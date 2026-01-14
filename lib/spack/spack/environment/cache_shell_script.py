@@ -18,8 +18,11 @@ def path_to_env_activate_shell_script(env, shell) -> str:
         env: the environment whose shell script we are returning the path of
         shell: the shell that the user is running on
     """
-
-    return os.path.join(env.path, ".spack-env", f"activate.{shell}")
+    if shell == "sh" or shell == "csh" or shell == "fish":
+        shell = ""
+    else:
+        shell = f".{shell}"
+    return os.path.join(env.path, ".spack-env", f"activate{shell}")
 
 
 def path_to_env_prompt_view_shell_script(env, shell) -> str:
@@ -89,8 +92,7 @@ def update_env_activate_script(env, prompt="", view=""):
         view: the name of the environment's view
     """
 
-    shells_avail = ["sh", "csh", "fish"]
-
+    shells_avail = ["sh"]
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
 
@@ -98,12 +100,27 @@ def update_env_activate_script(env, prompt="", view=""):
         env_mods = EnvironmentModifications()
         env_mods.extend(spack.environment.shell.activate(env=env, view=view))
 
-        activate_cmds = get_activation_cmds(env_mods, env, view, shell)
+        cmds = get_activation_cmds(env_mods, env, view, shell)
+
+        activate_script_path = path_to_env_activate_shell_script(env, shell)
+        prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
+
+        cmds += (
+            f"source {prompt_view_script_path}" if shell == "sh" else ""
+        )
+        with open(activate_script_path, "w", encoding="utf-8") as f:
+            f.write(
+                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
+            )
+            f.write(cmds)
+
+    shells_avail.extend(["csh", "fish"])
+
+    for shell in shells_avail:
         despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
         prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
         view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
 
-        activate_script_path = path_to_env_activate_shell_script(env, shell)
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
         if not os.path.isfile(prompt_view_script_path):
@@ -114,17 +131,6 @@ def update_env_activate_script(env, prompt="", view=""):
                 f.write(despactivate_cmd)
                 f.write(prompt_cmds)
                 f.write(view_cmd)
-        source_prompts = (
-            f"source {prompt_view_script_path}" if os.path.isfile(prompt_view_script_path) else ""
-        )
-
-        with open(activate_script_path, "w", encoding="utf-8") as f:
-            f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-            )
-            f.write(activate_cmds)
-            f.write(source_prompts)
-
 
 def write_env_deactivate_script(env, view):
     """Gets and writes the environment modifications to deactivate the specified
