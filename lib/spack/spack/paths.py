@@ -186,10 +186,10 @@ class SpackPaths:
 
         for check in [
             spack_env_check,
-            xdg_env_check,
             spack_home_env_check,
             cfg_check,
             spack_home_cfg_check,
+            xdg_env_check,
         ]:
             possible_resolution = check()
             if possible_resolution:

@@ -551,10 +551,10 @@ Furthermore each is controlled by a fall-through scheme.
 For example ``$data_home`` evaluates to one of the following (highest-priority first):
 
 #. ``SPACK_DATA_HOME`` env var if that is set
-#. ``XDG_DATA_HOME`` env var if that is set
 #. ``SPACK_HOME`` env var
 #. ``config:locations:data``
 #. ``config:locations:home``
+#. ``XDG_DATA_HOME`` env var if that is set
 #. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
 
 Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
