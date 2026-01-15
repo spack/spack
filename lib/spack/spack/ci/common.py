@@ -14,8 +14,8 @@ import sys
 import time
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
-from urllib.parse import quote, urlencode, urlparse
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from urllib.parse import ParseResult, quote, urlencode, urlparse
 from urllib.request import Request
 
 import spack.binary_distribution
@@ -36,6 +36,8 @@ from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
+
+from .job_class_registry import UnknownCIJobClass, get_ci_job_class
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -88,7 +90,7 @@ def copy_gzipped(glob_or_path: str, dest: str) -> None:
             f"'{glob_or_path}' matches multiple files but '{dest}' is not a directory"
         )
 
-    def is_gzipped(path):
+    def is_gzipped(path) -> bool:
         with open(path, "rb") as fd:
             return compression.GZipFileType().matches_magic(fd)
 
@@ -141,7 +143,7 @@ def win_quote(quote_str: str) -> str:
     return quote_str
 
 
-def _spec_matches(spec, match_string):
+def _spec_matches(spec, match_string) -> bool:
     return spec.intersects(match_string)
 
 
@@ -156,7 +158,7 @@ def ensure_expected_target_path(path: str) -> str:
     return path
 
 
-def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
+def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file) -> None:
     """Write out the file describing specs that should be copied"""
     buildcache_copies = {}
 
@@ -182,7 +184,7 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 class CIScript:
     """Job script."""
 
-    def __init__(self, contents: List[Union[str, List[str]]]):
+    def __init__(self, contents: List[Union[str, List[str]]]) -> None:
         """
         Instantiate the CI script
 
@@ -221,12 +223,12 @@ class CIScript:
 class CIDynamicMap:
     """Dynamic mapping options."""
 
-    def __init__(self, mapping: Dict[str, Any]):
+    def __init__(self, mapping: Dict[str, Any]) -> None:
         # Ensure additional properties readily available when needed
         self.mapping = mapping
 
         self.name: Optional[str] = mapping.get("name")
-        self.endpoint: Optional[str] = mapping.get("endpoint")
+        self.endpoint: str = mapping.get("endpoint", "")
         self.header: Dict[str, Any] = mapping.get("header", {})
 
         self.require: List[str] = mapping.get("require", [])
@@ -245,8 +247,8 @@ class CIDynamicMap:
     def required(self) -> List[str]:
         return sorted(set(self.require))
 
-    def endpoint_url(self) -> str:
-        return str(urlparse(self.endpoint))
+    def endpoint_url(self) -> ParseResult:
+        return urlparse(self.endpoint)
 
     def request_header(self) -> Dict[str, str]:
         header = {"User-Agent": web_util.SPACK_USER_AGENT}
@@ -267,7 +269,7 @@ class CIDynamicMap:
         Returns: resulting clean configuration attributes
         """
         request = Request(
-            self.endpoint_url().replace(query=query).geturl(),
+            str(self.endpoint_url()._replace(query=query).geturl()),
             headers=self.request_header(),
             method="GET",
         )
@@ -309,7 +311,7 @@ class CIDynamicMap:
 
         return clean_config
 
-    def skip(self) -> bool:
+    def skip(self):
         """Returns ``True`` if the section should be skipped; else ``False``."""
         skip_mapping = os.environ.get("SPACK_CI_SKIP_DYNAMIC_MAPPING")
         return self.name and skip_mapping and re.match(skip_mapping, self.name)
@@ -318,7 +320,9 @@ class CIDynamicMap:
 class CIJobData:
     """Job data for a given job name (and spec)."""
 
-    def __init__(self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False):
+    def __init__(
+        self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False, **kwargs
+    ) -> None:
         """
         Initialize the job data based on default settings.
 
@@ -331,7 +335,9 @@ class CIJobData:
         self.hash: str = spec.dag_hash() if spec else ""
         self.remove: bool = remove
         self.job_name = f"{self.name}-job{'-remove' if remove else ''}"
-        self.spec: Optional[spack.spec.Spec] = spec
+        self.spec: Optional[Union[spack.spec.Spec, str]] = spec
+
+        self.attributes: Dict[str, Any] = {}
 
         # Use script instances to facilitate conversions
         self.script: Dict[str, CIScript] = {}
@@ -349,7 +355,6 @@ class CIJobData:
                     except Exception as e:
                         tty.error(f"Failed to set {key} attribute with {value}: {str(e)}")
 
-        self.attributes: Dict[str, Union[str, Any]] = {}
         if spec:
             self.attributes["variables"] = {
                 "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
@@ -364,22 +369,23 @@ class CIJobData:
     def __str__(self) -> str:
         return f"CIJob({self.job_name}, spec={self.spec})"
 
-    def add_tags(self, tags: List[str]):
+    def add_tags(self, tags: List[str]) -> None:
         if "tags" not in self.attributes:
-            self.attributes["tags"]: List[str] = []
+            self.attributes["tags"] = []
         self.attributes["tags"].extend(tags)
 
-    def remove_tags(self, tags: List[str]):
+    def remove_tags(self, tags: List[str]) -> None:
         if "tags" not in self.attributes:
             return
 
-        try:
-            self.attributes["tags"].remove(tag)
-        except ValueError:
-            # value is not in the list
-            pass
+        for tag in tags:
+            try:
+                self.attributes["tags"].remove(tag)
+            except ValueError:
+                # value is not in the list
+                pass
 
-    def add_stage(self, stage: str):
+    def add_stage(self, stage: str) -> None:
         """Sets the job state.
 
         Args:
@@ -397,7 +403,7 @@ class CIJobData:
         """
         return stage in self.script
 
-    def remove_reserved_tags(self):
+    def remove_reserved_tags(self) -> None:
         self.remove_tags(SPACK_RESERVED_TAGS)
 
     def spec_query(self) -> Optional[str]:
@@ -415,7 +421,7 @@ class CIJobData:
         ).format_map(self.attributes["variables"])
         return f"spec={quote(query)}"
 
-    def merge_attributes(self, attrs: Dict[str, Any]):
+    def merge_attributes(self, attrs: Dict[str, Any]) -> None:
         """Merge the attributes into those of the job
 
         Args:
@@ -426,18 +432,18 @@ class CIJobData:
             if stage in attrs:
                 self.script[stage] = self.attributes[stage]
 
-    def remove_attributes(self, attrs: Dict[str, Any]):
+    def remove_attributes(self, attrs: Dict[str, Any]) -> None:
         """Remove the attributes from the job
 
         Args:
             attrs: attributes to be removed
         """
-        self.attributes = spack.config.remove_yaml(self.attributes, attrs)
+        self.attributes = cfg.remove_yaml(self.attributes, attrs)
         for stage in script_stage_names:
             if stage in attrs and stage in self.script:
                 del self.script[stage]
 
-    def update_attributes(self, section: Dict[str, Any]):
+    def update_attributes(self, section: Dict[str, Any]) -> None:
         """Update the job attributes with the attribute data for the job's name.
 
         The attributes will be removed if this is a ``remove`` job; otherwise,
@@ -459,7 +465,7 @@ class CIJobData:
             tty.debug(f"Merging {attrs} into {self.job_name} job")
             self.merge_attributes(attrs)
 
-    def update_submapping_attributes(self, section: Dict[str, Any]):
+    def update_submapping_attributes(self, section: Dict[str, Any]) -> None:
         """Update attributes with relevant submapping data.
 
         Args:
@@ -496,7 +502,7 @@ class CIJobData:
 
         Returns: dictionary of the populated job options.
         """
-        result = {}
+        result: Dict[str, Any] = {}
         if self.spec:
             result["spec"] = self.spec
 
@@ -521,7 +527,7 @@ class CDashHandler:
     Class for managing CDash data and processing.
     """
 
-    def __init__(self, ci_cdash):
+    def __init__(self, ci_cdash) -> None:
         # start with the gitlab ci configuration
         self.url = ci_cdash.get("url")
         self.build_group = ci_cdash.get("build-group")
@@ -538,7 +544,7 @@ class CDashHandler:
         if runner:
             self.site += f" ({runner})"
 
-    def args(self):
+    def args(self) -> List[Union[str, None]]:
         return [
             "--cdash-upload-url",
             win_quote(self.upload_url),
@@ -550,7 +556,7 @@ class CDashHandler:
             win_quote(self.build_stamp),
         ]
 
-    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
+    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> str:
         """Returns the CDash build name.
 
         A name will be generated if the ``spec`` is provided,
@@ -565,12 +571,12 @@ class CDashHandler:
             tty.debug(f"Generated CDash build name ({build_name}) from the {spec.name}")
             return build_name
 
-        env_build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
+        env_build_name = os.environ.get("SPACK_CDASH_BUILD_NAME", default="")
         tty.debug(f"Using CDash build name ({env_build_name}) from the environment")
         return env_build_name
 
     @property  # type: ignore
-    def build_stamp(self):
+    def build_stamp(self) -> str:
         """Returns the CDash build stamp.
 
         The one defined by SPACK_CDASH_BUILD_STAMP environment variable
@@ -589,23 +595,23 @@ class CDashHandler:
 
     @property  # type: ignore
     @memoized
-    def project_enc(self):
+    def project_enc(self) -> str:
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")
         encode = urlencode({"project": self.project})
         index = encode.find("=") + 1
         return encode[index:]
 
     @property
-    def upload_url(self):
+    def upload_url(self) -> str:
         url_format = f"{self.url}/submit.php?project={self.project_enc}"
         return url_format
 
-    def copy_test_results(self, source, dest):
+    def copy_test_results(self, source, dest) -> None:
         """Copy test results to artifacts directory."""
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self):
+    def create_buildgroup(self) -> None:
         """Create the CDash buildgroup if it does not already exist."""
         headers = {
             "Authorization": f"Bearer {self.auth_token}",
@@ -633,7 +639,9 @@ class CDashHandler:
         if not group_id:
             tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
-    def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
+    def report_skipped(
+        self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]
+    ) -> None:
         """Explicitly report skipping testing of a spec (e.g., it's CI
         configuration identifies it as known to have broken tests or
         the CI installation failed).
@@ -687,7 +695,7 @@ class PipelineOptions:
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
-    ):
+    ) -> None:
         """
         Args:
             env: Active spack environment
@@ -732,13 +740,13 @@ class PipelineNode:
     parents: Set[str]
     children: Set[str]
 
-    def __init__(self, spec: spack.spec.Spec):
-        self.spec = spec
-        self.parents = set()
-        self.children = set()
+    def __init__(self, spec: spack.spec.Spec) -> None:
+        self.spec: spack.spec.Spec = spec
+        self.parents: set[PipelineNode] = set()
+        self.children: set[PipelineNode] = set()
 
     @property
-    def key(self):
+    def key(self) -> str:
         """Return key of the stored spec"""
         return PipelineDag.key(self.spec)
 
@@ -768,7 +776,7 @@ class PipelineDag:
             self.nodes[parent_key].children.add(child_key)
             self.nodes[child_key].parents.add(parent_key)
 
-    def prune(self, node_key: str):
+    def prune(self, node_key: str) -> None:
         """Remove a node from the graph, and reconnect its parents and children"""
         node = self.nodes[node_key]
         for parent in node.parents:
@@ -830,7 +838,7 @@ class SpackCIConfig:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config: Dict[str, Any]):
+    def __init__(self, ci_config: Dict[str, Any]) -> None:
         """Given the information from the ci section of the config and the jobs,
         set up meta data needed for generating Spack CI IR.
         """
@@ -845,23 +853,38 @@ class SpackCIConfig:
 
         self.add_tests = "test-job" in self.pipeline_gen
 
+        #: registered or default job class used for pipeline job creation
+        self.job_class = self._get_job_class()
+
         # List of jobs keyed by job type name
         self.jobs: Dict[str, List[CIJobData]] = {}
         for job_type_name in all_job_type_names:
-            self.jobs[job_type_name]: List[CIJobData] = []
+            self.jobs[job_type_name] = []
 
         # Add each core job with its defaults
         for job_type_name in core_job_names:
-            tty.debug(f"TLD: SpackCIConfig: instantiating '{job_type_name}' job")
-            self.jobs[job_type_name].append(CIJobData(job_type_name))
+            class_object = self.job_class
+            self.jobs[job_type_name].append(class_object(job_type_name))
 
-        tty.msg(
-            f"TLD: initial jobs = {[self.jobs[name] for name in self.jobs.keys() if self.jobs[name]]}"
-        )
+    def _get_job_class(self):
+        """Get the registered or default job class path for the target pipeline."""
+        ci_target = self.ci_config.get("target", "gitlab")
 
-    def init_pipeline_jobs(self, pipeline: PipelineDag):
-        """Create jobs for all the pipeline specs"""
+        try:
+            job_class = get_ci_job_class(ci_target)
+        except UnknownCIJobClass:
+            tty.warn(
+                f"No registered job class detected for {ci_target}. " "Using default CIJobData."
+            )
+            job_class = CIJobData
+
+        return job_class
+
+    def init_pipeline_jobs(self, pipeline: PipelineDag) -> None:
+        """Create jobs for all of the pipeline specs"""
         names = ["build"]
+
+        # Be sure to use the registered job type, if available
         # TODO/TLD: Do we want to add these here or should we be
         # TODO/TLD: adding them when the spec stages are processed?
         if self.add_tests:
@@ -869,7 +892,9 @@ class SpackCIConfig:
 
         for _, node in pipeline.traverse_nodes():
             for job_type_name in names:
-                self.jobs[job_type_name].append(CIJobData(job_type_name, node.spec))
+                self.jobs[job_type_name].append(
+                    globals()[self.job_class](job_type_name, node.spec)
+                )
 
     def all_jobs(self, job_names: Optional[List[str]] = None) -> List[CIJobData]:
         """Return a list of all jobs of the given type(s).
@@ -879,10 +904,6 @@ class SpackCIConfig:
 
         Returns: list of all jobs of the given type(s) or all jobs if ``None``
         """
-        tty.msg(f"TLD: jobs:")
-        for name, jobs in self.jobs.items():
-            tty.msg(f"TLD: {name}: {[str(job) for job in jobs]}")
-
         if job_names:
             return list(
                 chain.from_iterable(self.jobs[name] for name in job_names if name in self.jobs)
@@ -910,7 +931,7 @@ class SpackCIConfig:
 
     def ir(self) -> Dict[str, Any]:
         """Return the intermediate representation of the Spack CI configuration."""
-        intermediate_rep = {
+        intermediate_rep: Dict[str, Any] = {
             "broken-specs-url": self.broken_specs_url,
             "broken-tests-packages": self.broken_tests,
             "rebuild-index": self.rebuild_index,
@@ -948,7 +969,7 @@ class SpackCIConfig:
 
         return None
 
-    def update_job_attributes(self, job_name: str, section: Dict[str, Any]):
+    def update_job_attributes(self, job_name: str, section: Dict[str, Any]) -> None:
         """Update the specified job attributes for corresponding jobs
 
         Args:
@@ -987,7 +1008,7 @@ class SpackCIConfig:
                     tty.msg("TLD: .. .. skipping signing job missing script")
                     return
 
-                self.jobs[job_name].append(CIJobData(job_name))
+                self.jobs[job_name].append(globals()[self.job_class](job_name))
 
         # Apply attributes to any other type of named job
         tty.debug(
@@ -996,7 +1017,7 @@ class SpackCIConfig:
         for job in self.jobs[job_name]:
             job.update_attributes(section)
 
-    def update_submapping_job_attributes(self, section: Dict[str, Any]):
+    def update_submapping_job_attributes(self, section: Dict[str, Any]) -> None:
         """Update spec job attributes with submapping data.
 
         Submapping attributes can be used to customize the tags and variables
@@ -1015,7 +1036,7 @@ class SpackCIConfig:
             tty.debug(f"TLD: .. for job {job}")
             job.update_submapping_attributes(section)
 
-    def process_dynamic_job_mapping(self, section: Dict[str, Any]):
+    def process_dynamic_job_mapping(self, section: Dict[str, Any]) -> None:
         """Process cost optimization options for large scale CI."""
         if "dynamic-mapping" not in section:
             return
@@ -1039,7 +1060,7 @@ class SpackCIConfig:
             if clean_config:
                 job.merge_attributes(clean_config)
 
-    def customize_ci_configs(self):
+    def customize_ci_configs(self) -> None:
         """Merge/override default CI configurations."""
 
         # Merge/override the default CI job configurations
@@ -1058,9 +1079,9 @@ class SpackCIConfig:
             if "dynamic-mapping" in section:
                 self.process_dynamic_job_mapping(section)
 
-        # Replace the job's spec with the spec's name
+        # Replace the spec job's spec with the spec's name
         for job in self.all_jobs(spec_job_names):
-            job.spec = job.spec.name
+            job.spec = job.spec.name  # type: ignore
 
     def generate_ir(self) -> Dict[str, Any]:
         self.customize_ci_configs()
@@ -1068,5 +1089,5 @@ class SpackCIConfig:
 
 
 class SpackCIError(spack.error.SpackError):
-    def __init__(self, msg):
+    def __init__(self, msg) -> None:
         super().__init__(msg)

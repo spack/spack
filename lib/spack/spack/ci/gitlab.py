@@ -1,12 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import copy
 import os
 import shutil
 import urllib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.ruamel.yaml
 
@@ -24,6 +23,7 @@ from spack.util.path import canonicalize_path, substitute_path_variables
 from .common import (
     CIJobData,
     PipelineDag,
+    PipelineNode,
     PipelineOptions,
     PipelineType,
     SpackCIConfig,
@@ -34,6 +34,7 @@ from .common import (
     write_pipeline_manifest,
 )
 from .generator_registry import generator
+from .job_class_registry import ci_job_class
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
@@ -54,13 +55,14 @@ JOB_RETRY_CONDITIONS = [
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
 
+@ci_job_class("gitlab")
 class GitlabJob(CIJobData):
     def __init__(
         self,
         name: str,
         spec: Optional[spack.spec.Spec] = None,
         remove: bool = False,
-        config: "GitlabCI" = None,
+        config: Optional["GitlabCI"] = None,
     ):
         """
         Args:
@@ -69,16 +71,17 @@ class GitlabJob(CIJobData):
             remove: ``True`` if a remove job; otherwise, ``False``
             config: configuration options
         """
+        # TODO/TLD: RESUME HERE with switching extra args (remove+) to kwargs
         super().__init__(name, spec, remove)
-        self.config: "GitlabCI" = config
+        self.config: Optional["GitlabCI"] = config
 
         # TODO/TBD/TLD: Should the job_id start with 0 or 1?
-        self.job_id: Optional[int] = None
+        self.job: Optional[int] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"GitlabJob({self.name}, {self.spec}, {self.remove})"
 
-    def convert_artifacts_dir(self):
+    def convert_artifacts_dir(self) -> None:
         """Replace the env_dir placeholder with the environment's artifacts directory.
 
         The only script we care about for spec jobs is the main script.
@@ -99,7 +102,7 @@ class GitlabJob(CIJobData):
 
         self.script["script"] = self.script["script"].convert(_replace_env_dir)
 
-    def convert_target_mirror(self):
+    def convert_target_mirror(self) -> None:
         """Replace the env_dir placeholder with the environment's artifacts directory.
 
         Raises:
@@ -113,24 +116,27 @@ class GitlabJob(CIJobData):
             lambda cmd: cmd.replace("{index_target_mirror}", target_mirror)
         )
 
-    def add_pipeline_tags(self):
+    def add_pipeline_tags(self) -> None:
         """Add pipeline type-specific tags."""
         if self.config.options.pipeline_type is None:
             return
 
         # For spack pipelines "public" and "protected" are reserved tags
         self.remove_reserved_tags()
-        if self.options.pipeline_type == PipelineType.PROTECTED_BRANCH:
+        if self.config.options.pipeline_type == PipelineType.PROTECTED_BRANCH:
             self.add_tags(["protected"])
-        elif self.options.pipeline_type == PipelineType.PULL_REQUEST:
+        elif self.config.options.pipeline_type == PipelineType.PULL_REQUEST:
             self.add_tags(["public"])
 
-    def update_build_data(self, job_id: int, stage: str, build_group: str):
+    def update_build_data(
+        self, job_id: int, stage: str, dependencies: List[PipelineNode], build_group: str
+    ) -> None:
         """Ensure the build job has the correct build data.
 
         Args:
             job_id: job number
-            name of the build stage
+            stage: name of the build stage
+            dependencies: direct job dependencies
             build_group: name of the job's CDash build group
 
         Raises:
@@ -147,10 +153,9 @@ class GitlabJob(CIJobData):
         self.attributes["stage"] = stage
         job_name = get_job_name(self.spec, build_group)
 
-        dep_nodes = pipeline.get_dependencies(node)
         self.attributes["needs"] = [
             {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
-            for dep_node in dep_nodes
+            for dep_node in dependencies
         ]
         self.attributes["needs"].append(
             {"job": self.generate_job_name, "pipeline": self.generate_pipeline_id}
@@ -164,29 +169,29 @@ class GitlabJob(CIJobData):
         job_vars = self.attributes["variables"]
         job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
 
-        if self.options.cdash_handler:
-            build_name = self.options.cdash_handler.build_name(self.spec)
+        options = self.config.options
+        if options.cdash_handler:
+            build_name = options.cdash_handler.build_name(self.spec)
             job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-            build_stamp = self.options.cdash_handler.build_stamp
+            build_stamp = options.cdash_handler.build_stamp
             job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
         # TODO/TLD: can't this be part of instantiating or converting
         # TODO/TLD:  a build (and maybe test) GitlabJob?
-        job.merge_attributes(
-            {
-                "when": "always",
-                "paths": [
-                    self.path("log_artifacts_dir", absolute=False),
-                    self.path("reproduction_artifacts_dir", absolute=False),
-                    self.path("test_artifacts_dir", absolute=False),
-                    self.path("user_artifacts_dir", absolute=False),
-                ],
-            }
-        )
+        if self.config:
+            paths = [
+                self.config.path(p, absolute=False)
+                for p in [
+                    "log_artifacts_dir",
+                    "reproduction_artifacts_dir",
+                    "test_artifacts_dir",
+                    "user_artifacts_dir",
+                ]
+            ]
+            self.merge_attributes({"when": "always", "paths": paths})
 
-        # TODO/TLD: Should these be part of converting a build (and test?)
-        # TODO/TLD: job?
-        self.attributes["stage"] = stage_name
+        # TODO/TLD: Should these be part of converting a build (and test?) job?
+        self.attributes["stage"] = stage
         self.attributes["retry"] = spack.schema.merge_yaml(
             {"max": 2, "when": JOB_RETRY_CONDITIONS}, self.attributes.get("retry", {})
         )
@@ -197,7 +202,7 @@ class GitlabJob(CIJobData):
             self.config.max_length_needs = length_needs
             self.config.max_needs_job = job_name
 
-    def update_copy_data(self, job_id: int, stage: str):
+    def update_copy_data(self, job_id: int, stage: str) -> None:
         """Ensure the copy job has the correct dependency and buildcache setting.
 
         Args:
@@ -247,7 +252,7 @@ class GitlabJob(CIJobData):
         self.attributes["allow_failure"] = True
         self.attributes["stage"] = stage
 
-    def update_reindex_data(self, stage: str):
+    def update_reindex_data(self, stage: str) -> None:
         """Ensure the reindex job has the data.
 
         Args:
@@ -271,7 +276,7 @@ class GitlabJob(CIJobData):
         self.attributes["interruptible"] = True
         self.attributes["dependencies"] = []
 
-    def update_signing_data(self, stage: str):
+    def update_signing_data(self, stage: str) -> None:
         """Ensure the signing job has the data.
 
         Args:
@@ -318,14 +323,14 @@ class GitlabCI(SpackCIConfig):
         )
         self.pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
         self.options: PipelineOptions = options
-        self.stages: List[List[str]] = []
+        self.stages: List[List[GitlabJob]] = []
         self.stage_names: List[str] = []
 
         # TODO/TLD: Should output jobs be (stage, job) tuples or a stage dict?
         # TODO/TLD: If a dict, wouldn't need stage_names UNLESS order important.
 
         # The output jobs, with the first element the stage name
-        self.output_jobs: List[Tuple(str, GitlabJob)] = []
+        self.output_jobs: List[Tuple[str, CIJobData]] = []
         self.variables: Dict[str, str] = {}
 
         self._path: Dict[str, str] = {}
@@ -339,7 +344,7 @@ class GitlabCI(SpackCIConfig):
         # TODO/TBD:   test jobs?
         self.next_job_id: int = 0
 
-    def _add_paths(self):
+    def _add_paths(self) -> None:
         """Add relevant CI paths."""
         ci_project_dir = os.environ.get("CI_PROJECT_DIR") or os.getcwd()
 
@@ -374,9 +379,9 @@ class GitlabCI(SpackCIConfig):
             spack.binary_distribution.buildcache_relative_specs_url()
         )
 
-    def customize_jobs(self):
+    def customize_jobs(self) -> None:
         """Convert each CIJobData instance into a GitlabJob instance."""
-        gitlab_jobs: Dict[str, List[CIJobData]] = {}
+        gitlab_jobs: Dict[str, List[Type[CIJobData]]] = {}
         for job in self.all_jobs(all_job_type_names):
             if job.name not in gitlab_jobs:
                 gitlab_jobs[job.name] = []
@@ -384,7 +389,7 @@ class GitlabCI(SpackCIConfig):
             gitlab_jobs[job.name].append(GitlabJob(job.name, job.spec, job.remove, self))
         self.jobs = gitlab_jobs
 
-    def add_copy_stage(self):
+    def add_copy_stage(self) -> None:
         """Add the copy stage, used by copy-only pipelines, and update its data.
 
         Raises:
@@ -405,10 +410,10 @@ class GitlabCI(SpackCIConfig):
         self.stage_names.append(stage)
         self.output_jobs.append((stage, job))
 
-    def no_build_specs(self):
+    def no_build_specs(self) -> bool:
         return len(self.all_jobs(["build"])) == 0
 
-    def add_no_specs_stage(self):
+    def add_no_specs_stage(self) -> None:
         """Add the no specs stage and update its data.
 
         Raises:
@@ -423,7 +428,7 @@ class GitlabCI(SpackCIConfig):
 
         self.output_jobs.append((stage, job))
 
-    def add_rebuild_index_stage(self):
+    def add_rebuild_index_stage(self) -> None:
         """Add the rebuild index stage and update its job data.
 
         Raises:
@@ -439,7 +444,7 @@ class GitlabCI(SpackCIConfig):
         self.output_jobs.append(("rebuild-index", job))
         return
 
-    def add_signing_stage(self):
+    def add_signing_stage(self) -> None:
         """Add the external signing stage, updating the job data accordingly.
 
         Raises:
@@ -450,8 +455,6 @@ class GitlabCI(SpackCIConfig):
             return
 
         job = self.job("signing")
-        job_str = str(job)
-        num_signing = len(self.all_jobs("signing"))
         assert job, "The default core signing job is required."
 
         if not (
@@ -467,7 +470,7 @@ class GitlabCI(SpackCIConfig):
         self.output_jobs.append(("sign-pkgs", job))
         return
 
-    def copy_env_artifacts(self):
+    def copy_env_artifacts(self) -> None:
         """Copy the environment manifest and lock files to the environment
         artifacts directory."""
         env_artifacts_dir = self.path("env_artifacts_dir")
@@ -480,7 +483,7 @@ class GitlabCI(SpackCIConfig):
             self.options.env.lock_path, os.path.join(env_artifacts_dir, ev.lockfile_name)
         )
 
-    def copy_manifest_file(self):
+    def copy_manifest_file(self) -> None:
         """Copy the manifest file to the artifacts directory.
 
         Raises:
@@ -496,7 +499,7 @@ class GitlabCI(SpackCIConfig):
                     'Missing top level "spack" section in environment'
                 )
 
-            def _rewrite_include(path, orig_root, new_root):
+            def _rewrite_include(path, orig_root, new_root) -> str:
                 expanded_path = substitute_path_variables(path)
 
                 # Skip non-local paths
@@ -559,7 +562,7 @@ class GitlabCI(SpackCIConfig):
 
         return os.path.relpath(path, self._path["ci_project_dir"])
 
-    def process_spec_stages(self, pipeline: PipelineDag):
+    def process_spec_stages(self, pipeline: PipelineDag) -> None:
         """Process pipeline specs, batching into multiple stages to ensure
         dependencies processed before dependents.
 
@@ -580,6 +583,7 @@ class GitlabCI(SpackCIConfig):
             test_stage_id = level + 1 if self.add_tests else stage_id
 
             # Ensure initialize the appropriate number of stage lists for this level.
+            # TODO/TLD: Why track specs/jobs per stage when appear not to be used?
             if not self.stages:
                 self.stages.append([])
                 if self.add_tests:
@@ -587,35 +591,37 @@ class GitlabCI(SpackCIConfig):
             elif len(self.stages) == test_stage_id:
                 self.stages.append([])
 
-            self.stages[stage_id].append(node.spec)
+            job = self.job("build", node.spec)
+            self.stages[stage_id].append(job)
             stage_name = f"stage-{level}"
 
             if stage_name not in self.stage_names:
                 self.stage_names.append(stage_name)
 
-            release_spec = node.spec
-            release_spec_dag_hash = release_spec.dag_hash()
-
             job = self.job("build", node.spec)
             if not job:
-                tty.warn(f"No match found for {release_spec}, skipping it")
+                tty.warn(f"No match found for {node.spec}, skipping it")
                 continue
 
             # TODO/TLD: Should the corresponding test job get the same job id?
-            job.update_build_data(self.next_job_id, stage_name, build_group)
+            if hasattr(job, "update_build_data"):
+                job.update_build_data(
+                    self.next_job_id, stage_name, pipeline.get_dependencies(node), build_group
+                )
             self.next_job_id += 1
 
             # TODO/TLD: Should output jobs be (stage, job) tuples or a stage
             # TODO/TLD: dictionary?
             self.output_jobs.append(("build", job))
 
-            # TODO/TLD: Need to ensure the corresponding build-remove job is listed or represented (and do not increase the job_id)
+            # TODO/TLD: Need to ensure the corresponding build-remove job is
+            # TODO/TLD:  listed or represented (and do not increase the job_id)
             # TODO/TLD: add the corresponding test and test-remove jobs if self.add_tests
 
         extra = " and test" if self.add_tests else ""
         tty.debug(f"{self.next_job_id} build{extra} jobs generated in {test_stage_id} stages")
 
-    def add_final_spec_processing(self):
+    def add_final_spec_processing(self) -> None:
         """Add the final stages needed when rebuilding specs."""
         self.add_signing_stage()
 
@@ -631,13 +637,13 @@ class GitlabCI(SpackCIConfig):
 
         self.variables.update(
             {
-                "SPACK_ARTIFACTS_ROOT": gitlab_ci.path("artifacts_root"),
-                "SPACK_CONCRETE_ENV_DIR": gitlab_ci.path("env_artifacts_dir", absolute=False),
+                "SPACK_ARTIFACTS_ROOT": self.path("artifacts_root"),
+                "SPACK_CONCRETE_ENV_DIR": self.path("env_artifacts_dir", absolute=False),
                 "SPACK_VERSION": spack.get_version(),
                 "SPACK_CHECKOUT_VERSION": version_to_clone,
-                "SPACK_JOB_LOG_DIR": gitlab_ci.path("log_artifacts_dir", absolute=False),
-                "SPACK_JOB_REPRO_DIR": gitlab_ci.path("reproduction_artifacts_dir"),
-                "SPACK_JOB_TEST_DIR": gitlab_ci.path("test_artifacts_dir", absolute=False),
+                "SPACK_JOB_LOG_DIR": self.path("log_artifacts_dir", absolute=False),
+                "SPACK_JOB_REPRO_DIR": self.path("reproduction_artifacts_dir"),
+                "SPACK_JOB_TEST_DIR": self.path("test_artifacts_dir", absolute=False),
                 "SPACK_PIPELINE_TYPE": (
                     self.options.pipeline_type.name if self.options.pipeline_type else "None"
                 ),
@@ -709,7 +715,9 @@ def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> st
 
 
 # TODO/TLD: refactor this
-def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, manifest_path):
+def maybe_generate_manifest(
+    pipeline: PipelineDag, options: PipelineOptions, manifest_path
+) -> None:
     # TODO: Consider including only hashes of rebuilt specs in the manifest,
     # instead of full source and destination urls.  Also, consider renaming
     # the variable that controls whether or not to write the manifest from
@@ -730,7 +738,9 @@ def maybe_generate_manifest(pipeline: PipelineDag, options: PipelineOptions, man
 
 
 @generator("gitlab")
-def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options: PipelineOptions):
+def generate_gitlab_yaml(
+    pipeline: PipelineDag, spack_ci: SpackCIConfig, options: PipelineOptions
+) -> None:
     """Given a pipeline graph, job attributes, and pipeline options,
     write a pipeline that can be consumed by GitLab to the given output file.
 
@@ -762,7 +772,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     if gitlab_ci.all_jobs(spec_job_names):
         # tty.debug(  # TLD
         tty.msg(
-            f"The max_needs_job is {gitlab_ci.max_needs_job}, with {gitlab_ci.max_length_needs} needs"
+            f"The max_needs_job is {gitlab_ci.max_needs_job}, with "
+            f"{gitlab_ci.max_length_needs} needs"
         )
 
     # In some cases, pipeline generation should write a manifest.  Currently

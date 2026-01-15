@@ -54,9 +54,9 @@ from .common import (
 )
 from .generator_registry import UnknownGeneratorException, get_generator
 
-# Import any modules with generator functions from here, so they get
+# Import any modules with generator functions and from here, so they get
 # registered without introducing any import cycles.
-from .gitlab import generate_gitlab_yaml  # noqa: F401
+from .gitlab import GitlabJob, generate_gitlab_yaml  # noqa: F401
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -1373,7 +1373,7 @@ def run_standalone_tests(
         test_args.extend(["--timeout", str(timeout)])
 
     if cdash:
-        test_args.extend(cdash.args())
+        test_args.extend(cdash.args())  # type: ignore
     else:
         test_args.extend(["--log-format", "junit"])
         if log_file:

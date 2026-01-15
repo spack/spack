@@ -563,3 +563,26 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
+
+
+def test_ci_gitlab_generator():
+    """Confirm known registered gitlab pipeline generator is loaded."""
+    assert ci.get_generator("gitlab")
+
+
+def test_ci_gitlab_job_class():
+    """Confirm known registered gitlab job class is loaded."""
+    assert ci.get_ci_job_class("gitlab")
+
+
+@pytest.mark.parametrize(
+    "target, job_class_name", [("gitlab", "GitlabJob"), ("unknown", "CIJobData")]
+)
+def test_ci_core_jobs(target, job_class_name):
+    """Confirm the core jobs are created using the appropriate job class."""
+    config = ci.SpackCIConfig({"target": target})
+    assert config.job_class.__name__ == job_class_name
+    for job_type_name, jobs in config.jobs.items():
+        if jobs:
+            assert job_type_name in ci.common.core_job_names
+            assert isinstance(jobs[0], config.job_class)
