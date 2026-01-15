@@ -249,6 +249,10 @@ def _execute_version(pkg: Type[spack.package_base.PackageBase], ver: Union[str, 
             f"    version('{ver}', {args})"
         )
 
+    # URL-based versions can define multiple instances of the same version
+    # e.g. (v1.0, x86_64 and v1.0 for aarch64)
+    # This logic uses a version+hash key to keep track of the versions and avoid
+    # key collisions.
     if spack.mirrors.utils.get_mirror_all_mode() and kwargs.get("url"):
         hash_val = next((kwargs[s] for s in spack.util.crypto.hashes if s in kwargs), None)
         if hash_val:
