@@ -1484,9 +1484,9 @@ variant_default_not_used(node(ID, Package), Variant, Value)
      node_has_variant(node(ID, Package), Variant, VariantID),
      variant_type(VariantID, VariantType), VariantType == "multi",
      not attr("variant_value", node(ID, Package), Variant, Value),
-     not propagate(node(ID, Package), variant_value(Variant, _, _)),
+     not propagate(node(ID, Package), variant_value(Variant, Value, _)),
      % variant set explicitly don't count for this metric
-     not attr("variant_set", node(ID, Package), Variant, _),
+     not attr("variant_set", node(ID, Package), Variant, Value),
      attr("node", node(ID, Package)).
 
 % Treat 'none' in a special way - it cannot be combined with other
