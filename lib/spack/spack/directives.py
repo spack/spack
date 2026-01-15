@@ -255,7 +255,6 @@ def _execute_version(pkg: Type[spack.package_base.PackageBase], ver: Union[str, 
             version_obj = Version(f"{version}.{hash_val[:16]}")
             pkg.versions[version_obj] = kwargs
     else:
-        # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[version] = kwargs
 
 
