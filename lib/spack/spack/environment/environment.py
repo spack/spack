@@ -1557,15 +1557,14 @@ class Environment:
             self.write()
 
     def concretize(
-        self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
+        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
     ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
-        Only concretizes specs that haven't been concretized yet unless
-        force is ``True``.
+        Only concretizes specs that haven't been concretized yet unless force is ``True``.
 
-        This only modifies the environment in memory. ``write()`` will
-        write out a lockfile containing concretized specs.
+        This only modifies the environment in memory. ``write()`` will write out a lockfile
+        containing concretized specs.
 
         Arguments:
             force: re-concretize ALL specs, even those that were already concretized;
@@ -1582,15 +1581,26 @@ class Environment:
 
         self._prepare_for_concretization(force=force)
 
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
+        if not new_user_specs:
+            return []
+
         # Pick the right concretization strategy
         if self.unify == "when_possible":
-            return self._concretize_together_where_possible(tests=tests)
+            return self._concretize_together_where_possible(
+                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
+            )
 
         if self.unify is True:
-            return self._concretize_together(tests=tests)
+            return self._concretize_together(
+                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
+            )
 
         if self.unify is False:
-            return self._concretize_separately(tests=tests)
+            return self._concretize_separately(
+                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
+            )
 
         msg = "concretization strategy not implemented [{0}]"
         raise SpackEnvironmentError(msg.format(self.unify))
@@ -1598,18 +1608,24 @@ class Environment:
     def _prepare_for_concretization(self, *, force: bool):
         """Reset the environment concrete state and ensure consistency with user specs."""
         if force:
-            # Clear previously concretized specs
-            self.concretized_roots = []
-            self.specs_by_hash = {}
-
-        # Remove concrete specs that no longer correlate to a user spec
-        to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
-        for spec in to_deconcretize:
-            self.deconcretize(spec, concrete=False)
+            self.clear_concretized_specs()
+        else:
+            self.sync_concretized_specs()
 
         # If a combined env, check updated spec is in the linked envs
         if self.included_concrete_envs:
             self.include_concrete_envs()
+
+    def sync_concretized_specs(self) -> None:
+        """Removes concrete specs that no longer correlate to a user spec"""
+        to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
+        for spec in to_deconcretize:
+            self.deconcretize(spec, concrete=False)
+
+    def clear_concretized_specs(self) -> None:
+        """Clears the currently concretized specs"""
+        self.concretized_roots = []
+        self.specs_by_hash = {}
 
     def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
         """
@@ -1670,13 +1686,14 @@ class Environment:
         return new_user_specs, kept_user_specs, specs_to_concretize
 
     def _concretize_together_where_possible(
-        self, tests: Union[bool, Sequence] = False
+        self,
+        new_user_specs: List[Spec],
+        kept_user_specs: List[Spec],
+        specs_to_concretize: List[SpecPair],
+        *,
+        tests: Union[bool, Sequence] = False,
     ) -> Sequence[SpecPair]:
         # Exit early if the set of concretized specs is the set of user specs
-        new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
-        if not new_user_specs:
-            return []
-
         result = spack.concretize.concretize_together_when_possible(
             specs_to_concretize, tests=tests
         )
@@ -1686,15 +1703,17 @@ class Environment:
 
         return result
 
-    def _concretize_together(self, tests: Union[bool, Sequence] = False) -> Sequence[SpecPair]:
+    def _concretize_together(
+        self,
+        new_user_specs: List[Spec],
+        kept_user_specs: List[Spec],
+        specs_to_concretize: List[SpecPair],
+        *,
+        tests: Union[bool, Sequence] = False,
+    ) -> Sequence[SpecPair]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
-        # Exit early if the set of concretized specs is the set of user specs
-        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
-        if not new_user_specs:
-            return []
-
         try:
             concretized_specs = spack.concretize.concretize_together(
                 specs_to_concretize, tests=tests
@@ -1721,14 +1740,17 @@ class Environment:
             self._add_concrete_spec(abstract, concrete, new=True)
         return result
 
-    def _concretize_separately(self, tests: Union[bool, Sequence] = False):
+    def _concretize_separately(
+        self,
+        new_user_specs: List[Spec],
+        kept_user_specs: List[Spec],
+        specs_to_concretize: List[SpecPair],
+        *,
+        tests: Union[bool, Sequence] = False,
+    ):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
-        # Exit early if the set of concretized specs is the set of user specs
-        new_user_specs, _, _ = self._get_specs_to_concretize()
-        if not new_user_specs:
-            return []
         to_concretize = [(root, None) for root in new_user_specs]
 
         concretized_specs = spack.concretize.concretize_separately(to_concretize, tests=tests)
