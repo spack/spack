@@ -572,7 +572,7 @@ def test_ci_gitlab_generator():
 
 def test_ci_gitlab_job_class():
     """Confirm known registered gitlab job class is loaded."""
-    assert ci.get_ci_job_class("gitlab")
+    assert ci.job_class_registry.get_ci_job_class("gitlab")
 
 
 @pytest.mark.parametrize(

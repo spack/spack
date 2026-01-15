@@ -855,6 +855,9 @@ class SpackCIConfig:
 
         #: registered or default job class used for pipeline job creation
         self.job_class = self._get_job_class()
+        assert issubclass(
+            self.job_class, CIJobData
+        ), f"Job class {self.job_class} does not inherit from CIJobData"
 
         # List of jobs keyed by job type name
         self.jobs: Dict[str, List[CIJobData]] = {}
