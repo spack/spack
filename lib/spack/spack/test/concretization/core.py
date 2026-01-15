@@ -4866,3 +4866,12 @@ def test_penalties_for_variant_defined_by_function(
     """
     s = default_mock_concretization(spec_str)
     assert s.satisfies(expected)
+
+
+def test_default_values_used_if_subset_required_by_dependent(mock_packages):
+    """If a dependent requires *at least* a subset of default values of a multi-valued variant of
+    a dependency, that should not influence concretization; the default values should be used."""
+    # multivalue-variant-multi-defaults-dependent requires myvariant=bar without baz.
+    a = spack.concretize.concretize_one("multivalue-variant-multi-defaults-dependent")
+    # we still end up using baz, and we don't drop it to avoid an extra dependency.
+    assert a.satisfies("%multivalue-variant-multi-defaults myvariant=bar,baz")
