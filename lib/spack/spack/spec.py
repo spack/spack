@@ -758,7 +758,7 @@ class DependencySpec:
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
         self.propagation = propagation
-        self.when = when or Spec()
+        self.when = when or EMPTY_SPEC
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -992,7 +992,7 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
         return flag_type, [str(flag) for flag in self[flag_type]]
 
     def _cmp_iter(self):
-        for k, v in sorted(self.items()):
+        for k, v in sorted(self.dict.items()):
             yield k
 
             def flags():
@@ -1843,7 +1843,7 @@ class Spec:
             when: optional condition under which dependency holds
         """
         if when is None:
-            when = Spec()
+            when = EMPTY_SPEC
 
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(
@@ -1914,7 +1914,7 @@ class Spec:
             when: if non-None, condition under which dependency holds
         """
         if when is None:
-            when = Spec()
+            when = EMPTY_SPEC
 
         # Check if we need to update edges that are already present
         selected = self._dependencies.get(dependency_spec.name, [])
@@ -3222,6 +3222,8 @@ class Spec:
     def _intersects(
         self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
+        if other is EMPTY_SPEC:
+            return True
         other = self._autospec(other)
 
         if other.concrete and self.concrete:
@@ -3371,6 +3373,8 @@ class Spec:
             resolve_virtuals: if True, resolve virtuals in self and other. This requires a
                 repository to be available.
         """
+        if other is EMPTY_SPEC:
+            return True
         other = self._autospec(other)
 
         if other.concrete:
@@ -4393,7 +4397,7 @@ class Spec:
             if deptypes and dep.depflag
             else ""
         )
-        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
+        when_str = f"when='{(dep.when)}'" if dep.when != EMPTY_SPEC else ""
         virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
 
         attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
@@ -4437,7 +4441,7 @@ class Spec:
 
             edge_attributes = (
                 self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
-                if edge.depflag or edge.when != Spec()
+                if edge.depflag or edge.when != EMPTY_SPEC
                 else ""
             )
             virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
@@ -4508,6 +4512,10 @@ class Spec:
 
     @property
     def compilers(self):
+        if self.original_spec_format() < 5:
+            # These specs don't have compilers as dependencies, return the compiler node attribute
+            return f" %{self.compiler}"
+
         # TODO: get rid of the space here and make formatting smarter
         return " " + self._format_dependencies(
             "{name}{@version}",
@@ -6004,3 +6012,37 @@ class InvalidEdgeError(spack.error.SpecError):
 
 class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
+
+
+class _EmptySpec(Spec):
+    """An immutable empty Spec that prevents a class of accidental mutations."""
+
+    def __init__(self) -> None:
+        object.__setattr__(self, "_mutable", True)
+        super().__init__()
+        object.__delattr__(self, "_mutable")
+
+    def __setstate__(self, state) -> None:
+        object.__setattr__(self, "_mutable", True)
+        super().__setstate__(state)
+        object.__delattr__(self, "_mutable")
+
+    def constrain(self, *args, **kwargs) -> bool:
+        raise TypeError("EmptySpec is immutable and cannot be modified")
+
+    def add_dependency_edge(self, *args, **kwargs):
+        raise TypeError("EmptySpec is immutable and cannot be modified")
+
+    def __setattr__(self, name, value) -> None:
+        if not getattr(self, "_mutable", False):
+            raise TypeError("EmptySpec is immutable and cannot be modified")
+        super().__setattr__(name, value)
+
+    def __delattr__(self, name) -> None:
+        if name != "_mutable":
+            raise TypeError("EmptySpec is immutable and cannot be modified")
+        object.__delattr__(self, name)
+
+
+#: Immutable empty spec, for fast comparisons and reduced memory usage.
+EMPTY_SPEC = _EmptySpec()

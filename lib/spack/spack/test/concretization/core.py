@@ -497,6 +497,10 @@ class TestConcretize:
             with pytest.raises(spack.error.UnsatisfiableSpecError):
                 spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
 
+    def test_disable_mixing_is_per_language(self):
+        with spack.config.override("concretizer", {"compiler_mixing": False}):
+            spack.concretize.concretize_one("openblas %c=llvm %fortran=gcc")
+
     def test_disable_mixing_override_by_package(self):
         with spack.config.override("concretizer", {"compiler_mixing": ["dt-diamond-bottom"]}):
             root = spack.concretize.concretize_one("dt-diamond%clang ^dt-diamond-bottom%gcc")
@@ -4823,7 +4827,7 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
 
 
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
-    """Tests that imposed dependenies triggered by identical conditions are grouped together,
+    """Tests that imposed dependencies triggered by identical conditions are grouped together,
     and that imposed dependencies that differ on a deptype are not grouped together."""
     # The trigger-and-effect-deps pkg has 4 conditions, 2 triggers, and 4 effects in total:
     # +x -> depends on pkg-a with deptype link
@@ -4844,3 +4848,32 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     assert len([line for line in asp if re.search(r"trigger_id\(\d+\)", line)]) == 2
     # There should be 4 effects total
     assert len([line for line in asp if re.search(r"effect_id\(\d+\)", line)]) == 4
+
+
+@pytest.mark.regression("51842")
+@pytest.mark.parametrize(
+    "spec_str,expected",
+    [
+        ("variant-function-validator", "generator=make %adios2~bzip2"),
+        ("variant-function-validator generator=make", "generator=make %adios2~bzip2"),
+        ("variant-function-validator generator=ninja", "generator=ninja %adios2+bzip2"),
+        ("variant-function-validator generator=other", "generator=other %adios2+bzip2"),
+    ],
+)
+def test_penalties_for_variant_defined_by_function(
+    default_mock_concretization, spec_str, expected
+):
+    """Tests that we have penalties for variants defined by functions, and that variant values
+    are consistent with defaults and optimization rules.
+    """
+    s = default_mock_concretization(spec_str)
+    assert s.satisfies(expected)
+
+
+def test_default_values_used_if_subset_required_by_dependent(mock_packages):
+    """If a dependent requires *at least* a subset of default values of a multi-valued variant of
+    a dependency, that should not influence concretization; the default values should be used."""
+    # multivalue-variant-multi-defaults-dependent requires myvariant=bar without baz.
+    a = spack.concretize.concretize_one("multivalue-variant-multi-defaults-dependent")
+    # we still end up using baz, and we don't drop it to avoid an extra dependency.
+    assert a.satisfies("%multivalue-variant-multi-defaults myvariant=bar,baz")

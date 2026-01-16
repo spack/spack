@@ -59,6 +59,7 @@ import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, DirectiveMeta
 from spack.resource import Resource
+from spack.spec import EMPTY_SPEC
 from spack.version import (
     GitVersion,
     Version,
@@ -136,7 +137,7 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
     # represent this by returning the unconstrained `Spec()`, which is
     # always satisfied.
     if value is None or value is True:
-        return spack.spec.Spec()
+        return EMPTY_SPEC
 
     # This is conditional on the spec
     return spack.spec.Spec(value)
@@ -497,10 +498,6 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
     if not when_spec:
         return
 
-    # ``when`` specs for ``provides()`` need a name, as they are used
-    # to build the ProviderIndex.
-    when_spec.name = pkg.name
-
     spec_objs = [spack.spec.Spec(x) for x in specs]
     spec_names = [x.name for x in spec_objs]
     if len(spec_names) > 1:
@@ -508,10 +505,9 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
 
     for provided_spec in spec_objs:
         if pkg.name == provided_spec.name:
-            raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
+            raise CircularReferenceError(f"Package '{pkg.name}' cannot provide itself.")
 
-        provided_set = pkg.provided.setdefault(when_spec, set())
-        provided_set.add(provided_spec)
+        pkg.provided.setdefault(when_spec, set()).add(provided_spec)
 
 
 @directive("splice_specs")
@@ -939,10 +935,10 @@ def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[U
     for other_when_spec in pkg.licenses:
         if when_spec.intersects(other_when_spec):
             when_message = ""
-            if when_spec != _make_when_spec(None):
+            if when_spec != EMPTY_SPEC:
                 when_message = f"when {when_spec}"
             other_when_message = ""
-            if other_when_spec != _make_when_spec(None):
+            if other_when_spec != EMPTY_SPEC:
                 other_when_message = f"when {other_when_spec}"
             err_msg = (
                 f"{pkg.name} is specified as being licensed as {license_identifier} "

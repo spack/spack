@@ -16,7 +16,6 @@ import re
 import sys
 import time
 import warnings
-from contextlib import contextmanager
 from typing import (
     Any,
     Callable,
@@ -66,6 +65,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.llnl.util.lang import elide_list
+from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
 from .core import (
@@ -86,9 +86,7 @@ from .versions import Provenance
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
 
-TransformFunction = Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]
-
-EMPTY_SPEC = spack.spec.Spec()
+TransformFunction = Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]
 
 
 class OutputConfiguration(NamedTuple):
@@ -117,23 +115,6 @@ def default_clingo_control():
     control.configuration.solver.heuristic = "Domain"
     control.configuration.solver.opt_strategy = "usc"
     return control
-
-
-@contextmanager
-def named_spec(
-    spec: Optional[spack.spec.Spec], name: Optional[str]
-) -> Iterator[Optional[spack.spec.Spec]]:
-    """Context manager to temporarily set the name of a spec"""
-    if spec is None or name is None:
-        yield spec
-        return
-
-    old_name = spec.name
-    spec.name = name
-    try:
-        yield spec
-    finally:
-        spec.name = old_name
 
 
 # Below numbers are used to map names of criteria to the order
@@ -224,13 +205,15 @@ def specify(spec):
 def remove_facts(*to_be_removed: str) -> TransformFunction:
     """Returns a transformation function that removes facts from the input list of facts."""
 
-    def _remove(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
+    def _remove(name: str, spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
         return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
 
     return _remove
 
 
-def dag_closure_by_deptype(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
+def dag_closure_by_deptype(
+    name: str, spec: spack.spec.Spec, facts: List[AspFunction]
+) -> List[AspFunction]:
     edges = spec.edges_to_dependencies()
     # Compute the "link" transitive closure with `when: root ^[deptypes=link] <this_pkg>`
     if len(edges) == 1:
@@ -1327,9 +1310,9 @@ class ConditionContext(SourceContext):
 
 
 def _track_dependencies(
-    input_spec: spack.spec.Spec, requirements: List[AspFunction]
+    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
 ) -> List[AspFunction]:
-    return requirements + [fn.attr("track_dependencies", input_spec.name)]
+    return requirements + [fn.attr("track_dependencies", name)]
 
 
 class SpackSolverSetup:
@@ -1424,11 +1407,12 @@ class SpackSolverSetup:
         for v in sorted(deprecated):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.deprecated_version(v)))
 
-    def spec_versions(self, spec: spack.spec.Spec) -> List[AspFunction]:
+    def spec_versions(
+        self, spec: spack.spec.Spec, *, name: Optional[str] = None
+    ) -> List[AspFunction]:
         """Return list of clauses expressing spec's version constraints."""
-        name = spec.name
-        msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
-        assert name, msg
+        name = spec.name or name
+        assert name, "Internal Error: spec with no name occured. Please file an issue."
 
         if spec.concrete:
             return [fn.attr("version", name, spec.version)]
@@ -1440,8 +1424,11 @@ class SpackSolverSetup:
         self.version_constraints.add((name, spec.versions))
         return [fn.attr("node_version_satisfies", name, spec.versions)]
 
-    def target_ranges(self, spec: spack.spec.Spec, single_target_fn) -> List[AspFunction]:
-        name = spec.name
+    def target_ranges(
+        self, spec: spack.spec.Spec, single_target_fn, *, name: Optional[str] = None
+    ) -> List[AspFunction]:
+        name = spec.name or name
+        assert name, "Internal Error: spec with no name occured. Please file an issue."
         target = spec.architecture.target
 
         # Check if the target is a concrete target
@@ -1600,8 +1587,9 @@ class SpackSolverSetup:
 
         # Deal with variants that use validator functions
         if variant_def.values_defined_by_validator():
-            for value in default_values:
+            for penalty, value in enumerate(default_values, 1):
                 pkg_fact(fn.variant_possible_value(vid, value))
+                pkg_fact(fn.variant_penalty(vid, value, penalty))
             self.gen.newline()
             return
 
@@ -1683,7 +1671,8 @@ class SpackSolverSetup:
 
     def _get_condition_id(
         self,
-        named_cond: spack.spec.Spec,
+        name: str,
+        cond: spack.spec.Spec,
         cache: ConditionSpecCache,
         body: bool,
         context: ConditionIdContext,
@@ -1698,17 +1687,18 @@ class SpackSolverSetup:
             The id of the cached trigger or effect.
 
         """
-        pkg_cache = cache[named_cond.name]
+        pkg_cache = cache[name]
+        cond_str = str(cond) if cond.name else f"{name} {cond}"
+        named_cond_key = (cond_str, context.transform)
 
-        named_cond_key = (str(named_cond), context.transform)
         result = pkg_cache.get(named_cond_key)
         if result:
             return result[0]
 
         cond_id = next(self._id_counter)
-        requirements = self.spec_clauses(named_cond, body=body, context=context)
+        requirements = self.spec_clauses(cond, name=name, body=body, context=context)
         if context.transform:
-            requirements = context.transform(named_cond, requirements)
+            requirements = context.transform(name, cond, requirements)
         pkg_cache[named_cond_key] = (cond_id, requirements)
 
         return cond_id
@@ -1732,38 +1722,39 @@ class SpackSolverSetup:
             context = ConditionContext()
             context.transform_imposed = remove_facts("node", "virtual_node")
 
-        if imposed_spec:
-            imposed_name = imposed_spec.name or imposed_name
-            if not imposed_name:
-                raise ValueError(f"Must provide a name for imposed constraint: '{imposed_spec}'")
-
-        with named_spec(required_spec, required_name), named_spec(imposed_spec, imposed_name):
-            # Check if we can emit the requirements before updating the condition ID counter.
-            # In this way, if a condition can't be emitted but the exception is handled in the
-            # caller, we won't emit partial facts.
-
-            condition_id = next(self._id_counter)
-            requirement_context = context.requirement_context()
-            trigger_id = self._get_condition_id(
-                required_spec, cache=self._trigger_cache, body=True, context=requirement_context
-            )
-            clauses.append(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
-            clauses.append(fn.condition_reason(condition_id, msg))
-            clauses.append(
-                fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
-            )
-            if not imposed_spec:
-                return clauses, condition_id
-
-            impose_context = context.impose_context()
-            effect_id = self._get_condition_id(
-                imposed_spec, cache=self._effect_cache, body=False, context=impose_context
-            )
-            clauses.append(
-                fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
-            )
-
+        # Check if we can emit the requirements before updating the condition ID counter.
+        # In this way, if a condition can't be emitted but the exception is handled in the
+        # caller, we won't emit partial facts.
+        condition_id = next(self._id_counter)
+        requirement_context = context.requirement_context()
+        trigger_id = self._get_condition_id(
+            required_name,
+            required_spec,
+            cache=self._trigger_cache,
+            body=True,
+            context=requirement_context,
+        )
+        clauses.append(fn.pkg_fact(required_name, fn.condition(condition_id)))
+        clauses.append(fn.condition_reason(condition_id, msg))
+        clauses.append(fn.pkg_fact(required_name, fn.condition_trigger(condition_id, trigger_id)))
+        if not imposed_spec:
             return clauses, condition_id
+
+        imposed_name = imposed_spec.name or imposed_name
+        if not imposed_name:
+            raise ValueError(f"Must provide a name for imposed constraint: '{imposed_spec}'")
+
+        impose_context = context.impose_context()
+        effect_id = self._get_condition_id(
+            imposed_name,
+            imposed_spec,
+            cache=self._effect_cache,
+            body=False,
+            context=impose_context,
+        )
+        clauses.append(fn.pkg_fact(required_name, fn.condition_effect(condition_id, effect_id)))
+
+        return clauses, condition_id
 
     def condition(
         self,
@@ -1803,21 +1794,21 @@ class SpackSolverSetup:
 
         return condition_id
 
-    def package_provider_rules(self, pkg):
+    def package_provider_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
                 continue
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):
+            for vpkg in sorted(provided):  # type: ignore[type-var]
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
-                msg = f"{pkg.name} provides {vpkg} when {when}"
+                msg = f"{pkg.name} provides {vpkg}{'' if when == EMPTY_SPEC else f' when {when}'}"
                 condition_id = self.condition(when, vpkg, required_name=pkg.name, msg=msg)
                 self.gen.fact(
-                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
+                    fn.pkg_fact(pkg.name, fn.provider_condition(condition_id, vpkg.name))
                 )
             self.gen.newline()
 
@@ -1856,23 +1847,23 @@ class SpackSolverSetup:
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
 
                 def dependency_holds(
-                    input_spec: spack.spec.Spec, requirements: List[AspFunction]
+                    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
                 ) -> List[AspFunction]:
                     # TODO: `dependency_holds` is used as a cache key, and is a unique object in
                     # every iteration of the loop. This prevents deduplication of identical
                     # "effects" when unique when specs impose the same dependency. We cannot move
                     # this out of the loop, because the effect cache is keyed only by a spec, and
                     # not by the dependency type.
-                    result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
-                        fn.attr(
-                            "dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t)
-                        )
+                    result = remove_facts("node", "virtual_node")(
+                        name, input_spec, requirements
+                    ) + [
+                        fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
                         for t in dt.ALL_FLAGS
                         if t & depflag
                     ]
-                    if input_spec.name not in pkg.extendees:
+                    if name not in pkg.extendees:
                         return result
-                    return result + [fn.attr("extends", pkg.name, input_spec.name)]
+                    return result + [fn.attr("extends", pkg.name, name)]
 
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
@@ -1917,59 +1908,56 @@ class SpackSolverSetup:
         for i, (cond, (spec_to_splice, match_variants)) in enumerate(
             sorted(pkg.splice_specs.items())
         ):
-            with named_spec(cond, pkg.name):
-                self.version_constraints.add((cond.name, cond.versions))
-                self.version_constraints.add((spec_to_splice.name, spec_to_splice.versions))
-                hash_var = AspVar("Hash")
-                splice_node = fn.node(AspVar("NID"), cond.name)
-                when_spec_attrs = [
-                    fn.attr(c.args[0], splice_node, *(c.args[2:]))
-                    for c in self.spec_clauses(cond, body=True, required_from=None)
-                    if c.args[0] != "node"
-                ]
-                splice_spec_hash_attrs = [
-                    fn.hash_attr(hash_var, *(c.args))
-                    for c in self.spec_clauses(spec_to_splice, body=True, required_from=None)
-                    if c.args[0] != "node"
-                ]
-                if match_variants is None:
-                    variant_constraints = []
-                elif match_variants == "*":
-                    filt_match_variants = set()
-                    for map in pkg.variants.values():
-                        for k in map:
-                            filt_match_variants.add(k)
-                    filt_match_variants = sorted(filt_match_variants)
-                    variant_constraints = self._gen_match_variant_splice_constraints(
-                        pkg, cond, spec_to_splice, hash_var, splice_node, filt_match_variants
+            self.version_constraints.add((pkg.name, cond.versions))
+            self.version_constraints.add((spec_to_splice.name, spec_to_splice.versions))
+            hash_var = AspVar("Hash")
+            splice_node = fn.node(AspVar("NID"), pkg.name)
+            when_spec_attrs = [
+                fn.attr(c.args[0], splice_node, *(c.args[2:]))
+                for c in self.spec_clauses(cond, name=pkg.name, body=True, required_from=None)
+                if c.args[0] != "node"
+            ]
+            splice_spec_hash_attrs = [
+                fn.hash_attr(hash_var, *(c.args))
+                for c in self.spec_clauses(spec_to_splice, body=True, required_from=None)
+                if c.args[0] != "node"
+            ]
+            if match_variants is None:
+                variant_constraints = []
+            elif match_variants == "*":
+                filt_match_variants = set()
+                for map in pkg.variants.values():
+                    for k in map:
+                        filt_match_variants.add(k)
+                filt_match_variants = sorted(filt_match_variants)
+                variant_constraints = self._gen_match_variant_splice_constraints(
+                    pkg, cond, spec_to_splice, hash_var, splice_node, filt_match_variants
+                )
+            else:
+                if any(v in cond.variants or v in spec_to_splice.variants for v in match_variants):
+                    raise spack.error.PackageError(
+                        "Overlap between match_variants and explicitly set variants"
                     )
-                else:
-                    if any(
-                        v in cond.variants or v in spec_to_splice.variants for v in match_variants
-                    ):
-                        raise spack.error.PackageError(
-                            "Overlap between match_variants and explicitly set variants"
-                        )
-                    variant_constraints = self._gen_match_variant_splice_constraints(
-                        pkg, cond, spec_to_splice, hash_var, splice_node, match_variants
-                    )
+                variant_constraints = self._gen_match_variant_splice_constraints(
+                    pkg, cond, spec_to_splice, hash_var, splice_node, match_variants
+                )
 
-                rule_head = fn.abi_splice_conditions_hold(
-                    i, splice_node, spec_to_splice.name, hash_var
-                )
-                rule_body_components = (
-                    [
-                        # splice_set_fact,
-                        fn.attr("node", splice_node),
-                        fn.installed_hash(spec_to_splice.name, hash_var),
-                    ]
-                    + when_spec_attrs
-                    + splice_spec_hash_attrs
-                    + variant_constraints
-                )
-                rule_body = ",\n  ".join(str(r) for r in rule_body_components)
-                rule = f"{rule_head} :-\n  {rule_body}."
-                self.gen.append(rule)
+            rule_head = fn.abi_splice_conditions_hold(
+                i, splice_node, spec_to_splice.name, hash_var
+            )
+            rule_body_components = (
+                [
+                    # splice_set_fact,
+                    fn.attr("node", splice_node),
+                    fn.installed_hash(spec_to_splice.name, hash_var),
+                ]
+                + when_spec_attrs
+                + splice_spec_hash_attrs
+                + variant_constraints
+            )
+            rule_body = ",\n  ".join(str(r) for r in rule_body_components)
+            rule = f"{rule_head} :-\n  {rule_body}."
+            self.gen.append(rule)
 
             self.gen.newline()
 
@@ -2172,6 +2160,7 @@ class SpackSolverSetup:
         self,
         spec: spack.spec.Spec,
         *,
+        name: Optional[str] = None,
         body: bool = False,
         transitive: bool = True,
         expand_hashes: bool = False,
@@ -2190,6 +2179,7 @@ class SpackSolverSetup:
         try:
             clauses = self._spec_clauses(
                 spec,
+                name=spec.name or name,
                 body=body,
                 transitive=transitive,
                 expand_hashes=expand_hashes,
@@ -2208,6 +2198,7 @@ class SpackSolverSetup:
         self,
         spec: spack.spec.Spec,
         *,
+        name: Optional[str] = None,
         body: bool = False,
         transitive: bool = True,
         expand_hashes: bool = False,
@@ -2220,6 +2211,7 @@ class SpackSolverSetup:
 
         Arguments:
             spec: the spec to analyze
+            name: optional fallback of spec.name (used for anonymous roots)
             body: if True, generate clauses to be used in rule bodies (final values) instead
                 of rule heads (setters).
             transitive: if False, don't generate clauses from dependencies (default True)
@@ -2240,7 +2232,7 @@ class SpackSolverSetup:
         """
         clauses = []
         seen = seen if seen is not None else set()
-        name = spec.name
+        name = spec.name or name or ""
         seen.add(id(spec))
 
         f: Union[Type[_Head], Type[_Body]] = _Body if body else _Head
@@ -2252,7 +2244,7 @@ class SpackSolverSetup:
         if spec.namespace:
             clauses.append(f.namespace(name, spec.namespace))
 
-        clauses.extend(self.spec_versions(spec))
+        clauses.extend(self.spec_versions(spec, name=name))
 
         # seed architecture at the root (we'll propagate later)
         # TODO: use better semantics.
@@ -2263,7 +2255,7 @@ class SpackSolverSetup:
             if arch.os:
                 clauses.append(f.node_os(name, arch.os))
             if arch.target:
-                clauses.extend(self.target_ranges(spec, f.node_target))
+                clauses.extend(self.target_ranges(spec, f.node_target, name=name))
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
@@ -3203,12 +3195,13 @@ class SpackSolverSetup:
             # because reused specs do not track virtual nodes.
             # Instead, track whether the parent uses the virtual
             def virtual_handler(
-                input_spec: spack.spec.Spec, requirements: List[AspFunction]
+                name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
             ) -> List[AspFunction]:
-                ret = remove_facts("virtual_node")(input_spec, requirements)
+                ret = remove_facts("virtual_node")(name, input_spec, requirements)
                 for edge in input_spec.traverse_edges(root=False, cover="edges"):
                     if spack.repo.PATH.is_virtual(edge.spec.name):
-                        ret.append(fn.attr("uses_virtual", edge.parent.name, edge.spec.name))
+                        parent_name = name if edge.parent is input_spec else edge.parent.name
+                        ret.append(fn.attr("uses_virtual", parent_name, edge.spec.name))
                 return ret
 
             context = ConditionContext()
@@ -3217,7 +3210,7 @@ class SpackSolverSetup:
             )
             # Default is to remove node-like attrs, override here
             context.transform_required = virtual_handler
-            context.transform_imposed = lambda x, y: y
+            context.transform_imposed = lambda x, y, z: z
 
             try:
                 subcondition_id = self.condition(

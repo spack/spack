@@ -1348,15 +1348,24 @@ variant_default_value(node(NodeID, Package), VariantName, Value) :-
     node_has_variant(node(NodeID, Package), VariantName, _),
     attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
 
+% Penalty from the variant definition
+possible_variant_penalty(VariantID, Value, Penalty) :- pkg_fact(Package, variant_penalty(VariantID, Value, Penalty)).
+
+% Use a very high penalty for variant values that are not defined in the package,
+% for instance those defined implicitly by a validator.
+possible_variant_penalty(VariantID, Value, 100) :-
+    pkg_fact(Package, variant_possible_value(VariantID, Value)),
+    not pkg_fact(Package, variant_penalty(VariantID, Value, _)).
+
 variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     node_has_variant(node(NodeID, Package), Variant, VariantID),
     attr("variant_value", node(NodeID, Package), Variant, Value),
-    pkg_fact(Package, variant_penalty(VariantID, Value, Penalty)),
+    possible_variant_penalty(VariantID, Value, Penalty),
     not variant_default_value(node(NodeID, Package), Variant, Value),
     % variants set explicitly from a directive don't count as non-default
-    not attr("variant_set", node(NodeID, Package), Variant, _),
+    not attr("variant_set", node(NodeID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
-    not propagate(node(NodeID, Package), variant_value(Variant, _, _)).
+    not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
 
 % -- Associate the definition's possible values with the node
 variant_possible_value(node(NodeID, Package), VariantName, Value) :-
@@ -1475,9 +1484,9 @@ variant_default_not_used(node(ID, Package), Variant, Value)
      node_has_variant(node(ID, Package), Variant, VariantID),
      variant_type(VariantID, VariantType), VariantType == "multi",
      not attr("variant_value", node(ID, Package), Variant, Value),
-     not propagate(node(ID, Package), variant_value(Variant, _, _)),
+     not propagate(node(ID, Package), variant_value(Variant, Value, _)),
      % variant set explicitly don't count for this metric
-     not attr("variant_set", node(ID, Package), Variant, _),
+     not attr("variant_set", node(ID, Package), Variant, Value),
      attr("node", node(ID, Package)).
 
 % Treat 'none' in a special way - it cannot be combined with other
@@ -1707,8 +1716,9 @@ unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
 #defined allow_mixing/1.
 
 % You can't have >1 compiler for a given language if mixing is disabled
-error(100, "Compiler mixing is disabled") :-
-    #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
+error(100, "Compiler mixing is disabled for the {0} language", Language) :-
+    language(Language),
+	  #count { CompilerNode : unification_set_compiler("root", CompilerNode, Language) } > 1.
 
 %-----------------------------------------------------------------------------
 % Runtimes

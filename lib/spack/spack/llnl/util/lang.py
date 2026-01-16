@@ -211,7 +211,7 @@ done = object()
 
 def tuplify(seq):
     """Helper for lazy_lexicographic_ordering()."""
-    return tuple((tuplify(x) if callable(x) else x) for x in seq())
+    return tuple([(tuplify(x) if callable(x) else x) for x in seq()])
 
 
 def lazy_eq(lseq, rseq):
@@ -456,7 +456,7 @@ class HashableMap(typing.MutableMapping[K, V]):
         del self.dict[key]
 
     def _cmp_iter(self):
-        for _, v in sorted(self.items()):
+        for _, v in sorted(self.dict.items()):
             yield v
 
 
@@ -734,7 +734,12 @@ class Singleton:
                     # if not, just assign the result like a normal singleton
                     self._instance = instance
             except AttributeError as e:
-                raise Exception("AttrbuteError during creation of Singleton instance") from e
+                # getattr will "absorb" an AttributeError that occurs
+                # during the execution of the factory method: we'd like
+                # to show that so wrap it in something that isn't absorbed
+                raise SingletonInstantiationError(
+                    "AttrbuteError during creation of Singleton instance"
+                ) from e
         return self._instance
 
     def __getattr__(self, name):
@@ -763,6 +768,10 @@ class Singleton:
 
     def __repr__(self):
         return repr(self.instance)
+
+
+class SingletonInstantiationError(Exception):
+    """Error that indicates a singleton that cannot instantiate."""
 
 
 def get_entry_points(*, group: str):
