@@ -543,29 +543,6 @@ packages:
         concretize_one("t1")
 
 
-def test_errmsg_external_wants_compiler_dependency(concretize_scope, mock_packages):
-    """A package specifies an external with a direct dependency on
-    a package that is not listed as a dependency in its package.
-
-    Check that an appropriate error message is generated when attempting
-    to concretize a parent of that package.
-    """
-    conf_str = """\
-packages:
-  dependency-install:
-    buildable: false
-    externals:
-    - spec: "dependency-install@2.0 %gcc@10.2.1"
-      prefix: /a/path/that/doesnt/need/to/exist/
-"""
-    update_packages_config(conf_str)
-
-    important_points = ["dependency-install specified a direct dependency on gcc"]
-
-    with expect_failure_and_print(should_mention=important_points):
-        concretize_one("dependent-install")
-
-
 def test_errmsg_external_wants_compiler(concretize_scope, mock_packages):
     """A package specifies an external with a direct dependency on
     a package that is not listed as a dependency in its package.
@@ -584,6 +561,29 @@ packages:
     update_packages_config(conf_str)
 
     important_points = ["dependent-install specified a direct dependency on gcc"]
+
+    with expect_failure_and_print(should_mention=important_points):
+        concretize_one("dependent-install")
+
+
+def test_errmsg_external_wants_compiler_dependency(concretize_scope, mock_packages):
+    """A package specifies an external with a direct dependency on
+    a package that is not listed as a dependency in its package.
+
+    Check that an appropriate error message is generated when attempting
+    to concretize a parent of that package.
+    """
+    conf_str = """\
+packages:
+  dependency-install:
+    buildable: false
+    externals:
+    - spec: "dependency-install@2.0 %gcc@10.2.1"
+      prefix: /a/path/that/doesnt/need/to/exist/
+"""
+    update_packages_config(conf_str)
+
+    important_points = ["dependency-install specified a direct dependency on gcc"]
 
     with expect_failure_and_print(should_mention=important_points):
         concretize_one("dependent-install")
