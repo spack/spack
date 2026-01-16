@@ -5052,25 +5052,21 @@ class Spec:
                 self._dunder_hash = self.dag_hash_bit_prefix(64)
             return self._dunder_hash
 
-        # For non-concrete specs include only a subset of the spec fields and only include the
-        # first dependency if there are any. This gives a good balance between the cost of the
-        # hash function and number of collisions.
-        if len(self._dependencies.edges) == 1:
-            first_dep_spec = next(iter(self._dependencies.edges.values()))[0].spec
-            hash_tuple = (
-                self.name,
-                self.versions,
-                self.variants,
-                self.architecture,
-                first_dep_spec.name,
-                first_dep_spec.versions,
-                first_dep_spec.variants,
-                first_dep_spec.architecture,
+        if not self._dependencies:
+            return hash(
+                (
+                    self.name,  # cheap
+                    self.namespace,  # cheap
+                    self.versions,
+                    (
+                        self.variants if self.variants.dict else None
+                    ),  # avoids expensive function call
+                    self.architecture,
+                    self.abstract_hash,  # cheap
+                )
             )
-        else:
-            hash_tuple = (self.name, self.versions, self.variants, self.architecture)
 
-        return hash(hash_tuple)
+        return hash(lang.tuplify(self._cmp_iter))
 
     def __getstate__(self):
         state = self.__dict__.copy()
