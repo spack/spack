@@ -185,6 +185,10 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                     continue
 
                 if self.unreachable(pkg_name=pkg_name, when_spec=when_spec):
+                    tty.debug(
+                        f"[{__name__}] Skipping {', '.join(new_dependencies)} dependencies of "
+                        f"{pkg_name}, because conditions are not met"
+                    )
                     continue
 
                 for name in new_dependencies:
