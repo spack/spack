@@ -497,12 +497,6 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
     when_spec = _make_when_spec(when)
     if not when_spec:
         return
-    elif when_spec is EMPTY_SPEC:
-        when_spec = spack.spec.Spec()  # this function mutates, so can't use EMPTY_SPEC
-
-    # ``when`` specs for ``provides()`` need a name, as they are used
-    # to build the ProviderIndex.
-    when_spec.name = pkg.name
 
     spec_objs = [spack.spec.Spec(x) for x in specs]
     spec_names = [x.name for x in spec_objs]
@@ -511,10 +505,9 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
 
     for provided_spec in spec_objs:
         if pkg.name == provided_spec.name:
-            raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
+            raise CircularReferenceError(f"Package '{pkg.name}' cannot provide itself.")
 
-        provided_set = pkg.provided.setdefault(when_spec, set())
-        provided_set.add(provided_spec)
+        pkg.provided.setdefault(when_spec, set()).add(provided_spec)
 
 
 @directive("splice_specs")

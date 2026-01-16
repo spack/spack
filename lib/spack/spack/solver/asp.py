@@ -1794,21 +1794,21 @@ class SpackSolverSetup:
 
         return condition_id
 
-    def package_provider_rules(self, pkg):
+    def package_provider_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         for vpkg_name in pkg.provided_virtual_names():
             if vpkg_name not in self.possible_virtuals:
                 continue
             self.gen.fact(fn.pkg_fact(pkg.name, fn.possible_provider(vpkg_name)))
 
         for when, provided in pkg.provided.items():
-            for vpkg in sorted(provided):
+            for vpkg in sorted(provided):  # type: ignore[type-var]
                 if vpkg.name not in self.possible_virtuals:
                     continue
 
-                msg = f"{pkg.name} provides {vpkg} when {when}"
+                msg = f"{pkg.name} provides {vpkg}{'' if when == EMPTY_SPEC else f' when {when}'}"
                 condition_id = self.condition(when, vpkg, required_name=pkg.name, msg=msg)
                 self.gen.fact(
-                    fn.pkg_fact(when.name, fn.provider_condition(condition_id, vpkg.name))
+                    fn.pkg_fact(pkg.name, fn.provider_condition(condition_id, vpkg.name))
                 )
             self.gen.newline()
 
