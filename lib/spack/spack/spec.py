@@ -5055,14 +5055,12 @@ class Spec:
         if not self._dependencies:
             return hash(
                 (
-                    self.name,  # cheap
-                    self.namespace,  # cheap
+                    self.name,
+                    self.namespace,
                     self.versions,
-                    (
-                        self.variants if self.variants.dict else None
-                    ),  # avoids expensive function call
+                    (self.variants if self.variants.dict else None),
                     self.architecture,
-                    self.abstract_hash,  # cheap
+                    self.abstract_hash,
                 )
             )
 
