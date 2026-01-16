@@ -385,7 +385,7 @@ def expect_failure_and_print(should_mention=None):
     err_msg = None
     try:
         yield
-    except (spack.error.UnsatisfiableSpecError, spack.externals.ExternalDependencyError ) as e:
+    except (spack.error.UnsatisfiableSpecError, spack.externals.ExternalDependencyError) as e:
         got_an_error_as_expected = True
         err_msg = str(e)
     if not got_an_error_as_expected:
