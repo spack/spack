@@ -543,7 +543,13 @@ packages:
         concretize_one("t1")
 
 
-def test_errmsg_external_wants_compiler(concretize_scope, mock_packages):
+def test_errmsg_external_wants_compiler_dependency(concretize_scope, mock_packages):
+    """A package specifies an external with a direct dependency on
+    a package that is not listed as a dependency in its package.
+
+    Check that an appropriate error message is generated when attempting
+    to concretize a parent of that package.
+    """
     conf_str = """\
 packages:
   dependency-install:
@@ -560,7 +566,13 @@ packages:
         concretize_one("dependent-install")
 
 
-def test_errmsg_external_wants_compiler_parent(concretize_scope, mock_packages):
+def test_errmsg_external_wants_compiler(concretize_scope, mock_packages):
+    """A package specifies an external with a direct dependency on
+    a package that is not listed as a dependency in its package.
+
+    Check that an appropriate error message is generated when attempting
+    to concretize that package.
+    """
     conf_str = """\
 packages:
   dependent-install:
