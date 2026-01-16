@@ -5,7 +5,7 @@ import os
 import shutil
 import urllib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import spack.vendor.ruamel.yaml
 
@@ -28,7 +28,6 @@ from .common import (
     PipelineType,
     SpackCIConfig,
     SpackCIError,
-    all_job_type_names,
     ensure_expected_target_path,
     spec_job_names,
     write_pipeline_manifest,
@@ -55,260 +54,11 @@ JOB_RETRY_CONDITIONS = [
 JOB_NAME_FORMAT = "{name}{@version} {/hash}"
 
 
-@ci_job_class("gitlab")
-class GitlabJob(CIJobData):
-    def __init__(
-        self,
-        name: str,
-        spec: Optional[spack.spec.Spec] = None,
-        remove: bool = False,
-        config: Optional["GitlabCI"] = None,
-    ):
-        """
-        Args:
-            name: standard job name
-            spec: release spec
-            remove: ``True`` if a remove job; otherwise, ``False``
-            config: configuration options
-        """
-        # TODO/TLD: RESUME HERE with switching extra args (remove+) to kwargs
-        super().__init__(name, spec, remove)
-        self.config: Optional["GitlabCI"] = config
-
-        # TODO/TBD/TLD: Should the job_id start with 0 or 1?
-        self.job: Optional[int] = None
-
-    def __str__(self) -> str:
-        return f"GitlabJob({self.name}, {self.spec}, {self.remove})"
-
-    def convert_artifacts_dir(self) -> None:
-        """Replace the env_dir placeholder with the environment's artifacts directory.
-
-        The only script we care about for spec jobs is the main script.
-
-        Raises:
-            AttributeError: job does not have the expected script
-        """
-        # skip conversions of non-spec jobs
-        if self.name not in spec_job_names:
-            tty.debug(f"{self}: skipping script conversion since non-spec job")
-            return
-
-        if "script" not in self.script:
-            raise AttributeError(f"{self.name} is missing the required 'script'")
-
-        def _replace_env_dir(cmd: str):
-            return cmd.replace("{env_dir}", self.config.path("env_artifacts_dir", absolute=False))
-
-        self.script["script"] = self.script["script"].convert(_replace_env_dir)
-
-    def convert_target_mirror(self) -> None:
-        """Replace the env_dir placeholder with the environment's artifacts directory.
-
-        Raises:
-            AttributeError: job does not have the expected script
-        """
-        if "script" not in self.script:
-            raise AttributeError(f"{self.name} is missing the required 'script'")
-
-        target_mirror = self.config.path("buildcache_push_url")
-        self.script["script"] = self.script["script"].convert(
-            lambda cmd: cmd.replace("{index_target_mirror}", target_mirror)
-        )
-
-    def add_pipeline_tags(self) -> None:
-        """Add pipeline type-specific tags."""
-        if self.config.options.pipeline_type is None:
-            return
-
-        # For spack pipelines "public" and "protected" are reserved tags
-        self.remove_reserved_tags()
-        if self.config.options.pipeline_type == PipelineType.PROTECTED_BRANCH:
-            self.add_tags(["protected"])
-        elif self.config.options.pipeline_type == PipelineType.PULL_REQUEST:
-            self.add_tags(["public"])
-
-    def update_build_data(
-        self, job_id: int, stage: str, dependencies: List[PipelineNode], build_group: str
-    ) -> None:
-        """Ensure the build job has the correct build data.
-
-        Args:
-            job_id: job number
-            stage: name of the build stage
-            dependencies: direct job dependencies
-            build_group: name of the job's CDash build group
-
-        Raises:
-            AssertionError: job name does not match expected core name
-        """
-        assert self.name == "build", f"Cannot update build data for non-build {self.name} job"
-
-        self.job_id = job_id
-
-        self.add_pipeline_tags()
-        self.convert_artifacts_dir()
-
-        # TODO/TLD: Resume here with processing job attributes
-        self.attributes["stage"] = stage
-        job_name = get_job_name(self.spec, build_group)
-
-        self.attributes["needs"] = [
-            {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
-            for dep_node in dependencies
-        ]
-        self.attributes["needs"].append(
-            {"job": self.generate_job_name, "pipeline": self.generate_pipeline_id}
-        )
-
-        # Let downstream jobs know whether the spec needed rebuilding, regardless
-        # whether DAG pruning was enabled or not.
-        already_built = spack.binary_distribution.get_mirrors_for_spec(
-            spec=self.spec, index_only=True
-        )
-        job_vars = self.attributes["variables"]
-        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
-
-        options = self.config.options
-        if options.cdash_handler:
-            build_name = options.cdash_handler.build_name(self.spec)
-            job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
-            build_stamp = options.cdash_handler.build_stamp
-            job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
-
-        # TODO/TLD: can't this be part of instantiating or converting
-        # TODO/TLD:  a build (and maybe test) GitlabJob?
-        if self.config:
-            paths = [
-                self.config.path(p, absolute=False)
-                for p in [
-                    "log_artifacts_dir",
-                    "reproduction_artifacts_dir",
-                    "test_artifacts_dir",
-                    "user_artifacts_dir",
-                ]
-            ]
-            self.merge_attributes({"when": "always", "paths": paths})
-
-        # TODO/TLD: Should these be part of converting a build (and test?) job?
-        self.attributes["stage"] = stage
-        self.attributes["retry"] = spack.schema.merge_yaml(
-            {"max": 2, "when": JOB_RETRY_CONDITIONS}, self.attributes.get("retry", {})
-        )
-        self.attributes["interruptible"] = True
-
-        length_needs = len(self.attributes["needs"])
-        if length_needs > self.config.max_length_needs:
-            self.config.max_length_needs = length_needs
-            self.config.max_needs_job = job_name
-
-    def update_copy_data(self, job_id: int, stage: str) -> None:
-        """Ensure the copy job has the correct dependency and buildcache setting.
-
-        Args:
-            job_id: job number
-            stage: name of the job stage
-
-        Raises:
-            AssertionError: job name does not match expected core name
-        """
-        assert self.name == "copy", f"Cannot update copy data for non-copy {self.name} job"
-
-        self.job_id = job_id
-
-        self.attributes["stage"] = stage
-        self.attributes["dependencies"] = []
-
-        self.attributes["needs"] = [
-            {"job": self.config.generate_job_name, "pipeline": self.config.generate_pipeline_id}
-        ]
-
-        if "variables" not in self.attributes:
-            self.attributes["variables"] = {}
-
-        self.attributes["variables"].update(
-            {
-                "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": self.config.path("relative_keys_url"),
-                "SPACK_BUILDCACHE_SOURCE": self.config.pipeline_mirrors[
-                    "buildcache-source"
-                ].fetch_url,
-                "SPACK_COPY_ONLY_DESTINATION": self.config.path("buildcache_fetch_url"),
-            }
-        )
-
-    def update_noop_data(self, stage: str) -> None:
-        """Ensure the noop job has the appropriate data.
-
-        Args:
-            stage: name of the job stage
-
-        Raises:
-            AssertionError: job name does not match expected core name
-        """
-        assert self.name == "noop", f"Cannot update noop data for non-noop  {self.name} job"
-
-        # If this job fails ignore the status and carry on
-        self.attributes["retry"] = 0
-        self.attributes["allow_failure"] = True
-        self.attributes["stage"] = stage
-
-    def update_reindex_data(self, stage: str) -> None:
-        """Ensure the reindex job has the data.
-
-        Args:
-            stage: name of the job stage
-
-        Raises:
-            AssertionError: job name does not match expected core name
-        """
-        assert (
-            self.name == "reindex"
-        ), f"Cannot update reindex data for non-reindex  {self.name} job"
-
-        self.convert_target_mirror()
-
-        self.attributes["stage"] = stage
-        self.attributes["when"] = "always"
-        self.attributes["retry"] = {
-            "max": 2,
-            "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
-        }
-        self.attributes["interruptible"] = True
-        self.attributes["dependencies"] = []
-
-    def update_signing_data(self, stage: str) -> None:
-        """Ensure the signing job has the data.
-
-        Args:
-            stage: name of the job stage
-
-        Raises:
-            AssertionError: job name does not match expected core name
-        """
-        assert (
-            self.name == "signing"
-        ), f"Cannot update signing data for non-signing {self.name} job"
-
-        self.attributes["stage"] = stage
-        self.attributes["when"] = "always"
-        self.attributes["retry"] = {"max": 2, "when": ["always"]}
-        self.attributes["interruptible"] = True
-        self.attributes["dependencies"] = []
-
-        if "variables" not in self.attributes:
-            self.attributes["variables"] = {}
-
-        self.attributes["variables"].update(
-            {
-                "SPACK_BUILDCACHE_DESTINATION": self.config.path("buildcache_push_url"),
-                "SPACK_BUILDCACHE_RELATIVE_SPECS_URL": self.config.path("relative_specs_url"),
-                "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": self.config.path("relative_keys_url"),
-            }
-        )
-
-
 class GitlabCI(SpackCIConfig):
     """Gitlab-specific CI configuration and options handler."""
+
+    # configuration instance shared by jobs
+    config: Optional["GitlabCI"] = None
 
     @classmethod
     def from_config(cls, config: SpackCIConfig, options: PipelineOptions) -> "GitlabCI":
@@ -323,26 +73,29 @@ class GitlabCI(SpackCIConfig):
         )
         self.pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
         self.options: PipelineOptions = options
-        self.stages: List[List[GitlabJob]] = []
+        self.stages: List[List["GitlabJob"]] = []
         self.stage_names: List[str] = []
 
         # TODO/TLD: Should output jobs be (stage, job) tuples or a stage dict?
         # TODO/TLD: If a dict, wouldn't need stage_names UNLESS order important.
 
         # The output jobs, with the first element the stage name
-        self.output_jobs: List[Tuple[str, CIJobData]] = []
+        self.output_jobs: List[Tuple[str, "GitlabJob"]] = []
         self.variables: Dict[str, str] = {}
 
         self._path: Dict[str, str] = {}
         self._add_paths()
 
         self.max_length_needs: int = 0
-        self.max_needs_job: str = ""
+        self.max_needs_job: Optional[str] = None
 
         # TODO/TBD: Should these start at 0 or at 1?
         # TODO/TBD: Should these track (essentially) only spec jobs or include
         # TODO/TBD:   test jobs?
         self.next_job_id: int = 0
+
+        # Ensure this configuration information is available to all jobs
+        GitlabCI.config = self
 
     def _add_paths(self) -> None:
         """Add relevant CI paths."""
@@ -379,16 +132,6 @@ class GitlabCI(SpackCIConfig):
             spack.binary_distribution.buildcache_relative_specs_url()
         )
 
-    def customize_jobs(self) -> None:
-        """Convert each CIJobData instance into a GitlabJob instance."""
-        gitlab_jobs: Dict[str, List[Type[CIJobData]]] = {}
-        for job in self.all_jobs(all_job_type_names):
-            if job.name not in gitlab_jobs:
-                gitlab_jobs[job.name] = []
-
-            gitlab_jobs[job.name].append(GitlabJob(job.name, job.spec, job.remove, self))
-        self.jobs = gitlab_jobs
-
     def add_copy_stage(self) -> None:
         """Add the copy stage, used by copy-only pipelines, and update its data.
 
@@ -399,6 +142,9 @@ class GitlabCI(SpackCIConfig):
         """
         job = self.job("copy")
         assert job, "The default core copy job is required."
+
+        # TODO: Remove cast() once Python 3.11+ allows return of typing.Self
+        job = cast(GitlabJob, job)
 
         if "buildcache-source" not in self.pipeline_mirrors:
             raise SpackCIError("Copy-only pipelines require a mirror named 'buildcache-source'")
@@ -422,6 +168,9 @@ class GitlabCI(SpackCIConfig):
         job = self.job("noop")
         assert job, "The default core noop job is required."
 
+        # TODO: Remove cast() once Python 3.11+ allows return of typing.Self
+        job = cast(GitlabJob, job)
+
         stage = "no-specs-to-rebuild"
         job.update_noop_data(stage)
         self.stage_names.append(stage)
@@ -437,12 +186,14 @@ class GitlabCI(SpackCIConfig):
         job = self.job("reindex")
         assert job, "The default core reindex job is required."
 
+        # TODO: Remove cast() once Python 3.11+ allows return of typing.Self
+        job = cast(GitlabJob, job)
+
         stage = "stage-rebuild-index"
         job.update_reindex_data(stage)
 
         self.stage_names.append(stage)
         self.output_jobs.append(("rebuild-index", job))
-        return
 
     def add_signing_stage(self) -> None:
         """Add the external signing stage, updating the job data accordingly.
@@ -457,6 +208,9 @@ class GitlabCI(SpackCIConfig):
         job = self.job("signing")
         assert job, "The default core signing job is required."
 
+        # TODO: Remove cast() once Python 3.11+ allows return of typing.Self
+        job = cast(GitlabJob, job)
+
         if not (
             job.has_script("script")
             and self.options.pipeline_type == PipelineType.PROTECTED_BRANCH
@@ -468,7 +222,6 @@ class GitlabCI(SpackCIConfig):
         job.update_signing_data(stage)
 
         self.output_jobs.append(("sign-pkgs", job))
-        return
 
     def copy_env_artifacts(self) -> None:
         """Copy the environment manifest and lock files to the environment
@@ -592,16 +345,18 @@ class GitlabCI(SpackCIConfig):
                 self.stages.append([])
 
             job = self.job("build", node.spec)
-            self.stages[stage_id].append(job)
-            stage_name = f"stage-{level}"
-
-            if stage_name not in self.stage_names:
-                self.stage_names.append(stage_name)
-
-            job = self.job("build", node.spec)
             if not job:
                 tty.warn(f"No match found for {node.spec}, skipping it")
                 continue
+
+            # TODO: Remove cast() once Python 3.11+ allows return of typing.Self
+            job = cast(GitlabJob, job)
+
+            self.stages[stage_id].append(job)
+
+            stage_name = f"stage-{level}"
+            if stage_name not in self.stage_names:
+                self.stage_names.append(stage_name)
 
             # TODO/TLD: Should the corresponding test job get the same job id?
             if hasattr(job, "update_build_data"):
@@ -696,7 +451,9 @@ class GitlabCI(SpackCIConfig):
             spack.vendor.ruamel.yaml.YAML().dump(sorted_output, f)
 
 
-def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> str:
+def get_job_name(
+    spec: Optional[spack.spec.Spec], build_group: Optional[str] = None
+) -> Optional[str]:
     """Given a spec and possibly a build group, return the job name. If the
     resulting name is longer than 255 characters, it will be truncated.
 
@@ -706,6 +463,9 @@ def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> st
 
     Returns: The job name
     """
+    if not spec:
+        return None
+
     job_name = spec.format(JOB_NAME_FORMAT)
 
     if build_group:
@@ -751,7 +511,6 @@ def generate_gitlab_yaml(
     """
     # Convert to gitlab-specific CI manager and jobs
     gitlab_ci = GitlabCI.from_config(spack_ci, options)
-    gitlab_ci.customize_jobs()
 
     # Ensure directory of output file exists
     # Now that we've added the mirrors we know about, they should be properly
@@ -801,3 +560,308 @@ def generate_gitlab_yaml(
         gitlab_ci.add_final_spec_processing()
 
     gitlab_ci.write_yaml_output()
+
+
+@ci_job_class("gitlab")
+class GitlabJob(CIJobData):
+
+    # CI configuration information shared by all gitlab jobs
+    config: Optional["GitlabCI"] = GitlabCI.config
+
+    def __init__(self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False):
+        """
+        Args:
+            name: standard job name
+            spec: release spec
+            remove: ``True`` if a remove job; otherwise, ``False``
+        """
+        super().__init__(name, spec, remove)
+
+        # TODO/TBD/TLD: Should the job_id start with 0 or 1?
+        self.job_id: Optional[int] = None
+
+    def __str__(self) -> str:
+        return f"GitlabJob({self.name}, {self.spec}, {self.remove}, {self.job_id})"
+
+    def _msg(self, msg: str) -> str:
+        """Generate a standard message
+
+        Args:
+            msg: primary contents of the message
+
+        Return: formatted message
+        """
+        # TODO: Do we need/want to track a job's job id?
+        id_str = f"#{self.job_id}: " if self.job_id else ""
+        spec_str = f" ({self.spec}) " if self.spec else ""
+        return f"{id_str}{self.name}{spec_str}: {msg}"
+
+    def path(self, name: str, absolute: bool = True) -> str:
+        """Return the named path.
+
+        Args:
+            name: name/key of the path
+            absolute: ``True`` for the absolute directory; ``False`` for the
+                path relative to CI_PROJECT_DIR
+
+        Returns: named path
+
+        Raises:
+            ValueError: unknown name/key or required configuration info missing
+        """
+        if self.config:
+            return self.config.path(name, absolute)
+
+        raise ValueError(
+            self._msg(f"cannot retrieve '{name}' path without required configuration information")
+        )
+
+    def convert_artifacts_dir(self) -> None:
+        """Replace 'env_dir' with the environment's artifacts directory.
+
+        The only script we care about for spec jobs is the main script.
+
+        Raises:
+            AttributeError: job does not have the expected script
+        """
+        # skip conversions of non-spec jobs
+        if self.name not in spec_job_names:
+            tty.debug(self._msg("skipping script conversion since non-spec job"))
+            return
+
+        if "script" not in self.script:
+            raise AttributeError(self._msg("required 'script' is missing"))
+
+        def _replace_env_dir(cmd: str):
+            return cmd.replace("{env_dir}", self.path("env_artifacts_dir", absolute=False))
+
+        self.script["script"].convert(_replace_env_dir)
+
+    def convert_target_mirror(self) -> None:
+        """Replace the 'index_target_mirror' with the buildcache mirror url.
+
+        Raises:
+            AttributeError: job does not have the expected script
+        """
+        if "script" not in self.script:
+            raise AttributeError(self._msg("required 'script' is missing"))
+
+        target_mirror = self.path("buildcache_push_url")
+        self.script["script"].convert(
+            lambda cmd: cmd.replace("{index_target_mirror}", target_mirror)
+        )
+
+    def add_pipeline_tags(self) -> None:
+        """Replace tags with pipeline type-specific tags."""
+        if not self.config:
+            tty.warn(
+                self._msg(
+                    "cannot add pipeline type-specfic tags without configuration information"
+                )
+            )
+            return
+
+        if not self.config.options.pipeline_type:
+            tty.debug(
+                self._msg(
+                    "skipping pipeline type-specific tags addition since no pipeline type provided"
+                )
+            )
+            return
+
+        # For spack pipelines "public" and "protected" are reserved tags
+        self.remove_reserved_tags()
+        if self.config.options.pipeline_type == PipelineType.PROTECTED_BRANCH:
+            self.add_tags(["protected"])
+        elif self.config.options.pipeline_type == PipelineType.PULL_REQUEST:
+            self.add_tags(["public"])
+
+    def update_build_data(
+        self, job_id: int, stage: str, dependencies: List[PipelineNode], build_group: Optional[str]
+    ) -> None:
+        """Ensure the build job has the correct build data.
+
+        Args:
+            job_id: job number
+            stage: name of the build stage
+            dependencies: direct job dependencies
+            build_group: name of the job's CDash build group
+
+        Raises:
+            AssertionError: job name does not match expected core name or
+                configuration information is missing
+            ValueError: unknown name/key
+        """
+        assert self.name == "build", self._msg(
+            f"cannot update build data for non-build {self.name} job"
+        )
+        assert self.spec, self._msg("build jobs require a spec")
+        assert self.config, self._msg("build jobs require configuration info")
+
+        self.job_id = job_id
+
+        self.add_pipeline_tags()
+        self.convert_artifacts_dir()
+
+        self.attributes["stage"] = stage
+        job_name = get_job_name(self.spec, build_group)
+
+        self.attributes["needs"] = [
+            {"job": get_job_name(dep_node.spec, build_group), "artifacts": False}
+            for dep_node in dependencies
+        ]
+
+        self.attributes["needs"].append(
+            {"job": self.config.generate_job_name, "pipeline": self.config.generate_pipeline_id}
+        )
+
+        # Let downstream jobs know whether the spec needed rebuilding, whether
+        # DAG pruning was enabled or not.
+        already_built = spack.binary_distribution.get_mirrors_for_spec(
+            spec=self.spec, index_only=True
+        )
+        job_vars = self.attributes["variables"]
+        job_vars["SPACK_SPEC_NEEDS_REBUILD"] = "False" if already_built else "True"
+
+        options = self.config.options
+        if options.cdash_handler:
+            build_name = options.cdash_handler.build_name(self.spec)
+            job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
+            build_stamp = options.cdash_handler.build_stamp
+            job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
+
+        paths = [
+            self.path(p, absolute=False)
+            for p in [
+                "log_artifacts_dir",
+                "reproduction_artifacts_dir",
+                "test_artifacts_dir",
+                "user_artifacts_dir",
+            ]
+        ]
+        self.merge_attributes({"when": "always", "paths": paths})
+
+        self.attributes["stage"] = stage
+        self.attributes["retry"] = spack.schema.merge_yaml(
+            {"max": 2, "when": JOB_RETRY_CONDITIONS}, self.attributes.get("retry", {})
+        )
+        self.attributes["interruptible"] = True
+
+        length_needs = len(self.attributes["needs"])
+        if length_needs > self.config.max_length_needs:
+            self.config.max_length_needs = length_needs
+            self.config.max_needs_job = job_name
+
+    def update_copy_data(self, job_id: int, stage: str) -> None:
+        """Ensure the copy job has the correct dependency and buildcache setting.
+
+        Args:
+            job_id: job number
+            stage: name of the job stage
+
+        Raises:
+            AssertionError: job name does not match expected core name or
+                configuration information is missing
+        """
+        assert self.name == "copy", self._msg(
+            f"cannot update copy data for non-copy {self.name} job"
+        )
+        assert self.config, self._msg("copy jobs require configuration info")
+
+        self.job_id = job_id
+
+        self.attributes["stage"] = stage
+        self.attributes["dependencies"] = []
+
+        self.attributes["needs"] = [
+            {"job": self.config.generate_job_name, "pipeline": self.config.generate_pipeline_id}
+        ]
+
+        if "variables" not in self.attributes:
+            self.attributes["variables"] = {}
+
+        self.attributes["variables"].update(
+            {
+                "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": self.path("relative_keys_url"),
+                "SPACK_BUILDCACHE_SOURCE": self.config.pipeline_mirrors[
+                    "buildcache-source"
+                ].fetch_url,
+                "SPACK_COPY_ONLY_DESTINATION": self.path("buildcache_fetch_url"),
+            }
+        )
+
+    def update_noop_data(self, stage: str) -> None:
+        """Ensure the noop job has the appropriate data.
+
+        Args:
+            stage: name of the job stage
+
+        Raises:
+            AssertionError: job name does not match expected core name or
+                configuration information is missing
+        """
+        assert self.name == "noop", self._msg(
+            f"cannot update noop data for non-noop  {self.name} job"
+        )
+        assert self.config, self._msg("copy jobs require configuration info")
+
+        # If this job fails ignore the status and carry on
+        self.attributes["retry"] = 0
+        self.attributes["allow_failure"] = True
+        self.attributes["stage"] = stage
+
+    def update_reindex_data(self, stage: str) -> None:
+        """Ensure the reindex job has the data.
+
+        Args:
+            stage: name of the job stage
+
+        Raises:
+            AssertionError: job name does not match expected core name
+        """
+        assert self.name == "reindex", self._msg(
+            f"cannot update reindex data for non-reindex  {self.name} job"
+        )
+
+        self.convert_target_mirror()
+
+        self.attributes["stage"] = stage
+        self.attributes["when"] = "always"
+        self.attributes["retry"] = {
+            "max": 2,
+            "when": ["runner_system_failure", "stuck_or_timeout_failure", "script_failure"],
+        }
+        self.attributes["interruptible"] = True
+        self.attributes["dependencies"] = []
+
+    def update_signing_data(self, stage: str) -> None:
+        """Ensure the signing job has the data.
+
+        Args:
+            stage: name of the job stage
+
+        Raises:
+            AssertionError: job name does not match expected core name or
+                configuration information is missing
+        """
+        assert self.name == "signing", self._msg(
+            f"cannot update signing data for non-signing {self.name} job"
+        )
+        assert self.config, self._msg("signing jobs require configuration info")
+
+        self.attributes["stage"] = stage
+        self.attributes["when"] = "always"
+        self.attributes["retry"] = {"max": 2, "when": ["always"]}
+        self.attributes["interruptible"] = True
+        self.attributes["dependencies"] = []
+
+        if "variables" not in self.attributes:
+            self.attributes["variables"] = {}
+
+        self.attributes["variables"].update(
+            {
+                "SPACK_BUILDCACHE_DESTINATION": self.path("buildcache_push_url"),
+                "SPACK_BUILDCACHE_RELATIVE_SPECS_URL": self.path("relative_specs_url"),
+                "SPACK_BUILDCACHE_RELATIVE_KEYS_URL": self.path("relative_keys_url"),
+            }
+        )

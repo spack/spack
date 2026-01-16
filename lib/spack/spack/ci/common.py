@@ -14,7 +14,7 @@ import sys
 import time
 from collections import deque
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 from urllib.parse import ParseResult, quote, urlencode, urlparse
 from urllib.request import Request
 
@@ -193,7 +193,7 @@ class CIScript:
         """
         self.contents = contents
 
-    def convert(self, converter: Optional[Callable[[str], str]]) -> List[str]:
+    def convert(self, converter: Optional[Callable[[str], str]]):
         """Return the converted commands.
 
         Args:
@@ -209,7 +209,7 @@ class CIScript:
 
         convert = converter or _noop
 
-        script = []
+        script: List[Union[str, List[str]]] = []
         for cmd in self.contents:
             if isinstance(cmd, list):
                 for subcmd in cmd:
@@ -217,7 +217,7 @@ class CIScript:
             else:
                 script.append(convert(cmd))
 
-        return script
+        self.contents = script
 
 
 class CIDynamicMap:
@@ -321,7 +321,7 @@ class CIJobData:
     """Job data for a given job name (and spec)."""
 
     def __init__(
-        self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False, **kwargs
+        self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False
     ) -> None:
         """
         Initialize the job data based on default settings.
@@ -335,7 +335,7 @@ class CIJobData:
         self.hash: str = spec.dag_hash() if spec else ""
         self.remove: bool = remove
         self.job_name = f"{self.name}-job{'-remove' if remove else ''}"
-        self.spec: Optional[Union[spack.spec.Spec, str]] = spec
+        self.spec: Optional[spack.spec.Spec] = spec
 
         self.attributes: Dict[str, Any] = {}
 
@@ -860,6 +860,7 @@ class SpackCIConfig:
         ), f"Job class {self.job_class} does not inherit from CIJobData"
 
         # List of jobs keyed by job type name
+        # TODO: switch CIJobData to typing.Self once Python 3.11+
         self.jobs: Dict[str, List[CIJobData]] = {}
         for job_type_name in all_job_type_names:
             self.jobs[job_type_name] = []
@@ -893,12 +894,12 @@ class SpackCIConfig:
         if self.add_tests:
             names.append("test")
 
+        class_object = self.job_class
         for _, node in pipeline.traverse_nodes():
             for job_type_name in names:
-                self.jobs[job_type_name].append(
-                    globals()[self.job_class](job_type_name, node.spec)
-                )
+                self.jobs[job_type_name].append(class_object(job_type_name, node.spec))
 
+    # TODO: switch CIJobData to typing.Self once Python 3.11+
     def all_jobs(self, job_names: Optional[List[str]] = None) -> List[CIJobData]:
         """Return a list of all jobs of the given type(s).
 
@@ -914,6 +915,7 @@ class SpackCIConfig:
 
         return list(chain.from_iterable(self.jobs.values()))
 
+    # TODO: switch CIJobData to typing.Self once Python 3.11+
     def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
         """Retrieve the matching job
 
@@ -1011,7 +1013,8 @@ class SpackCIConfig:
                     tty.msg("TLD: .. .. skipping signing job missing script")
                     return
 
-                self.jobs[job_name].append(globals()[self.job_class](job_name))
+                class_object = self.job_class
+                self.jobs[job_name].append(class_object(job_name))
 
         # Apply attributes to any other type of named job
         tty.debug(
