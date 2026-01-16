@@ -540,3 +540,18 @@ packages:
 
     with expect_failure_and_print(should_mention=important_points):
         concretize_one("t1")
+
+
+def test_errmsg_external_wants_compiler(concretize_scope, mock_packages):
+    conf_str = """\
+packages:
+  pkg-c:
+    buildable: false
+    externals:
+    - spec: "pkg-c@1.1 %gcc@10.2.1"
+      prefix: /a/path/that/doesnt/need/to/exist/
+"""
+    update_packages_config(conf_str)
+
+    with expect_failure_and_print(should_mention=[]):
+        concretize_one("pkg-c")
