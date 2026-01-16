@@ -6014,12 +6014,12 @@ class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
 
 
-class _EmptySpec(Spec):
-    """An immutable empty Spec that prevents a class of accidental mutations."""
+class _ImmutableSpec(Spec):
+    """An immutable Spec that prevents a class of accidental mutations."""
 
-    def __init__(self) -> None:
+    def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
-        super().__init__()
+        super().__init__(spec_like)
         object.__delattr__(self, "_mutable")
 
     def __setstate__(self, state) -> None:
@@ -6028,21 +6028,21 @@ class _EmptySpec(Spec):
         object.__delattr__(self, "_mutable")
 
     def constrain(self, *args, **kwargs) -> bool:
-        raise TypeError("EmptySpec is immutable and cannot be modified")
+        self._mutable
+        return super().constrain(*args, **kwargs)
 
     def add_dependency_edge(self, *args, **kwargs):
-        raise TypeError("EmptySpec is immutable and cannot be modified")
+        self._mutable
+        return super().add_dependency_edge(*args, **kwargs)
 
     def __setattr__(self, name, value) -> None:
-        if not getattr(self, "_mutable", False):
-            raise TypeError("EmptySpec is immutable and cannot be modified")
+        self._mutable
         super().__setattr__(name, value)
 
     def __delattr__(self, name) -> None:
-        if name != "_mutable":
-            raise TypeError("EmptySpec is immutable and cannot be modified")
+        self._mutable
         object.__delattr__(self, name)
 
 
 #: Immutable empty spec, for fast comparisons and reduced memory usage.
-EMPTY_SPEC = _EmptySpec()
+EMPTY_SPEC = _ImmutableSpec()
