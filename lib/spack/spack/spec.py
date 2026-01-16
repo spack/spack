@@ -6028,7 +6028,6 @@ class _ImmutableSpec(Spec):
         object.__delattr__(self, "_mutable")
 
     def constrain(self, *args, **kwargs) -> bool:
-        self._mutable
         return super().constrain(*args, **kwargs)
 
     def add_dependency_edge(self, *args, **kwargs):
@@ -6036,7 +6035,7 @@ class _ImmutableSpec(Spec):
         return super().add_dependency_edge(*args, **kwargs)
 
     def __setattr__(self, name, value) -> None:
-        self._mutable
+        self._mutable: Any
         super().__setattr__(name, value)
 
     def __delattr__(self, name) -> None:
