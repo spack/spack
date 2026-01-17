@@ -27,6 +27,7 @@ from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
 min_opt_string = ".".join(map(str, spack.util.git.MIN_OPT_VERSION))
+min_direct_commit = ".".join(map(str, spack.util.git.MIN_DIRECT_COMMIT_FETCH))
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
@@ -256,6 +257,9 @@ def test_get_full_repo(
     if git_version < Version(min_opt_string):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
 
+    # newer git allows for direct commit fetching
+    can_use_direct_commit = git_version >= Version(min_direct_commit)
+
     secure = True
     type_of_test = "tag-branch"
 
@@ -294,7 +298,22 @@ def test_get_full_repo(
             assert nbranches >= 5, branches
             assert ncommits == 2, commits
         else:
-            assert nbranches == 2, branches
+            if can_use_direct_commit:
+                if use_commit:
+                    # only commit (detached state)
+                    assert nbranches == 1, branches
+                else:
+                    # tag, commit (detached state)
+                    assert nbranches == 2, branches
+            else:
+                if use_commit:
+                    # default branch, tag, commit (detached state)
+                    # git does not have a rewind, avoid messing with git history by
+                    # accepting detachment
+                    assert nbranches == 3, branches
+                else:
+                    # default branch plus tag
+                    assert nbranches == 2, branches
             assert ncommits == 1, commits
 
 

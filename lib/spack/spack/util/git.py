@@ -78,6 +78,7 @@ class VersionConditionalOption:
 # git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
 # This also corresponds to system git on RHEL7
 MIN_OPT_VERSION = (1, 8, 5, 2)
+MIN_DIRECT_COMMIT_FETCH = (2, 5, 0)
 
 # Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
 BRANCH = VersionConditionalOption("--branch", min_version=MIN_OPT_VERSION)
@@ -308,7 +309,7 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     # minimum criteria for fetching a single commit, but also requires server to be configured
     # fall-back to a process error so an old git version or a fetch failure from an nonsupporting
     # server can be caught the same way.
-    if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
+    if ref and is_git_commit_sha(ref) and version < MIN_DIRECT_COMMIT_FETCH:
         raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
     init = ["init"]
     remote = ["remote", "add", "origin", url]
