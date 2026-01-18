@@ -1748,7 +1748,9 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
             revision=tag_branch, file=tag_file, args={"git": url, "branch": tag_branch}
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
-        "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "commit": Bunch(
+            revision=r1, file=r1_file, args={"git": url, "branch": branch, "commit": r1}
+        ),
         "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic

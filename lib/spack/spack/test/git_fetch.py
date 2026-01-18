@@ -112,6 +112,9 @@ def test_fetch(
     s = default_mock_concretization("git-test")
     monkeypatch.setitem(s.package.versions, Version("git"), t.args)
 
+    if type_of_test == "commit":
+        s.variants["commit"] = SingleValuedVariant("commit", t.args["commit"])
+
     # Enter the stage directory and check some properties
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
@@ -295,9 +298,11 @@ def test_get_full_repo(
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert nbranches >= 5, branches
+            # default branch commit, plus checkout commit
             assert ncommits == 2, commits
+            assert nbranches >= 5, branches
         else:
+            assert ncommits == 1, commits
             if can_use_direct_commit:
                 if use_commit:
                     # only commit (detached state)
@@ -314,7 +319,6 @@ def test_get_full_repo(
                 else:
                     # default branch plus tag
                     assert nbranches == 2, branches
-            assert ncommits == 1, commits
 
 
 @pytest.mark.disable_clean_stage_check

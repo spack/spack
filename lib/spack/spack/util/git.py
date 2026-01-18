@@ -313,6 +313,7 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
         raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
     init = ["init"]
     remote = ["remote", "add", "origin", url]
+    config = ["config", "remote.origin.fetch", "+refs/heads/*:origin/refs/*"]
     fetch = ["fetch"]
 
     if not debug:
@@ -321,7 +322,7 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
         fetch.extend(DEPTH(version, str(depth)))
 
     fetch.extend([*FILTER_BLOB_NONE(version), url, ref])
-    cmds = [init, remote, fetch]
+    cmds = [init, remote, config, fetch]
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 
