@@ -6017,6 +6017,8 @@ class SpecMutationError(spack.error.SpecError):
 class _ImmutableSpec(Spec):
     """An immutable Spec that prevents a class of accidental mutations."""
 
+    _mutable: bool
+
     def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
         super().__init__(spec_like)
@@ -6028,19 +6030,19 @@ class _ImmutableSpec(Spec):
         object.__delattr__(self, "_mutable")
 
     def constrain(self, *args, **kwargs) -> bool:
-        self._mutable  # type: ignore[attr-defined]
+        assert self._mutable
         return super().constrain(*args, **kwargs)
 
     def add_dependency_edge(self, *args, **kwargs):
-        self._mutable  # type: ignore[attr-defined]
+        assert self._mutable
         return super().add_dependency_edge(*args, **kwargs)
 
     def __setattr__(self, name, value) -> None:
-        self._mutable  # type: ignore[attr-defined]
+        assert self._mutable
         super().__setattr__(name, value)
 
     def __delattr__(self, name) -> None:
-        self._mutable  # type: ignore[attr-defined]
+        assert self._mutable
         object.__delattr__(self, name)
 
 
