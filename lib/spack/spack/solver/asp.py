@@ -209,7 +209,7 @@ def remove_facts(*to_be_removed: str) -> TransformFunction:
     """Returns a transformation function that removes facts from the input list of facts."""
 
     def _remove(name: str, spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-        return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
+        return [x for x in facts if x.args[0] not in to_be_removed]
 
     return _remove
 
@@ -218,6 +218,26 @@ def identity_for_facts(
     name: str, spec: spack.spec.Spec, facts: List[AspFunction]
 ) -> List[AspFunction]:
     return facts
+
+
+# Caching because the returned function id is used as a cache key
+@functools.lru_cache(maxsize=None)
+def dependency_holds(
+    *, dependency_flags: dt.DepFlag, pkg: spack.package_base.PackageBase
+) -> TransformFunction:
+    def _transform_fn(
+        name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
+    ) -> List[AspFunction]:
+        result = remove_facts("node", "virtual_node")(name, input_spec, requirements) + [
+            fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
+            for t in dt.ALL_FLAGS
+            if t & dependency_flags
+        ]
+        if name not in pkg.extendees:
+            return result
+        return result + [fn.attr("extends", pkg.name, name)]
+
+    return _transform_fn
 
 
 def dag_closure_by_deptype(
@@ -1830,26 +1850,6 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
-
-        # Caching because the returned function id is used as a cache key
-        @functools.lru_cache(maxsize=None)
-        def dependency_holds(
-            *, dependency_flags: dt.DepFlag
-        ) -> Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]:
-            def _transform_fn(
-                name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
-            ) -> List[AspFunction]:
-                result = remove_facts("node", "virtual_node")(name, input_spec, requirements) + [
-                    fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
-                    for t in dt.ALL_FLAGS
-                    if t & dependency_flags
-                ]
-                if name not in pkg.extendees:
-                    return result
-                return result + [fn.attr("extends", pkg.name, name)]
-
-            return _transform_fn
-
         for cond, deps_by_name in pkg.dependencies.items():
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
@@ -1874,10 +1874,8 @@ class SpackSolverSetup:
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
                 context.transform_required = _track_dependencies
-                context.transform_imposed = dependency_holds(dependency_flags=depflag)
-
+                context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg=pkg)
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
-
                 self.gen.newline()
 
     def _gen_match_variant_splice_constraints(
