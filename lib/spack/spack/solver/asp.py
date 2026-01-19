@@ -223,19 +223,19 @@ def identity_for_facts(
 # Caching because the returned function id is used as a cache key
 @functools.lru_cache(maxsize=None)
 def dependency_holds(
-    *, dependency_flags: dt.DepFlag, pkg: spack.package_base.PackageBase
+    *, dependency_flags: dt.DepFlag, pkg_cls: Type[spack.package_base.PackageBase]
 ) -> TransformFunction:
     def _transform_fn(
         name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
     ) -> List[AspFunction]:
         result = remove_facts("node", "virtual_node")(name, input_spec, requirements) + [
-            fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
+            fn.attr("dependency_holds", pkg_cls.name, name, dt.flag_to_string(t))
             for t in dt.ALL_FLAGS
             if t & dependency_flags
         ]
-        if name not in pkg.extendees:
+        if name not in pkg_cls.extendees:
             return result
-        return result + [fn.attr("extends", pkg.name, name)]
+        return result + [fn.attr("extends", pkg_cls.name, name)]
 
     return _transform_fn
 
@@ -1874,7 +1874,7 @@ class SpackSolverSetup:
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
                 context.transform_required = _track_dependencies
-                context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg=pkg)
+                context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg_cls=pkg)
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
                 self.gen.newline()
 
