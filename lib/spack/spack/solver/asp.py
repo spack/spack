@@ -1519,10 +1519,6 @@ class SpackSolverSetup:
 
         self.package_requirement_rules(pkg)
 
-        # trigger and effect tables
-        self.trigger_rules()
-        self.effect_rules()
-
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
         if not self._trigger_cache:
@@ -3028,6 +3024,10 @@ class SpackSolverSetup:
             self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
+
+        self.gen.h1("Condition Triggers and Imposed Effects")
+        self.trigger_rules()
+        self.effect_rules()
 
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
