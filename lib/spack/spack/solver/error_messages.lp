@@ -158,6 +158,11 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
      unification_set(X, node(ID1, TriggerPackage)),
      build(node(ID, Package)).  % ignore conflicts for concrete packages
 
+pkg_fact(Package, version_satisfies(Constraint, Version)) :-
+    pkg_fact(Package, version_order(Version, VersionIdx)),
+    pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
+    VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
+
 % variables to show
 #show error/2.
 #show error/3.

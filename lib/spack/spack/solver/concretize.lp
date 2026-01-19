@@ -268,8 +268,7 @@ error(100, multiple_values_error, Attribute, Package)
 % Version semantics
 %-----------------------------------------------------------------------------
 
-% versions are declared w/priority -- declared with priority implies declared
-pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declared(Version, _)).
+version_declared(Package, Version) :- pkg_fact(Package, version_order(Version, _)).
 
 % If something is a package, it has only one version and that must be a
 % declared version.
@@ -278,14 +277,20 @@ pkg_fact(Package, version_declared(Version)) :- pkg_fact(Package, version_declar
 % against to ensure they cannot be inferred when a non-error solution is
 % possible
 
+version_constraint_satisfied(node(ID,Package), Constraint) :-
+    attr("version", node(ID,Package), Version),
+    pkg_fact(Package, version_order(Version, VersionIdx)),
+    pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
+    VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
+
 % Pick a single version among the possible ones
-1 { choose_version(node(ID, Package), Version) : pkg_fact(Package, version_declared(Version)) } 1 :- attr("node", node(ID, Package)).
+1 { choose_version(node(ID, Package), Version) : version_declared(Package, Version) } 1 :- attr("node", node(ID, Package)).
 
 % To choose the "fake" version of virtual packages, we need a separate rule.
 % Note that a virtual node may or may not have a version, but cannot have more than one.
-{ choose_version(node(ID, Package), Version) : pkg_fact(Package, version_satisfies(Constraint, Version)) } 1
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     attr("virtual_node", node(ID, Package)).
+{ choose_version(node(ID, Package), Version) : version_declared(Package, Version) } 1
+  :- attr("virtual_node", node(ID, Package)),
+     virtual(Package).
 
 #defined compiler_package/1.
 
@@ -331,18 +336,16 @@ version_deprecation_penalty(node(ID, Package), Penalty)
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10000, "Cannot satisfy '{0}@{1}' 1({2})", Package, Constraint, Version)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)).
-
 error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     not attr("version", node(ID, Package), _).
+     not version_constraint_satisfied(node(ID,Package), Constraint).
 
 attr("node_version_satisfies", node(ID, Package), Constraint)
   :- attr("version", node(ID, Package), Version),
-     pkg_fact(Package, version_satisfies(Constraint, Version)).
+     pkg_fact(Package, version_order(Version, VersionIdx)),
+     pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
+     VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
+
 
 % if a version needs a commit or has one it can use the commit variant
 can_accept_commit(Package, Version) :- pkg_fact(Package, version_needs_commit(Version)).
@@ -500,7 +503,9 @@ satisfied(trigger(node(Hash, Package)), condition_requirement("node_version_sati
   reused_provider(node(Hash, Package), node(Hash, Language)),
   hash_attr(Hash, "version", Package, Version),
   condition_requirement(ID, "node_version_satisfies", Package, VersionConstraint),
-  pkg_fact(Package, version_satisfies(VersionConstraint, Version)).
+  pkg_fact(Package, version_order(Version, VersionIdx)),
+  pkg_fact(Package, version_range(VersionConstraint, MinIdx, MaxIdx)),
+  VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
 
 satisfied(trigger(node(Hash, Package)), condition_requirement(Name, Package, A1, A2)) :-
   trigger_real_node(ID, node(Hash, Package)),
@@ -636,7 +641,7 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 :- attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, Constraint)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
-   not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
+   not hash_attr(BuildDependencyHash, "node_version_satisfies", BuildDependency, Constraint).
 
 :- attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
    concrete_build_requirement(ParentNode, BuildDependency),
@@ -1911,7 +1916,9 @@ error(100, "Cannot set multiple {0} values for {1} from cli", FlagType, Package)
 % hash_attrs are versions, but can_splice_attr are usually node_version_satisfies
 hash_attr(Hash, "node_version_satisfies", PackageName, Constraint) :-
   hash_attr(Hash, "version", PackageName, Version),
-  pkg_fact(PackageName, version_satisfies(Constraint, Version)).
+  pkg_fact(PackageName, version_order(Version, VersionIdx)),
+  pkg_fact(PackageName, version_range(Constraint, MinIdx, MaxIdx)),
+  VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
 
 % This recovers the exact semantics for hash reuse hash and depends_on are where
 % splices are decided, and virtual_on_edge can result in name-changes, which is

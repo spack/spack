@@ -2661,22 +2661,32 @@ class SpackSolverSetup:
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
 
-        for pkg_name, versions in self.possible_versions.items():
-            for v in versions:
+        sorted_versions = {}
+        for pkg_name in self.possible_versions:
+            possible_versions = [x for x in self.possible_versions[pkg_name]]
+            possible_versions.sort()
+            sorted_versions[pkg_name] = possible_versions
+            for idx, v in enumerate(possible_versions):
+                self.gen.fact(fn.pkg_fact(pkg_name, fn.version_order(v, idx)))
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
                     if sha:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
                     else:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+            self.gen.newline()
         self.gen.newline()
 
         for pkg_name, versions in self.version_constraints:
-            # generate facts for each package constraint and the version
-            # that satisfies it
-            for v in self.possible_versions[pkg_name]:
-                if v.satisfies(versions):
-                    self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
+            possible_versions = sorted_versions.get(pkg_name, [])
+            satisfies = [v.satisfies(versions) for v in possible_versions]
+            for key, group in itertools.groupby(enumerate(satisfies), lambda x: x[1]):
+                if key is True:
+                    indexes = [idx for idx, _ in group]
+                    min_idx, max_idx = indexes[0], indexes[-1]
+                    self.gen.fact(
+                        fn.pkg_fact(pkg_name, fn.version_range(versions, min_idx, max_idx))
+                    )
             self.gen.newline()
 
     def collect_virtual_constraints(self):
