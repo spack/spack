@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import enum
+import functools
 import gzip
 import io
 import itertools
@@ -202,6 +203,8 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
+# Caching because the returned function id is used as a cache key
+@functools.lru_cache(maxsize=None)
 def remove_facts(*to_be_removed: str) -> TransformFunction:
     """Returns a transformation function that removes facts from the input list of facts."""
 
@@ -209,6 +212,12 @@ def remove_facts(*to_be_removed: str) -> TransformFunction:
         return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
 
     return _remove
+
+
+def identity_for_facts(
+    name: str, spec: spack.spec.Spec, facts: List[AspFunction]
+) -> List[AspFunction]:
+    return facts
 
 
 def dag_closure_by_deptype(
@@ -1826,6 +1835,25 @@ class SpackSolverSetup:
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
 
+        # Caching because the returned function id is used as a cache key
+        @functools.lru_cache(maxsize=None)
+        def dependency_holds(
+            *, dependency_flags: dt.DepFlag
+        ) -> Callable[[str, spack.spec.Spec, List[AspFunction]], List[AspFunction]]:
+            def _transform_fn(
+                name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
+            ) -> List[AspFunction]:
+                result = remove_facts("node", "virtual_node")(name, input_spec, requirements) + [
+                    fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
+                    for t in dt.ALL_FLAGS
+                    if t & dependency_flags
+                ]
+                if name not in pkg.extendees:
+                    return result
+                return result + [fn.attr("extends", pkg.name, name)]
+
+            return _transform_fn
+
         for cond, deps_by_name in pkg.dependencies.items():
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
@@ -1845,32 +1873,12 @@ class SpackSolverSetup:
                     continue
 
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
-
-                def dependency_holds(
-                    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
-                ) -> List[AspFunction]:
-                    # TODO: `dependency_holds` is used as a cache key, and is a unique object in
-                    # every iteration of the loop. This prevents deduplication of identical
-                    # "effects" when unique when specs impose the same dependency. We cannot move
-                    # this out of the loop, because the effect cache is keyed only by a spec, and
-                    # not by the dependency type.
-                    result = remove_facts("node", "virtual_node")(
-                        name, input_spec, requirements
-                    ) + [
-                        fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
-                        for t in dt.ALL_FLAGS
-                        if t & depflag
-                    ]
-                    if name not in pkg.extendees:
-                        return result
-                    return result + [fn.attr("extends", pkg.name, name)]
-
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
                 context.transform_required = _track_dependencies
-                context.transform_imposed = dependency_holds
+                context.transform_imposed = dependency_holds(dependency_flags=depflag)
 
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
 
@@ -3210,7 +3218,7 @@ class SpackSolverSetup:
             )
             # Default is to remove node-like attrs, override here
             context.transform_required = virtual_handler
-            context.transform_imposed = lambda x, y, z: z
+            context.transform_imposed = identity_for_facts
 
             try:
                 subcondition_id = self.condition(
