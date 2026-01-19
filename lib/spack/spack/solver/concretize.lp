@@ -841,7 +841,7 @@ depends_on(PackageNode, DependencyNode) :- attr("depends_on", PackageNode, Depen
 
 % Dependencies of concrete specs don't need to be resolved -- they arise from the concrete specs themselves.
 do_not_impose(EffectID, node(X, Package)) :-
-     trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
+     trigger_and_effect(Package, _, TriggerID, EffectID),
      trigger_condition_holds(TriggerID, node(X, Package)),
      imposed_constraint(EffectID, "dependency_holds", Package, _, _),
      concrete(node(X, Package)).
