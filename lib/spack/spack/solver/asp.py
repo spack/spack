@@ -1368,7 +1368,6 @@ class SpackSolverSetup:
         self.version_constraints: Set = set()
         self.target_constraints: Set = set()
         self.default_targets: List = []
-        self.post_facts: List = []
         self.variant_ids_by_def_id: Dict[int, int] = {}
 
         self.reusable_and_possible: ConcreteSpecsByHash = ConcreteSpecsByHash()
