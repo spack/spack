@@ -1368,7 +1368,6 @@ class SpackSolverSetup:
         self.version_constraints: Set = set()
         self.target_constraints: Set = set()
         self.default_targets: List = []
-        self.compiler_version_constraints: Set = set()
         self.post_facts: List = []
         self.variant_ids_by_def_id: Dict[int, int] = {}
 
@@ -2710,17 +2709,6 @@ class SpackSolverSetup:
             for version in sorted(possible_versions):
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
 
-    def define_compiler_version_constraints(self):
-        for constraint in sorted(self.compiler_version_constraints):
-            for compiler_id, compiler in enumerate(self.possible_compilers):
-                if compiler.spec.satisfies(constraint):
-                    self.gen.fact(
-                        fn.compiler_version_satisfies(
-                            constraint.name, constraint.versions, compiler_id
-                        )
-                    )
-        self.gen.newline()
-
     def define_target_constraints(self):
         def _all_targets_satisfiying(single_constraint):
             allowed_targets = []
@@ -3041,9 +3029,6 @@ class SpackSolverSetup:
         self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
         self.define_version_constraints()
-
-        self.gen.h1("Compiler Version Constraints")
-        self.define_compiler_version_constraints()
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
