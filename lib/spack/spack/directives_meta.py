@@ -112,7 +112,7 @@ class DirectiveMeta(type):
             if isinstance(arg, (list, tuple)):
                 # Descend into args that are lists or tuples
                 DirectiveMeta._remove_directives(arg)
-            elif callable(arg):
+            elif callable(arg):  # directives are always callable, and very rare
                 # Remove directives args from the exec queue
                 for directive in directives:
                     if arg is directive:
