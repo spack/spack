@@ -461,7 +461,7 @@ def _install(
         # Try removing it if it exists.
         try:
             os.unlink(pkg.log_path)
-        except Exception:
+        except OSError:
             pass
         os.symlink(log_path, pkg.log_path)
 
