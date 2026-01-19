@@ -4757,7 +4757,7 @@ def test_concretization_cache_asp_canonicalization(asp_file):
 
     with open(path, "r", encoding="utf-8") as f:
         original = [line.strip() for line in f.readlines()]
-        stripped = spack.solver.asp.strip_asp_problem(original)
+        stripped = spack.solver.asp._strip_asp_problem(original)
 
     diff = list(difflib.unified_diff(original, stripped))
 
