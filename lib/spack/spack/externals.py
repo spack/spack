@@ -376,25 +376,29 @@ class ExternalSpecsParser:
 
             self.complete_node(node)
 
-            # Add a Python dependency to Python extensions that don't specify it
-            pkg_class = spack.repo.PATH.get_pkg_class(node.name)
-            if (
-                "dependencies" not in external_dict
-                and not node.dependencies()
-                and any([c.__name__ == "PythonExtension" for c in pkg_class.__mro__])
-            ):
-                warnings.warn(
-                    f"Spack is trying attach a Python dependency to '{node}'. This feature is "
-                    f"deprecated, and will be removed in v1.2. Please make the dependency "
-                    f"explicit in your configuration."
-                )
-                external_dict.setdefault("dependencies", []).append({"spec": "python"})
+            self.inject_python_dependency(node, external_dict)
 
             # Normalize internally so that each node has a unique id
             spec_and_config = ExternalSpecAndConfig(spec=node, config=external_dict)
             self.specs_by_external_id[eid] = spec_and_config
             self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
             self.nodes.append(node)
+
+    @staticmethod
+    def inject_python_dependency(node: spack.spec.Spec, external_dict: ExternalDict) -> None:
+        """Add a Python dependency to Python extensions that don't specify it."""
+        pkg_class = spack.repo.PATH.get_pkg_class(node.name)
+        if (
+            "dependencies" not in external_dict
+            and not node.dependencies()
+            and any([c.__name__ == "PythonExtension" for c in pkg_class.__mro__])
+        ):
+            warnings.warn(
+                f"Spack is trying attach a Python dependency to '{node}'. This feature is "
+                f"deprecated, and will be removed in v1.2. Please make the dependency "
+                f"explicit in your configuration."
+            )
+            external_dict.setdefault("dependencies", []).append({"spec": "python"})
 
     def get_specs_for_package(self, package_name: str) -> List[spack.spec.Spec]:
         """Returns the external specs for a given package name."""
