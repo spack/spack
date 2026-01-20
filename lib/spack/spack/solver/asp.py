@@ -2678,7 +2678,9 @@ class SpackSolverSetup:
         self.gen.newline()
 
         for pkg_name, versions in self.version_constraints:
-            possible_versions = sorted_versions.get(pkg_name, [])
+            possible_versions = sorted_versions.get(pkg_name)
+            if possible_versions is None:
+                continue
             satisfies = [v.satisfies(versions) for v in possible_versions]
             for key, group in itertools.groupby(enumerate(satisfies), lambda x: x[1]):
                 if key is True:
