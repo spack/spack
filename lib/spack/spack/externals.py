@@ -270,6 +270,10 @@ class ExternalSpecsParser:
                         if spack.repo.PATH.is_virtual(name):
                             inferred_virtuals.append(name)
                     virtuals = tuple(inferred_virtuals)
+                    # If we could not infer deptypes, use DEFAULT
+                    # this is the case where a dependency is unknown to Spack package recipe
+                    if depflag == spack.deptypes.NONE:
+                        depflag = spack.deptypes.DEFAULT
                 elif depflag == spack.deptypes.NONE:
                     depflag = spack.deptypes.DEFAULT
 
