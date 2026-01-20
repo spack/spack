@@ -25,6 +25,7 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.error import SpackError
 from spack.llnl.util import tty
 
@@ -55,7 +56,7 @@ class ExternalDict(TypedDict, total=False):
 
 def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
     """Returns an external spec node from a dictionary representation."""
-    extra_attributes = external_dict.get("extra_attributes", {})
+    extra_attributes = syaml.sorted_dict(external_dict.get("extra_attributes", {}))
     result = spack.spec.Spec(
         # Allow `@x.y.z` instead of `@=x.y.z`
         str(spack.spec.parse_with_version_concrete(external_dict["spec"])),
