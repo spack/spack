@@ -1424,40 +1424,48 @@ class Repo:
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
-        def defining_class(myclass, name):
-            return next((c for c in myclass.__mro__ if name in c.__dict__), None)
+        # Check whether we have to undo or apply overrides to the package class type
+        current_overrides = self.overrides.get(pkg_name)
+        has_prior_overrides = hasattr(cls, "overridden_attrs") or hasattr(
+            cls, "attrs_exclusively_from_config"
+        )
 
-        # Clear any prior changes to class attributes in case the class was loaded from the
-        # same repo, but with different overrides
-        overridden_attrs = getattr(cls, "overridden_attrs", {})
-        attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
-        defclass_attrs = defining_class(cls, "overridden_attrs")
-        defclass_exclusively_from_config = defining_class(cls, "attrs_exclusively_from_config")
-        for key, val in overridden_attrs.items():
-            setattr(defclass_attrs, key, val)
-        for key in attrs_exclusively_from_config:
-            delattr(defclass_exclusively_from_config, key)
+        # Typical case: early exit if no overrides to apply or undo
+        if not current_overrides and not has_prior_overrides:
+            return cls
 
-        # Keep track of every class attribute that is overridden: if different overrides
-        # dictionaries are used on the same physical repo, we make sure to restore the original
-        # config values
-        new_overridden_attrs = {}
-        new_attrs_exclusively_from_config = set()
-        for key, val in self.overrides.get(pkg_name, {}).items():
-            if hasattr(cls, key):
-                new_overridden_attrs[key] = getattr(cls, key)
-            else:
-                new_attrs_exclusively_from_config.add(key)
+        # Clear any prior changes to class attributes, anywhere in the MRO
+        if has_prior_overrides:
+            for c in cls.__mro__:
+                prior_overridden_attrs = c.__dict__.get("overridden_attrs")
+                if prior_overridden_attrs:
+                    for key, val in prior_overridden_attrs.items():
+                        setattr(c, key, val)
+                    delattr(c, "overridden_attrs")
 
-            setattr(cls, key, val)
-        if new_overridden_attrs:
-            setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
-        elif hasattr(cls, "overridden_attrs"):
-            delattr(defclass_attrs, "overridden_attrs")
-        if new_attrs_exclusively_from_config:
-            setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
-        elif hasattr(cls, "attrs_exclusively_from_config"):
-            delattr(defclass_exclusively_from_config, "attrs_exclusively_from_config")
+                prior_exclusive_attrs = c.__dict__.get("attrs_exclusively_from_config")
+                if prior_exclusive_attrs:
+                    for key in prior_exclusive_attrs:
+                        delattr(c, key)
+                    delattr(c, "attrs_exclusively_from_config")
+
+        # Apply overrides from config if any, and backup prior values
+        if current_overrides:
+            new_overridden_attrs = {}
+            new_attrs_exclusively_from_config = []
+
+            for key, val in current_overrides.items():
+                if hasattr(cls, key):
+                    new_overridden_attrs[key] = getattr(cls, key)
+                else:
+                    new_attrs_exclusively_from_config.append(key)
+                setattr(cls, key, val)
+
+            if new_overridden_attrs:
+                setattr(cls, "overridden_attrs", new_overridden_attrs)
+
+            if new_attrs_exclusively_from_config:
+                setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
 
         return cls
 
