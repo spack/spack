@@ -3409,12 +3409,11 @@ def fix_darwin_install_name(path: str) -> None:
 
 @memoized
 def relocate(package=None) -> Executable:
-    make_wrapper_executable = lambda x: Executable(str(x.package.bin_dir() / "relocate.exe"))
     if package:
         spec = package.spec["compiler-wrapper"]
     else:
         spec = spack.store.STORE.db.query_local("compiler-wrapper", installed=True)[0]
-    return make_wrapper_executable(spec)
+    return Executable(str(spec.package.bin_dir() / "relocate.exe")) # type: ignore
 
 
 @memoized
@@ -3468,7 +3467,7 @@ def relocate_win_rpath(package):
         # inside those PE files
         if name in lib_map and is_imp_lib_for_pe(package, lib_map[name], pe):
             args.extend(["--coff", lib_map[name][0]])
-        reloc(*args, extra_env=ev, output=sys.stdout, error=sys.stderr, fail_on_error=True)
+        res = reloc(*args, extra_env=ev, output=str, error=str, fail_on_error=True)
 
 
 def extract_spack_id(lib: str) -> Optional[str]:
