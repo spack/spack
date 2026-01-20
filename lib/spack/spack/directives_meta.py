@@ -15,6 +15,15 @@ import spack.spec
 #: Some directives leverage others and in that case are not automatically added.
 directive_names = ["build_system"]
 
+SPEC_CACHE: Dict[str, spack.spec.Spec] = {}
+
+
+def get_spec(spec_str: str) -> spack.spec.Spec:
+    """Get a spec from the cache, or create it if not present."""
+    if spec_str not in SPEC_CACHE:
+        SPEC_CACHE[spec_str] = spack.spec._ImmutableSpec(spec_str)
+    return SPEC_CACHE[spec_str]
+
 
 class DirectiveMeta(type):
     """Flushes the directives that were temporarily stored in the staging
@@ -180,48 +189,44 @@ class DirectiveMeta(type):
             @functools.wraps(decorated_function)
             def _wrapper(*args, **_kwargs):
                 # First merge default args with kwargs
-                kwargs = dict()
-                for default_args in DirectiveMeta._default_args:
-                    kwargs.update(default_args)
-                kwargs.update(_kwargs)
+                if DirectiveMeta._default_args:
+                    kwargs = {}
+                    for default_args in DirectiveMeta._default_args:
+                        kwargs.update(default_args)
+                    kwargs.update(_kwargs)
+                else:
+                    kwargs = _kwargs
 
                 # Inject when arguments from the context
                 if DirectiveMeta._when_constraints_from_context:
+                    when_constraints = DirectiveMeta._when_constraints_from_context
                     # Check that directives not yet supporting the when= argument
                     # are not used inside the context manager
                     if decorated_function.__name__ == "version":
-                        msg = (
-                            'directive "{0}" cannot be used within a "when"'
-                            ' context since it does not support a "when=" '
-                            "argument"
+                        raise DirectiveError(
+                            f'directive "{decorated_function.__name__}" cannot be used within a '
+                            '"when" context since it does not support a "when=" argument'
                         )
-                        msg = msg.format(decorated_function.__name__)
-                        raise DirectiveError(msg)
 
-                    when_constraints = [
-                        spack.spec.Spec(x) for x in DirectiveMeta._when_constraints_from_context
-                    ]
-                    if kwargs.get("when"):
-                        when_constraints.append(spack.spec.Spec(kwargs["when"]))
-
-                    when_spec = spack.spec.Spec()
-                    for current in when_constraints:
-                        when_spec._constrain_symbolically(current, deps=True)
-                    kwargs["when"] = when_spec
+                    if len(when_constraints) == 1 and not kwargs.get("when"):
+                        # In case of a single when constraint, avoid allocating a new spec
+                        kwargs["when"] = when_constraints[0]
+                    else:
+                        # Otherwise, combine all when constraints by mutating a new spec
+                        if kwargs.get("when"):
+                            when_spec = spack.spec.Spec(kwargs["when"])
+                        else:
+                            when_spec = spack.spec.Spec()
+                        for current in when_constraints:
+                            when_spec._constrain_symbolically(current, deps=True)
+                        kwargs["when"] = when_spec
 
                 DirectiveMeta._remove_directives(args)
                 DirectiveMeta._remove_directives(list(kwargs.values()))
 
-                # A directive returns either something that is callable on a
-                # package or a sequence of them
                 result = decorated_function(*args, **kwargs)
 
-                # ...so if it is not a sequence make it so
-                values = result
-                if not isinstance(values, collections.abc.Sequence):
-                    values = (values,)
-
-                DirectiveMeta._directives_to_be_executed.extend(values)
+                DirectiveMeta._directives_to_be_executed.append(result)
 
                 # wrapped function returns same result as original so
                 # that we can nest directives

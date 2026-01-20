@@ -25,7 +25,7 @@ so package authors should use their judgement.
 """
 import functools
 from contextlib import contextmanager
-from typing import Union
+from typing import Optional, Union
 
 import spack.directives_meta
 import spack.error
@@ -237,6 +237,8 @@ class when:
     override all of the decorated versions. This is a limitation of the Python language.
     """
 
+    spec: Optional[spack.spec.Spec]
+
     def __init__(self, condition: Union[str, bool]):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
@@ -246,9 +248,9 @@ class when:
             condition (str): condition to be met
         """
         if isinstance(condition, bool):
-            self.spec = spack.spec.Spec() if condition else None
+            self.spec = spack.spec.EMPTY_SPEC if condition else None
         else:
-            self.spec = spack.spec.Spec(condition)
+            self.spec = spack.directives_meta.get_spec(condition)
 
     def __call__(self, method):
         assert (
@@ -266,10 +268,12 @@ class when:
         return original_method
 
     def __enter__(self):
-        spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
+        if self.spec is not None:
+            spack.directives_meta.DirectiveMeta.push_to_context(self.spec)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives_meta.DirectiveMeta.pop_from_context()
+        if self.spec is not None:
+            spack.directives_meta.DirectiveMeta.pop_from_context()
 
 
 @contextmanager

@@ -45,7 +45,7 @@ import os
 import re
 import warnings
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 import spack.deptypes as dt
 import spack.error
@@ -57,7 +57,7 @@ import spack.spec
 import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
-from spack.directives_meta import DirectiveError, DirectiveMeta
+from spack.directives_meta import DirectiveError, DirectiveMeta, get_spec
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import (
@@ -96,15 +96,6 @@ WhenType = Optional[Union[spack.spec.Spec, str, bool]]
 PackageType = Type[spack.package_base.PackageBase]
 Patcher = Callable[[Union[PackageType, Dependency]], None]
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
-
-SPEC_CACHE: Dict[str, spack.spec.Spec] = {}
-
-
-def get_spec(spec_str: str) -> spack.spec.Spec:
-    """Get a spec from the cache, or create it if not present."""
-    if spec_str not in SPEC_CACHE:
-        SPEC_CACHE[spec_str] = spack.spec._ImmutableSpec(spec_str)
-    return SPEC_CACHE[spec_str]
 
 
 def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
