@@ -416,7 +416,7 @@ class TestVariant:
 class TestVariantMapTest:
     def test_invalid_values(self) -> None:
         # Value with invalid type
-        a = VariantMap(Spec())
+        a = VariantMap()
         with pytest.raises(TypeError):
             a["foo"] = 2
 
@@ -437,7 +437,7 @@ class TestVariantMapTest:
 
     def test_set_item(self) -> None:
         # Check that all the three types of variants are accepted
-        a = VariantMap(Spec())
+        a = VariantMap()
 
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
@@ -445,7 +445,7 @@ class TestVariantMapTest:
 
     def test_substitute(self) -> None:
         # Check substitution of a key that exists
-        a = VariantMap(Spec())
+        a = VariantMap()
         a["foo"] = BoolValuedVariant("foo", True)
         a.substitute(SingleValuedVariant("foo", "bar"))
 
@@ -456,34 +456,34 @@ class TestVariantMapTest:
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
-        a = VariantMap(Spec())
-        a["foo"] = MultiValuedVariant("foo", ("bar",))
-        a["foobar"] = SingleValuedVariant("foobar", "fee")
-        a["feebar"] = SingleValuedVariant("feebar", "foo")
+        a = Spec()
+        a.variants["foo"] = MultiValuedVariant("foo", ("bar",))
+        a.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        a.variants["feebar"] = SingleValuedVariant("feebar", "foo")
 
         # foo=bar,baz foobar=fee shared=True
-        b = VariantMap(Spec())
-        b["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        b["foobar"] = SingleValuedVariant("foobar", "fee")
-        b["shared"] = BoolValuedVariant("shared", True)
+        b = Spec()
+        b.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
+        b.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        b.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete, different values do not intersect / satisfy each other
         assert not a.intersects(b) and not b.intersects(a)
         assert not a.satisfies(b) and not b.satisfies(a)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
-        c = VariantMap(Spec())
-        c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        c["foobar"] = SingleValuedVariant("foobar", "fee")
-        c["feebar"] = SingleValuedVariant("feebar", "foo")
-        c["shared"] = BoolValuedVariant("shared", True)
+        c = Spec()
+        c.variants["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
+        c.variants["foobar"] = SingleValuedVariant("foobar", "fee")
+        c.variants["feebar"] = SingleValuedVariant("feebar", "foo")
+        c.variants["shared"] = BoolValuedVariant("shared", True)
 
         # concrete values cannot be constrained
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
-            a.constrain(b)
+            a._constrain_variants(b)
 
     def test_copy(self) -> None:
-        a = VariantMap(Spec())
+        a = VariantMap()
         a["foo"] = BoolValuedVariant("foo", True)
         a["bar"] = SingleValuedVariant("bar", "baz")
         a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
@@ -492,7 +492,7 @@ class TestVariantMapTest:
         assert a == c
 
     def test_str(self) -> None:
-        c = VariantMap(Spec())
+        c = VariantMap()
         c["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
         c["foobar"] = SingleValuedVariant("foobar", "fee")
         c["feebar"] = SingleValuedVariant("feebar", "foo")
