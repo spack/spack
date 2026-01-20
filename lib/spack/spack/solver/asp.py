@@ -2681,14 +2681,26 @@ class SpackSolverSetup:
             possible_versions = sorted_versions.get(pkg_name)
             if possible_versions is None:
                 continue
-            satisfies = [v.satisfies(versions) for v in possible_versions]
-            for key, group in itertools.groupby(enumerate(satisfies), lambda x: x[1]):
-                if key is True:
-                    indexes = [idx for idx, _ in group]
-                    min_idx, max_idx = indexes[0], indexes[-1]
+            # Look for contiguous ranges of versions that satisfy the constraint
+            start_idx = None
+            for current_idx, v in enumerate(possible_versions):
+                if v.satisfies(versions):
+                    if start_idx is None:
+                        start_idx = current_idx
+                elif start_idx is not None:
+                    # End of a contiguous satisfying range found
                     self.gen.fact(
-                        fn.pkg_fact(pkg_name, fn.version_range(versions, min_idx, max_idx))
+                        fn.pkg_fact(
+                            pkg_name, fn.version_range(versions, start_idx, current_idx - 1)
+                        )
                     )
+                    start_idx = None
+            if start_idx is not None:
+                self.gen.fact(
+                    fn.pkg_fact(
+                        pkg_name, fn.version_range(versions, start_idx, len(possible_versions) - 1)
+                    )
+                )
             self.gen.newline()
 
     def collect_virtual_constraints(self):
