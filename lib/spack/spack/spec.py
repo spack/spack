@@ -795,6 +795,26 @@ class DependencySpec:
             when=self.when,
         )
 
+    def _constrain(self, other: "DependencySpec") -> bool:
+        """Constrain this edge with another edge. Precondition: parent and child of self and other
+        are compatible, and both edges have the same when condition. Used as an internal helper
+        function in Spec.constrain.
+
+        Args:
+            other: edge to use as constraint
+
+        Returns:
+            True if the current edge was changed, False otherwise.
+        """
+        changed = False
+        changed |= self.spec.constrain(other.spec)
+        changed |= self.update_deptypes(other.depflag)
+        changed |= self.update_virtuals(other.virtuals)
+        if not self.direct and other.direct:
+            changed = True
+            self.direct = True
+        return changed
+
     def _cmp_iter(self):
         yield self.parent.name if self.parent else None
         yield self.spec.name if self.spec else None
@@ -3166,29 +3186,28 @@ class Spec:
         if not other._intersects_dependencies(self, resolve_virtuals=resolve_virtuals):
             raise UnsatisfiableDependencySpecError(other, self)
 
-        if any(not d.name for d in other.traverse(root=False)):
-            raise UnconstrainableDependencySpecError(other)
-
-        reference_spec = self.copy(deps=True)
-        for edge in other.edges_to_dependencies():
-            existing = [
-                e for e in self.edges_to_dependencies(edge.spec.name) if e.when == edge.when
-            ]
-            if existing:
-                existing[0].spec.constrain(edge.spec)
-                existing[0].update_deptypes(edge.depflag)
-                existing[0].update_virtuals(edge.virtuals)
-                existing[0].direct |= edge.direct
+        for d in other.traverse(root=False):
+            if not d.name:
+                raise UnconstrainableDependencySpecError(other)
+        changed = False
+        for other_edge in other.edges_to_dependencies():
+            # Find the first edge in self that matches other_edge by name and when clause.
+            for self_edge in self.edges_to_dependencies(other_edge.spec.name):
+                if self_edge.when == other_edge.when:
+                    changed |= self_edge._constrain(other_edge)
+                    break
             else:
+                # Otherwise, a copy of the edge is added as a constraint to self.
+                changed = True
                 self.add_dependency_edge(
-                    edge.spec,
-                    depflag=edge.depflag,
-                    virtuals=edge.virtuals,
-                    direct=edge.direct,
-                    propagation=edge.propagation,
-                    when=edge.when,
+                    other_edge.spec.copy(deps=True),
+                    depflag=other_edge.depflag,
+                    virtuals=other_edge.virtuals,
+                    direct=other_edge.direct,
+                    propagation=other_edge.propagation,
+                    when=other_edge.when,  # no need to copy; when conditions are immutable
                 )
-        return self != reference_spec
+        return changed
 
     def constrained(self, other, deps=True):
         """Return a constrained copy without modifying this spec."""
