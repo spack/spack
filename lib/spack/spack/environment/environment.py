@@ -1223,12 +1223,7 @@ class Environment:
         return spec_list
 
     def clear(self):
-        """Clear the contents of the environment
-
-        Arguments:
-            re_read: If ``True``, do not clear ``new_specs``. This value cannot be read from yaml,
-                and needs to be maintained when re-reading an existing environment.
-        """
+        """Clear the contents of the environment"""
         self.spec_lists = {}
         self._dev_specs = {}
         self.concretized_roots = []
@@ -1691,7 +1686,7 @@ class Environment:
         kept_user_specs: List[Spec],
         specs_to_concretize: List[SpecPair],
         *,
-        tests: Union[bool, Sequence] = False,
+        tests: Union[bool, Sequence[str]] = False,
     ) -> Sequence[SpecPair]:
         # Exit early if the set of concretized specs is the set of user specs
         result = spack.concretize.concretize_together_when_possible(
@@ -1709,7 +1704,7 @@ class Environment:
         kept_user_specs: List[Spec],
         specs_to_concretize: List[SpecPair],
         *,
-        tests: Union[bool, Sequence] = False,
+        tests: Union[bool, Sequence[str]] = False,
     ) -> Sequence[SpecPair]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
@@ -1746,7 +1741,7 @@ class Environment:
         kept_user_specs: List[Spec],
         specs_to_concretize: List[SpecPair],
         *,
-        tests: Union[bool, Sequence] = False,
+        tests: Union[bool, Sequence[str]] = False,
     ):
         """Concretization strategy that concretizes separately one
         user spec after the other.
