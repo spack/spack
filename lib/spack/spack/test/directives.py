@@ -10,6 +10,8 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
+from spack.directives_meta import _combine_when
+from spack.spec import Spec
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -212,3 +214,19 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
     assert spack.spec.Spec("%pkg-c") in pkg_cls.dependencies
     # Nested ^foo followed by ^foo %gcc
     assert spack.spec.Spec("^pkg-c %gcc") in pkg_cls.dependencies
+
+
+def test_directives_meta_combine_when():
+    x, y = Spec("+x ^dep +a"), Spec("+y ^dep +b")
+
+    # Check that specs are combined, and do not mutate inputs
+    assert _combine_when("+z", [x, y]) == Spec("+x +y +z ^dep +a +b")
+    assert x == Spec("+x ^dep +a")
+    assert y == Spec("+y ^dep +b")
+
+    assert _combine_when(None, [x, y]) == Spec("+x +y ^dep +a +b")
+    assert x == Spec("+x ^dep +a")
+    assert y == Spec("+y ^dep +b")
+
+    # Check the optimization for single stack with no when
+    assert _combine_when(None, [x]) is x

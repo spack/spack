@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections.abc
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Type, Union
+import itertools
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union
 
 import spack.error
 import spack.llnl.util.lang
@@ -30,11 +30,14 @@ class DirectiveMeta(type):
     area into the package.
     """
 
-    # Set of all known directives
+    #: Set of all known directive dictionary names from `@directive(dicts=...)`
     _directive_dict_names: Set[str] = set()
+    #: List of directives to be executed at class initialization time
     _directives_to_be_executed: List[Callable] = []
-    _when_constraints_from_context: List[spack.spec.Spec] = []
-    _default_args: List[dict] = []
+    #: Stack of when constraints from `with when(...)` context managers
+    _when_constraints_stack: List[spack.spec.Spec] = []
+    #: Stack of default args from `with default_args(...)` context managers
+    _default_args_stack: List[dict] = []
 
     def __new__(
         cls: Type["DirectiveMeta"], name: str, bases: tuple, attr_dict: dict
@@ -90,24 +93,24 @@ class DirectiveMeta(type):
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
-    def push_to_context(when_spec: spack.spec.Spec) -> None:
+    def push_when_constraint(when_spec: spack.spec.Spec) -> None:
         """Add a spec to the context constraints."""
-        DirectiveMeta._when_constraints_from_context.append(when_spec)
+        DirectiveMeta._when_constraints_stack.append(when_spec)
 
     @staticmethod
-    def pop_from_context() -> spack.spec.Spec:
+    def pop_when_constraint() -> spack.spec.Spec:
         """Pop the last constraint from the context"""
-        return DirectiveMeta._when_constraints_from_context.pop()
+        return DirectiveMeta._when_constraints_stack.pop()
 
     @staticmethod
     def push_default_args(default_args: Dict[str, Any]) -> None:
         """Push default arguments"""
-        DirectiveMeta._default_args.append(default_args)
+        DirectiveMeta._default_args_stack.append(default_args)
 
     @staticmethod
     def pop_default_args() -> dict:
         """Pop default arguments"""
-        return DirectiveMeta._default_args.pop()
+        return DirectiveMeta._default_args_stack.pop()
 
     @staticmethod
     def _remove_directives(args):
@@ -128,113 +131,110 @@ class DirectiveMeta(type):
                         directives.remove(directive)  # iterations ends, so mutation is fine
                         break
 
-    @staticmethod
-    def directive(dicts: Optional[Union[Sequence[str], str]] = None) -> Callable:
+
+def _combine_when(
+    when: Optional[str] = None,
+    context: List[spack.spec.Spec] = DirectiveMeta._when_constraints_stack,
+) -> spack.spec.Spec:
+    """Compute the combined when constraints from context and argument."""
+
+    if len(context) == 1 and not when:
+        # In case of a single when constraint, avoid allocating a new spec
+        return context[0]
+
+    # Otherwise, combine all when constraints by mutating a new spec
+    if when:
+        when_spec = spack.spec.Spec(when)
+    else:
+        when_spec = spack.spec.Spec()
+    for current in context:
+        when_spec._constrain_symbolically(current, deps=True)
+    return when_spec
+
+
+class directive:
+    def __init__(
+        self, dicts: Union[Tuple[str, ...], str] = (), supports_when: bool = True
+    ) -> None:
         """Decorator for Spack directives.
 
-        Spack directives allow you to modify a package while it is being
-        defined, e.g. to add version or dependency information.  Directives
-        are one of the key pieces of Spack's package "language", which is
-        embedded in python.
+        Spack directives allow you to modify a package while it is being defined, e.g. to add
+        version or dependency information.  Directives are one of the key pieces of Spack's
+        package "language", which is embedded in python.
 
-        Here's an example directive:
-
-        .. code-block:: python
+        Here's an example directive::
 
             @directive(dicts="versions")
             def version(pkg, ...):
                 ...
 
-        This directive allows you write:
-
-        .. code-block:: python
+        This directive allows you write::
 
             class Foo(Package):
                 version(...)
 
         The ``@directive`` decorator handles a couple things for you:
 
-        1. Adds the class scope (pkg) as an initial parameter when
-           called, like a class method would.  This allows you to modify
-           a package from within a directive, while the package is still
-           being defined.
+        1. Adds the class scope (pkg) as an initial parameter when called, like a class method
+           would. This allows you to modify a package from within a directive, while the package is
+           still being defined.
 
-        2. It automatically adds a dictionary called ``versions`` to the
-           package so that you can refer to pkg.versions.
+        2. It automatically adds a dictionary called ``versions`` to the package so that you can
+           refer to pkg.versions.
 
-        The ``(dicts="versions")`` part ensures that ALL packages in Spack
-        will have a ``versions`` attribute after they're constructed, and
-        that if no directive actually modified it, it will just be an
-        empty dict.
-
-        This is just a modular way to add storage attributes to the
-        Package class, and it's how Spack gets information from the
-        packages to the core.
+        Arguments:
+            dicts: A list of names of dictionaries to add to the package class if they don't
+                already exist.
+            supports_when: If True, the directive can be used within a ``with when(...)`` context
+                manager. (To be removed when all directives support ``when=`` arguments.)
         """
 
         if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, collections.abc.Sequence):
-            message = "dicts arg must be list, tuple, or string. Found {0}"
-            raise TypeError(message.format(type(dicts)))
-
         # Add the dictionary names if not already there
-        DirectiveMeta._directive_dict_names |= set(dicts)
+        DirectiveMeta._directive_dict_names.update(dicts)
 
-        # This decorator just returns the directive functions
-        def _decorator(decorated_function: Callable) -> Callable:
-            directive_names.append(decorated_function.__name__)
+        self.supports_when = supports_when
 
-            @functools.wraps(decorated_function)
-            def _wrapper(*args, **_kwargs):
-                # First merge default args with kwargs
-                if DirectiveMeta._default_args:
-                    kwargs = {}
-                    for default_args in DirectiveMeta._default_args:
-                        kwargs.update(default_args)
-                    kwargs.update(_kwargs)
-                else:
-                    kwargs = _kwargs
+    def __call__(self, decorated_function: Callable) -> Callable:
+        directive_names.append(decorated_function.__name__)
 
-                # Inject when arguments from the context
-                if DirectiveMeta._when_constraints_from_context:
-                    when_constraints = DirectiveMeta._when_constraints_from_context
-                    # Check that directives not yet supporting the when= argument
-                    # are not used inside the context manager
-                    if decorated_function.__name__ == "version":
-                        raise DirectiveError(
-                            f'directive "{decorated_function.__name__}" cannot be used within a '
-                            '"when" context since it does not support a "when=" argument'
-                        )
+        # Do not capture `self` in the wrapper
+        supports_when = self.supports_when
 
-                    if len(when_constraints) == 1 and not kwargs.get("when"):
-                        # In case of a single when constraint, avoid allocating a new spec
-                        kwargs["when"] = when_constraints[0]
-                    else:
-                        # Otherwise, combine all when constraints by mutating a new spec
-                        if kwargs.get("when"):
-                            when_spec = spack.spec.Spec(kwargs["when"])
-                        else:
-                            when_spec = spack.spec.Spec()
-                        for current in when_constraints:
-                            when_spec._constrain_symbolically(current, deps=True)
-                        kwargs["when"] = when_spec
+        @functools.wraps(decorated_function)
+        def _wrapper(*args, **_kwargs):
+            # First merge default args with kwargs
+            if DirectiveMeta._default_args_stack:
+                kwargs = {}
+                for default_args in DirectiveMeta._default_args_stack:
+                    kwargs.update(default_args)
+                kwargs.update(_kwargs)
+            else:
+                kwargs = _kwargs
 
-                DirectiveMeta._remove_directives(args)
-                DirectiveMeta._remove_directives(list(kwargs.values()))
+            # Inject when arguments from the context
+            if DirectiveMeta._when_constraints_stack:
+                if not supports_when:
+                    raise DirectiveError(
+                        f'directive "{decorated_function.__name__}" cannot be used within a '
+                        '"when" context since it does not support a "when=" argument'
+                    )
+                kwargs["when"] = _combine_when(kwargs.get("when"))
 
-                result = decorated_function(*args, **kwargs)
+            # Remove directives passed as arguments, so they are not executed as part of this
+            # class's directive execution, but handled by the called directive instead
+            DirectiveMeta._remove_directives(itertools.chain(args, kwargs.values()))
 
-                DirectiveMeta._directives_to_be_executed.append(result)
+            result = decorated_function(*args, **kwargs)
 
-                # wrapped function returns same result as original so
-                # that we can nest directives
-                return result
+            DirectiveMeta._directives_to_be_executed.append(result)
 
-            return _wrapper
+            # wrapped function returns same result as original so that we can nest directives
+            return result
 
-        return _decorator
+        return _wrapper
 
 
 class DirectiveError(spack.error.SpackError):

@@ -269,11 +269,11 @@ class when:
 
     def __enter__(self):
         if self.spec is not None:
-            spack.directives_meta.DirectiveMeta.push_to_context(self.spec)
+            spack.directives_meta.DirectiveMeta.push_when_constraint(self.spec)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.spec is not None:
-            spack.directives_meta.DirectiveMeta.pop_from_context()
+            spack.directives_meta.DirectiveMeta.pop_when_constraint()
 
 
 @contextmanager

@@ -57,7 +57,7 @@ import spack.spec
 import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
-from spack.directives_meta import DirectiveError, DirectiveMeta, get_spec
+from spack.directives_meta import DirectiveError, directive, get_spec
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import (
@@ -144,10 +144,9 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
 
 
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
-directive = DirectiveMeta.directive
 
 
-@directive("versions")
+@directive("versions", supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
