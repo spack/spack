@@ -160,7 +160,7 @@ READER_CLS = {
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
-user_speclist_name = "specs"
+USER_SPECS_KEY = "specs"
 # The name of the default view (the view loaded on env.activate)
 default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
@@ -1165,13 +1165,13 @@ class Environment:
                 data=spack.config.CONFIG.get("definitions", [])
             )
         )
-        self.spec_lists[user_speclist_name] = self._spec_lists_parser.parse_user_specs(
-            name=user_speclist_name, yaml_list=self.manifest.user_specs()
+        self.spec_lists[USER_SPECS_KEY] = self._spec_lists_parser.parse_user_specs(
+            name=USER_SPECS_KEY, yaml_list=self.manifest.user_specs()
         )
 
     @property
     def user_specs(self):
-        return self.spec_lists[user_speclist_name]
+        return self.spec_lists[USER_SPECS_KEY]
 
     @property
     def dev_specs(self):
@@ -1312,7 +1312,7 @@ class Environment:
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, list_name=user_speclist_name) -> bool:
+    def add(self, user_spec, list_name=USER_SPECS_KEY) -> bool:
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
@@ -1325,7 +1325,7 @@ class Environment:
         if list_name not in self.spec_lists:
             raise SpackEnvironmentError(f"No list {list_name} exists in environment {self.name}")
 
-        if list_name == user_speclist_name:
+        if list_name == USER_SPECS_KEY:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
             elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
@@ -1337,7 +1337,7 @@ class Environment:
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
             list_to_change.add(spec)
-            if list_name == user_speclist_name:
+            if list_name == USER_SPECS_KEY:
                 self.manifest.add_user_spec(str(user_spec))
             else:
                 self.manifest.add_definition(str(user_spec), list_name=list_name)
@@ -1348,7 +1348,7 @@ class Environment:
     def change_existing_spec(
         self,
         change_spec: Spec,
-        list_name: str = user_speclist_name,
+        list_name: str = USER_SPECS_KEY,
         match_spec: Optional[Spec] = None,
         allow_changing_multiple_specs=False,
     ):
@@ -1389,7 +1389,7 @@ class Environment:
 
         for idx, spec in matches:
             override_spec = Spec.override(spec, change_spec)
-            if list_name == user_speclist_name:
+            if list_name == USER_SPECS_KEY:
                 self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
                 self.manifest.override_definition(
@@ -1397,7 +1397,7 @@ class Environment:
                 )
         self._sync_speclists()
 
-    def remove(self, query_spec, list_name=user_speclist_name, force=False):
+    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False):
         """Remove specs from an environment that match a query_spec"""
         err_msg_header = (
             f"Cannot remove '{query_spec}' from '{list_name}' definition "
@@ -1434,7 +1434,7 @@ class Environment:
                     msg += " It will be removed from the concrete specs."
                 tty.warn(msg)
             else:
-                if list_name == user_speclist_name:
+                if list_name == USER_SPECS_KEY:
                     self.manifest.remove_user_spec(str(spec))
                 else:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
@@ -2837,7 +2837,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return result
 
     def user_specs(self) -> List:
-        return self.configuration.get(user_speclist_name, [])
+        return self.configuration.get(USER_SPECS_KEY, [])
 
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
