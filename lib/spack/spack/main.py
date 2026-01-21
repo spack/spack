@@ -8,6 +8,7 @@ In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
 import argparse
+import gc
 import inspect
 import operator
 import os
@@ -1120,6 +1121,8 @@ def main(argv=None):
 
     """
     try:
+        g0, g1, g2 = gc.get_threshold()
+        gc.set_threshold(50 * g0, g1, g2)
         return _main(argv)
 
     except spack.solver.asp.OutputDoesNotSatisfyInputError as e:
