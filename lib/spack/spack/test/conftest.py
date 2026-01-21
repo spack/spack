@@ -8,6 +8,7 @@ import datetime
 import email.message
 import errno
 import functools
+import gc
 import inspect
 import io
 import itertools
@@ -81,6 +82,9 @@ from spack.llnl.util.filesystem import (
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
+
+g0, g1, g2 = gc.get_threshold()
+gc.set_threshold(50000, g1, g2)
 
 mirror_cmd = SpackCommand("mirror")
 
