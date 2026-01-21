@@ -361,7 +361,7 @@ def test_buildcache_create_install(
 
 
 @pytest.mark.parametrize(
-    "things_to_install,expected",
+    "things_to_install,expected,only_noncached,cached_specs",
     [
         (
             "",
@@ -379,6 +379,8 @@ def test_buildcache_create_install(
                 "dtrun3",
                 "dtbuild3",
             ],
+            False,
+            ["dtbuild3"],
         ),
         (
             "dependencies",
@@ -395,13 +397,53 @@ def test_buildcache_create_install(
                 "dtrun3",
                 "dtbuild3",
             ],
+            False,
+            ["dtbuild3"],
         ),
-        ("package", ["dttop"]),
+        ("package", ["dttop"], False, []),
+        (
+            "",
+            [
+                "dttop",
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+            ],
+            True,
+            ["dtbuild3"],
+        ),
+        (
+            "dependencies",
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtlink2",
+                "dtrun2",
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtrun1",
+                "dtlink5",
+                "dtrun3",
+            ],
+            True,
+            ["dtbuild3"],
+        ),
+        ("package", [], True, ["dttop"]),
     ],
 )
 def test_correct_specs_are_pushed(
     things_to_install,
     expected,
+    only_noncached,
+    cached_specs,
     tmp_path: pathlib.Path,
     monkeypatch,
     default_mock_concretization,
@@ -428,10 +470,23 @@ def test_correct_specs_are_pushed(
         spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
     )
 
+    # When testing --only-noncached, mock update_cache_and_get_specs to return
+    # specs that are already in the cache
+    if only_noncached:
+        root_spec = default_mock_concretization("dttop")
+        all_specs = list(root_spec.traverse())
+        cached_spec_objs = [s for s in all_specs if s.name in cached_specs]
+        monkeypatch.setattr(
+            spack.binary_distribution, "update_cache_and_get_specs", lambda: cached_spec_objs
+        )
+
     buildcache_create_args = ["create", "--unsigned"]
 
     if things_to_install != "":
         buildcache_create_args.extend(["--only", things_to_install])
+
+    if only_noncached:
+        buildcache_create_args.append("--only-noncached")
 
     buildcache_create_args.extend([str(tmp_path), slash_hash])
 
