@@ -1165,11 +1165,8 @@ class Environment:
                 data=spack.config.CONFIG.get("definitions", [])
             )
         )
-
-        env_configuration = self.manifest[TOP_LEVEL_KEY]
-        spec_list = env_configuration.get(user_speclist_name, [])
         self.spec_lists[user_speclist_name] = self._spec_lists_parser.parse_user_specs(
-            name=user_speclist_name, yaml_list=spec_list
+            name=user_speclist_name, yaml_list=self.manifest.user_specs()
         )
 
     @property
@@ -2838,6 +2835,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")
 
         return result
+
+    def user_specs(self) -> List:
+        return self.configuration.get(user_speclist_name, [])
 
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the list of root specs.
