@@ -1165,13 +1165,27 @@ class Environment:
                 data=spack.config.CONFIG.get("definitions", [])
             )
         )
-        self.spec_lists[USER_SPECS_KEY] = self._spec_lists_parser.parse_user_specs(
-            name=USER_SPECS_KEY, yaml_list=self.manifest.user_specs()
-        )
+        for group in self.manifest.groups():
+            if tty.is_debug(level=2):
+                tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group")
+            key = self._user_specs_key(group=group)
+            self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
+                name=key, yaml_list=self.manifest.user_specs(group=group)
+            )
+
+    def _user_specs_key(self, *, group: Optional[str] = None) -> str:
+        if group is None or group == DEFAULT_USER_SPEC_GROUP:
+            return USER_SPECS_KEY
+        return f"{USER_SPECS_KEY}:{group}"
 
     @property
-    def user_specs(self):
-        return self.spec_lists[USER_SPECS_KEY]
+    def user_specs(self) -> SpecList:
+        return self.user_specs_by(group=DEFAULT_USER_SPEC_GROUP)
+
+    def user_specs_by(self, *, group: Optional[str]) -> SpecList:
+        """Returns a dictionary of user specs keyed by their group."""
+        key = self._user_specs_key(group=group)
+        return self.spec_lists[key]
 
     @property
     def dev_specs(self):
@@ -2875,9 +2889,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return result
 
     def user_specs(self, *, group: Optional[str] = None) -> List:
-        group = DEFAULT_USER_SPEC_GROUP if group is None else group
-        if group not in self._groups:
-            raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
+        group = self._ensure_group_exists(group)
         return self._user_specs[group]
 
     def groups(self) -> Set[str]:
@@ -2886,10 +2898,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
     def needs(self, *, group: Optional[str] = None) -> Tuple[str, ...]:
         """Returns the dependencies of a group of user specs."""
+        group = self._ensure_group_exists(group)
+        return self._groups[group]
+
+    def _ensure_group_exists(self, group: Optional[str]) -> str:
         group = DEFAULT_USER_SPEC_GROUP if group is None else group
         if group not in self._groups:
             raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
-        return self._groups[group]
+        return group
 
     def add_user_spec(self, user_spec: str) -> None:
         """Appends the user spec passed as input to the default list of root specs.

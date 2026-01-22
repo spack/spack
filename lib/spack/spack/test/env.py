@@ -1685,7 +1685,7 @@ class TestEnvironmentGroups:
       - libelf
     """
         )
-
+        # Check manifest properties
         assert manifest.groups() == {"default", "compiler", "apps"}
 
         assert manifest.user_specs(group="default") == manifest.user_specs()
@@ -1699,6 +1699,18 @@ class TestEnvironmentGroups:
         assert manifest.needs(group="default") == ()
         assert manifest.needs(group="compiler") == ()
         assert manifest.needs(group="apps") == ("compiler",)
+
+        # Check user specs within the environment
+        e = ev.Environment(manifest.manifest_dir)
+        assert e.user_specs.specs == [spack.spec.Spec("mpileaks"), spack.spec.Spec("libelf")]
+
+        compiler_specs = e.user_specs_by(group="compiler")
+        assert compiler_specs.name == "specs:compiler"
+        assert compiler_specs.specs == [spack.spec.Spec("gcc@14")]
+
+        apps_specs = e.user_specs_by(group="apps")
+        assert apps_specs.name == "specs:apps"
+        assert apps_specs.specs == [spack.spec.Spec("mpileaks %gcc@14"), spack.spec.Spec("mpich")]
 
     def test_cannot_define_group_twice(self, create_temporary_manifest):
         """Tests that defining the same group twice raises an error"""
@@ -1715,3 +1727,28 @@ class TestEnvironmentGroups:
         - [llvm@20]
 """
             )
+
+    def test_matrix_can_be_expanded_in_groups(self, create_temporary_manifest):
+        """Tests that definitions can be expanded also for matrix groups"""
+        manifest = create_temporary_manifest(
+            """
+spack:
+  definitions:
+  - compilers: ["%gcc", "%clang"]
+  - desired_specs: ["mpileaks@2.1"]
+  specs:
+  - group: apps
+    specs:
+    - matrix:
+      - [$desired_specs]
+      - [$compilers]
+    - mpich
+"""
+        )
+        e = ev.Environment(manifest.manifest_dir)
+        assert e.user_specs.specs == []
+        assert e.user_specs_by(group="apps").specs == [
+            spack.spec.Spec("mpileaks@2.1 %gcc"),
+            spack.spec.Spec("mpileaks@2.1 %clang"),
+            spack.spec.Spec("mpich"),
+        ]
