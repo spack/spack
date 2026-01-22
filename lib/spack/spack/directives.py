@@ -295,11 +295,12 @@ def _execute_conflicts(pkg: PackageType, conflict_spec, when, msg):
     conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
 
 
-@directive("dependencies")
+@directive("dependencies", can_patch_dependencies=True)
 def depends_on(
     spec: SpecType,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
+    *,
     patches: Optional[PatchesType] = None,
 ):
     """Declare a dependency on another package.
@@ -316,18 +317,18 @@ def depends_on(
         patches: single result of :py:func:`patch` directive, a
             ``str`` to be passed to ``patch``, or a list of these
     """
-    dep_spec = get_spec(spec)
-    return partial(_execute_depends_on, spec=dep_spec, when=when, type=type, patches=patches)
+    return partial(_execute_depends_on, spec=spec, when=when, type=type, patches=patches)
 
 
 def _execute_depends_on(
     pkg: PackageType,
-    spec: spack.spec.Spec,
+    spec: Union[SpecType, spack.spec.Spec],
     *,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
     patches: Optional[PatchesType] = None,
 ):
+    spec = get_spec(spec) if isinstance(spec, str) else spec
     when_spec = _make_when_spec(when)
     if not when_spec:
         return
@@ -362,10 +363,6 @@ def _execute_depends_on(
     elif not isinstance(patches, (list, tuple)):
         patches = [patches]
 
-    # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, str) else p for p in patches]
-    assert all(callable(p) for p in patches)
-
     # this is where we actually add the dependency to this package
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
     dependency = deps_by_name.get(spec.name)
@@ -388,8 +385,12 @@ def _execute_depends_on(
         dependency.depflag |= depflag
 
     # apply patches to the dependency
-    for execute_patch in patches:
-        execute_patch(dependency)
+    for patch in patches:
+        if isinstance(patch, str):
+            _execute_patch(dependency, url_or_filename=patch)
+        else:
+            assert callable(patch), f"Invalid patch argument: {patch!r}"
+            patch(dependency)
 
 
 @directive("disable_redistribute")
@@ -440,11 +441,12 @@ def _execute_redistribute(
         )
 
 
-@directive(("extendees", "dependencies"))
+@directive(("extendees", "dependencies"), can_patch_dependencies=True)
 def extends(
     spec: str,
     when: WhenType = None,
     type: DepType = ("build", "run"),
+    *,
     patches: Optional[PatchesType] = None,
 ):
     """Same as :func:`depends_on`, but also adds this package to the extendee list.
@@ -472,7 +474,7 @@ def _execute_extends(
     # When extending python, also add a dependency on python-venv. This is done so that
     # Spack environment views are Python virtual environments.
     if dep_spec.name == "python" and not pkg.name == "python-venv":
-        _execute_depends_on(pkg, get_spec("python-venv"), when=when, type=("build", "run"))
+        _execute_depends_on(pkg, "python-venv", when=when, type=("build", "run"))
 
     pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
@@ -591,12 +593,12 @@ def patch(
 def _execute_patch(
     pkg_or_dep: Union[PackageType, Dependency],
     url_or_filename: str,
-    level: int,
-    when: WhenType,
-    working_dir: str,
-    reverse: bool,
-    sha256: Optional[str],
-    archive_sha256: Optional[str],
+    level: int = 1,
+    when: WhenType = None,
+    working_dir: str = ".",
+    reverse: bool = False,
+    sha256: Optional[str] = None,
+    archive_sha256: Optional[str] = None,
 ) -> None:
     pkg = pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
 
@@ -901,7 +903,7 @@ def maintainers(*names: str):
 
 
 def _execute_maintainer(pkg: PackageType, names: Tuple[str, ...]):
-    maintainers = set(getattr(pkg, "maintainers", []))
+    maintainers = set(pkg.maintainers)
     maintainers.update(names)
     pkg.maintainers = sorted(maintainers)
 

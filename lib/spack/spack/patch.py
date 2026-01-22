@@ -520,6 +520,9 @@ class PatchCache:
                 patch_dict.pop("sha256")  # save some space
                 index[patch.sha256] = {pkg_class.fullname: patch_dict}
 
+        if not pkg_class._patches_dependencies:
+            return index
+
         for deps_by_name in pkg_class.dependencies.values():
             for dependency in deps_by_name.values():
                 for patch_list in dependency.patches.values():

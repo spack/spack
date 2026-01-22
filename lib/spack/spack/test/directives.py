@@ -10,7 +10,7 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.directives_meta import _combine_when
+from spack.directives_meta import DirectiveDictDescriptor, _combine_when
 from spack.spec import Spec
 
 
@@ -230,3 +230,33 @@ def test_directives_meta_combine_when():
 
     # Check the optimization for single stack with no when
     assert _combine_when(None, [x]) is x
+
+
+def test_directive_descriptor_init():
+    # when `pkg.variants` is initialized, only the `variant` directive should run
+    variants = DirectiveDictDescriptor("variants")
+    assert variants.directives_to_run == ["variant"]
+    assert variants.dicts_to_init == ["variants"]
+
+    # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
+    # `pkg.extendees` should be initialized
+    dependencies = DirectiveDictDescriptor("dependencies")
+    assert dependencies.directives_to_run == ["depends_on", "extends"]
+    assert dependencies.dicts_to_init == ["dependencies", "extendees"]
+
+    # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
+    # provides directive should run
+    provided = DirectiveDictDescriptor("provided")
+    assert provided.directives_to_run == ["provides"]
+    assert provided.dicts_to_init == ["provided", "provided_together"]
+
+    # idem for `pkg.provided_together`
+    provided_together = DirectiveDictDescriptor("provided_together")
+    assert provided_together.directives_to_run == ["provides"]
+    assert provided_together.dicts_to_init == ["provided", "provided_together"]
+
+    # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
+    # dict is not affects -- they are stored on a Dependency object.
+    patches = DirectiveDictDescriptor("patches")
+    assert patches.directives_to_run == ["patch"]
+    assert patches.dicts_to_init == ["patches"]

@@ -546,6 +546,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     compiler = DeprecatedCompiler()
 
+    #: Set to true when this package has directives that specify patches on dependencies. Can be
+    #: used as an optimization to avoid execution of :func:`~spack.directives.depends_on` and
+    #: :func:`~spack.directives.extends` directives when looking for all patches defined by this
+    #: package.
+    _patches_dependencies: bool = False
     #: Class level dictionary populated by :func:`~spack.directives.version` directives
     versions: dict
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
