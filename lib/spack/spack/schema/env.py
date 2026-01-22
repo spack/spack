@@ -7,11 +7,12 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 19-
 """
+
 from typing import Any, Dict
 
 import spack.schema.merged
 
-from .spec_list import spec_list_schema
+from .spec_list import spec_list_properties, spec_list_schema
 
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
@@ -25,6 +26,16 @@ include_concrete = {
     "items": {"type": "string"},
 }
 
+group_name_and_deps = {
+    "group": {"type": "string", "description": "Name for this group of specs"},
+    "needs": {
+        "type": "array",
+        "description": "Groups of specs that are needed by this group",
+        "items": {"type": "string"},
+    },
+}
+
+
 properties: Dict[str, Any] = {
     "spack": {
         "type": "object",
@@ -36,7 +47,37 @@ properties: Dict[str, Any] = {
             # merged configuration scope schemas
             **spack.schema.merged.properties,
             # extra environment schema properties
-            "specs": spec_list_schema,
+            "specs": {
+                "type": "array",
+                "description": "List of specs to include in the environment, "
+                "supporting both simple specs and matrix configurations",
+                "default": [],
+                "items": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "description": "Matrix configuration for generating multiple specs"
+                            " from combinations of constraints",
+                            "additionalProperties": False,
+                            "properties": {**spec_list_properties},
+                        },
+                        {"type": "string", "description": "Simple spec string"},
+                        {"type": "null"},
+                        {
+                            "type": "object",
+                            "description": "User spec group with a single matrix",
+                            "additionalProperties": False,
+                            "properties": {**spec_list_properties, **group_name_and_deps},
+                        },
+                        {
+                            "type": "object",
+                            "description": "User spec group with multiple matrices",
+                            "additionalProperties": False,
+                            "properties": {**group_name_and_deps, "specs": spec_list_schema},
+                        },
+                    ]
+                },
+            },
             "include_concrete": include_concrete,
         },
     }

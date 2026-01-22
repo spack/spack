@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
+
 import filecmp
 import os
 import pathlib
@@ -15,6 +16,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
@@ -1646,3 +1648,70 @@ spack:
         if node.satisfies("%c"):
             assert node.satisfies("%c=gcc@12"), node.tree()
             assert not node.satisfies("%c=gcc@7"), node.tree()
+
+
+@pytest.fixture()
+def create_temporary_manifest(tmp_path):
+    manifest_path = tmp_path / "spack.yaml"
+
+    def _create(spack_yaml: str):
+        manifest_path.write_text(spack_yaml)
+        return EnvironmentManifestFile(tmp_path)
+
+    return _create
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestEnvironmentGroups:
+    """Tests for the environment "groups" feature"""
+
+    def test_manifest_and_groups(self, create_temporary_manifest):
+        """Tests a basic case of reading groups from a manifest file"""
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - group: apps
+        needs: [compiler]
+        specs:
+        - matrix:
+          - [mpileaks]
+          - ["%gcc@14"]
+        - mpich
+      - libelf
+    """
+        )
+
+        assert manifest.groups() == {"default", "compiler", "apps"}
+
+        assert manifest.user_specs(group="default") == manifest.user_specs()
+        assert manifest.user_specs() == ["mpileaks", "libelf"]
+        assert manifest.user_specs(group="compiler") == [{"matrix": [["gcc@14"]]}]
+        assert manifest.user_specs(group="apps") == [
+            {"matrix": [["mpileaks"], ["%gcc@14"]]},
+            "mpich",
+        ]
+
+        assert manifest.needs(group="default") == ()
+        assert manifest.needs(group="compiler") == ()
+        assert manifest.needs(group="apps") == ("compiler",)
+
+    def test_cannot_define_group_twice(self, create_temporary_manifest):
+        """Tests that defining the same group twice raises an error"""
+        with pytest.raises(SpackEnvironmentConfigError, match="defined more than once"):
+            create_temporary_manifest(
+                """
+    spack:
+      specs:
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - group: compiler
+        matrix:
+        - [llvm@20]
+"""
+            )

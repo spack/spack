@@ -12,7 +12,7 @@ import re
 import shutil
 import stat
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 import spack
 import spack.concretize
@@ -2765,6 +2765,9 @@ def initialize_environment_dir(
         shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
+DEFAULT_USER_SPEC_GROUP = "default"
+
+
 class EnvironmentManifestFile(collections.abc.Mapping):
     """Manages the in-memory representation of a manifest file, and its synchronization
     with the actual manifest on disk.
@@ -2814,7 +2817,42 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         with self.manifest_file.open(encoding="utf-8") as f:
             self.yaml_content = _read_yaml(f)
 
+        # Maps groups to their dependencies
+        self._groups: Dict[str, Tuple[str, ...]] = {DEFAULT_USER_SPEC_GROUP: tuple()}
+        # Raw YAML definitions of the user specs for each group
+        self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
+        self._init_user_specs()
+
         self.changed = False
+
+    def _init_user_specs(self):
+        specs_yaml = self.configuration.get(USER_SPECS_KEY, [])
+        for item in specs_yaml:
+            if isinstance(item, str):
+                self._user_specs[DEFAULT_USER_SPEC_GROUP].append(item)
+            elif isinstance(item, dict):
+                group = item.get("group", DEFAULT_USER_SPEC_GROUP)
+
+                # Error if a group is defined more than once
+                if group != DEFAULT_USER_SPEC_GROUP and group in self._groups:
+                    raise SpackEnvironmentConfigError(
+                        f"group '{group}' defined more than once", self.manifest_file
+                    )
+
+                # Add an entry for the user specs and store group dependencies
+                if group not in self._user_specs:
+                    self._user_specs[group] = []
+                    self._groups[group] = tuple(item.get("needs", ()))
+
+                if "matrix" in item:
+                    # Short form if the group is composed of only one matrix
+                    self._user_specs[group].append({"matrix": item["matrix"]})
+                elif "specs" in item:
+                    self._user_specs[group].extend(item["specs"])
+
+    def _clear_user_specs(self) -> None:
+        self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
+        self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
@@ -2836,20 +2874,35 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         return result
 
-    def user_specs(self) -> List:
-        return self.configuration.get(USER_SPECS_KEY, [])
+    def user_specs(self, *, group: Optional[str] = None) -> List:
+        group = DEFAULT_USER_SPEC_GROUP if group is None else group
+        if group not in self._groups:
+            raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
+        return self._user_specs[group]
+
+    def groups(self) -> Set[str]:
+        """Returns the list of groups defined in the manifest"""
+        return set(self._groups)
+
+    def needs(self, *, group: Optional[str] = None) -> Tuple[str, ...]:
+        """Returns the dependencies of a group of user specs."""
+        group = DEFAULT_USER_SPEC_GROUP if group is None else group
+        if group not in self._groups:
+            raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
+        return self._groups[group]
 
     def add_user_spec(self, user_spec: str) -> None:
-        """Appends the user spec passed as input to the list of root specs.
+        """Appends the user spec passed as input to the default list of root specs.
 
         Args:
             user_spec: user spec to be appended
         """
         self.configuration.setdefault("specs", []).append(user_spec)
+        self._user_specs[DEFAULT_USER_SPEC_GROUP].append(user_spec)
         self.changed = True
 
     def remove_user_spec(self, user_spec: str) -> None:
-        """Removes the user spec passed as input from the list of root specs
+        """Removes the user spec passed as input from the default list of root specs
 
         Args:
             user_spec: user spec to be removed
@@ -2860,6 +2913,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         try:
             for key in self._all_matches(user_spec):
                 self.configuration["specs"].remove(key)
+                self._user_specs[DEFAULT_USER_SPEC_GROUP].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
@@ -2868,6 +2922,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def clear(self) -> None:
         """Clear all user specs from the list of root specs"""
         self.configuration["specs"] = []
+        self._clear_user_specs()
         self.changed = True
 
     def override_user_spec(self, user_spec: str, idx: int) -> None:
@@ -2882,6 +2937,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         try:
             self.configuration["specs"][idx] = user_spec
+            self._clear_user_specs()
+            self._init_user_specs()
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
@@ -3113,8 +3170,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     """Class for Spack environment-specific configuration errors."""
 
     def __init__(self, msg, filename):
-        self.filename = filename
-        super().__init__(msg)
+        super().__init__(f"{msg} in {filename}")
 
 
 class SpackEnvironmentDevelopError(SpackEnvironmentError):
