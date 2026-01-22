@@ -150,8 +150,8 @@ Build Cache Index Views
 Build caches can quickly become large and inefficient to search as binaries are added over time.
 A common work around to this problem is to break the build cache into stacks that target specific applications or workflows.
 This allows for curation of binaries as smaller collections of packages that push to their own mirrors that each maintain a smaller search area.
-However, this approach comes with the tradeoff of requiring much larger storage and computational footprints due to duplication of common dependencies between stacks.
-Splitting build caches can also reduce direct fetch hits by reducing the breadth of binaries availabe in a single mirror.
+However, this approach comes with the trade off of requiring much larger storage and computational footprints due to duplication of common dependencies between stacks.
+Splitting build caches can also reduce direct fetch hits by reducing the breadth of binaries available in a single mirror.
 
 To better address the issues with large search areas, build cache index views (or just "views" in this section) were introduced.
 A view is a named index which provides a curated view into a larger build cache.
@@ -167,7 +167,7 @@ View indices are stored similarly to the top level build cache index, but use an
 Creating a Build Cache Index View
 """""""""""""""""""""""""""""""""
 
-Here is an example of creating a view using an active environent.
+Here is an example of creating a view using an active environment.
 
 .. code-block:: console
 
@@ -188,7 +188,7 @@ If a list of environments is passed while inside of an active environment, the a
 Updating a Build Cache Index View
 """""""""""""""""""""""""""""""""
 
-To prevent accidently overwriting an existing view, it is required to specify how a view should be updated.
+To prevent accidentally overwriting an existing view, it is required to specify how a view should be updated.
 It is possible to use one of two options for updating a view index: ``--force`` or ``--append``.
 Using the ``--force`` option will replace the index as if the previous one did not exist.
 The ``--append`` option will first read the existing index, and then add the new specs to it.
@@ -332,13 +332,13 @@ Automatic Push to a Build Cache
 ---------------------------------
 
 Sometimes it is convenient to push packages to a build cache immediately after they are installed.
-Spack can do this by setting the autopush flag when adding a mirror:
+Spack can do this by setting the ``--autopush`` flag when adding a mirror:
 
 .. code-block:: console
 
     $ spack mirror add --autopush <name> <url or path>
 
-Or the autopush flag can be set for an existing mirror:
+Or the ``--autopush`` flag can be set for an existing mirror:
 
 .. code-block:: console
 

@@ -45,7 +45,7 @@ The spec ``cflags=-O3`` is *always* applied, because there is no ``when`` clause
 The toolchain can be referenced using
 
 .. code-block:: spec
-  
+
    $ spack install my-package %llvm_gfortran
 
 Toolchains are useful for three reasons:

@@ -112,7 +112,7 @@ Scopes can tell Spack to prefer to edit their included scopes instead, using ``p
      path: /path/to/scope/we/want-to-write
      prefer_modify: true
 
-Now, if the including scope is the highest precedence scope and would otherwise be selected automatically by one fo these commands, they will instead prefer to edit ``preferred``.
+Now, if the including scope is the highest precedence scope and would otherwise be selected automatically by one of these commands, they will instead prefer to edit ``preferred``.
 The including scope can still be modified by using the ``--scope`` argument (e.g., ``spack compiler find --scope NAME``).
 
 .. warning::

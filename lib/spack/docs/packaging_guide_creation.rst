@@ -1660,7 +1660,7 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
 ^^^^^^^^^^^^^^^^
 
 The highlighted ``depends_on("libelf")`` call tells Spack that it needs to build and install the ``libelf`` package before it builds ``libdwarf``.
-This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your libdwarf build.
+This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your ``libdwarf`` build.
 
 .. _dependency_specs:
 
@@ -2294,7 +2294,7 @@ Only needed for patches fetched from URLs.
 
 If supplied, this is a spec that tells Spack when to apply the patch.
 If the installed package spec matches this spec, the patch will be applied.
-In our example above, the patch is applied when mvapich is at version ``1.9`` or higher.
+In our example above, the patch is applied when ``mvapich`` is at version ``1.9`` or higher.
 
 ``level``
 """""""""
@@ -2325,7 +2325,7 @@ Lines 1-2 show paths with synthetic ``a/`` and ``b/`` prefixes.
 These are placeholders for the two ``mvapich2`` source directories that ``diff`` compared when it created the patch file.
 This is git's default behavior when creating patch files, but other programs may behave differently.
 
-``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded mvapich2 archive.
+``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded ``mvapich2`` archive.
 If you set level to ``2``, it would strip off ``src``, and so on.
 
 It's generally easier to just structure your patch file so that it applies cleanly with ``-p1``, but if you're using a patch you didn't create yourself, ``level`` can be handy.
@@ -2482,7 +2482,7 @@ This ensures that Python in a view can always locate its Python packages, even w
 
 A package can only extend one other package at a time.
 To support packages that may extend one of a list of other packages, Spack supports multiple ``extends`` directives as long as at most one of them is selected as a dependency during concretization.
-For example, a lua package could extend either lua or luajit, but not both:
+For example, a lua package could extend either ``lua`` or ``lua-luajit``, but not both:
 
 .. code-block:: python
 
@@ -2493,7 +2493,7 @@ For example, a lua package could extend either lua or luajit, but not both:
        extends("lua-luajit", when="~use_lua")
        ...
 
-Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or luajit.
+Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or ``lua-luajit``.
 
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
