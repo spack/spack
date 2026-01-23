@@ -145,7 +145,7 @@ sep_re = re.escape(os.sep)
 valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 6
+lockfile_format_version = 7
 
 
 READER_CLS = {
@@ -155,6 +155,7 @@ READER_CLS = {
     4: spack.spec.SpecfileV3,
     5: spack.spec.SpecfileV4,
     6: spack.spec.SpecfileV5,
+    7: spack.spec.SpecfileV5,
 }
 
 
@@ -968,12 +969,15 @@ def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
 class ConcretizedRootInfo:
     """Data on root specs that have been concretized"""
 
-    __slots__ = ("root", "hash", "new")
+    __slots__ = ("root", "hash", "new", "group")
 
-    def __init__(self, *, root_spec: spack.spec.Spec, root_hash: str, new: bool = False):
+    def __init__(
+        self, *, root_spec: spack.spec.Spec, root_hash: str, new: bool = False, group: str
+    ):
         self.root = root_spec
         self.hash = root_hash
         self.new = new
+        self.group = group
 
     def __str__(self):
         return f"{self.root} -> {self.hash} [new={self.new}]"
@@ -1772,7 +1776,12 @@ class Environment:
         return env_mod
 
     def add_concrete_spec(
-        self, spec: spack.spec.Spec, concrete: spack.spec.Spec, *, new: bool = True
+        self,
+        spec: spack.spec.Spec,
+        concrete: spack.spec.Spec,
+        *,
+        new: bool = True,
+        group: Optional[str] = None,
     ):
         """Called when a new concretized spec is added to the environment.
 
@@ -1785,7 +1794,10 @@ class Environment:
         """
         assert concrete.concrete
         h = concrete.dag_hash()
-        self.concretized_roots.append(ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new))
+        user_specs_group = self._user_specs_key(group=group)
+        self.concretized_roots.append(
+            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=user_specs_group)
+        )
         self.specs_by_hash[h] = concrete
 
     def _dev_specs_that_need_overwrite(self):
@@ -2071,7 +2083,9 @@ class Environment:
         return concrete_specs
 
     def _concrete_roots_dict(self):
-        return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
+        return [
+            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
+        ]
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
@@ -2159,9 +2173,16 @@ class Environment:
         self.included_concretized_order = {}
 
         roots = d["roots"]
+        default_user_specs_group = self._user_specs_key()
 
         self.concretized_roots = [
-            ConcretizedRootInfo(root_spec=Spec(r["spec"]), root_hash=r["hash"], new=False)
+            # Lockfile versions < 7 don't have the "group" attribute
+            ConcretizedRootInfo(
+                root_spec=Spec(r["spec"]),
+                root_hash=r["hash"],
+                new=False,
+                group=r.get("group", default_user_specs_group),
+            )
             for r in roots
         ]
 
