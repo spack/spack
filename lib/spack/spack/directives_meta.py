@@ -134,20 +134,24 @@ class DirectiveMeta(type):
 
 def _combine_when(
     when: Optional[str] = None,
-    context: List[spack.spec.Spec] = DirectiveMeta._when_constraints_stack,
+    when_stack: List[spack.spec.Spec] = DirectiveMeta._when_constraints_stack,
 ) -> spack.spec.Spec:
-    """Compute the combined when constraints from context and argument."""
+    """Compute the combined when constraints from the context and the directive keyword argument.
 
-    if len(context) == 1 and not when:
-        # In case of a single when constraint, avoid allocating a new spec
-        return context[0]
+    Arguments:
+        when: The when constraint from the directive's keyword argument as a raw string (if any).
+        when_stack: The stack of parsed when constraints from ``with when(...)`` context managers.
+    """
+    # In the following case
+    #     with when("+foo"):     # single constraint on the stack
+    #         depends_on("foo")  # unconditional directive
+    # avoid creating a new spec and just return the one from the stack
+    if len(when_stack) == 1 and not when:
+        return when_stack[0]
 
     # Otherwise, combine all when constraints by mutating a new spec
-    if when:
-        when_spec = spack.spec.Spec(when)
-    else:
-        when_spec = spack.spec.Spec()
-    for current in context:
+    when_spec = spack.spec.Spec(when)
+    for current in when_stack:
         when_spec._constrain_symbolically(current, deps=True)
     return when_spec
 
