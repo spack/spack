@@ -1,3 +1,4 @@
 *.py diff=python
 lib/spack/spack/vendor/* linguist-vendored
 *.bat text eol=crlf
+*.patch text eol=lf
