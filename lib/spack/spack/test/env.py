@@ -1752,3 +1752,24 @@ spack:
             spack.spec.Spec("mpileaks@2.1 %clang"),
             spack.spec.Spec("mpich"),
         ]
+
+    def test_independent_groups_concretization(self, create_temporary_manifest):
+        """Tests that groups of specs without dependencies among them can be concretized
+        correctly
+        """
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - libelf
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+            roots = e.concrete_roots()
+            assert len(roots) == 3
