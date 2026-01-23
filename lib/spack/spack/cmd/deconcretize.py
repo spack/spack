@@ -86,7 +86,7 @@ def deconcretize_specs(args, specs):
 
     with env.write_transaction():
         for spec in deconcretize_list:
-            env.deconcretize(spec)
+            env.deconcretize(spec, concrete=True)
         env.write()
 
 

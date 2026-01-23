@@ -1622,7 +1622,7 @@ class Environment:
         self.concretized_roots = []
         self.specs_by_hash = {}
 
-    def deconcretize(self, spec: spack.spec.Spec, concrete: bool = True):
+    def deconcretize(self, spec: spack.spec.Spec, *, concrete: bool) -> None:
         """
         Remove specified spec from environment concretization
 
