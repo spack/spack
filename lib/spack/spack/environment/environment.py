@@ -1615,35 +1615,35 @@ class Environment:
         """Removes concrete specs that no longer correlate to a user spec"""
         to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
         for spec in to_deconcretize:
-            self.deconcretize(spec, concrete=False)
+            self.deconcretize_by_user_spec(spec)
 
     def clear_concretized_specs(self) -> None:
         """Clears the currently concretized specs"""
         self.concretized_roots = []
         self.specs_by_hash = {}
 
-    def deconcretize(self, spec: spack.spec.Spec, *, concrete: bool) -> None:
-        """
-        Remove specified spec from environment concretization
+    def deconcretize_by_hash(self, dag_hash: str) -> None:
+        """Removes a concrete spec from the environment concretization"""
+        self.concretized_roots = [x for x in self.concretized_roots if x.hash != dag_hash]
+        self._maybe_remove_dag_hash(dag_hash)
+
+    def deconcretize_by_user_spec(self, spec: spack.spec.Spec) -> None:
+        """Remove a user spec from the environment concretization
 
         Arguments:
-            spec: Spec to deconcretize. This must be a root of the environment
-            concrete: If True, find all instances of spec as concrete in the environment.
-                If False, find a single instance of the abstract spec as root of the environment.
+            spec: user spec to deconcretize
         """
         # spec has to be a root of the environment
-        if concrete:
-            dag_hash = spec.dag_hash()
-            self.concretized_roots = [x for x in self.concretized_roots if x.hash != dag_hash]
-        else:
-            self.concretized_roots, discarded = stable_partition(
-                self.concretized_roots, lambda x: x.root != spec
-            )
-            assert (
-                len({x.hash for x in discarded}) == 1
-            ), "More than one hash associated with a single user spec"
-            dag_hash = discarded[0].hash
+        self.concretized_roots, discarded = stable_partition(
+            self.concretized_roots, lambda x: x.root != spec
+        )
+        assert (
+            len({x.hash for x in discarded}) == 1
+        ), "More than one hash associated with a single user spec"
+        dag_hash = discarded[0].hash
+        self._maybe_remove_dag_hash(dag_hash)
 
+    def _maybe_remove_dag_hash(self, dag_hash: str):
         # If this was the only user spec that concretized to this concrete spec, remove it
         if not self.user_spec_with_hash(dag_hash) and dag_hash in self.specs_by_hash:
             # if we deconcretized a dependency that doesn't correspond to a root, it won't be here.

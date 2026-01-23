@@ -824,7 +824,7 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
         assert len(e.concretized_roots) == 3
         assert all(x.new for x in e.concretized_roots)
 
-        e.deconcretize(spack.spec.Spec("pkg-a"), concrete=False)
+        e.deconcretize_by_user_spec(spack.spec.Spec("pkg-a"))
         assert len(e.user_specs) == 3
         assert len(e.concretized_roots) == 2
         assert all(x.new for x in e.concretized_roots)
