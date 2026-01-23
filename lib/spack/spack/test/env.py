@@ -1753,6 +1753,21 @@ spack:
             spack.spec.Spec("mpich"),
         ]
 
+    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - mpileaks
+  - pkg-a
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+            lockfile_data = e._to_lockfile_dict()
+            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert all("group" not in x for x in lockfile_data["roots"])
+
     def test_independent_groups_concretization(self, create_temporary_manifest):
         """Tests that groups of specs without dependencies among them can be concretized
         correctly

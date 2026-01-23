@@ -145,7 +145,7 @@ sep_re = re.escape(os.sep)
 valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 7
+CURRENT_LOCKFILE_VERSION = 7
 
 
 READER_CLS = {
@@ -2083,12 +2083,21 @@ class Environment:
         return concrete_specs
 
     def _concrete_roots_dict(self):
+        if not self.has_groups():
+            return [
+                {"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots
+            ]
+
         return [
             {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
         ]
 
+    def has_groups(self) -> bool:
+        return self.manifest.groups() != {DEFAULT_USER_SPEC_GROUP}
+
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
+        lockfile_version = CURRENT_LOCKFILE_VERSION if self.has_groups() else 6
         concrete_specs = self._concrete_specs_dict()
         root_specs = self._concrete_roots_dict()
 
@@ -2105,7 +2114,7 @@ class Environment:
             # metadata about the format
             "_meta": {
                 "file-type": "spack-lockfile",
-                "lockfile-version": lockfile_format_version,
+                "lockfile-version": lockfile_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # spack version information
@@ -2205,7 +2214,7 @@ class Environment:
                 f"Spack {spack.__version__} cannot read the lockfile '{self.lock_path}', using "
                 f"the v{current_lockfile_format} format."
             )
-            if lockfile_format_version < current_lockfile_format:
+            if CURRENT_LOCKFILE_VERSION < current_lockfile_format:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
 
