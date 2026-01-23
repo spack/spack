@@ -988,10 +988,11 @@ class ConcretizedRootInfo:
             and self.root == other.root
             and self.hash == other.hash
             and self.new == other.new
+            and self.group == other.group
         )
 
     def __hash__(self) -> int:
-        return hash((self.root, self.hash, self.new))
+        return hash((self.root, self.hash, self.new, self.group))
 
 
 class Environment:
@@ -1578,9 +1579,23 @@ class Environment:
 
     def sync_concretized_specs(self) -> None:
         """Removes concrete specs that no longer correlate to a user spec"""
-        to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
-        for spec in to_deconcretize:
-            self.deconcretize_by_user_spec(spec)
+        if not self.concretized_roots:
+            return
+
+        to_deconcretize, user_specs = [], self._all_user_specs_with_group()
+        for x in self.concretized_roots:
+            if (x.group, x.root) not in user_specs:
+                to_deconcretize.append(x)
+        for x in to_deconcretize:
+            # FIXME: hack to do the inverse mapping
+            group = x.group.split(":")[-1]
+            self.deconcretize_by_user_spec(x.root, group=group)
+
+    def _all_user_specs_with_group(self) -> Set[Tuple[str, Spec]]:
+        result = set()
+        for group in self.manifest.groups():
+            result.update([(group, x) for x in self.user_specs_by(group=group)])
+        return result
 
     def clear_concretized_specs(self) -> None:
         """Clears the currently concretized specs"""
@@ -1592,15 +1607,20 @@ class Environment:
         self.concretized_roots = [x for x in self.concretized_roots if x.hash != dag_hash]
         self._maybe_remove_dag_hash(dag_hash)
 
-    def deconcretize_by_user_spec(self, spec: spack.spec.Spec) -> None:
-        """Remove a user spec from the environment concretization
+    def deconcretize_by_user_spec(
+        self, spec: spack.spec.Spec, *, group: Optional[str] = None
+    ) -> None:
+        """Removes a user spec from the environment concretization
 
         Arguments:
             spec: user spec to deconcretize
+            group: group of the spec to remove. If not specified, the spec is removed from
+                the default group
         """
+        group = group or DEFAULT_USER_SPEC_GROUP
         # spec has to be a root of the environment
-        self.concretized_roots, discarded = stable_partition(
-            self.concretized_roots, lambda x: x.root != spec
+        discarded, self.concretized_roots = stable_partition(
+            self.concretized_roots, lambda x: x.group == group and x.root == spec
         )
         assert (
             len({x.hash for x in discarded}) == 1
@@ -1794,9 +1814,9 @@ class Environment:
         """
         assert concrete.concrete
         h = concrete.dag_hash()
-        user_specs_group = self._user_specs_key(group=group)
+        group = group or DEFAULT_USER_SPEC_GROUP
         self.concretized_roots.append(
-            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=user_specs_group)
+            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=group)
         )
         self.specs_by_hash[h] = concrete
 
@@ -2084,9 +2104,7 @@ class Environment:
 
     def _concrete_roots_dict(self):
         if not self.has_groups():
-            return [
-                {"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots
-            ]
+            return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
 
         return [
             {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
@@ -2182,7 +2200,7 @@ class Environment:
         self.included_concretized_order = {}
 
         roots = d["roots"]
-        default_user_specs_group = self._user_specs_key()
+        default_user_specs_group = DEFAULT_USER_SPEC_GROUP
 
         self.concretized_roots = [
             # Lockfile versions < 7 don't have the "group" attribute
@@ -2419,27 +2437,54 @@ class EnvironmentConcretizer:
     ) -> List[SpecPair]:
         if force is None:
             force = spack.config.get("concretizer:force")
-
-        # Exit early if the set of concretized specs is the set of user specs
         self._prepare_environment_for_concretization(force=force)
-        new_user_specs, kept_user_specs = self._partition_user_specs()
-        if not new_user_specs:
-            return []
 
-        # Pick the right concretization strategy
-        unify = self.env.unify
-        if unify == "when_possible":
-            return self._concretize_together_where_possible(
-                new_user_specs, kept_user_specs, tests=tests
-            )
+        result = []
+        groups = list(self.env.manifest.groups())
+        # Sort so that the ordering is deterministic, and "default" specs are first
+        groups.sort(key=lambda x: (x == DEFAULT_USER_SPEC_GROUP, x))
+        while groups:
+            current_group = groups.pop()
+            # Exit early if the set of concretized specs is the set of user specs
+            new_user_specs, kept_user_specs = self._partition_user_specs(group=current_group)
+            if not new_user_specs:
+                continue
 
-        if unify is True:
-            return self._concretize_together(new_user_specs, kept_user_specs, tests=tests)
+            # Pick the right concretization strategy
+            unify = self.env.unify
+            if unify == "when_possible":
+                partial_result = self._concretize_together_where_possible(
+                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                )
 
-        if unify is False:
-            return self._concretize_separately(new_user_specs, kept_user_specs, tests=tests)
+            elif unify is True:
+                partial_result = self._concretize_together(
+                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                )
 
-        raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+            elif unify is False:
+                partial_result = self._concretize_separately(
+                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                )
+            else:
+                raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+            result.extend(partial_result)
+
+        # Unify the specs objects, so we get correct references to all parents
+        self.env.unify_specs()
+        return result
+
+        # for group in self.env.user_spec_groups:
+        #     # Exit early if the set of concretized specs is the set of user specs
+        #     new_user_specs, kept_user_specs = self._partition_user_specs(group)
+        #     if not new_user_specs:
+        #         continue
+        #
+        #     needed_groups = self.env.needed_groups(group)
+        #     reused_specs = self.env.concrete_specs_from_groups(*needed_groups)
+        #     group_scope = ...
+        #     with spack.config.push_scope():
+        #         [concretize and add]
 
     def _prepare_environment_for_concretization(self, *, force: bool):
         """Reset the environment concrete state and ensure consistency with user specs."""
@@ -2452,13 +2497,15 @@ class EnvironmentConcretizer:
         if self.env.included_concrete_env_root_dirs:
             self.env.include_concrete_envs()
 
-    def _partition_user_specs(self) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
+    def _partition_user_specs(
+        self, *, group: str
+    ) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
         """Splits the users specs in the list of the ones to be computed, and the list of
         the ones to retain.
         """
-        concretized_user_specs = {x.root for x in self.env.concretized_roots}
+        concretized_user_specs = {x.root for x in self.env.concretized_roots if x.group == group}
         kept_user_specs, new_user_specs = stable_partition(
-            self.env.user_specs, lambda x: x in concretized_user_specs
+            self.env.user_specs_by(group=group), lambda x: x in concretized_user_specs
         )
         kept_user_specs += self.env.included_user_specs
         return new_user_specs, kept_user_specs
@@ -2474,7 +2521,12 @@ class EnvironmentConcretizer:
         return specs_to_concretize
 
     def _concretize_together_where_possible(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
     ) -> List[SpecPair]:
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
@@ -2482,12 +2534,17 @@ class EnvironmentConcretizer:
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
 
         return result
 
     def _concretize_together(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
     ) -> List[SpecPair]:
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
@@ -2495,7 +2552,7 @@ class EnvironmentConcretizer:
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
-            if len(self.env.user_specs) > 1:
+            if len(self.env.user_specs_by(group=group)) > 1:
                 e.message += ". "
                 if to_keep:
                     e.message += (
@@ -2511,23 +2568,24 @@ class EnvironmentConcretizer:
         # Return the portion of the return value that is new
         result = concrete_pairs[: len(to_compute)]
         for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
         return result
 
     def _concretize_separately(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
     ) -> List[SpecPair]:
-        """Concretization strategy that concretizes separately one
-        user spec after the other.
-        """
+        """Concretization strategy that concretizes separately one user spec after the other"""
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(to_concretize, tests=tests)
 
         for abstract, concrete in concrete_pairs:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
 
-        # Unify the specs objects, so we get correct references to all parents
-        self.env.unify_specs()
         return concrete_pairs
 
 
