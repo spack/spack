@@ -4,7 +4,7 @@
 
 import collections
 import functools
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Set, Tuple, Type, Union
 
 import spack.error
 import spack.repo
@@ -42,7 +42,7 @@ class DirectiveMeta(type):
     #: function name (e.g. "depends_on", "version", etc.)
     _directives_to_be_executed: Dict[str, List[Callable]] = collections.defaultdict(list)
     #: Stack of when constraints from `with when(...)` context managers
-    _when_constraints_stack: List[spack.spec.Spec] = []
+    _when_constraints_stack: List[str] = []
     #: Stack of default args from `with default_args(...)` context managers
     _default_args_stack: List[dict] = []
     #: This property is set *automatically* during class definition as directives are invoked,
@@ -109,12 +109,12 @@ class DirectiveMeta(type):
         return DirectiveMeta._descriptor_cache[name]
 
     @staticmethod
-    def push_when_constraint(when_spec: spack.spec.Spec) -> None:
+    def push_when_constraint(when_spec: str) -> None:
         """Add a spec to the context constraints."""
         DirectiveMeta._when_constraints_stack.append(when_spec)
 
     @staticmethod
-    def pop_when_constraint() -> spack.spec.Spec:
+    def pop_when_constraint() -> str:
         """Pop the last constraint from the context"""
         return DirectiveMeta._when_constraints_stack.pop()
 
@@ -198,30 +198,6 @@ class DirectiveDictDescriptor:
         return getattr(objtype, self.private_name)
 
 
-def _combine_when(
-    when: Optional[str] = None,
-    when_stack: List[spack.spec.Spec] = DirectiveMeta._when_constraints_stack,
-) -> spack.spec.Spec:
-    """Compute the combined when constraints from the context and the directive keyword argument.
-
-    Arguments:
-        when: The when constraint from the directive's keyword argument as a raw string (if any).
-        when_stack: The stack of parsed when constraints from ``with when(...)`` context managers.
-    """
-    # In the following case
-    #     with when("+foo"):     # single constraint on the stack
-    #         depends_on("foo")  # unconditional directive
-    # avoid creating a new spec and just return the one from the stack
-    if len(when_stack) == 1 and not when:
-        return when_stack[0]
-
-    # Otherwise, combine all when constraints by mutating a new spec
-    when_spec = spack.spec.Spec(when)
-    for current in when_stack:
-        when_spec._constrain_symbolically(current, deps=True)
-    return when_spec
-
-
 class directive:
     def __init__(
         self,
@@ -290,14 +266,17 @@ class directive:
             else:
                 kwargs = _kwargs
 
-            # Inject when arguments from the context
+            # Inject when arguments from the `with when(...)` stack.
             if DirectiveMeta._when_constraints_stack:
                 if not self.supports_when:
                     raise DirectiveError(
                         f'directive "{decorated_function.__name__}" cannot be used within a '
                         '"when" context since it does not support a "when=" argument'
                     )
-                kwargs["when"] = _combine_when(kwargs.get("when"))
+                if "when" in kwargs:
+                    kwargs["when"] = (*DirectiveMeta._when_constraints_stack, kwargs["when"])
+                else:
+                    kwargs["when"] = tuple(DirectiveMeta._when_constraints_stack)
 
             # Remove directives passed as arguments, so they are not executed as part of this
             # class's directive execution, but handled by the called directive instead

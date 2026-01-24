@@ -10,8 +10,8 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.directives import depends_on, extends, patch
-from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta, _combine_when
+from spack.directives import _make_when_spec, depends_on, extends, patch
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
 from spack.spec import Spec
 
 
@@ -218,19 +218,10 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
 
 
 def test_directives_meta_combine_when():
-    x, y = Spec("+x ^dep +a"), Spec("+y ^dep +b")
-
-    # Check that specs are combined, and do not mutate inputs
-    assert _combine_when("+z", [x, y]) == Spec("+x +y +z ^dep +a +b")
-    assert x == Spec("+x ^dep +a")
-    assert y == Spec("+y ^dep +b")
-
-    assert _combine_when(None, [x, y]) == Spec("+x +y ^dep +a +b")
-    assert x == Spec("+x ^dep +a")
-    assert y == Spec("+y ^dep +b")
-
-    # Check the optimization for single stack with no when
-    assert _combine_when(None, [x]) is x
+    x, y, z = "+x ^dep +a", "+y ^dep +b", "+z"
+    assert _make_when_spec((x, y, z)) == Spec("+x +y +z ^dep +a +b")
+    assert _make_when_spec((x, y)) == Spec("+x +y ^dep +a +b")
+    assert _make_when_spec((x,)) == Spec("+x ^dep +a")
 
 
 def test_directive_descriptor_init():

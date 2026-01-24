@@ -98,7 +98,7 @@ Patcher = Callable[[Union[PackageType, Dependency]], None]
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
 
 
-def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
+def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.spec.Spec]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
     Directives with ``when`` specs, e.g.:
@@ -122,11 +122,24 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
 
     Arguments:
         value: a conditional Spec, constant ``bool``, or None if not supplied
-           value indicating when a directive should be applied.
+           value indicating when a directive should be applied. It can also be a tuple of when
+           conditions (as strings) to be combined together.
 
     """
+    # This branch is never taken, but our WhenType type annotation allows it, so handle it too.
     if isinstance(value, spack.spec.Spec):
         return value
+
+    if isinstance(value, tuple):
+        assert value, "when stack cannot be empty"
+        # avoid a copy when there's only one condition
+        if len(value) == 1:
+            return get_spec(value[0])
+        # reduce the when-stack to a single spec by combining all constraints.
+        combined_spec = spack.spec.Spec(value[0])
+        for cond in value[1:]:
+            combined_spec._constrain_symbolically(get_spec(cond))
+        return combined_spec
 
     # Unsatisfiable conditions are discarded by the caller, and never
     # added to the package class

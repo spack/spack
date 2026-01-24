@@ -247,10 +247,7 @@ class when:
         Args:
             condition (str): condition to be met
         """
-        if isinstance(condition, bool):
-            self.spec = spack.spec.EMPTY_SPEC if condition else None
-        else:
-            self.spec = spack.directives_meta.get_spec(condition)
+        self.when = condition
 
     def __call__(self, method):
         assert (
@@ -262,17 +259,20 @@ class when:
         if not isinstance(original_method, SpecMultiMethod):
             original_method = SpecMultiMethod(original_method)
 
-        if self.spec is not None:
-            original_method.register(self.spec, method)
+        if self.when is True:
+            original_method.register(spack.spec.EMPTY_SPEC, method)
+        elif self.when is not False:
+            original_method.register(spack.directives_meta.get_spec(self.when), method)
 
         return original_method
 
     def __enter__(self):
-        if self.spec is not None:
-            spack.directives_meta.DirectiveMeta.push_when_constraint(self.spec)
+        # TODO: support when=False.
+        if isinstance(self.when, str):
+            spack.directives_meta.DirectiveMeta.push_when_constraint(self.when)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.spec is not None:
+        if isinstance(self.when, str):
             spack.directives_meta.DirectiveMeta.pop_when_constraint()
 
 
