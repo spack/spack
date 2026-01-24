@@ -10,7 +10,8 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.directives_meta import DirectiveDictDescriptor, _combine_when
+from spack.directives import depends_on, extends, patch
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta, _combine_when
 from spack.spec import Spec
 
 
@@ -260,3 +261,45 @@ def test_directive_descriptor_init():
     patches = DirectiveDictDescriptor("patches")
     assert patches.directives_to_run == ["patch"]
     assert patches.dicts_to_init == ["patches"]
+
+
+def test_directive_laziness():
+    class ExamplePackage(metaclass=DirectiveMeta):
+        name = "example-package"
+        depends_on("foo")
+        extends("bar", when="+bar")
+
+    # Initially, no directive dicts are initialized
+    assert ExamplePackage._dependencies is None  # type: ignore
+    assert ExamplePackage._extendees is None  # type: ignore
+    assert ExamplePackage._variants is None  # type: ignore
+
+    # Only when we access the dependencies descriptor, the relevant dicts (dependencies, extendees)
+    # are initialized, while others remain None
+    dependencies = ExamplePackage.dependencies  # type: ignore
+    assert type(ExamplePackage._dependencies) is dict  # type: ignore
+    assert type(ExamplePackage._extendees) is dict  # type: ignore
+    assert ExamplePackage._variants is None  # type: ignore
+
+    # The dependencies dict is populated with the expected entries
+    assert "foo" in dependencies[spack.spec.Spec()]
+    assert "bar" in dependencies[spack.spec.Spec("+bar")]
+
+
+def test_patched_dependencies_sets_class_attribute():
+    sha256 = "a" * 64
+
+    class PatchesDependencies(metaclass=DirectiveMeta):
+        name = "patches-dependencies"
+        depends_on("dependency", patches=patch("https://example.com/diff.patch", sha256=sha256))
+
+    assert PatchesDependencies._patches_dependencies is True
+    assert not PatchesDependencies.patches  # type: ignore
+
+    class DoesNotPatchDependencies(metaclass=DirectiveMeta):
+        name = "does-not-patch-dependencies"
+        fullname = "does-not-patch-dependencies"
+        patch("https://example.com/diff.patch", sha256=sha256)
+
+    assert DoesNotPatchDependencies._patches_dependencies is False
+    assert DoesNotPatchDependencies.patches  # type: ignore
