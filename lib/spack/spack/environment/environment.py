@@ -1171,18 +1171,6 @@ class Environment:
             name=user_speclist_name, yaml_list=spec_list
         )
 
-    def all_concretized_orders(self) -> List[str]:
-        """Returns all of the concretized order of the environment and
-        its included environment(s)."""
-        concretized_order = [x.hash for x in self.concretized_roots]
-        for included_concretized_order in self.included_concretized_order.values():
-            for included in included_concretized_order:
-                # Don't duplicate included spec(s)
-                if included not in concretized_order:
-                    concretized_order.append(included)
-
-        return concretized_order
-
     @property
     def user_specs(self):
         return self.spec_lists[user_speclist_name]
@@ -1819,22 +1807,8 @@ class Environment:
         installer, and those that should be, taking into account development
         specs. This is done in a single read transaction per environment instead
         of per spec."""
-        installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.all_concretized_orders():
-                if concretized_hash in self.specs_by_hash:
-                    spec = self.specs_by_hash[concretized_hash]
-                else:
-                    for env_path in self.included_specs_by_hash.keys():
-                        if concretized_hash in self.included_specs_by_hash[env_path]:
-                            spec = self.included_specs_by_hash[env_path][concretized_hash]
-                            break
-                if not spec.installed or (
-                    spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
-                ):
-                    uninstalled.append(spec)
-                else:
-                    installed.append(spec)
+            uninstalled, installed = stable_partition(self.concrete_roots(), _is_uninstalled)
         return installed, uninstalled
 
     def uninstalled_specs(self):
@@ -2388,6 +2362,10 @@ class Environment:
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def _is_uninstalled(spec):
+    return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
 
 
 class EnvironmentConcretizer:
