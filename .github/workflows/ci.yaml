@@ -88,7 +88,7 @@ jobs:
     steps:
     - name: Success
       run: |
-        if [ "${{ needs.prechecks.result }}" == "failure" ] || [ "${{ needs.prechecks.result }}" == "canceled" ]; then
+        if [ "${{ needs.prechecks.result }}" = "failure" ] || [ "${{ needs.prechecks.result }}" = "cancelled" ]; then
           echo "Unit tests failed."
           exit 1
         else
@@ -109,10 +109,10 @@ jobs:
     steps:
     - name: Status summary
       run: |
-        if [ "${{ needs.unit-tests.result }}" == "failure" ] || [ "${{ needs.unit-tests.result }}" == "canceled" ]; then
+        if [ "${{ needs.unit-tests.result }}" = "failure" ] || [ "${{ needs.unit-tests.result }}" = "cancelled" ]; then
           echo "Unit tests failed."
           exit 1
-        elif [ "${{ needs.bootstrap.result }}" == "failure" ] || [ "${{ needs.bootstrap.result }}" == "canceled" ]; then
+        elif [ "${{ needs.bootstrap.result }}" = "failure" ] || [ "${{ needs.bootstrap.result }}" = "cancelled" ]; then
           echo "Bootstrap tests failed."
           exit 1
         else
