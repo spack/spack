@@ -1174,7 +1174,7 @@ class Environment:
     def all_concretized_user_specs(self) -> List[Spec]:
         """Returns all of the concretized user specs of the environment and
         its included environment(s)."""
-        concretized_user_specs = self.concretized_user_specs
+        concretized_user_specs = [x.root for x in self.concretized_roots]
         for included_specs in self.included_concretized_user_specs.values():
             for included in included_specs:
                 # Don't duplicate included spec(s)
@@ -1799,10 +1799,6 @@ class Environment:
         h = concrete.dag_hash()
         self.concretized_roots.append(ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new))
         self.specs_by_hash[h] = concrete
-
-    @property
-    def concretized_user_specs(self) -> List[Spec]:
-        return [x.root for x in self.concretized_roots]
 
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""

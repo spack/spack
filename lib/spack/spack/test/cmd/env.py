@@ -2294,19 +2294,24 @@ def test_env_include_concrete_env_reconcretized(unify):
 
 
 def test_concretize_include_concrete_env():
+    """Tests that if we update an included environment, and later we re-concretize the environment
+    that includes it, we use the latest version of the concrete specs.
+    """
     test1, _, combined = setup_combined_multiple_env()
 
+    # Update test1 environment
     with test1:
         add("mpileaks")
     test1.concretize()
     test1.write()
 
-    assert Spec("mpileaks") in test1.concretized_user_specs
+    # Check the test1 environment includes mpileaks, while the combined environment does not
+    assert Spec("mpileaks") in {x.root for x in test1.concretized_roots}
     assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
 
+    # If we update the combined environment, it will include mpileaks too
     combined.concretize()
     combined.write()
-
     assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
 
 
@@ -2753,18 +2758,18 @@ spack:
             e.concretize()
 
             before_user = e.user_specs.specs
-            before_conc = e.concretized_user_specs
+            concretized_roots_before = e.concretized_roots
 
             remove("-f", "-l", "packages", "mpileaks")
 
             after_user = e.user_specs.specs
-            after_conc = e.concretized_user_specs
+            concretized_roots_after = e.concretized_roots
 
             assert before_user == after_user
 
             mpileaks_spec = Spec("mpileaks target=default_target")
-            assert mpileaks_spec in before_conc
-            assert mpileaks_spec not in after_conc
+            assert mpileaks_spec in {x.root for x in concretized_roots_before}
+            assert mpileaks_spec not in {x.root for x in concretized_roots_after}
 
 
 def test_stack_definition_extension(tmp_path: pathlib.Path):
