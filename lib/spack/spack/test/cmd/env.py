@@ -3360,46 +3360,34 @@ def test_env_activate_sh_script_output():
     env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="sh")
 
     with open(env_activate_script, "r", encoding="utf-8") as f:
-        out = f.read()
-
-    assert "_spack_env_set SPACK_ENV " in out
-    assert "export PS1=" not in out
-    assert "alias despacktivate=" not in out
-
-    env_prompt_script = shell_script.path_to_env_prompt_view_shell_script(environ, shell="sh")
-
-    with open(env_prompt_script, "r", encoding="utf-8") as f:
-        out = f.read()
+        script = f.read()
 
     assert "_spack_env_set SPACK_ENV " not in out
+    assert "_spack_env_set SPACK_ENV " in script
     assert "export PS1=" in out
+    assert "export PS1=" not in script
     assert "alias despacktivate=" in out
+    assert "alias despacktivate=" not in script
 
 
 def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
-    env("activate", "--csh", "test")
+    out = env("activate", "--csh", "test")
 
     environ = ev.environment_from_name_or_dir("test")
     env_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell="csh")
 
     with open(env_activate_script, "r", encoding="utf-8") as f:
-        out = f.read()
-
-    assert "_spack_env_set SPACK_ENV " in out
-    assert "_spack_env_set prompt" not in out
-    assert "alias despacktivate" not in out
-
-    env_prompt_script = shell_script.path_to_env_prompt_view_shell_script(environ, shell="csh")
-
-    with open(env_prompt_script, "r", encoding="utf-8") as f:
-        out = f.read()
+        script = f.read()
 
     assert "_spack_env_set SPACK_ENV " not in out
+    assert "_spack_env_set SPACK_ENV " in script
     assert "_spack_env_set prompt" in out
+    assert "_spack_env_set prompt" not in script
     assert "alias despacktivate" in out
+    assert "alias despacktivate" not in script
 
 
 @pytest.mark.regression("12719")

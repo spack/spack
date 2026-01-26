@@ -25,17 +25,6 @@ def path_to_env_activate_shell_script(env, shell) -> str:
     return os.path.join(env.path, ".spack-env", f"activate{shell}")
 
 
-def path_to_env_prompt_view_shell_script(env, shell) -> str:
-    """Returns to path to the shell script to prompt and view commands for the env
-
-    Args:
-        env: the environment whose shell script we are returning the path of
-        shell: the shell that the user is running on
-    """
-
-    return os.path.join(env.path, ".spack-env", f"prompt_view.{shell}")
-
-
 def path_to_env_deactivate_shell_script(env, shell) -> str:
     """Returns to path to the shell script to activate the specified env for the shell that
     the user is running
@@ -115,30 +104,12 @@ def update_env_activate_script(env, prompt="", view=""):
         cmds = get_activation_cmds(env_mods, env, view, shell)
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
-        prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
-        cmds += (
-            f"source {prompt_view_script_path}" if shell == "sh" else ""
-        )
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
                 f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
             )
             f.write(cmds)
-
-    shells_avail.extend(["csh", "fish"])
-
-    for shell in shells_avail:
-        cmds = get_shell_unique_env_cmds(shell, prompt, view)
-
-        prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
-
-        if not os.path.isfile(prompt_view_script_path):
-            with open(prompt_view_script_path, "w", encoding="utf-8") as f:
-                f.write(
-                    f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-                )
-                f.write(cmds)
 
 
 def write_env_deactivate_script(env, view):
