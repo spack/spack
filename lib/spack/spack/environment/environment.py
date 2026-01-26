@@ -2068,22 +2068,6 @@ class Environment:
                 if d not in needed:
                     yield d
 
-    def _get_environment_specs(self, recurse_dependencies=True):
-        """Returns the specs of all the packages in an environment.
-
-        If these specs appear under different user_specs, only one copy
-        is added to the list returned.
-        """
-        specs = [self.specs_by_hash[h] for h in self.all_concretized_orders()]
-        if recurse_dependencies:
-            specs.extend(
-                traverse.traverse_nodes(
-                    specs, root=False, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-            )
-
-        return specs
-
     def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):

@@ -43,6 +43,7 @@ from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder
+from spack.traverse import traverse_nodes
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
 from spack.version import Version
@@ -473,8 +474,9 @@ def test_concretize():
     e = ev.create("test")
     e.add("mpileaks")
     e.concretize()
-    env_specs = e._get_environment_specs()
-    assert any(x.name == "mpileaks" for x in env_specs)
+
+    assert len(e.concretized_roots) == 1
+    assert e.concretized_roots[0].root == Spec("mpileaks")
 
 
 def test_env_specs_partition(install_mockery, mock_fetch):
@@ -510,8 +512,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     e.add("cmake-client")
     e.concretize()
     e.install_all(fake=True)
-    env_specs = e._get_environment_specs()
-    spec = next(x for x in env_specs if x.name == "cmake-client")
+    spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
     assert spec.installed
 
 
@@ -689,16 +690,14 @@ def test_remove_after_concretize():
 
     e.remove("mpileaks")
     assert Spec("mpileaks") not in e.user_specs
-    env_specs = e._get_environment_specs()
-    assert any(s.name == "mpileaks" for s in env_specs)
+    assert any(s.name == "mpileaks" for s in e.all_specs_generator())
 
     e.add("mpileaks")
     assert any(s.name == "mpileaks" for s in e.user_specs)
 
     e.remove("mpileaks", force=True)
     assert Spec("mpileaks") not in e.user_specs
-    env_specs = e._get_environment_specs()
-    assert not any(s.name == "mpileaks" for s in env_specs)
+    assert not any(s.name == "mpileaks" for s in e.all_specs_generator())
 
 
 def test_remove_before_concretize():
@@ -940,9 +939,7 @@ spack:
     after.write()
 
     read = ev.read("test")
-    env_specs = read._get_environment_specs()
-
-    assert not any(x.name == "hypre" for x in env_specs)
+    assert not any(x.name == "hypre" for x in read.all_specs_generator())
 
 
 def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
@@ -1224,7 +1221,9 @@ spack:
     with e:
         e.concretize()
 
-    assert any(x.intersects("mpileaks@2.2") for x in e._get_environment_specs())
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
+    assert mpileaks.satisfies("mpileaks@2.2")
 
 
 def test_with_config_bad_include_create(environment_from_manifest):
@@ -1308,10 +1307,13 @@ spack:
     with e:
         e.concretize()
 
-    environment_specs = e._get_environment_specs(False)
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
+    assert mpileaks.satisfies("mpileaks@2.2")
 
-    assert environment_specs[0].satisfies("libelf@0.8.10")
-    assert environment_specs[1].satisfies("mpileaks@2.2")
+    libelf_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("libelf"))
+    libelf = e.specs_by_hash[libelf_hash]
+    assert libelf.satisfies("libelf@0.8.10")
 
 
 @pytest.fixture(scope="function")
@@ -1368,7 +1370,9 @@ spack:
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
+    assert mpileaks.satisfies("mpileaks@2.2")
 
 
 def test_config_change_existing(
@@ -1532,7 +1536,9 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
+    assert mpileaks.satisfies("mpileaks@2.2")
 
 
 def test_env_with_included_config_var_path(tmp_path: pathlib.Path, packages_file):
@@ -1553,7 +1559,9 @@ def test_env_with_included_config_var_path(tmp_path: pathlib.Path, packages_file
     with e:
         e.concretize()
 
-    assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
+    assert mpileaks.satisfies("mpileaks@2.2")
 
 
 def test_env_with_included_config_precedence(tmp_path: pathlib.Path):
@@ -1590,13 +1598,15 @@ spack:
     e = ev.Environment(tmp_path)
     with e:
         e.concretize()
-    specs = e._get_environment_specs()
+
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
 
     # ensure included scope took effect
-    assert any(x.satisfies("mpileaks@2.2") for x in specs)
+    assert mpileaks.satisfies("mpileaks@2.2")
 
     # ensure env file takes precedence
-    assert any(x.satisfies("libelf@0.8.12") for x in specs)
+    assert mpileaks["libelf"].satisfies("libelf@0.8.12")
 
 
 def test_env_with_included_configs_precedence(tmp_path: pathlib.Path):
@@ -1639,13 +1649,15 @@ packages:
     e = ev.Environment(tmp_path)
     with e:
         e.concretize()
-    specs = e._get_environment_specs()
 
-    # ensure included package spec took precedence over manifest spec
-    assert any(x.satisfies("mpileaks@2.2") for x in specs)
+    mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
+    mpileaks = e.specs_by_hash[mpileaks_hash]
 
-    # ensure first included package spec took precedence over one from second
-    assert any(x.satisfies("libelf@0.8.10") for x in specs)
+    # ensure the included package spec took precedence over manifest spec
+    assert mpileaks.satisfies("mpileaks@2.2")
+
+    # ensure the first included package spec took precedence over one from second
+    assert mpileaks["libelf"].satisfies("libelf@0.8.10")
 
 
 @pytest.mark.regression("39248")
@@ -2973,7 +2985,7 @@ def test_stack_combinatorial_view(
     """Tests creating a default view for a combinatorial stack."""
     view_dir = tmp_path / "view"
     with installed_environment(template_combinatorial_env.format(view_config="")) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -2986,7 +2998,7 @@ def test_stack_view_select(
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="select: ['target=x86_64']\n")
     with installed_environment(content) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -2999,7 +3011,7 @@ def test_stack_view_exclude(
     view_dir = tmp_path / "view"
     content = template_combinatorial_env.format(view_config="exclude: [callpath]\n")
     with installed_environment(content) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -3016,7 +3028,7 @@ def test_stack_view_select_and_exclude(
 """
     )
     with installed_environment(content) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -3036,7 +3048,7 @@ def test_view_link_roots(
     """
     )
     with installed_environment(content) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -3118,7 +3130,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
     )
 
     with installed_environment(content) as test:
-        for spec in test._get_environment_specs():
+        for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -3257,7 +3269,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
 
     with installed_environment(content) as e:
         assert os.path.exists(str(default_dir / "bin"))
-        for spec in e._get_environment_specs():
+        for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
             current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
@@ -4567,7 +4579,7 @@ spack:
         # the view root in the included view should NOT exist
         assert not os.path.exists(str(default_dir))
 
-        for spec in e._get_environment_specs():
+        for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             # no specs will exist in the included view projection
             base_dir = view_dir / f"{spec.architecture.target}"
             included_dir = base_dir / f"{spec.name}-{spec.version}-from-view"
