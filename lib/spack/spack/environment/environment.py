@@ -1171,18 +1171,6 @@ class Environment:
             name=user_speclist_name, yaml_list=spec_list
         )
 
-    def all_concretized_user_specs(self) -> List[Spec]:
-        """Returns all of the concretized user specs of the environment and
-        its included environment(s)."""
-        concretized_user_specs = [x.root for x in self.concretized_roots]
-        for included_specs in self.included_concretized_user_specs.values():
-            for included in included_specs:
-                # Don't duplicate included spec(s)
-                if included not in concretized_user_specs:
-                    concretized_user_specs.append(included)
-
-        return concretized_user_specs
-
     def all_concretized_orders(self) -> List[str]:
         """Returns all of the concretized order of the environment and
         its included environment(s)."""
@@ -1945,14 +1933,19 @@ class Environment:
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
-        for s, h in zip(self.all_concretized_user_specs(), self.all_concretized_orders()):
-            if h in self.specs_by_hash:
-                yield (s, self.specs_by_hash[h])
-            else:
-                for env_path in self.included_specs_by_hash.keys():
-                    if h in self.included_specs_by_hash[env_path]:
-                        yield (s, self.included_specs_by_hash[env_path][h])
-                        break
+        for x in self.concretized_roots:
+            yield x.root, self.specs_by_hash[x.hash]
+
+        seen = set()
+        for included_env in self.included_concretized_user_specs:
+            for s, h in zip(
+                self.included_concretized_user_specs[included_env],
+                self.included_concretized_order[included_env],
+            ):
+                if (s, h) in seen:
+                    continue
+                seen.add((s, h))
+                yield s, self.included_specs_by_hash[included_env][h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
