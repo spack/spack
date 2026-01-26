@@ -244,9 +244,12 @@ def activate(env, use_env_repo=False, prompt="", view=""):
         env_activate_script = path_to_env_activate_shell_script(env, shell)
 
         if os.path.isfile(env_activate_script):
-            yaml_update = os.stat(os.path.join(env.path, manifest_name)).st_mtime
+            if os.path.isfile(os.path.join(env.path, lockfile_name)):
+                lock_update = os.stat(os.path.join(env.path, lockfile_name)).st_mtime
+            else:
+                lock_update = 0.00
             activation_update = os.stat(env_activate_script).st_mtime
-            if yaml_update > activation_update or prompt or view:
+            if lock_update > activation_update or prompt or view:
                 update_env_activate_script(env, prompt, view)
 
         tty.debug(f"Using environment '{env.name}'")

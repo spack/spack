@@ -385,6 +385,11 @@ def env_activate(args):
 
     ev.activate(active_env, prompt=env_prompt, view=view)
 
+    cmds = shell_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
+
+    if cmds:
+        sys.stdout.write(cmds)
+
     print(f"source {env_activate_script}")
 
 

@@ -55,6 +55,18 @@ def get_activation_cmds(env_mods, env, view, shell) -> str:
     return cmds
 
 
+def get_shell_unique_env_cmds(shell, prompt, view):
+    """This does a thing"""
+
+    despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
+    prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
+    view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
+
+    cmds = despactivate_cmd + prompt_cmds + view_cmd
+
+    return cmds
+
+
 def write_env_activate_script(env, view):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
@@ -117,9 +129,7 @@ def update_env_activate_script(env, prompt="", view=""):
     shells_avail.extend(["csh", "fish"])
 
     for shell in shells_avail:
-        despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
-        prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
-        view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
+        cmds = get_shell_unique_env_cmds(shell, prompt, view)
 
         prompt_view_script_path = path_to_env_prompt_view_shell_script(env, shell)
 
@@ -128,9 +138,8 @@ def update_env_activate_script(env, prompt="", view=""):
                 f.write(
                     f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
                 )
-                f.write(despactivate_cmd)
-                f.write(prompt_cmds)
-                f.write(view_cmd)
+                f.write(cmds)
+
 
 def write_env_deactivate_script(env, view):
     """Gets and writes the environment modifications to deactivate the specified
