@@ -13,9 +13,23 @@ from typing import Any, Dict
 properties: Dict[str, Any] = {
     "projections": {
         "type": "object",
-        "properties": {"all": {"type": "string"}},
+        "description": "Customize directory structure and naming schemes by mapping specs to "
+        "format strings.",
+        "properties": {
+            "all": {
+                "type": "string",
+                "description": "Default projection format string used as fallback for all specs "
+                "that do not match other entries. Uses spec format syntax like "
+                '"{name}/{version}/{hash:16}".',
+            }
+        },
         "additionalKeysAreSpecs": True,
-        "additionalProperties": {"type": "string"},
+        "additionalProperties": {
+            "type": "string",
+            "description": "Projection format string for specs matching this key. Uses spec "
+            "format syntax supporting tokens like {name}, {version}, {compiler.name}, "
+            "{^dependency.name}, etc.",
+        },
     }
 }
 

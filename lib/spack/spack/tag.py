@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage package tags"""
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Set
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -51,26 +51,28 @@ class TagIndex:
             else:
                 self.tags[tag] = sorted({*self.tags[tag], *pkgs})
 
-    def update_package(self, pkg_name: str, repo: "spack.repo.Repo") -> None:
-        """Updates a package in the tag index.
+    def update_packages(self, pkg_names: Set[str], repo: "spack.repo.Repo") -> None:
+        """Updates packages in the tag index.
 
         Args:
-            pkg_name: name of the package to be updated
+            pkg_names: names of the packages to be updated
+            repo: the repository to get package classes from
         """
-        pkg_cls = repo.get_pkg_class(pkg_name)
-
-        # Remove the package from the list of packages, if present
+        # Remove the packages from the list of packages, if present
         for pkg_list in self.tags.values():
-            if pkg_name in pkg_list:
-                pkg_list.remove(pkg_name)
+            if pkg_names.isdisjoint(pkg_list):
+                continue
+            pkg_list[:] = [pkg for pkg in pkg_list if pkg not in pkg_names]
 
-        # Add it again under the appropriate tags
-        for tag in getattr(pkg_cls, "tags", []):
-            tag = tag.lower()
-            if tag not in self.tags:
-                self.tags[tag] = [pkg_cls.name]
-            else:
-                self.tags[tag].append(pkg_cls.name)
+        # Add them again under the appropriate tags
+        for pkg_name in pkg_names:
+            pkg_cls = repo.get_pkg_class(pkg_name)
+            for tag in getattr(pkg_cls, "tags", []):
+                tag = tag.lower()
+                if tag not in self.tags:
+                    self.tags[tag] = [pkg_cls.name]
+                else:
+                    self.tags[tag].append(pkg_cls.name)
 
 
 class TagIndexError(spack.error.SpackError):

@@ -202,6 +202,15 @@ class ConfigScope(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
+def config_scope_readable_validator(value):
+    if value not in spack.config.existing_scope_names():
+        raise ValueError(
+            f"Invalid scope argument {value} "
+            "for config read operation, scope context does not exist"
+        )
+    return value
+
+
 def _cdash_reporter(namespace):
     """Helper function to create a CDash reporter. This function gets an early reference to the
     argparse namespace under construction, so it can later use it to create the object.
@@ -461,6 +470,16 @@ def no_install_status():
         action="store_false",
         default=True,
         help="do not show install status annotations",
+    )
+
+
+@arg
+def show_non_defaults():
+    return Args(
+        "--non-defaults",
+        action="store_true",
+        default=False,
+        help="highlight non-default versions or variants",
     )
 
 

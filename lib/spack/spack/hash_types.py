@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Definitions that control how Spack creates Spec hashes."""
 
-from typing import Any, Callable, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 import spack.deptypes as dt
 import spack.repo
 
-HASHES: List["SpecHashDescriptor"] = []
+if TYPE_CHECKING:
+    import spack.spec
 
 
 class SpecHashDescriptor:
@@ -28,21 +29,20 @@ class SpecHashDescriptor:
         depflag: dt.DepFlag,
         package_hash: bool,
         name: str,
-        override: Optional[Callable[[Any], str]] = None,
-    ):
+        override: Optional[Callable[["spack.spec.Spec"], str]] = None,
+    ) -> None:
         self.depflag = depflag
         self.package_hash = package_hash
         self.name = name
         self.attr = f"_{name}"
-        HASHES.append(self)
         # Allow spec hashes to have an alternate computation method
         self.override = override
 
-    def __call__(self, spec):
+    def __call__(self, spec: "spack.spec.Spec") -> str:
         """Run this hash on the provided spec."""
         return spec.spec_hash(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"SpecHashDescriptor(depflag={self.depflag!r}, "
             f"package_hash={self.package_hash!r}, name={self.name!r}, override={self.override!r})"
@@ -55,7 +55,7 @@ dag_hash = SpecHashDescriptor(
 )
 
 
-def _content_hash_override(spec):
+def _content_hash_override(spec: "spack.spec.Spec") -> str:
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
     return pkg.content_hash()
@@ -78,3 +78,5 @@ full_hash = SpecHashDescriptor(
 build_hash = SpecHashDescriptor(
     depflag=dt.BUILD | dt.LINK | dt.RUN, package_hash=False, name="build_hash"
 )
+
+HASHES: List["SpecHashDescriptor"] = [dag_hash, package_hash, full_hash, build_hash]

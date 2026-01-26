@@ -16,6 +16,7 @@ import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
 import spack.repo
+import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
 from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.package_base import PackageBase
@@ -25,6 +26,7 @@ from spack.variant import SingleValuedVariant
 from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
+min_opt_string = ".".join(map(str, spack.util.git.MIN_OPT_VERSION))
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
@@ -36,7 +38,7 @@ def git_version(git, request, monkeypatch):
     paths for old versions still work, we fake it out here and make it
     use the backward-compatibility code paths with newer git versions.
     """
-    real_git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
+    real_git_version = Version(spack.util.git.extract_git_version_str(git))
 
     if request.param is None:
         # Don't patch; run with the real git_version method.
@@ -49,26 +51,20 @@ def git_version(git, request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, "git_version", test_git_version)
+        monkeypatch.setattr(spack.util.git, "extract_git_version_str", lambda _: request.param)
         yield test_git_version
 
 
 @pytest.fixture
-def mock_bad_git(monkeypatch):
+def mock_bad_git(mock_util_executable):
     """
     Test GitFetchStrategy behavior with a bad git command for git >= 1.7.1
     to trigger a SpackError.
     """
 
-    def bad_git(*args, **kwargs):
-        """Raise a SpackError with the transport message."""
-        raise spack.error.SpackError(_mock_transport_error)
-
-    # Patch the fetch strategy to think it's using a git version that
-    # will error out when git is called.
-    monkeypatch.setattr(GitFetchStrategy, "git", bad_git)
-    monkeypatch.setattr(GitFetchStrategy, "git_version", Version("1.7.1"))
-    yield
+    _, should_fail, registered_respones = mock_util_executable
+    should_fail.extend(["clone", "fetch"])
+    registered_respones["--version"] = "1.7.1"
 
 
 def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):
@@ -255,7 +251,7 @@ def test_get_full_repo(
 ):
     """Ensure that we can clone a full repository."""
 
-    if git_version < Version("1.7.1"):
+    if git_version < Version(min_opt_string):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
 
     secure = True

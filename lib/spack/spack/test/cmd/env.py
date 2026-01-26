@@ -666,7 +666,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     pkg = spack.repo.PATH.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
-    spack.environment.shell.activate(e)
+    ev.shell.activate(e)
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
@@ -3888,7 +3888,7 @@ spack:
     )
     current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != str(install_root)
-    with spack.environment.Environment(str(tmp_path)):
+    with ev.Environment(str(tmp_path)):
         assert str(spack.store.STORE.root) == str(install_root)
     assert str(spack.store.STORE.root) == current_store_root
 

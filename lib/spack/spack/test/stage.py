@@ -19,6 +19,7 @@ import spack.error
 import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
+import spack.util.path
 import spack.util.url as url_util
 from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 from spack.resource import Resource
@@ -707,39 +708,45 @@ class TestStage:
             except OSError:
                 pass
 
-    def test_resolve_paths(self):
+    def test_resolve_paths(self, monkeypatch):
         """Test _resolve_paths."""
         assert spack.stage._resolve_paths([]) == []
 
-        # resolved path without user appends user
-        paths = [os.path.join(os.path.sep, "a", "b", "c")]
-        can_paths = [paths[0]]
-        user = getpass.getuser()
+        user = "testuser"
+        monkeypatch.setattr(spack.util.path, "get_user", lambda: user)
 
-        if sys.platform != "win32":
-            can_paths = [os.path.join(paths[0], user)]
-        assert spack.stage._resolve_paths(paths) == can_paths
+        # Test that user is appended to path if not present (except on Windows)
+        if sys.platform == "win32":
+            path = r"C:\spack-test\a\b\c"
+            expected = path
+        else:
+            path = "/spack-test/a/b/c"
+            expected = os.path.join(path, user)
 
-        # resolved path with node including user does not append user
-        paths = [os.path.join(os.path.sep, "spack-{0}".format(user), "stage")]
-        assert spack.stage._resolve_paths(paths) == paths
+        assert spack.stage._resolve_paths([path]) == [expected]
 
-        tempdir = "$tempdir"
-        can_tempdir = canonicalize_path(tempdir)
-        user = getpass.getuser()
-        temp_has_user = user in can_tempdir.split(os.sep)
+        # Test that user is NOT appended if already present
+        if sys.platform == "win32":
+            path_with_user = rf"C:\spack-test\spack-{user}\stage"
+        else:
+            path_with_user = f"/spack-test/spack-{user}/stage"
+
+        assert spack.stage._resolve_paths([path_with_user]) == [path_with_user]
+
+        canonicalized_tempdir = canonicalize_path("$tempdir")
+        temp_has_user = user in canonicalized_tempdir.split(os.sep)
         paths = [
-            os.path.join(tempdir, "stage"),
-            os.path.join(tempdir, "$user"),
-            os.path.join(tempdir, "$user", "$user"),
-            os.path.join(tempdir, "$user", "stage", "$user"),
+            os.path.join("$tempdir", "stage"),
+            os.path.join("$tempdir", "$user"),
+            os.path.join("$tempdir", "$user", "$user"),
+            os.path.join("$tempdir", "$user", "stage", "$user"),
         ]
 
         res_paths = [canonicalize_path(p) for p in paths]
         if temp_has_user:
-            res_paths[1] = can_tempdir
-            res_paths[2] = os.path.join(can_tempdir, user)
-            res_paths[3] = os.path.join(can_tempdir, "stage", user)
+            res_paths[1] = canonicalized_tempdir
+            res_paths[2] = os.path.join(canonicalized_tempdir, user)
+            res_paths[3] = os.path.join(canonicalized_tempdir, "stage", user)
         elif sys.platform != "win32":
             res_paths[0] = os.path.join(res_paths[0], user)
 
@@ -766,16 +773,14 @@ class TestStage:
     )
     def test_stage_purge(self, tmp_path: pathlib.Path, clear_stage_root, path, purged):
         """Test purging of stage directories."""
-        stage_dir = tmp_path / "stage"
-        stage_path = str(stage_dir)
+        stage_config_path = str(tmp_path / "stage")
 
-        test_dir = stage_dir / path
-        test_dir.mkdir(parents=True)
-        test_path = str(test_dir)
-
-        with spack.config.override("config:build_stage", stage_path):
+        with spack.config.override("config:build_stage", stage_config_path):
             stage_root = spack.stage.get_stage_root()
-            assert stage_path == stage_root
+
+            test_dir = pathlib.Path(stage_root) / path
+            test_dir.mkdir(parents=True)
+            test_path = str(test_dir)
 
             spack.stage.purge()
 

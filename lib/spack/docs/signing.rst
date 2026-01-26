@@ -217,7 +217,7 @@ Procedurally the ``spack-intermediate-ci-signing-key`` secret is used in the fol
 
 1. A ``large-arm-prot`` or ``large-x86-prot`` protected runner picks up a job tagged ``protected`` from a protected GitLab branch.
    (See :ref:`protected_runners`).
-2. Based on its configuration, the runner creates a job Pod in the pipeline namespace and mounts the spack-intermediate-ci-signing-key Kubernetes secret into the build container
+2. Based on its configuration, the runner creates a job Pod in the pipeline namespace and mounts the ``spack-intermediate-ci-signing-key`` Kubernetes secret into the build container
 3. The Intermediate CI Key, affiliated institutions' public key and the Reputational Public Key are imported into a keyring by the ``spack gpg ...`` sub-command.
    This is initiated by the job's build script which is created by the generate job at the beginning of the pipeline.
 4. Assuming the package has dependencies those spec manifests are verified using the keyring.
@@ -269,7 +269,7 @@ Protected Runners and Reserved Tags
 
 Spack has a large number of Gitlab Runners operating in its build farm.
 These include runners deployed in the AWS Kubernetes cluster as well as runners deployed at affiliated institutions.
-The majority of runners are shared runners that operate across projects in gitlab.spack.io.
+The majority of runners are shared runners that operate across projects in `gitlab.spack.io <gitlab.spack.io>`_.
 These runners pick up jobs primarily from the spack/spack project and execute them in PR pipelines.
 
 A small number of runners operating on AWS and at affiliated institutions are registered as specific *protected* runners on the spack/spack project.

@@ -62,7 +62,7 @@ If Spack is asked to build a package that uses one of these MPIs as a dependency
 Note that the specified path is the top-level install prefix, not the ``bin`` subdirectory.
 
 ``packages.yaml`` can also be used to specify modules to load instead of the installation prefixes.
-The following example says that module ``CMake/3.7.2`` provides cmake version 3.7.2.
+The following example says that module ``CMake/3.7.2`` provides CMake version 3.7.2.
 
 .. code-block:: yaml
 
@@ -155,7 +155,7 @@ Spack can be configured with every MPI provider not buildable individually, but 
 
 Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose among them depending on the compiler and architecture.
 
-In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or buildcaches) are not desirable, Spack can be configured to require specs matching only the available externals:
+In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or build caches) are not desirable, Spack can be configured to require specs matching only the available externals:
 
 .. code-block:: yaml
 
@@ -173,7 +173,7 @@ In cases where the concretizer is configured to reuse specs, and other ``mpi`` p
        - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
 
-This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
+This configuration prevents any spec using MPI and originating from stores or build caches to be reused, unless it matches the requirements under ``packages:mpi:require``.
 For more information on requirements see :ref:`package-requirements`.
 
 Specifying dependencies among external packages

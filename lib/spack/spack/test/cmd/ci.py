@@ -19,7 +19,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
-import spack.paths as spack_paths
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -218,7 +218,7 @@ spack:
   specs:
     - archive-files
   mirrors:
-    buildcache-destination: {tmp_path / 'ci-mirror'}
+    buildcache-destination: {tmp_path / "ci-mirror"}
 """
     expect = "Environment does not have a `ci` configuration"
     with pytest.raises(ci.SpackCIError, match=expect):
@@ -355,7 +355,7 @@ spack:
   specs:
     - dependent-install
   mirrors:
-    buildcache-destination: {tmp_path / 'ci-mirror'}
+    buildcache-destination: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
     - submapping:
@@ -398,7 +398,7 @@ spack:
   specs:
     - dependent-install
   mirrors:
-    buildcache-destination: {tmp_path / 'ci-mirror'}
+    buildcache-destination: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
     - submapping:
@@ -474,7 +474,7 @@ def test_ci_rebuild_missing_config(tmp_path: pathlib.Path, working_env, mutable_
 
 
 def _signing_key():
-    signing_key_path = pathlib.Path(spack_paths.mock_gpg_keys_path) / "package-signing-key"
+    signing_key_path = pathlib.Path(spack.paths.mock_gpg_keys_path) / "package-signing-key"
     return signing_key_path.read_text()
 
 
@@ -875,10 +875,8 @@ spack:
 
             # Validate resulting buildcache (database) index
             layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
-            url_and_version = spack.binary_distribution.MirrorURLAndVersion(
-                mirror_url, layout_version
-            )
-            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
+            mirror_metadata = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
+            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
             result = index_fetcher.conditional_fetch()
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
@@ -1138,7 +1136,7 @@ spack:
     - pkg-a
     - pkg-d
   mirrors:
-    buildcache-destination: {tmp_path / 'ci-mirror'}
+    buildcache-destination: {tmp_path / "ci-mirror"}
   ci:
     pipeline-gen:
     - build-job:
@@ -2161,6 +2159,19 @@ def verify_standard_versions_invalid(monkeypatch):
 
 
 @pytest.fixture
+def verify_standard_versions_invalid_duplicates(monkeypatch):
+    def validate_standard_versions(pkg, versions):
+        for version in versions:
+            if str(version) == "2.1.7":
+                print(f"Validated {pkg.name}@{version}")
+            else:
+                print(f"Invalid checksum found {pkg.name}@{version}")
+        return False
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_standard_versions", validate_standard_versions)
+
+
+@pytest.fixture
 def verify_git_versions_invalid(monkeypatch):
     def validate_git_versions(pkg, versions):
         for version in versions:
@@ -2186,7 +2197,7 @@ def test_ci_verify_versions_valid(
         assert "Validated diff-test@2.1.6" in out
 
 
-def test_ci_verify_versions_standard_invalid(
+def test_ci_verify_versions_invalid(
     monkeypatch,
     mock_packages,
     mock_git_package_changes,
@@ -2200,6 +2211,22 @@ def test_ci_verify_versions_standard_invalid(
         out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
         assert "Invalid checksum found diff-test@2.1.5" in out
         assert "Invalid commit for diff-test@2.1.6" in out
+
+
+def test_ci_verify_versions_standard_duplicates(
+    monkeypatch,
+    mock_packages,
+    mock_git_package_changes,
+    verify_standard_versions_invalid_duplicates,
+):
+    repo, _, commits = mock_git_package_changes
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+
+        out = ci_cmd("verify-versions", commits[-3], commits[-4], fail_on_error=False)
+        print(f"'{out}'")
+        assert "Validated diff-test@2.1.7" in out
+        assert "Invalid checksum found diff-test@2.1.8" in out
 
 
 def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):

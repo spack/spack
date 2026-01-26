@@ -838,13 +838,13 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
 
 
 @pytest.mark.regression("11118")
-def test_old_external_entries_prefix(mutable_database):
+def test_old_external_entries_prefix(mutable_database: spack.database.Database):
     with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
     spack.vendor.jsonschema.validate(db_obj, schema)
 
-    s = spack.concretize.concretize_one("externaltool")
+    s, *_ = mutable_database.query("externaltool")
 
     db_obj["database"]["installs"][s.dag_hash()]["path"] = "None"
 
@@ -855,7 +855,7 @@ def test_old_external_entries_prefix(mutable_database):
             f.write(str(uuid.uuid4()))
 
     record = spack.store.STORE.db.get_record(s)
-
+    assert record is not None
     assert record.path is None
     assert record.spec._prefix is None
     assert record.spec.prefix == record.spec.external_path

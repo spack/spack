@@ -131,7 +131,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
         raise ValueError("Bad characters in version string: %s" % string)
 
     segments = SEGMENT_REGEX.findall(string)
-    separators: Tuple[str] = tuple(m[2] for m in segments)
+    separators: Tuple[str] = tuple([m[2] for m in segments])
     prerelease: Tuple[int, ...]
 
     # <version>(alpha|beta|rc)<number>
@@ -149,7 +149,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
         prerelease = (FINAL,)
 
     release: VersionComponentTuple = tuple(
-        int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments
+        [int(m[0]) if m[0] else VersionStrComponent.from_string(m[1]) for m in segments]
     )
 
     return (release, prerelease), separators
@@ -171,6 +171,8 @@ class VersionType(SupportsRichComparison):
     ``@=`` to make it concrete.
 
     """
+
+    __slots__ = ()
 
     def intersection(self, other: "VersionType") -> "VersionType":
         """Any versions contained in both self and other, or empty VersionList if no overlap."""
@@ -199,6 +201,8 @@ class VersionType(SupportsRichComparison):
 class ConcreteVersion(VersionType):
     """Base type for versions that represents a single (non-range or list) version."""
 
+    __slots__ = ()
+
 
 def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> str:
     """Create a string representation from version components."""
@@ -217,7 +221,7 @@ def _stringify_version(versions: VersionTuple, separators: Tuple[str, ...]) -> s
 class StandardVersion(ConcreteVersion):
     """Class to represent versions"""
 
-    __slots__ = ["version", "_string", "separators"]
+    __slots__ = ("version", "_string", "separators")
 
     _string: str
     version: VersionTuple
@@ -241,7 +245,8 @@ class StandardVersion(ConcreteVersion):
 
     @staticmethod
     def from_string(string: str) -> "StandardVersion":
-        return StandardVersion(string, *parse_string_components(string))
+        version, separators = parse_string_components(string)
+        return StandardVersion(string, version, separators)
 
     @staticmethod
     def typemin() -> "StandardVersion":
@@ -361,17 +366,17 @@ class StandardVersion(ConcreteVersion):
         return other.intersects(self)
 
     def satisfies(self, other: VersionType) -> bool:
+        if isinstance(other, VersionList):
+            return other.intersects(self)
+
+        if isinstance(other, ClosedOpenRange):
+            return other.intersects(self)
+
         if isinstance(other, GitVersion):
             return False
 
         if isinstance(other, StandardVersion):
             return self == other
-
-        if isinstance(other, ClosedOpenRange):
-            return other.intersects(self)
-
-        if isinstance(other, VersionList):
-            return other.intersects(self)
 
         raise NotImplementedError
 
@@ -509,13 +514,6 @@ class StandardVersion(ConcreteVersion):
         return self.up_to(3)
 
 
-_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
-
-_STANDARD_VERSION_TYPEMAX = StandardVersion(
-    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
-)
-
-
 class GitVersion(ConcreteVersion):
     """Class to represent versions interpreted from git refs.
 
@@ -552,7 +550,7 @@ class GitVersion(ConcreteVersion):
     sufficient.
     """
 
-    __slots__ = ["has_git_prefix", "commit_sha", "ref", "std_version", "_ref_lookup"]
+    __slots__ = ("has_git_prefix", "commit_sha", "ref", "is_commit", "std_version", "_ref_lookup")
 
     def __init__(self, string: str):
         # TODO will be required for concrete specs when commit lookup added
@@ -776,43 +774,65 @@ class GitVersion(ConcreteVersion):
         return self.ref_version.up_to(index)
 
 
+def _str_range(lo: StandardVersion, hi: StandardVersion) -> str:
+    """Create a string representation from lo:hi range."""
+    if lo == _STANDARD_VERSION_TYPEMIN:
+        if hi == _STANDARD_VERSION_TYPEMAX:
+            return ":"
+        else:
+            return f":{hi}"
+    elif hi == _STANDARD_VERSION_TYPEMAX:
+        return f"{lo}:"
+    elif lo == hi:
+        return str(lo)
+    else:
+        return f"{lo}:{hi}"
+
+
 class ClosedOpenRange(VersionType):
+    __slots__ = ("lo", "hi", "_string", "_hash")
+
     def __init__(self, lo: StandardVersion, hi: StandardVersion):
         if hi < lo:
             raise EmptyRangeError(f"{lo}..{hi} is an empty range")
         self.lo: StandardVersion = lo
         self.hi: StandardVersion = hi
+        self._string: Optional[str] = None
+        self._hash: Optional[int] = None
 
     @classmethod
     def from_version_range(cls, lo: StandardVersion, hi: StandardVersion) -> "ClosedOpenRange":
         """Construct ClosedOpenRange from lo:hi range."""
         try:
-            return ClosedOpenRange(lo, _next_version(hi))
+            r = ClosedOpenRange(lo, _next_version(hi))
         except EmptyRangeError as e:
             raise EmptyRangeError(f"{lo}:{hi} is an empty range") from e
 
+        # Cache hash and string representation
+        r._hash = hash((lo, hi))
+        r._string = _str_range(lo, hi)
+        return r
+
     def __str__(self) -> str:
-        # This simplifies 3.1:<3.2 to 3.1:3.1 to 3.1
-        # 3:3 -> 3
-        hi_prev = _prev_version(self.hi)
-        if self.lo != StandardVersion.typemin() and self.lo == hi_prev:
-            return str(self.lo)
-        lhs = "" if self.lo == StandardVersion.typemin() else str(self.lo)
-        rhs = "" if hi_prev == StandardVersion.typemax() else str(hi_prev)
-        return f"{lhs}:{rhs}"
+        if self._string:
+            return self._string
+        self._string = _str_range(self.lo, _prev_version(self.hi))
+        return self._string
 
     def __repr__(self):
         return str(self)
 
     def __hash__(self):
-        # prev_version for backward compat.
-        return hash((self.lo, _prev_version(self.hi)))
+        if self._hash is not None:
+            return self._hash
+        self._hash = hash((self.lo, _prev_version(self.hi)))
+        return self._hash
 
     def __eq__(self, other):
-        if isinstance(other, StandardVersion):
-            return False
         if isinstance(other, ClosedOpenRange):
             return (self.lo, self.hi) == (other.lo, other.hi)
+        if isinstance(other, StandardVersion):
+            return False
         return NotImplemented
 
     def __ne__(self, other):
@@ -823,10 +843,10 @@ class ClosedOpenRange(VersionType):
         return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, StandardVersion):
-            return other > self
         if isinstance(other, ClosedOpenRange):
             return (self.lo, self.hi) < (other.lo, other.hi)
+        if isinstance(other, StandardVersion):
+            return other > self
         return NotImplemented
 
     def __le__(self, other):
@@ -858,10 +878,10 @@ class ClosedOpenRange(VersionType):
     def intersects(self, other: VersionType) -> bool:
         if isinstance(other, StandardVersion):
             return self.lo <= other < self.hi
-        if isinstance(other, GitVersion):
-            return self.lo <= other.ref_version < self.hi
         if isinstance(other, ClosedOpenRange):
             return (self.lo < other.hi) and (other.lo < self.hi)
+        if isinstance(other, GitVersion):
+            return self.lo <= other.ref_version < self.hi
         if isinstance(other, VersionList):
             return any(self.intersects(rhs) for rhs in other)
         raise TypeError(f"'intersects' not supported for instances of {type(other)}")
@@ -878,12 +898,6 @@ class ClosedOpenRange(VersionType):
     def _union_if_not_disjoint(self, other: VersionType) -> Optional["ClosedOpenRange"]:
         """Same as union, but returns None when the union is not connected. This function is not
         implemented for version lists as right-hand side, as that makes little sense."""
-        if isinstance(other, StandardVersion):
-            return self if self.lo <= other < self.hi else None
-
-        if isinstance(other, GitVersion):
-            return self if self.lo <= other.ref_version < self.hi else None
-
         if isinstance(other, ClosedOpenRange):
             # Notice <= cause we want union(1:2, 3:4) = 1:4.
             return (
@@ -891,6 +905,12 @@ class ClosedOpenRange(VersionType):
                 if self.lo <= other.hi and other.lo <= self.hi
                 else None
             )
+
+        if isinstance(other, StandardVersion):
+            return self if self.lo <= other < self.hi else None
+
+        if isinstance(other, GitVersion):
+            return self if self.lo <= other.ref_version < self.hi else None
 
         raise TypeError(f"'union()' not supported for instances of {type(other)}")
 
@@ -923,21 +943,21 @@ class VersionList(VersionType):
     versions: List[VersionType]
 
     def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
-        if vlist is None:
-            self.versions = []
-
-        elif isinstance(vlist, str):
+        if isinstance(vlist, str):
             vlist = from_string(vlist)
             if isinstance(vlist, VersionList):
                 self.versions = vlist.versions
             else:
                 self.versions = [vlist]
 
-        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
-            self.versions = [vlist]
+        elif vlist is None:
+            self.versions = []
 
         elif isinstance(vlist, VersionList):
             self.versions = vlist[:]
+
+        elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
+            self.versions = [vlist]
 
         elif isinstance(vlist, Iterable):
             self.versions = []
@@ -948,15 +968,7 @@ class VersionList(VersionType):
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
 
     def add(self, item: VersionType) -> None:
-        if isinstance(item, (StandardVersion, GitVersion)):
-            i = bisect_left(self, item)
-            # Only insert when prev and next are not intersected.
-            if (i == 0 or not item.intersects(self[i - 1])) and (
-                i == len(self) or not item.intersects(self[i])
-            ):
-                self.versions.insert(i, item)
-
-        elif isinstance(item, ClosedOpenRange):
+        if isinstance(item, ClosedOpenRange):
             i = bisect_left(self, item)
 
             # Note: can span multiple concrete versions to the left (as well as to the right).
@@ -982,6 +994,14 @@ class VersionList(VersionType):
         elif isinstance(item, VersionList):
             for v in item:
                 self.add(v)
+
+        elif isinstance(item, (StandardVersion, GitVersion)):
+            i = bisect_left(self, item)
+            # Only insert when prev and next are not intersected.
+            if (i == 0 or not item.intersects(self[i - 1])) and (
+                i == len(self) or not item.intersects(self[i])
+            ):
+                self.versions.insert(i, item)
 
         else:
             raise TypeError("Can't add %s to VersionList" % type(item))
@@ -1039,6 +1059,9 @@ class VersionList(VersionType):
         raise TypeError(f"'satisfies()' not supported for instances of {type(other)}")
 
     def intersects(self, other: VersionType) -> bool:
+        if isinstance(other, (ClosedOpenRange, StandardVersion)):
+            return any(v.intersects(other) for v in self)
+
         if isinstance(other, VersionList):
             s = o = 0
             while s < len(self) and o < len(other):
@@ -1049,9 +1072,6 @@ class VersionList(VersionType):
                 else:
                     o += 1
             return False
-
-        if isinstance(other, (ClosedOpenRange, StandardVersion)):
-            return any(v.intersects(other) for v in self)
 
         raise TypeError(f"'intersects()' not supported for instances of {type(other)}")
 
@@ -1069,6 +1089,13 @@ class VersionList(VersionType):
         elif "version" in dictionary:
             return VersionList([Version(dictionary["version"])])
         raise ValueError("Dict must have 'version' or 'versions' in it.")
+
+    @classmethod
+    def any(cls) -> "VersionList":
+        """Return a VersionList that matches any version."""
+        version_list = cls.__new__(cls)
+        version_list.versions = [_UNBOUNDED_RANGE]
+        return version_list
 
     def update(self, other: "VersionList") -> None:
         self.add(other)
@@ -1291,13 +1318,13 @@ def from_string(string: str) -> VersionType:
 
     # VersionList
     if "," in string:
-        return VersionList(list(map(from_string, string.split(","))))
+        return VersionList([from_string(x) for x in string.split(",")])
 
     # ClosedOpenRange
     elif ":" in string:
         s, e = string.split(":")
-        lo = StandardVersion.typemin() if s == "" else StandardVersion.from_string(s)
-        hi = StandardVersion.typemax() if e == "" else StandardVersion.from_string(e)
+        lo = _STANDARD_VERSION_TYPEMIN if s == "" else StandardVersion.from_string(s)
+        hi = _STANDARD_VERSION_TYPEMAX if e == "" else StandardVersion.from_string(e)
         return VersionRange(lo, hi)
 
     # StandardVersion
@@ -1328,3 +1355,14 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
         return from_string(str(obj))
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
+
+
+_STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))
+
+_STANDARD_VERSION_TYPEMAX = StandardVersion(
+    "infinity", ((VersionStrComponent(len(infinity_versions)),), (FINAL,)), ("",)
+)
+
+_UNBOUNDED_RANGE = ClosedOpenRange.from_version_range(
+    _STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX
+)

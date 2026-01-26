@@ -438,6 +438,47 @@ The supplied location will become the build-directory for that package in all fu
    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds while all ``CMake`` packages do.
    Understanding these nuances is up to the software developers and we strongly encourage developers to only redirect the build directory if they understand their package's build-system.
 
+Modifying Specs in an Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack change`` command allows the user to change individual specs in a Spack environment.
+
+By default, ``spack change`` operates on the abstract specs of an environment.
+The command a list of spec arguments.
+For each argument, the root spec with the same name as the provided spec is modified to satisfy the provided spec.
+For example, in an environment with the root spec ``hdf5+mpi+fortran``, then
+
+.. code-block:: console
+
+   spack change hdf5~mpi+cxx
+
+will change the root spec to ``hdf5~mpi+cxx+fortran``.
+
+When more complex matching semantics are necessary, the ``--match-spec`` argument replaces the spec name as the selection criterion.
+When using the ``--match-spec`` argument, the spec name is not required.
+In the same environment,
+
+.. code-block:: console
+
+   spack change --match-spec "+fortran" +hl
+
+will constrain the ``hdf5`` spec to ``+hl``.
+
+By default, the ``spack change`` command will result in an error and no change to the environment if it will modify more than one abstract spec.
+Use the ``--all`` option to allow ``spack change`` to modify multiple abstract specs.
+
+The ``--concrete`` option allows ``spack change`` to modify the concrete specs of an environment as well as the abstract specs.
+Multiple concrete specs may be modified, even for a change that modifies only a single abstract spec.
+The ``--all`` option does not affect how many concrete specs may be modified.
+
+.. warning::
+
+   Concrete specs are modified without any constraints from the packages.
+   The ``spack change --concrete`` command  may create invalid specs that will not build properly if applied without caution.
+
+The ``--concrete-only`` option allows for modifying concrete specs without modifying abstract specs.
+It allows changes to be applied to non-root nodes in the environment, and other changes that do not modify any root specs.
+
 Loading
 ^^^^^^^
 
@@ -595,7 +636,7 @@ For example, a ``spack.yaml`` manifest file containing some package preference c
            mpi: [openmpi]
      # ...
 
-This configuration sets the default mpi provider to be openmpi.
+This configuration sets the default ``mpi`` provider to be ``openmpi``.
 
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -835,7 +876,7 @@ The valid variables for a ``when`` clause are:
    The platform string of the default Spack architecture on the system.
 
 #. ``os``.
-   The os string of the default Spack architecture on the system.
+   The OS string of the default Spack architecture on the system.
 
 #. ``target``.
    The target string of the default Spack architecture on the system.
@@ -1181,7 +1222,7 @@ Adding post-install hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another advanced use-case of generated ``Makefile``\s is running a post-install command for each package.
-These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a buildcache.
+These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a build cache.
 
 This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS`` variable.
 Assuming we have an active and concrete environment, we generate the associated ``Makefile`` with a prefix ``example``:
@@ -1194,7 +1235,7 @@ And we now include it in a different ``Makefile``, in which we create a target `
 This target depends on the particular package installation.
 In this target we automatically have the target-specific ``HASH`` and ``SPEC`` variables at our disposal.
 They are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
-Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
+Finally, we have an entry point target ``push`` that will update the build cache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
 .. code-block:: Makefile

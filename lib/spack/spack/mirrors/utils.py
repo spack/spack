@@ -7,7 +7,6 @@ from collections import Counter
 
 import spack.caches
 import spack.config
-import spack.error
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec

@@ -102,7 +102,11 @@ def concretize_separately(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
     """
-    from spack.bootstrap import ensure_bootstrap_configuration, ensure_clingo_importable_or_raise
+    from spack.bootstrap import (
+        ensure_bootstrap_configuration,
+        ensure_clingo_importable_or_raise,
+        ensure_winsdk_external_or_raise,
+    )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
     args = [
@@ -117,6 +121,10 @@ def concretize_separately(
     except ImportError:
         with ensure_bootstrap_configuration():
             ensure_clingo_importable_or_raise()
+
+    # ensure we don't try to detect winsdk in parallel
+    if sys.platform == "win32":
+        ensure_winsdk_external_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting
@@ -138,11 +146,11 @@ def concretize_separately(
         ]
 
     # Solve the environment in parallel on Linux
-    # TODO: support parallel concretization on macOS and Windows
     num_procs = min(len(args), spack.config.determine_number_of_jobs(parallel=True))
 
     msg = "Starting concretization"
-    if sys.platform not in ("darwin", "win32") and num_procs > 1:
+    # no parallel conc on Windows
+    if not sys.platform == "win32" and num_procs > 1:
         msg += f" pool with {num_procs} processes"
     tty.msg(msg)
 
@@ -152,9 +160,9 @@ def concretize_separately(
         )
     ):
         ret.append((i, concrete))
-        percentage = (j + 1) / len(args) * 100
+        percentage = int((j + 1) / len(args) * 100)
         tty.verbose(
-            f"{duration:6.1f}s [{percentage:3.0f}%] {concrete.cformat('{hash:7}')} "
+            f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
             f"{to_concretize[i].colored_str}"
         )
         sys.stdout.flush()

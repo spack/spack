@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import enum
 import fnmatch
 import gzip
@@ -41,9 +40,6 @@ from spack.util.executable import which
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
 CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
-
-#: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 #: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
@@ -259,11 +255,11 @@ class URLBuildcacheEntry:
         return rematch.group(1)
 
     @classmethod
-    def get_index_url(cls, mirror_url: str):
+    def get_index_url(cls, mirror_url: str, view: Optional[str] = None):
         return url_util.join(
             mirror_url,
             *cls.get_relative_path_components(BuildcacheComponent.INDEX),
-            cls.BUILDCACHE_INDEX_FILE,
+            url_util.join(view or "", cls.BUILDCACHE_INDEX_FILE),
         )
 
     @classmethod
@@ -470,7 +466,7 @@ class URLBuildcacheEntry:
 
         try:
             _, _, manifest_file = web_util.read_from_url(manifest_url)
-            manifest_contents = codecs.getreader("utf-8")(manifest_file).read()
+            manifest_contents = io.TextIOWrapper(manifest_file, encoding="utf-8").read()
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 
@@ -571,6 +567,7 @@ class URLBuildcacheEntry:
         # write the manifest to a temporary location
         manifest_file_name = f"{manifest_name}.manifest.json"
         manifest_path = os.path.join(tmpdir, manifest_file_name)
+        os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest.to_dict(), f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
@@ -1353,65 +1350,70 @@ def try_verify(specfile_path):
     return True
 
 
-class MirrorURLAndVersion:
+class MirrorMetadata:
     """Simple class to hold a mirror url and a buildcache layout version
 
     This class is used by BinaryCacheIndex to produce a key used to keep
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
-    __slots__ = ("url", "version")
+    __slots__ = ("url", "version", "view")
 
-    def __init__(self, url: str, version: int):
+    def __init__(self, url: str, version: int, view: Optional[str] = None):
         self.url = url
         self.version = version
+        self.view = view
 
     def __str__(self):
-        return f"{self.url}__v{self.version}"
+        s = f"{self.url}__v{self.version}"
+        if self.view:
+            s += f"__{self.view}"
+        return s
 
     def __eq__(self, other):
-        if not isinstance(other, MirrorURLAndVersion):
+        if not isinstance(other, MirrorMetadata):
             return NotImplemented
-        return self.url == other.url and self.version == other.version
+        return self.url == other.url and self.version == other.version and self.view == other.view
 
     def __hash__(self):
-        return hash((self.url, self.version))
+        return hash((self.url, self.version, self.view))
 
     @classmethod
     def from_string(cls, s: str):
-        parts = s.split("__v")
-        return cls(parts[0], int(parts[1]))
+        m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
+        if not m:
+            raise MirrorMetadataError(f"Malformed string {s}")
+
+        url, version, view = m.groups()
+        return cls(url, int(version), view)
+
+    def strip_view(self) -> "MirrorMetadata":
+        return MirrorMetadata(self.url, self.version)
 
 
 class InvalidMetadataFile(spack.error.SpackError):
     """Raised when spack encounters a spec file it cannot understand or process"""
 
-    pass
-
 
 class BuildcacheEntryError(spack.error.SpackError):
     """Raised for problems finding or accessing binary cache entry on mirror"""
-
-    pass
 
 
 class NoSuchBlobException(spack.error.SpackError):
     """Raised when manifest does have some requested type of requested type"""
 
-    pass
-
 
 class NoVerifyException(BuildcacheEntryError):
     """Raised if file fails signature verification"""
-
-    pass
 
 
 class UnknownBuildcacheLayoutError(BuildcacheEntryError):
     """Raised when unrecognized buildcache layout version is encountered"""
 
-    pass
-
 
 class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
+
+
+class MirrorMetadataError(spack.error.SpackError):
+    """Raised when unable to interpret a MirrorMetadata string"""

@@ -61,7 +61,7 @@ Exporting Spack installations as Container Images
 The command
 
 .. code-block:: text
-  
+
    spack buildcache push [--base-image BASE_IMAGE] [--tag TAG] mirror [specs...]
 
 creates and pushes a container image to an OCI-compatible container registry, with the ``mirror`` argument specifying a registry (see below).
@@ -72,7 +72,7 @@ Container images created this way are **minimal**: they contain only runtime dep
 Spack itself is *not* included in the resulting image.
 
 The arguments are as follows:
-  
+
 ``--base-image BASE_IMAGE``
    Specifies the base image to use for the container.
    This should be a minimal Linux distribution with a libc that is compatible with the host system.
@@ -253,7 +253,7 @@ Since recipes need a little more boilerplate than:
    RUN spack -e /environment install
 
 Spack provides a command to generate customizable recipes for container images.
-Customizations include minimizing the size of the image, installing packages in the base image using the system package manager, and setting up a proper entrypoint to run the image.
+Customizations include minimizing the size of the image, installing packages in the base image using the system package manager, and setting up a proper entry point to run the image.
 
 .. _cmd-spack-containerize:
 

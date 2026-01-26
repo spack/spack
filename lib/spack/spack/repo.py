@@ -343,17 +343,27 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping[str, os.stat_result]):
-    """Cache that maps package names to the stats obtained on the
-    ``package.py`` files associated with them.
+@contextlib.contextmanager
+def _directory_fd(path: str) -> Generator[Optional[int], None, None]:
+    if sys.platform == "win32":
+        yield None
+        return
 
-    For each repository a cache is maintained at class level, and shared among
-    all instances referring to it. Update of the global cache is done lazily
-    during instance initialization.
-    """
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        yield fd
+    finally:
+        os.close(fd)
+
+
+class FastPackageChecker(Mapping[str, float]):
+    """Cache that maps package names to the modification times of their ``package.py`` files.
+
+    For each repository a cache is maintained at class level, and shared among all instances
+    referring to it. Update of the global cache is done lazily during instance initialization."""
 
     #: Global cache, reused by every instance
-    _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
+    _paths_cache: Dict[str, Dict[str, float]] = {}
 
     def __init__(self, packages_path: str, package_api: Tuple[int, int]) -> None:
         # The path of the repository managed by this instance
@@ -365,39 +375,45 @@ class FastPackageChecker(Mapping[str, os.stat_result]):
             self._paths_cache[packages_path] = self._create_new_cache()
 
         #: Reference to the appropriate entry in the global cache
-        self._packages_to_stats = self._paths_cache[packages_path]
+        self._packages_to_mtime = self._paths_cache[packages_path]
 
     def invalidate(self) -> None:
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
-        self._packages_to_stats = self._paths_cache[self.packages_path]
+        self._packages_to_mtime = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self) -> Dict[str, os.stat_result]:
+    def _create_new_cache(self) -> Dict[str, float]:
         """Create a new cache for packages in a repo.
 
-        The implementation here should try to minimize filesystem
-        calls.  At the moment, it is O(number of packages) and makes
-        about one stat call per package.  This is reasonably fast, and
-        avoids actually importing packages in Spack, which is slow.
-        """
+        The implementation here should try to minimize filesystem calls. At the moment, it makes
+        one stat call per package. This is reasonably fast, and avoids actually importing packages
+        in Spack, which is slow."""
         # Create a dictionary that will store the mapping between a
-        # package name and its stat info
-        cache: Dict[str, os.stat_result] = {}
-        with os.scandir(self.packages_path) as entries:
+        # package name and its mtime
+        cache: Dict[str, float] = {}
+        # Don't use os.path.join in the loop cause it's slow and redundant.
+        package_py_suffix = f"{os.path.sep}{package_file_name}"
+
+        # Use a file descriptor for the packages directory to avoid repeated path resolution.
+        with _directory_fd(self.packages_path) as fd, os.scandir(self.packages_path) as entries:
             for entry in entries:
                 # Construct the file name from the directory
-                pkg_file = os.path.join(entry.path, package_file_name)
+                if sys.platform == "win32":
+                    pkg_file = f"{entry.path}{package_py_suffix}"
+                else:
+                    pkg_file = f"{entry.name}{package_py_suffix}"
 
                 try:
-                    sinfo = os.stat(pkg_file)
+                    sinfo = os.stat(pkg_file, dir_fd=fd)
                 except OSError as e:
                     if e.errno in (errno.ENOENT, errno.ENOTDIR):
                         # No package.py file here.
                         continue
                     elif e.errno == errno.EACCES:
+                        pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                         tty.warn(f"Can't read package file {pkg_file}.")
                         continue
-                    raise e
+                    raise
 
                 # If it's not a file, skip it.
                 if not stat.S_ISREG(sinfo.st_mode):
@@ -407,31 +423,32 @@ class FastPackageChecker(Mapping[str, os.stat_result]):
                 # the current package API
                 if not nm.valid_module_name(entry.name, self.package_api):
                     x, y = self.package_api
+                    pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                     tty.warn(
                         f"Package {pkg_file} cannot be used because `{entry.name}` is not a valid "
                         f"Spack package module name for Package API v{x}.{y}."
                     )
                     continue
 
-                # Store the stat info by package name.
-                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo
+                # Store the mtime by package name.
+                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo.st_mtime
 
         return cache
 
     def last_mtime(self) -> float:
-        return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
+        return max(self._packages_to_mtime.values())
 
     def modified_since(self, since: float) -> List[str]:
-        return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
+        return [name for name, mtime in self._packages_to_mtime.items() if mtime > since]
 
-    def __getitem__(self, item: str) -> os.stat_result:
-        return self._packages_to_stats[item]
+    def __getitem__(self, item: str) -> float:
+        return self._packages_to_mtime[item]
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self._packages_to_stats)
+        return iter(self._packages_to_mtime)
 
     def __len__(self) -> int:
-        return len(self._packages_to_stats)
+        return len(self._packages_to_mtime)
 
 
 class Indexer(metaclass=abc.ABCMeta):
@@ -468,7 +485,7 @@ class Indexer(metaclass=abc.ABCMeta):
         """Read this index from a provided file object."""
 
     @abc.abstractmethod
-    def update(self, pkg_fullname):
+    def update(self, pkgs_fullname: Set[str]):
         """Update the index in memory with information about a package."""
 
     @abc.abstractmethod
@@ -485,8 +502,8 @@ class TagIndexer(Indexer):
     def read(self, stream):
         self.index = spack.tag.TagIndex.from_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages({p.split(".")[-1] for p in pkgs_fullname}, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -501,15 +518,15 @@ class ProviderIndexer(Indexer):
     def read(self, stream):
         self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
-    def update(self, pkg_fullname):
-        name = pkg_fullname.split(".")[-1]
+    def update(self, pkgs_fullname: Set[str]):
         is_virtual = (
-            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
+            lambda name: not self.repository.exists(name)
+            or self.repository.get_pkg_class(name).virtual
         )
-        if is_virtual:
-            return
-        self.index.remove_provider(pkg_fullname)
-        self.index.update(pkg_fullname)
+        non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
+        non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}
+        self.index.remove_providers(non_virtual_pkgs_names)
+        self.index.update_packages(non_virtual_pkgs_fullname)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -534,8 +551,8 @@ class PatchIndexer(Indexer):
     def write(self, stream):
         self.index.to_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages(pkgs_fullname)
 
 
 class RepoIndex:
@@ -627,9 +644,7 @@ class RepoIndex:
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
-                for pkg_name in needs_update:
-                    indexer.update(f"{self.namespace}.{pkg_name}")
-
+                indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
                 indexer.write(new)
 
         return indexer.index
@@ -903,12 +918,6 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def _have_name(self, pkg_name: str) -> bool:
-        have_name = pkg_name is not None
-        if have_name and not isinstance(pkg_name, str):
-            raise ValueError(f"is_virtual(): expected package name, got {type(pkg_name)}")
-        return have_name
-
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 
@@ -916,9 +925,9 @@ class RepoPath:
         is used to construct the provider index use the ``is_virtual_safe`` function.
 
         Args:
-            pkg_name (str): name of the package we want to check
+            pkg_name: name of the package we want to check
         """
-        have_name = self._have_name(pkg_name)
+        have_name = bool(pkg_name)
         return have_name and pkg_name in self.provider_index
 
     def is_virtual_safe(self, pkg_name: str) -> bool:
@@ -927,9 +936,9 @@ class RepoPath:
         This function doesn't use the provider index.
 
         Args:
-            pkg_name (str): name of the package we want to check
+            pkg_name: name of the package we want to check
         """
-        have_name = self._have_name(pkg_name)
+        have_name = bool(pkg_name)
         return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
@@ -1413,6 +1422,14 @@ class Repo:
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
 
+        # Early exit if no overrides to apply or undo
+        if (
+            not self.overrides.get(pkg_name)
+            and not hasattr(cls, "overridden_attrs")
+            and not hasattr(cls, "attrs_exclusively_from_config")
+        ):
+            return cls
+
         def defining_class(myclass, name):
             return next((c for c in myclass.__mro__ if name in c.__dict__), None)
 
@@ -1735,11 +1752,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
                     if self.commit:
-                        spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
+                        spack.util.git.pull_checkout_commit(
+                            self.commit, remote=remote, depth=depth, git_exe=git
+                        )
 
                     elif self.tag:
                         spack.util.git.pull_checkout_tag(
-                            self.tag, remote, depth=depth, git_exe=git
+                            self.tag, remote=remote, depth=depth, git_exe=git
                         )
 
                     elif self.branch:

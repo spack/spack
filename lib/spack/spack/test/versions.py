@@ -17,6 +17,7 @@ import spack.spec
 import spack.version
 from spack.llnl.util.filesystem import working_dir
 from spack.version import (
+    ClosedOpenRange,
     EmptyRangeError,
     GitVersion,
     StandardVersion,
@@ -596,6 +597,22 @@ def test_repr_and_str():
     check_repr_and_str("1.2.3")
     check_repr_and_str("R2016a")
     check_repr_and_str("R2016a.2-3_4")
+
+
+def test_str_and_hash_version_range():
+    """Test that precomputed string and hash values are consistent with computed ones."""
+    x = ver("1.2:3.4")
+    assert isinstance(x, ClosedOpenRange)
+    # Test that precomputed str() and hash() are assigned
+    assert x._string is not None and x._hash is not None
+    _str = str(x)
+    _hash = hash(x)
+    assert x._string == _str and x._hash == _hash
+    # Ensure computed values match precomputed ones
+    x._string = None
+    x._hash = None
+    assert _str == str(x)
+    assert _hash == hash(x)
 
 
 @pytest.mark.parametrize(

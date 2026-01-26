@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync update-index rebuild-index migrate"
+        SPACK_COMPREPLY="push create install list keys check download prune save-specfile sync check-index update-index rebuild-index migrate"
     fi
 }
 
@@ -642,10 +642,19 @@ _spack_buildcache_sync() {
     fi
 }
 
+_spack_buildcache_check_index() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --verify --name -n --output -o"
+    else
+        _mirrors
+    fi
+}
+
 _spack_buildcache_update_index() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -k --keys"
+        SPACK_COMPREPLY="-h --help --name -n --append -a --force -f -k --keys -y --yes-to-all"
     else
         _mirrors
     fi
@@ -654,7 +663,7 @@ _spack_buildcache_update_index() {
 _spack_buildcache_rebuild_index() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -k --keys"
+        SPACK_COMPREPLY="-h --help --name -n --append -a --force -f -k --keys -y --yes-to-all"
     else
         _mirrors
     fi
@@ -681,7 +690,7 @@ _spack_cd() {
 _spack_change() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --list-name --match-spec -a --all"
+        SPACK_COMPREPLY="-h --help -l --list-name --match-spec -a --all -c --concrete -C --concrete-only"
     else
         _all_packages
     fi
@@ -765,7 +774,7 @@ _spack_compiler() {
 _spack_compiler_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope -j --jobs"
+        SPACK_COMPREPLY="-h --help --scope -j --jobs"
     else
         SPACK_COMPREPLY=""
     fi
@@ -774,7 +783,7 @@ _spack_compiler_find() {
 _spack_compiler_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --mixed-toolchain --no-mixed-toolchain --scope -j --jobs"
+        SPACK_COMPREPLY="-h --help --scope -j --jobs"
     else
         SPACK_COMPREPLY=""
     fi
@@ -809,7 +818,7 @@ _spack_compiler_ls() {
 _spack_compiler_info() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --scope --remote"
     else
         _installed_compilers
     fi
@@ -820,11 +829,11 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs --non-defaults"
 }
 
 _spack_concretise() {
-    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs"
+    SPACK_COMPREPLY="-h --help --test -q --quiet -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated -j --jobs --non-defaults"
 }
 
 _spack_config() {
@@ -1477,7 +1486,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
+        SPACK_COMPREPLY="-h --help --scope --type --autopush --unsigned --signed --name -n --s3-access-key-id --s3-access-key-id-variable --s3-access-key-secret-variable --s3-access-token-variable --s3-profile --s3-endpoint-url --oci-username --oci-username-variable --oci-password-variable"
     else
         _mirrors
     fi
@@ -1906,7 +1915,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show --timers --stats -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help --show --timers --stats -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format --non-defaults -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -1915,7 +1924,7 @@ _spack_solve() {
 _spack_spec() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -N --namespaces -I --install-status --no-install-status -y --yaml -j --json --format --non-defaults -c --cover -t --types -f --force -U --fresh --reuse --fresh-roots --reuse-deps --deprecated"
     else
         _all_packages
     fi
@@ -2095,7 +2104,7 @@ _spack_verify() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="manifest libraries"
+        SPACK_COMPREPLY="manifest libraries versions"
     fi
 }
 
@@ -2109,6 +2118,15 @@ _spack_verify_manifest() {
 }
 
 _spack_verify_libraries() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _installed_packages
+    fi
+}
+
+_spack_verify_versions() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"

@@ -25,6 +25,7 @@ import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.report
 import spack.spec
 import spack.store
 import spack.util.lock as lk
@@ -509,6 +510,7 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     """Test the clear_failures exception paths."""
     failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
@@ -642,6 +644,22 @@ def test_installer_init_requests(install_mockery):
     assert len(installer.build_requests) == 1
     request = installer.build_requests[0]
     assert request.pkg.name == spec_name
+
+
+def false(*args, **kwargs):
+    return False
+
+
+def test_rewire_task_no_tarball(monkeypatch, mock_packages):
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+    out = spec.splice(dep)
+
+    rewire_task = inst.RewireTask(out.package, inst.BuildRequest(out.package, {}))
+    monkeypatch.setattr(inst, "_process_binary_cache_tarball", false)
+    monkeypatch.setattr(spack.report.InstallRecord, "succeed", lambda x: None)
+
+    assert rewire_task.complete() == inst.ExecuteResult.MISSING_BUILD_SPEC
 
 
 @pytest.mark.parametrize("transitive", [True, False])
@@ -1345,7 +1363,7 @@ def test_print_install_test_log_skipped(install_mockery, mock_packages, capfd, r
     pkg = s.package
 
     pkg.run_tests = run_tests
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert out == ""
 
@@ -1362,12 +1380,12 @@ def test_print_install_test_log_failures(
     pkg.run_tests = True
     pkg.tester.test_log_file = str(tmp_path / "test-log.txt")
     pkg.tester.add_failure(AssertionError("test"), "test-failure")
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     err = capfd.readouterr()[1]
     assert "no test log file" in err
 
     # Having test log results in path being output
     fs.touch(pkg.tester.test_log_file)
-    spack.installer.print_install_test_log(pkg)
+    inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
