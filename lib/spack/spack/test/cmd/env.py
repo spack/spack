@@ -291,14 +291,12 @@ def test_change_multiple_matches():
 
 def test_env_add_virtual():
     env("create", "test")
-
     e = ev.read("test")
     e.add("mpi")
     e.concretize()
 
-    hashes = e.concretized_order
-    assert len(hashes) == 1
-    spec = e.specs_by_hash[hashes[0]]
+    assert len(e.concretized_roots) == 1
+    spec = e.specs_by_hash[e.concretized_roots[0].hash]
     assert spec.intersects("mpi")
 
 
@@ -526,9 +524,12 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
         install("--fake", "--add", "cmake-client")
 
     e = ev.read("test")
-    assert e.user_specs[0].name == "cmake-client"
-    assert e.concretized_user_specs[0].name == "cmake-client"
-    assert e.specs_by_hash[e.concretized_order[0]].name == "cmake-client"
+    assert len(e.concretized_roots) == 1
+
+    item = e.concretized_roots[0]
+    assert list(e.user_specs) == [Spec("cmake-client")]
+    assert item.root == Spec("cmake-client")
+    assert e.specs_by_hash[item.hash].name == "cmake-client"
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
@@ -546,23 +547,24 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mu
     with combined:
         install("--fake")
 
-    test1_roots = test1.concretized_order
-    test2_roots = test2.concretized_order
+    test1_user_spec_hashes = [x.hash for x in test1.concretized_roots]
+    test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
     combined_included_roots = combined.included_concretized_order
 
     for spec in combined.all_specs():
         assert spec.installed
 
-    assert test1_roots == combined_included_roots[test1.path]
-    assert test2_roots == combined_included_roots[test2.path]
+    assert test1_user_spec_hashes == combined_included_roots[test1.path]
+    assert test2_user_spec_hashes == combined_included_roots[test2.path]
 
-    mpileaks = combined.specs_by_hash[combined.concretized_order[0]]
+    mpileaks_hash = combined.concretized_roots[0].hash
+    mpileaks = combined.specs_by_hash[mpileaks_hash]
     if unify:
-        assert mpileaks["mpi"].dag_hash() in test1_roots
-        assert mpileaks["libelf"].dag_hash() in test2_roots
+        assert mpileaks["mpi"].dag_hash() in test1_user_spec_hashes
+        assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
     else:
         # check that unification is not by accident
-        assert mpileaks["mpi"].dag_hash() not in test1_roots
+        assert mpileaks["mpi"].dag_hash() not in test1_user_spec_hashes
 
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
@@ -995,12 +997,10 @@ spack:
     for s1, s2 in zip(e1.user_specs, e2.user_specs):
         assert s1 == s2
 
-    for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
-        assert h1 == h2
-        assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
+    for r1, r2 in zip(e1.concretized_roots, e2.concretized_roots):
+        assert r1 == r2
 
-    for s1, s2 in zip(e1.concretized_user_specs, e2.concretized_user_specs):
-        assert s1 == s2
+    assert e1.specs_by_hash == e2.specs_by_hash
 
 
 def test_init_from_yaml(environment_from_manifest):
@@ -1022,8 +1022,7 @@ spack:
     for s1, s2 in zip(e1.user_specs, e2.user_specs):
         assert s1 == s2
 
-    assert not e2.concretized_order
-    assert not e2.concretized_user_specs
+    assert not e2.concretized_roots
     assert not e2.specs_by_hash
 
 
@@ -1058,8 +1057,7 @@ spack:
     for s1, s2 in zip(e1.user_specs, e2.user_specs):
         assert s1 == s2
 
-    assert e2.concretized_order == e1.concretized_order
-    assert e2.concretized_user_specs == e1.concretized_user_specs
+    assert e2.concretized_roots == e1.concretized_roots
     assert e2.specs_by_hash == e1.specs_by_hash
 
     assert os.path.exists(os.path.join(e2.path, "libelf"))
@@ -1847,15 +1845,15 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     test = ev.read("test")
     # Save this spec to check later if it is still in the env
     (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
-    orig_user_specs = test.user_specs
-    orig_concretized_specs = test.concretized_order
+    user_specs_before = test.user_specs
+    user_spec_hashes_before = {x.hash for x in test.concretized_roots}
 
     with ev.read("test"):
         uninstall("-ya")
 
     test = ev.read("test")
-    assert test.concretized_order == orig_concretized_specs
-    assert test.user_specs.specs == orig_user_specs.specs
+    assert {x.hash for x in test.concretized_roots} == user_spec_hashes_before
+    assert test.user_specs.specs == user_specs_before.specs
     assert mpileaks_hash in test.specs_by_hash
     assert not test.specs_by_hash[mpileaks_hash].installed
 
@@ -1873,7 +1871,7 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
 
     test = ev.read("test")
     assert not test.specs_by_hash
-    assert not test.concretized_order
+    assert not test.concretized_roots
     assert not test.user_specs
 
 
@@ -1897,8 +1895,8 @@ def test_indirect_build_dep(repo_builder: RepoBuilder):
         e.write()
 
         e_read = ev.read("test")
-        (x_env_hash,) = e_read.concretized_order
-
+        assert len(e_read.concretized_roots) == 1
+        x_env_hash = e_read.concretized_roots[0].hash
         x_env_spec = e_read.specs_by_hash[x_env_hash]
         assert x_env_spec == x_concretized
 
@@ -1939,7 +1937,7 @@ def test_store_different_build_deps(repo_builder: RepoBuilder):
         e.write()
 
         e_read = ev.read("test")
-        y_env_hash, x_env_hash = e_read.concretized_order
+        y_env_hash, x_env_hash = [x.hash for x in e_read.concretized_roots]
 
         y_read = e_read.specs_by_hash[y_env_hash]
         x_read = e_read.specs_by_hash[x_env_hash]
@@ -3612,8 +3610,8 @@ spack:
 
     with ev.read("test") as e:
         install("--fake")
-
-        spec = e.specs_by_hash[e.concretized_order[0]]
+        user_spec_hash = e.concretized_roots[0].hash
+        spec = e.specs_by_hash[user_spec_hash]
         view_prefix = e.default_view.get_projection_for_spec(spec)
         modules_glob = "%s/modules/**/*/*" % e.path
         modules = glob.glob(modules_glob)

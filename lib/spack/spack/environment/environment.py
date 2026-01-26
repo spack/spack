@@ -977,6 +977,17 @@ class ConcretizedRootInfo:
     def __str__(self):
         return f"{self.root} -> {self.hash} [new={self.new}]"
 
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, ConcretizedRootInfo)
+            and self.root == other.root
+            and self.hash == other.hash
+            and self.new == other.new
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.root, self.hash, self.new))
+
 
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
@@ -1788,10 +1799,6 @@ class Environment:
         h = concrete.dag_hash()
         self.concretized_roots.append(ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new))
         self.specs_by_hash[h] = concrete
-
-    @property
-    def concretized_order(self) -> List[str]:
-        return [x.hash for x in self.concretized_roots]
 
     @property
     def concretized_user_specs(self) -> List[Spec]:
