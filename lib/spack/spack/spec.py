@@ -3305,7 +3305,7 @@ class Spec:
             if not self.versions.intersects(other.versions):
                 return False
 
-        if not self.variants.intersects(other.variants):
+        if not self._intersects_variants(other):
             return False
 
         if self.architecture and other.architecture:
@@ -3674,6 +3674,11 @@ class Spec:
                     return False
 
         return result
+
+    def _intersects_variants(self, other: "Spec") -> bool:
+        self_dict = self.variants.dict
+        other_dict = other.variants.dict
+        return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
 
     def _constrain_variants(self, other: "Spec") -> bool:
         """Add all variants in other that aren't in self to self. Also constrain all multi-valued
@@ -5270,9 +5275,6 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         non_prop = [x.name for x in non_prop]
         prop = [x.name for x in prop]
         return non_prop, prop
-
-    def intersects(self, other):
-        return all(self[k].intersects(other[k]) for k in other if k in self)
 
     def copy(self) -> "VariantMap":
         clone = VariantMap()
