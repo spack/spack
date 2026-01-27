@@ -1794,3 +1794,25 @@ spack:
 
             compiler_specs = list(e.concretized_specs_by(group="compiler"))
             assert len(compiler_specs) == 1
+
+    def test_independent_group_dont_reuse(self, create_temporary_manifest):
+        """Tests that there is no cross-groups reuse among groups of specs without dependencies."""
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks@2.2
+      - group: app
+        matrix:
+        - [mpileaks]
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            _, default_mpileaks = list(e.concretized_specs_by(group="default"))[0]
+            assert default_mpileaks.satisfies("@2.2")
+
+            _, app_mpileaks = list(e.concretized_specs_by(group="app"))[0]
+            assert app_mpileaks.satisfies("@2.3")
