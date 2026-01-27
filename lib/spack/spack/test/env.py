@@ -1788,3 +1788,9 @@ spack:
             e.concretize()
             roots = e.concrete_roots()
             assert len(roots) == 3
+
+            default_specs = list(e.concretized_specs_by(group="default"))
+            assert len(default_specs) == 2
+
+            compiler_specs = list(e.concretized_specs_by(group="compiler"))
+            assert len(compiler_specs) == 1

@@ -1970,6 +1970,13 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
+    def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
+        """Generates all the (abstract, concrete) spec pairs for a given group"""
+        for x in self.concretized_roots:
+            if x.group != group:
+                continue
+            yield x.root, self.specs_by_hash[x.hash]
+
     def get_by_hash(self, dag_hash: str) -> List[Spec]:
         # If it's not a partial hash prefix we can early exit
         early_exit = len(dag_hash) == 32
