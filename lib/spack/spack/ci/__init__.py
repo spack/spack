@@ -495,13 +495,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     # Build a pipeline from the specs in the concrete environment
-    pipeline = PipelineDag(
-        [
-            concrete
-            for abstract, concrete in env.concretized_specs()
-            if abstract in env.spec_lists["specs"]
-        ]
-    )
+    pipeline = PipelineDag([env.specs_by_hash[x.hash] for x in env.concretized_roots])
 
     # Optionally add various pruning filters
     pruning_filters = []
