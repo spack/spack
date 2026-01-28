@@ -16,6 +16,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
@@ -148,6 +149,60 @@ def test_possible_dependencies_with_multiple_classes(
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(*pkgs, allowed_deps=dt.ALL)
     assert set(expected) == real_pkgs
+
+
+def test_can_be_installed_with_buildable_false_all(mock_packages, mutable_config):
+    """Test that can_be_installed returns False when packages:all:buildable:false
+    and no externals are configured."""
+    import spack.util.spack_yaml as syaml
+
+    conf = syaml.load_config(
+        """\
+all:
+  buildable: false
+"""
+    )
+    spack.config.set("packages", conf)
+
+    inspector = StaticAnalysis(
+        configuration=spack.config.CONFIG,
+        repo=mock_packages,
+        store=spack.store.STORE,
+        binary_index=spack.binary_distribution.BINARY_INDEX,
+    )
+
+    # libelf should not be installable when packages:all:buildable:false
+    # and no externals are configured
+    assert not inspector.can_be_installed(pkg_name="libelf")
+
+
+def test_can_be_installed_with_explicit_buildable_true(mock_packages, mutable_config):
+    """Test that can_be_installed returns True when packages:all:buildable:false
+    but the package is explicitly marked buildable:true."""
+    import spack.util.spack_yaml as syaml
+
+    conf = syaml.load_config(
+        """\
+all:
+  buildable: false
+libelf:
+  buildable: true
+"""
+    )
+    spack.config.set("packages", conf)
+
+    inspector = StaticAnalysis(
+        configuration=spack.config.CONFIG,
+        repo=mock_packages,
+        store=spack.store.STORE,
+        binary_index=spack.binary_distribution.BINARY_INDEX,
+    )
+
+    # libelf should be installable when explicitly marked buildable:true
+    assert inspector.can_be_installed(pkg_name="libelf")
+
+    # mpich should not be installable (not explicitly marked)
+    assert not inspector.can_be_installed(pkg_name="mpich")
 
 
 def setup_install_test(source_paths, test_root):

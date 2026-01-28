@@ -11,6 +11,7 @@ import spack.concretize
 import spack.config
 import spack.package_prefs
 import spack.repo
+import spack.solver.asp
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.error import ConfigError
@@ -403,6 +404,93 @@ mpich:
 
         spec = Spec("mpich")
         assert spack.package_prefs.is_spec_buildable(spec)
+
+    def test_buildable_false_all_concrete_failure(self):
+        """Test that concretization fails when packages:all:buildable:false
+        and no externals are configured for a required package."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+"""
+        )
+        spack.config.set("packages", conf)
+
+        # Should fail because libelf cannot be built and has no externals
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+            spack.concretize.concretize_one("libelf")
+
+        assert "buildable:false" in str(exc_info.value)
+
+    def test_buildable_false_all_with_explicit_true(self):
+        """Test that a package can be built when packages:all:buildable:false
+        but the package is explicitly marked buildable:true."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+libelf:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.set("packages", conf)
+
+        # Should succeed because libelf is explicitly buildable
+        spec = spack.concretize.concretize_one("libelf")
+        assert spec.name == "libelf"
+        assert spec.concrete
+
+    def test_buildable_false_provider_overrides_virtual_true(self):
+        """Test that a virtual provider explicitly set to buildable:false
+        cannot be built even when the virtual package is buildable:true
+        and packages:all:buildable:true."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: true
+mpi:
+  buildable: true
+mpich:
+  buildable: false
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.set("packages", conf)
+
+        # Should fail because mpich provider is explicitly not buildable
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+            spack.concretize.concretize_one("mpich")
+
+        assert "buildable:false" in str(exc_info.value)
+
+    def test_buildable_true_virtual_allows_provider_with_all_false(self):
+        """Test that a virtual provider can be built when packages:all:buildable:false
+        if the virtual package is explicitly buildable:true and the provider has
+        no explicit buildable setting."""
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+mpi:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.set("packages", conf)
+
+        # Should succeed because mpi virtual is buildable:true, and mpich
+        # as a provider should inherit that
+        spec = spack.concretize.concretize_one("mpich")
+        assert spec.name == "mpich"
+        assert spec.concrete
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are

@@ -2107,6 +2107,56 @@ class SpackSolverSetup:
                 self.gen.h2(f"External package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
 
+    def buildable_constraints(self, packages_with_externals):
+        """Apply buildable constraints based on packages:all:buildable setting."""
+        # Check if packages:all:buildable is explicitly set to false
+        all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
+
+        if all_buildable:
+            # Default behavior: all packages are buildable unless explicitly marked otherwise
+            return
+
+        # packages:all:buildable is False, so all packages are non-buildable by default
+        # except those explicitly marked as buildable, either directly or as virtual providers
+        self.gen.h1("Buildable constraints from packages:all:buildable")
+
+        for pkg_name in sorted(self.pkgs):
+            # Check if this package is explicitly marked as buildable
+            pkg_data = packages_with_externals.get(pkg_name, {})
+            if pkg_data.get("buildable", False):
+                continue
+
+            # If not, it may provide a buildable virtual.
+            # Check all virtuals explicitly configured in packages.yaml
+            provides_buildable_virtual = False
+
+            # Get the full packages configuration, not just packages_with_externals
+            packages_config = spack.config.CONFIG.get("packages", {})
+
+            for virtual_name in packages_config.keys():
+                # Only check actual virtual packages
+                if not spack.repo.PATH.is_virtual(virtual_name):
+                    continue
+
+                virtual_data = packages_config.get(virtual_name, {})
+                # Only if the virtual is explicitly marked buildable:true
+                if not virtual_data.get("buildable", False):
+                    continue
+
+                # Check if pkg_name is a provider for this buildable virtual
+                for provider in spack.repo.PATH.providers_for(virtual_name):
+                    if provider.name == pkg_name:
+                        provides_buildable_virtual = True
+                        break
+
+                if provides_buildable_virtual:
+                    break
+
+            if provides_buildable_virtual:
+                continue
+
+            self.gen.fact(fn.buildable_false(pkg_name))
+
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
         preferences = spack.package_prefs.PackagePrefs
@@ -2996,6 +3046,7 @@ class SpackSolverSetup:
 
         self.virtual_requirements_and_weights()
         self.external_packages(packages_with_externals)
+        self.buildable_constraints(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ

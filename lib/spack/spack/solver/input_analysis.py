@@ -291,9 +291,17 @@ class StaticAnalysis(NoStaticAnalysis):
 
     @lang.memoized
     def can_be_installed(self, *, pkg_name) -> bool:
-        if self.configuration.get(f"packages:{pkg_name}:buildable", True):
+        # Determine if package is buildable from config
+        pkg_buildable = self.configuration.get(f"packages:{pkg_name}:buildable")
+        if pkg_buildable is None:
+            # If not explicitly set, check the "all" setting
+            pkg_buildable = self.configuration.get("packages:all:buildable", True)
+
+        # If explicitly or implicitly buildable, allow it
+        if pkg_buildable:
             return True
 
+        # Package is not buildable, check if it can be satisfied through other means
         if self.configuration.get(f"packages:{pkg_name}:externals", []):
             return True
 
