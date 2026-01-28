@@ -12,7 +12,19 @@ import re
 import shutil
 import stat
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import spack
 import spack.concretize
@@ -43,6 +55,7 @@ from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
+from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
@@ -1954,16 +1967,25 @@ class Environment:
         for x in self.concretized_roots:
             yield x.root, self.specs_by_hash[x.hash]
 
+        yield from self.concretized_specs_from_all_included_environments()
+
+    def concretized_specs_from_all_included_environments(self):
         seen = {(x.root, x.hash) for x in self.concretized_roots}
         for included_env in self.included_concretized_user_specs:
-            for s, h in zip(
-                self.included_concretized_user_specs[included_env],
-                self.included_concretized_order[included_env],
-            ):
-                if (s, h) in seen:
-                    continue
-                seen.add((s, h))
-                yield s, self.included_specs_by_hash[included_env][h]
+            yield from self.concretized_specs_from_included_environment(included_env, _seen=seen)
+
+    def concretized_specs_from_included_environment(
+        self, included_env: str, *, _seen: Optional[set[Tuple[spack.spec.Spec, str]]] = None
+    ):
+        _seen = set() if _seen is None else _seen
+        for s, h in zip(
+            self.included_concretized_user_specs[included_env],
+            self.included_concretized_order[included_env],
+        ):
+            if (s, h) in _seen:
+                continue
+            _seen.add((s, h))
+            yield s, self.included_specs_by_hash[included_env][h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -2435,6 +2457,92 @@ def _is_uninstalled(spec):
     return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
 
 
+class ReusableSpecsFactory:
+    """Creates a list of SpecFilters to generate the reusable specs for the environment"""
+
+    def __init__(self, *, env: Environment, group: str):
+        self.env = env
+        self.group = group
+
+    def __call__(self, is_usable: Callable[[Spec], bool]) -> List[SpecFilter]:
+        result = []
+        # Specs from group dependencies _must_ be reused, regardless of configuration
+        dependencies = self.env.manifest.needs(group=self.group)
+        necessary_specs = []
+        for d in dependencies:
+            necessary_specs.extend([x for _, x in self.env.concretized_specs_by(group=d)])
+
+        # Specs from groups listed as dependencies
+        if necessary_specs:
+            necessary_specs = list(traverse.traverse_nodes(necessary_specs))
+            result.append(
+                SpecFilter(lambda: necessary_specs, include=[], exclude=[], is_usable=is_usable)
+            )
+
+        # Included environments and _this_ group, instead, are subject to configuration
+        concretizer_yaml = spack.config.CONFIG.get_config("concretizer")
+        reuse_yaml = concretizer_yaml.get("reuse", False)
+
+        # With no reuse don't account for previously concretized specs in _this_ group
+        if reuse_yaml is False:
+            return result
+
+        this_group_specs = [x for _, x in self.env.concretized_specs_by(group=self.group)]
+        included_specs = [
+            x for _, x in self.env.concretized_specs_from_all_included_environments()
+        ]
+        additional_specs = list(traverse.traverse_nodes(this_group_specs + included_specs))
+        if not isinstance(reuse_yaml, Mapping):
+            result.append(
+                SpecFilter(lambda: additional_specs, include=[], exclude=[], is_usable=is_usable)
+            )
+            return result
+
+        # Here we know we have a complex reuse configuration
+        default_include = reuse_yaml.get("include", [])
+        default_exclude = reuse_yaml.get("exclude", [])
+        for source in reuse_yaml.get("from", []):
+            # We just need to take care of the environment-related parts
+            if source["type"] != "environment":
+                continue
+
+            include = source.get("include", default_include)
+            exclude = source.get("exclude", default_exclude)
+            if "path" not in source:
+                result.append(
+                    SpecFilter(
+                        lambda: additional_specs,
+                        include=include,
+                        exclude=exclude,
+                        is_usable=is_usable,
+                    )
+                )
+                continue
+
+            env_dir = as_env_dir(source["path"])
+            if env_dir in self.env.included_concrete_envs:
+                included_specs = list(
+                    traverse.traverse_nodes(
+                        [
+                            x
+                            for _, x in self.env.concretized_specs_from_included_environment(
+                                env_dir
+                            )
+                        ]
+                    )
+                )
+                result.append(
+                    SpecFilter(
+                        lambda: included_specs,
+                        include=include,
+                        exclude=exclude,
+                        is_usable=is_usable,
+                    )
+                )
+
+        return result
+
+
 class EnvironmentConcretizer:
     def __init__(self, env: Environment):
         self.env = env
@@ -2447,11 +2555,8 @@ class EnvironmentConcretizer:
         self._prepare_environment_for_concretization(force=force)
 
         result = []
-        groups = list(self.env.manifest.groups())
         # Sort so that the ordering is deterministic, and "default" specs are first
-        groups.sort(key=lambda x: (x == DEFAULT_USER_SPEC_GROUP, x))
-        while groups:
-            current_group = groups.pop()
+        for current_group in self._order_groups():
             # Exit early if the set of concretized specs is the set of user specs
             new_user_specs, kept_user_specs = self._partition_user_specs(group=current_group)
             if not new_user_specs:
@@ -2459,19 +2564,32 @@ class EnvironmentConcretizer:
 
             # Pick the right concretization strategy
             unify = self.env.unify
+            factory = ReusableSpecsFactory(env=self.env, group=current_group)
             if unify == "when_possible":
                 partial_result = self._concretize_together_where_possible(
-                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                    new_user_specs,
+                    kept_user_specs,
+                    tests=tests,
+                    group=current_group,
+                    factory=factory,
                 )
 
             elif unify is True:
                 partial_result = self._concretize_together(
-                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                    new_user_specs,
+                    kept_user_specs,
+                    tests=tests,
+                    group=current_group,
+                    factory=factory,
                 )
 
             elif unify is False:
                 partial_result = self._concretize_separately(
-                    new_user_specs, kept_user_specs, tests=tests, group=current_group
+                    new_user_specs,
+                    kept_user_specs,
+                    tests=tests,
+                    group=current_group,
+                    factory=factory,
                 )
             else:
                 raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
@@ -2517,6 +2635,29 @@ class EnvironmentConcretizer:
         kept_user_specs += self.env.included_user_specs
         return new_user_specs, kept_user_specs
 
+    def _order_groups(self) -> List[str]:
+        done, result = {DEFAULT_USER_SPEC_GROUP}, [DEFAULT_USER_SPEC_GROUP]
+        remaining = self.env.manifest.groups() - {DEFAULT_USER_SPEC_GROUP}
+        while remaining:
+            # Check we have groups that are "ready"
+            ready = []
+            for current in remaining:
+                deps = self.env.manifest.needs(group=current)
+                if all(d in done for d in deps):
+                    ready.append(current)
+
+            # Check we can progress
+            if not ready:
+                raise SpackEnvironmentConfigError(
+                    "cannot resolve dependencies for the group of specs in the environment",
+                    self.env.manifest.manifest_file,
+                )
+
+            result.extend(ready)
+            done.update(ready)
+            remaining.difference_update(ready)
+        return result
+
     def _user_spec_pairs(
         self, user_specs_to_compute: List[Spec], user_specs_to_keep: List[Spec]
     ) -> List[SpecPair]:
@@ -2534,10 +2675,11 @@ class EnvironmentConcretizer:
         *,
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests
+            specs_to_concretize, tests=tests, factory=factory
         )
         result = [x for x in result if x[0] in to_compute]
         for abstract, concrete in result:
@@ -2552,10 +2694,13 @@ class EnvironmentConcretizer:
         *,
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
-            concrete_pairs = spack.concretize.concretize_together(to_concretize, tests=tests)
+            concrete_pairs = spack.concretize.concretize_together(
+                to_concretize, tests=tests, factory=factory
+            )
         except spack.error.UnsatisfiableSpecError as e:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
@@ -2585,10 +2730,13 @@ class EnvironmentConcretizer:
         *,
         group: Optional[str] = None,
         tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
         to_concretize = [(x, None) for x in to_compute]
-        concrete_pairs = spack.concretize.concretize_separately(to_concretize, tests=tests)
+        concrete_pairs = spack.concretize.concretize_separately(
+            to_concretize, tests=tests, factory=factory
+        )
 
         for abstract, concrete in concrete_pairs:
             self.env.add_concrete_spec(abstract, concrete, new=True, group=group)

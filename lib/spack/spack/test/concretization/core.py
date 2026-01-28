@@ -3277,7 +3277,7 @@ def test_filtering_reused_specs(
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        mutable_config,
+        configuration=mutable_config,
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
     )
@@ -3318,7 +3318,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        mutable_config,
+        configuration=mutable_config,
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
     )

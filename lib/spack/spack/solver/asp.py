@@ -43,7 +43,6 @@ import spack.compilers.flags
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
-import spack.environment as ev
 import spack.error
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
@@ -81,7 +80,7 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector, create_external_parser
+from .reuse import ReusableSpecsSelector, SpecFiltersFactory, create_external_parser
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
 from .versions import Provenance
 
@@ -2904,6 +2903,9 @@ class SpackSolverSetup:
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
+        # TODO: remove this local import and get rid of dependency on globals
+        import spack.environment as ev
+
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
@@ -3673,6 +3675,8 @@ class SpecBuilder:
         self._splices.setdefault(parent_spec, []).append(splice)
 
     def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
+        # TODO: remove this local import and get rid of dependency on globals
+        import spack.environment as ev
 
         attr_key = {
             # hash attributes are handled first, since they imply entire concrete specs
@@ -3891,7 +3895,7 @@ class Solver:
     and passes the setup method to the driver, as well.
     """
 
-    def __init__(self):
+    def __init__(self, *, specs_factory: Optional[SpecFiltersFactory] = None):
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(init_config=True)
 
@@ -3904,6 +3908,7 @@ class Solver:
         self.selector = ReusableSpecsSelector(
             configuration=spack.config.CONFIG,
             external_parser=create_external_parser(self.packages_with_externals, completion_mode),
+            factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
         )
 

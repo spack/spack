@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import functools
-from typing import Any, Callable, List, Mapping
+import typing
+from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
-import spack.environment
 import spack.llnl.path
 import spack.repo
 import spack.spec
@@ -21,6 +21,9 @@ from spack.externals import (
 )
 
 from .runtimes import all_libcs
+
+if typing.TYPE_CHECKING:
+    import spack.environment
 
 
 class SpecFilter:
@@ -88,23 +91,6 @@ class SpecFilter:
             _is_reusable, packages_with_externals=packages_with_externals, local=True
         )
         factory = functools.partial(_specs_from_environment, env=env)
-        return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
-
-    @staticmethod
-    def from_environment_included_concrete(
-        *,
-        packages_with_externals,
-        include: List[str],
-        exclude: List[str],
-        env: spack.environment.Environment,
-        included_concrete: str,
-    ) -> "SpecFilter":
-        is_reusable = functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True
-        )
-        factory = functools.partial(
-            _specs_from_environment_included_concrete, env=env, included_concrete=included_concrete
-        )
         return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
     @staticmethod
@@ -197,15 +183,6 @@ def _specs_from_environment(env):
         return []
 
 
-def _specs_from_environment_included_concrete(env, included_concrete):
-    """Return only concrete specs from the environment included from the included_concrete"""
-    if env:
-        assert included_concrete in env.included_concrete_env_root_dirs
-        return [concrete for concrete in env.included_specs_by_hash[included_concrete].values()]
-    else:
-        return []
-
-
 class ReuseStrategy(enum.Enum):
     ROOTS = enum.auto()
     DEPENDENCIES = enum.auto()
@@ -228,21 +205,35 @@ def create_external_parser(
     return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
+SpecFiltersFactory = Callable[[Callable[[spack.spec.Spec], bool]], List[SpecFilter]]
+
+
 class ReusableSpecsSelector:
     """Selects specs that can be reused during concretization."""
 
     def __init__(
         self,
+        *,
         configuration: spack.config.Configuration,
         external_parser: ExternalSpecsParser,
         packages_with_externals: Any,
+        factory: Optional[SpecFiltersFactory] = None,
     ) -> None:
+        # Local import to break circular dependencies
+        import spack.environment
+
         self.configuration = configuration
         self.store = spack.store.create(configuration)
         self.reuse_strategy = ReuseStrategy.ROOTS
-
         reuse_yaml = self.configuration.get("concretizer:reuse", False)
+
         self.reuse_sources = []
+        if factory is not None:
+            is_reusable = functools.partial(
+                _is_reusable, packages_with_externals=packages_with_externals, local=True
+            )
+            self.reuse_sources.extend(factory(is_reusable))
+
         if not isinstance(reuse_yaml, Mapping):
             self.reuse_sources.append(
                 SpecFilter.from_packages_yaml(
@@ -269,12 +260,6 @@ class ReusableSpecsSelector:
                     SpecFilter.from_buildcache(
                         packages_with_externals=packages_with_externals, include=[], exclude=[]
                     ),
-                    SpecFilter.from_environment(
-                        packages_with_externals=packages_with_externals,
-                        include=[],
-                        exclude=[],
-                        env=spack.environment.active_environment(),  # with all concrete includes
-                    ),
                 ]
             )
         else:
@@ -294,19 +279,7 @@ class ReusableSpecsSelector:
                     env_dir = spack.environment.as_env_dir(source["path"])
                     active_env = spack.environment.active_environment()
                     if active_env and env_dir in active_env.included_concrete_env_root_dirs:
-                        # If the environment is included as a concrete environment, use the
-                        # local copy of specs in the active environment.
-                        # note: included concrete environments are only updated at concretization
-                        #       time, and reuse needs to match the included specs.
-                        self.reuse_sources.append(
-                            SpecFilter.from_environment_included_concrete(
-                                packages_with_externals=packages_with_externals,
-                                include=include,
-                                exclude=exclude,
-                                env=active_env,
-                                included_concrete=env_dir,
-                            )
-                        )
+                        pass
                     else:
                         # If the environment is not included as a concrete environment, use the
                         # current specs from its lockfile.
@@ -318,17 +291,6 @@ class ReusableSpecsSelector:
                                 env=spack.environment.environment_from_name_or_dir(env_dir),
                             )
                         )
-                elif source["type"] == "environment":
-                    # reusing from the current environment implicitly reuses from all of the
-                    # included concrete environments
-                    self.reuse_sources.append(
-                        SpecFilter.from_environment(
-                            packages_with_externals=packages_with_externals,
-                            include=include,
-                            exclude=exclude,
-                            env=spack.environment.active_environment(),
-                        )
-                    )
                 elif source["type"] == "local":
                     self.reuse_sources.append(
                         SpecFilter.from_store(

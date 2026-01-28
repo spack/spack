@@ -1816,3 +1816,47 @@ spack:
 
             _, app_mpileaks = list(e.concretized_specs_by(group="app"))[0]
             assert app_mpileaks.satisfies("@2.3")
+
+    def test_relying_on_a_dependency_group(self, create_temporary_manifest):
+        """Tests that a group of specs that would not concretize without a dependency group
+        works correctly.
+        """
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - group: app
+        matrix:
+        - [mpileaks]
+        - ["%c,cxx=gcc@14"]
+    """
+        )
+
+        # We have no gcc@14 configured, so this will raise an error
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+                e.concretize()
+
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - group: compiler
+        specs:
+        - gcc@14
+      - group: mpileaks
+        needs: [compiler]
+        matrix:
+        - [mpileaks]
+        - ["%c,cxx=gcc@14"]
+    """
+        )
+
+        # In this case gcc@14 is taken from the "needed" group
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            _, gcc = next(iter(e.concretized_specs_by(group="compiler")))
+            assert gcc.satisfies("gcc@14")
+            _, mpileaks = next(iter(e.concretized_specs_by(group="mpileaks")))
+            assert mpileaks["c"].dag_hash() == gcc.dag_hash()
