@@ -2557,46 +2557,12 @@ class EnvironmentConcretizer:
         result = []
         # Sort so that the ordering is deterministic, and "default" specs are first
         for current_group in self._order_groups():
-            # Exit early if the set of concretized specs is the set of user specs
-            new_user_specs, kept_user_specs = self._partition_user_specs(group=current_group)
-            if not new_user_specs:
-                continue
-
-            # Pick the right concretization strategy
-            unify = self.env.unify
-            factory = ReusableSpecsFactory(env=self.env, group=current_group)
-            if unify == "when_possible":
-                partial_result = self._concretize_together_where_possible(
-                    new_user_specs,
-                    kept_user_specs,
-                    tests=tests,
-                    group=current_group,
-                    factory=factory,
-                )
-
-            elif unify is True:
-                partial_result = self._concretize_together(
-                    new_user_specs,
-                    kept_user_specs,
-                    tests=tests,
-                    group=current_group,
-                    factory=factory,
-                )
-
-            elif unify is False:
-                partial_result = self._concretize_separately(
-                    new_user_specs,
-                    kept_user_specs,
-                    tests=tests,
-                    group=current_group,
-                    factory=factory,
-                )
-            else:
-                raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+            partial_result = self._concretize_single_group(group=current_group, tests=tests)
             result.extend(partial_result)
 
         # Unify the specs objects, so we get correct references to all parents
-        self.env.unify_specs()
+        if result:
+            self.env.unify_specs()
         return result
 
         # for group in self.env.user_spec_groups:
@@ -2610,6 +2576,36 @@ class EnvironmentConcretizer:
         #     group_scope = ...
         #     with spack.config.push_scope():
         #         [concretize and add]
+
+    def _concretize_single_group(
+        self, *, group: str, tests: Union[bool, Sequence[str]]
+    ) -> List[SpecPair]:
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
+        if not new_user_specs:
+            return []
+
+        # Pick the right concretization strategy
+        unify = self.env.unify
+        factory = ReusableSpecsFactory(env=self.env, group=group)
+        if unify == "when_possible":
+            partial_result = self._concretize_together_where_possible(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+
+        elif unify is True:
+            partial_result = self._concretize_together(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+
+        elif unify is False:
+            partial_result = self._concretize_separately(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+        else:
+            raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+
+        return partial_result
 
     def _prepare_environment_for_concretization(self, *, force: bool):
         """Reset the environment concrete state and ensure consistency with user specs."""
