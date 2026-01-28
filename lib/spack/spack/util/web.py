@@ -411,7 +411,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method.startswith("curl"):
+    if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
         curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
