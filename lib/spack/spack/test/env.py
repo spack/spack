@@ -16,6 +16,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import (
     EnvironmentManifestFile,
@@ -23,6 +24,7 @@ from spack.environment.environment import (
     _error_on_nonempty_view_dir,
 )
 from spack.environment.list import UndefinedReferenceError
+from spack.traverse import traverse_nodes
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -554,9 +556,8 @@ spack:
     )
     mutable_config.set("concretizer:unify", unify_in_lower_scope)
     assert mutable_config.get("concretizer:unify") == unify_in_lower_scope
-    with ev.Environment(manifest.parent) as e:
+    with ev.Environment(manifest.parent):
         assert mutable_config.get("concretizer:unify") == unify_in_spack_yaml
-        assert e.unify == unify_in_spack_yaml
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
@@ -574,8 +575,8 @@ spack:
     )
 
     with spack.config.override("concretizer:unify", unify_in_config):
-        with ev.Environment(manifest.parent) as e:
-            assert e.unify == unify_in_config
+        with ev.Environment(manifest.parent):
+            assert spack.config.CONFIG.get("concretizer:unify") == unify_in_config
 
 
 @pytest.mark.parametrize(
@@ -1860,3 +1861,80 @@ spack:
             assert gcc.satisfies("gcc@14")
             _, mpileaks = next(iter(e.concretized_specs_by(group="mpileaks")))
             assert mpileaks["c"].dag_hash() == gcc.dag_hash()
+
+    def test_manifest_can_contain_config_override(self, mutable_config, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      concretizer:
+        unify: False
+      specs:
+      - group: compiler
+        override:
+          concretizer:
+            unify: True
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+            # Assert the internal scope works when used manually
+            override = manifest.config_override(group="compiler")
+            mutable_config.push_scope(
+                override, priority=ConfigScopePriority.ENVIRONMENT_SPEC_GROUPS
+            )
+            assert mutable_config.get_config("concretizer")["unify"] is True
+            mutable_config.remove_scope(override.name)
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+            # Assert the context manager works too
+            with e.config_override_for_group(group="compiler"):
+                assert mutable_config.get_config("concretizer")["unify"] is True
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+    def test_overriding_concretization_properties_per_group(self, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      concretizer:
+        unify: True
+      specs:
+      - group: compiler
+        specs:
+        - gcc@14
+      - group: scalapacks
+        needs: [compiler]
+        matrix:
+        - [netlib-scalapack]
+        - ["%mpi=mpich", "%mpi=mpich2"]
+        - ["%lapack=openblas-with-lapack", "%lapack=netlib-lapack"]
+        override:
+          concretizer:
+            unify: False
+          packages:
+            c:
+              prefer: [gcc@14]
+            cxx:
+              prefer: [gcc@14]
+            fortran:
+              prefer: [gcc@14]
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            assert len(list(e.concretized_specs_by(group="compiler"))) == 1
+
+            gcc = next(x for _, x in e.concretized_specs_by(group="compiler"))
+            assert gcc.satisfies("gcc@14") and not gcc.external
+            assert gcc.satisfies("%c,cxx,fortran=gcc")
+            gcc_hash = gcc.dag_hash()
+
+            assert len(list(e.concretized_specs_by(group="scalapacks"))) == 4
+            scalapacks = [x for _, x in e.concretized_specs_by(group="scalapacks")]
+            for node in traverse_nodes(scalapacks, deptype=("link", "run")):
+                assert node.satisfies(f"%[when=c]c=gcc/{gcc_hash}")
+                assert node.satisfies(f"%[when=cxx]cxx=gcc/{gcc_hash}")
+                assert node.satisfies(f"%[when=fortran]fortran=gcc/{gcc_hash}")

@@ -33,6 +33,12 @@ group_name_and_deps = {
         "description": "Groups of specs that are needed by this group",
         "items": {"type": "string"},
     },
+    "override": {
+        "type": "object",
+        "description": "Top-most configuration scope for this group of specs",
+        "additionalProperties": False,
+        "properties": {**spack.schema.merged.properties},
+    },
 }
 
 

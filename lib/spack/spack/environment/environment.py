@@ -51,6 +51,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
+from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
@@ -59,7 +60,6 @@ from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
-from ..enums import ConfigScopePriority
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
@@ -1063,15 +1063,30 @@ class Environment:
             with self.manifest.use_config():
                 self._read()
 
-    @property
-    def unify(self):
-        if self._unify is None:
-            self._unify = spack.config.get("concretizer:unify", False)
-        return self._unify
+    @contextlib.contextmanager
+    def config_override_for_group(self, *, group: str):
+        key = self.manifest._ensure_group_exists(group=group)
+        internal_scope = self.manifest.config_override(group=key)
+        if internal_scope is None:
+            # No internal scope
+            tty.debug(
+                f"[{__name__}] No configuration override necessary for the '{group}' group "
+                f"in the environment at {self.manifest_path}"
+            )
+            yield
+            return
 
-    @unify.setter
-    def unify(self, value):
-        self._unify = value
+        try:
+            tty.debug(
+                f"[{__name__}] Overriding the configuration for the '{group}' group defined "
+                f"in {self.manifest_path} before concretization"
+            )
+            spack.config.CONFIG.push_scope(
+                internal_scope, priority=ConfigScopePriority.ENVIRONMENT_SPEC_GROUPS
+            )
+            yield
+        finally:
+            spack.config.CONFIG.remove_scope(internal_scope.name)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -1975,7 +1990,7 @@ class Environment:
             yield from self.concretized_specs_from_included_environment(included_env, _seen=seen)
 
     def concretized_specs_from_included_environment(
-        self, included_env: str, *, _seen: Optional[set[Tuple[spack.spec.Spec, str]]] = None
+        self, included_env: str, *, _seen: Optional[Set[Tuple[spack.spec.Spec, str]]] = None
     ):
         _seen = set() if _seen is None else _seen
         for s, h in zip(
@@ -2474,7 +2489,9 @@ class ReusableSpecsFactory:
 
         # Specs from groups listed as dependencies
         if necessary_specs:
-            necessary_specs = list(traverse.traverse_nodes(necessary_specs))
+            necessary_specs = list(
+                traverse.traverse_nodes(necessary_specs, deptype=("link", "run"))
+            )
             result.append(
                 SpecFilter(lambda: necessary_specs, include=[], exclude=[], is_usable=is_usable)
             )
@@ -2557,25 +2574,14 @@ class EnvironmentConcretizer:
         result = []
         # Sort so that the ordering is deterministic, and "default" specs are first
         for current_group in self._order_groups():
-            partial_result = self._concretize_single_group(group=current_group, tests=tests)
-            result.extend(partial_result)
+            with self.env.config_override_for_group(group=current_group):
+                partial_result = self._concretize_single_group(group=current_group, tests=tests)
+                result.extend(partial_result)
 
         # Unify the specs objects, so we get correct references to all parents
         if result:
             self.env.unify_specs()
         return result
-
-        # for group in self.env.user_spec_groups:
-        #     # Exit early if the set of concretized specs is the set of user specs
-        #     new_user_specs, kept_user_specs = self._partition_user_specs(group)
-        #     if not new_user_specs:
-        #         continue
-        #
-        #     needed_groups = self.env.needed_groups(group)
-        #     reused_specs = self.env.concrete_specs_from_groups(*needed_groups)
-        #     group_scope = ...
-        #     with spack.config.push_scope():
-        #         [concretize and add]
 
     def _concretize_single_group(
         self, *, group: str, tests: Union[bool, Sequence[str]]
@@ -2586,7 +2592,9 @@ class EnvironmentConcretizer:
             return []
 
         # Pick the right concretization strategy
-        unify = self.env.unify
+        if group != DEFAULT_USER_SPEC_GROUP:
+            tty.msg(f"Concretizing the '{group}' group of specs")
+        unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
         factory = ReusableSpecsFactory(env=self.env, group=group)
         if unify == "when_possible":
             partial_result = self._concretize_together_where_possible(
@@ -3074,6 +3082,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._groups: Dict[str, Tuple[str, ...]] = {DEFAULT_USER_SPEC_GROUP: tuple()}
         # Raw YAML definitions of the user specs for each group
         self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
+        # Configuration overrides for each group
+        self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
         self._init_user_specs()
 
         self.changed = False
@@ -3096,6 +3106,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 if group not in self._user_specs:
                     self._user_specs[group] = []
                     self._groups[group] = tuple(item.get("needs", ()))
+                    self._config_override[group] = item.get("override", None)
 
                 if "matrix" in item:
                     # Short form if the group is composed of only one matrix
@@ -3130,6 +3141,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def user_specs(self, *, group: Optional[str] = None) -> List:
         group = self._ensure_group_exists(group)
         return self._user_specs[group]
+
+    def config_override(
+        self, *, group: Optional[str] = None
+    ) -> Optional[spack.config.InternalConfigScope]:
+        group = self._ensure_group_exists(group)
+        data = self._config_override[group]
+        if data is None:
+            return None
+        return spack.config.InternalConfigScope(f"env:groups:{group}", data)
 
     def groups(self) -> Set[str]:
         """Returns the list of groups defined in the manifest"""
