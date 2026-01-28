@@ -164,17 +164,18 @@ def test_env_activate_script_concretize():
     shell = "sh"
     environ = ev.read("test")
 
+    env("activate", f"--{shell}", "test")
+
     path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
-    with open(path_to_activate_script, "r", encoding="utf-8") as f:
-        env_mods = f.read()
+    script_creation = os.stat(path_to_activate_script).st_mtime
 
     environ.add("mpi")
-    environ.concretize()
+    environ.install_specs()
 
-    with open(path_to_activate_script, "r", encoding="utf-8") as f:
-        concretized_env = f.read()
+    path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
+    script_update = os.stat(path_to_activate_script).st_mtime
 
-    assert env_mods == concretized_env
+    assert script_update > script_creation
 
 
 def test_env_missing_deactivation_script():

@@ -65,7 +65,7 @@ def write_env_activate_script(env, view):
         view: the name of the environment's view
     """
 
-    shells_avail = ["sh", "csh", "fish"]
+    shells_avail = ["sh"]  # csh & fish have the same script as sh
 
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
@@ -93,7 +93,8 @@ def update_env_activate_script(env, prompt="", view=""):
         view: the name of the environment's view
     """
 
-    shells_avail = ["sh"]
+    shells_avail = ["sh"]  # csh & fish have the same script as sh
+
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
 

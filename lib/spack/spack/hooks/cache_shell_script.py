@@ -44,7 +44,7 @@ def post_install(spec, explicit=None):
     if spec.external:
         return
 
-    shells_avail = ["sh", "csh", "fish"]
+    shells_avail = ["sh"]  # csh & fish have the same script as sh
 
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
