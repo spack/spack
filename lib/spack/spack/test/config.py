@@ -1871,8 +1871,8 @@ def test_included_path_git(
     assert isinstance(include, spack.config.GitIncludePaths)
     assert not include.optional and include.evaluate_condition()
 
-    destination = include._destination()
-    assert not os.path.exists(destination)
+    destination = include._destination_directory(include.git)
+    assert destination and not os.path.exists(destination)
 
     # set up minimal git and repository operations
     monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
@@ -1911,7 +1911,7 @@ def test_included_path_git(
     # A direct clone now returns already cloned destination and debug message.
     # Again only need to run this test once.
     if key == "tag":
-        assert include._clone() == include.destination
+        assert include._clone(parent_scope) == include.destination
         captured = capfd.readouterr()[1]
         assert "already cloned" in captured
 

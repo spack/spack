@@ -44,7 +44,7 @@ The same conditions and variables in :ref:`Spec List References <spec-list-refer
 Remote file URLs
 ~~~~~~~~~~~~~~~~
 
-Only the ``file``, ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported for remote file URLs.
+Only the ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported for remote file URLs.
 Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
