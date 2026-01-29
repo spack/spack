@@ -320,7 +320,7 @@ def as_env_dir(name_or_dir):
         validate_env_name(name_or_dir)
         if not exists(name_or_dir):
             raise SpackEnvironmentError("no such environment '%s'" % name_or_dir)
-        return root(name_or_dir)
+        return _root(name_or_dir)
 
 
 def environment_from_name_or_dir(name_or_dir):
