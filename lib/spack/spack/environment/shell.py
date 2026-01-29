@@ -211,9 +211,6 @@ def deactivate(active_env, view) -> EnvironmentModifications:
     env_mods = EnvironmentModifications()
     active = active_env
 
-    if active is None:
-        return env_mods
-
     with active.manifest.use_config():
         env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
