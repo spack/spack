@@ -307,7 +307,7 @@ def display_env(env, args, decorator, results):
 
     print()
 
-    if env.included_concrete_envs:
+    if env.included_concrete_env_root_dirs:
         tty.msg("Included specs")
 
         # Root specs cannot be displayed with prefixes, since those are not

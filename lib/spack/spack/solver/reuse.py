@@ -200,7 +200,7 @@ def _specs_from_environment(env):
 def _specs_from_environment_included_concrete(env, included_concrete):
     """Return only concrete specs from the environment included from the included_concrete"""
     if env:
-        assert included_concrete in env.included_concrete_envs
+        assert included_concrete in env.included_concrete_env_root_dirs
         return [concrete for concrete in env.included_specs_by_hash[included_concrete].values()]
     else:
         return []
@@ -293,7 +293,7 @@ class ReusableSpecsSelector:
                 if source["type"] == "environment" and "path" in source:
                     env_dir = spack.environment.as_env_dir(source["path"])
                     active_env = spack.environment.active_environment()
-                    if active_env and env_dir in active_env.included_concrete_envs:
+                    if active_env and env_dir in active_env.included_concrete_env_root_dirs:
                         # If the environment is included as a concrete environment, use the
                         # local copy of specs in the active environment.
                         # note: included concrete environments are only updated at concretization

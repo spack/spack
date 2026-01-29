@@ -2140,7 +2140,7 @@ def test_env_include_concrete_add_env():
     new_env.write()
 
     # add new env to combined
-    combined.included_concrete_envs.append(new_env.path)
+    combined.included_concrete_env_root_dirs.append(new_env.path)
 
     # assert thing haven't changed yet
     with open(combined.lock_path, encoding="utf-8") as f:
@@ -2163,7 +2163,7 @@ def test_env_include_concrete_remove_env():
     test1, test2, combined = setup_combined_multiple_env()
 
     # remove test2 from combined
-    combined.included_concrete_envs = [test1.path]
+    combined.included_concrete_env_root_dirs = [test1.path]
 
     # assert test2 is still in combined's lockfile
     with open(combined.lock_path, encoding="utf-8") as f:

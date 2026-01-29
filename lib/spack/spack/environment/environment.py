@@ -1019,8 +1019,8 @@ class Environment:
         #: Repository for this environment (memoized)
         self._repo = None
 
-        #: Environment paths for concrete (lockfile) included environments
-        self.included_concrete_envs: List[str] = []
+        #: Environment root dirs for concrete (lockfile) included environments
+        self.included_concrete_env_root_dirs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
         self.included_concrete_spec_data: Dict[str, Dict[str, List[str]]] = {}
         #: User specs from included environments from the last concretization
@@ -1136,11 +1136,11 @@ class Environment:
         """Extract and load into memory included concrete spec data."""
         _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
         # Expand config and environment variables
-        self.included_concrete_envs = [
+        self.included_concrete_env_root_dirs = [
             spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
         ]
 
-        if self.included_concrete_envs:
+        if self.included_concrete_env_root_dirs:
             if os.path.exists(self.lock_path):
                 with open(self.lock_path, encoding="utf-8") as f:
                     data = self._read_lockfile(f)
@@ -1194,7 +1194,7 @@ class Environment:
         """Included concrete user (or root) specs from last concretization."""
         spec_list = SpecList()
 
-        if not self.included_concrete_envs:
+        if not self.included_concrete_env_root_dirs:
             return spec_list
 
         def add_root_specs(included_concrete_specs):
@@ -1280,7 +1280,7 @@ class Environment:
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
 
-        for env_path in self.included_concrete_envs:
+        for env_path in self.included_concrete_env_root_dirs:
             # Check that environment exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
@@ -2090,7 +2090,7 @@ class Environment:
             "concrete_specs": concrete_specs,
         }
 
-        if self.included_concrete_envs:
+        if self.included_concrete_env_root_dirs:
             data[included_concrete_name] = self.included_concrete_spec_data
 
         return data
@@ -2266,7 +2266,7 @@ class Environment:
             regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
         self.manifest_uptodate_or_warn()
-        if self.specs_by_hash or self.included_concrete_envs:
+        if self.specs_by_hash or self.included_concrete_env_root_dirs:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()
