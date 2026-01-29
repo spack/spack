@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import urllib.parse
 import urllib.request
-from typing import Callable, Optional
+from typing import Optional
 
 import spack.llnl.util.tty as tty
 import spack.util.crypto
@@ -60,13 +60,13 @@ def fetch_remote_text_file(url: str, dest_dir: str) -> str:
     return fetch_url_text(raw_url, dest_dir=dest_dir)
 
 
-def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]] = None) -> str:
+def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
     """Determine the actual path and, if remote, stage its contents locally.
 
     Args:
         raw_path: raw path with possible variables needing substitution
-        sha256: the expected sha256 for the file
-        make_dest: function to create a stage for remote files, if needed (e.g., ``mkdtemp``)
+        sha256: the expected sha256 if the file is remote
+        dest: destination path
 
     Returns: resolved, normalized local path
 
@@ -98,8 +98,11 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
     if validate_scheme(url.scheme):
         # Fetch files from supported URL schemes.
         if url.scheme in ("http", "https", "ftp"):
-            if make_dest is None:
+            if not dest:
                 raise ValueError("Requires the destination argument to cache remote files")
+            assert os.path.isabs(
+                dest
+            ), f"Remote file destination '{dest}' must be an absolute path"
 
             # Stage the remote configuration file
             tmpdir = tempfile.mkdtemp()
@@ -118,7 +121,7 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
                     raise ValueError(f"Requires sha256 ('{checksum}') to cache remote files.")
 
                 # Copy the file to the destination directory
-                dest_dir = join_path(make_dest(), checksum)
+                dest_dir = join_path(dest, checksum)
                 if not os.path.exists(dest_dir):
                     mkdirp(dest_dir)
 

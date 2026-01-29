@@ -94,16 +94,15 @@ def test_rfc_remote_local_path(
         tty.debug(f"Expected {element} in '{filename}'")
         return False
 
-    def _dest_dir():
-        return join_path(str(tmp_path), "cache")
+    dest_dir = join_path(str(tmp_path), "cache")
 
     if err is not None:
         with spack.config.override("config:url_fetch_method", "curl"):
             with pytest.raises(err, match=msg):
-                rfc_util.local_path(url, sha256, _dest_dir)
+                rfc_util.local_path(url, sha256, dest_dir)
     else:
         with spack.config.override("config:url_fetch_method", "curl"):
-            path = rfc_util.local_path(url, sha256, _dest_dir)
+            path = rfc_util.local_path(url, sha256, dest_dir)
             assert os.path.exists(path)
             # Ensure correct file is "fetched"
             assert os.path.basename(path) == os.path.basename(url)
