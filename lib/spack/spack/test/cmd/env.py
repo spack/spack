@@ -18,8 +18,6 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
-import spack.environment.environment
-import spack.environment.shell
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.link_tree
@@ -622,7 +620,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    spack.environment.shell.activate(e).apply_modifications(env_variables)
+    ev.shell.activate(e).apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
@@ -3531,9 +3529,7 @@ spack:
     def _write_helper_raise(self):
         raise RuntimeError("some error")
 
-    monkeypatch.setattr(
-        spack.environment.environment.EnvironmentManifestFile, "flush", _write_helper_raise
-    )
+    monkeypatch.setattr(ev.environment.EnvironmentManifestFile, "flush", _write_helper_raise)
     with ev.Environment(str(tmp_path)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):
