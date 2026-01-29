@@ -46,17 +46,13 @@ def _msvc_relocate() -> Optional[executable.Executable]:
     import spack.bootstrap
 
     if sys.platform != "win32":
-        return None
+        raise RuntimeError("Cannot perform MSVC based relocation on non Windows platform")
     with spack.bootstrap.ensure_bootstrap_configuration():
         return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
 
 
 def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
-
-
-def generizize_msvc_link_references(target):
-    _msvc_relocate()("--pe", target, "--deploy", "--full")
 
 
 def relocate_msvc_pe_files(targets, prefixes: dict):
@@ -71,12 +67,14 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
     ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
     dll_lib_map = {}
     for target in targets:
-        # we relocate exes and dlls, libs are regenerated from themselves
-        # if import libs, if static, no op
+        # we relocate exes and dlls, import libraries are regenerated
+        # with a new dll pointer from the existing import library
+        # static .libs are ignored (.lib is any coff library on Windows,
+        # which covers both import and static libraries)
         # Dlls have no references to their import libraries
         # but import libraries reference dlls, so although
         # the DLLs are our "relocation targets" we drive that
-        # via the libs to determine the proper association
+        # via import libs to determine the proper association
         if target.endswith(".lib"):
             if sfs.verify_import_lib(target):
                 regex = re.compile("|".join(re.escape(p) for p in prefixes.keys()))
@@ -93,7 +91,11 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
                         "in this prefix, skipping relocation..."
                     )
     for target in targets:
-        # now we process the DLLs, now that we've mapped all our libs
+        # Now that we've mapped all our libs to the dlls they point to
+        # Replace any dll references in our target dll or exe with the 
+        # appropriate replacement for the packages new location on the host
+        # and if there is an import library associated with the dll/exe,
+        # regenerate it
         if target.endswith(".dll") or target.endswith(".exe"):
             regex = re.compile("|".join(re.escape(p) for p in prefixes.values()))
             match = regex.match(target)
@@ -367,7 +369,7 @@ def is_elf_magic(magic: bytes) -> bool:
 
 
 def is_msvc_magic(magic: bytes) -> bool:
-    return magic.startswith(b"!<arch>\n") or magic.startswith(b"MZ")
+    return magic.startswith(b"!<arch>\n") or (magic.startswith(b"MZ") and magic[60:64].startswith(b"PE\0\0"))
 
 
 def is_binary(filename: str) -> bool:

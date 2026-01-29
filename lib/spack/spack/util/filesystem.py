@@ -3413,68 +3413,64 @@ def relocate(package=None) -> Executable:
         spec = package.spec["compiler-wrapper"]
     else:
         spec = spack.store.STORE.db.query_local("compiler-wrapper", installed=True)[0]
-    return Executable(str(spec.package.bin_dir() / "relocate.exe")) # type: ignore
+    return Executable(str(spec.package.bin_dir() / "relocate.exe"))  # type: ignore
 
 
 @memoized
 def dumpbin(pkg) -> Executable:
-    # TODO: actually find path to this
     db_bin_dir = os.path.dirname(pkg["msvc"].cc)
-    dumpbin = which("dumpbin", path=db_bin_dir)
-    if not dumpbin:
-        raise RuntimeError("dumpbin required, but not found")
+    dumpbin = which("dumpbin", path=db_bin_dir, required=True)
     return dumpbin
 
 
 def relocate_win_rpath(package):
-
-    get_binary_file_from_prefix = lambda x: glob.glob(
-        os.path.join(package.spec.prefix, f"**\\*.{x}"), recursive=True
-    )
-
-    # populate environment with required paths to perform relocation
-    # relocate relies on finding the dll an import library
-    # links to and re-writing the path to the dll
-    # in the import lib
     ev = EnvironmentModifications()
-    dirs_to_relocate = [package.prefix]
-    for search_dir in dirs_to_relocate:
-        for entry in os.scandir(search_dir):
-            if not (entry.is_symlink() or entry.is_junction()) and entry.is_dir():
-                dirs_to_relocate.append(entry.path)
-    ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
-    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.root)
-    ev.set("SPACK_CONTEXT_ROOT", package.spec.prefix)
+    dlls = llnl.util.filesystem.find(package.spec.prefix, "*.dll")
+    exes = llnl.util.filesystem.find(package.spec.prefix, "*.exe")
+    pes = dlls + exes
+    pe_stage_to_prefix = {}
+    # map all PE (dll,exe) prefix locations to the stage
+    for pe in pes:
+        # location of PE file at link time (in stage)
+        # is baked into PE file as a resource
+        # extract it
+        stage_pe_loc = extract_spack_id(pe)
+        if stage_pe_loc:
+            pe_stage_to_prefix[stage_pe_loc] = pe
+
+    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
+    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    reloc = relocate(package)
     lib_map = {}
-    for lib in get_binary_file_from_prefix("lib"):
+    for lib in llnl.util.filesystem.find(package.spec.prefix, "*.lib"):
+        print(f"processing lib {lib}")
         if verify_import_lib(lib, package=package):
-            # we have an import lib, determine symbols
+            # we have an import lib, determine associated DLL
             dll_name = get_importlib_target(lib, package=package)
             if dll_name:
-                dll_basename = os.path.basename(dll_name)
-                lib_map[dll_basename] = (lib, dll_name)
-    dlls = get_binary_file_from_prefix("dll")
-    exes = get_binary_file_from_prefix("exe")
-    pes = dlls + exes
-    reloc = relocate(package)
-
+                print(f"dll name: {dll_name}")
+                prefix_pe = pe_stage_to_prefix.get(dll_name, None)
+                print(f"prefix dll {prefix_pe}")
+                if prefix_pe:
+                    lib_map[prefix_pe] = lib
     for pe in pes:
-        name = os.path.basename(pe)
-        args = ["--pe", pe, "--full", "--export"]
+        args = ["--pe", pe, "--full"]
         # PE files may or may not export symbols
         # if they do not (i.e. most exes and plugin dlls)
         # we still need to relocate the references to other PE files
         # inside those PE files
-        if name in lib_map and is_imp_lib_for_pe(package, lib_map[name], pe):
-            args.extend(["--coff", lib_map[name][0]])
-        res = reloc(*args, extra_env=ev, output=str, error=str, fail_on_error=True)
+        if pe in lib_map:
+            args.extend(["--coff", lib_map[pe]])
+        print(args)
+        reloc(*args, extra_env=ev, output=str, error=str, fail_on_error=True)
 
 
 def extract_spack_id(lib: str) -> Optional[str]:
-    """Extracts the string at ID 59673 from the string table in a given dll
+    """Extracts the string ID spack of type spackresource from the
+    string table in a given dll
     Arguments:
         lib: the dll to extract the string resource from
-    Returns the string at ID 59673 if one is present, None otherwise
+    Returns the resource of type SPACKRESOURCE with id spack
     """
     if not sys.platform == "win32":
         return None
@@ -3557,9 +3553,7 @@ def verify_import_lib(lib: str, package=None) -> bool:
         relocate_exe("--coff", lib, "--verify", ignore_errors=[1])
     except ProcessError:
         tty.debug(f"Cannot verify library {lib} as COFF.")
-    if relocate_exe.returncode == 0:
-        return True
-    return False
+    return relocate_exe.returncode == 0
 
 
 def collect_import_exports(pkg, lib):
@@ -3584,30 +3578,3 @@ def collect_import_exports(pkg, lib):
             continue
         exports.append(sanitized_line)
     return exports
-
-
-def collect_pe_api(pkg, pe):
-    regex = re.compile(".*? ([?]*[@$?a-zA-Z0-9_]+)(?: = ([a-zA-Z_][a-zA-Z0-9_]*))?\r$")
-    db = dumpbin(pkg)
-    raw_exports = db("/NOLOGO", "/EXPORTS", pe, output=str).split("\n")
-    raw_exports = raw_exports[16:]
-    exports = []
-    for export_line in raw_exports:
-        if export_line == "  Summary\r":
-            # exports end just before this section, terminate
-            break
-        match = regex.search(export_line)
-        if match:
-            symbol_export = match.group(1)
-            if match.group(2):
-                symbol_export += f" = {match.group(2)}"
-            exports.append(symbol_export)
-    return exports
-
-
-def is_imp_lib_for_pe(pkg, imp_lib, pe):
-    pe_name = extract_spack_id(pe)
-
-    if not pe_name:
-        return False
-    return os.path.normpath(imp_lib[1]) == os.path.normpath(pe_name)

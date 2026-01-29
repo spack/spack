@@ -827,12 +827,12 @@ NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
 def file_type(f: IO[bytes]) -> int:
     try:
         # first check if this is an ELF or mach-o binary.
-        magic = f.read(8)
+        magic = f.read(64)
         if len(magic) < 8:
             return FileTypes.UNKNOWN
         elif (
-            relocate.is_elf_magic(magic)
-            or relocate.is_macho_magic(magic)
+            relocate.is_elf_magic(magic[:8])
+            or relocate.is_macho_magic(magic[:8])
             or relocate.is_msvc_magic(magic)
         ):
             return FileTypes.BINARY
@@ -901,16 +901,6 @@ def tarfile_of_spec_prefix(
             f_type = file_type(f)
             if f_type == FileTypes.BINARY:
                 relocate_binaries.append(os.path.relpath(path, prefix))
-                # Windows compiler wrappers are executables all symlinked
-                # to a central executable, we shouldn't relocate any
-                # of them
-                filename = os.path.basename(os.path.realpath(path))
-                if sys.platform == "win32" and ".lib" not in path and filename != "cl.exe":
-                    # Windows binaries produced by Spack's compiler wrapper
-                    # have absolute paths to their deps hardcoded into them
-                    # We replace hardcoded paths with a special sigil
-                    # to make relocation safer/easier on extraction
-                    relocate.generizize_msvc_link_references(path)
             elif f_type == FileTypes.TEXT and file_matches(f, binary_regex):
                 relocate_textfiles.append(os.path.relpath(path, prefix))
             tar.addfile(info, f)
@@ -2180,7 +2170,6 @@ def install_root_node(
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
-
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
 

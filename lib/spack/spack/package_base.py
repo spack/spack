@@ -126,7 +126,7 @@ class WindowsRPath:
         # be doing in this method
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
-        if sys.platform == "win32" and not (self.spec.external or self.name == "compiler-wrapper"):
+        if sys.platform == "win32" and self.spec.satisfies("%compiler-wrapper"):
             fsys.relocate_win_rpath(self)
 
 
