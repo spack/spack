@@ -17,6 +17,7 @@ from .spec_list import spec_list_properties, spec_list_schema
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
 
+# (DEPRECATED) include concrete entries to be merged under the include key
 include_concrete = {
     "type": "array",
     "default": [],
@@ -84,6 +85,7 @@ properties: Dict[str, Any] = {
                     ]
                 },
             },
+            # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
         },
     }
