@@ -239,7 +239,7 @@ def add_padding(path, length):
 
 
 def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
-    """Same as substitute_path_variables, but also take absolute path.
+    """Same as substitute_path_variables, but also takes an absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
     relative to that file's directory.
@@ -249,10 +249,8 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         path: path being converted as needed
         default_wd: optional working directory/root for non-yaml string paths
 
-    Returns: An absolute path or non-file URL with path variable substitution
+    Returns: An absolute path with path variable substitution
     """
-    import urllib.parse
-    import urllib.request
 
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
@@ -270,17 +268,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         # (though DOS does allow drive-relative paths).
         return os.path.normpath(str(win_path))
 
-    # Now process linux-like paths and remote URLs
-    url = urllib.parse.urlparse(path)
-    url_path = urllib.request.url2pathname(url.path)
-    if url.scheme:
-        if url.scheme != "file":
-            # Have a remote URL so simply return it with substitutions
-            return path
-
-        # Drop the URL scheme from the local path
-        path = url_path
-
+    # Now process linux-like paths
     if os.path.isabs(path):
         return os.path.normpath(path)
 

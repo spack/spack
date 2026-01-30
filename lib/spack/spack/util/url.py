@@ -6,18 +6,19 @@
 Utility functions for parsing, formatting, and manipulating URLs.
 """
 
-import posixpath
+import os
 import pathlib
+import posixpath
 import re
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Optional, Union
 
-from spack.util.path import sanitize_filename, substitute_path_variables
-import spack.util.spack_yaml as syaml
-
 from llnl.util import tty
+
+import spack.util.spack_yaml as syaml
+from spack.util.path import sanitize_filename, substitute_path_variables
 
 
 def validate_scheme(scheme):
@@ -156,6 +157,7 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
 
     return None
 
+
 def handle_windows_file_urls(url: str) -> str:
     """Handles file urls with Windows style paths.
     Colons are present in both network paths as well as
@@ -167,7 +169,7 @@ def handle_windows_file_urls(url: str) -> str:
 
     Many file urls with Windows style paths are naively and inccorectly
     composed as 'file://' + path, which results in incorrect parsing
-    
+
     This method contains some heuristics to detect a Windows file url,
     and marshall it so it's properly formed and thus can be reasoned about
 
@@ -204,7 +206,6 @@ def make_file_url(path: Union[str, pathlib.Path]) -> str:
     if check_path.drive:
         url_path = "/" + url_path
     return urllib.parse.urlunparse(("file", "", url_path, "", "", ""))
-    
 
 
 def canonicalize_url(url: str, default_wd: Optional[pathlib.Path] = None) -> str:
@@ -231,17 +232,19 @@ def canonicalize_url(url: str, default_wd: Optional[pathlib.Path] = None) -> str
     if not p_url.scheme:
         # url argument is not a valid url
         raise RuntimeError("Attempting to canonicalize a non url object from url canonicalization")
-    
+
     if p_url.scheme != "file":
         # Have a remote URL so simply return it with substitutions
         return c_url
 
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
-    
+
     filename = None
     if isinstance(url, syaml.syaml_str):
-        filename = pathlib.Path(os.path.dirname(url._start_mark.name))  # type: ignore[attr-defined]
+        filename = pathlib.Path(
+            os.path.dirname(url._start_mark.name)  # type: ignore[attr-defined]
+        )
         assert url._start_mark.name == url._end_mark.name  # type: ignore[attr-defined]
 
     if path.is_absolute():
