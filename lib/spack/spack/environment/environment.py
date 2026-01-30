@@ -182,8 +182,12 @@ default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
 
+# (DEPRECATED) Use as the heading/name in the manifest is deprecated.
 # The key for any concrete specs included in a lockfile.
 lockfile_include_key = "include_concrete"
+
+# The name/heading for include paths in the manifest file.
+manifest_include_name = "include"
 
 
 def installed_specs():
@@ -1179,14 +1183,8 @@ class Environment:
         if self.views == dict():
             self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
 
-    def _process_concrete_includes(self):
-        """Extract and load into memory included concrete spec data."""
-        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
-        # Expand config and environment variables
-        self.included_concrete_env_root_dirs = [
-            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
-        ]
-
+    def _load_concrete_include_data(self):
+        """Load concrete include specs data from included concrete directories."""
         if self.included_concrete_env_root_dirs:
             if os.path.exists(self.lock_path):
                 with open(self.lock_path, encoding="utf-8") as f:
@@ -1197,12 +1195,45 @@ class Environment:
             else:
                 self.include_concrete_envs()
 
+    def _process_included_lockfiles(self):
+        """Extract and load into memory included lock file data."""
+        includes = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
+        if includes:
+            tty.warn(
+                f"Use of '{lockfile_include_key}' in manifest files "
+                f"is deprecated. The key should be '{manifest_include_name}' "
+                f"and the path should end with '{lockfile_name}'. Run "
+                f"'spack env update {self.name}' to update the manifest."
+            )
+            includes = [os.path.join(inc, lockfile_name) for inc in includes]
+        includes += self.manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
+        if not includes:
+            return
+
+        # Expand config and environment variables for concrete environments,
+        # indicated by the inclusion of lock files.
+        self.included_concrete_env_root_dirs = []
+
+        paths = [
+            path
+            for path in spack.config.paths_from_includes(includes)
+            if os.path.basename(path) == lockfile_name
+        ]
+        for path in paths:
+            path = spack.util.path.canonicalize_path(path)
+
+            tty.debug(f"Adding {path} to the concrete environment root directories")
+            self.included_concrete_env_root_dirs.append(os.path.dirname(path))
+
+        # Cache concrete environments for required lock files.
+        self._load_concrete_include_data()
+
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.views = {}
         self._sync_speclists()
         self._process_view(spack.config.get("view", True))
-        self._process_concrete_includes()
+        self._process_included_lockfiles()
 
     def _sync_speclists(self):
         self.spec_lists = {}
@@ -1331,7 +1362,7 @@ class Environment:
         return self.manifest.scope_name
 
     def include_concrete_envs(self):
-        """Copy and save the included envs' specs internally"""
+        """Copy and save the included environments' specs internally."""
 
         root_hash_seen = set()
         concrete_hash_seen = set()
@@ -3032,7 +3063,7 @@ def initialize_environment_dir(
         return
 
     # TODO: make this recursive
-    includes = manifest[TOP_LEVEL_KEY].get("include", [])
+    includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
     paths = spack.config.paths_from_includes(includes)
     for path in paths:
         if os.path.isabs(path):
