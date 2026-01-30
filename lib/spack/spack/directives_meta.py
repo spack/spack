@@ -38,13 +38,18 @@ class DirectiveMeta(type):
     _descriptor_cache: Dict[str, "DirectiveDictDescriptor"] = {}
     #: Set of all known directive dictionary names from `@directive(dicts=...)`
     _directive_dict_names: Set[str] = set()
-    #: List of directives to be executed at class initialization time
+    #: Lists of directives to be executed for the class being defined, grouped by directive
+    #: function name (e.g. "depends_on", "version", etc.)
     _directives_to_be_executed: Dict[str, List[Callable]] = collections.defaultdict(list)
     #: Stack of when constraints from `with when(...)` context managers
     _when_constraints_stack: List[spack.spec.Spec] = []
     #: Stack of default args from `with default_args(...)` context managers
     _default_args_stack: List[dict] = []
-    #: Whether the package being defined patches dependencies
+    #: This property is set *automatically* during class definition as directives are invoked,
+    #: if any ``depends_on`` or ``extends`` calls include patches for dependencies. This flag can
+    #: be used as an optimization to detect whether a package provides patches for dependencies,
+    #: without triggering the expensive deferred execution of those directives (without populating
+    #: the ``dependencies`` dictionary).
     _patches_dependencies: bool = False
 
     def __new__(
@@ -126,7 +131,7 @@ class DirectiveMeta(type):
     @staticmethod
     def _remove_kwarg_value_directives_from_queue(value) -> None:
         """Remove directives found in a kwarg value from the execution queue."""
-        # Certain keyword argument values of directives may themselve be (lists of) directives. An
+        # Certain keyword argument values of directives may themselves be (lists of) directives. An
         # example of this is ``depends_on(..., patches=[patch(...), ...])``. In that case, we
         # should not execute those directives as part of the current package, but let the called
         # directive handle them. This function removes such directives from the execution queue.

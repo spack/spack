@@ -322,7 +322,7 @@ def depends_on(
 
 def _execute_depends_on(
     pkg: PackageType,
-    spec: Union[SpecType, spack.spec.Spec],
+    spec: Union[str, spack.spec.Spec],
     *,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
