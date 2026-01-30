@@ -252,6 +252,14 @@ def activate(env, use_env_repo=False, prompt="", view=""):
             if lock_update > activation_update or prompt or view:
                 update_env_activate_script(env, prompt, view)
                 write_env_deactivate_script(env, view)
+        else:
+            if not view:
+                view = os.environ.get(spack_env_view_var, "")
+            if not prompt:
+                prompt = "default"
+
+            update_env_activate_script(env, prompt, view)
+            write_env_deactivate_script(env, view)
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
