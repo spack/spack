@@ -5,6 +5,7 @@
 """Utility classes for logging the output of blocks of code."""
 
 import atexit
+import collections
 import ctypes
 import ctypes.wintypes as wintypes
 import errno
@@ -14,13 +15,18 @@ import multiprocessing.connection
 import os
 import re
 import select
+import selectors
 import signal
+import socket
 import sys
+import time
 import traceback
 from contextlib import contextmanager
+from ctypes import wintypes
 from multiprocessing.connection import Connection
 from threading import Thread
 from typing import IO, Callable, List, Optional, Tuple
+
 
 import spack.llnl.util.tty as tty
 
@@ -130,6 +136,508 @@ class preserve_terminal_settings:
         if self.old_cfg:
             self._restore_default_terminal_settings()
             atexit.unregister(self._restore_default_terminal_settings)
+
+kernel32 = ctypes.windll.kernel32
+
+HANDLE = ctypes.c_void_p
+LPHANDLE = ctypes.POINTER(HANDLE)
+
+# Define ULONG_PTR for 32/64 bit compatibility
+if ctypes.sizeof(ctypes.c_void_p) == 8:
+    ULONG_PTR = ctypes.c_ulonglong
+else:
+    ULONG_PTR = ctypes.c_ulong
+
+INVALID_HANDLE_VALUE = HANDLE(-1).value 
+INFINITE = 0xFFFFFFFF
+WAIT_TIMEOUT = 258
+ERROR_MORE_DATA = 234
+ERROR_IO_PENDING = 997
+ERROR_BROKEN_PIPE = 109
+ERROR_OPERATION_ABORTED = 995
+ERROR_INVALID_HANDLE = 6
+ERROR_HANDLE_EOF = 38
+READ_BUFFER_SIZE = 65536
+
+class OVERLAPPED(ctypes.Structure):
+    _fields_ = [
+        ("Internal", ULONG_PTR),
+        ("InternalHigh", ULONG_PTR),
+        ("Offset", wintypes.DWORD),
+        ("OffsetHigh", wintypes.DWORD),
+        ("hEvent", HANDLE)
+    ]
+
+CreateIoCompletionPort = kernel32.CreateIoCompletionPort
+CreateIoCompletionPort.argtypes = [HANDLE, HANDLE, ULONG_PTR, wintypes.DWORD]
+CreateIoCompletionPort.restype = HANDLE
+
+GetQueuedCompletionStatus = kernel32.GetQueuedCompletionStatus
+GetQueuedCompletionStatus.argtypes = [
+    HANDLE, 
+    ctypes.POINTER(wintypes.DWORD), 
+    ctypes.POINTER(ULONG_PTR), 
+    ctypes.POINTER(ctypes.POINTER(OVERLAPPED)), 
+    wintypes.DWORD
+]
+GetQueuedCompletionStatus.restype = wintypes.BOOL
+
+PostQueuedCompletionStatus = kernel32.PostQueuedCompletionStatus
+PostQueuedCompletionStatus.argtypes = [HANDLE, wintypes.DWORD, ULONG_PTR, ctypes.POINTER(OVERLAPPED)]
+PostQueuedCompletionStatus.restype = wintypes.BOOL
+
+ReadFile = kernel32.ReadFile
+ReadFile.argtypes = [HANDLE, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), ctypes.POINTER(OVERLAPPED)]
+ReadFile.restype = wintypes.BOOL
+
+CancelIoEx = kernel32.CancelIoEx
+CancelIoEx.argtypes = [HANDLE, ctypes.POINTER(OVERLAPPED)]
+CancelIoEx.restype = wintypes.BOOL
+
+PeekNamedPipe = kernel32.PeekNamedPipe
+PeekNamedPipe.argtypes = [
+    HANDLE, 
+    ctypes.c_void_p, 
+    wintypes.DWORD, 
+    ctypes.POINTER(wintypes.DWORD), 
+    ctypes.POINTER(wintypes.DWORD), 
+    ctypes.POINTER(wintypes.DWORD)
+]
+PeekNamedPipe.restype = wintypes.BOOL
+
+CloseHandle = kernel32.CloseHandle
+CloseHandle.argtypes = [HANDLE]
+CloseHandle.restype = wintypes.BOOL
+
+
+
+class BufferedPipe:
+    """
+    A pipe wrapper that buffers data received by the IOCP Selector.
+    Acts as a drop-in replacement for the read-end of a multiprocessing Pipe.
+    """
+    def __init__(self, raw_fd):
+        self.fileno_val = raw_fd
+        self._buffer = collections.deque()
+        self._closed = False
+        
+    def fileno(self):
+        return self.fileno_val
+        
+    def recv(self, max_size=-1):
+        """
+        Reads data from the internal buffer. 
+        Does NOT perform syscalls.
+        """
+        if not self._buffer and self._closed:
+            raise EOFError
+            
+        # If no data is available, this implementation implies a non-blocking
+        # check (since select() told us we were ready). 
+        # In a real app, you might raise BlockingIOError here if empty.
+        if not self._buffer:
+             return b""
+
+        # Fast path: one chunk
+        if len(self._buffer) == 1:
+            chunk = self._buffer[0]
+            if max_size < 0 or len(chunk) <= max_size:
+                self._buffer.popleft()
+                return chunk
+            else:
+                # Split chunk
+                data = chunk[:max_size]
+                self._buffer[0] = chunk[max_size:]
+                return data
+
+        # Slow path: Multiple chunks
+        out = io.BytesIO()
+        remaining = max_size if max_size >= 0 else float('inf')
+        
+        while self._buffer and remaining > 0:
+            chunk = self._buffer[0]
+            if len(chunk) > remaining:
+                out.write(chunk[:remaining])
+                self._buffer[0] = chunk[remaining:]
+                remaining = 0
+            else:
+                out.write(chunk)
+                self._buffer.popleft()
+                remaining -= len(chunk)
+                
+        return out.getvalue()
+    
+    # Internal method for the Selector to inject data
+    def _push_data(self, data):
+        if data:
+            self._buffer.append(data)
+            
+    def _mark_closed(self):
+        self._closed = True
+
+class IOCPSelector(selectors.BaseSelector):
+    """IO multiplexor class that works with win32 named pipes
+
+    Note: the selectors documentation claims they only work
+    with sockets on Windows, this class explicitly supports
+    only named pipes, not sockets
+    """
+
+    def __init__(self, jobs=0):
+
+        self._iocp = CreateIoCompletionPort(
+            HANDLE(INVALID_HANDLE_VALUE),
+            HANDLE(0),
+            0,
+            jobs,  # controls thread pool size, setting this as 0 will default to # of processors
+        )
+        if not self._iocp:
+            raise OSError(f"Failed to create IOCP: {ctypes.GetLastError()}")
+        self._fd_to_key = {}
+        self._fd_to_handle = {}
+        self._valid_ov_addrs = set()
+
+    def register(self, fileobj, events, data=None):
+        if (not events) or (events & ~(selectors.EVENT_WRITE | selectors.EVENT_READ)):
+            raise ValueError("Invalid event")
+
+        if hasattr(fileobj, "fileno"):
+            fd = fileobj.fileno()
+        else:
+            fd = fileobj
+
+        if fd in self._fd_to_key:
+            raise KeyError(f"{fileobj!r} (FD {fd}) is already registered")
+
+        try:
+            f_handle = msvcrt.get_osfhandle(fd)
+            f_handle = HANDLE(f_handle)
+        except OSError as e:
+            if e.errno == 9:
+                # fd is already a handle
+                f_handle = HANDLE(fd)
+            else:
+                raise ValueError(f"Invalid file descriptor: {fd}") from e
+        
+        bf = BufferedPipe(fd)
+
+        key = selectors.SelectorKey(bf, fd, events, data)
+        self._fd_to_key[fd] = key
+
+        # associate handle with completion port
+        res = CreateIoCompletionPort(f_handle, self._iocp, fd, 0)
+        if not res:
+            raise OSError(f"Failed to associate handle with IOCP: {ctypes.GetLastError()}")
+
+        ov = OVERLAPPED()
+        ov_addr = ctypes.addressof(ov)
+        self._valid_ov_addrs.add(ov_addr)
+        read_buffer = ctypes.create_string_buffer(READ_BUFFER_SIZE)
+
+        self._fd_to_handle[fd] = {
+            "handle": f_handle,
+            "overlapped": ov,
+            "addr": ov_addr,
+            "buffer": read_buffer,
+            "wrapper": bf,
+        }
+        self._issue_real_read(fd)
+        return key
+
+    def _issue_real_read(self, fd):
+        """
+        Submits an async read.
+        """
+        if fd not in self._fd_to_handle:
+            return
+
+        handle = self._fd_to_handle[fd]['handle']
+        ov = self._fd_to_handle[fd]['ov']
+        buf = self._fd_to_handle[fd]['buffer']
+        
+        ov.Offset = 0
+        ov.OffsetHigh = 0
+        ov.Internal = 0
+        ov.InternalHigh = 0
+
+        bytes_read = wintypes.DWORD()
+        res = ReadFile(
+            handle, 
+            buf, 
+            READ_BUFFER_SIZE, 
+            ctypes.byref(bytes_read), 
+            ctypes.byref(ov)
+        )
+        
+        if res:
+            PostQueuedCompletionStatus(self._iocp, bytes_read, fd, ctypes.byref(ov))
+            return
+
+        err = ctypes.GetLastError()
+        if err == ERROR_IO_PENDING:
+            return
+            
+        if err in (ERROR_BROKEN_PIPE, ERROR_INVALID_HANDLE, ERROR_HANDLE_EOF):
+            PostQueuedCompletionStatus(self._iocp, 0, fd, ctypes.byref(ov))
+            return
+            
+        raise OSError(f"ReadFile failed: {err}")
+
+    def _check_pipe_has_data(self, fd):
+        # Replaces win32pipe.PeekNamedPipe
+        try:
+            handle = self._fd_to_handle[fd]['handle']
+            avail = wintypes.DWORD()
+            
+            res = PeekNamedPipe(
+                handle, 
+                None, 
+                0, 
+                None, 
+                ctypes.byref(avail), 
+                None
+            )
+            
+            if not res:
+                err = ctypes.GetLastError()
+                # Broken pipe (109) means EOF, which is a readable state
+                if err == ERROR_BROKEN_PIPE:
+                    return True
+                return False
+            return avail.value > 0
+        except Exception:
+            # Conservative fallback
+            return True
+
+    def unregister(self, fileobj):
+        if hasattr(fileobj, 'fileno'):
+            fd = fileobj.fileno()
+        else:
+            fd = fileobj
+
+        try:
+            key = self._fd_to_key.pop(fd)
+        except KeyError:
+            raise KeyError(f"{fileobj!r} is not registered")
+
+        if fd in self._fd_to_handle:
+            handle = self._fd_to_handle[fd]['handle']
+            ov = self._fd_to_handle[fd]['overlapped']
+            ov_addr = self._fd_to_handle[fd]['addr']
+            
+            CancelIoEx(handle, ctypes.byref(ov))
+            
+            if ov_addr in self._valid_ov_addrs:
+                self._valid_ov_addrs.remove(ov_addr)
+            
+            del self._fd_to_handle[fd]
+
+        return key
+
+    def select(self, timeout=None):
+        ready_keys = []
+
+        has_buffered_data = False
+
+        for fd, key in self._fd_to_key.items():
+            if key.fileobj.has_data:
+                ready_keys.append((key, selectors.EVENT_READ))
+                has_buffered_data = True
+        
+        if has_buffered_data:
+            ms = 0
+        elif timeout is None:
+            ms = INFINITE
+        else:
+            ms = int(timeout * 1000)
+
+        current_ms = ms
+        seen_keys = set()
+
+        # Ctypes output buffers
+        c_nbytes = wintypes.DWORD()
+        c_key = ULONG_PTR()
+        c_ov_ptr = ctypes.POINTER(OVERLAPPED)()
+
+        while True:
+            res = GetQueuedCompletionStatus(
+                self._iocp, 
+                ctypes.byref(c_nbytes), 
+                ctypes.byref(c_key), 
+                ctypes.byref(c_ov_ptr), 
+                current_ms
+            )
+            rc = 0 if res else ctypes.GetLastError()
+            try:
+                overlapped = c_ov_ptr.contents
+            except ValueError:
+                # pointer was null
+                overlapped = None
+            # because we rearm with zero byte reads, the "normal" return code of
+            # 0 is not our standard case, instead the more data error is our expected return value
+            # this is a special case where overlapped is set to null and we have an error return code
+            # but behavior is completely acceptable/expected
+            if rc == WAIT_TIMEOUT:
+                break
+
+            if rc and not overlapped:
+                # if rc is a value, we failed, and if the overlapped pointer is null
+                # then we did not dequeue a completion packet, 
+                # OR the completion that was dequeued had an associated overlapped struct
+                # that has since been deallocated
+                # either way, this is an error
+                # for the legit errors like a broken pipe or buffer undersize 
+                # an overlapped struct is available since the failing read
+                # associated with the completion packet is still a valid completion
+                # it just wasn't a sucessful IO
+                raise OSError(f"GetQueuedCompletionStatus failed. Error {rc}")
+
+            # any IO operations associated with the handle we're using 
+            # i.e. reads on a read pipe we pass in, trigger completion objects
+            # but we don't care about those, only our rearm completions
+            # so whitelist the expected overlapped addrs so we know the completion packet
+            # is coming from us
+            ov_addr = ctypes.cast(c_ov_ptr, ctypes.c_void_p).value
+            if ov_addr not in self._valid_ov_addrs:
+                if ready_keys or has_buffered_data:
+                    current_ms = 0
+                continue
+
+            key_fd = c_key.value
+            if key_fd in self._fd_to_key:
+                if key_fd not in seen_keys:
+                    bytes_transferred = c_nbytes.value
+                    if bytes_transferred:
+                        read_buffer = self._fd_to_handle[key_fd]["buffer"]
+                        chunk = read_buffer.raw[:bytes_transferred]
+                        self._fd_to_handle[key_fd]["wrapper"]._push_data(chunk)
+                    if rc in (ERROR_BROKEN_PIPE, ERROR_HANDLE_EOF):
+                        self._fd_to_handle[key_fd]['wrapper']._mark_closed()
+                    
+                    key = self._fd_to_key[key_fd]
+                    
+                    # Manual uniqueness check (faster than set overhead for small lists)
+                    is_new = True
+                    for rk, _ in ready_keys:
+                        if rk is key:
+                            is_new = False
+                            break
+                    if is_new:
+                        ready_keys.append((key, selectors.EVENT_READ))
+                    
+                    seen_keys.add(key_fd)
+            # After the first success, we switch to valid check (0ms) to
+            # pick up any other simultaneously ready pipes without blocking.
+            current_ms = 0
+        for key_fd in seen_keys:
+            # If data remains in the
+            # pipe, this new ReadFile will complete immediately, ensuring
+            # the next select() call returns immediately.
+            # similar to select on unix
+            self._issue_real_read(key_fd)
+
+        return ready_keys
+
+    def get_map(self):
+        return self._fd_to_key
+
+    def close(self):
+        for fd in list(self._fd_to_handle.keys()):
+            self.unregister(fd)
+        self._fd_to_handle.clear()
+        if self._iocp:
+            CloseHandle(self._iocp)
+            # while unlikely, technically 0 could be valid (I think?), so set to None
+            # for clarity
+            self._iocp = None
+        super().close()
+
+
+class HybridWindowsSelector(selectors.BaseSelector):
+    """Windows IO multiplexor supporting sockets AND fds"""
+
+    def __init__(self):
+        self._socket_selector = selectors.SelectSelector()
+        self._pipe_selector = IOCPSelector()
+        self._map = {}  # Master map of all keys
+
+    def register(self, fileobj, events, data=None):
+        is_socket = isinstance(fileobj, socket.socket) or hasattr(fileobj, "family")
+
+        if is_socket:
+            key = self._socket_selector.register(fileobj, events, data)
+        else:
+            # Assume it's a pipe/file handle if it's not a socket
+            key = self._pipe_selector.register(fileobj, events, data)
+
+        # We need to wrap the key to point back to THIS selector, not the internal ones
+        self._map[key.fd] = key
+        return key
+
+    def unregister(self, fileobj):
+        if hasattr(fileobj, "fileno"):
+            fd = fileobj.fileno()
+        else:
+            fd = fileobj
+
+        key = self._map[fd]
+        # Try unregistering from both (safest way if we don't track origin strictly)
+        try:
+            key = self._socket_selector.unregister(fileobj)
+        except KeyError:
+            pass
+
+        try:
+            key = self._pipe_selector.unregister(fileobj)
+        except KeyError:
+            pass
+
+        return key
+    
+    def _get_socket_events(self):
+        has_sockets = self._socket_selector.get_map()
+        return self._socket_selector.select(timeout=0) if has_sockets else []
+
+    def _get_pipe_events(self):
+        has_pipes = self._pipe_selector._fd_to_key
+        return self._pipe_selector.select(timeout=0) if has_pipes else []
+
+    def select(self, timeout=None):
+        """
+        Polls both internal selectors.
+        Since we can't wait on both natively, we use a short polling interval.
+        """
+        ready_keys = []
+        start_time = time.time()
+
+        POLL_INTERVAL = 0.05
+
+        while True:
+            ready_keys = [*self._get_socket_events(), *self._get_pipe_events()]
+
+            if ready_keys:
+                return ready_keys
+
+            if timeout is not None:
+                elapsed = time.time() - start_time
+                if elapsed >= timeout:
+                    return []
+
+            if timeout is None:
+                wait_time = POLL_INTERVAL
+            else:
+                wait_time = min(POLL_INTERVAL, timeout - (time.time() - start_time))
+                if wait_time < 0:
+                    wait_time = 0
+
+            time.sleep(wait_time)
+
+    def close(self):
+        self._socket_selector.close()
+        self._pipe_selector.close()
+
+    def get_map(self):
+        return self._map
 
 
 class keyboard_input(preserve_terminal_settings):
