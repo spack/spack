@@ -450,16 +450,18 @@ def env_deactivate(args):
     if ev.active_environment() is None:
         tty.die("No environment is currently active.")
 
-    env_deactivate_script = shell_script.path_to_env_deactivate_shell_script(
+    env_deactivate_script_path = shell_script.path_to_env_deactivate_shell_script(
         ev.active_environment(), shell=args.shell
     )
 
+    if not os.path.isfile(env_deactivate_script_path):
+        shell_script.write_env_deactivate_script(
+            ev.active_environment(), os.environ.get("SPACK_ENV_VIEW", "")
+        )
+
     ev.deactivate()
 
-    if not os.path.isfile(env_deactivate_script):
-        shell_script.write_env_deactivate_script(env, args.view)
-
-    print(f"source {env_deactivate_script}")
+    print(f"source {env_deactivate_script_path}")
 
 
 #

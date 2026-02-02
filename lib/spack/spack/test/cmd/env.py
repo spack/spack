@@ -141,6 +141,9 @@ def test_env_create_shell_scripts(shell):
     path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(environ, shell)
 
     assert os.path.isfile(path_to_activate_script)
+
+    env("activate", f"--{shell}", environ.name)
+
     assert os.path.isfile(path_to_deactivate_script)
 
 
