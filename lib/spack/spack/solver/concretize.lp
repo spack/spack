@@ -80,7 +80,27 @@ error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", P
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
-unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
+
+isolated_build_set(SetID) :- unification_set(SetID, _), SetID = ("build", _).
+
+% Non-isolated sets inherit normally
+unification_set(SetID, ChildNode) :-
+    attr("depends_on", ParentNode, ChildNode, Type),
+    Type != "build",
+    unification_set(SetID, ParentNode),
+    not isolated_build_set(SetID).
+
+% Isolated sets (build tools) keep link deps private, but expose run deps
+unification_set(SetID, ChildNode) :-
+    attr("depends_on", ParentNode, ChildNode, Type),
+    Type != "build", Type != "run",
+    unification_set(SetID, ParentNode),
+    isolated_build_set(SetID).
+
+unification_set("generic_build", ChildNode) :-
+    attr("depends_on", ParentNode, ChildNode, "run"),
+    unification_set(SetID, ParentNode),
+    isolated_build_set(SetID).
 
 build_only_dependency(ParentNode, node(X, Child)) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
