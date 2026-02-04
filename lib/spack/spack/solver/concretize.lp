@@ -82,13 +82,12 @@ error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", P
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
-% Trigger a separate build unification set if there is build dependency that is allowed to go into
-% its own unification set
+% A separate unification set can be created if any of the build dependencies can be duplicated
 has_separate_build_unification_set(ParentNode) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
   multiple_unification_sets(Child).
 
-% Build dependencies go into a build unification set together with their siblings
+% Build dependencies always go into a build unification set together with their siblings
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
      build_set_id(ParentNode, ID),
@@ -100,8 +99,7 @@ unification_set(("build", 0), node(X, Child))
      not has_separate_build_unification_set(ParentNode),
      unification_set(_, ParentNode).
 
-% Limit the number of build unification sets to a reasonable number to avoid combinatorial
-% explosion.
+% Limit the number of unification sets to a reasonable number to avoid combinatorial explosion
 #const max_build_unification_sets = 4.
 1 { build_set_id(ParentNode, 0..max_build_unification_sets-1) } 1
   :- has_separate_build_unification_set(ParentNode).
