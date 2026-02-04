@@ -87,10 +87,11 @@ separate_build_unification_set_allowed(ParentNode) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
   multiple_unification_sets(Child).
 
-% Build dependencies always go into a build unification set together with their siblings
+% If any of the build dependencies can be duplicated, they can go into any ("build", ID) set
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
      build_set_id(ParentNode, ID),
+     separate_build_unification_set_allowed(ParentNode),
      unification_set(_, ParentNode).
 
 % If none of the build dependencies can be duplicated, they go into the ("build", 0) set
