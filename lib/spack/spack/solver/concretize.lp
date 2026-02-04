@@ -2063,6 +2063,12 @@ opt_criterion(100, "number of nodes from the same package").
 #minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
+% Minimize the unification set ID used for build dependencies. This reduces the number of optimal
+% solutions that differ only by which node belongs to which unification set.
+opt_criterion(90, "minimize build unification set id").
+#minimize{ 0@90: #true }.
+#minimize{ ID@90,ParentNode : build_set_id(ParentNode, ID) }.
+
 % Minimize the number of deprecated versions being used
 opt_criterion(73, "deprecated versions used").
 #minimize{ 0@273: #true }.
