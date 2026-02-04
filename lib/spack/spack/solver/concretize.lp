@@ -2062,7 +2062,7 @@ opt_criterion(100, "number of nodes from the same package").
 
 % Minimize the unification set ID used for build dependencies. This reduces the number of optimal
 % solutions that differ only by which node belongs to which unification set.
-opt_criterion(90, "minimize build unification set id").
+opt_criterion(90, "build unification sets").
 #minimize{ 0@90: #true }.
 #minimize{ ID@90,ParentNode : build_set_id(ParentNode, ID) }.
 
