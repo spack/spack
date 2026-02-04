@@ -88,18 +88,16 @@ has_separate_build_unification_set(ParentNode) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
   multiple_unification_sets(Child).
 
-% General case: build dependencies of any parent are put in the same unification set named
-% "generic_build"
-unification_set("generic_build", node(X, Child))
-  :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     not has_separate_build_unification_set(ParentNode),
-     unification_set(_, ParentNode).
-
-% Special case: build dependencies are put into a separate unification set if one of their sibling
-% build dependencies is allowed to be duplicated
+% Build dependencies go into a build unification set together with their siblings
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
      build_set_id(ParentNode, ID),
+     unification_set(_, ParentNode).
+
+% If none of the build dependencies can be duplicated, they go into the ("build", 0) set
+unification_set(("build", 0), node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), "build"),
+     not has_separate_build_unification_set(ParentNode),
      unification_set(_, ParentNode).
 
 % Limit the number of build unification sets to a reasonable number to avoid combinatorial
