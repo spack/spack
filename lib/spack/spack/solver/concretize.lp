@@ -83,7 +83,7 @@ unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
 % A separate unification set can be created if any of the build dependencies can be duplicated
-has_separate_build_unification_set(ParentNode) :-
+separate_build_unification_set_allowed(ParentNode) :-
   attr("depends_on", ParentNode, node(X, Child), "build"),
   multiple_unification_sets(Child).
 
@@ -96,13 +96,13 @@ unification_set(("build", ID), node(X, Child))
 % If none of the build dependencies can be duplicated, they go into the ("build", 0) set
 unification_set(("build", 0), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     not has_separate_build_unification_set(ParentNode),
+     not separate_build_unification_set_allowed(ParentNode),
      unification_set(_, ParentNode).
 
 % Limit the number of unification sets to a reasonable number to avoid combinatorial explosion
 #const max_build_unification_sets = 4.
 1 { build_set_id(ParentNode, 0..max_build_unification_sets-1) } 1
-  :- has_separate_build_unification_set(ParentNode).
+  :- separate_build_unification_set_allowed(ParentNode).
 
 unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
