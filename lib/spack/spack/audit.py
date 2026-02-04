@@ -435,6 +435,22 @@ def _check_build_test_callbacks(pkgs, error_cls):
 
 
 @package_directives
+def _directives_can_be_evaluated(pkgs, error_cls):
+    """Ensure that all directives in a package can be evaluated."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        for attr in pkg_cls._dict_to_directives:
+            try:
+                getattr(pkg_cls, attr)
+            except Exception as e:
+                error_msg = f"Package '{pkg_name}' has invalid directive '{attr}'"
+                details = [str(e)]
+                errors.append(error_cls(error_msg, details))
+    return errors
+
+
+@package_directives
 def _check_patch_urls(pkgs, error_cls):
     """Ensure that patches fetched from GitHub and GitLab have stable sha256
     hashes."""

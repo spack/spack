@@ -378,21 +378,35 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             output_object["sign-pkgs"] = signing_job
 
         if options.rebuild_index:
+            # Create a dummy job that runs as the stage before reindex.
+            # This job will be used to ensure reindex doesn't run until
+            # the other build jobs complete.
+            stage_names.append("stage-wait")
+            wait_job = spack_ci_ir["jobs"]["noop"]["attributes"]
+            wait_job["stage"] = "stage-wait"
+            wait_job["retry"] = 0
+            wait_job["when"] = "always"
+            wait_job["script"] = ["echo 'Open the pod bay doors HAL'"]
+            wait_job["dependencies"] = []
+
+            output_object["wait-for-build-jobs"] = wait_job
+
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             final_job["stage"] = "stage-rebuild-index"
-            target_mirror = options.buildcache_destination.push_url
-            final_job["script"] = unpack_script(
-                final_job["script"],
-                op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
-            )
+            final_job["script"] = unpack_script(final_job["script"], op=main_script_replacements)
 
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
             final_job["interruptible"] = True
-            final_job["dependencies"] = []
+            # update-index needs to download generate artifacts
+            # it also needs to wait until all of the other stages complete.
+            final_job["needs"] = [
+                {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"},
+                "wait-for-build-jobs",
+            ]
 
             output_object["rebuild-index"] = final_job
 

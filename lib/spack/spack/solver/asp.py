@@ -379,10 +379,10 @@ class Result:
         return self._unsolved_specs
 
     @property
-    def specs_by_input(self):
+    def specs_by_input(self) -> Dict[spack.spec.Spec, spack.spec.Spec]:
         if self._concrete_specs_by_input is None:
             self._compute_specs_from_answer_set()
-        return self._concrete_specs_by_input
+        return self._concrete_specs_by_input  # type: ignore
 
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:

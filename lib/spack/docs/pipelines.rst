@@ -704,3 +704,15 @@ Optional.
 Only needed if you want ``spack ci rebuild`` to trust the key you store in this variable, in which case, it will subsequently be used to sign and verify binary packages (when installing or creating build caches).
 You could also have already trusted a key Spack knows about, or if no key is present anywhere, Spack will install specs using ``--no-check-signature`` and create build caches using ``-u`` (for unsigned binaries).
 
+``SPACK_CI_BUILDCACHE_VIEW``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.
+Only needed when using a ``buildcache-destination`` mirror that points at a build cache view.
+This option affects the behavior the ``reindex`` job (:ref:`rebuild_index`) can have the values ``force`` or ``append`` which mirror behavior described by ref:`cmd-spack-buildcache-update-view`.
+The default option is ``append`` because that is what is used by the Spack build farm.
+
+.. warning::
+
+   Using the ``append`` option with build cache index views is a non-atomic operation.
+   It is up to the CI maintainer to ensure that concurrent writes to the build cache are handled appropriately.
