@@ -87,14 +87,28 @@ build_only_dependency(ParentNode, node(X, Child)) :-
   not attr("depends_on", ParentNode, node(X, Child), "link"),
   not attr("depends_on", ParentNode, node(X, Child), "run").
 
-unification_set(("build", node(X, Child)), node(X, Child))
-  :- build_only_dependency(ParentNode, node(X, Child)),
-     multiple_unification_sets(Child),
+% Trigger a separate build unification set if there is a pure build dependency that is allowed
+% to go into its own unification set
+has_separate_build_unification_set(ParentNode) :-
+  build_only_dependency(ParentNode, node(X, Child)),
+  multiple_unification_sets(Child).
+
+% Limit the number of build unification sets to a reasonable number to avoid combinatorial
+% explosion.
+#const max_build_unification_sets = 4.
+1 { build_set_id(ParentNode, 0..max_build_unification_sets-1) } 1
+  :- has_separate_build_unification_set(ParentNode).
+
+% General case: build dependencies are put in the same unification set named "generic_build"
+unification_set("generic_build", node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), "build"),
+     not has_separate_build_unification_set(ParentNode),
      unification_set(_, ParentNode).
 
-unification_set("generic_build", node(X, Child))
-  :- build_only_dependency(ParentNode, node(X, Child)),
-     not multiple_unification_sets(Child),
+% Create a separate build unification set if one of the pure build dependencies is allowed to
+unification_set(("build", ID), node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), "build"),
+     build_set_id(ParentNode, ID),
      unification_set(_, ParentNode).
 
 unification_set(SetID, VirtualNode)

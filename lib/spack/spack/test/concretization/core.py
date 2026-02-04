@@ -2966,6 +2966,26 @@ class TestConcretizeSeparately:
         assert len(edges) == 1
         assert edges[0].spec.satisfies("@=60")
 
+    def test_build_environment_is_unified(self):
+        """A pure build dep that is marked build-tool can creates its own unification set. This
+        test ensures that its sibling build dependencies are unified with it, together with their
+        runtime dependencies. It ensures the same package cannot appear multiple times in a single
+        build environment, for example when it's both a direct build dep, as well as pulled in as
+        a transitive runtime dep of a sibling build dep."""
+        spack.config.CONFIG.set("concretizer:duplicates", {"max_dupes": {"unify-build-deps-c": 2}})
+
+        # Fails because unify-build-deps-c version @1 and @2 are needed in the build environment
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.concretize.concretize_one("unify-build-deps-a@1.0")
+
+        # Succeeds because unify-build-deps-c version @2 is not needed in the build environment
+        spack.concretize.concretize_one("unify-build-deps-a@2.0")
+
+        # Lastly, a sanity check that max_dupes is a requirement for this to work.
+        spack.config.CONFIG.set("concretizer:duplicates", {"max_dupes": {"unify-build-deps-c": 1}})
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.concretize.concretize_one("unify-build-deps-a@2.0")
+
     @pytest.mark.regression("43647")
     def test_specifying_different_versions_build_deps(self):
         """Tests that we can concretize a spec with nodes using the same build
