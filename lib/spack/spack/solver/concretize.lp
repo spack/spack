@@ -82,34 +82,31 @@ error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", P
 unification_set("root", PackageNode) :- attr("root", PackageNode).
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
-build_only_dependency(ParentNode, node(X, Child)) :-
-  attr("depends_on", ParentNode, node(X, Child), "build"),
-  not attr("depends_on", ParentNode, node(X, Child), "link"),
-  not attr("depends_on", ParentNode, node(X, Child), "run").
-
-% Trigger a separate build unification set if there is a pure build dependency that is allowed
-% to go into its own unification set
+% Trigger a separate build unification set if there is build dependency that is allowed to go into
+% its own unification set
 has_separate_build_unification_set(ParentNode) :-
-  build_only_dependency(ParentNode, node(X, Child)),
+  attr("depends_on", ParentNode, node(X, Child), "build"),
   multiple_unification_sets(Child).
+
+% General case: build dependencies of any parent are put in the same unification set named
+% "generic_build"
+unification_set("generic_build", node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), "build"),
+     not has_separate_build_unification_set(ParentNode),
+     unification_set(_, ParentNode).
+
+% Special case: build dependencies are put into a separate unification set if one of their sibling
+% build dependencies is allowed to be duplicated
+unification_set(("build", ID), node(X, Child))
+  :- attr("depends_on", ParentNode, node(X, Child), "build"),
+     build_set_id(ParentNode, ID),
+     unification_set(_, ParentNode).
 
 % Limit the number of build unification sets to a reasonable number to avoid combinatorial
 % explosion.
 #const max_build_unification_sets = 4.
 1 { build_set_id(ParentNode, 0..max_build_unification_sets-1) } 1
   :- has_separate_build_unification_set(ParentNode).
-
-% General case: build dependencies are put in the same unification set named "generic_build"
-unification_set("generic_build", node(X, Child))
-  :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     not has_separate_build_unification_set(ParentNode),
-     unification_set(_, ParentNode).
-
-% Create a separate build unification set if one of the pure build dependencies is allowed to
-unification_set(("build", ID), node(X, Child))
-  :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     build_set_id(ParentNode, ID),
-     unification_set(_, ParentNode).
 
 unification_set(SetID, VirtualNode)
   :- provider(PackageNode, VirtualNode),
