@@ -5,7 +5,7 @@
 import importlib
 import sys
 import time
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import spack.compilers
 import spack.compilers.config
@@ -76,12 +76,25 @@ def concretize_together_when_possible(
         concrete: abstract for (abstract, concrete) in spec_list if concrete
     }
 
-    result_by_user_spec = {}
+    result_by_user_spec: Dict[Spec, Spec] = {}
     allow_deprecated = spack.config.get("config:deprecated", False)
+    j = 0
+    start = time.monotonic()
     for result in Solver().solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
     ):
+        now = time.monotonic()
+        duration = now - start
+        percentage = int((j + 1) / len(to_concretize) * 100)
+        for abstract, concrete in result.specs_by_input.items():
+            tty.verbose(
+                f"{duration:6.1f}s [{percentage:3d}%] {concrete.cformat('{hash:7}')} "
+                f"{abstract.colored_str}"
+            )
+            j += 1
+        sys.stdout.flush()
         result_by_user_spec.update(result.specs_by_input)
+        start = now
 
     # If the "abstract" spec is a concrete spec from the previous concretization
     # translate it back to an abstract spec. Otherwise, keep the abstract spec

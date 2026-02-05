@@ -89,7 +89,7 @@ If the search was successful, you can now list known compilers, and get an outpu
 If no compilers were found, you need to either:
 
 * Install further prerequisites, see :ref:`verify-spack-prerequisites`, and repeat the search above.
-* Register a buildcache that provides a compiler already available as a binary
+* Register a build cache that provides a compiler already available as a binary
 
 Once a compiler is available, you can proceed installing your first package:
 

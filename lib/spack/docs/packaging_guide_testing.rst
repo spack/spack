@@ -49,7 +49,7 @@ Success is assumed if anything (e.g., a file or directory) is written after ``in
 Otherwise, the build is assumed to have failed.
 However, the presence of install prefix contents is not a sufficient indicator of success so Spack supports the addition of tests that can be performed during `spack install` processing.
 
-Consider a simple autotools build using the following commands:
+Consider a simple Autotools build using the following commands:
 
 .. code-block:: console
 

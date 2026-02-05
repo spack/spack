@@ -483,7 +483,7 @@ class Indexer(metaclass=abc.ABCMeta):
         """Read this index from a provided file object."""
 
     @abc.abstractmethod
-    def update(self, pkg_fullname):
+    def update(self, pkgs_fullname: Set[str]):
         """Update the index in memory with information about a package."""
 
     @abc.abstractmethod
@@ -500,8 +500,8 @@ class TagIndexer(Indexer):
     def read(self, stream):
         self.index = spack.tag.TagIndex.from_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages({p.split(".")[-1] for p in pkgs_fullname}, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -516,15 +516,15 @@ class ProviderIndexer(Indexer):
     def read(self, stream):
         self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
-    def update(self, pkg_fullname):
-        name = pkg_fullname.split(".")[-1]
+    def update(self, pkgs_fullname: Set[str]):
         is_virtual = (
-            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
+            lambda name: not self.repository.exists(name)
+            or self.repository.get_pkg_class(name).virtual
         )
-        if is_virtual:
-            return
-        self.index.remove_provider(pkg_fullname)
-        self.index.update(pkg_fullname)
+        non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
+        non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}
+        self.index.remove_providers(non_virtual_pkgs_names)
+        self.index.update_packages(non_virtual_pkgs_fullname)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -549,8 +549,8 @@ class PatchIndexer(Indexer):
     def write(self, stream):
         self.index.to_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages(pkgs_fullname)
 
 
 class RepoIndex:
@@ -642,9 +642,7 @@ class RepoIndex:
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
-                for pkg_name in needs_update:
-                    indexer.update(f"{self.namespace}.{pkg_name}")
-
+                indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
                 indexer.write(new)
 
         return indexer.index
@@ -1421,6 +1419,14 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
+
+        # Early exit if no overrides to apply or undo
+        if (
+            not self.overrides.get(pkg_name)
+            and not hasattr(cls, "overridden_attrs")
+            and not hasattr(cls, "attrs_exclusively_from_config")
+        ):
+            return cls
 
         def defining_class(myclass, name):
             return next((c for c in myclass.__mro__ if name in c.__dict__), None)

@@ -66,7 +66,7 @@ From lowest to highest precedence:
 
 #. **system**: Stored in ``/etc/spack/``.
    These are settings for this machine or for all machines on which this file system is mounted.
-   The systm scope overrides the defaults scope.
+   The system scope overrides the defaults scope.
    It can be used for settings idiosyncratic to a particular machine, such as the locations of compilers or external packages.
    Be careful when modifying this scope, as changes here affect all Spack users on a machine.
    Before putting configuration here, instead consider using the ``site`` scope, which only affects the spack instance it's part of.
@@ -85,7 +85,7 @@ From lowest to highest precedence:
 #. **spack**: Stored in ``$(prefix)/etc/spack/``.
    Settings here affect only *this instance* of Spack, and they override ``user`` and lower configuration scopes.
    This is intended for project-specific or single-user spack installations.
-   This is the the topmost built-in spack scope, and modifying it gives you full control over configuration scopes.
+   This is the topmost built-in spack scope, and modifying it gives you full control over configuration scopes.
    For example, it defines the ``user``, ``site``, and ``system`` scopes, so you can use it to remove them completely if you want.
 
 #. **environment**: When using Spack :ref:`environments`, Spack reads additional configuration from the environment file.
@@ -102,7 +102,7 @@ When configurations conflict, settings from higher-precedence scopes override lo
 
 All of these except ``spack`` and ``defaults`` are initially empty, so you don't have to think about the others unless you need them.
 The most commonly used scopes are ``environment``, ``user``, and ``spack``.
-If you forget, you can always see the available configuration scopes in order of precedece wiht the ``spack config scopes`` command::
+If you forget, you can always see the available configuration scopes in order of precedence with the ``spack config scopes`` command::
 
     > spack config scopes -p
     Scope            Path

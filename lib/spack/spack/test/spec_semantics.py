@@ -1978,6 +1978,21 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
     assert rhs == factory(constrained_str)
 
 
+def test_constrain_dependencies_copies(mock_packages):
+    """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
+    share dependency instances, leading to corruption of unrelated Spec instances."""
+    x = Spec("root")
+    y = Spec("^foo")
+    z = Spec("%foo +bar")
+    assert x.constrain(y)
+    assert x == Spec("root ^foo")
+    assert x.constrain(z)
+    assert x == Spec("root %foo +bar")
+    assert not x.constrain(Spec("root %foo +bar"))  # no new constraints
+    # now, double check that we did not mutate `y` after constraining `x` with `z`.
+    assert y == Spec("^foo")
+
+
 def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):
     concrete: Spec = default_mock_concretization("pkg-a")
     hash = concrete.dag_hash()

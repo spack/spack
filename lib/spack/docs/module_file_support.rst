@@ -399,7 +399,7 @@ For instance, the following config options,
 
 will add a ``python3.12`` to module names of packages compiled with Python 3.12, and similarly for all specs depending on ``python@3``.
 This is useful to know which version of Python a set of Python extensions is associated with.
-Likewise, the ``openblas`` string is attached to any program that has openblas in the spec, most likely via the ``+blas`` variant specification.
+Likewise, the ``openblas`` string is attached to any program that has ``openblas`` in the spec, most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire naming convention for module files.
 This uses the projections format covered in :ref:`view_projections`.
@@ -413,7 +413,7 @@ This uses the projections format covered in :ref:`view_projections`.
            all: "{name}/{version}-{compiler.name}-{compiler.version}-module"
            ^mpi: "{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module"
 
-will create module files that are nested in directories by package name, contain the version and compiler name and version, and have the word ``module`` before the hash for all specs that do not depend on mpi, and will have the same information plus the MPI implementation name and version for all packages that depend on mpi.
+will create module files that are nested in directories by package name, contain the version and compiler name and version, and have the word ``module`` before the hash for all specs that do not depend on ``mpi``, and will have the same information plus the MPI implementation name and version for all packages that depend on ``mpi``.
 
 When specifying module names by projection for Lmod modules, we recommend NOT including names of dependencies (e.g., MPI, compilers) that are already in the Lmod hierarchy.
 

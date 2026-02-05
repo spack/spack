@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import enum
+import functools
 import gzip
 import io
 import itertools
@@ -202,13 +203,41 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
+# Caching because the returned function id is used as a cache key
+@functools.lru_cache(maxsize=None)
 def remove_facts(*to_be_removed: str) -> TransformFunction:
     """Returns a transformation function that removes facts from the input list of facts."""
 
     def _remove(name: str, spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-        return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
+        return [x for x in facts if x.args[0] not in to_be_removed]
 
     return _remove
+
+
+def identity_for_facts(
+    name: str, spec: spack.spec.Spec, facts: List[AspFunction]
+) -> List[AspFunction]:
+    return facts
+
+
+# Caching because the returned function id is used as a cache key
+@functools.lru_cache(maxsize=None)
+def dependency_holds(
+    *, dependency_flags: dt.DepFlag, pkg_cls: Type[spack.package_base.PackageBase]
+) -> TransformFunction:
+    def _transform_fn(
+        name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
+    ) -> List[AspFunction]:
+        result = remove_facts("node", "virtual_node")(name, input_spec, requirements) + [
+            fn.attr("dependency_holds", pkg_cls.name, name, dt.flag_to_string(t))
+            for t in dt.ALL_FLAGS
+            if t & dependency_flags
+        ]
+        if name not in pkg_cls.extendees:
+            return result
+        return result + [fn.attr("extends", pkg_cls.name, name)]
+
+    return _transform_fn
 
 
 def dag_closure_by_deptype(
@@ -350,10 +379,10 @@ class Result:
         return self._unsolved_specs
 
     @property
-    def specs_by_input(self):
+    def specs_by_input(self) -> Dict[spack.spec.Spec, spack.spec.Spec]:
         if self._concrete_specs_by_input is None:
             self._compute_specs_from_answer_set()
-        return self._concrete_specs_by_input
+        return self._concrete_specs_by_input  # type: ignore
 
     def _compute_specs_from_answer_set(self):
         if not self.satisfiable:
@@ -1309,12 +1338,6 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
-def _track_dependencies(
-    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
-) -> List[AspFunction]:
-    return requirements + [fn.attr("track_dependencies", name)]
-
-
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1345,8 +1368,6 @@ class SpackSolverSetup:
         self.version_constraints: Set = set()
         self.target_constraints: Set = set()
         self.default_targets: List = []
-        self.compiler_version_constraints: Set = set()
-        self.post_facts: List = []
         self.variant_ids_by_def_id: Dict[int, int] = {}
 
         self.reusable_and_possible: ConcreteSpecsByHash = ConcreteSpecsByHash()
@@ -1509,10 +1530,6 @@ class SpackSolverSetup:
             self.package_splice_rules(pkg)
 
         self.package_requirement_rules(pkg)
-
-        # trigger and effect tables
-        self.trigger_rules()
-        self.effect_rules()
 
     def trigger_rules(self):
         """Flushes all the trigger rules collected so far, and clears the cache."""
@@ -1825,7 +1842,6 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
-
         for cond, deps_by_name in pkg.dependencies.items():
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
@@ -1845,35 +1861,12 @@ class SpackSolverSetup:
                     continue
 
                 msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
-
-                def dependency_holds(
-                    name: str, input_spec: spack.spec.Spec, requirements: List[AspFunction]
-                ) -> List[AspFunction]:
-                    # TODO: `dependency_holds` is used as a cache key, and is a unique object in
-                    # every iteration of the loop. This prevents deduplication of identical
-                    # "effects" when unique when specs impose the same dependency. We cannot move
-                    # this out of the loop, because the effect cache is keyed only by a spec, and
-                    # not by the dependency type.
-                    result = remove_facts("node", "virtual_node")(
-                        name, input_spec, requirements
-                    ) + [
-                        fn.attr("dependency_holds", pkg.name, name, dt.flag_to_string(t))
-                        for t in dt.ALL_FLAGS
-                        if t & depflag
-                    ]
-                    if name not in pkg.extendees:
-                        return result
-                    return result + [fn.attr("extends", pkg.name, name)]
-
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
-                context.transform_required = _track_dependencies
-                context.transform_imposed = dependency_holds
-
+                context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg_cls=pkg)
                 self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
-
                 self.gen.newline()
 
     def _gen_match_variant_splice_constraints(
@@ -2666,22 +2659,40 @@ class SpackSolverSetup:
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
 
-        for pkg_name, versions in self.possible_versions.items():
-            for v in versions:
+        sorted_versions = {}
+        for pkg_name in self.possible_versions:
+            possible_versions = list(self.possible_versions[pkg_name])
+            possible_versions.sort()
+            sorted_versions[pkg_name] = possible_versions
+            for idx, v in enumerate(possible_versions):
+                self.gen.fact(fn.pkg_fact(pkg_name, fn.version_order(v, idx)))
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
                     if sha:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
                     else:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+            self.gen.newline()
         self.gen.newline()
 
         for pkg_name, versions in self.version_constraints:
-            # generate facts for each package constraint and the version
-            # that satisfies it
-            for v in self.possible_versions[pkg_name]:
+            possible_versions = sorted_versions.get(pkg_name)
+            if possible_versions is None:
+                continue
+            # Look for contiguous ranges of versions that satisfy the constraint
+            start_idx = None
+            for current_idx, v in enumerate(possible_versions):
                 if v.satisfies(versions):
-                    self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
+                    if start_idx is None:
+                        start_idx = current_idx
+                elif start_idx is not None:
+                    # End of a contiguous satisfying range found
+                    version_range = fn.version_range(versions, start_idx, current_idx - 1)
+                    self.gen.fact(fn.pkg_fact(pkg_name, version_range))
+                    start_idx = None
+            if start_idx is not None:
+                version_range = fn.version_range(versions, start_idx, len(possible_versions) - 1)
+                self.gen.fact(fn.pkg_fact(pkg_name, version_range))
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -2714,17 +2725,6 @@ class SpackSolverSetup:
             possible_versions = set(sum([versions_for(v) for v in versions], []))
             for version in sorted(possible_versions):
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
-
-    def define_compiler_version_constraints(self):
-        for constraint in sorted(self.compiler_version_constraints):
-            for compiler_id, compiler in enumerate(self.possible_compilers):
-                if compiler.spec.satisfies(constraint):
-                    self.gen.fact(
-                        fn.compiler_version_satisfies(
-                            constraint.name, constraint.versions, compiler_id
-                        )
-                    )
-        self.gen.newline()
 
     def define_target_constraints(self):
         def _all_targets_satisfiying(single_constraint):
@@ -3021,6 +3021,10 @@ class SpackSolverSetup:
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
 
+        self.gen.h1("Condition Triggers and Imposed Effects")
+        self.trigger_rules()
+        self.effect_rules()
+
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
         self.define_auto_variant("commit", multi=False)
@@ -3042,9 +3046,6 @@ class SpackSolverSetup:
         self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
         self.define_version_constraints()
-
-        self.gen.h1("Compiler Version Constraints")
-        self.define_compiler_version_constraints()
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
@@ -3210,7 +3211,7 @@ class SpackSolverSetup:
             )
             # Default is to remove node-like attrs, override here
             context.transform_required = virtual_handler
-            context.transform_imposed = lambda x, y, z: z
+            context.transform_imposed = identity_for_facts
 
             try:
                 subcondition_id = self.condition(
@@ -3438,7 +3439,6 @@ class SpecBuilder:
                 r"^dependency_holds$",
                 r"^package_hash$",
                 r"^root$",
-                r"^track_dependencies$",
                 r"^uses_virtual$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",

@@ -456,6 +456,13 @@ def _install(
             stage.destroy()
         stage.create()
 
+        # For develop packages or non-develop packages with --keep-stage there may be a
+        # pre-existing symlink at pkg.log_path which would cause the new symlink to fail.
+        # Try removing it if it exists.
+        try:
+            os.unlink(pkg.log_path)
+        except OSError:
+            pass
         os.symlink(log_path, pkg.log_path)
 
         send_state("staging", state_stream)

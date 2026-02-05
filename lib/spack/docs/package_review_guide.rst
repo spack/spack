@@ -129,7 +129,7 @@ This commonly happens with Python packages.
 For example, the case of one or more letters in the package name may change at some point (e.g., `py-sphinx <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_sphinx/package.py>`_).
 Also, dashes may be replaced with underscores (e.g., `py-scikit-build <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_scikit_build/package.py>`_).
 In some cases, both changes can occur for the same package.
-As these examples illlustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
+As these examples illustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
 
 If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest :ref:`deprecating <deprecate>` them in the package.
 

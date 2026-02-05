@@ -456,7 +456,7 @@ As the action runs, you should observe output similar to:
    ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
    https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
 
-The first line is the ssh command neccesary to connect to the server, the second line is a tmate web-ui that also provides access to the ssh server on the runner.
+The first line is the ssh command necessary to connect to the server, the second line is a tmate web UI that also provides access to the ssh server on the runner.
 
 .. note:: The web UI has occasionally been unresponsive, if it does not respond within ~10s, you'll need to use your local ssh utility.
 
