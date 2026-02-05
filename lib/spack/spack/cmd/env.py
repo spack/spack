@@ -173,6 +173,8 @@ def _env_create(
         )
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
+
+    shell_script.write_env_activate_script(env, view=with_view)
     return env
 
 
@@ -383,6 +385,8 @@ def env_activate(args):
         active_env, shell=args.shell
     )
 
+    shell_script.update_env_activate_script(active_env, env_prompt, view)
+
     ev.activate(active_env, prompt=env_prompt, view=view)
 
     cmds = shell_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
@@ -391,6 +395,7 @@ def env_activate(args):
         sys.stdout.write(cmds)
 
     print(f"source {env_activate_script}")
+    shell_script.write_env_deactivate_script(ev.active_environment(), view)
 
 
 #

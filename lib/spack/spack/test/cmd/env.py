@@ -187,6 +187,8 @@ def test_env_missing_deactivation_script():
     shell = "sh"
     environ = ev.read("test")
 
+    env("activate", f"--{shell}", "test")
+
     path_to_deactivate_script = shell_script.path_to_env_deactivate_shell_script(environ, shell)
     os.remove(path_to_deactivate_script)
 
@@ -3210,7 +3212,7 @@ def test_stack_view_activate_from_default(
         with open(path_to_activate_script, "r", encoding="utf-8") as f:
             shell_output = f.read()
 
-        assert "PATH" in shell_output, shell_output
+        assert "PATH" in shell_output
         assert str(view_dir / "bin") in shell_output
         assert "_spack_env_set FOOBAR mpileaks" in shell_output
 

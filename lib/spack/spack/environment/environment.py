@@ -47,12 +47,6 @@ from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
-from .cache_shell_script import (
-    path_to_env_activate_shell_script,
-    update_env_activate_script,
-    write_env_activate_script,
-    write_env_deactivate_script,
-)
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
@@ -240,27 +234,6 @@ def activate(env, use_env_repo=False, prompt="", view=""):
             if use_env_repo:
                 new_repo.put_first(env.repo)
             spack.repo.enable_repo(new_repo)
-
-        shell = os.environ.get("SPACK_SHELL", "sh")
-        env_activate_script = path_to_env_activate_shell_script(env, shell)
-
-        if os.path.isfile(env_activate_script):
-            if os.path.isfile(os.path.join(env.path, lockfile_name)):
-                lock_update = os.stat(os.path.join(env.path, lockfile_name)).st_mtime
-            else:
-                lock_update = 0.00
-            activation_update = os.stat(env_activate_script).st_mtime
-            if lock_update > activation_update or prompt or view:
-                update_env_activate_script(env, prompt, view)
-                write_env_deactivate_script(env, view)
-        else:
-            if not view:
-                view = os.environ.get(spack_env_view_var, "")
-            if not prompt:
-                prompt = "default"
-
-            update_env_activate_script(env, prompt, view)
-            write_env_deactivate_script(env, view)
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
@@ -450,8 +423,6 @@ def create_in_dir(
                 # relative paths outside of env
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
-
-    write_env_activate_script(env, view=with_view)
 
     return env
 
