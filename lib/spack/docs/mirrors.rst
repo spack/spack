@@ -222,7 +222,7 @@ To remove a mirror by name, run:
 Mirror precedence
 -----------------
 
-Adding a mirror really adds a line in ``~/.config/spack/mirrors.yaml``:
+Adding a mirror really adds an entry in the mirrors config, by default stored in the user environment scope at ``~/.config/spack/mirrors.yaml``:
 
 .. code-block:: yaml
 
@@ -240,7 +240,7 @@ Local Default Cache
 
 Spack caches resources that are downloaded as part of installations.
 The cache is a valid Spack mirror: it uses the same directory structure and naming scheme as other Spack mirrors (so it can be copied anywhere and referenced with a URL like other mirrors).
-The mirror is maintained locally (within the Spack installation directory) at :file:`$data_home/downloads`.
+The mirror is maintained locally at :file:`$data_home/downloads`.
 It is always enabled (and is always searched first when attempting to retrieve files for an installation) but can be cleared with ``spack clean --misc-cache``; the cache directory can also be deleted manually without issue.
 
 Caching includes retrieved tarball archives and source control repositories, but only resources with an associated digest or commit ID (e.g. a revision number for SVN) will be cached.
