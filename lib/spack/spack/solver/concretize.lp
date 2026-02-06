@@ -473,6 +473,12 @@ satisfied(trigger(PackageNode), condition_requirement("closure", A1, A2, A3)) :-
   generic_condition_requirement("closure", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
 
+satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+  attr("virtual_on_edge", node(X, A1), node(Y, A2), A3),
+  generic_condition_requirement("virtual_on_edge", A1, A2, A3),
+  condition_nodes(PackageNode, node(X, A1)),
+  condition_nodes(PackageNode, node(Y, A2)).
+
 %%%%
 % Conditions verified on pure build deps of reused nodes
 %%%%
