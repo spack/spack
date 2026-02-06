@@ -40,6 +40,10 @@ class SpackPaths:
     def __init__(self, base):
         self.base = base
 
+        self._state_home = None
+        self._data_home = None
+        self._cache_home = None
+
         #: Not a location itself, but used for when Spack instances
         #: share the same cache base directory for caches that should
         #: not be shared between those instances.
@@ -201,7 +205,9 @@ class SpackPaths:
                 return os.path.join(os.environ["SPACK_HOME"], home_rel, "spack"), Provenance.SPACK_HOME_ENV
 
         def cfg_check():
-            return config.get(f"config:locations:{config_var}", None), Provenance.CONFIG_VAR
+            val = config.get(f"config:locations:{config_var}", None)
+            if val:
+                return val, Provenance.CONFIG_VAR
 
         def spack_home_cfg_check():
             h = config.get("config:locations:home", None)
