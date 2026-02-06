@@ -96,6 +96,69 @@ def test_install_location(working_env, tmp_path, mutable_config, set_home):
     assert p6.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
 
 
+def test_install_location_old_installs_exist(working_env, tmp_path, mutable_config, set_home):
+    # If prior default install dir inside spack prefix does not
+    # exist, place installs in $HOME
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+
+    not_empty_dir = _ensure_dir(tmp_path / "not-empty")
+    (pathlib.Path(not_empty_dir) / "afile").touch()
+
+    def paths_base_nonempty_old_install():
+        pb = SpackPathsBase(base_prefix)
+        pb.old_install_path = not_empty_dir
+        return pb
+
+    set_home(home_prefix)
+
+    p1 = SpackPaths(paths_base_nonempty_old_install())
+    assert p1.default_install_location == not_empty_dir
+
+    spack.config.set("config:locations", {})
+
+    # $XDG_DATA_HOME does *not* override if it is empty
+    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
+    os.environ["XDG_DATA_HOME"] = xdg_data_home
+    p4 = SpackPaths(paths_base_nonempty_old_install())
+    assert p4.default_install_location == not_empty_dir
+
+    # If there are installs XDG_DATA_HOME, prefer that, even if
+    # there are also installs in old location
+    xdg_installs_location = _ensure_dir(pathlib.Path(xdg_data_home) / "spack" / "installs")
+    (pathlib.Path(xdg_installs_location) / "afile").touch()
+    assert p4.default_install_location == str(pathlib.Path(xdg_data_home) / "spack" / "installs")
+
+    # NOTE: the rest of this test is the same as the prior test
+
+    # "config:locations:home" variable overrides the above (even if there
+    # are no installs there and there are installs in the old location)
+    spack_home_prefix = _ensure_dir(tmp_path / "spack-home")
+    spack.config.set("config:locations:home", spack_home_prefix)
+    p2 = SpackPaths(paths_base_nonempty_old_install())
+    assert p2.default_install_location == str(
+        pathlib.Path(spack_home_prefix) / ".local" / "share" / "spack" / "installs"
+    )
+
+    # "config:locations:data" overrides the above
+    spack_data_prefix = _ensure_dir(tmp_path / "spack-data")
+    spack.config.set("config:locations:data", spack_data_prefix)
+    p3 = SpackPaths(paths_base_nonempty_old_install())
+    assert p3.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
+
+    # Check that $SPACK_DATA_HOME overrides all the above
+    spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
+    os.environ["SPACK_DATA_HOME"] = spack_data_home
+    p5 = SpackPaths(paths_base_nonempty_old_install())
+    assert p5.default_install_location == str(pathlib.Path(spack_data_home) / "installs")
+
+    # Disable all location-based env vars: this will then defer
+    # to using "config:locations:data"
+    spack.config.set("config:locations:disable_env", True)
+    p6 = SpackPaths(paths_base_nonempty_old_install())
+    assert p6.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
+
+
 def test_system_config_path_is_overridable(working_env, tmp_path):
     redirect_syscfg_path = str(pathlib.Path(tmp_path) / "redirected_syscfg")
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = redirect_syscfg_path
