@@ -8,6 +8,7 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+from enum import Enum
 import os
 import pathlib
 
@@ -22,6 +23,19 @@ def dir_is_occupied(x, except_for=None):
     return x.is_dir() and bool(set(x.iterdir()) - except_for)
 
 
+class Provenance(Enum):
+    SPACK_ENV = 1  # SPACK_x_HOME
+    SPACK_HOME_ENV = 2  # SPACK_HOME
+    CONFIG_VAR = 3  # config:locations:x
+    CONFIG_HOME_VAR = 4  # config:locations:home
+    XDG_VAR = 5  # XDG_x_HOME
+    NOTHING_SET = 6  # None of the above are set
+
+    def respectable(self):
+        return self in {Provenance.SPACK_ENV, Provenance.SPACK_HOME_ENV, Provenance.CONFIG_VAR,
+                        Provenance.CONFIG_HOME_VAR}
+
+
 class SpackPaths:
     def __init__(self, base):
         self.base = base
@@ -33,22 +47,28 @@ class SpackPaths:
 
     @property
     def state_home(self):
-        return self.resolve_a_home(
-            ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
-            "XDG_STATE_HOME",
-            "state",
-            os.path.join(".local", "state"),
-        )
+        if not self._state_home:
+            self._state_home, self._state_home_provenance = self.resolve_a_home(
+                ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
+                "XDG_STATE_HOME",
+                "state",
+                os.path.join(".local", "state"),
+            )
+        return self._state_home
 
     @property
     def cache_home(self):
-        return self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache")
+        if not self._cache_home:
+            self._cache_home, self._cache_home_provenance = self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache")
+        return self._cache_home
 
     @property
     def data_home(self):
-        return self.resolve_a_home(
-            "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", os.path.join(".local", "share")
-        )
+        if not self._data_home:
+            self._data_home, self._data_home_provenance = self.resolve_a_home(
+                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", os.path.join(".local", "share")
+            )
+        return self._data_home
 
     @property
     def user_cache_path(self):
@@ -57,13 +77,15 @@ class SpackPaths:
     @property
     def default_install_location(self):
         return self._fallback_old_location_if_used(
-            self.base.old_install_path, os.path.join(self.data_home, "installs")
+            self.base.old_install_path, os.path.join(self.data_home, "installs"),
+            self._data_home_provenance
         )
 
     @property
     def default_envs_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_envs_path, os.path.join(self.data_home, "envs")
+            self.base.old_envs_path, os.path.join(self.data_home, "envs"),
+            self._data_home_provenance
         )
 
     @property
@@ -101,13 +123,15 @@ class SpackPaths:
     @property
     def gpg_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_gpg_path, os.path.join(self.data_home, "gpg")
+            self.base.old_gpg_path, os.path.join(self.data_home, "gpg"),
+            self._data_home_provenance
         )
 
     @property
     def gpg_keys_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys")
+            self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"),
+            self._data_home_provenance
         )
 
     @property
@@ -162,27 +186,27 @@ class SpackPaths:
                 x = env_vars
             for n in x:
                 if n in os.environ:
-                    return os.environ[n]
+                    return os.environ[n], Provenance.SPACK_ENV
 
         def xdg_env_check():
             if disable_env:
                 return
             if xdg_var in os.environ:
-                return os.path.join(os.environ[xdg_var], "spack")
+                return os.path.join(os.environ[xdg_var], "spack"), Provenance.XDG_VAR
 
         def spack_home_env_check():
             if disable_env:
                 return
             if "SPACK_HOME" in os.environ:
-                return os.path.join(os.environ["SPACK_HOME"], home_rel, "spack")
+                return os.path.join(os.environ["SPACK_HOME"], home_rel, "spack"), Provenance.SPACK_HOME_ENV
 
         def cfg_check():
-            return config.get(f"config:locations:{config_var}", None)
+            return config.get(f"config:locations:{config_var}", None), Provenance.CONFIG_VAR
 
         def spack_home_cfg_check():
             h = config.get("config:locations:home", None)
             if h:
-                return os.path.join(h, home_rel, "spack")
+                return os.path.join(h, home_rel, "spack"), Provenance.CONFIG_HOME_VAR
 
         for check in [
             spack_env_check,
@@ -193,14 +217,15 @@ class SpackPaths:
         ]:
             possible_resolution = check()
             if possible_resolution:
-                return os.path.expanduser(possible_resolution)
+                path, provenance = possible_resolution
+                return os.path.expanduser(path), provenance
 
-        return os.path.join(os.path.expanduser("~"), home_rel, "spack")
+        return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
-    def _fallback_old_location_if_used(self, old_location, new_location):
+    def _fallback_old_location_if_used(self, old_location, new_location, provenance):
         # TODO: perhaps it should be configurable whether old locations
         # are used. Other option is to relocate downloads & gpg keys.
-        if dir_is_occupied(new_location):
+        if dir_is_occupied(new_location) or provenance.respectable():
             return new_location
         elif dir_is_occupied(old_location):
             # TODO: should probably raise a deprecation warning here encouraging
