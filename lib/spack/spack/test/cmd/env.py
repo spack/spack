@@ -39,6 +39,7 @@ import spack.util.spack_yaml
 from spack.cmd.env import _env_create
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import readlink
+from spack.llnl.util.lang import dedupe
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.stage import stage_prefix
@@ -4650,3 +4651,41 @@ spack:
       branch: develop"""
     ):
         pass
+
+
+def test_concretized_specs_and_include_concrete(mutable_config):
+    """Tests the consistency of concretized specs when there are either
+    duplicate input specs or duplicate hashes.
+    """
+    # Create a structure like this one
+    #
+    # Local specs:
+    # - mpileaks -> hash1
+    # - libelf@0.8.12 -> hash2
+    # - pkg-a -> hash3
+    #
+    # Included specs:
+    # - mpileaks -> hash4
+    # - libelf -> hash2
+    # - pkg-a -> hash3
+    env("create", "included-env")
+    with ev.read("included-env") as e:
+        e.add("mpileaks")
+        e.add("libelf")
+        e.add("pkg-a")
+        mutable_config.set(
+            "packages", {"mpileaks": {"require": ["@2.2"]}, "libelf": {"require": ["@0.8.12"]}}
+        )
+        included_pairs = e.concretize()
+        e.write()
+
+    env("create", "--include-concrete", "included-env", "main-env")
+    with ev.read("main-env") as e:
+        e.add("mpileaks")
+        e.add("libelf@0.8.12")
+        e.add("pkg-a")
+        mutable_config.set("packages", {"mpileaks": {"require": ["@2.3"]}})
+        spec_pairs = e.concretize()
+        concretized_specs = list(e.concretized_specs())
+        assert list(dedupe(spec_pairs + included_pairs)) == concretized_specs
+        assert len(concretized_specs) == 5

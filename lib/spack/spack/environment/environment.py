@@ -1910,7 +1910,7 @@ class Environment:
         for x in self.concretized_roots:
             yield x.root, self.specs_by_hash[x.hash]
 
-        seen = set()
+        seen = {(x.root, x.hash) for x in self.concretized_roots}
         for included_env in self.included_concretized_user_specs:
             for s, h in zip(
                 self.included_concretized_user_specs[included_env],
