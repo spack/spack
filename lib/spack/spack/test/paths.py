@@ -102,18 +102,18 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
 
-    not_empty_dir = _ensure_dir(tmp_path / "not-empty")
-    (pathlib.Path(not_empty_dir) / "afile").touch()
+    nonempty_dir = _ensure_dir(tmp_path / "not-empty")
+    (pathlib.Path(nonempty_dir) / "afile").touch()
 
     def paths_base_nonempty_old_install():
         pb = SpackPathsBase(base_prefix)
-        pb.old_install_path = not_empty_dir
+        pb.old_install_path = nonempty_dir
         return pb
 
     set_home(home_prefix)
 
     p1 = SpackPaths(paths_base_nonempty_old_install())
-    assert p1.default_install_location == not_empty_dir
+    assert p1.default_install_location == nonempty_dir
 
     spack.config.set("config:locations", {})
 
@@ -121,7 +121,7 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p4 = SpackPaths(paths_base_nonempty_old_install())
-    assert p4.default_install_location == not_empty_dir
+    assert p4.default_install_location == nonempty_dir
 
     # If there are installs XDG_DATA_HOME, prefer that, even if
     # there are also installs in old location
