@@ -8,9 +8,9 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
-from enum import Enum
 import os
 import pathlib
+from enum import Enum
 
 import spack.config as config
 import spack.paths_base as paths_base
@@ -32,8 +32,12 @@ class Provenance(Enum):
     NOTHING_SET = 6  # None of the above are set
 
     def respectable(self):
-        return self in {Provenance.SPACK_ENV, Provenance.SPACK_HOME_ENV, Provenance.CONFIG_VAR,
-                        Provenance.CONFIG_HOME_VAR}
+        return self in {
+            Provenance.SPACK_ENV,
+            Provenance.SPACK_HOME_ENV,
+            Provenance.CONFIG_VAR,
+            Provenance.CONFIG_HOME_VAR,
+        }
 
 
 class SpackPaths:
@@ -63,7 +67,9 @@ class SpackPaths:
     @property
     def cache_home(self):
         if not self._cache_home:
-            self._cache_home, self._cache_home_provenance = self.resolve_a_home("SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache")
+            self._cache_home, self._cache_home_provenance = self.resolve_a_home(
+                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache"
+            )
         return self._cache_home
 
     @property
@@ -81,15 +87,17 @@ class SpackPaths:
     @property
     def default_install_location(self):
         return self._fallback_old_location_if_used(
-            self.base.old_install_path, os.path.join(self.data_home, "installs"),
-            self._data_home_provenance
+            self.base.old_install_path,
+            os.path.join(self.data_home, "installs"),
+            self._data_home_provenance,
         )
 
     @property
     def default_envs_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_envs_path, os.path.join(self.data_home, "envs"),
-            self._data_home_provenance
+            self.base.old_envs_path,
+            os.path.join(self.data_home, "envs"),
+            self._data_home_provenance,
         )
 
     @property
@@ -127,15 +135,15 @@ class SpackPaths:
     @property
     def gpg_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_gpg_path, os.path.join(self.data_home, "gpg"),
-            self._data_home_provenance
+            self.base.old_gpg_path, os.path.join(self.data_home, "gpg"), self._data_home_provenance
         )
 
     @property
     def gpg_keys_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_gpg_keys_path, os.path.join(self.data_home, "gpg-keys"),
-            self._data_home_provenance
+            self.base.old_gpg_keys_path,
+            os.path.join(self.data_home, "gpg-keys"),
+            self._data_home_provenance,
         )
 
     @property
@@ -202,7 +210,10 @@ class SpackPaths:
             if disable_env:
                 return
             if "SPACK_HOME" in os.environ:
-                return os.path.join(os.environ["SPACK_HOME"], home_rel, "spack"), Provenance.SPACK_HOME_ENV
+                return (
+                    os.path.join(os.environ["SPACK_HOME"], home_rel, "spack"),
+                    Provenance.SPACK_HOME_ENV,
+                )
 
         def cfg_check():
             val = config.get(f"config:locations:{config_var}", None)
