@@ -41,12 +41,23 @@ class Provenance(Enum):
 
 
 class SpackPaths:
+
+    relative_state_home = os.path.join(".local", "state")
+    relative_data_home = os.path.join(".local", "share")
+    relative_cache_home = ".cache"
+
     def __init__(self, base):
         self.base = base
 
         self._state_home = None
         self._data_home = None
         self._cache_home = None
+
+        self.default_state_home, self.default_data_home, self.default_cache_home = (
+            os.path.join(os.path.expanduser("~"), x, "spack") for x in
+            [SpackPaths.relative_state_home, SpackPaths.relative_data_home,
+             SpackPaths.relative_cache_home]
+        )
 
         #: Not a location itself, but used for when Spack instances
         #: share the same cache base directory for caches that should
@@ -89,6 +100,7 @@ class SpackPaths:
         return self._fallback_old_location_if_used(
             self.base.old_install_path,
             os.path.join(self.data_home, "installs"),
+            os.path.join(self.default_data_home, "installs"),
             self._data_home_provenance,
         )
 
@@ -97,6 +109,7 @@ class SpackPaths:
         return self._fallback_old_location_if_used(
             self.base.old_envs_path,
             os.path.join(self.data_home, "envs"),
+            os.path.join(self.default_data_home, "envs"),
             self._data_home_provenance,
         )
 
@@ -135,7 +148,10 @@ class SpackPaths:
     @property
     def gpg_path(self):
         return self._fallback_old_location_if_used(
-            self.base.old_gpg_path, os.path.join(self.data_home, "gpg"), self._data_home_provenance
+            self.base.old_gpg_path,
+            os.path.join(self.data_home, "gpg"),
+            os.path.join(self.default_data_home, "gpg"),
+            self._data_home_provenance
         )
 
     @property
@@ -143,6 +159,7 @@ class SpackPaths:
         return self._fallback_old_location_if_used(
             self.base.old_gpg_keys_path,
             os.path.join(self.data_home, "gpg-keys"),
+            os.path.join(self.default_data_home, "gpg-keys"),
             self._data_home_provenance,
         )
 
@@ -239,15 +256,15 @@ class SpackPaths:
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
-    def _fallback_old_location_if_used(self, old_location, new_location, provenance):
-        # TODO: perhaps it should be configurable whether old locations
-        # are used. Other option is to relocate downloads & gpg keys.
+    def _fallback_old_location_if_used(self, old_location, new_location, default_new_location, provenance):
         if dir_is_occupied(new_location) or provenance.respectable():
             return new_location
+        elif dir_is_occupied(default_new_location):
+            # This can occur e.g. if someone clones a new instance of spack,
+            # which would write into the default new location, and then later
+            # they set XDG_DATA_HOME
+            return new_location
         elif dir_is_occupied(old_location):
-            # TODO: should probably raise a deprecation warning here encouraging
-            # them to set their config explicitly back to the old value that
-            # will allow us to eventually remove these fallbacks
             return old_location
         else:
             return new_location
