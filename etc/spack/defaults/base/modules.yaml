@@ -33,10 +33,6 @@ modules:
   default:
     # Where to install modules
     # If set to a non-default value, this setting has precedence.
-    # This default value tells spack to:
-    # * Prefer $data_home/<module-type> (e.g. $data_home/lmod)
-    # * The old module locations are $share/spack/<module-type>: Spack will use
-    #   this old location if the new location is empty and the old one isn't
     roots:
      tcl:    $modules_base/modules
      lmod:   $modules_base/lmod
