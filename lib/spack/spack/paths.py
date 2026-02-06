@@ -193,7 +193,7 @@ class SpackPaths:
         ]:
             possible_resolution = check()
             if possible_resolution:
-                return possible_resolution
+                return os.path.expanduser(possible_resolution)
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack")
 
