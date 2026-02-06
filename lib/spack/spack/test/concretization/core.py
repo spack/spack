@@ -4828,6 +4828,15 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
     assert s.satisfies("+fortran")
 
 
+def test_when_condition_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+    """If a when condition contains a direct dependency on a provider of a virtual, it should only
+    trigger if the provider is used for that current package, and not if the provider happens to be
+    a dependency, without its virtual being depended on."""
+    s = default_mock_concretization("direct-dep-virtuals-one")
+    assert s.satisfies("%netlib-blas")
+    assert s["direct-dep-virtuals-two"].satisfies("%blas=netlib-blas")
+
+
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     """Tests that imposed dependencies triggered by identical conditions are grouped together,
     and that imposed dependencies that differ on a deptype are not grouped together."""
