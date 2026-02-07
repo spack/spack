@@ -71,7 +71,7 @@ class SpackPaths:
                 ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
                 "XDG_STATE_HOME",
                 "state",
-                os.path.join(".local", "state"),
+                SpackPaths.relative_state_home,
             )
         return self._state_home
 
@@ -79,7 +79,7 @@ class SpackPaths:
     def cache_home(self):
         if not self._cache_home:
             self._cache_home, self._cache_home_provenance = self.resolve_a_home(
-                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", ".cache"
+                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", SpackPaths.relative_cache_home
             )
         return self._cache_home
 
@@ -87,7 +87,7 @@ class SpackPaths:
     def data_home(self):
         if not self._data_home:
             self._data_home, self._data_home_provenance = self.resolve_a_home(
-                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", os.path.join(".local", "share")
+                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", SpackPaths.relative_data_home
             )
         return self._data_home
 
