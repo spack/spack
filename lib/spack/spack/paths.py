@@ -31,7 +31,7 @@ class Provenance(Enum):
     XDG_VAR = 5  # XDG_x_HOME
     NOTHING_SET = 6  # None of the above are set
 
-    def respectable(self):
+    def unilateral_override(self):
         return self in {
             Provenance.SPACK_ENV,
             Provenance.SPACK_HOME_ENV,
@@ -249,7 +249,7 @@ class SpackPaths:
     def _decide_old_or_new_location(
         self, old_location, new_location, default_new_location, provenance
     ):
-        if dir_is_occupied(new_location) or provenance.respectable():
+        if dir_is_occupied(new_location) or provenance.unilateral_override():
             return new_location
         elif dir_is_occupied(default_new_location):
             # This can occur e.g. if someone clones a new instance of spack,
