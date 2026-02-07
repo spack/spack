@@ -24,6 +24,11 @@ def dir_is_occupied(x, except_for=None):
 
 
 class Provenance(Enum):
+    # Used entirely inside this module, for recording configuration
+    # or environment options that the user set in order to influence
+    # the location of data that used to live in $spack and following
+    # #47615 now lives outside of it
+
     SPACK_ENV = 1  # SPACK_x_HOME
     SPACK_HOME_ENV = 2  # SPACK_HOME
     CONFIG_VAR = 3  # config:locations:x
@@ -32,6 +37,9 @@ class Provenance(Enum):
     NOTHING_SET = 6  # None of the above are set
 
     def unilateral_override(self):
+        # The following mechanisms for indicating user preference
+        # override the existence of data stored in its old location
+        # in $spack prior to #47615
         return self in {
             Provenance.SPACK_ENV,
             Provenance.SPACK_HOME_ENV,
