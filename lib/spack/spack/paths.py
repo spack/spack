@@ -100,7 +100,7 @@ class SpackPaths:
 
     @property
     def default_install_location(self):
-        return self._fallback_old_location_if_used(
+        return self._decide_old_or_new_location(
             self.base.old_install_path,
             os.path.join(self.data_home, "installs"),
             os.path.join(self.default_data_home, "installs"),
@@ -109,7 +109,7 @@ class SpackPaths:
 
     @property
     def default_envs_path(self):
-        return self._fallback_old_location_if_used(
+        return self._decide_old_or_new_location(
             self.base.old_envs_path,
             os.path.join(self.data_home, "envs"),
             os.path.join(self.default_data_home, "envs"),
@@ -150,7 +150,7 @@ class SpackPaths:
 
     @property
     def gpg_path(self):
-        return self._fallback_old_location_if_used(
+        return self._decide_old_or_new_location(
             self.base.old_gpg_path,
             os.path.join(self.data_home, "gpg"),
             os.path.join(self.default_data_home, "gpg"),
@@ -159,7 +159,7 @@ class SpackPaths:
 
     @property
     def gpg_keys_path(self):
-        return self._fallback_old_location_if_used(
+        return self._decide_old_or_new_location(
             self.base.old_gpg_keys_path,
             os.path.join(self.data_home, "gpg-keys"),
             os.path.join(self.default_data_home, "gpg-keys"),
@@ -246,7 +246,7 @@ class SpackPaths:
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
-    def _fallback_old_location_if_used(
+    def _decide_old_or_new_location(
         self, old_location, new_location, default_new_location, provenance
     ):
         if dir_is_occupied(new_location) or provenance.respectable():
@@ -263,7 +263,7 @@ class SpackPaths:
 
     @property
     def modules_base(self):
-        # This is similar to logic _fallback_old_location_if_used, but this
+        # This is similar to logic _decide_old_or_new_location, but this
         # moves the modules base if any component (typically one of lmod or
         # tcl) has been relocated, so is examining one-layer deeper
         for module_dir in ["lmod", "modules"]:
