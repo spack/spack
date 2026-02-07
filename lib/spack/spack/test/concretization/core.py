@@ -4837,6 +4837,18 @@ def test_when_condition_with_direct_dependency_on_virtual_provider(default_mock_
     assert s["direct-dep-virtuals-two"].satisfies("%blas=netlib-blas")
 
 
+def test_conflict_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+    """Test that conflicts on virtual providers as direct dependencies work"""
+    s = default_mock_concretization("conflict-virtual")
+    assert s.satisfies("%blas=netlib-blas")
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("conflict-virtual +conflict_direct")
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("conflict-virtual +conflict_transitive")
+
+
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     """Tests that imposed dependencies triggered by identical conditions are grouped together,
     and that imposed dependencies that differ on a deptype are not grouped together."""
