@@ -174,7 +174,7 @@ class SpackPaths:
 
     def __getattr__(self, name):
         # Things that aren't sensitive to import cycles can import the
-        # paths module and access all items from it
+        # paths module and access all items from paths_base
         return getattr(self.base, name)
 
     def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
