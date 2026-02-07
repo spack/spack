@@ -167,19 +167,6 @@ class SpackPaths:
         )
 
     @property
-    def modules_base(self):
-        # This is similar to logic _fallback_old_location_if_used, but this
-        # moves the modules base if any component (typically one of lmod or
-        # tcl) has been relocated, so is examining one-layer deeper
-        for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(os.path.join(self.data_home, module_dir)):
-                return self.data_home
-        for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(os.path.join(self.base.share_path, module_dir)):
-                return self.base.share_path
-        return self.data_home
-
-    @property
     def default_misc_cache_path(self):
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
@@ -273,6 +260,28 @@ class SpackPaths:
             return old_location
         else:
             return new_location
+
+    @property
+    def modules_base(self):
+        # This is similar to logic _fallback_old_location_if_used, but this
+        # moves the modules base if any component (typically one of lmod or
+        # tcl) has been relocated, so is examining one-layer deeper
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(os.path.join(self.data_home, module_dir)):
+                return self.data_home
+
+        new_default_is_occupied = False
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(self.default_data_home, module_dir):
+                new_default_is_occupied = True
+                break
+        if new_default_is_occupied:
+            return self.data_home
+
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(os.path.join(self.base.share_path, module_dir)):
+                return self.base.share_path
+        return self.data_home
 
 
 locations = SpackPaths(paths_base.locations)
