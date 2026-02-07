@@ -54,9 +54,12 @@ class SpackPaths:
         self._cache_home = None
 
         self.default_state_home, self.default_data_home, self.default_cache_home = (
-            os.path.join(os.path.expanduser("~"), x, "spack") for x in
-            [SpackPaths.relative_state_home, SpackPaths.relative_data_home,
-             SpackPaths.relative_cache_home]
+            os.path.join(os.path.expanduser("~"), x, "spack")
+            for x in [
+                SpackPaths.relative_state_home,
+                SpackPaths.relative_data_home,
+                SpackPaths.relative_cache_home,
+            ]
         )
 
         #: Not a location itself, but used for when Spack instances
@@ -151,7 +154,7 @@ class SpackPaths:
             self.base.old_gpg_path,
             os.path.join(self.data_home, "gpg"),
             os.path.join(self.default_data_home, "gpg"),
-            self._data_home_provenance
+            self._data_home_provenance,
         )
 
     @property
@@ -256,7 +259,9 @@ class SpackPaths:
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
-    def _fallback_old_location_if_used(self, old_location, new_location, default_new_location, provenance):
+    def _fallback_old_location_if_used(
+        self, old_location, new_location, default_new_location, provenance
+    ):
         if dir_is_occupied(new_location) or provenance.respectable():
             return new_location
         elif dir_is_occupied(default_new_location):

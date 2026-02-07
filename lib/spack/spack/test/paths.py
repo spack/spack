@@ -119,7 +119,9 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 
     # If there are spack installs in the new installs dir, it is
     # preferred over the old dir
-    new_default_installs_dir = _ensure_dir(pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs")
+    new_default_installs_dir = _ensure_dir(
+        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
+    )
     (pathlib.Path(new_default_installs_dir) / "afile").touch()
     assert p1.default_install_location == new_default_installs_dir
 
