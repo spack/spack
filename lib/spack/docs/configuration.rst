@@ -563,10 +563,10 @@ Older installs of spack placed these within ``$spack``, and fallback scheme in t
 
 * ``$default_install_root``: the location where installs go by default.
   Overridden by ``config:install_tree:root``.
-  Prefers ``$data_home/installs``, but if there are no installs there but there are installs in the old location within ``$spack``, then the old location will be used.
+  Prefers ``$data_home/installs``, but if there are no installs there but there are installs in the old location ``$spack/opt/spack``, then the old location will be used.
 * ``$default_envs_root``: the location where environments are managed by default.
   Overridden by ``config:environments_root``.
-  Prefers ``$data_home/envs`` but if there are no envs there and there are envs in the old location in ``$spack``, then the old location will be used.
+  Prefers ``$data_home/envs`` but if there are no envs there and there are envs in the old location ``$spack/var/spack/environments``, then the old location will be used.
 
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
