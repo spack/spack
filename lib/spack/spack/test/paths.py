@@ -19,9 +19,11 @@ def _ensure_dir(pathlike):
 
 
 @pytest.fixture(scope="module", autouse=True)
-def clear_xdg_vars():
+def clear_env_vars():
     saved = os.environ.copy()
     spack.paths_base._unset_xdg_vars(os.environ)
+    for x in ["SPACK_USER_CACHE_PATH", "SPACK_HOME", "SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME"]:
+        os.environ.pop(x, None)
     yield
     os.environ.update(saved)
 
@@ -189,8 +191,9 @@ def test_user_cache_path_is_overridable(working_env, tmp_path):
     # Now check that $SPACK_STATE_HOME takes precedence when both are set
     redirect2 = str(pathlib.Path(tmp_path) / "redirected_usr_cache2")
     os.environ["SPACK_STATE_HOME"] = redirect2
-    assert p1.user_cache_path == redirect2
-    assert p1.package_repos_path == str(pathlib.Path(redirect2) / "package_repos")
+    p2 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
+    assert p2.user_cache_path == redirect2
+    assert p2.package_repos_path == str(pathlib.Path(redirect2) / "package_repos")
 
 
 def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
@@ -234,7 +237,8 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     assert p1.gpg_path == str(old_gpg_dir)
 
 
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmp_path):
-    os.environ["SPACK_USER_CACHE_PATH"] = ""
+def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
+    homedir = _ensure_dir(tmp_path / "base-prefix")
+    set_home(homedir)
     p1 = SpackPaths(SpackPathsBase(str(tmp_path)))
-    assert os.path.expanduser(os.path.join("~", ".local", "state", "spack")) == p1.user_cache_path
+    assert str(pathlib.Path(homedir) / os.path.join(".local", "state", "spack")) == p1.user_cache_path
