@@ -116,13 +116,13 @@ class SpackPaths:
             self._data_home_provenance,
         )
 
-    def bypassed_old_installs_warning(self):
+    def bypassed_old_installs_warning(self, _show=True):
         if (
             self.default_install_location != self.base.old_install_path
             and dir_is_occupied(self.base.old_install_path)
             and not self._data_home_provenance.unilateral_override()
         ):
-            tty.warn(
+            msg = (
                 f"Detected installs in {self.base.old_install_path}; Spack's default"
                 " install path resolution mechanism is active and determined that"
                 f" {self.default_install_location} is where it should look for and"
@@ -130,14 +130,18 @@ class SpackPaths:
                 " config:install_tree:root, config:locations:home, config:locations:data,"
                 " SPACK_DATA_HOME, or SPACK_HOME"
             )
+            if _show:
+                tty.warn(msg)
+            return msg
+        return ""
 
-    def bypassed_old_envs_warning(self):
+    def bypassed_old_envs_warning(self, _show=True):
         if (
             self.default_envs_path != self.base.old_envs_path
             and dir_is_occupied(self.base.old_envs_path)
             and not self._data_home_provenance.unilateral_override()
         ):
-            tty.warn(
+            msg = (
                 f"Detected environments in {self.base.old_envs_path}; Spack's default"
                 " environment path resolution mechanism is active and determined that"
                 f" {self.default_envs_path} is where it should look for and"
@@ -145,6 +149,10 @@ class SpackPaths:
                 " config:install_tree:root, config:locations:home, config:locations:data,"
                 " SPACK_DATA_HOME, or SPACK_HOME"
             )
+            if _show:
+                tty.warn(msg)
+            return msg
+        return ""
 
     @property
     def default_envs_path(self):
