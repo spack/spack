@@ -27,7 +27,6 @@ from typing import (
 )
 
 import spack
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -62,7 +61,7 @@ from spack.util.path import substitute_path_variables
 
 from .list import SpecList, SpecListError, SpecListParser
 
-SpecPair = spack.concretize.SpecPair
+SpecPair = Tuple[Spec, Spec]
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -2681,6 +2680,8 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
+        import spack.concretize
+
         specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
         result = spack.concretize.concretize_together_when_possible(
             specs_to_concretize, tests=tests, factory=factory
@@ -2700,6 +2701,8 @@ class EnvironmentConcretizer:
         tests: Union[bool, Sequence] = False,
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
+        import spack.concretize
+
         to_concretize = self._user_spec_pairs(to_compute, to_keep)
         try:
             concrete_pairs = spack.concretize.concretize_together(
@@ -2737,6 +2740,8 @@ class EnvironmentConcretizer:
         factory: ReusableSpecsFactory,
     ) -> List[SpecPair]:
         """Concretization strategy that concretizes separately one user spec after the other"""
+        import spack.concretize
+
         to_concretize = [(x, None) for x in to_compute]
         concrete_pairs = spack.concretize.concretize_separately(
             to_concretize, tests=tests, factory=factory

@@ -36,6 +36,7 @@ def _concretize_specs_together(
         abstract_specs: abstract specs to be concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     from spack.solver.asp import Solver
 
@@ -59,6 +60,7 @@ def concretize_together(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     abstract_specs = [abstract for abstract, _ in spec_list]
@@ -82,6 +84,7 @@ def concretize_together_when_possible(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     from spack.solver.asp import Solver
 
@@ -131,6 +134,7 @@ def concretize_separately(
             already concrete spec or None if not yet concretized
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
+        factory: optional factory to produce a list of specs to be reused
     """
     from spack.bootstrap import (
         ensure_bootstrap_configuration,
