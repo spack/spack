@@ -37,9 +37,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="install prefix for spec (spec need not be installed)",
     )
     directories.add_argument(
-        "--install-root",
-        action="store_true",
-        help="where spack installs specs",
+        "--install-root", action="store_true", help="where spack installs specs"
     )
     directories.add_argument(
         "-p",
