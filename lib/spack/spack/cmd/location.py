@@ -11,6 +11,7 @@ import spack.environment as ev
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
+import spack.store
 from spack.cmd.common import arguments
 from spack.paths import locations as paths
 
@@ -34,6 +35,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--install-dir",
         action="store_true",
         help="install prefix for spec (spec need not be installed)",
+    )
+    directories.add_argument(
+        "--install-root",
+        action="store_true",
+        help="where spack installs specs",
     )
     directories.add_argument(
         "-p",
@@ -98,6 +104,10 @@ def location(parser, args):
 
     if args.spack_root:
         print(paths.prefix)
+        return
+
+    if args.install_root:
+        print(spack.store.STORE.root)
         return
 
     # no -e corresponds to False, -e without arg to None, -e name to the string name.
