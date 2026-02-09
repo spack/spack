@@ -280,7 +280,7 @@ class SpackPaths:
 
         new_default_is_occupied = False
         for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(self.default_data_home, module_dir):
+            if dir_is_occupied(os.path.join(self.data_home, module_dir)):
                 new_default_is_occupied = True
                 break
         if new_default_is_occupied:
