@@ -65,9 +65,6 @@ _active_environment: Optional["Environment"] = None
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = lambda: paths.default_envs_path
-
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -79,6 +76,18 @@ lockfile_name = "spack.lock"
 
 #: Name of the directory where environments store repos, logs, views, configs
 env_subdir_name = ".spack-env"
+
+
+#: default path where environments are stored in the spack tree
+_default_env_path = None
+
+
+def default_env_path():
+    global _default_env_path
+    if not _default_env_path:
+        _default_env_path = paths.default_envs_path
+        paths.bypassed_old_envs_warning()
+    return _default_env_path
 
 
 def env_root_path() -> str:

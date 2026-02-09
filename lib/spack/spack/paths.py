@@ -13,6 +13,7 @@ import pathlib
 from enum import Enum
 
 import spack.config as config
+import spack.llnl.util.tty as tty
 import spack.paths_base as paths_base
 import spack.util.hash as hash
 
@@ -114,6 +115,36 @@ class SpackPaths:
             os.path.join(self.default_data_home, "installs"),
             self._data_home_provenance,
         )
+
+    def bypassed_old_installs_warning(self):
+        if (
+            self.default_install_location != self.base.old_install_path
+            and dir_is_occupied(self.base.old_install_path)
+            and not self._data_home_provenance.unilateral_override()
+        ):
+            tty.warn(
+                f"Detected installs in {self.base.old_install_path}; Spack's default"
+                " install path resolution mechanism is active and determined that"
+                f" {self.default_install_location} is where it should look for and"
+                " place new installs. You can suppress this warning by setting"
+                " config:install_tree:root, config:locations:home, config:locations:data,"
+                " SPACK_DATA_HOME, or SPACK_HOME"
+            )
+
+    def bypassed_old_envs_warning(self):
+        if (
+            self.default_envs_path != self.base.old_envs_path
+            and dir_is_occupied(self.base.old_envs_path)
+            and not self._data_home_provenance.unilateral_override()
+        ):
+            tty.warn(
+                f"Detected environments in {self.base.old_envs_path}; Spack's default"
+                " environment path resolution mechanism is active and determined that"
+                f" {self.default_envs_path} is where it should look for and"
+                " place new environments. You can suppress this warning by setting"
+                " config:install_tree:root, config:locations:home, config:locations:data,"
+                " SPACK_DATA_HOME, or SPACK_HOME"
+            )
 
     @property
     def default_envs_path(self):
