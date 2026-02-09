@@ -22,7 +22,13 @@ def _ensure_dir(pathlike):
 def clear_env_vars():
     saved = os.environ.copy()
     spack.paths_base._unset_xdg_vars(os.environ)
-    for x in ["SPACK_USER_CACHE_PATH", "SPACK_HOME", "SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME"]:
+    for x in [
+        "SPACK_USER_CACHE_PATH",
+        "SPACK_HOME",
+        "SPACK_DATA_HOME",
+        "SPACK_STATE_HOME",
+        "SPACK_CACHE_HOME",
+    ]:
         os.environ.pop(x, None)
     yield
     os.environ.update(saved)
@@ -102,7 +108,10 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     )
     (pathlib.Path(new_default_installs_dir) / "afile").touch()
     assert p1.default_install_location == new_default_installs_dir
-    assert f"{new_default_installs_dir} is where it should look" in p1.bypassed_old_installs_warning(_show=False)
+    assert (
+        f"{new_default_installs_dir} is where it should look"
+        in p1.bypassed_old_installs_warning(_show=False)
+    )
 
     spack.config.set("config:locations", {})
 
@@ -114,7 +123,9 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     p4 = SpackPaths(paths_base_nonempty_old_install())
     xdg_installs_location = _ensure_dir(pathlib.Path(xdg_data_home) / "spack" / "installs")
     assert p4.default_install_location == str(xdg_installs_location)
-    assert f"{xdg_installs_location} is where it should look" in p4.bypassed_old_installs_warning(_show=False)
+    assert f"{xdg_installs_location} is where it should look" in p4.bypassed_old_installs_warning(
+        _show=False
+    )
 
     # (sanity) XDG_DATA_HOME still overrides when there is something in it
     (pathlib.Path(xdg_installs_location) / "afile").touch()
@@ -241,4 +252,6 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
     homedir = _ensure_dir(tmp_path / "base-prefix")
     set_home(homedir)
     p1 = SpackPaths(SpackPathsBase(str(tmp_path)))
-    assert str(pathlib.Path(homedir) / os.path.join(".local", "state", "spack")) == p1.user_cache_path
+    assert (
+        str(pathlib.Path(homedir) / os.path.join(".local", "state", "spack")) == p1.user_cache_path
+    )
