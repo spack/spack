@@ -302,6 +302,7 @@ class SpackPaths:
                 return os.environ[parent_env_var], Provenance.PARENT_SETTING
 
         for check in [
+            parent_env_check,
             spack_env_check,
             spack_home_env_check,
             cfg_check,
