@@ -598,6 +598,8 @@ def test_016_roundtrip_spliced_spec(mutable_database):
     spec = build_spec.splice(replacement)
 
     spack.store.STORE.db.add(spec)
+    spack.store.STORE.db._state_is_inconsistent = True  # force re-read
+
     _, spec_record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
     _, buildspec_record = spack.store.STORE.db.query_by_spec_hash(spec.build_spec.dag_hash())
 
