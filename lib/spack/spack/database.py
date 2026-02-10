@@ -16,6 +16,7 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
+
 import contextlib
 import datetime
 import os
@@ -768,8 +769,9 @@ class Database:
         if "build_spec" in spec_node_dict:
             assert spec_reader.SPEC_VERSION >= 2, "SpecfileV1 spec cannot have build_spec"
             _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
-            build_spec = self.query_by_spec_hash(bhash, data=data)
-            spec._build_spec = build_spec
+            _, build_spec = self.query_by_spec_hash(bhash, data=data)
+            assert build_spec is not None, f"build_spec with hash {bhash} not found in database"
+            spec._build_spec = build_spec.spec
 
     def _assign_dependencies(
         self,
