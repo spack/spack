@@ -100,7 +100,11 @@ class SpackPaths:
     def cache_home(self):
         if not self._cache_home:
             self._cache_home, self._cache_home_provenance = self.resolve_a_home(
-                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", SpackPaths.relative_cache_home, _cache_home_parent
+                "SPACK_CACHE_HOME",
+                "XDG_CACHE_HOME",
+                "cache",
+                SpackPaths.relative_cache_home,
+                _cache_home_parent,
             )
         return self._cache_home
 
@@ -108,7 +112,11 @@ class SpackPaths:
     def data_home(self):
         if not self._data_home:
             self._data_home, self._data_home_provenance = self.resolve_a_home(
-                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", SpackPaths.relative_data_home, _data_home_parent
+                "SPACK_DATA_HOME",
+                "XDG_DATA_HOME",
+                "data",
+                SpackPaths.relative_data_home,
+                _data_home_parent,
             )
         return self._data_home
 
