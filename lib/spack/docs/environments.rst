@@ -925,6 +925,83 @@ For example, the following environment has three root packages: ``gcc@8.1.0``, `
 
 This allows for a much-needed reduction in redundancy between packages and constraints.
 
+.. _environment-spec-groups:
+
+Spec Groups
+^^^^^^^^^^^
+
+.. versionadded:: 1.2
+
+Environments can be organized with named spec groups, enabling you to apply localized configuration overrides and establish concretization dependencies.
+This is extremely useful in a couple of common scenarios, as detailed below.
+
+.. _environment-spec-groups-bootstrapping-compiler:
+
+Building and using a compiler in a single environment
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+A common use case is to build a recent compiler on top of an existing system and then compile a stack of software with it.
+For instance, assume we are interested in building ``hdf5`` and ``libtree`` with ``gcc@15.2``.
+The following manifest file would do exactly that:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - group: compiler
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5 %gcc@15.2
+       - libtree %gcc@15.2
+
+The ``group:`` attribute allows to name a group of specs, which are then listed under the ``specs:`` attribute in the same object.
+The simplest example is the ``compiler`` group composed of just the ``gcc@15.2`` spec.
+
+To express dependencies among groups of specs the ``needs:`` attribute is used, which is a list of names corresponding to the groups we depend on.
+The way this works is that group dependencies are always concretized *before* the current group, and their specs are *always* available for reuse when the current group is concretized.
+
+.. _environment-spec-groups-configuring-groups:
+
+Configuring a group of specs
+""""""""""""""""""""""""""""
+
+Another common scenario is the deployment of different configurations (e.g. CUDA enabled vs.
+ROCm enabled) of the same set of software.
+As an example, assume we want to install ``gromacs`` and ``quantum-espresso`` for both ``target=x86_64_v3`` and ``target=x86_64_v4``.
+That can be done with the following manifest file:
+
+.. code-block:: yaml
+
+   spack:
+     - group: apps-x86_64_v3
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v3
+
+     - group: apps-x86_64_v4
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v4
+
+The ``override:`` attribute allows us to override the configuration for a single group of specs.
+The overridden part is always added as the *topmost* scope when the current group is concretized.
+This ensures the override always takes precedence over other sources of configuration.
+
+
 Modifying Environment Variables
 -------------------------------
 
@@ -1085,6 +1162,42 @@ Given the example above, the spec ``zlib@1.2.8`` will be linked into ``/my/view/
 
 If the keyword ``all`` does not appear in the projections configuration file, any spec that does not satisfy any entry in the file will be linked into the root of the view as in a single-prefix view.
 Any entries that appear below the keyword ``all`` in the projections configuration file will not be used, as all specs will use the projection under ``all`` before reaching those entries.
+
+Group of Specs
+""""""""""""""
+
+Views can also be applied to a selected list of :ref:`spec groups <environment-spec-matrices>`.
+This can be done by specifying the ``group:`` attribute in the view configuration.
+For instance, with the following manifest:
+
+.. code-block:: yaml
+
+   spack:
+     concretizer:
+       unify: true
+
+     packages:
+       all:
+         require:
+         - target=x86_64_v4
+
+     specs:
+     - group: compiler
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5~mpi %gcc@15.2
+       - libtree %gcc@15.2
+
+     view:
+       apps:
+         root: ./views/apps
+         group: apps
+
+The view will only contain entries from the ``apps`` group, and will not include specs from the ``compiler`` group.
 
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
