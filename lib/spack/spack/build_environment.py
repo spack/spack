@@ -71,6 +71,7 @@ import spack.error
 import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
+import spack.paths
 import spack.paths_base
 import spack.platforms
 import spack.schema.environment
@@ -1403,7 +1404,8 @@ def start_build_process(
             pkg=pkg,
         )
 
-        p.start()
+        with spack.paths.locations.subprocess_override():
+            p.start()
 
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p

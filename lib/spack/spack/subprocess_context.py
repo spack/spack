@@ -20,6 +20,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Optional
 
 import spack.config
+import spack.paths
 import spack.paths_base
 import spack.platforms
 import spack.repo
@@ -55,9 +56,12 @@ class SpackTestProcess:
         test_state.restore()
         fn()
 
-    def create(self):
+    def create_and_start(self):
         test_state = GlobalStateMarshaler()
-        return multiprocessing.Process(target=self._restore_and_run, args=(self.fn, test_state))
+        p = multiprocessing.Process(target=self._restore_and_run, args=(self.fn, test_state))
+        with spack.paths.locations.subprocess_override():
+            p.start()
+        return p
 
 
 class PackageInstallContext:
