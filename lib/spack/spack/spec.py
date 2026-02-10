@@ -5423,6 +5423,8 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
 
 
 class SpecfileReaderBase:
+    SPEC_VERSION: int
+
     @classmethod
     def from_node_dict(cls, node):
         spec = Spec()
@@ -5563,6 +5565,10 @@ class SpecfileReaderBase:
                 node_spec._build_spec = hash_dict[bhash]["node_spec"]
 
         return hash_dict[root_spec_hash]["node_spec"]
+
+    @classmethod
+    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+        raise NotImplementedError("Subclasses must implement this method.")
 
     @classmethod
     def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):

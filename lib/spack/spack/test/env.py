@@ -70,9 +70,10 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     read_in = ev.Environment(env_path)
 
     # Ensure read hashes are used (rewritten hash seen on read)
-    assert read_in.concretized_order
-    assert read_in.concretized_order[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[read_in.concretized_order[0]]._hash  # type: ignore[attr-defined]
+    hashes = [x.hash for x in read_in.concretized_roots]
+    assert hashes
+    assert hashes[0] in read_in.specs_by_hash
+    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
     assert _hash == new_hash
 
 

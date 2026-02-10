@@ -977,6 +977,17 @@ class ConcretizedRootInfo:
     def __str__(self):
         return f"{self.root} -> {self.hash} [new={self.new}]"
 
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, ConcretizedRootInfo)
+            and self.root == other.root
+            and self.hash == other.hash
+            and self.new == other.new
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.root, self.hash, self.new))
+
 
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
@@ -1159,30 +1170,6 @@ class Environment:
         self.spec_lists[user_speclist_name] = self._spec_lists_parser.parse_user_specs(
             name=user_speclist_name, yaml_list=spec_list
         )
-
-    def all_concretized_user_specs(self) -> List[Spec]:
-        """Returns all of the concretized user specs of the environment and
-        its included environment(s)."""
-        concretized_user_specs = self.concretized_user_specs
-        for included_specs in self.included_concretized_user_specs.values():
-            for included in included_specs:
-                # Don't duplicate included spec(s)
-                if included not in concretized_user_specs:
-                    concretized_user_specs.append(included)
-
-        return concretized_user_specs
-
-    def all_concretized_orders(self) -> List[str]:
-        """Returns all of the concretized order of the environment and
-        its included environment(s)."""
-        concretized_order = [x.hash for x in self.concretized_roots]
-        for included_concretized_order in self.included_concretized_order.values():
-            for included in included_concretized_order:
-                # Don't duplicate included spec(s)
-                if included not in concretized_order:
-                    concretized_order.append(included)
-
-        return concretized_order
 
     @property
     def user_specs(self):
@@ -1789,14 +1776,6 @@ class Environment:
         self.concretized_roots.append(ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new))
         self.specs_by_hash[h] = concrete
 
-    @property
-    def concretized_order(self) -> List[str]:
-        return [x.hash for x in self.concretized_roots]
-
-    @property
-    def concretized_user_specs(self) -> List[Spec]:
-        return [x.root for x in self.concretized_roots]
-
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""
         changed_dev_specs = [
@@ -1828,22 +1807,8 @@ class Environment:
         installer, and those that should be, taking into account development
         specs. This is done in a single read transaction per environment instead
         of per spec."""
-        installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.all_concretized_orders():
-                if concretized_hash in self.specs_by_hash:
-                    spec = self.specs_by_hash[concretized_hash]
-                else:
-                    for env_path in self.included_specs_by_hash.keys():
-                        if concretized_hash in self.included_specs_by_hash[env_path]:
-                            spec = self.included_specs_by_hash[env_path][concretized_hash]
-                            break
-                if not spec.installed or (
-                    spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
-                ):
-                    uninstalled.append(spec)
-                else:
-                    installed.append(spec)
+            uninstalled, installed = stable_partition(self.concrete_roots(), _is_uninstalled)
         return installed, uninstalled
 
     def uninstalled_specs(self):
@@ -1942,14 +1907,19 @@ class Environment:
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
-        for s, h in zip(self.all_concretized_user_specs(), self.all_concretized_orders()):
-            if h in self.specs_by_hash:
-                yield (s, self.specs_by_hash[h])
-            else:
-                for env_path in self.included_specs_by_hash.keys():
-                    if h in self.included_specs_by_hash[env_path]:
-                        yield (s, self.included_specs_by_hash[env_path][h])
-                        break
+        for x in self.concretized_roots:
+            yield x.root, self.specs_by_hash[x.hash]
+
+        seen = {(x.root, x.hash) for x in self.concretized_roots}
+        for included_env in self.included_concretized_user_specs:
+            for s, h in zip(
+                self.included_concretized_user_specs[included_env],
+                self.included_concretized_order[included_env],
+            ):
+                if (s, h) in seen:
+                    continue
+                seen.add((s, h))
+                yield s, self.included_specs_by_hash[included_env][h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -2071,22 +2041,6 @@ class Environment:
             for d in c.traverse():
                 if d not in needed:
                     yield d
-
-    def _get_environment_specs(self, recurse_dependencies=True):
-        """Returns the specs of all the packages in an environment.
-
-        If these specs appear under different user_specs, only one copy
-        is added to the list returned.
-        """
-        specs = [self.specs_by_hash[h] for h in self.all_concretized_orders()]
-        if recurse_dependencies:
-            specs.extend(
-                traverse.traverse_nodes(
-                    specs, root=False, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-            )
-
-        return specs
 
     def _concrete_specs_dict(self):
         concrete_specs = {}
@@ -2408,6 +2362,10 @@ class Environment:
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def _is_uninstalled(spec):
+    return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
 
 
 class EnvironmentConcretizer:

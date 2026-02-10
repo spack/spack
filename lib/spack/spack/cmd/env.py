@@ -28,6 +28,7 @@ from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.traverse import traverse_nodes
 from spack.util.environment import EnvironmentModifications
 
 description = "manage environments"
@@ -870,8 +871,10 @@ def env_loads(args):
 
     loads_file = fs.join_path(env.path, "loads")
     with open(loads_file, "w", encoding="utf-8") as f:
-        specs = env._get_environment_specs(recurse_dependencies=recurse_dependencies)
-
+        if not recurse_dependencies:
+            specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots]
+        else:
+            specs = list(traverse_nodes(env.concrete_roots(), deptype=("link", "run")))
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")

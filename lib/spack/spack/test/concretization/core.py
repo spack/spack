@@ -4828,6 +4828,27 @@ def test_activating_variant_for_conditional_language_dependency(default_mock_con
     assert s.satisfies("+fortran")
 
 
+def test_when_condition_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+    """If a when condition contains a direct dependency on a provider of a virtual, it should only
+    trigger if the provider is used for that current package, and not if the provider happens to be
+    a dependency, without its virtual being depended on."""
+    s = default_mock_concretization("direct-dep-virtuals-one")
+    assert s.satisfies("%netlib-blas")
+    assert s["direct-dep-virtuals-two"].satisfies("%blas=netlib-blas")
+
+
+def test_conflict_with_direct_dependency_on_virtual_provider(default_mock_concretization):
+    """Test that conflicts on virtual providers as direct dependencies work"""
+    s = default_mock_concretization("conflict-virtual")
+    assert s.satisfies("%blas=netlib-blas")
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("conflict-virtual +conflict_direct")
+
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("conflict-virtual +conflict_transitive")
+
+
 def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     """Tests that imposed dependencies triggered by identical conditions are grouped together,
     and that imposed dependencies that differ on a deptype are not grouped together."""

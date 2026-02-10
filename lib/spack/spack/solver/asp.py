@@ -2317,15 +2317,18 @@ class SpackSolverSetup:
             if spec.external:
                 clauses.append(fn.attr("external", name))
 
+        # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
+        # since dependents can point to specs out of scope for the solver.
         edges = spec.edges_from_dependents()
-        virtuals = sorted(
-            {x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])}
-        )
         if not body and not spec.concrete:
+            virtuals = sorted(set(itertools.chain.from_iterable(edge.virtuals for edge in edges)))
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))
         else:
+            # direct dependencies are handled under `edges_to_dependencies()`
+            virtual_iter = (edge.virtuals for edge in edges if not edge.direct)
+            virtuals = sorted(set(itertools.chain.from_iterable(virtual_iter)))
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
 
@@ -2424,6 +2427,9 @@ class SpackSolverSetup:
                 ###
                 for dependency_type in dt.flag_to_tuple(dspec.depflag):
                     edge_clauses.append(fn.attr("depends_on", name, dep.name, dependency_type))
+
+                for virtual in dspec.virtuals:
+                    dependency_clauses.append(fn.attr("virtual_on_edge", name, dep.name, virtual))
 
                 # By default, wrap head of rules, unless the context says otherwise
                 wrap_node_requirement = body is False
