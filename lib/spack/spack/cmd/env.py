@@ -385,6 +385,7 @@ def env_activate(args):
         active_env, shell=args.shell
     )
 
+    active_env.manifest.prepare_config_scope()
     shell_script.update_env_activate_script(active_env, env_prompt, view)
 
     ev.activate(active_env, prompt=env_prompt, view=view)
