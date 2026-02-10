@@ -5301,6 +5301,8 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
 
 
 class SpecfileReaderBase:
+    SPEC_VERSION: int
+
     @classmethod
     def from_node_dict(cls, node):
         spec = Spec()
