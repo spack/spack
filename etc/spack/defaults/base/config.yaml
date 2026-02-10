@@ -91,7 +91,8 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $state_home/$spack_instance_id/cache
+  # TODO: see note in paths.py - default_misc_cache_path
+  misc_cache: $state_home/cache
 
 
   # Abort downloads after this many seconds if not data is received.
