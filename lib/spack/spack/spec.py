@@ -5445,6 +5445,10 @@ class SpecfileReaderBase:
         return hash_dict[root_spec_hash]["node_spec"]
 
     @classmethod
+    def extract_build_spec_info_from_node_dict(cls, node, hash_type=ht.dag_hash.name):
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    @classmethod
     def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
         raise NotImplementedError("Subclasses must implement this method.")
 
