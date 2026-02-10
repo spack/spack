@@ -11,14 +11,12 @@ import spack.llnl.util.filesystem
 
 
 class XDG_vars(Enum):
-    config_home = "XDG_CONFIG_HOME"
     state_home = "XDG_STATE_HOME"
     data_home = "XDG_DATA_HOME"
     cache_home = "XDG_CACHE_HOME"
 
 
 class XDG_overrides(Enum):
-    config_home = "SPACK_CONFIG_HOME"
     state_home = "SPACK_STATE_HOME"
     data_home = "SPACK_DATA_HOME"
     cache_home = "SPACK_CACHE_HOME"
