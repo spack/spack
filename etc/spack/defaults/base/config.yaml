@@ -86,7 +86,7 @@ config:
   # * Prefer $data_home/envs
   # * The old location for envs is $spack/var/spack/environments: Spack will
   #   use this old location if the new location is empty and the old one isn't
-  # environments_root: $default_envs_root
+  environments_root: $default_envs_root
 
 
   # Cache directory for miscellaneous files, like the package index.
