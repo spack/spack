@@ -99,7 +99,7 @@ concretizer:
   # Feature is experimental: enabling may result in potentially invalid concretizations
   # if package recipes are changed, see: https://github.com/spack/spack/issues/51553
   concretization_cache:
-    enable: false
+    enable: true
 
   # Options to control the behavior of the concretizer with external specs
   externals:
