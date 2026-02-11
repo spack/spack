@@ -122,6 +122,9 @@ class SpecFilter:
 def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     # TODO (compiler as nodes): this function contains specific names from builtin, and should
     # be made more general
+    if spec.original_spec_format() >= 5:
+        return True
+
     if "gcc" in spec and "gcc-runtime" not in spec:
         return False
 
