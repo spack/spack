@@ -327,7 +327,7 @@ def weights_from_result(result: Result, *, name: str) -> Dict[str, int]:
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 class TestConcretize:
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -3264,7 +3264,7 @@ def test_concretization_version_order():
         ),
     ],
 )
-@pytest.mark.usefixtures("mutable_database", "mock_store", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("mutable_database", "mock_store")
 @pytest.mark.not_on_windows("Expected length is different on Windows")
 def test_filtering_reused_specs(
     roots, reuse_yaml, expected, not_expected, expected_length, mutable_config
@@ -3309,9 +3309,7 @@ def test_filtering_reused_specs(
     ],
 )
 @pytest.mark.not_on_windows("Expected length is different on Windows")
-def test_selecting_reused_sources(
-    reuse_yaml, expected_length, mutable_config, do_not_check_runtimes_on_reuse
-):
+def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
@@ -3350,7 +3348,7 @@ def test_spec_filters(specs, include, exclude, expected):
 
 
 @pytest.mark.regression("38484")
-def test_git_ref_version_can_be_reused(install_mockery, do_not_check_runtimes_on_reuse):
+def test_git_ref_version_can_be_reused(install_mockery):
     first_spec = spack.concretize.concretize_one(
         spack.spec.Spec("git-ref-package@git.2.1.5=2.1.5~opt")
     )
@@ -3371,9 +3369,7 @@ def test_git_ref_version_can_be_reused(install_mockery, do_not_check_runtimes_on
 
 
 @pytest.mark.parametrize("standard_version", ["2.0.0", "2.1.5", "2.1.6"])
-def test_reuse_prefers_standard_over_git_versions(
-    standard_version, install_mockery, do_not_check_runtimes_on_reuse
-):
+def test_reuse_prefers_standard_over_git_versions(standard_version, install_mockery):
     """
     order matters in this test. typically reuse would pick the highest versioned installed match
     but we want to prefer the standard version over git ref based versions
@@ -3419,7 +3415,7 @@ def test_parallel_concretization(mutable_config, mock_packages):
     assert {s.name for s, _ in result} == {"pkg-a", "pkg-b"}
 
 
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 @pytest.mark.parametrize(
     "spec_str, error_type",
     [
@@ -3439,7 +3435,7 @@ def test_spec_containing_commit_variant(spec_str, error_type):
             spack.concretize.concretize_one(spec)
 
 
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 @pytest.mark.parametrize(
     "spec_str",
     [
@@ -3459,7 +3455,7 @@ def test_spec_with_commit_interacts_with_lookup(mock_git_version_info, monkeypat
     spack.concretize.concretize_one(spec)
 
 
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 @pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
 def test_relationship_git_versions_and_commit_variant(version_str):
     """
@@ -3474,7 +3470,7 @@ def test_relationship_git_versions_and_commit_variant(version_str):
         assert "commit" not in spec.variants
 
 
-@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("install_mockery")
 def test_abstract_commit_spec_reuse():
     commit = "abcd" * 10
     spec_str_1 = f"git-ref-package@develop commit={commit}"
@@ -3487,7 +3483,7 @@ def test_abstract_commit_spec_reuse():
         assert spec2.dag_hash() == spec1.dag_hash()
 
 
-@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.usefixtures("install_mockery")
 @pytest.mark.parametrize(
     "installed_commit, incoming_commit, reusable",
     [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
@@ -3703,7 +3699,7 @@ def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
 
 @pytest.mark.regression("49847")
 @pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
-def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runtimes_on_reuse):
+def test_reuse_when_input_specifies_build_dep(install_mockery):
     """Test that we can reuse a spec when specifying build dependencies in the input"""
     pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
     PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
@@ -3721,9 +3717,7 @@ def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runt
 
 
 @pytest.mark.regression("49847")
-def test_reuse_when_requiring_build_dep(
-    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
-):
+def test_reuse_when_requiring_build_dep(install_mockery, mutable_config):
     """Test that we can reuse a spec when specifying build dependencies in requirements"""
     mutable_config.set("packages:all:require", "%gcc")
     pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9"))
@@ -3810,9 +3804,7 @@ packages:
 
 
 @pytest.mark.regression("50161")
-def test_installed_compiler_and_better_external(
-    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
-):
+def test_installed_compiler_and_better_external(install_mockery, mutable_config):
     """Tests that we always prefer a higher-priority external compiler, when we have a
     lower-priority compiler installed, and we try to concretize a spec without specifying
     the compiler dependency.

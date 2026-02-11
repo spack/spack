@@ -32,7 +32,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
-def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
+def test_spec_concretizer_args(mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
     It's here to make sure that everything works from CLI
