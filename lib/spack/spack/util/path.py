@@ -75,6 +75,7 @@ def replacements():
         "data_home": lambda: paths.data_home,
         "cache_home": lambda: paths.cache_home,
         "state_home": lambda: paths.state_home,
+        "spack_home": lambda: paths.spack_home,
         "spack_instance_id": lambda: paths.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,

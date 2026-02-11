@@ -121,6 +121,19 @@ class SpackPaths:
         return self._data_home
 
     @property
+    def spack_home(self):
+        disable_env = config.get("config:locations:disable_env", False)
+        spack_home_env = os.environ.get("SPACK_HOME", None)
+        if not disable_env and spack_home_env:
+            return spack_home_env
+
+        spack_home_cfg = config.get("config:locations:home", None)
+        if spack_home_cfg:
+            return spack_home_cfg
+
+        return os.path.expanduser("~")
+
+    @property
     def user_cache_path(self):
         return self.state_home
 
