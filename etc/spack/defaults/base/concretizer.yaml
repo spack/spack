@@ -82,7 +82,7 @@ concretizer:
     explicit: []
     automatic: false
   # Maximum time, in seconds, allowed for the 'solve' phase. If set to 0, there is no time limit.
-  timeout: 0
+  timeout: 600
   # If set to true, exceeding the timeout will always result in a concretization error. If false,
   # the best (suboptimal) model computed before the timeout is used.
   #
