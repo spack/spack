@@ -205,7 +205,9 @@ def create_external_parser(
     return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
-SpecFiltersFactory = Callable[[Callable[[spack.spec.Spec], bool]], List[SpecFilter]]
+SpecFiltersFactory = Callable[
+    [Callable[[spack.spec.Spec], bool], spack.config.Configuration], List[SpecFilter]
+]
 
 
 class ReusableSpecsSelector:
@@ -232,7 +234,7 @@ class ReusableSpecsSelector:
             is_reusable = functools.partial(
                 _is_reusable, packages_with_externals=packages_with_externals, local=True
             )
-            self.reuse_sources.extend(factory(is_reusable))
+            self.reuse_sources.extend(factory(is_reusable, configuration))
 
         if not isinstance(reuse_yaml, Mapping):
             self.reuse_sources.append(

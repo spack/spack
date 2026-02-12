@@ -2487,7 +2487,9 @@ class ReusableSpecsFactory:
         self.env = env
         self.group = group
 
-    def __call__(self, is_usable: Callable[[Spec], bool]) -> List[SpecFilter]:
+    def __call__(
+        self, is_usable: Callable[[Spec], bool], configuration: spack.config.Configuration
+    ) -> List[SpecFilter]:
         result = []
         # Specs from group dependencies _must_ be reused, regardless of configuration
         dependencies = self.env.manifest.needs(group=self.group)
@@ -2505,7 +2507,7 @@ class ReusableSpecsFactory:
             )
 
         # Included environments and _this_ group, instead, are subject to configuration
-        concretizer_yaml = spack.config.CONFIG.get_config("concretizer")
+        concretizer_yaml = configuration.get_config("concretizer")
         reuse_yaml = concretizer_yaml.get("reuse", False)
 
         # With no reuse don't account for previously concretized specs in _this_ group
