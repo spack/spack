@@ -96,7 +96,7 @@ def spec(parser, args):
     if args.specs:
         concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True)
     elif env:
-        spack.concretize.EnvironmentConcretizer(env).concretize()
+        spack.concretize.concretize_environment(env)
         concrete_specs = env.concrete_roots()
     else:
         tty.die("spack spec requires at least one spec or an active environment")

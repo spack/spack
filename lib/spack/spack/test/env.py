@@ -15,7 +15,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
@@ -57,7 +57,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     # add a spec with a rewritten build hash
     spec = spack.spec.Spec("mpileaks")
     env.add(spec)
-    EnvironmentConcretizer(env).concretize()
+    concretize_environment(env)
 
     # rewrite the hash
     old_hash, new_hash = env.concretized_roots[0].hash, "abc"
@@ -115,7 +115,7 @@ def test_env_change_spec_in_definition(tmp_path: pathlib.Path, mutable_mock_env_
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     e.write()
 
     assert any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
@@ -138,7 +138,7 @@ def test_env_change_spec_in_matrix_raises_error(tmp_path: pathlib.Path, mutable_
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(_test_matrix_yaml)
     e = ev.create("test", manifest_file)
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     e.write()
 
     with pytest.raises(ev.SpackEnvironmentError) as error:
@@ -605,9 +605,9 @@ spack:
     with ev.Environment(manifest.parent) as e:
         if expected_raise:
             with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
-                EnvironmentConcretizer(e).concretize()
+                concretize_environment(e)
         else:
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
             assert any(s.satisfies(expected_spec) for s in e.concrete_roots())
 
 
@@ -638,7 +638,7 @@ def test_requires_on_virtual_and_potential_providers(
     """
     )
     with ev.Environment(manifest.parent) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert e.matching_spec(possible_mpi_spec)
         assert e.matching_spec("mpich2")
 
@@ -729,7 +729,7 @@ def test_variant_propagation_with_unify_false(tmp_path: pathlib.Path, config):
     """
     )
     with ev.Environment(tmp_path) as env:
-        EnvironmentConcretizer(env).concretize()
+        concretize_environment(env)
 
     root = env.matching_spec("parent-foo")
     for node in root.traverse():
@@ -767,7 +767,7 @@ def test_env_with_include_defs(mutable_mock_env_path):
 
     e = ev.Environment(env_path)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
 
 def test_env_with_include_def_missing(mutable_mock_env_path):
@@ -821,7 +821,7 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
     assert len(e.concretized_roots) == 0
 
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert len(e.user_specs) == 3
         assert len(e.concretized_roots) == 3
         assert all(x.new for x in e.concretized_roots)
@@ -831,7 +831,7 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
         assert len(e.concretized_roots) == 2
         assert all(x.new for x in e.concretized_roots)
 
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert len(e.user_specs) == 3
         assert len(e.concretized_roots) == 3
         assert all(x.new for x in e.concretized_roots)
@@ -860,7 +860,7 @@ def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     )
     e = ev.Environment(mutable_mock_env_path)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     bowtie = [x for x in e.concrete_roots() if x.name == "bowtie"][0]
     gcc = [x for x in e.concrete_roots() if x.name == "gcc"][0]
@@ -875,7 +875,7 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     view_dir.mkdir()
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
-    EnvironmentConcretizer(env).concretize()
+    concretize_environment(env)
     env.install_all(fake=True)
     env.regenerate_views()
     assert view_dir.is_symlink()
@@ -888,7 +888,7 @@ def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, tempor
     (view_dir / "file").write_text("")
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
-    EnvironmentConcretizer(env).concretize()
+    concretize_environment(env)
     env.install_all(fake=True)
     with pytest.raises(ev.SpackEnvironmentError, match="because it is a non-empty dir"):
         env.regenerate_views()
@@ -921,7 +921,7 @@ spack:
     # Here we raise different exceptions depending on whether we solve serially or not
     with pytest.raises(Exception):
         with ev.Environment(tmp_path) as e:
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
 
 
 def test_only_roots_are_explicitly_installed(tmp_path: pathlib.Path, config, temporary_store):
@@ -929,7 +929,7 @@ def test_only_roots_are_explicitly_installed(tmp_path: pathlib.Path, config, tem
     as implicitly installed. What makes installs explicit is that they are root of the env."""
     env = ev.create_in_dir(tmp_path)
     env.add("mpileaks")
-    EnvironmentConcretizer(env).concretize()
+    concretize_environment(env)
     mpileaks = env.concrete_roots()[0]
     callpath = mpileaks["callpath"]
     env.install_specs([callpath], fake=True)
@@ -1025,7 +1025,7 @@ spack:
 """
     )
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         mpileaks = e.concrete_roots()[0]
 
     assert not mpileaks.satisfies("%gcc") and mpileaks.satisfies("%clang")
@@ -1090,7 +1090,7 @@ def test_toolchain_definitions_are_allowed(
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         mpileaks = e.concrete_roots()[0]
 
     for c in expected:
@@ -1130,7 +1130,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     expected = [
@@ -1179,7 +1179,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     mpileaks_gcc = [s for s in roots if s.satisfies("mpileaks %[virtuals=c] gcc")][0]
@@ -1216,7 +1216,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     mpileaks = [s for s in roots if s.satisfies("mpileaks")][0]
@@ -1252,7 +1252,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     dt = [s for s in roots if s.satisfies("dt-diamond-right")][0]
@@ -1277,7 +1277,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     mpileaks = [s for s in roots if s.satisfies("mpileaks")][0]
@@ -1309,7 +1309,7 @@ spack:
 """
     )
     with ev.Environment(base) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         # We need the spack.lock for reuse in the derived environment
         e.write(regenerate=False)
         base_pkga = e.concrete_roots()[0]
@@ -1331,7 +1331,7 @@ spack:
 """
     )
     with ev.Environment(derived) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         derived_pkga = e.concrete_roots()[0]
 
     assert base_pkga.dag_hash() == derived_pkga.dag_hash()
@@ -1394,7 +1394,7 @@ def test_dependency_propagation_in_environments(spack_yaml, tmp_path, mutable_co
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         roots = e.concrete_roots()
 
     mpileaks_gcc = [s for s in roots if s.satisfies("mpileaks %c=gcc")][0]
@@ -1489,7 +1489,7 @@ def test_double_percent_semantics(spack_yaml, exception_nodes, tmp_path, mutable
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         trilinos = e.concrete_roots()[0]
 
     runtime_nodes = [
@@ -1525,7 +1525,7 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="failed to concretize"):
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
 
 
 @pytest.mark.parametrize(
@@ -1566,12 +1566,12 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         no_static_analysis = {x.dag_hash() for x in e.concrete_roots()}
 
     mutable_config.set("concretizer:static_analysis", True)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         static_analysis = {x.dag_hash() for x in e.concrete_roots()}
 
     assert no_static_analysis == static_analysis
@@ -1640,7 +1640,7 @@ spack:
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         mpileaks = e.concrete_roots()[0]
 
     for node in mpileaks.traverse():

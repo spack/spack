@@ -30,7 +30,7 @@ from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.error import SpackError
 from spack.llnl.util.filesystem import mkdirp, working_dir
 from spack.schema.database_index import schema as db_idx_schema
@@ -540,7 +540,7 @@ spack:
         )
 
     with ev.Environment(env_dir) as env:
-        EnvironmentConcretizer(env).concretize()
+        concretize_environment(env)
         env.write()
 
     shutil.copy(env_dir / "spack.yaml", tmp_path / "spack.yaml")
@@ -741,7 +741,7 @@ spack:
     with working_dir(tmp_path):
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as env:
-            EnvironmentConcretizer(env).concretize()
+            concretize_environment(env)
 
             # Create environment variables as gitlab would do it
             os.environ.update(
@@ -813,7 +813,7 @@ spack:
             )
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as current_env:
-            EnvironmentConcretizer(current_env).concretize()
+            concretize_environment(current_env)
             install_cmd("--keep-stage")
 
             concrete_spec = list(current_env.roots())[0]
@@ -1153,7 +1153,7 @@ spack:
     #          -> mpich
     env_hashes = {}
     with ev.read("test") as active_env:
-        EnvironmentConcretizer(active_env).concretize()
+        concretize_environment(active_env)
         for s in active_env.all_specs():
             env_hashes[s.name] = s.dag_hash()
 
@@ -1370,7 +1370,7 @@ spack:
         )
 
     with working_dir(tmp_path), ev.Environment(".") as env:
-        EnvironmentConcretizer(env).concretize()
+        concretize_environment(env)
         env.write()
 
     def fake_download_and_extract_artifacts(url, work_dir, merge_commit_test=True):
@@ -1886,7 +1886,7 @@ spack:
         manifest_data = json.load(fd)
 
     with ev.read("test") as active_env:
-        EnvironmentConcretizer(active_env).concretize()
+        concretize_environment(active_env)
         for s in active_env.all_specs():
             assert s.dag_hash() in manifest_data
 

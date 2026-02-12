@@ -475,7 +475,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             line.
     """
     with env.write_transaction():
-        spack.concretize.EnvironmentConcretizer(env).concretize()
+        spack.concretize.concretize_environment(env)
         env.write()
 
     options = collect_pipeline_options(env, args)

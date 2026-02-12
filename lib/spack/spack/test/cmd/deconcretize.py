@@ -5,7 +5,7 @@
 import pytest
 
 import spack.environment as ev
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.main import SpackCommand, SpackCommandError
 
 deconcretize = SpackCommand("deconcretize")
@@ -17,7 +17,7 @@ def test_env(mutable_mock_env_path, mock_packages):
     with ev.read("test") as e:
         e.add("pkg-a@2.0 foobar=bar ^pkg-b@1.0")
         e.add("pkg-a@1.0 foobar=bar ^pkg-b@0.9")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         e.write()
 
 

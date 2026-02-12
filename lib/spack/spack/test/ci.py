@@ -17,7 +17,7 @@ import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.repo as repo
 import spack.util.git
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.version import Version
@@ -361,7 +361,7 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     e1 = ev.create("test")
     e1.add("mpileaks")
     e1.add("hypre")
-    EnvironmentConcretizer(e1).concretize()
+    concretize_environment(e1)
 
     touched = {"libdwarf"}
 
@@ -419,7 +419,7 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path):
     e = ev.create("first_concretization")
     e.add("mpileaks~shared")
     e.add("mpileaks+shared")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     affected_specs = ci.get_spec_filter_list(e, {"callpath"})
     mpileaks_specs = [s for s in affected_specs if s.name == "mpileaks"]

@@ -9,7 +9,7 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.spec
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.main import SpackCommand
 
 pytestmark = [
@@ -51,7 +51,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
 
     root_name = "cmake-client" if dep else "cmake"
     env.add(root_name)
-    EnvironmentConcretizer(env).concretize()
+    concretize_environment(env)
 
     root_spec = next(env.roots()).copy()
     cmake_spec = root_spec["cmake"] if dep else root_spec
@@ -98,7 +98,7 @@ def _test_mutate_from_cli(args, create=True):
     if create:
         env.add("cmake-client%cmake@3.4.3")
         env.add("cmake-client%cmake@3.23.1")
-        EnvironmentConcretizer(env).concretize()
+        concretize_environment(env)
         env.write()
 
     with env:

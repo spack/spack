@@ -11,7 +11,7 @@ import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
 import spack.main
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 
 
 @pytest.fixture()
@@ -85,7 +85,7 @@ def test_match_spec_env(mock_packages, mutable_mock_env_path):
 
     e = ev.create("test")
     e.add("pkg-a foobar=baz")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     with e:
         env_spec = spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(["pkg-a"])[0])
         assert env_spec.satisfies("foobar=baz")
@@ -96,7 +96,7 @@ def test_multiple_env_match_raises_error(mock_packages, mutable_mock_env_path):
     e = ev.create("test")
     e.add("pkg-a foobar=baz")
     e.add("pkg-a foobar=fee")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     with e:
         with pytest.raises(ev.SpackEnvironmentError) as exc_info:
             spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(["pkg-a"])[0])
@@ -108,7 +108,7 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
     e = ev.create("test")
     e.add("pkg-b@0.9")
     e.add("pkg-a foobar=bar")  # Depends on b, should choose b@1.0
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     with e:
         # This query matches the root b and b as a dependency of a. In that
         # case the root instance should be preferred.

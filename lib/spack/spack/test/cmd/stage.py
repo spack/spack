@@ -11,7 +11,7 @@ import spack.environment as ev
 import spack.package_base
 import spack.traverse
 from spack.cmd.stage import StageFilter
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.version import Version
@@ -73,7 +73,7 @@ def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
 
     e = ev.create("test")
     e.add("mpileaks")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     with e:
         stage("trivial-install-test-package")
@@ -91,7 +91,7 @@ def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
 
     e = ev.create("test")
     e.add("mpileaks@=100.100")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     with e:
         stage("mpileaks")
@@ -103,7 +103,7 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
 
     e = ev.create("test")
     e.add("mpileaks@=100.100")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     # list all the package names that should be staged
     expected, externals = set(), set()
@@ -152,7 +152,7 @@ def test_stage_spec_filters(
 ):
     e = ev.create("test")
     e.add("mpileaks@=100.100")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     all_specs = e.all_specs()
 
     def is_installed(self):

@@ -240,6 +240,32 @@ def concretize_one(spec: Union[str, Spec], tests: TestsType = False) -> Spec:
     return concretized
 
 
+def concretize_environment(
+    env: spack.environment.environment.Environment,
+    *,
+    force: Optional[bool] = None,
+    tests: Union[bool, Sequence[str]] = False,
+) -> List[SpecPair]:
+    """Concretize user_specs in this environment.
+
+    Only concretizes specs that haven't been concretized yet unless force is ``True``.
+
+    This only modifies the environment in memory. ``write()`` will write out a lockfile
+    containing concretized specs.
+
+    Arguments:
+        force: re-concretize ALL specs, even those that were already concretized;
+            defaults to ``spack.config.get("concretizer:force")``
+        tests: False to run no tests, True to test all packages, or a list of
+            package names to run tests for some
+
+    Returns:
+        List of specs that have been concretized. Each entry is a tuple of
+        the user spec and the corresponding concretized spec.
+    """
+    return EnvironmentConcretizer(env).concretize(force=force, tests=tests)
+
+
 class EnvironmentConcretizer:
 
     def __init__(self, env: spack.environment.environment.Environment):

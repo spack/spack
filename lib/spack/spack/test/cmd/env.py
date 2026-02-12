@@ -37,7 +37,7 @@ import spack.util.environment
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import readlink
 from spack.llnl.util.lang import dedupe
@@ -79,14 +79,14 @@ def setup_combined_multiple_env():
     test1 = ev.read("test1")
     with test1:
         add("mpich@1.0")
-        EnvironmentConcretizer(test1).concretize()
+        concretize_environment(test1)
         test1.write()
 
     env("create", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
-        EnvironmentConcretizer(test2).concretize()
+        concretize_environment(test2)
         test2.write()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
@@ -220,7 +220,7 @@ def installed_environment(
         with fs.working_dir(tmp_path):
             env("create", "test", "./spack.yaml")
             with ev.read("test") as current_environment:
-                EnvironmentConcretizer(current_environment).concretize()
+                concretize_environment(current_environment)
                 current_environment.install_all(fake=True)
                 current_environment.write(regenerate=True)
 
@@ -295,7 +295,7 @@ def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")
     e.add("mpi")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     assert len(e.concretized_roots) == 1
     spec = e.specs_by_hash[e.concretized_roots[0].hash]
@@ -474,7 +474,7 @@ def test_env_rename_independent(tmp_path: pathlib.Path):
 def test_concretize():
     e = ev.create("test")
     e.add("mpileaks")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     assert len(e.concretized_roots) == 1
     assert e.concretized_roots[0].root == Spec("mpileaks")
@@ -483,7 +483,7 @@ def test_concretize():
 def test_env_specs_partition(install_mockery, mock_fetch):
     e = ev.create("test")
     e.add("cmake-client")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     # Single not installed root spec.
     roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
@@ -500,7 +500,7 @@ def test_env_specs_partition(install_mockery, mock_fetch):
 
     # One installed root, one not installed root.
     e.add("mpileaks")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
     assert len(roots_already_installed) == 1
     assert len(roots_to_install) == 1
@@ -511,7 +511,7 @@ def test_env_specs_partition(install_mockery, mock_fetch):
 def test_env_install_all(install_mockery, mock_fetch):
     e = ev.create("test")
     e.add("cmake-client")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     e.install_all(fake=True)
     spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
     assert spec.installed
@@ -548,7 +548,7 @@ def test_env_install_include_concrete_env(
         mutable_config.set("concretizer:unify", unify)
         mutable_config.set("concretizer:reuse", reuse)
         combined.add("mpileaks")
-        EnvironmentConcretizer(combined).concretize()
+        concretize_environment(combined)
         combined.write()
         install("--fake")
 
@@ -586,7 +586,7 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch):
     with ev.read("test") as e:
         # make implicit install a root of the env
         e.add(dependency[0].name)
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         e.install_all()
 
     explicit = spack.store.STORE.db.query(explicit=True)
@@ -639,7 +639,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
     os.symlink(filepath, filepath_mid)
     os.symlink(filepath_mid, e.manifest_path)
 
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     e.write()
 
     assert os.path.islink(e.manifest_path)
@@ -687,10 +687,10 @@ def test_remove_after_concretize():
     e = ev.create("test")
 
     e.add("mpileaks")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     e.add("python")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
 
     e.remove("mpileaks")
     assert Spec("mpileaks") not in e.user_specs
@@ -709,12 +709,12 @@ def test_remove_before_concretize(mutable_config):
     with ev.create("test") as e:
         mutable_config.set("concretizer:unify", True)
         e.add("mpileaks")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert len(e.concretized_roots) == 1
         assert e.concrete_roots()[0].satisfies("mpileaks")
 
         e.remove("mpileaks")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert not e.concretized_roots
 
 
@@ -801,7 +801,7 @@ def test_bad_remove_included_env():
     with test:
         add("mpileaks")
 
-    EnvironmentConcretizer(test).concretize()
+    concretize_environment(test)
     test.write()
 
     env("create", "--include-concrete", "test", "combined_env")
@@ -817,7 +817,7 @@ def test_force_remove_included_env():
     with test:
         add("mpileaks")
 
-    EnvironmentConcretizer(test).concretize()
+    concretize_environment(test)
     test.write()
 
     env("create", "--include-concrete", "test", "combined_env")
@@ -892,7 +892,7 @@ def test_env_activate_broken_view(
 def test_to_lockfile_dict():
     e = ev.create("test")
     e.add("mpileaks")
-    EnvironmentConcretizer(e).concretize()
+    concretize_environment(e)
     context_dict = e._to_lockfile_dict()
 
     e_copy = ev.create("test_copy")
@@ -925,7 +925,7 @@ spack:
   - libelf
 """
     )
-    EnvironmentConcretizer(before).concretize()
+    concretize_environment(before)
     before.write()
 
     # user modifies yaml externally to spack and removes hypre
@@ -940,7 +940,7 @@ spack:
         )
 
     after = ev.read("test")
-    EnvironmentConcretizer(after).concretize()
+    concretize_environment(after)
     after.write()
 
     read = ev.read("test")
@@ -967,7 +967,7 @@ spack:
 """
     )
     with e1:
-        EnvironmentConcretizer(e1).concretize()
+        concretize_environment(e1)
         e1.write()
 
     # By reading into a second environment, we force a round trip to json
@@ -991,7 +991,7 @@ spack:
   - libelf
 """
     )
-    EnvironmentConcretizer(e1).concretize()
+    concretize_environment(e1)
     e1.write()
 
     e2 = _env_create("test2", init_file=e1.lock_path)
@@ -1016,7 +1016,7 @@ spack:
   - libelf
 """
     )
-    EnvironmentConcretizer(e1).concretize()
+    concretize_environment(e1)
     e1.write()
 
     e2 = _env_create("test2", init_file=e1.manifest_path)
@@ -1051,7 +1051,7 @@ spack:
         spack.config.set("develop", dev_config)
         fs.touch(os.path.join(e1.path, "libelf"))
 
-    EnvironmentConcretizer(e1).concretize()
+    concretize_environment(e1)
     e1.write()
 
     e2 = _env_create("test2", init_file="test" if use_name else e1.path)
@@ -1168,7 +1168,7 @@ packages:
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
     with spack.config.override(test_scope):
         e = ev.create("test", manifest_file)
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         # Note: normally installing specs in a test environment requires doing
         # a fake install, but not for external specs since no actions are
         # taken to install them. The installation commands also include
@@ -1224,7 +1224,7 @@ spack:
 """
     )
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1260,7 +1260,7 @@ spack:
     )
 
     with ev.Environment(env_root) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     # We've created an environment with included config file (which does
     # exist). Now we remove it and check that we get a sensible error.
@@ -1310,7 +1310,7 @@ spack:
     )
 
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1373,7 +1373,7 @@ spack:
 
     e = ev.Environment(env_root)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1539,7 +1539,7 @@ def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
     # packages.yaml file.
     e = ev.Environment(env_root)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1562,7 +1562,7 @@ def test_env_with_included_config_var_path(tmp_path: pathlib.Path, packages_file
 
     e = ev.Environment(env_path)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1602,7 +1602,7 @@ spack:
 
     e = ev.Environment(tmp_path)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1653,7 +1653,7 @@ packages:
 
     e = ev.Environment(tmp_path)
     with e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     mpileaks_hash = next(x.hash for x in e.concretized_roots if x.root == Spec("mpileaks"))
     mpileaks = e.specs_by_hash[mpileaks_hash]
@@ -1908,7 +1908,7 @@ def test_indirect_build_dep(repo_builder: RepoBuilder):
         _env_create("test", with_view=False)
         e = ev.read("test")
         e.add(x_spec)
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         e.write()
 
         e_read = ev.read("test")
@@ -1950,7 +1950,7 @@ def test_store_different_build_deps(repo_builder: RepoBuilder):
         e = ev.read("test")
         e.add(y_spec)
         e.add(x_spec)
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         e.write()
 
         e_read = ev.read("test")
@@ -2056,7 +2056,7 @@ def test_env_include_concrete_env_yaml(env_name):
 
     with test:
         add("mpileaks")
-    EnvironmentConcretizer(test).concretize()
+    concretize_environment(test)
     test.write()
 
     environ = "test" if env_name else test.path
@@ -2137,7 +2137,7 @@ def test_env_include_concrete_add_env():
     with new_env:
         add("mpileaks")
 
-    EnvironmentConcretizer(new_env).concretize()
+    concretize_environment(new_env)
     new_env.write()
 
     # add new env to combined
@@ -2150,7 +2150,7 @@ def test_env_include_concrete_add_env():
     assert new_env.path not in lockfile_as_dict["include_concrete"].keys()
 
     # concretize combined env with new env
-    EnvironmentConcretizer(combined).concretize()
+    concretize_environment(combined)
     combined.write()
 
     # assert changes
@@ -2173,7 +2173,7 @@ def test_env_include_concrete_remove_env():
     assert test2.path in lockfile_as_dict["include_concrete"].keys()
 
     # reconcretize combined
-    EnvironmentConcretizer(combined).concretize()
+    concretize_environment(combined)
     combined.write()
 
     # assert test2 is not in combined's lockfile
@@ -2199,7 +2199,7 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
         override_env = ev.read("external_test")
         with override_env:
             add("mpich@1.0 +debug")
-        EnvironmentConcretizer(override_env).concretize()
+        concretize_environment(override_env)
         override_env.write()
 
         # Reuse from the environment that is not included.
@@ -2256,7 +2256,7 @@ def test_env_include_concrete_reuse(reuse_mode):
         # Add mpileaks to the combined environment
         with combined:
             add("mpileaks")
-            EnvironmentConcretizer(combined).concretize()
+            concretize_environment(combined)
         comb_specs_by_hash = combined.specs_by_hash
 
         # create reference env with mpileaks that does not use reuse
@@ -2265,7 +2265,7 @@ def test_env_include_concrete_reuse(reuse_mode):
         ref_env = ev.read("new")
         with ref_env:
             add("mpileaks")
-        EnvironmentConcretizer(ref_env).concretize()
+        concretize_environment(ref_env)
         ref_specs_by_hash = ref_env.specs_by_hash
 
         # Ensure that the mpich used by the mpileaks is the mpich from the reused test environment
@@ -2300,7 +2300,7 @@ def test_env_include_concrete_env_reconcretized(mutable_config, unify):
 
     with combined:
         mutable_config.set("concretizer:unify", unify)
-        EnvironmentConcretizer(combined).concretize()
+        concretize_environment(combined)
         combined.write()
 
     with open(combined.lock_path, encoding="utf-8") as f:
@@ -2319,7 +2319,7 @@ def test_concretize_include_concrete_env():
     # Update test1 environment
     with test1:
         add("mpileaks")
-    EnvironmentConcretizer(test1).concretize()
+    concretize_environment(test1)
     test1.write()
 
     # Check the test1 environment includes mpileaks, while the combined environment does not
@@ -2327,7 +2327,7 @@ def test_concretize_include_concrete_env():
     assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
 
     # If we update the combined environment, it will include mpileaks too
-    EnvironmentConcretizer(combined).concretize()
+    concretize_environment(combined)
     combined.write()
     assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
 
@@ -2337,14 +2337,14 @@ def test_concretize_nested_include_concrete_envs():
     test1 = ev.read("test1")
     with test1:
         add("zlib")
-    EnvironmentConcretizer(test1).concretize()
+    concretize_environment(test1)
     test1.write()
 
     env("create", "--include-concrete", "test1", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
-    EnvironmentConcretizer(test2).concretize()
+    concretize_environment(test2)
     test2.write()
 
     env("create", "--include-concrete", "test2", "test3")
@@ -2366,7 +2366,7 @@ def test_concretize_nested_included_concrete():
     test1 = ev.read("test1")
     with test1:
         add("zlib")
-    EnvironmentConcretizer(test1).concretize()
+    concretize_environment(test1)
     test1.write()
 
     # test2 should include test1 with zlib
@@ -2374,7 +2374,7 @@ def test_concretize_nested_included_concrete():
     test2 = ev.read("test2")
     with test2:
         add("libelf")
-    EnvironmentConcretizer(test2).concretize()
+    concretize_environment(test2)
     test2.write()
 
     assert Spec("zlib") in test2.included_concretized_user_specs[test1.path]
@@ -2383,7 +2383,7 @@ def test_concretize_nested_included_concrete():
     with test1:
         remove("zlib")
         add("mpileaks")
-    EnvironmentConcretizer(test1).concretize()
+    concretize_environment(test1)
     test1.write()
 
     # test3 should include the latest concretization of test1
@@ -2391,7 +2391,7 @@ def test_concretize_nested_included_concrete():
     test3 = ev.read("test3")
     with test3:
         add("callpath")
-    EnvironmentConcretizer(test3).concretize()
+    concretize_environment(test3)
     test3.write()
 
     included_specs = test3.included_concretized_user_specs[test1.path]
@@ -2424,9 +2424,9 @@ def test_concretize_nested_included_concrete():
     # to remove zlib and write it out so it can be picked up by test4.
     # Re-concretize test4 to reflect the re-concretization of included test2
     # and ensure that its included specs are up-to-date
-    EnvironmentConcretizer(test2).concretize()
+    concretize_environment(test2)
     test2.write()
-    EnvironmentConcretizer(test4).concretize()
+    concretize_environment(test4)
 
     concrete_specs = [s for s, _ in test4.concretized_specs()]
     assert Spec("zlib") not in concrete_specs
@@ -2772,7 +2772,7 @@ spack:
     with fs.working_dir(str(tmp_path)):
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
 
             before_user = e.user_specs.specs
             concretized_roots_before = e.concretized_roots
@@ -3362,7 +3362,7 @@ def test_concretize_user_specs_together(mutable_config):
         # Concretize a first time using 'mpich' as the MPI provider
         e.add("mpileaks")
         e.add("mpich")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
         assert all("mpich" in spec for _, spec in e.concretized_specs())
         assert all("mpich2" not in spec for _, spec in e.concretized_specs())
@@ -3375,15 +3375,15 @@ def test_concretize_user_specs_together(mutable_config):
 
         # Concretizing without invalidating the concrete spec for mpileaks fails
         with pytest.raises(exc_cls):
-            EnvironmentConcretizer(e).concretize()
-        EnvironmentConcretizer(e).concretize(force=True)
+            concretize_environment(e)
+        concretize_environment(e, force=True)
 
         assert all("mpich2" in spec for _, spec in e.concretized_specs())
         assert all("mpich" not in spec for _, spec in e.concretized_specs())
 
         # Concretize again without changing anything, check everything
         # stays the same
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
         assert all("mpich2" in spec for _, spec in e.concretized_specs())
         assert all("mpich" not in spec for _, spec in e.concretized_specs())
@@ -3400,7 +3400,7 @@ def test_duplicate_packages_raise_when_concretizing_together(mutable_config):
         match = r"You could consider setting `concretizer:unify`"
 
         with pytest.raises(exc_cls, match=match):
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
 
 
 def test_env_write_only_non_default():
@@ -3438,7 +3438,7 @@ spack:
 
     # concretize
     with ev.read("test") as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         e.write()
 
         with open(e.manifest_path, "r", encoding="utf-8") as f:
@@ -3492,12 +3492,12 @@ spack:
 
     # Concretize a first time and create a lockfile
     with ev.Environment(str(tmp_path)) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         libelf_first_hash = extract_dag_hash(e)
 
     # Check that a second run won't error
     with ev.Environment(str(tmp_path)) as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         libelf_second_hash = extract_dag_hash(e)
 
     assert libelf_first_hash == libelf_second_hash
@@ -3533,7 +3533,7 @@ spack:
         spack.environment.environment.EnvironmentManifestFile, "flush", _write_helper_raise
     )
     with ev.Environment(str(tmp_path)) as e:
-        EnvironmentConcretizer(e).concretize(force=True)
+        concretize_environment(e, force=True)
         with pytest.raises(RuntimeError):
             e.clear()
             e.write()
@@ -3608,7 +3608,7 @@ def test_custom_version_concretize_together(mutable_config):
         # Concretize a first time using 'mpich' as the MPI provider
         e.add("hdf5@=myversion")
         e.add("mpich")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert any(spec.satisfies("hdf5@myversion") for _, spec in e.concretized_specs())
 
 
@@ -3730,7 +3730,7 @@ def test_virtual_spec_concretize_together(mutable_config):
     with ev.create("virtual_spec") as e:
         mutable_config.set("concretizer:unify", True)
         e.add("mpi")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
         assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
@@ -4367,7 +4367,7 @@ def test_unify_when_possible_works_around_conflicts(mutable_config):
         e.add("mpileaks+opt")
         e.add("mpileaks~opt")
         e.add("mpich")
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
         assert len([x for x in e.all_specs() if x.satisfies("mpileaks")]) == 2
         assert len([x for x in e.all_specs() if x.satisfies("mpileaks+opt")]) == 1
@@ -4467,7 +4467,7 @@ spack:
     )
     env("create", "disabled", str(spack_yaml))
     with ev.read("disabled") as e:
-        EnvironmentConcretizer(e).concretize()
+        concretize_environment(e)
 
     assert len(e.views) == 0
     assert not os.path.exists(e.view_path_default)
@@ -4673,7 +4673,7 @@ def test_concretized_specs_and_include_concrete(mutable_config):
         mutable_config.set(
             "packages", {"mpileaks": {"require": ["@2.2"]}, "libelf": {"require": ["@0.8.12"]}}
         )
-        included_pairs = EnvironmentConcretizer(e).concretize()
+        included_pairs = concretize_environment(e)
         e.write()
 
     env("create", "--include-concrete", "included-env", "main-env")
@@ -4682,7 +4682,7 @@ def test_concretized_specs_and_include_concrete(mutable_config):
         e.add("libelf@0.8.12")
         e.add("pkg-a")
         mutable_config.set("packages", {"mpileaks": {"require": ["@2.3"]}})
-        spec_pairs = EnvironmentConcretizer(e).concretize()
+        spec_pairs = concretize_environment(e)
         concretized_specs = list(e.concretized_specs())
         assert list(dedupe(spec_pairs + included_pairs)) == concretized_specs
         assert len(concretized_specs) == 5

@@ -83,7 +83,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Update the installations of this environment."""
         log_enabled = tty.is_debug() or tty.is_verbose()
         with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-            specs = spack.concretize.EnvironmentConcretizer(self).concretize()
+            specs = spack.concretize.concretize_environment(self)
         if specs:
             colorized_specs = [
                 spack.spec.Spec(x).cformat("{name}{@version}")

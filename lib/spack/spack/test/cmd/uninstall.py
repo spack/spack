@@ -9,7 +9,7 @@ import spack.cmd.uninstall
 import spack.environment
 import spack.llnl.util.tty as tty
 import spack.store
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
 
@@ -227,7 +227,7 @@ class TestUninstallFromEnv:
         with e1:
             add("diamond-link-left")
             add("diamond-link-bottom")
-            EnvironmentConcretizer(e1).concretize()
+            concretize_environment(e1)
             install("--fake")
 
         env("create", "e2")
@@ -235,7 +235,7 @@ class TestUninstallFromEnv:
         with e2:
             add("diamond-link-right")
             add("diamond-link-bottom")
-            EnvironmentConcretizer(e2).concretize()
+            concretize_environment(e2)
             install("--fake")
         yield "environment_setup"
         env("rm", "e1", "-y")

@@ -41,7 +41,7 @@ import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
-from spack.concretize import EnvironmentConcretizer
+from spack.concretize import concretize_environment
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
 from spack.solver.asp import Result
@@ -586,7 +586,7 @@ spack:
         )
 
         with ev.Environment(tmp_path) as e:
-            EnvironmentConcretizer(e).concretize()
+            concretize_environment(e)
             for root in e.roots():
                 if root.satisfies("%gcc"):
                     assert root["dt-diamond-left"].satisfies("%gcc")
