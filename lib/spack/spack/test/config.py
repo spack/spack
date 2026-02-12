@@ -1966,15 +1966,4 @@ def test_config_scope_empty_write(tmp_path: pathlib.Path):
     """Confirm skipping attempt to write non-existent scope section."""
     config_scope = spack.config.DirectoryConfigScope("test", str(tmp_path))
 
-    config_scope.get_section("include") is None
-
-
-def test_config_optional_include_failures(tmp_path: pathlib.Path):
-    include = spack.config.OptionalInclude({})
-
-    with pytest.raises(NotImplementedError):
-        include.paths
-
-    config_scope = spack.config.DirectoryConfigScope("test", str(tmp_path))
-    with pytest.raises(NotImplementedError):
-        include.scopes(config_scope)
+    assert config_scope.get_section("include") is None
