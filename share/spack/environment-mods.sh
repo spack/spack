@@ -173,7 +173,7 @@ _spack_env_remove_last() {
     # Put the entries back in in reverse order to get back original order
     accumulator=$sep
     for val in $reversed; do
-        if [[ $val != $value || $done == "yes" ]]; then
+        if [[ "$val" != "$value" || "$done" == "yes" ]]; then
             accumulator=$sep$val$accumulator
         else
             done="yes"
