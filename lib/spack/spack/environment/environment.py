@@ -1207,8 +1207,7 @@ class Environment:
             )
         )
         for group in self.manifest.groups():
-            if tty.is_debug(level=2):
-                tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group")
+            tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
             key = self._user_specs_key(group=group)
             self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
                 name=key, yaml_list=self.manifest.user_specs(group=group)
