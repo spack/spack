@@ -3465,7 +3465,6 @@ class Spec:
         # verify the edge properties, cause everything is encoded in the hash of the nodes that
         # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
-        mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # Check satisfaction of the dependency only if its when condition can apply
             if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
@@ -3501,58 +3500,43 @@ class Spec:
                     except KeyError:
                         return False
 
-                if current_node.original_spec_format() < 5 or (
-                    # If the current external node has dependencies, it has no annotations
-                    current_node.original_spec_format() >= 5
-                    and current_node.external
-                    and not current_node._dependencies
-                ):
+                # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
+                # branch in the lhs
+                candidate_edges = []
+                if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
+                    candidate_edges = current_node.edges_to_dependencies(name=rhs_edge.spec.name)
+
+                name = (
+                    None
+                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
+                    else rhs_edge.spec.name
+                )
+                candidate_edges.extend(
+                    current_node.edges_to_dependencies(
+                        name=name, virtuals=rhs_edge.virtuals or None
+                    )
+                )
+
+                # Select at least the deptypes on the rhs_edge, and conditional edges that
+                # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
+                candidates = [
+                    lhs_edge.spec
+                    for lhs_edge in candidate_edges
+                    if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                    and rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
+                ]
+
+                # For old specs, consider compiler dependencies from annotations
+                if current_node.original_spec_format() < 5:
                     compiler_spec = current_node.annotations.compiler_node_attribute
-                    if compiler_spec is None:
-                        return False
+                    if compiler_spec is not None:
+                        candidates.append(compiler_spec)
 
-                    mock_nodes_from_old_specfiles.add(compiler_spec)
-                    # This checks that the single node compiler spec satisfies the request
-                    # of a direct dependency. The check is not perfect, but based on heuristic.
-                    if not compiler_spec._satisfies(
-                        rhs_edge.spec, resolve_virtuals=resolve_virtuals
-                    ):
-                        return False
-
-                else:
-                    # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
-                    # branch in the lhs
-                    candidate_edges = []
-                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
-                        candidate_edges = current_node.edges_to_dependencies(
-                            name=rhs_edge.spec.name
-                        )
-
-                    name = (
-                        None
-                        if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
-                        else rhs_edge.spec.name
-                    )
-                    candidate_edges.extend(
-                        current_node.edges_to_dependencies(
-                            name=name, virtuals=rhs_edge.virtuals or None
-                        )
-                    )
-                    # Select at least the deptypes on the rhs_edge, and conditional edges that
-                    # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
-                    candidates = [
-                        lhs_edge.spec
-                        for lhs_edge in candidate_edges
-                        if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                        and rhs_edge.when._satisfies(
-                            lhs_edge.when, resolve_virtuals=resolve_virtuals
-                        )
-                    ]
-                    if not candidates or not any(
-                        x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
-                        for x in candidates
-                    ):
-                        return False
+                if not candidates or not any(
+                    x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                    for x in candidates
+                ):
+                    return False
 
                 continue
 
