@@ -130,7 +130,7 @@ _spack_env_remove_first() {
 
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
-        if [[ $val != $value || $done == "yes" ]]; then
+        if [[ "$val" != "$value" || "$done" == "yes" ]]; then
             accumulator=$accumulator$val$sep
         else
             done="yes"
