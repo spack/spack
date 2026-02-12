@@ -7,6 +7,7 @@ import sys
 
 import spack
 import spack.cmd
+import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.llnl.util.lang as lang
@@ -95,7 +96,7 @@ def spec(parser, args):
     if args.specs:
         concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True)
     elif env:
-        env.concretize()
+        spack.concretize.EnvironmentConcretizer(env).concretize()
         concrete_specs = env.concrete_roots()
     else:
         tty.die("spack spec requires at least one spec or an active environment")

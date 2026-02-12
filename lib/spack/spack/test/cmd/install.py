@@ -27,6 +27,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.store
+from spack.concretize import EnvironmentConcretizer
 from spack.error import SpackError, SpecSyntaxError
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
@@ -755,7 +756,7 @@ def test_install_no_add_in_env(
     e.add("libelf@0.8.10")  # so env has both root and dep libelf specs
     e.add("pkg-a")
     e.add("pkg-a ~bvv")
-    e.concretize()
+    EnvironmentConcretizer(e).concretize()
     e.write()
     env_specs = e.all_specs()
 

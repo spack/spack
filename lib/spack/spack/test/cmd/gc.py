@@ -12,6 +12,7 @@ import spack.environment as ev
 import spack.main
 import spack.spec
 import spack.traverse
+from spack.concretize import EnvironmentConcretizer
 from spack.installer import PackageInstaller
 
 gc = spack.main.SpackCommand("gc")
@@ -99,7 +100,7 @@ def test_gc_except_any_environments(mutable_database, mutable_mock_env_path):
 
     e = ev.create("test_gc")
     e.add("simple-inheritance")
-    e.concretize()
+    EnvironmentConcretizer(e).concretize()
     e.install_all(fake=True)
     e.write()
 

@@ -10,6 +10,7 @@ from typing import Iterable, List
 
 import spack.vendor.archspec.cpu
 
+import spack.concretize
 import spack.environment
 import spack.spec
 import spack.tengine
@@ -82,7 +83,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Update the installations of this environment."""
         log_enabled = tty.is_debug() or tty.is_verbose()
         with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-            specs = self.concretize()
+            specs = spack.concretize.EnvironmentConcretizer(self).concretize()
         if specs:
             colorized_specs = [
                 spack.spec.Spec(x).cformat("{name}{@version}")

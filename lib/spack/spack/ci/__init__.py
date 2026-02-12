@@ -20,6 +20,7 @@ from urllib.request import Request
 import spack
 import spack.binary_distribution
 import spack.builder
+import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.llnl.path
@@ -474,7 +475,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             line.
     """
     with env.write_transaction():
-        env.concretize()
+        spack.concretize.EnvironmentConcretizer(env).concretize()
         env.write()
 
     options = collect_pipeline_options(env, args)

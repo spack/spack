@@ -42,6 +42,7 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.concretize import EnvironmentConcretizer
 
 
 @pytest.fixture
@@ -250,7 +251,7 @@ spack:
     manifest_file.write_text(env_content)
     e = ev.create("test", manifest_file)
     with e:
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
     e.write()
 
     (result,) = list(j for i, j in e.concretized_specs() if j.name == "y")

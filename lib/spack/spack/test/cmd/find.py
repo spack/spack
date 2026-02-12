@@ -18,6 +18,7 @@ import spack.paths
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
+from spack.concretize import EnvironmentConcretizer
 from spack.enums import InstallRecordStatus
 from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
@@ -357,7 +358,7 @@ spack:
         env("create", "test1", "spack.yaml")
 
     test1 = ev.read("test1")
-    test1.concretize()
+    EnvironmentConcretizer(test1).concretize()
     test1.write()
 
     with working_dir(str(tmp_path)):
@@ -372,7 +373,7 @@ spack:
         env("create", "test2", "spack.yaml")
 
     test2 = ev.read("test2")
-    test2.concretize()
+    EnvironmentConcretizer(test2).concretize()
     test2.write()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
@@ -403,13 +404,13 @@ spack:
         env("create", "test1", "spack.yaml")
 
     test1 = ev.read("test1")
-    test1.concretize()
+    EnvironmentConcretizer(test1).concretize()
     test1.write()
 
     env("create", "--include-concrete", "test1", "test2")
     test2 = ev.read("test2")
     test2.add("libelf")
-    test2.concretize()
+    EnvironmentConcretizer(test2).concretize()
     test2.write()
 
     env("create", "--include-concrete", "test2", "test3")

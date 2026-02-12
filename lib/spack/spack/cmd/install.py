@@ -16,6 +16,7 @@ import spack.paths
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
+from spack.concretize import EnvironmentConcretizer
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
 from spack.llnl.string import plural
@@ -355,7 +356,7 @@ def _maybe_add_and_concretize(args, env, specs):
 
         # `spack concretize`
         tests = compute_tests_install_kwargs(env.user_specs, args.test)
-        concretized_specs = env.concretize(tests=tests)
+        concretized_specs = EnvironmentConcretizer(env).concretize(tests=tests)
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
             ev.display_specs([concrete for _, concrete in concretized_specs])

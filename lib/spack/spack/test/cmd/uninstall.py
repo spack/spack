@@ -9,6 +9,7 @@ import spack.cmd.uninstall
 import spack.environment
 import spack.llnl.util.tty as tty
 import spack.store
+from spack.concretize import EnvironmentConcretizer
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
 
@@ -202,6 +203,12 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
     uninstall("-y", "-a")
 
 
+env = SpackCommand("env")
+add = SpackCommand("add")
+concretize = SpackCommand("concretize")
+find = SpackCommand("find")
+
+
 # Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
 # the style formatter insists on separating these two lines.
 class TestUninstallFromEnv:
@@ -213,31 +220,26 @@ class TestUninstallFromEnv:
     e2 has diamond-link-right -> diamond-link-bottom
     """
 
-    env = SpackCommand("env")
-    add = SpackCommand("add")
-    concretize = SpackCommand("concretize")
-    find = SpackCommand("find")
-
     @pytest.fixture(scope="function")
     def environment_setup(self, mock_packages, mutable_database, install_mockery):
-        TestUninstallFromEnv.env("create", "e1")
+        env("create", "e1")
         e1 = spack.environment.read("e1")
         with e1:
-            TestUninstallFromEnv.add("diamond-link-left")
-            TestUninstallFromEnv.add("diamond-link-bottom")
-            TestUninstallFromEnv.concretize()
+            add("diamond-link-left")
+            add("diamond-link-bottom")
+            EnvironmentConcretizer(e1).concretize()
             install("--fake")
 
-        TestUninstallFromEnv.env("create", "e2")
+        env("create", "e2")
         e2 = spack.environment.read("e2")
         with e2:
-            TestUninstallFromEnv.add("diamond-link-right")
-            TestUninstallFromEnv.add("diamond-link-bottom")
-            TestUninstallFromEnv.concretize()
+            add("diamond-link-right")
+            add("diamond-link-bottom")
+            EnvironmentConcretizer(e2).concretize()
             install("--fake")
         yield "environment_setup"
-        TestUninstallFromEnv.env("rm", "e1", "-y")
-        TestUninstallFromEnv.env("rm", "e2", "-y")
+        env("rm", "e1", "-y")
+        env("rm", "e2", "-y")
 
     def test_basic_env_sanity(self, environment_setup):
         for env_name in ["e1", "e2"]:

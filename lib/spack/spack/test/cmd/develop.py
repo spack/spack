@@ -16,6 +16,7 @@ import spack.spec
 import spack.stage
 import spack.util.git
 import spack.util.path
+from spack.concretize import EnvironmentConcretizer
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
@@ -130,7 +131,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
@@ -144,7 +145,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("hdf5^mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             orig_hash = next(e.roots()).dag_hash()
@@ -161,7 +162,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
@@ -172,7 +173,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             # canonicalize paths relative to env
@@ -193,7 +194,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
@@ -207,7 +208,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             path = "../$user"
@@ -229,7 +230,7 @@ class TestDevelop:
         env("create", "test")
         with ev.read("test") as e:
             e.add("mpich@1.0")
-            e.concretize()
+            EnvironmentConcretizer(e).concretize()
             e.write()
 
             path = "$user"
@@ -296,7 +297,7 @@ def test_develop_full_git_repo(
     env("create", "test")
     with ev.read("test") as e:
         add("git-test-commit@1.2")
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
         e.write()
 
         develop("git-test-commit@1.2")
@@ -313,7 +314,7 @@ def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
 
     with ev.read("test") as e:
         add("indirect-mpich@1.0")
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
         e.write()
         specs = e.all_specs()
 
@@ -338,7 +339,7 @@ def test_develop_fails_with_multiple_concrete_versions(
         add("indirect-mpich@1.0")
         add("indirect-mpich@0.9")
         e.unify = False
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
 
         with pytest.raises(SpackError) as develop_error:
             develop("indirect-mpich", fail_on_error=True)
@@ -358,7 +359,7 @@ def test_concretize_dev_path_with_at_symbol_in_env(
 
     with ev.read("test_at_sym") as e:
         add(spec_like)
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
         e.write()
         develop(f"--path={develop_dir}", spec_like)
         result = e.concrete_roots()
@@ -404,7 +405,7 @@ def test_develop_with_devpath_staging(
 
     with ev.read("test") as e:
         e.add(spec_like)
-        e.concretize()
+        EnvironmentConcretizer(e).concretize()
         e.write()
         develop(f"--path={develop_dir}", spec_like)
 

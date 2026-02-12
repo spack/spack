@@ -12,10 +12,9 @@ import re
 import shutil
 import stat
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import spack
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -49,7 +48,7 @@ from spack.util.path import substitute_path_variables
 from ..enums import ConfigScopePriority
 from .list import SpecList, SpecListError, SpecListParser
 
-SpecPair = spack.concretize.SpecPair
+SpecPair = Tuple[Spec, Spec]
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -1538,28 +1537,6 @@ class Environment:
         if modified_roots:
             self.write()
 
-    def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
-    ) -> Sequence[SpecPair]:
-        """Concretize user_specs in this environment.
-
-        Only concretizes specs that haven't been concretized yet unless force is ``True``.
-
-        This only modifies the environment in memory. ``write()`` will write out a lockfile
-        containing concretized specs.
-
-        Arguments:
-            force: re-concretize ALL specs, even those that were already concretized;
-                defaults to ``spack.config.get("concretizer:force")``
-            tests: False to run no tests, True to test all packages, or a list of
-                package names to run tests for some
-
-        Returns:
-            List of specs that have been concretized. Each entry is a tuple of
-            the user spec and the corresponding concretized spec.
-        """
-        return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
-
     def sync_concretized_specs(self) -> None:
         """Removes concrete specs that no longer correlate to a user spec"""
         to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
@@ -2366,127 +2343,6 @@ class Environment:
 
 def _is_uninstalled(spec):
     return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
-
-
-class EnvironmentConcretizer:
-    def __init__(self, env: Environment):
-        self.env = env
-
-    def concretize(
-        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
-    ) -> List[SpecPair]:
-        if force is None:
-            force = spack.config.get("concretizer:force")
-
-        # Exit early if the set of concretized specs is the set of user specs
-        self._prepare_environment_for_concretization(force=force)
-        new_user_specs, kept_user_specs = self._partition_user_specs()
-        if not new_user_specs:
-            return []
-
-        # Pick the right concretization strategy
-        unify = self.env.unify
-        if unify == "when_possible":
-            return self._concretize_together_where_possible(
-                new_user_specs, kept_user_specs, tests=tests
-            )
-
-        if unify is True:
-            return self._concretize_together(new_user_specs, kept_user_specs, tests=tests)
-
-        if unify is False:
-            return self._concretize_separately(new_user_specs, kept_user_specs, tests=tests)
-
-        raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
-
-    def _prepare_environment_for_concretization(self, *, force: bool):
-        """Reset the environment concrete state and ensure consistency with user specs."""
-        if force:
-            self.env.clear_concretized_specs()
-        else:
-            self.env.sync_concretized_specs()
-
-        # If a combined env, check updated spec is in the linked envs
-        if self.env.included_concrete_envs:
-            self.env.include_concrete_envs()
-
-    def _partition_user_specs(self) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
-        """Splits the users specs in the list of the ones to be computed, and the list of
-        the ones to retain.
-        """
-        concretized_user_specs = {x.root for x in self.env.concretized_roots}
-        kept_user_specs, new_user_specs = stable_partition(
-            self.env.user_specs, lambda x: x in concretized_user_specs
-        )
-        kept_user_specs += self.env.included_user_specs
-        return new_user_specs, kept_user_specs
-
-    def _user_spec_pairs(
-        self, user_specs_to_compute: List[Spec], user_specs_to_keep: List[Spec]
-    ) -> List[SpecPair]:
-        specs_to_concretize = [(s, None) for s in user_specs_to_compute] + [
-            (abstract, concrete)
-            for abstract, concrete in self.env.concretized_specs()
-            if abstract in user_specs_to_keep
-        ]
-        return specs_to_concretize
-
-    def _concretize_together_where_possible(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
-    ) -> List[SpecPair]:
-        specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
-        result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests
-        )
-        result = [x for x in result if x[0] in to_compute]
-        for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
-
-        return result
-
-    def _concretize_together(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
-    ) -> List[SpecPair]:
-        to_concretize = self._user_spec_pairs(to_compute, to_keep)
-        try:
-            concrete_pairs = spack.concretize.concretize_together(to_concretize, tests=tests)
-        except spack.error.UnsatisfiableSpecError as e:
-            # "Enhance" the error message for multiple root specs, suggest a less strict
-            # form of concretization.
-            if len(self.env.user_specs) > 1:
-                e.message += ". "
-                if to_keep:
-                    e.message += (
-                        "Couldn't concretize without changing the existing environment. "
-                        "If you are ok with changing it, try `spack concretize --force`. "
-                    )
-                e.message += (
-                    "You could consider setting `concretizer:unify` to `when_possible` "
-                    "or `false` to allow multiple versions of some packages."
-                )
-            raise
-
-        # Return the portion of the return value that is new
-        result = concrete_pairs[: len(to_compute)]
-        for abstract, concrete in result:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
-        return result
-
-    def _concretize_separately(
-        self, to_compute: List[Spec], to_keep: List[Spec], *, tests: Union[bool, Sequence] = False
-    ) -> List[SpecPair]:
-        """Concretization strategy that concretizes separately one
-        user spec after the other.
-        """
-        to_concretize = [(x, None) for x in to_compute]
-        concrete_pairs = spack.concretize.concretize_separately(to_concretize, tests=tests)
-
-        for abstract, concrete in concrete_pairs:
-            self.env.add_concrete_spec(abstract, concrete, new=True)
-
-        # Unify the specs objects, so we get correct references to all parents
-        self.env.unify_specs()
-        return concrete_pairs
 
 
 def yaml_equivalent(first, second) -> bool:
