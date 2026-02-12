@@ -20,7 +20,7 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
-from spack.solver.reuse import SpecFilter, create_external_parser
+from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
 from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
@@ -1323,7 +1323,7 @@ def test_requirements_on_compilers_and_reuse(
     root_specs = [Spec(input_spec)]
     packages_with_externals = external_config_with_implicit_externals(mutable_config)
     completion_mode = mutable_config.get("concretizer:externals:completion")
-    external_specs = SpecFilter.from_packages_yaml(
+    external_specs = spec_filter_from_packages_yaml(
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
         include=[],
@@ -1513,7 +1513,7 @@ packages:
     reused_nodes = list(initial_mpileaks.traverse())
     packages_with_externals = external_config_with_implicit_externals(mutable_config)
     completion_mode = mutable_config.get("concretizer:externals:completion")
-    external_specs = SpecFilter.from_packages_yaml(
+    external_specs = spec_filter_from_packages_yaml(
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
         include=[],

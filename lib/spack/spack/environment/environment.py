@@ -55,8 +55,8 @@ from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
-from spack.solver.reuse import SpecFilter
 from spack.spec import Spec
+from spack.spec_filter import SpecFilter
 from spack.util.path import substitute_path_variables
 
 from .list import SpecList, SpecListError, SpecListParser

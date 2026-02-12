@@ -37,6 +37,7 @@ import spack.solver.core
 import spack.solver.reuse
 import spack.solver.runtimes
 import spack.spec
+import spack.spec_filter
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
@@ -44,7 +45,7 @@ import spack.variant as vt
 from spack.externals import ExternalDependencyError
 from spack.installer import PackageInstaller
 from spack.solver.asp import Result
-from spack.solver.reuse import SpecFilter, create_external_parser
+from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
 from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
@@ -2010,7 +2011,7 @@ spack:
 
         packages_with_externals = external_config_with_implicit_externals(mutable_config)
         completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = SpecFilter.from_packages_yaml(
+        external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
             packages_with_externals=packages_with_externals,
             include=[],
@@ -2044,7 +2045,7 @@ spack:
         """Test package preferences during concretization."""
         packages_with_externals = external_config_with_implicit_externals(mutable_config)
         completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = SpecFilter.from_packages_yaml(
+        external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
             packages_with_externals=packages_with_externals,
             include=[],
@@ -2400,7 +2401,7 @@ packages:
         specs = [Spec(s) for s in specs]
         packages_with_externals = external_config_with_implicit_externals(mutable_config)
         completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = SpecFilter.from_packages_yaml(
+        external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
             packages_with_externals=packages_with_externals,
             include=[],
@@ -3341,7 +3342,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
 def test_spec_filters(specs, include, exclude, expected):
     specs = [Spec(x) for x in specs]
     expected = [Spec(x) for x in expected]
-    f = spack.solver.reuse.SpecFilter(
+    f = spack.spec_filter.SpecFilter(
         factory=lambda: specs, is_usable=lambda x: True, include=include, exclude=exclude
     )
     assert f.selected_specs() == expected

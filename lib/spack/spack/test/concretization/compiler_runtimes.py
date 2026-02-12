@@ -16,7 +16,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import ViewDescriptor
-from spack.solver.reuse import SpecFilter, create_external_parser
+from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
 from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.version import Version
 
@@ -25,7 +25,7 @@ def _concretize_with_reuse(*, root_str, reused_str, config):
     reused_spec = spack.concretize.concretize_one(reused_str)
     packages_with_externals = external_config_with_implicit_externals(config)
     completion_mode = config.get("concretizer:externals:completion")
-    external_specs = SpecFilter.from_packages_yaml(
+    external_specs = spec_filter_from_packages_yaml(
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
         include=[],

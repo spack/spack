@@ -335,7 +335,7 @@ def _find_query(args, env):
     if args.show_configured_externals:
         packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
         completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
-        results = spack.solver.reuse.SpecFilter.from_packages_yaml(
+        results = spack.solver.reuse.spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
             packages_with_externals=packages_with_externals,
             include=[],
