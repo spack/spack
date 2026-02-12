@@ -4,12 +4,17 @@
 
 import collections
 import functools
-from typing import Any, Callable, Dict, List, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Set, Tuple, Type, TypeVar, Union
+
+from spack.vendor.typing_extensions import ParamSpec
 
 import spack.error
 import spack.repo
 import spack.spec
 from spack.llnl.util.lang import dedupe
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 #: Names of possible directives. This list is mostly populated using the @directive decorator.
 #: Some directives leverage others and in that case are not automatically added.
@@ -251,7 +256,7 @@ class directive:
         self.can_patch_dependencies = can_patch_dependencies
         self.dicts = tuple(dicts)
 
-    def __call__(self, decorated_function: Callable) -> Callable:
+    def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
         directive_names.append(decorated_function.__name__)
         DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
 
