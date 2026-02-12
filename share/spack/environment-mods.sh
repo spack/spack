@@ -99,7 +99,7 @@ _spack_env_remove_value() {
 
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
-        if [ $val != $value ]; then
+        if [ "$val" != "$value" ]; then
             accumulator=$accumulator$val$sep
         fi
     done
