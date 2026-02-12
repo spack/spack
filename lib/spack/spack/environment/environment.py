@@ -2546,16 +2546,10 @@ class ReusableSpecsFactory:
 
             env_dir = as_env_dir(source["path"])
             if env_dir in self.env.included_concrete_envs:
-                included_specs = list(
-                    traverse.traverse_nodes(
-                        [
-                            x
-                            for _, x in self.env.concretized_specs_from_included_environment(
-                                env_dir
-                            )
-                        ]
-                    )
-                )
+                spec_pairs_from_included_envs = [
+                    x for _, x in self.env.concretized_specs_from_included_environment(env_dir)
+                ]
+                included_specs = list(traverse.traverse_nodes(spec_pairs_from_included_envs))
                 result.append(
                     SpecFilter(
                         lambda: included_specs,
