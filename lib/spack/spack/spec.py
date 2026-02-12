@@ -1309,47 +1309,6 @@ class ForwardQueryToPackage:
 QueryState = collections.namedtuple("QueryState", ["name", "extra_parameters", "isvirtual"])
 
 
-class SpecBuildInterface(lang.ObjectWrapper):
-    # home is available in the base Package so no default is needed
-    home = ForwardQueryToPackage("home", default_handler=None)
-    headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
-    libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
-    command = ForwardQueryToPackage("command", default_handler=None, _indirect=True)
-
-    def __init__(
-        self,
-        spec: "Spec",
-        name: str,
-        query_parameters: List[str],
-        _parent: "Spec",
-        is_virtual: bool,
-    ):
-        super().__init__(spec)
-        # Adding new attributes goes after super() call since the ObjectWrapper
-        # resets __dict__ to behave like the passed object
-        original_spec = getattr(spec, "wrapped_obj", spec)
-        self.wrapped_obj = original_spec
-        self.token = original_spec, name, query_parameters, _parent, is_virtual
-        self.last_query = QueryState(
-            name=name, extra_parameters=query_parameters, isvirtual=is_virtual
-        )
-
-        # TODO: this ad-hoc logic makes `spec["python"].command` return
-        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
-        self.indirect_spec = None
-        if spec.name == "python":
-            python_venvs = _parent.dependencies("python-venv")
-            if not python_venvs:
-                return
-            self.indirect_spec = python_venvs[0]
-
-    def __reduce__(self):
-        return SpecBuildInterface, self.token
-
-    def copy(self, *args, **kwargs):
-        return self.wrapped_obj.copy(*args, **kwargs)
-
-
 def tree(
     specs: List["Spec"],
     *,
@@ -5309,6 +5268,47 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
             sorted(self.keys()), lambda x: self[x].type == vt.VariantType.BOOL
         )
         return bool_keys, kv_keys
+
+
+class SpecBuildInterface(lang.ObjectWrapper, Spec):
+    # home is available in the base Package so no default is needed
+    home = ForwardQueryToPackage("home", default_handler=None)
+    headers = ForwardQueryToPackage("headers", default_handler=_headers_default_handler)
+    libs = ForwardQueryToPackage("libs", default_handler=_libs_default_handler)
+    command = ForwardQueryToPackage("command", default_handler=None, _indirect=True)
+
+    def __init__(
+        self,
+        spec: "Spec",
+        name: str,
+        query_parameters: List[str],
+        _parent: "Spec",
+        is_virtual: bool,
+    ):
+        lang.ObjectWrapper.__init__(self, spec)
+        # Adding new attributes goes after ObjectWrapper.__init__ call since the ObjectWrapper
+        # resets __dict__ to behave like the passed object
+        original_spec = getattr(spec, "wrapped_obj", spec)
+        self.wrapped_obj = original_spec
+        self.token = original_spec, name, query_parameters, _parent, is_virtual
+        self.last_query = QueryState(
+            name=name, extra_parameters=query_parameters, isvirtual=is_virtual
+        )
+
+        # TODO: this ad-hoc logic makes `spec["python"].command` return
+        # `spec["python-venv"].command` and should be removed when `python` is a virtual.
+        self.indirect_spec = None
+        if spec.name == "python":
+            python_venvs = _parent.dependencies("python-venv")
+            if not python_venvs:
+                return
+            self.indirect_spec = python_venvs[0]
+
+    def __reduce__(self):
+        return SpecBuildInterface, self.token
+
+    def copy(self, *args, **kwargs):
+        return self.wrapped_obj.copy(*args, **kwargs)
 
 
 def substitute_abstract_variants(spec: Spec):
