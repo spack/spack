@@ -78,19 +78,18 @@ def setup_combined_multiple_env():
     test1 = ev.read("test1")
     with test1:
         add("mpich@1.0")
-    test1.concretize()
-    test1.write()
+        test1.concretize()
+        test1.write()
 
     env("create", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
-    test2.concretize()
-    test2.write()
+        test2.concretize()
+        test2.write()
 
     env("create", "--include-concrete", "test1", "--include-concrete", "test2", "combined_env")
     combined = ev.read("combined_env")
-
     return test1, test2, combined
 
 
@@ -535,18 +534,21 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
-def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mutable_config):
+@pytest.mark.parametrize("reuse", [True, False])
+def test_env_install_include_concrete_env(
+    unify, reuse, install_mockery, mock_fetch, mutable_config
+):
     test1, test2, combined = setup_combined_multiple_env()
 
-    combined.unify = unify
-    if not unify:
+    if unify is False:
         combined.manifest.set_default_view(False)
 
-    combined.add("mpileaks")
-    combined.concretize()
-    combined.write()
-
     with combined:
+        mutable_config.set("concretizer:unify", unify)
+        mutable_config.set("concretizer:reuse", reuse)
+        combined.add("mpileaks")
+        combined.concretize()
+        combined.write()
         install("--fake")
 
     test1_user_spec_hashes = [x.hash for x in test1.concretized_roots]
@@ -561,12 +563,12 @@ def test_env_install_include_concrete_env(unify, install_mockery, mock_fetch, mu
 
     mpileaks_hash = combined.concretized_roots[0].hash
     mpileaks = combined.specs_by_hash[mpileaks_hash]
-    if unify:
-        assert mpileaks["mpi"].dag_hash() in test1_user_spec_hashes
-        assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
-    else:
+    if unify is False and reuse is False:
         # check that unification is not by accident
         assert mpileaks["mpi"].dag_hash() not in test1_user_spec_hashes
+    else:
+        assert mpileaks["mpi"].dag_hash() in test1_user_spec_hashes
+        assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
 def test_env_roots_marked_explicit(install_mockery, mock_fetch):
@@ -701,17 +703,18 @@ def test_remove_after_concretize():
     assert not any(s.name == "mpileaks" for s in e.all_specs_generator())
 
 
-def test_remove_before_concretize():
-    e = ev.create("test")
-    e.unify = True
+def test_remove_before_concretize(mutable_config):
+    """Tests the effect of concretization after adding and removing specs"""
+    with ev.create("test") as e:
+        mutable_config.set("concretizer:unify", True)
+        e.add("mpileaks")
+        e.concretize()
+        assert len(e.concretized_roots) == 1
+        assert e.concrete_roots()[0].satisfies("mpileaks")
 
-    e.add("mpileaks")
-    e.concretize()
-
-    e.remove("mpileaks")
-    e.concretize()
-
-    assert not list(e.concretized_specs())
+        e.remove("mpileaks")
+        e.concretize()
+        assert not e.concretized_roots
 
 
 def test_remove_command():
@@ -2282,13 +2285,11 @@ def test_env_include_concrete_reuse(reuse_mode):
 
 
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
-def test_env_include_concrete_env_reconcretized(unify):
+def test_env_include_concrete_env_reconcretized(mutable_config, unify):
     """Double check to make sure that concrete_specs for the local specs is empty
     after reconcretizing.
     """
     _, _, combined = setup_combined_multiple_env()
-
-    combined.unify = unify
 
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
@@ -2296,8 +2297,10 @@ def test_env_include_concrete_env_reconcretized(unify):
     assert not lockfile_as_dict["roots"]
     assert not lockfile_as_dict["concrete_specs"]
 
-    combined.concretize()
-    combined.write()
+    with combined:
+        mutable_config.set("concretizer:unify", unify)
+        combined.concretize()
+        combined.write()
 
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
@@ -3351,53 +3354,52 @@ spack:
     assert os.path.join(nondefaultdir, "bin") in shell
 
 
-def test_concretize_user_specs_together():
-    e = ev.create("coconcretization")
-    e.unify = True
+def test_concretize_user_specs_together(mutable_config):
+    with ev.create("coconcretization") as e:
+        mutable_config.set("concretizer:unify", True)
 
-    # Concretize a first time using 'mpich' as the MPI provider
-    e.add("mpileaks")
-    e.add("mpich")
-    e.concretize()
-
-    assert all("mpich" in spec for _, spec in e.concretized_specs())
-    assert all("mpich2" not in spec for _, spec in e.concretized_specs())
-
-    # Concretize a second time using 'mpich2' as the MPI provider
-    e.remove("mpich")
-    e.add("mpich2")
-
-    exc_cls = spack.error.UnsatisfiableSpecError
-
-    # Concretizing without invalidating the concrete spec for mpileaks fails
-    with pytest.raises(exc_cls):
+        # Concretize a first time using 'mpich' as the MPI provider
+        e.add("mpileaks")
+        e.add("mpich")
         e.concretize()
-    e.concretize(force=True)
 
-    assert all("mpich2" in spec for _, spec in e.concretized_specs())
-    assert all("mpich" not in spec for _, spec in e.concretized_specs())
+        assert all("mpich" in spec for _, spec in e.concretized_specs())
+        assert all("mpich2" not in spec for _, spec in e.concretized_specs())
 
-    # Concretize again without changing anything, check everything
-    # stays the same
-    e.concretize()
+        # Concretize a second time using 'mpich2' as the MPI provider
+        e.remove("mpich")
+        e.add("mpich2")
 
-    assert all("mpich2" in spec for _, spec in e.concretized_specs())
-    assert all("mpich" not in spec for _, spec in e.concretized_specs())
+        exc_cls = spack.error.UnsatisfiableSpecError
 
+        # Concretizing without invalidating the concrete spec for mpileaks fails
+        with pytest.raises(exc_cls):
+            e.concretize()
+        e.concretize(force=True)
 
-def test_duplicate_packages_raise_when_concretizing_together():
-    e = ev.create("coconcretization")
-    e.unify = True
+        assert all("mpich2" in spec for _, spec in e.concretized_specs())
+        assert all("mpich" not in spec for _, spec in e.concretized_specs())
 
-    e.add("mpileaks+opt")
-    e.add("mpileaks~opt")
-    e.add("mpich")
-
-    exc_cls = spack.error.UnsatisfiableSpecError
-    match = r"You could consider setting `concretizer:unify`"
-
-    with pytest.raises(exc_cls, match=match):
+        # Concretize again without changing anything, check everything
+        # stays the same
         e.concretize()
+
+        assert all("mpich2" in spec for _, spec in e.concretized_specs())
+        assert all("mpich" not in spec for _, spec in e.concretized_specs())
+
+
+def test_duplicate_packages_raise_when_concretizing_together(mutable_config):
+    with ev.create("coconcretization") as e:
+        mutable_config.set("concretizer:unify", True)
+        e.add("mpileaks+opt")
+        e.add("mpileaks~opt")
+        e.add("mpich")
+
+        exc_cls = spack.error.UnsatisfiableSpecError
+        match = r"You could consider setting `concretizer:unify`"
+
+        with pytest.raises(exc_cls, match=match):
+            e.concretize()
 
 
 def test_env_write_only_non_default():
@@ -3597,18 +3599,16 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmp_path: pathl
 
 
 @pytest.mark.regression("23440")
-def test_custom_version_concretize_together():
+def test_custom_version_concretize_together(mutable_config):
     # Custom versions should be permitted in specs when
     # concretizing together
-    e = ev.create("custom_version")
-    e.unify = True
-
-    # Concretize a first time using 'mpich' as the MPI provider
-    e.add("hdf5@=myversion")
-    e.add("mpich")
-    e.concretize()
-
-    assert any(spec.satisfies("hdf5@myversion") for _, spec in e.concretized_specs())
+    with ev.create("custom_version") as e:
+        mutable_config.set("concretizer:unify", True)
+        # Concretize a first time using 'mpich' as the MPI provider
+        e.add("hdf5@=myversion")
+        e.add("mpich")
+        e.concretize()
+        assert any(spec.satisfies("hdf5@myversion") for _, spec in e.concretized_specs())
 
 
 def test_modules_relative_to_views(environment_from_manifest, install_mockery, mock_fetch):
@@ -3724,15 +3724,13 @@ def _always_fail(cls, *args, **kwargs):
 
 
 @pytest.mark.regression("24148")
-def test_virtual_spec_concretize_together():
+def test_virtual_spec_concretize_together(mutable_config):
     # An environment should permit to concretize "mpi"
-    e = ev.create("virtual_spec")
-    e.unify = True
-
-    e.add("mpi")
-    e.concretize()
-
-    assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
+    with ev.create("virtual_spec") as e:
+        mutable_config.set("concretizer:unify", True)
+        e.add("mpi")
+        e.concretize()
+        assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
 def test_query_develop_specs(tmp_path: pathlib.Path):
@@ -4362,20 +4360,18 @@ def test_depfile_empty_does_not_error(tmp_path: pathlib.Path):
     assert make.returncode == 0
 
 
-def test_unify_when_possible_works_around_conflicts():
-    e = ev.create("coconcretization")
-    e.unify = "when_possible"
+def test_unify_when_possible_works_around_conflicts(mutable_config):
+    with ev.create("coconcretization") as e:
+        mutable_config.set("concretizer:unify", "when_possible")
+        e.add("mpileaks+opt")
+        e.add("mpileaks~opt")
+        e.add("mpich")
+        e.concretize()
 
-    e.add("mpileaks+opt")
-    e.add("mpileaks~opt")
-    e.add("mpich")
-
-    e.concretize()
-
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks")]) == 2
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks+opt")]) == 1
-    assert len([x for x in e.all_specs() if x.satisfies("mpileaks~opt")]) == 1
-    assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
+        assert len([x for x in e.all_specs() if x.satisfies("mpileaks")]) == 2
+        assert len([x for x in e.all_specs() if x.satisfies("mpileaks+opt")]) == 1
+        assert len([x for x in e.all_specs() if x.satisfies("mpileaks~opt")]) == 1
+        assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
 
 
 # Using mock_include_cache to ensure the "remote" file is cached in a temporary
