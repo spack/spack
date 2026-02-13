@@ -38,10 +38,18 @@ properties: Dict[str, Any] = {
                             "type": "string",
                             "description": "Root directory path where the view will be created",
                         },
-                        "groups": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "Groups of specs to include in the view",
+                        "group": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "Groups of specs to include in the view",
+                                },
+                                {
+                                    "type": "string",
+                                    "description": "Groups of specs to include in the view",
+                                },
+                            ]
                         },
                         "link": {
                             "enum": ["roots", "all", "run"],

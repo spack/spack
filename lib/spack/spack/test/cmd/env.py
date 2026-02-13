@@ -4705,10 +4705,37 @@ spack:
   view:
     default:
       root: {view_dir}
-      groups: [apps1, apps2]
+      group: [apps1, apps2]
 """
     ) as test:
         for item in test.concretized_roots:
             # Assertions are based on the behavior of the "--fake" install
             bin_file = pathlib.Path(test.default_view.view()._root) / "bin" / item.root.name
             assert not bin_file.exists() if item.group == "apps3" else bin_file.exists()
+
+
+def test_view_can_select_group_of_specs_using_string(
+    installed_environment, tmp_path: pathlib.Path
+):
+    """Tests that we can select groups of specs in a view and exclude other groups"""
+    view_dir = tmp_path / "view"
+    with installed_environment(
+        f"""\
+spack:
+  specs:
+    - group: apps1
+      specs:
+      - mpileaks
+    - group: apps2
+      specs:
+      - cmake
+  view:
+    default:
+      root: {view_dir}
+      group: apps1
+"""
+    ) as test:
+        for item in test.concretized_roots:
+            # Assertions are based on the behavior of the "--fake" install
+            bin_file = pathlib.Path(test.default_view.view()._root) / "bin" / item.root.name
+            assert not bin_file.exists() if item.group == "apps2" else bin_file.exists()

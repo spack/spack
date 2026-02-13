@@ -697,7 +697,7 @@ class ViewDescriptor:
         exclude: Optional[List[str]] = None,
         link: str = default_view_link,
         link_type: fsv.LinkType = "symlink",
-        groups: Optional[List[str]] = None,
+        groups: Optional[Union[str, List[str]]] = None,
     ) -> None:
         self.base = base_path
         self.raw_root = root
@@ -707,7 +707,9 @@ class ViewDescriptor:
         self.exclude = exclude or []
         self.link_type: fsv.LinkType = fsv.canonicalize_link_type(link_type)
         self.link = link
-        self.groups = groups
+        if isinstance(groups, str):
+            groups = [groups]
+        self.groups: Optional[List[str]] = groups
 
     def select_fn(self, spec: Spec) -> bool:
         return any(spec.satisfies(s) for s in self.select)
@@ -755,7 +757,7 @@ class ViewDescriptor:
             exclude=d.get("exclude", []),
             link=d.get("link", default_view_link),
             link_type=d.get("link_type", "symlink"),
-            groups=d.get("groups", None),
+            groups=d.get("group", None),
         )
 
     @property
