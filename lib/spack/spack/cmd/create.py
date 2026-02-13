@@ -384,7 +384,8 @@ class PythonPackageTemplate(PackageTemplate):
     # depends_on("py-poetry-core", type="build")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("py-foo")"""
 
     body_def = """\
     def config_settings(self, spec, prefix):
@@ -458,7 +459,8 @@ class RPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("r-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -499,7 +501,8 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -526,7 +529,8 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -539,7 +543,8 @@ class OctavePackageTemplate(PackageTemplate):
     extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("octave-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("octave-foo")"""
 
     def __init__(self, name, url, versions, languages: List[str]):
         # If the user provided `--name octave-splines`, don't rename it
@@ -562,8 +567,9 @@ class RubyPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
     # added implicity by the RubyPackage class.
-    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
-    # depends_on("ruby-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("ruby@X.Y.Z:")
+    #     depends_on("ruby-foo")"""
 
     body_def = """\
     def build(self, spec, prefix):
