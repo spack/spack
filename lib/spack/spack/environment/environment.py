@@ -689,35 +689,38 @@ def _error_on_nonempty_view_dir(new_root):
 class ViewDescriptor:
     def __init__(
         self,
-        base_path,
-        root,
-        projections={},
-        select=[],
-        exclude=[],
-        link=default_view_link,
-        link_type="symlink",
-    ):
+        base_path: str,
+        root: str,
+        *,
+        projections: Optional[Dict[str, str]] = None,
+        select: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        link: str = default_view_link,
+        link_type: fsv.LinkType = "symlink",
+        groups: Optional[List[str]] = None,
+    ) -> None:
         self.base = base_path
         self.raw_root = root
         self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
-        self.projections = projections
-        self.select = select
-        self.exclude = exclude
-        self.link_type = fsv.canonicalize_link_type(link_type)
+        self.projections = projections or {}
+        self.select = select or []
+        self.exclude = exclude or []
+        self.link_type: fsv.LinkType = fsv.canonicalize_link_type(link_type)
         self.link = link
+        self.groups = groups
 
-    def select_fn(self, spec):
+    def select_fn(self, spec: Spec) -> bool:
         return any(spec.satisfies(s) for s in self.select)
 
-    def exclude_fn(self, spec):
+    def exclude_fn(self, spec: Spec) -> bool:
         return not any(spec.satisfies(e) for e in self.exclude)
 
-    def update_root(self, new_path):
+    def update_root(self, new_path: str) -> None:
         self.raw_root = new_path
         self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
 
-    def __eq__(self, other):
-        return all(
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ViewDescriptor) and all(
             [
                 self.root == other.root,
                 self.projections == other.projections,
@@ -743,19 +746,20 @@ class ViewDescriptor:
         return ret
 
     @staticmethod
-    def from_dict(base_path, d):
+    def from_dict(base_path: str, d) -> "ViewDescriptor":
         return ViewDescriptor(
             base_path,
             d["root"],
-            d.get("projections", {}),
-            d.get("select", []),
-            d.get("exclude", []),
-            d.get("link", default_view_link),
-            d.get("link_type", "symlink"),
+            projections=d.get("projections", {}),
+            select=d.get("select", []),
+            exclude=d.get("exclude", []),
+            link=d.get("link", default_view_link),
+            link_type=d.get("link_type", "symlink"),
+            groups=d.get("groups", None),
         )
 
     @property
-    def _current_root(self):
+    def _current_root(self) -> Optional[str]:
         if not islink(self.root):
             return None
 
@@ -854,7 +858,12 @@ class ViewDescriptor:
 
         return self._exclude_duplicate_runtimes(result)
 
-    def regenerate(self, concrete_roots: List[Spec]) -> None:
+    def regenerate(self, env: "Environment") -> None:
+        if self.groups is None:
+            concrete_roots = env.concrete_roots()
+        else:
+            concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
+
         specs = self.specs_for_view(concrete_roots)
 
         # To ensure there are no conflicts with packages being installed
@@ -1302,7 +1311,7 @@ class Environment:
         return os.path.join(self.env_subdir_path, "repos")
 
     @property
-    def view_path_default(self):
+    def view_path_default(self) -> str:
         # default path for environment views
         return os.path.join(self.env_subdir_path, "view")
 
@@ -1723,6 +1732,7 @@ class Environment:
         if default_view_name in self.views:
             self.default_view.update_root(view_path)
         else:
+            assert isinstance(view_path, str), f"expected str for 'view_path', but got {view_path}"
             self.views[default_view_name] = ViewDescriptor(self.path, view_path)
 
         self.manifest.set_default_view(self._default_view_as_yaml())
@@ -1746,7 +1756,7 @@ class Environment:
             return
 
         for view in self.views.values():
-            view.regenerate(self.concrete_roots())
+            view.regenerate(self)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
