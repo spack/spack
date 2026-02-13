@@ -9,6 +9,7 @@ import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.environment as environment
+import spack.util.path
 from spack import traverse
 from spack.context import Context
 
@@ -57,6 +58,7 @@ def unconditional_environment_modifications(view):
 
     for subdir, vars in prefix_inspections(sys.platform).items():
         full_subdir = os.path.join(view.root, subdir)
+        full_subdir = spack.util.path.canonicalize_path(full_subdir)
         for var in vars:
             env.prepend_path(var, full_subdir)
 
