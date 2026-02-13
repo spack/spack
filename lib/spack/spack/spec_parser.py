@@ -439,7 +439,7 @@ class SpecParser:
             toolchain = parse_one_or_raise(toolchain_config)
             self._ensure_all_direct_edges(toolchain)
         else:
-            from spack.spec import Spec
+            from spack.spec import EMPTY_SPEC, Spec
 
             toolchain = Spec()
             for entry in toolchain_config:
@@ -447,9 +447,15 @@ class SpecParser:
                 when = entry.get("when", "")
                 self._ensure_all_direct_edges(toolchain_part)
 
-                # Conditions are applied to every edge in the constraint
-                for edge in toolchain_part.traverse_edges():
-                    edge.when.constrain(when)
+                # Apply global "when" to all edges in toolchain part
+                if when:
+                    when_spec = Spec(when)
+                    for edge in toolchain_part.traverse_edges():
+                        # EMPTY_SPEC is immutable by convention, so create a mutable instance.
+                        if edge.when is EMPTY_SPEC:
+                            edge.when = when_spec.copy()
+                        else:
+                            edge.when.constrain(when_spec)
                 toolchain.constrain(toolchain_part)
         return toolchain
 

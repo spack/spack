@@ -176,7 +176,7 @@ properties: Dict[str, Any] = {
             },
             "concurrent_packages": {
                 "type": "integer",
-                "minimum": 1,
+                "minimum": 0,
                 "description": "The maximum number of concurrent package builds a single Spack "
                 "instance will run",
             },

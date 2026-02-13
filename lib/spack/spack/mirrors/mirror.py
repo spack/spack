@@ -4,7 +4,7 @@
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -13,9 +13,13 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
+from spack.oci.image import is_oci_url
 
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
+
+#: The layout version spack can current install
+SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -111,6 +115,11 @@ class Mirror:
 
     @property
     def signed(self) -> bool:
+        # TODO: OCI support signing
+        # Only checking for fetch, push is handled by OCI implementation
+        if is_oci_url(self.fetch_url):
+            return False
+
         return isinstance(self._data, str) or self._data.get("signed", True)
 
     @property
@@ -128,6 +137,16 @@ class Mirror:
     def push_url(self):
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("push")
+
+    @property
+    def fetch_view(self):
+        """Get the valid, canonicalized fetch URL"""
+        return self.get_view("fetch")
+
+    @property
+    def push_view(self):
+        """Get the valid, canonicalized fetch URL"""
+        return self.get_view("push")
 
     def ensure_mirror_usable(self, direction: str = "push"):
         access_pair = self._get_value("access_pair", direction)
@@ -157,6 +176,25 @@ class Mirror:
             msg = f"invalid {direction} configuration for mirror {self.name}: "
             msg += "\n    ".join(errors)
             raise MirrorError(msg)
+
+    @property
+    def supported_layout_versions(self) -> List[int]:
+        """List all of the supported layouts a mirror can fetch from"""
+        # Only check the fetch configuration, the push configuration is whatever the latest
+        # mirror version is which should support all configurable features.
+
+        # All configured mirrors support the latest version
+        supported_versions = [SUPPORTED_LAYOUT_VERSIONS[0]]
+        has_view = self.fetch_view is not None
+
+        # Check if the mirror supports older layout versions
+        # OCI - Only return the newest version, the layout version is a dummy version since OCI
+        #       has its own layout.
+        # Views - Only versions >=3 support the views feature
+        if not is_oci_url(self.fetch_url) and not has_view:
+            supported_versions.extend(SUPPORTED_LAYOUT_VERSIONS[1:])
+
+        return supported_versions
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool):
         # Only allow one to exist in the config
@@ -303,6 +341,9 @@ class Mirror:
             raise ValueError(f"Mirror {self.name} has no URL configured")
 
         return _url_or_path_to_url(url)
+
+    def get_view(self, direction: str):
+        return self._get_value("view", direction)
 
     def get_credentials(self, direction: str) -> Dict[str, Any]:
         """Get the mirror credentials from the mirror config

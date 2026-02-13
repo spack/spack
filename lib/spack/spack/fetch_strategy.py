@@ -439,7 +439,7 @@ class URLFetchStrategy(FetchStrategy):
 
         try:
             response = web_util.urlopen(request)
-            tty.msg(f"Fetching {url}")
+            tty.verbose(f"Fetching {url}")
             progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
             with open(save_file, "wb") as f:
                 while True:
@@ -472,7 +472,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + ".part"
-        tty.msg(f"Fetching {url}")
+        tty.verbose(f"Fetching {url}")
         if partial_file:
             save_args = [
                 "-C",
@@ -659,7 +659,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
         try:
             response = self._urlopen(self.url)
-            tty.msg(f"Fetching {self.url}")
+            tty.verbose(f"Fetching {self.url}")
             with open(file, "wb") as f:
                 shutil.copyfileobj(response, f)
         except OSError as e:

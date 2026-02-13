@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.installer
 import spack.repo
+import spack.solver.asp
 import spack.util.hash as hashutil
 import spack.version
 from spack.dependency import Dependency
@@ -456,9 +457,9 @@ class TestSpecDag:
     @pytest.mark.parametrize(
         "constraint_str,spec_str",
         [
-            ("mpich@1.0", "mpileaks ^mpich@2.0"),
+            ("mpich@1.0", "mpileaks ^mpich@3.0"),
             ("mpich%gcc", "mpileaks ^mpich%intel"),
-            ("mpich%gcc@4.6", "mpileaks ^mpich%gcc@4.5"),
+            ("mpich%gcc@2.0", "mpileaks ^mpich%gcc@3.0"),
         ],
     )
     def test_unsatisfiable_cases(self, set_dependency, constraint_str, spec_str):
@@ -474,7 +475,7 @@ class TestSpecDag:
     )
     def test_invalid_dep(self, spec_str):
         spec = Spec(spec_str)
-        with pytest.raises(spack.error.SpecError):
+        with pytest.raises(spack.solver.asp.InvalidDependencyError):
             spack.concretize.concretize_one(spec)
 
     def test_equal(self):

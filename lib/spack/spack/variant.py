@@ -18,6 +18,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     Union,
@@ -56,6 +57,7 @@ class VariantType(enum.IntEnum):
     BOOL = 1
     SINGLE = 2
     MULTI = 3
+    INDICATOR = 4  # special type for placeholder variant values
 
     @property
     def string(self) -> str:
@@ -64,7 +66,10 @@ class VariantType(enum.IntEnum):
             return "bool"
         elif self == VariantType.SINGLE:
             return "single"
-        return "multi"
+        elif self == VariantType.MULTI:
+            return "multi"
+        else:
+            return "indicator"
 
 
 class Variant:
@@ -147,6 +152,9 @@ class Variant:
         self.group_validator = validator
         self.sticky = sticky
         self.precedence = precedence
+
+    def values_defined_by_validator(self) -> bool:
+        return self.values is None
 
     def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
@@ -496,6 +504,13 @@ def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> Varian
     return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
 
+class VariantValueRemoval(VariantValue):
+    """Indicator class for Spec.mutate to remove a variant"""
+
+    def __init__(self, name):
+        super().__init__(VariantType.INDICATOR, name, (None,))
+
+
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
 class DisjointSetsOfValues(collections.abc.Sequence):
@@ -508,23 +523,27 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         *sets (list): mutually exclusive sets of values
     """
 
-    _empty_set = {"none"}
+    _empty_set = ("none",)
 
     def __init__(self, *sets: Tuple[str, ...]) -> None:
-        self.sets = [set(_flatten(x)) for x in sets]
+        self.sets = [tuple(_flatten(x)) for x in sets]
 
-        # 'none' is a special value and can appear only in a set of
-        # a single element
-        if any("none" in s and s != {"none"} for s in self.sets):
+        # 'none' is a special value and can appear only in a set of a single element
+        if any("none" in s and s != self._empty_set for s in self.sets):
             raise spack.error.SpecError(
-                "The value 'none' represents the empty set,"
-                " and must appear alone in a set. Use the "
-                "method 'allow_empty_set' to add it."
+                "The value 'none' represents the empty set, and must appear alone in a set. "
+                "Use the method 'allow_empty_set' to add it."
             )
 
         # Sets should not intersect with each other
-        if any(s1 & s2 for s1, s2 in itertools.combinations(self.sets, 2)):
-            raise spack.error.SpecError("sets in input must be disjoint")
+        cumulated: Set[str] = set()
+        for current_set in self.sets:
+            if not cumulated.isdisjoint(current_set):
+                duplicates = ", ".join(sorted(cumulated.intersection(current_set)))
+                raise spack.error.SpecError(
+                    f"sets in input must be disjoint, but {duplicates} appeared more than once"
+                )
+            cumulated.update(current_set)
 
         #: Attribute used to track values which correspond to
         #: features which can be enabled or disabled as understood by the
@@ -582,7 +601,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
     def __len__(self):
-        return len(itertools.chain.from_iterable(self.sets))
+        return sum(len(x) for x in self.sets)
 
     @property
     def validator(self):

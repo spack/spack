@@ -1157,7 +1157,7 @@ class IncludePath(OptionalInclude):
             return os.getcwd()
 
         with filesystem.working_dir(work_dir()):
-            config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location)
+            config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location())
         assert config_path
         self.destination = config_path
 

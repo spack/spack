@@ -25,6 +25,7 @@ import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.report
 import spack.spec
 import spack.store
 import spack.util.lock as lk
@@ -643,6 +644,22 @@ def test_installer_init_requests(install_mockery):
     assert len(installer.build_requests) == 1
     request = installer.build_requests[0]
     assert request.pkg.name == spec_name
+
+
+def false(*args, **kwargs):
+    return False
+
+
+def test_rewire_task_no_tarball(monkeypatch, mock_packages):
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+    out = spec.splice(dep)
+
+    rewire_task = inst.RewireTask(out.package, inst.BuildRequest(out.package, {}))
+    monkeypatch.setattr(inst, "_process_binary_cache_tarball", false)
+    monkeypatch.setattr(spack.report.InstallRecord, "succeed", lambda x: None)
+
+    assert rewire_task.complete() == inst.ExecuteResult.MISSING_BUILD_SPEC
 
 
 @pytest.mark.parametrize("transitive", [True, False])

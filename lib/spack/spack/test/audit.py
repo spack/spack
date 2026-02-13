@@ -28,8 +28,6 @@ import spack.config
         (["invalid-selfhosted-gitlab-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone test method in build-time callbacks
         (["fail-test-audit"], ["PKG-PROPERTIES"]),
-        # This package implements and uses several deprecated stand-alone test methods
-        (["fail-test-audit-deprecated"], ["PKG-DEPRECATED-ATTRIBUTES"]),
         # This package has stand-alone test methods without non-trivial docstrings
         (["fail-test-audit-docstring"], ["PKG-PROPERTIES"]),
         # This package has a stand-alone test method without an implementation

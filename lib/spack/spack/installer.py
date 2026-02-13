@@ -1431,7 +1431,18 @@ class RewireTask(Task):
             try:
                 install_args = self.request.install_args
                 unsigned = install_args.get("unsigned")
-                _process_binary_cache_tarball(self.pkg, explicit=self.explicit, unsigned=unsigned)
+                success = _process_binary_cache_tarball(
+                    self.pkg, explicit=self.explicit, unsigned=unsigned
+                )
+
+                if not success:
+                    tty.msg(
+                        "Failed to find binary for build spec, requeuing {self.pkg.spec} with"
+                        "dependency install task for its build spec"
+                    )
+                    self.status = oldstatus
+                    return ExecuteResult.MISSING_BUILD_SPEC
+
                 _print_installed_pkg(self.pkg.prefix)
                 self.record.succeed()
                 return ExecuteResult.SUCCESS
@@ -1517,8 +1528,8 @@ class PackageInstaller:
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = spack.config.get("config:concurrent_packages", default=1)
-        self.concurrent_packages = concurrent_packages
+            concurrent_packages = int(spack.config.get("config:concurrent_packages", default=1))
+        self.concurrent_packages = max(1, concurrent_packages)
 
         install_args = {
             "dependencies_policy": dependencies_policy,

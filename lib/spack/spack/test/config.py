@@ -1960,3 +1960,10 @@ def test_missing_include_scope_write_file(mock_missing_file_include_scopes):
     assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
     install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
     assert install_root == "$spack/tmp/spack"
+
+
+def test_config_scope_empty_write(tmp_path: pathlib.Path):
+    """Confirm skipping attempt to write non-existent scope section."""
+    config_scope = spack.config.DirectoryConfigScope("test", str(tmp_path))
+
+    assert config_scope.get_section("include") is None

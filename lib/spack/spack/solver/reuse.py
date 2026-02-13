@@ -120,15 +120,8 @@ class SpecFilter:
 
 
 def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
-    # TODO (compiler as nodes): this function contains specific names from builtin, and should
-    # be made more general
-    if "gcc" in spec and "gcc-runtime" not in spec:
-        return False
-
-    if "intel-oneapi-compilers" in spec and "intel-oneapi-runtime" not in spec:
-        return False
-
-    return True
+    # Spack v1.0 specs and later
+    return spec.original_spec_format() >= 5
 
 
 def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) -> bool:

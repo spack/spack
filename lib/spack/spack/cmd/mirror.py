@@ -143,6 +143,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
+    add_parser.add_argument(
+        "--name",
+        "-n",
+        action="store",
+        dest="view_name",
+        help="Name of the index view for a binary mirror",
+    )
     arguments.add_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
@@ -306,6 +313,7 @@ def mirror_add(args):
         or args.s3_access_token_variable
         or args.s3_profile
         or args.s3_endpoint_url
+        or args.view_name
         or args.type
         or args.oci_username
         or args.oci_username_variable
@@ -344,6 +352,9 @@ def mirror_add(args):
             connection["autopush"] = args.autopush
         if args.signed is not None:
             connection["signed"] = args.signed
+        if args.view_name:
+            connection["view"] = args.view_name
+
         mirror = spack.mirrors.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirrors.mirror.Mirror(args.url, name=args.name)
