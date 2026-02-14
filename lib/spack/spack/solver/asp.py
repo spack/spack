@@ -2479,17 +2479,17 @@ class SpackSolverSetup:
             from_packages_yaml: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
-                v = vn.ver(vstr)
+                cfg_ver = vn.ver(vstr)
 
-                if isinstance(v, vn.GitVersion):
-                    if not require_checksum or v.is_commit:
-                        from_packages_yaml.append(v)
+                if isinstance(cfg_ver, vn.GitVersion):
+                    if not require_checksum or cfg_ver.is_commit:
+                        from_packages_yaml.append(cfg_ver)
                 else:
-                    matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
+                    matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(cfg_ver)]
                     matches.sort(reverse=True)
                     if not matches:
                         raise spack.error.ConfigError(
-                            f"Preference for version {v} does not match any known "
+                            f"Preference for version {cfg_ver} does not match any known "
                             f"version of {pkg_name}"
                         )
                     from_packages_yaml.extend(matches)

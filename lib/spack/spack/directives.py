@@ -60,13 +60,7 @@ from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
-from spack.version import (
-    GitVersion,
-    Version,
-    VersionChecksumError,
-    VersionError,
-    VersionLookupError,
-)
+from spack.version import StandardVersion, VersionChecksumError, VersionError
 
 __all__ = [
     "DirectiveError",
@@ -261,15 +255,7 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
             f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
         )
 
-    # Declared versions are concrete
-    version = Version(ver)
-
-    if isinstance(version, GitVersion) and not hasattr(pkg, "git") and "git" not in kwargs:
-        args = ", ".join(f"{argname}='{value}'" for argname, value in kwargs.items())
-        raise VersionLookupError(
-            f"{pkg.name}: spack version directives cannot include git hashes fetched from URLs.\n"
-            f"    version('{ver}', {args})"
-        )
+    version = StandardVersion.from_string(str(ver))
 
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs
