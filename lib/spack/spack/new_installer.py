@@ -646,23 +646,23 @@ def db_writer_worker(
 class DatabaseWriter:
     def __init__(self, nodes: Dict[str, spack.spec.Spec]) -> None:
         #: The write end of the pipe to send work to the DB writer process
-        self.task_r, self.task_w = Pipe(duplex=False)
+        task_r, self.task_w = Pipe(duplex=False)
         #: The read end of the pipe to receive results from the DB writer process
-        self.result_r, self.result_w = Pipe(duplex=False)
+        self.result_r, result_w = Pipe(duplex=False)
         self.proc = Process(
             target=db_writer_worker,
             args=(
                 nodes,
-                self.task_r,
+                task_r,
                 self.task_w if get_start_method() == "fork" else None,
-                self.result_w,
+                result_w,
                 spack.store.STORE,
                 spack.config.CONFIG,
             ),
         )
         self.proc.start()
-        self.task_r.close()
-        self.result_w.close()
+        task_r.close()
+        result_w.close()
 
         #: List of (dag_hash, explicit) tuples to be sent to the database writer process.
         self.to_be_submitted: List[Tuple[str, bool]] = []
