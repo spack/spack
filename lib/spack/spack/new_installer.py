@@ -35,7 +35,7 @@ import time
 import traceback
 import tty
 from gzip import GzipFile
-from multiprocessing import Pipe, Process
+from multiprocessing import Pipe, Process, get_start_method
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
 
@@ -566,6 +566,136 @@ class JobServer:
         # 2. if we created the jobserver, did the children return all tokens?
         self.r_conn.close()
         self.w_conn.close()
+
+
+def db_writer_worker(
+    nodes: Dict[str, spack.spec.Spec],
+    receiver_r: Connection,
+    receiver_w: Optional[Connection],
+    sender: Connection,
+    store: spack.store.Store,
+    config: spack.config.Configuration,
+) -> None:
+    """Worker process that reads specs from a pipe and persists them to the database, and informs
+    the parent when work is done.
+
+    Args:
+        nodes: Mapping of dag_hash to spec for all specs that may be persisted
+        receiver_r: Read end of the pipe to receive work from the parent
+        receiver_w: Write end of the pipe to receive work from the parent, only used if we forked
+        sender: Write end of the pipe to send results back to the parent
+        store: global store instance from parent
+        config: global config instance from parent
+    """
+    spack.store.STORE = store
+    spack.config.CONFIG = config
+    db = store.db
+
+    # If we forked, we inherit the write end, so gotta close this otherwise the loop below does
+    # not terminate when the parent process closes its write end.
+    if receiver_w:
+        receiver_w.close()
+
+    # Specs to be persisted
+    pending: List[Tuple[str, bool]] = []
+    # Indicates whether the parent is done producing work.
+    done = False
+
+    # Setup the database write lock. TODO: clean this up
+    if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
+        spack.store.STORE.db.lock._ensure_parent_directory()
+        spack.store.STORE.db.lock._file = spack.llnl.util.lock.FILE_TRACKER.get_fh(
+            spack.store.STORE.db.lock.path
+        )
+
+    while not done or pending:
+        # If we don't have any data, do a blocking read. This ensures the sub-process is idle until
+        # work is available; the kernel wakes it. If we do already have data we did not manage to
+        # persist yet, do a conditional (non-blocking) read to drain the pipe. This ensures the
+        # parent process is unblocked.
+        try:
+            if not pending or receiver_r.poll(0.0):
+                pending.extend(receiver_r.recv())
+        except EOFError:
+            done = True
+            if not pending:
+                break
+
+        # Acquire a write lock on the database
+        try:
+            # Try to acquire the lock in a non-blocking way; we still wanna receive more work from
+            # the parent if this fails.
+            if db.lock.acquire_write(timeout=1e-9):
+                db._read()
+        except spack.util.lock.LockTimeoutError:
+            # Avoid busy waiting if the lock is held by another process.
+            time.sleep(0.1)
+            continue
+
+        # Persist pending specs to the database, and inform the parent of their hashes.
+        try:
+            for dag_hash, explicit in pending:
+                spec = nodes[dag_hash]
+                db._add(spec, explicit=explicit)
+            sender.send([dag_hash for dag_hash, _ in pending])
+            pending.clear()
+        finally:
+            db.lock.release_write(db._write)
+
+
+class DatabaseWriter:
+    def __init__(self, nodes: Dict[str, spack.spec.Spec]) -> None:
+        #: The write end of the pipe to send work to the DB writer process
+        self.task_r, self.task_w = Pipe(duplex=False)
+        #: The read end of the pipe to receive results from the DB writer process
+        self.result_r, self.result_w = Pipe(duplex=False)
+        self.proc = Process(
+            target=db_writer_worker,
+            args=(
+                nodes,
+                self.task_r,
+                self.task_w if get_start_method() == "fork" else None,
+                self.result_w,
+                spack.store.STORE,
+                spack.config.CONFIG,
+            ),
+        )
+        self.proc.start()
+        self.task_r.close()
+        self.result_w.close()
+
+        #: List of (dag_hash, explicit) tuples to be sent to the database writer process.
+        self.to_be_submitted: List[Tuple[str, bool]] = []
+        #: Set of spec hashes we're waiting to be persisted to the database.
+        self.unfinished_work: Set[str] = set()
+
+    def add(self, build: ChildInfo) -> None:
+        dag_hash = build.spec.dag_hash()
+        self.unfinished_work.add(dag_hash)
+        self.to_be_submitted.append((dag_hash, build.explicit))
+
+    def save_async(self) -> None:
+        """Persist the given specs to the database asynchronously."""
+        if not self.to_be_submitted:
+            return
+        self.task_w.send(self.to_be_submitted)
+        self.to_be_submitted.clear()
+
+    def get_finished(self) -> List[str]:
+        """Retrieve the hashes of specs that have been persisted to the database."""
+        try:
+            result = self.result_r.recv()
+            self.unfinished_work.difference_update(result)
+            return result
+        except EOFError:
+            return []
+
+    def close(self) -> None:
+        """Graceful shutdown."""
+        # Closing the write end will end the worker's loop after it finishes pending work.
+        self.task_w.close()
+        # Wait for the worker to finish; writing to the database is critical.
+        self.proc.join()
 
 
 def start_build(
@@ -1303,6 +1433,7 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
+        db_writer = DatabaseWriter(self.build_graph.nodes)
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
@@ -1313,15 +1444,8 @@ class PackageInstaller:
 
         selector = selectors.DefaultSelector()
         selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
+        selector.register(db_writer.result_r.fileno(), selectors.EVENT_READ, "db_writer")
 
-        # Setup the database write lock. TODO: clean this up
-        if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
-            spack.store.STORE.db.lock._ensure_parent_directory()
-            spack.store.STORE.db.lock._file = spack.llnl.util.lock.FILE_TRACKER.get_fh(
-                spack.store.STORE.db.lock.path
-            )
-
-        to_insert_in_database: List[ChildInfo] = []
         failures: List[spack.spec.Spec] = []
 
         try:
@@ -1329,7 +1453,7 @@ class PackageInstaller:
             if self.pending_builds and not self.running_builds:
                 self._start(selector, jobserver)
 
-            while self.pending_builds or self.running_builds or to_insert_in_database:
+            while self.pending_builds or self.running_builds or db_writer.unfinished_work:
                 # Only monitor the jobserver if we have pending builds.
                 if self.pending_builds and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
@@ -1358,13 +1482,17 @@ class PackageInstaller:
                         jobserver_token_available = True
                     elif data == "stdin":
                         stdin_ready = True
+                    elif data == "db_writer":
+                        # Enqueue parents of specs that have been persisted to the database
+                        for dag_hash in db_writer.get_finished():
+                            self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
 
                 for pid in finished_pids:
                     build = self.running_builds.pop(pid)
                     jobserver.release()
                     build.cleanup(selector)
                     if build.proc.exitcode == 0:
-                        to_insert_in_database.append(build)
+                        db_writer.add(build)
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
                     else:
                         failures.append(build.spec)
@@ -1387,14 +1515,8 @@ class PackageInstaller:
                     elif char == "p" or char == "N":
                         self.build_status.next(-1)
 
-                # Flush installed packages to the database and enqueue any parents that are now
-                # ready.
-                if to_insert_in_database and self._save_to_db(to_insert_in_database):
-                    for entry in to_insert_in_database:
-                        self.build_graph.enqueue_parents(
-                            entry.spec.dag_hash(), self.pending_builds
-                        )
-                    to_insert_in_database.clear()
+                # Send work to database writer if needed.
+                db_writer.save_async()
 
                 # Again, the first job should start immediately and does not require a token.
                 if self.pending_builds and not self.running_builds:
@@ -1425,27 +1547,13 @@ class PackageInstaller:
             self.build_status.update(finalize=True)
             selector.close()
             jobserver.close()
+            db_writer.close()
 
         if failures:
             lines = [f"{s}: {s.package.log_path}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
-
-    def _save_to_db(self, to_insert_in_database: List[ChildInfo]) -> bool:
-        db = spack.store.STORE.db
-        try:
-            # Only try to get the lock once (non-blocking). If it fails, try it next time.
-            if db.lock.acquire_write(timeout=1e-9):
-                db._read()
-        except spack.util.lock.LockTimeoutError:
-            return False
-        try:
-            for entry in to_insert_in_database:
-                db._add(entry.spec, explicit=entry.explicit)
-            return True
-        finally:
-            db.lock.release_write(db._write)
 
     def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
         dag_hash = self.pending_builds.pop()
