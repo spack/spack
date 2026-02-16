@@ -1622,7 +1622,9 @@ class Environment:
         modify_specs = []
         modified_specs = []
         for dep in self.all_specs_generator():
-            for selector, mutator, validator, msg in zip_longest(selectors,mutators, validators or [], msgs or [], fillvalue=None):
+            for selector, mutator, validator, msg in zip_longest(
+                selectors, mutators, validators or [], msgs or [], fillvalue=None
+            ):
                 if dep.satisfies(selector):
                     if not dep.satisfies(validator or selector):
                         if not msg:
