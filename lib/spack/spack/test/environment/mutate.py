@@ -63,7 +63,7 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
 
     selector = spack.spec.Spec("cmake")
     mutator = spack.spec.Spec(mutated_constraint)
-    env.mutate(selector=selector, mutator=mutator)
+    env.mutate(selectors=[selector], mutators=[mutator])
     cmake_spec.mutate(mutator)
 
     for spec in env.all_specs_generator():
