@@ -8,6 +8,7 @@ import collections
 import os
 import shutil
 import sys
+import tempfile
 
 import spack.cmd
 import spack.config
@@ -329,24 +330,44 @@ def refresh(module_type, specs, args):
 
     # Proceed regenerating module files
     tty.msg("Regenerating {name} module files".format(name=module_type))
-    if os.path.isdir(module_type_root) and args.delete_tree:
-        shutil.rmtree(module_type_root, ignore_errors=False)
-    filesystem.mkdirp(module_type_root)
 
-    # Dump module index after potentially removing module tree
-    spack.modules.common.generate_module_index(
-        module_type_root, writers, overwrite=args.delete_tree
-    )
+    # Prepare new module root
+    swap = args.delete_tree and os.path.isdir(module_type_root)
+    if swap:
+        parent = os.path.dirname(module_type_root.rstrip(os.sep))
+        temp_root = tempfile.mkdtemp(dir=parent)
+        backup = module_type_root + ".bak"
+        write_root = temp_root
+    else:
+        filesystem.mkdirp(module_type_root)
+        write_root = module_type_root
+
+    # Write module index and module files
+    spack.modules.common.generate_module_index(write_root, writers, overwrite=args.delete_tree)
     errors = []
     for x in writers:
+        target = (
+            os.path.join(write_root, os.path.relpath(x.layout.filename, module_type_root))
+            if swap
+            else None
+        )
         try:
-            x.write(overwrite=True)
-        except spack.error.SpackError as e:
-            msg = f"{x.layout.filename}: {e.message}"
-            errors.append(msg)
+            x.write(overwrite=True, target_filename=target)
         except Exception as e:
-            msg = f"{x.layout.filename}: {str(e)}"
-            errors.append(msg)
+            errors.append(f"{x.layout.filename}: {getattr(e, 'message', str(e))}")
+
+    # Swap new module root into place if requested
+    if swap:
+        try:
+            os.rename(module_type_root, backup)
+            os.rename(temp_root, module_type_root)
+        except BaseException:
+            if not os.path.exists(module_type_root) and os.path.exists(backup):
+                os.rename(backup, module_type_root)
+            if os.path.exists(temp_root):
+                shutil.rmtree(temp_root, ignore_errors=True)
+            raise
+        shutil.rmtree(backup, ignore_errors=True)
 
     if errors:
         errors.insert(0, color.colorize("@*{some module files could not be written}"))
