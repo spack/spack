@@ -214,6 +214,7 @@ def test_write_key_in_memory(mock_low_high_config, compiler_specs):
     # Make sure the config looks how we expect.
     check_compiler_config(a_comps["compilers"], *compiler_specs.a)
     check_compiler_config(b_comps["compilers"], *compiler_specs.b)
+    assert False
 
 
 def test_write_key_to_disk(mock_low_high_config, compiler_specs):
