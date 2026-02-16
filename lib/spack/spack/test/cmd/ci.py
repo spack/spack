@@ -193,15 +193,14 @@ spack:
     assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
     assert "stages" in yaml_contents
-    assert len(yaml_contents["stages"]) == 7
+    assert len(yaml_contents["stages"]) == 6
     assert yaml_contents["stages"][0] == "stage-0"
-    assert yaml_contents["stages"][5] == "stage-wait"
-    assert yaml_contents["stages"][6] == "stage-rebuild-index"
+    assert yaml_contents["stages"][5] == "stage-rebuild-index"
 
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
     assert (
-        rebuild_job["script"][1] == "spack buildcache update-index --keys  buildcache-destination"
+        rebuild_job["script"][0] == f"spack buildcache update-index --keys {mirror_url.as_uri()}"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 
@@ -333,11 +332,12 @@ spack:
             "git checkout ${SPACK_REF}",
             "popd",
         ]
-        assert ci_obj["script"][1].startswith("spack env activate --without-view ")
-        ci_obj["script"][1] = "spack env activate --without-view ENV"
+        assert ci_obj["script"][1].startswith("cd ")
+        ci_obj["script"][1] = "cd ENV"
         assert ci_obj["script"] == [
             "spack -d ci rebuild",
-            "spack env activate --without-view ENV",
+            "cd ENV",
+            "spack env activate --without-view .",
             "spack ci rebuild",
         ]
         assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
@@ -1674,8 +1674,7 @@ spack:
     with open(tmp_path / ".gitlab-ci.yml", encoding="utf-8") as f:
         pipeline_doc = syaml.load(f)
         assert fst not in pipeline_doc["rebuild-index"]["script"][0]
-        assert "env activate" in pipeline_doc["rebuild-index"]["script"][0]
-        assert "buildcache-destination" in pipeline_doc["rebuild-index"]["script"][1]
+        assert snd in pipeline_doc["rebuild-index"]["script"][0]
 
 
 def dynamic_mapping_setup(tmp_path: pathlib.Path):
@@ -1856,13 +1855,11 @@ spack:
     # Make sure there are only two jobs and two stages
     stages = pipeline_doc["stages"]
     copy_stage = "copy"
-    wait_stage = "stage-wait"
     rebuild_index_stage = "stage-rebuild-index"
 
-    assert len(stages) == 3
+    assert len(stages) == 2
     assert stages[0] == copy_stage
-    assert stages[1] == wait_stage
-    assert stages[2] == rebuild_index_stage
+    assert stages[1] == rebuild_index_stage
 
     rebuild_index_job = pipeline_doc["rebuild-index"]
     assert rebuild_index_job["stage"] == rebuild_index_stage
