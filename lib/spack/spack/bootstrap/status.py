@@ -85,25 +85,15 @@ def _core_requirements() -> List[RequiredResponseType]:
 
 
 def _buildcache_requirements() -> List[RequiredResponseType]:
-    # Define executables that must be found on the system (not bootstrapped)
-    _buildcache_system_exes: Dict[ExecutablesType, str] = {}
-    if sys.platform == "darwin":
-        _buildcache_system_exes["otool"] = _missing("otool", "required to relocate binaries")
-
-    # Executables that are system-only
-    result = [
-        _required_system_executable(exe, msg) for exe, msg in _buildcache_system_exes.items()
-    ]
-
     # Add bootstrappable executables (these can be in PATH or bootstrapped)
     # GPG/GPG2 - used for signing and verifying buildcaches
-    result.append(
+    result = [
         _required_executable(
             ("gpg2", "gpg"),
             gnupg_root_spec(),
             _missing("gpg2", "required to sign/verify buildcaches", False),
         )
-    )
+    ]
 
     # Patchelf - only needed on Linux, used for binary relocation
     if sys.platform == "linux":
