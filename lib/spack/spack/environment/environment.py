@@ -1584,7 +1584,9 @@ class Environment:
         mutators = []
         msgs = []
 
+        assert not paths or len(specs) == len(paths)
         for spec, path in zip_longest(specs, paths or [], fillvalue=None):
+            assert spec
             selector = spack.spec.Spec(spec.name)
 
             mutator = spack.spec.Spec()
@@ -1621,10 +1623,15 @@ class Environment:
         # Find all specs that this mutation applies to
         modify_specs = []
         modified_specs = []
+        assert len(selectors) == len(mutators)
+        assert not validators or len(validators) == len(selectors)
+        assert not msgs or len(msgs) == len(selectors)
         for dep in self.all_specs_generator():
             for selector, mutator, validator, msg in zip_longest(
                 selectors, mutators, validators or [], msgs or [], fillvalue=None
             ):
+                assert selector
+                assert mutator
                 if dep.satisfies(selector):
                     if not dep.satisfies(validator or selector):
                         if not msg:
