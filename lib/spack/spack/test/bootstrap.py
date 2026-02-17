@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pathlib
-import sys
 
 import pytest
 
@@ -269,7 +268,7 @@ def test_gpg_status_check(
     # We know the first entry in requirements is the gpg entry because of how
     # _buildcache_requirements is structured:
     # Make sure we're not out of bounds
-    assert len(requirements) >= 1, f"No gpg requirement found"
+    assert len(requirements) >= 1, "No gpg requirement found"
 
     # Check that the gpg requirement matches our expectations
     gpg_req = requirements[0]
