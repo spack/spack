@@ -266,23 +266,13 @@ def test_gpg_status_check(
     requirements = spack.bootstrap.status._buildcache_requirements()
 
     # Find the gpg entry by examining the calls made to set up requirements
-    # We know the second entry in requirements is the gpg entry because of how
+    # We know the first entry in requirements is the gpg entry because of how
     # _buildcache_requirements is structured:
-    # 1. First, it adds system exes (otool on macOS)
-    # 2. Then it explicitly adds the gpg entry
-    # 3. Then it adds patchelf on Linux
-
-    # On macOS there might be two entries (otool and gpg), on other platforms at least gpg
-    # The index of gpg depends on the platform
-    gpg_index = 0
-    if sys.platform == "darwin":
-        gpg_index = 1
-
     # Make sure we're not out of bounds
-    assert len(requirements) > gpg_index, f"No gpg requirement found at index {gpg_index}"
+    assert len(requirements) >= 1, f"No gpg requirement found"
 
     # Check that the gpg requirement matches our expectations
-    gpg_req = requirements[gpg_index]
+    gpg_req = requirements[0]
     assert gpg_req[0] is not expected_missing
 
 
