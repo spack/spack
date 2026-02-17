@@ -17,8 +17,12 @@ def path_to_load_shell_script(spec, shell):
         spec: The spec whose shell script we are returning the path of
         shell: The shell that the user is running on
     """
+    if shell == "sh" or shell == "csh" or shell == "fish":
+        shell = ""
+    else:
+        shell = f".{shell}"
 
-    return os.path.join(spec.prefix, ".spack", f"load.{shell}")
+    return os.path.join(spec.prefix, ".spack", f"load{shell}")
 
 
 def path_to_unload_shell_script(spec, shell):
@@ -29,8 +33,12 @@ def path_to_unload_shell_script(spec, shell):
         spec: The spec whose shell script we are returning the path of
         shell: The shell that the user is running
     """
+    if shell == "sh" or shell == "csh" or shell == "fish":
+        shell = ""
+    else:
+        shell = f".{shell}"
 
-    return os.path.join(spec.prefix, ".spack", f"unload.{shell}")
+    return os.path.join(spec.prefix, ".spack", f"unload{shell}")
 
 
 def post_install(spec, explicit=None):
