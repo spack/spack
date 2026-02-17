@@ -570,7 +570,12 @@ class SpackCIConfig:
 
     # Generate IR from the configs
     def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
+        """Generate the IR from the Spack CI configurations.
+
+        Generate makes use of special strings that need to be expanded by python format.
+
+            env_dir: The concrete environment directory used in downstream jobs
+        """
 
         jobs = self.ir["jobs"]
 
@@ -579,8 +584,7 @@ class SpackCIConfig:
             {
                 "build-job": {
                     "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
+                        "spack env activate --without-view {env_dir}",
                         "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
@@ -589,18 +593,33 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+        update_index_extra_args = []
+        if buildcache_destination.push_view:
+            update_index_extra_args.extend(["--name", buildcache_destination.push_view])
+            option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
+            if option == "append":
+                # Running this in CI relies on a guarentee from the calling context that there is
+                # only a single writter or the build cache view doesn't require a complete view
+                # after each append.
+                tty.warn("Using --append to update buildcache-destination mirror index view")
+                update_index_extra_args.extend(["-y", "--append"])
+            elif option == "force":
+                update_index_extra_args.append("--force")
+            else:
+                raise SpackCIError(f"Unrecognized value: SPACK_CI_BUILDCACHE_VIEW={option}")
+
         # Job overrides
         overrides = [
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack -v buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
+                    "script:": [
+                        "spack env activate --without-view {env_dir}",
+                        "spack buildcache -v update-index --keys "
+                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                    ]
                 }
             },
             # Add signing job tags
