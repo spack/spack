@@ -9,7 +9,7 @@ import spack.util.executable
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
-from .core import clingo_root_spec, patchelf_root_spec
+from .core import clingo_root_spec, gnupg_root_spec, patchelf_root_spec
 from .environment import (
     BootstrapEnvironment,
     black_root_spec,
@@ -85,15 +85,25 @@ def _core_requirements() -> List[RequiredResponseType]:
 
 
 def _buildcache_requirements() -> List[RequiredResponseType]:
-    _buildcache_exes: Dict[ExecutablesType, str] = {
-        ("gpg2", "gpg"): _missing("gpg2", "required to sign/verify buildcaches", False)
-    }
+    # Define executables that must be found on the system (not bootstrapped)
+    _buildcache_system_exes: Dict[ExecutablesType, str] = {}
     if sys.platform == "darwin":
-        _buildcache_exes["otool"] = _missing("otool", "required to relocate binaries")
+        _buildcache_system_exes["otool"] = _missing("otool", "required to relocate binaries")
 
-    # Executables that are not bootstrapped yet
-    result = [_required_system_executable(exe, msg) for exe, msg in _buildcache_exes.items()]
+    # Executables that are system-only
+    result = [_required_system_executable(exe, msg) for exe, msg in _buildcache_system_exes.items()]
 
+    # Add bootstrappable executables (these can be in PATH or bootstrapped)
+    # GPG/GPG2 - used for signing and verifying buildcaches
+    result.append(
+        _required_executable(
+            ("gpg2", "gpg"),
+            gnupg_root_spec(),
+            _missing("gpg2", "required to sign/verify buildcaches", False),
+        )
+    )
+
+    # Patchelf - only needed on Linux, used for binary relocation
     if sys.platform == "linux":
         result.append(
             _required_executable(
