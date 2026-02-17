@@ -240,7 +240,7 @@ def test_gpg_status_check(
     gpg_in_store,
     expected_missing,
 ):
-    """Test that gpg/gpg2 status is properly detected whether it's in PATH or in the bootstrap store."""
+    """Test that gpg/gpg2 status is detected whether it's in PATH or in the bootstrap store."""
     # Set up mock PATH with or without gpg
     path_dir = tmp_path / "bin"
     path_dir.mkdir(exist_ok=True)

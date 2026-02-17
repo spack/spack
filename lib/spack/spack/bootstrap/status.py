@@ -91,7 +91,9 @@ def _buildcache_requirements() -> List[RequiredResponseType]:
         _buildcache_system_exes["otool"] = _missing("otool", "required to relocate binaries")
 
     # Executables that are system-only
-    result = [_required_system_executable(exe, msg) for exe, msg in _buildcache_system_exes.items()]
+    result = [
+        _required_system_executable(exe, msg) for exe, msg in _buildcache_system_exes.items()
+    ]
 
     # Add bootstrappable executables (these can be in PATH or bootstrapped)
     # GPG/GPG2 - used for signing and verifying buildcaches
