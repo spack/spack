@@ -813,6 +813,94 @@ def test_repo_list_format_flags(
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
 
 
+def test_repo_list_json_output(
+    mutable_config: spack.config.Configuration, tmp_path: pathlib.Path
+):
+    """Test the --json flag for repo list command produces valid JSON output"""
+    import json
+
+    # Fake a git monorepo with two package repositories
+    (tmp_path / "monorepo" / ".git").mkdir(parents=True)
+    repo("create", str(tmp_path / "monorepo"), "repo_one")
+    repo("create", str(tmp_path / "monorepo"), "repo_two")
+
+    mutable_config.set(
+        "repos",
+        {
+            # git repo that provides two package repositories
+            "monorepo": {
+                "git": "https://example.com/monorepo.git",
+                "destination": str(tmp_path / "monorepo"),
+                "paths": ["spack_repo/repo_one", "spack_repo/repo_two"],
+            },
+            # git repo that is not yet cloned
+            "uninitialized": {
+                "git": "https://example.com/uninitialized.git",
+                "destination": str(tmp_path / "uninitialized"),
+            },
+            # invalid local repository
+            "misconfigured": str(tmp_path / "misconfigured"),
+        },
+        scope="site",
+    )
+
+    # Get JSON output
+    json_output = repo("list", "--json")
+
+    # Parse the JSON output and verify structure
+    data = json.loads(json_output)
+
+    # Verify it's a list of repository objects
+    assert isinstance(data, list)
+
+    # Validate structure and content
+    repo_one = None
+    repo_two = None
+    uninitialized = None
+    misconfigured = None
+
+    for item in data:
+        # Check all required fields are present
+        assert "name" in item
+        assert "namespace" in item
+        assert "path" in item
+        assert "api_version" in item
+        assert "status" in item
+        assert "error" in item
+
+        # Store for specific validation
+        if item["namespace"] == "repo_one":
+            repo_one = item
+        elif item["namespace"] == "repo_two":
+            repo_two = item
+        elif item["namespace"] == "uninitialized":
+            uninitialized = item
+        elif item["namespace"] == "misconfigured":
+            misconfigured = item
+
+    # Validate the specific repository entries
+    assert repo_one is not None
+    assert repo_one["name"] == "monorepo"
+    assert repo_one["status"] == "installed"
+    assert repo_one["error"] is None
+    assert repo_one["api_version"] != ""
+
+    assert repo_two is not None
+    assert repo_two["name"] == "monorepo"
+    assert repo_two["status"] == "installed"
+    assert repo_two["error"] is None
+    assert repo_two["api_version"] != ""
+
+    assert uninitialized is not None
+    assert uninitialized["name"] == "uninitialized"
+    assert uninitialized["status"] == "uninitialized"
+
+    assert misconfigured is not None
+    assert misconfigured["name"] == "misconfigured"
+    assert misconfigured["status"] == "error"
+    assert misconfigured["error"] is not None
+
+
 @pytest.mark.parametrize(
     "repo_name,flags",
     [
