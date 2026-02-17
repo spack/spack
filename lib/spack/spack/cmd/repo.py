@@ -358,14 +358,16 @@ def repo_list(args):
             repo_path = path
 
         # Add the repo info to our list
-        repo_info.append({
-            "name": name,
-            "namespace": namespace,
-            "path": repo_path,
-            "api_version": api,
-            "status": status,
-            "error": str(maybe_repo) if isinstance(maybe_repo, Exception) else None
-        })
+        repo_info.append(
+            {
+                "name": name,
+                "namespace": namespace,
+                "path": repo_path,
+                "api_version": api,
+                "status": status,
+                "error": str(maybe_repo) if isinstance(maybe_repo, Exception) else None,
+            }
+        )
 
     # Output in JSON format if requested
     if args.json:
@@ -382,9 +384,7 @@ def repo_list(args):
         else:  # error
             status = "@r{[-]}"
 
-        formatted_repo_info.append(
-            (status, repo["namespace"], repo["api_version"], repo["path"])
-        )
+        formatted_repo_info.append((status, repo["namespace"], repo["api_version"], repo["path"]))
 
     if formatted_repo_info:
         max_namespace_width = max(len(namespace) for _, namespace, _, _ in formatted_repo_info) + 3

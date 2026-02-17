@@ -813,9 +813,7 @@ def test_repo_list_format_flags(
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
 
 
-def test_repo_list_json_output(
-    mutable_config: spack.config.Configuration, tmp_path: pathlib.Path
-):
+def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_path: pathlib.Path):
     """Test the --json flag for repo list command produces valid JSON output"""
     import json
 
