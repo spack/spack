@@ -74,6 +74,9 @@ SPINNER_INTERVAL = 0.1
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
 
+#: How often to flush completed builds to the database
+DATABASE_WRITE_INTERVAL = 5.0
+
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 4096
 
@@ -1377,7 +1380,10 @@ class PackageInstaller:
                 spack.store.STORE.db.lock.path
             )
 
-        to_insert_in_database: List[ChildInfo] = []
+        # Finished builds that have not yet been written to the database.
+        finished_builds: List[ChildInfo] = []
+        next_database_write = 0.0
+
         failures: List[spack.spec.Spec] = []
 
         try:
@@ -1385,7 +1391,7 @@ class PackageInstaller:
             if self.pending_builds and not self.running_builds:
                 self._start(selector, jobserver)
 
-            while self.pending_builds or self.running_builds or to_insert_in_database:
+            while self.pending_builds or self.running_builds or finished_builds:
                 # Only monitor the jobserver if we have pending builds and capacity.
                 can_schedule_more = self.pending_builds and self.capacity > 0
                 if can_schedule_more and jobserver.r not in selector.get_map():
@@ -1416,13 +1422,19 @@ class PackageInstaller:
                     elif data == "stdin":
                         stdin_ready = True
 
+                current_time = time.monotonic()
                 for pid in finished_pids:
                     build = self.running_builds.pop(pid)
                     self.capacity += 1
                     jobserver.release()
                     build.cleanup(selector)
                     if build.proc.exitcode == 0:
-                        to_insert_in_database.append(build)
+                        # Add successful builds for database insertion (after a short delay)
+                        finished_builds.append(build)
+                        self.build_graph.enqueue_parents(
+                            build.spec.dag_hash(), self.pending_builds
+                        )
+                        next_database_write = current_time + DATABASE_WRITE_INTERVAL
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
                     elif not self.fail_fast or not failures:
                         # In fail-fast mode, only record the first failure. Subsequent failures may
@@ -1455,14 +1467,19 @@ class PackageInstaller:
                     elif char == "p" or char == "N":
                         self.build_status.next(-1)
 
-                # Flush installed packages to the database and enqueue any parents that are now
-                # ready.
-                if to_insert_in_database and self._save_to_db(to_insert_in_database):
-                    for entry in to_insert_in_database:
-                        self.build_graph.enqueue_parents(
-                            entry.spec.dag_hash(), self.pending_builds
-                        )
-                    to_insert_in_database.clear()
+                # Insert into the database if we have any finished builds, and either the delay
+                # interval has passed, or we're done with all builds. The database save is not
+                # guaranteed; it fails if another process holds the lock. We'll try again next
+                # iteration of the event loop in that case.
+                if (
+                    finished_builds
+                    and (
+                        current_time >= next_database_write
+                        or not (self.pending_builds or self.running_builds)
+                    )
+                    and self._save_to_db(finished_builds)
+                ):
+                    finished_builds.clear()
 
                 # Again, the first job should start immediately and does not require a token.
                 if self.pending_builds and not self.running_builds:
@@ -1512,7 +1529,7 @@ class PackageInstaller:
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
 
-    def _save_to_db(self, to_insert_in_database: List[ChildInfo]) -> bool:
+    def _save_to_db(self, finished_builds: List[ChildInfo]) -> bool:
         db = spack.store.STORE.db
         try:
             # Only try to get the lock once (non-blocking). If it fails, try it next time.
@@ -1521,8 +1538,8 @@ class PackageInstaller:
         except spack.util.lock.LockTimeoutError:
             return False
         try:
-            for entry in to_insert_in_database:
-                db._add(entry.spec, explicit=entry.explicit)
+            for build in finished_builds:
+                db._add(build.spec, explicit=build.explicit)
             return True
         finally:
             db.lock.release_write(db._write)
