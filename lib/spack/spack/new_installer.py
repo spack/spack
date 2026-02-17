@@ -1303,16 +1303,15 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
+        selector = selectors.DefaultSelector()
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
             old_stdin_settings = termios.tcgetattr(sys.stdin)
             tty.setcbreak(sys.stdin.fileno())
+            selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
         else:
             old_stdin_settings = None
-
-        selector = selectors.DefaultSelector()
-        selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
 
         # Setup the database write lock. TODO: clean this up
         if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
