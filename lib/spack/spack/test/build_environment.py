@@ -291,6 +291,7 @@ def test_compiler_config_modifications(
 @pytest.mark.not_on_windows("Module files are not supported on Windows")
 def test_load_external_modules_error(working_env, monkeypatch):
     """Test that load_external_modules raises an exception when a module cannot be loaded"""
+
     # Create a mock spec object with the minimum attributes needed for the test
     class MockSpec:
         def __init__(self):
@@ -311,7 +312,7 @@ def test_load_external_modules_error(working_env, monkeypatch):
     # Mock the load_module function to raise an exception
     def mock_load_module(module_name):
         # Simulate module load failure
-        raise spack.util.module_cmd.ModuleLoadError('mock-external-spec', module_name)
+        raise spack.util.module_cmd.ModuleLoadError("mock-external-spec", module_name)
 
     monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
 

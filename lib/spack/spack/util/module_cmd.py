@@ -114,7 +114,7 @@ def load_module(mod):
 
     # If LOADEDMODULES didn't change, the module wasn't loaded
     if loaded_modules_before == loaded_modules_after:
-        raise ModuleLoadError(mod, mod)
+        raise ModuleLoadError(mod)
 
 
 def get_path_args_from_module_line(line):
@@ -256,7 +256,5 @@ def get_path_from_module_contents(text, module_name):
 class ModuleLoadError(SpackError):
     """Raised when a module cannot be loaded."""
 
-    def __init__(self, spec_or_id, module):
-        super().__init__(
-            f"Module specified for '{spec_or_id}' could not be loaded: {module}"
-        )
+    def __init__(self, module):
+        super().__init__(f"Module '{module}' could not be loaded.")
