@@ -1624,9 +1624,7 @@ class Environment:
             if (x.group, x.root) not in user_specs:
                 to_deconcretize.append(x)
         for x in to_deconcretize:
-            # FIXME: hack to do the inverse mapping
-            group = x.group.split(":")[-1]
-            self.deconcretize_by_user_spec(x.root, group=group)
+            self.deconcretize_by_user_spec(x.root, group=x.group)
 
     def _all_user_specs_with_group(self) -> Set[Tuple[str, Spec]]:
         result = set()
