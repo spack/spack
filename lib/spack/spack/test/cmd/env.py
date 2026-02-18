@@ -716,6 +716,12 @@ def test_remove_before_concretize(mutable_config):
         e.concretize()
         assert not e.concretized_roots
 
+        # Ensure setting force=True ignores nonexistent specs
+        with pytest.raises(ev.SpackEnvironmentError):
+            e.remove("nonexistent-pkg")
+
+        e.remove("nonexistent-pkg", force=True)
+
 
 def test_remove_command():
     env("create", "test")
