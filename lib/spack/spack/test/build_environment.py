@@ -20,6 +20,7 @@ import spack.deptypes as dt
 import spack.package_base
 import spack.spec
 import spack.util.environment
+import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
@@ -285,6 +286,38 @@ def test_compiler_config_modifications(
             assert os.environ[name] == value
             continue
         assert name not in os.environ
+
+
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_load_external_modules_error(working_env, monkeypatch):
+    """Test that load_external_modules raises an exception when a module cannot be loaded"""
+    # Create a mock spec object with the minimum attributes needed for the test
+    class MockSpec:
+        def __init__(self):
+            self.external_modules = ["non_existent_module"]
+
+        def __str__(self):
+            return "mock-external-spec"
+
+    mock_spec = MockSpec()
+
+    # Create a simplified SetupContext-like class that only contains what we need
+    class MockSetupContext:
+        def __init__(self, spec):
+            self.external = [(spec, None)]
+
+    context = MockSetupContext(mock_spec)
+
+    # Mock the load_module function to raise an exception
+    def mock_load_module(module_name):
+        # Simulate module load failure
+        raise spack.util.module_cmd.ModuleLoadError('mock-external-spec', module_name)
+
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
+
+    # Test that load_external_modules raises ModuleLoadError
+    with pytest.raises(spack.util.module_cmd.ModuleLoadError):
+        spack.build_environment.load_external_modules(context)
 
 
 def test_external_config_env(mock_packages, mutable_config, working_env):
