@@ -1399,8 +1399,14 @@ class Environment:
                 )
         self._sync_speclists()
 
-    def remove(self, query_spec, list_name=user_speclist_name, force=False):
-        """Remove specs from an environment that match a query_spec"""
+    def remove(self, query_spec, list_name=user_speclist_name, force=False) -> bool:
+        """Remove specs from an environment that match a query_spec.
+
+        Returns:
+            False if the spec wasn't removed due to not being present in the
+            environment, otherwise True.
+
+        """
         err_msg_header = (
             f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
