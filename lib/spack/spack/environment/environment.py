@@ -3138,6 +3138,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
         self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
+        self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
