@@ -2489,6 +2489,11 @@ class ReusableSpecsFactory:
         self.env = env
         self.group = group
 
+    @staticmethod
+    def _const(specs: List[Spec]) -> Callable[[], List[Spec]]:
+        """Returns a zero-argument callable that always returns the given list."""
+        return lambda: specs
+
     def __call__(
         self, is_usable: Callable[[Spec], bool], configuration: spack.config.Configuration
     ) -> List[SpecFilter]:
@@ -2505,7 +2510,9 @@ class ReusableSpecsFactory:
                 traverse.traverse_nodes(necessary_specs, deptype=("link", "run"))
             )
             result.append(
-                SpecFilter(lambda: necessary_specs, include=[], exclude=[], is_usable=is_usable)
+                SpecFilter(
+                    self._const(necessary_specs), include=[], exclude=[], is_usable=is_usable
+                )
             )
 
         # Included environments and _this_ group, instead, are subject to configuration
@@ -2523,7 +2530,9 @@ class ReusableSpecsFactory:
         additional_specs = list(traverse.traverse_nodes(this_group_specs + included_specs))
         if not isinstance(reuse_yaml, Mapping):
             result.append(
-                SpecFilter(lambda: additional_specs, include=[], exclude=[], is_usable=is_usable)
+                SpecFilter(
+                    self._const(additional_specs), include=[], exclude=[], is_usable=is_usable
+                )
             )
             return result
 
@@ -2540,7 +2549,7 @@ class ReusableSpecsFactory:
             if "path" not in source:
                 result.append(
                     SpecFilter(
-                        lambda: additional_specs,
+                        self._const(additional_specs),
                         include=include,
                         exclude=exclude,
                         is_usable=is_usable,
@@ -2556,7 +2565,7 @@ class ReusableSpecsFactory:
                 included_specs = list(traverse.traverse_nodes(spec_pairs_from_included_envs))
                 result.append(
                     SpecFilter(
-                        lambda: included_specs,
+                        self._const(included_specs),
                         include=include,
                         exclude=exclude,
                         is_usable=is_usable,
