@@ -2656,7 +2656,18 @@ class EnvironmentConcretizer:
 
     def _order_groups(self) -> List[str]:
         done, result = {DEFAULT_USER_SPEC_GROUP}, [DEFAULT_USER_SPEC_GROUP]
-        remaining = self.env.manifest.groups() - {DEFAULT_USER_SPEC_GROUP}
+        all_groups = self.env.manifest.groups()
+        remaining = all_groups - {DEFAULT_USER_SPEC_GROUP}
+
+        # Validate upfront that all 'needs' references point to defined groups
+        for group in remaining:
+            for dep in self.env.manifest.needs(group=group):
+                if dep not in all_groups:
+                    raise SpackEnvironmentConfigError(
+                        f"group '{group}' needs '{dep}', but '{dep}' is not a defined group",
+                        self.env.manifest.manifest_file,
+                    )
+
         while remaining:
             # Check we have groups that are "ready"
             ready = []
@@ -2665,10 +2676,10 @@ class EnvironmentConcretizer:
                 if all(d in done for d in deps):
                     ready.append(current)
 
-            # Check we can progress
+            # Check we can progress — if nothing is ready, there is a cycle
             if not ready:
                 raise SpackEnvironmentConfigError(
-                    "cannot resolve dependencies for the group of specs in the environment",
+                    f"cyclic dependency detected among groups: {', '.join(sorted(remaining))}",
                     self.env.manifest.manifest_file,
                 )
 

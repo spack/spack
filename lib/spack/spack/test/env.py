@@ -1938,3 +1938,45 @@ spack:
                 assert node.satisfies(f"%[when=c]c=gcc/{gcc_hash}")
                 assert node.satisfies(f"%[when=cxx]cxx=gcc/{gcc_hash}")
                 assert node.satisfies(f"%[when=fortran]fortran=gcc/{gcc_hash}")
+
+    def test_missing_needs_group_gives_clear_error(self, create_temporary_manifest):
+        """Tests that referencing a non-existent group in 'needs' gives a clear error message
+        that includes the name of the blocked group and the missing dependency.
+        """
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - group: apps
+    needs: [nonexistent]
+    specs:
+    - mpileaks
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(
+                ev.SpackEnvironmentConfigError, match=r"but 'nonexistent' is not a defined group"
+            ):
+                e.concretize()
+
+    def test_cyclic_group_dependencies_give_clear_error(self, create_temporary_manifest):
+        """Tests that cyclic group dependencies give a clear error message that mentions
+        the groups involved in the cycle.
+        """
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - group: alpha
+    needs: [beta]
+    specs:
+    - mpileaks
+  - group: beta
+    needs: [alpha]
+    specs:
+    - zlib
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(ev.SpackEnvironmentConfigError, match=r"among groups: alpha, beta"):
+                e.concretize()
