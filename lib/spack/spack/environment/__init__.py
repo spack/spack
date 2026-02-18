@@ -585,7 +585,7 @@ corresponding group.
         {
           "hash": "o72mlpqvb5xijyqg4iyubpnvd5bfcomb",
           "spec": "hdf5",
-          "group": "specs"
+          "group": "default"
         }
       ],
       "concrete_specs": {
