@@ -3058,8 +3058,11 @@ class SpackSolverSetup:
 
         # once we've done a full traversal and know possible versions, check that the
         # requested solve is at least consistent.
-        self.impossible_dependencies_check(specs)
-        self.input_spec_version_check(specs, allow_deprecated)
+        # do not check dependency and version availability for already concrete specs
+        # as they come from reusable specs
+        abstract_specs = [s for s in specs if not s.concrete]
+        self.impossible_dependencies_check(abstract_specs)
+        self.input_spec_version_check(abstract_specs, allow_deprecated)
 
         return self.gen
 
