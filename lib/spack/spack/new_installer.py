@@ -1504,6 +1504,11 @@ class PackageInstaller:
                 child.proc.join()
             raise
         finally:
+            # Make sure to write any successful builds to the database before exiting
+            with spack.store.STORE.db.write_transaction():
+                for build in finished_builds:
+                    spack.store.STORE.db._add(build.spec, explicit=build.explicit)
+
             # Restore terminal settings
             if old_stdin_settings:
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
