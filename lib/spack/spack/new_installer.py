@@ -243,20 +243,17 @@ def install_from_buildcache(
 class PrefixPivoter:
     """Manages the installation prefix during overwrite installations."""
 
-    def __init__(self, prefix: str, overwrite: bool, keep_prefix: bool = False) -> None:
+    def __init__(self, prefix: str, keep_prefix: bool = False) -> None:
         """Initialize the prefix pivoter.
 
         Args:
             prefix: The installation prefix path
-            overwrite: Whether to allow overwriting an existing prefix
-            keep_prefix: Whether to keep a failed installation prefix (when not overwriting)
+            keep_prefix: Whether to keep a failed installation prefix
         """
         self.prefix = prefix
-        #: Whether to allow installation when the prefix exists
-        self.overwrite = overwrite
         #: Whether to keep a failed installation prefix
         self.keep_prefix = keep_prefix
-        #: Temporary location for the original prefix during overwrite
+        #: Temporary location for the original prefix
         self.tmp_prefix: Optional[str] = None
         self.parent = os.path.dirname(prefix)
 
@@ -264,9 +261,7 @@ class PrefixPivoter:
         """Enter the context: move existing prefix to temporary location if needed."""
         if not self._lexists(self.prefix):
             return self
-        if not self.overwrite:
-            raise spack.error.InstallError(f"Install prefix {self.prefix} already exists")
-        # Move the existing prefix to a temporary location
+        # Move the existing prefix to a temporary location so the build starts fresh
         self.tmp_prefix = self._mkdtemp(
             dir=self.parent, prefix=".", suffix=OVERWRITE_BACKUP_SUFFIX
         )
@@ -278,36 +273,32 @@ class PrefixPivoter:
     ) -> None:
         """Exit the context: cleanup on success, restore on failure."""
         if exc_type is None:
-            # Success: remove the backup in case of overwrite
+            # Success: remove the backup
             if self.tmp_prefix is not None:
                 self._rmtree_ignore_errors(self.tmp_prefix)
             return
 
         # Failure handling:
-        # Priority 1: If we're overwriting, always restore the original prefix
-        # Priority 2: If keep_prefix is False, remove the failed installation
-
-        if self.overwrite and self.tmp_prefix is not None:
-            # Overwrite case: restore the original prefix if it existed
-            # The highest priority is to restore the original prefix, so we try to:
-            # rename prefix -> garbage: move failed dir out of the way
-            # rename tmp_prefix -> prefix: restore original prefix
-            # remove garbage (this is allowed to fail)
+        if self.keep_prefix:
+            # Leave the failed prefix in place, discard the backup
+            if self.tmp_prefix is not None:
+                self._rmtree_ignore_errors(self.tmp_prefix)
+        elif self.tmp_prefix is not None:
+            # There was a pre-existing prefix: pivot back to it and discard the failed build
             garbage = self._mkdtemp(dir=self.parent, prefix=".", suffix=OVERWRITE_GARBAGE_SUFFIX)
             try:
                 self._rename(self.prefix, garbage)
                 has_failed_prefix = True
-            except FileNotFoundError:  # prefix dir does not exist, so we don't have to delete it.
+            except FileNotFoundError:  # build never created the prefix dir
                 has_failed_prefix = False
             self._rename(self.tmp_prefix, self.prefix)
             if has_failed_prefix:
                 self._rmtree_ignore_errors(garbage)
-        elif not self.keep_prefix and self._lexists(self.prefix):
-            # Not overwriting, keep_prefix is False: remove the failed installation
+        elif self._lexists(self.prefix):
+            # No backup, just remove the failed installation
             garbage = self._mkdtemp(dir=self.parent, prefix=".", suffix=OVERWRITE_GARBAGE_SUFFIX)
             self._rename(self.prefix, garbage)
             self._rmtree_ignore_errors(garbage)
-        # else: keep_prefix is True, leave the failed prefix in place
 
     def _lexists(self, path: str) -> bool:
         return os.path.lexists(path)
@@ -331,7 +322,6 @@ def worker_function(
     dirty: bool,
     keep_stage: bool,
     restage: bool,
-    overwrite: bool,
     keep_prefix: bool,
     skip_patch: bool,
     state: Connection,
@@ -357,7 +347,6 @@ def worker_function(
         dirty: Whether to preserve user environment in the build environment
         keep_stage: Whether to keep the build stage after installation
         restage: Whether to restage the source before building
-        overwrite: Whether to overwrite the existing install prefix
         keep_prefix: Whether to keep a failed installation prefix
         skip_patch: Whether to skip the patch phase
         state: Connection to send state updates to
@@ -404,7 +393,7 @@ def worker_function(
     exit_code = 0
 
     try:
-        with PrefixPivoter(spec.prefix, overwrite, keep_prefix):
+        with PrefixPivoter(spec.prefix, keep_prefix):
             _install(
                 spec,
                 explicit,
@@ -618,7 +607,6 @@ def start_build(
     dirty: bool,
     keep_stage: bool,
     restage: bool,
-    overwrite: bool,
     keep_prefix: bool,
     skip_patch: bool,
     jobserver: JobServer,
@@ -653,7 +641,6 @@ def start_build(
             dirty,
             keep_stage,
             restage,
-            overwrite,
             keep_prefix,
             skip_patch,
             state_w_conn,
@@ -1547,7 +1534,6 @@ class PackageInstaller:
             # keep_stage/restage logic taken from installer.py
             keep_stage=self.keep_stage or is_develop,
             restage=self.restage and not is_develop,
-            overwrite=dag_hash in self.overwrite,
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
             jobserver=jobserver,

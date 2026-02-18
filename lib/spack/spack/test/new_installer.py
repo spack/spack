@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the new_installer.py module"""
 
-import pathlib as pathlb
+import pathlib
 import sys
 
 import pytest
@@ -11,13 +11,12 @@ import pytest
 if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
-import spack.error
 import spack.spec
 from spack.new_installer import OVERWRITE_GARBAGE_SUFFIX, PackageInstaller, PrefixPivoter
 
 
 @pytest.fixture
-def existing_prefix(tmp_path: pathlb.Path) -> pathlb.Path:
+def existing_prefix(tmp_path: pathlib.Path) -> pathlib.Path:
     """Creates a standard existing prefix with content."""
     prefix = tmp_path / "existing_prefix"
     prefix.mkdir()
@@ -28,28 +27,22 @@ def existing_prefix(tmp_path: pathlb.Path) -> pathlb.Path:
 class TestPrefixPivoter:
     """Tests for the PrefixPivoter class."""
 
-    def test_no_existing_prefix(self, tmp_path: pathlb.Path):
+    def test_no_existing_prefix(self, tmp_path: pathlib.Path):
         """Test installation when prefix doesn't exist yet."""
         prefix = tmp_path / "new_prefix"
 
-        with PrefixPivoter(str(prefix), overwrite=False):
+        with PrefixPivoter(str(prefix)):
             prefix.mkdir()
             (prefix / "installed_file").write_text("content")
 
         assert prefix.exists()
         assert (prefix / "installed_file").read_text() == "content"
 
-    def test_existing_prefix_no_overwrite_raises(self, existing_prefix: pathlb.Path):
-        """Test that existing prefix raises error when overwrite=False."""
-        with pytest.raises(spack.error.InstallError, match="already exists"):
-            with PrefixPivoter(str(existing_prefix), overwrite=False):
-                pass
-
-    def test_overwrite_success_cleans_up_old_prefix(
-        self, tmp_path: pathlb.Path, existing_prefix: pathlb.Path
+    def test_existing_prefix_success_cleans_up_old_prefix(
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
     ):
-        """Test that overwrite=True moves old prefix and cleans it up on success."""
-        with PrefixPivoter(str(existing_prefix), overwrite=True):
+        """Test that an existing prefix is moved aside, and cleaned up on success."""
+        with PrefixPivoter(str(existing_prefix)):
             assert not existing_prefix.exists()
             existing_prefix.mkdir()
             (existing_prefix / "new_file").write_text("new content")
@@ -60,15 +53,12 @@ class TestPrefixPivoter:
         # Only the existing_prefix directory should remain
         assert len(list(tmp_path.iterdir())) == 1
 
-    def test_overwrite_failure_restores_original_prefix(
-        self, tmp_path: pathlb.Path, existing_prefix: pathlb.Path
+    def test_existing_prefix_failure_restores_original_prefix(
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
     ):
-        """Test that original prefix is restored when installation fails.
-
-        Note: keep_prefix=True is passed but should be ignored since overwrite=True
-        takes precedence."""
+        """Test that the original prefix is restored when installation fails."""
         with pytest.raises(RuntimeError, match="simulated failure"):
-            with PrefixPivoter(str(existing_prefix), overwrite=True, keep_prefix=True):
+            with PrefixPivoter(str(existing_prefix), keep_prefix=False):
                 existing_prefix.mkdir()
                 (existing_prefix / "partial_file").write_text("partial")
                 raise RuntimeError("simulated failure")
@@ -76,22 +66,24 @@ class TestPrefixPivoter:
         assert existing_prefix.exists()
         assert (existing_prefix / "old_file").read_text() == "old content"
         assert not (existing_prefix / "partial_file").exists()
-        # Only the existing_prefix directory should remain
+        # Only the original prefix should remain
         assert len(list(tmp_path.iterdir())) == 1
 
-    def test_overwrite_failure_no_partial_prefix_created(self, existing_prefix: pathlb.Path):
-        """Test restoration when failure occurs before any prefix is created."""
+    def test_existing_prefix_failure_no_partial_prefix_created(
+        self, existing_prefix: pathlib.Path
+    ):
+        """Test restoration when failure occurs before the build creates the prefix dir."""
         with pytest.raises(RuntimeError, match="early failure"):
-            with PrefixPivoter(str(existing_prefix), overwrite=True):
+            with PrefixPivoter(str(existing_prefix)):
                 raise RuntimeError("early failure")
 
         assert existing_prefix.exists()
         assert (existing_prefix / "old_file").read_text() == "old content"
 
-    def test_overwrite_true_no_existing_prefix(self, tmp_path: pathlb.Path):
-        """Test that overwrite=True works fine when prefix doesn't exist."""
+    def test_no_existing_prefix_success(self, tmp_path: pathlib.Path):
+        """Test that a fresh install with no pre-existing prefix works fine."""
         prefix = tmp_path / "new_prefix"
-        with PrefixPivoter(str(prefix), overwrite=True):
+        with PrefixPivoter(str(prefix)):
             prefix.mkdir()
             (prefix / "installed_file").write_text("content")
 
@@ -99,34 +91,64 @@ class TestPrefixPivoter:
         # Only the new_prefix directory should remain
         assert len(list(tmp_path.iterdir())) == 1
 
-    def test_keep_prefix_true_leaves_failed_install(self, tmp_path: pathlb.Path):
-        """Test that keep_prefix=True preserves the failed installation."""
-        prefix = tmp_path / "new_prefix"
-
+    def test_keep_prefix_true_with_existing_prefix_keeps_failed_install(
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
+    ):
+        """Test that keep_prefix=True keeps the failed install and discards the backup."""
         with pytest.raises(RuntimeError, match="simulated failure"):
-            with PrefixPivoter(str(prefix), overwrite=False, keep_prefix=True):
-                prefix.mkdir()
-                (prefix / "partial_file").write_text("partial content")
+            with PrefixPivoter(str(existing_prefix), keep_prefix=True):
+                existing_prefix.mkdir()
+                (existing_prefix / "partial_file").write_text("partial content")
                 raise RuntimeError("simulated failure")
 
-        # Failed prefix should still exist
-        assert prefix.exists()
-        assert (prefix / "partial_file").exists()
-        assert (prefix / "partial_file").read_text() == "partial content"
-        # Only the failed prefix should remain
+        # The failed prefix should be kept (not the original)
+        assert existing_prefix.exists()
+        assert (existing_prefix / "partial_file").exists()
+        assert not (existing_prefix / "old_file").exists()
+        # Backup should have been removed
         assert len(list(tmp_path.iterdir())) == 1
 
-    def test_keep_prefix_false_removes_failed_install(self, tmp_path: pathlb.Path):
-        """Test that keep_prefix=False removes the failed installation."""
+    def test_keep_prefix_false_removes_failed_install(self, tmp_path: pathlib.Path):
+        """Test that keep_prefix=False removes the failed installation (no pre-existing prefix)."""
         prefix = tmp_path / "new_prefix"
 
         with pytest.raises(RuntimeError, match="simulated failure"):
-            with PrefixPivoter(str(prefix), overwrite=False, keep_prefix=False):
+            with PrefixPivoter(str(prefix), keep_prefix=False):
                 prefix.mkdir()
                 (prefix / "partial_file").write_text("partial content")
                 raise RuntimeError("simulated failure")
 
         # Failed prefix should be removed
+        assert not prefix.exists()
+        # Nothing should remain
+        assert len(list(tmp_path.iterdir())) == 0
+
+    def test_keep_prefix_true_no_existing_prefix(self, tmp_path: pathlib.Path):
+        """Test failure with keep_prefix=True when no prefix existed beforehand."""
+        prefix = tmp_path / "new_prefix"
+
+        with pytest.raises(RuntimeError, match="simulated failure"):
+            with PrefixPivoter(str(prefix), keep_prefix=True):
+                prefix.mkdir()
+                (prefix / "partial_file").write_text("partial content")
+                raise RuntimeError("simulated failure")
+
+        # The failed prefix should be kept
+        assert prefix.exists()
+        assert (prefix / "partial_file").exists()
+        # No backup should exist
+        assert len(list(tmp_path.iterdir())) == 1
+
+    def test_failure_no_prefix_created(self, tmp_path: pathlib.Path):
+        """Test failure when the prefix directory was never created."""
+        prefix = tmp_path / "new_prefix"
+
+        with pytest.raises(RuntimeError, match="simulated failure"):
+            with PrefixPivoter(str(prefix), keep_prefix=False):
+                # Do NOT create the prefix directory
+                raise RuntimeError("simulated failure")
+
+        # Prefix should not exist
         assert not prefix.exists()
         # Nothing should remain
         assert len(list(tmp_path.iterdir())) == 0
@@ -138,12 +160,11 @@ class FailingPrefixPivoter(PrefixPivoter):
     def __init__(
         self,
         prefix: str,
-        overwrite: bool,
         keep_prefix: bool = False,
         fail_on_restore: bool = False,
         fail_on_move_garbage: bool = False,
     ):
-        super().__init__(prefix, overwrite, keep_prefix)
+        super().__init__(prefix, keep_prefix)
         self.fail_on_restore = fail_on_restore
         self.fail_on_move_garbage = fail_on_move_garbage
         self.restore_rename_count = 0
@@ -168,10 +189,10 @@ class TestPrefixPivoterFailureRecovery:
     """Tests for edge cases and failure recovery in PrefixPivoter."""
 
     def test_restore_failure_leaves_backup(
-        self, tmp_path: pathlb.Path, existing_prefix: pathlb.Path
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
     ):
         """Test that if restoration fails, the backup is not deleted."""
-        pivoter = FailingPrefixPivoter(str(existing_prefix), overwrite=True, fail_on_restore=True)
+        pivoter = FailingPrefixPivoter(str(existing_prefix), fail_on_restore=True)
 
         with pytest.raises(OSError, match="Simulated rename failure during restore"):
             with pivoter:
@@ -184,12 +205,10 @@ class TestPrefixPivoterFailureRecovery:
         assert len(list(tmp_path.iterdir())) == 2
 
     def test_garbage_move_failure_leaves_backup(
-        self, tmp_path: pathlb.Path, existing_prefix: pathlb.Path
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
     ):
         """Test that if moving the failed install to garbage fails, the backup is preserved."""
-        pivoter = FailingPrefixPivoter(
-            str(existing_prefix), overwrite=True, fail_on_move_garbage=True
-        )
+        pivoter = FailingPrefixPivoter(str(existing_prefix), fail_on_move_garbage=True)
 
         with pytest.raises(OSError, match="Simulated rename failure moving to garbage"):
             with pivoter:
