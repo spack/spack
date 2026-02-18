@@ -79,6 +79,7 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.module_cmd
 from spack import traverse
 from spack.context import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
@@ -100,7 +101,6 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -1117,7 +1117,7 @@ def load_external_modules(context: SetupContext) -> None:
     for spec, _ in context.external:
         external_modules = spec.external_modules or []
         for external_module in external_modules:
-            load_module(external_module)
+            spack.util.module_cmd.load_module(external_module)
 
 
 def _setup_pkg_and_run(

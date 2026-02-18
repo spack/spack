@@ -133,7 +133,7 @@ class TestCompilerPropertyDetector:
 
         def mock_load_module(module_name):
             # Simulate module load failure
-            raise spack.util.module_cmd.ModuleLoadError("mock_gcc", module_name)
+            raise spack.util.module_cmd.ModuleLoadError(module_name)
 
         monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
 

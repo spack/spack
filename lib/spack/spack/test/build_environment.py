@@ -160,7 +160,7 @@ def test_cc_not_changed_by_modules(monkeypatch, mutable_config, working_env, com
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake %gcc@14")
     spack.build_environment.setup_package(s.package, dirty=False)
@@ -312,7 +312,7 @@ def test_load_external_modules_error(working_env, monkeypatch):
     # Mock the load_module function to raise an exception
     def mock_load_module(module_name):
         # Simulate module load failure
-        raise spack.util.module_cmd.ModuleLoadError("mock-external-spec", module_name)
+        raise spack.util.module_cmd.ModuleLoadError(module_name)
 
     monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
 
@@ -354,7 +354,7 @@ def test_spack_paths_before_module_paths(
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake")
 
