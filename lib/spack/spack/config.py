@@ -1046,6 +1046,7 @@ class OptionalInclude:
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 
+
         # use specified name if there is one
         config_name = self.name
         if not config_name:
@@ -1077,6 +1078,16 @@ class OptionalInclude:
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
         if (exists and not is_dir) or ext_is_yaml:
+            if self.name and hasattr(self, "paths") and len(self.paths) > 1:
+                # TODO: Remove the try-except once the minimum Python is 3.9
+                # TODO: since that is when removeprefix was introduced
+                prefix = f".{os.sep}"
+                try:
+                    base_path = path.removeprefix(prefix)
+                except AttributeError:
+                    base_path = path[len(prefix):] if path.startswith(prefix) else path
+                config_name = f"{config_name}:{os.path.basename(base_path)}"
+
             # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
