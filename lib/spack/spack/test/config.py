@@ -1967,3 +1967,21 @@ def test_config_scope_empty_write(tmp_path: pathlib.Path):
     config_scope = spack.config.DirectoryConfigScope("test", str(tmp_path))
 
     assert config_scope.get_section("include") is None
+
+
+def test_include_bad_parent_scope(tmp_path: pathlib.Path):
+    """Test parent scope validation."""
+    path = tmp_path / "config.yaml"
+    path.touch()
+    entry = {"path": str(path)}
+    include = spack.config.included_path(entry)
+
+    # Confim require a ConfigScope parent
+    with pytest.raises(AssertionError, match="configuration scope"):
+        _ = include.scopes("_builtin")  # type: ignore
+
+    # Confirm require a named parent scope
+    for name in ["", " "]:
+        parent_scope = spack.config.InternalConfigScope(name, spack.config.CONFIG_DEFAULTS)
+        with pytest.raises(AssertionError, match="must have a name"):
+            _ = include.scopes(parent_scope)

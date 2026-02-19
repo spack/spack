@@ -1011,9 +1011,8 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        assert self._valid_parent_scope(
-            parent_scope
-        ), "Optional includes must have valid parent_scope object"
+        # Ensure the parent scope is valid
+        self._validate_parent_scope(parent_scope)
 
         # use specified name if there is one
         config_name = self.name
@@ -1066,15 +1065,14 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
         return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
 
-    def _valid_parent_scope(self, parent_scope: ConfigScope) -> bool:
+    def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
         # enforced by type checking but those can always be # type: ignore'd
         assert isinstance(
             parent_scope, ConfigScope
-        ), f"Optional include must have valid parent scope,\
- of type ConfigScope; Type:{type(parent_scope)} is not valid."
-        # naive check that parent scope name isn't empty or just whitespace
-        return bool(re.sub(r"\s", "", parent_scope.name))
+        ), f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"
+
+        assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
     def evaluate_condition(self) -> bool:
         # circular dependencies
