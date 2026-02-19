@@ -111,7 +111,7 @@ def test_include_overrides(mutable_config):
 
     mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
 
-    # overridden scopes are not shown wtihout `-v`
+    # overridden scopes are not shown without `-v`
     output = config("scopes").strip()
     lines = output.split("\n")
     assert "user" not in lines
@@ -121,7 +121,7 @@ def test_include_overrides(mutable_config):
     # scopes with ConfigScopePriority.DEFAULTS remain
     assert "_builtin" in lines
 
-    # overridden scopes are shown wtih `-v` and marked 'override'
+    # overridden scopes are shown with `-v` and marked 'override'
     output = config("scopes", "-v").strip()
     lines = output.split("\n")
     assert "override" in next(line for line in lines if line.startswith("user"))
