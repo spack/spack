@@ -1144,6 +1144,8 @@ class PyclingoDriver:
             result, concretization_stats = self._conc_cache.fetch(cache_key)
         timer.stop("cache-check")
 
+        tty.debug("Starting concretizer")
+
         # run the solver and store the result, if it wasn't cached already
         if not result:
             problem_repr = "\n".join(problem)

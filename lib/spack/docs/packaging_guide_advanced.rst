@@ -27,99 +27,102 @@ This section of the packaging guide covers a few advanced topics.
 Multiple build systems
 ----------------------
 
-It is not uncommon for a package to use different build systems across different versions or platforms.
-For instance, a project might migrate from Autotools to CMake, or use a different build system on Windows than on UNIX.
+Packages may use different build systems over time or across platforms.
 Spack is designed to handle this seamlessly within a single ``package.py`` file.
-While Spack uses one package class per recipe, it can manage multiple build systems by associating different *builder* classes with the package.
-This design makes supporting multiple build systems straightforward and maintainable.
 
-The following changes are needed to support multiple build systems in a package:
-
-1. The package class should derive from *multiple base classes*, such as ``CMakePackage`` and ``AutotoolsPackage``.
-2. The ``build_system`` directive is used to declare the available build systems and specify the default one.
-3. The :doc:`build instructions <packaging_guide_build>` are specified in *separate builder classes*.
-
-Here is a simple example of a package that supports both CMake and Autotools:
+Let's assume we work with ``curl`` and that the package is built using Autotools so far:
 
 .. code-block:: python
 
-   from spack.package import *
-   from spack_repo.builtin.build_systems import cmake, autotools
+   from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
 
-   class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
-       variant("my_feature", default=True)
-       build_system("cmake", "autotools", default="cmake")
+   class Curl(AutotoolsPackage):
+
+       depends_on("zlib-api")
+
+       def configure_args(self):
+           return [f"--with-zlib={self.spec['zlib-api'].prefix}"]
+
+To add CMake as a further build system we need to:
+
+1. Add another base to the ``Curl`` package class (in our case ``cmake.CMakePackage``),
+2. Explicitly declare which build systems are supported using the ``build_system`` directive,
+3. Move the :doc:`build instructions <packaging_guide_build>` in *separate builder classes*.
+
+.. code-block:: python
+
+   from spack_repo.builtin.build_systems import autotools, cmake
 
 
-   class CMakeBuilder(cmake.CMakeBuilder):
-       def cmake_args(self):
-           return [self.define_from_variant("MY_FEATURE", "my_feature")]
+   class Curl(cmake.CMakePackage, autotools.AutotoolsPackage):
+
+       build_system("autotools", "cmake", default="cmake")
+
+       depends_on("zlib-api")
 
 
    class AutotoolsBuilder(autotools.AutotoolsBuilder):
        def configure_args(self):
-           return self.with_or_without("my-feature", variant="my_feature")
+           return [f"--with-zlib={self.spec['zlib-api'].prefix}"]
 
-When defining a package like this, Spack automatically makes the ``build_system`` **variant** available, which can be used to pick the desired build system at install time.
-For example
+
+   class CMakeBuilder(cmake.CMakeBuilder):
+       def cmake_args(self):
+           return [self.define_from_variant("USE_NGHTTP2", "nghttp2")]
+
+In general, with multiple build systems there is a clear split between the :doc:`package metadata <packaging_guide_creation>` and the :doc:`build instructions <packaging_guide_build>`:
+
+1. The directives such as ``depends_on``, ``variant``, ``patch`` go into the package class
+2. The build phase functions like ``configure``, ``build`` and ``install``, and helper functions such as ``cmake_args`` or ``configure_args`` go into the builder classes
+
+When ``curl`` is concretized, we can select its build system using the ``build_system`` variant, which is available for every package:
 
 .. code-block:: spec
 
-   $ spack install example +feature build_system=cmake
+   $ spack install curl build_system=cmake
 
-makes Spack pick the ``CMakeBuilder`` class and runs ``cmake -DMY_FEATURE:BOOL=ON``.
+Override "phases" of a build system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Similarly
+Sometimes package recipes need to override entire :ref:`phases <overriding-phases>` of a build system.
+Let's assume this happens for ``cp2k``:
 
-.. code-block:: spec
+.. code-block:: python
 
-   $ spack install example +feature build_system=autotools
-
-will pick the ``AutotoolsBuilder`` class and runs ``./configure --with-my-feature``.
-
-With multiple build systems, we have a clear split between the :doc:`package metadata <packaging_guide_creation>` and the :doc:`build instructions <packaging_guide_build>`.
-The directives such as ``depends_on``, ``variant``, ``patch`` go into the package class, whereas build phase functions like ``configure``, ``build`` and ``install``, and helper functions such as ``cmake_args`` or ``configure_args`` go into the builder classes.
-
-.. note::
-
-   The signature of certain methods changes when moving from a single build system to multiple build systems.
-
-   Suppose you add support for CMake in the following Autotools package:
-
-   .. code-block:: python
-
-      from spack.package import *
-      from spack_repo.builtin.build_systems import autotools
+   from spack.package import *
+   from spack_repo.builtin.build_systems import autotools
 
 
-      class Example(autotools.AutotoolsPackage):
-          def install(self, spec: Spec, prefix: str) -> None:
-              # ...existing code...
-              pass
-   
-   Then you should move the install method to the appropriate builder class, and change its signature:
+   class Cp2k(autotools.AutotoolsPackage):
+       def install(self, spec: Spec, prefix: str) -> None:
+           # ...existing code...
+           pass
 
-   .. code-block:: python
+If we want to add CMake as another build system we need to remember that the signature of phases changes when moving from the ``Package`` to the ``Builder`` class:
 
-      from spack.package import *
-      from spack_repo.builtin.build_systems import autotools, cmake
+.. code-block:: python
 
-
-      class Example(autotools.AutotoolsPackage, cmake.CMakePackage):
-          build_system("autotools", "cmake", default="cmake")
+   from spack.package import *
+   from spack_repo.builtin.build_systems import autotools, cmake
 
 
-      class AutotoolsBuilder(autotools.AutotoolsBuilder):
-          def install(self, pkg: Example, spec: Spec, prefix: str) -> None:
-              # ...existing code...
-              pass
+   class Cp2k(autotools.AutotoolsPackage, cmake.CMakePackage):
+       build_system("autotools", "cmake", default="cmake")
 
-   Notice that the install method now takes the package instance as the first argument.
-   This is because ``self`` refers to the builder class, not the package class.
 
-Build dependencies typically depend on the choice of the build system.
-An effective way to handle this is to use a ``with when("build_system=...")`` block to specify dependencies that are only relevant for a specific build system.
+   class AutotoolsBuilder(autotools.AutotoolsBuilder):
+       def install(self, pkg: Cp2k, spec: Spec, prefix: str) -> None:
+           # ...existing code...
+           pass
+
+The ``install`` method now takes the ``Package`` instance as the first argument, since ``self`` refers to the builder class.
+
+Add dependencies conditional on a build system
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Many build dependencies are conditional on which build system is chosen.
+An effective way to handle this is to use a ``with when("build_system=...")`` block to specify dependencies that are only relevant for a specific build system:
 
 .. code-block:: python
 
@@ -127,7 +130,7 @@ An effective way to handle this is to use a ``with when("build_system=...")`` bl
    from spack_repo.builtin.build_systems import cmake, autotools
 
 
-   class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
+   class Cp2k(cmake.CMakePackage, autotools.AutotoolsPackage):
 
        build_system("cmake", "autotools", default="cmake")
 
@@ -145,10 +148,10 @@ An effective way to handle this is to use a ``with when("build_system=...")`` bl
            depends_on("perl", type="build")
            depends_on("pkgconfig", type="build")
 
-In the previous example, users could pick the desired build system at install time by specifying the ``build_system`` variant.
-Much more commonly, packages transition from one build system to another from one version to the next.
-That is, a package might use Autotools in version ``0.63`` and CMake in version ``0.64``.
-In such cases we have to use the ``build_system`` directive to indicate when which build system can be used:
+Transition from one build system to another
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Packages that transition from one build system to another can be modeled using :ref:`conditional variant values <variant-conditional-values>`:
 
 .. code-block:: python
 
@@ -156,7 +159,7 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
    from spack_repo.builtin.build_systems import cmake, autotools
 
 
-   class Example(cmake.CMakePackage, autotools.AutotoolsPackage):
+   class Cp2k(cmake.CMakePackage, autotools.AutotoolsPackage):
 
        build_system(
            conditional("cmake", when="@0.64:"),
@@ -166,16 +169,32 @@ In such cases we have to use the ``build_system`` directive to indicate when whi
 
 In the example, the directive imposes a change from ``Autotools`` to ``CMake`` going from ``v0.63`` to ``v0.64``.
 
-We have seen how users can run ``spack install example build_system=cmake`` to pick the desired build system.
-The same can be done in ``depends_on`` statements, which has certain use cases.
-A notable example is when a CMake package *needs* a CMake config file for its dependency, which is only generated when the dependency is built with CMake (and not Autotools).
-In that case, you can *force* the choice of the build system of the dependency:
+Inherit from a package with multiple build systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Customizing a package supporting multiple build systems is straightforward.
+If we need to only customize the metadata, we can just define the derived package class.
+
+For instance, let's assume we want to add a new version to the ``silo`` package:
 
 .. code-block:: python
 
-   class Dependent(CMakePackage):
+   from spack_repo.builtin.packages.silo.package import Silo as BuiltinSilo
 
-       depends_on("example build_system=cmake")
+   class Silo(BuiltinSilo):
+       # Version not in builtin.silo
+       version("special_version")
+
+If we don't define any builder, Spack will reuse the custom builder from ``builtin.silo`` by default.
+If we need to customize the builder too, we just have to inherit from it, like any other Python class:
+
+.. code-block:: python
+
+   from spack_repo.builtin.packages.silo.package import CMakeBuilder as SiloCMakeBuilder
+
+   class CMakeBuilder(SiloCMakeBuilder):
+       def cmake_args(self):
+           return [self.define_from_variant("USE_NGHTTP2", "nghttp2")]
 
 .. _make-package-findable:
 
