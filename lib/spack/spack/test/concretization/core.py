@@ -4826,6 +4826,30 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
+def test_concrete_specs_skip_prechecks(mock_packages):
+    """Test that concrete specs are not verified by solver prechecks.
+
+    This verifies the change in commit de00d2a937 that modifies the solver
+    to skip running impossible_dependencies_check and input_spec_version_check
+    on already concrete specs, which come from reusable specs.
+
+    The test directly checks the filtering logic added in the commit.
+    """
+
+    specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
+
+    with pytest.raises(spack.solver.asp.DeprecatedVersionError):
+        spack.solver.asp.SpackSolverSetup().setup(specs)
+
+    with spack.config.override("config:deprecated", True):
+        concrete_spec = spack.concretize.concretize_one(specs[1])
+
+    # Try again with the same version but a concrete spec
+    specs[1] = concrete_spec
+
+    spack.solver.asp.SpackSolverSetup().setup(specs)
+
+
 @pytest.mark.regression("51683")
 def test_activating_variant_for_conditional_language_dependency(default_mock_concretization):
     """Tests that a dependency on a conditional language can be concretized, and that the solver
