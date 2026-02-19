@@ -4827,14 +4827,7 @@ packages:
 
 
 def test_concrete_specs_skip_prechecks(mock_packages):
-    """Test that concrete specs are not verified by solver prechecks.
-
-    This verifies the change in commit de00d2a937 that modifies the solver
-    to skip running impossible_dependencies_check and input_spec_version_check
-    on already concrete specs, which come from reusable specs.
-
-    The test directly checks the filtering logic added in the commit.
-    """
+    """Test that concrete specs are not checked for unknown versions and dependencies."""
 
     specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
 
