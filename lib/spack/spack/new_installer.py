@@ -27,6 +27,7 @@ import os
 import re
 import selectors
 import shutil
+import signal
 import sys
 import tempfile
 import termios
@@ -359,6 +360,22 @@ def worker_function(
     # TODO: don't start a build for external packages
     if spec.external:
         return
+
+    # Start a new session, so our SIGTERM handler can kill all child processes.
+    os.setsid()
+
+    def handle_sigterm(signum, frame):
+        # This SIGTERM handler forwards the signal to child processes, and
+        # then resets the handler to default. It does not raise an exception,
+        # because the assumption is we're stuck in waitpid, and we want to
+        # let child processes finish with SIGTERM before we run the cleanup
+        # code in finally blocks and __exit__ functions and exit. If we exit
+        # too early, the child process may still write to the prefix or stage.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        os.killpg(0, signal.SIGTERM)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
     spack.store.STORE = store
@@ -1410,6 +1427,8 @@ class PackageInstaller:
                 self.build_status.update()
         except KeyboardInterrupt:
             # Cleanup running builds.
+            for child in self.running_builds.values():
+                child.proc.terminate()
             for child in self.running_builds.values():
                 child.proc.join()
             raise
