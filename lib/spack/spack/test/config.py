@@ -1976,7 +1976,7 @@ def test_include_bad_parent_scope(tmp_path: pathlib.Path):
     entry = {"path": str(path)}
     include = spack.config.included_path(entry)
 
-    # Confim require a ConfigScope parent
+    # Confirm require a ConfigScope parent
     with pytest.raises(AssertionError, match="configuration scope"):
         _ = include.scopes("_builtin")  # type: ignore
 
