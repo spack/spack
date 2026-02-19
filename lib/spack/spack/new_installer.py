@@ -1238,9 +1238,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fail_fast:
-            raise NotImplementedError("Fail-fast installs are not implemented")
-        elif fake:
+        if fake:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
@@ -1260,6 +1258,7 @@ class PackageInstaller:
         #: Set of DAG hashes to overwrite (if already installed)
         self.overwrite: Set[str] = set(overwrite) if overwrite else set()
         self.keep_prefix = keep_prefix
+        self.fail_fast = fail_fast
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
@@ -1382,9 +1381,19 @@ class PackageInstaller:
                     if build.proc.exitcode == 0:
                         to_insert_in_database.append(build)
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    else:
+                    elif not self.fail_fast or not failures:
+                        # In fail-fast mode, only record the first failure. Subsequent failures may
+                        # be a consequence of us terminating other builds, and should not be
+                        # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+
+                if failures and self.fail_fast:
+                    # Terminate other builds to actually fail fast. We continue in the event loop
+                    # waiting for child processes to finish, which may take a little while.
+                    for child in self.running_builds.values():
+                        child.proc.terminate()
+                    self.pending_builds.clear()
 
                 if stdin_ready:
                     try:
