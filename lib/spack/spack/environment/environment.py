@@ -2408,7 +2408,7 @@ class EnvironmentConcretizer:
             self.env.sync_concretized_specs()
 
         # If a combined env, check updated spec is in the linked envs
-        if self.env.included_concrete_envs:
+        if self.env.included_concrete_env_root_dirs:
             self.env.include_concrete_envs()
 
     def _partition_user_specs(self) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
