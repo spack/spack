@@ -1086,23 +1086,25 @@ class SetupContext:
         return env
 
     def _make_buildtime_detectable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
-        if is_system_path(dep.prefix):
-            return
+        add_path = getattr(env, "prepend_path")
+        if dep.external:
+            add_path = getattr(env, "append_path")
 
-        env.prepend_path("CMAKE_PREFIX_PATH", dep.prefix)
+        add_path("CMAKE_PREFIX_PATH", dep.prefix)
         for d in ("lib", "lib64", "share"):
             pcdir = os.path.join(dep.prefix, d, "pkgconfig")
             if os.path.isdir(pcdir):
-                env.prepend_path("PKG_CONFIG_PATH", pcdir)
+                add_path("PKG_CONFIG_PATH", pcdir)
 
     def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
-        if is_system_path(dep.prefix):
-            return
+        add_path = getattr(env, "prepend_path")
+        if dep.external:
+            add_path = getattr(env, "append_path")
 
         for d in ("bin", "bin64"):
             bin_dir = os.path.join(dep.prefix, d)
             if os.path.isdir(bin_dir):
-                env.prepend_path("PATH", bin_dir)
+                add_path("PATH", bin_dir)
 
 
 def load_external_modules(context: SetupContext) -> None:
