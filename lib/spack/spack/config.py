@@ -71,6 +71,7 @@ import spack.util.spack_yaml as syaml
 from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
+from spack.util.path import substitute_path_variables
 
 from .enums import ConfigScopePriority
 
@@ -1009,6 +1010,16 @@ def override(
         assert scope is overrides
 
 
+def _remove_prefix(path: str, prefix: str) -> str:
+    try:
+        # TODO: Retain only this call once the minimum version is Python 3.9
+        path = path.removeprefix(prefix)
+    except AttributeError:
+        if path.startswith(prefix):
+            path = path[len(prefix) :]
+    return path
+
+
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
@@ -1046,18 +1057,20 @@ class OptionalInclude:
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 
+        # Determine the configuration scope name
+        config_name = self.name if self.name else parent_scope.name
 
-        # use specified name if there is one
-        config_name = self.name
-        if not config_name:
-            # Try to use the relative path to create the included scope name
+        # But ensure that name is unique if there are multiple paths.
+        if not self.name or (hasattr(self, "paths") and len(self.paths) > 1):
             parent_path = getattr(parent_scope, "path", None)
-            if parent_path and str(parent_path) == os.path.commonprefix(
-                [parent_path, config_path]
-            ):
-                included_name = os.path.relpath(config_path, parent_path)
+            path = substitute_path_variables(path)
+
+            if parent_path and str(parent_path) == os.path.commonprefix([parent_path, path]):
+                included_name = os.path.relpath(path, parent_path)
             else:
-                included_name = config_path
+                included_name = path
+
+            included_name = _remove_prefix(included_name, f".{os.sep}")
 
             if sys.platform == "win32":
                 # Clean windows path for use in config name that looks nicer
@@ -1066,7 +1079,7 @@ class OptionalInclude:
                 included_name = included_name.replace("\\", "/")
                 included_name = included_name.replace(":", "")
 
-            config_name = f"{parent_scope.name}:{included_name}"
+            config_name = f"{config_name}:{included_name}"
 
         _, ext = os.path.splitext(config_path)
         ext_is_yaml = ext == ".yaml" or ext == ".yml"
@@ -1078,17 +1091,6 @@ class OptionalInclude:
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
         if (exists and not is_dir) or ext_is_yaml:
-            if self.name and hasattr(self, "paths") and len(self.paths) > 1:
-                # TODO: Remove the try-except once the minimum Python is 3.9
-                # TODO: since that is when removeprefix was introduced
-                prefix = f".{os.sep}"
-                try:
-                    base_path = path.removeprefix(prefix)
-                except AttributeError:
-                    base_path = path[len(prefix):] if path.startswith(prefix) else path
-                config_name = f"{config_name}:{os.path.basename(base_path)}"
-
-            # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
                 config_name,
@@ -1333,9 +1335,14 @@ class GitIncludePaths(OptionalInclude):
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []
-        for relative_path in self.paths:
-            config_path = os.path.join(destination, relative_path)
-            scope = self._scope(relative_path, config_path, parent_scope)
+        prefix = os.path.commonpath(self.paths)
+        if prefix:
+            prefix += os.sep
+
+        for path in self.paths:
+            config_path = os.path.join(destination, path)
+            path = _remove_prefix(path, prefix)
+            scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
 
