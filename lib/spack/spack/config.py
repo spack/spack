@@ -1072,9 +1072,13 @@ class OptionalInclude:
             else:
                 included_name = path
 
-            included_name = _remove_prefix(included_name, f".{os.sep}")
+            # Remove relative prefix from linux local and git repo paths
+            included_name = _remove_prefix(included_name, "./")
 
             if sys.platform == "win32":
+                # Remove relative prefix from windows paths
+                included_name = _remove_prefix(included_name, ".\\")
+
                 # Clean windows path for use in config name that looks nicer
                 # ie. The path: C:\\some\\path\\to\\a\\file
                 # becomes C/some/path/to/a/file
