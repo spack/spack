@@ -70,27 +70,29 @@ _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
 
     # For our purposes, flags should not affect tab completion. For instance,
-    # `spack install []` and `spack -d install --jobs 8 []` should both give the same
-    # possible completions. Therefore, we need to ignore any flags in COMP_WORDS.
+    # `spack install []` and `spack -d install --jobs 8 []` should both give the
+    # same possible completions. Therefore, we need to ignore any flags in
+    # COMP_WORDS. We do this by navigating the subcommand tree level-by-level: a
+    # non-flag word is only kept if a completion function exists for the
+    # resulting path.
     local -a COMP_WORDS_NO_FLAGS
-    local index=0
+    COMP_WORDS_NO_FLAGS=("spack")
+    local subfunction="_spack"
+    local index=1
     while [[ "$index" -lt "$COMP_CWORD" ]]
     do
-        if [[ "${COMP_WORDS[$index]}" == [a-z]* ]]
+        local word="${COMP_WORDS[$index]}"
+        if [[ "$word" != -* ]]
         then
-            COMP_WORDS_NO_FLAGS+=("${COMP_WORDS[$index]}")
+            local candidate="${subfunction}_${word//-/_}"
+            if declare -f "$candidate" > /dev/null 2>&1
+            then
+                COMP_WORDS_NO_FLAGS+=("$word")
+                subfunction="$candidate"
+            fi
         fi
-        let index++
+        ((index++))
     done
-
-    # Options will be listed by a subfunction named after non-flag arguments.
-    # For example, `spack -d install []` will call _spack_install
-    # and `spack compiler add []` will call _spack_compiler_add
-    local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
-
-    # Translate dashes to underscores, as dashes are not permitted in
-    # compatibility mode. See https://github.com/spack/spack/pull/4079
-    subfunction=${subfunction//-/_}
 
     # However, the word containing the current cursor position needs to be
     # added regardless of whether or not it is a flag. This allows us to
@@ -144,14 +146,8 @@ _bash_completion_spack() {
     # Uncomment this line to enable logging
     #_test_vars >> temp
 
-    # Make sure function exists before calling it
-    local rgx #this dance is necessary to cover bash and zsh regex
-    rgx="$subfunction.*function.* "
-    if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
-    then
-        $subfunction
-        COMPREPLY=($(_compgen_w "$SPACK_COMPREPLY" "$cur"))
-    fi
+    $subfunction
+    COMPREPLY=($(_compgen_w "$SPACK_COMPREPLY" "$cur"))
 
     # if every completion is an alias for the same thing, just return that thing.
     _spack_compress_aliases
