@@ -71,7 +71,6 @@ import spack.util.spack_yaml as syaml
 from spack.llnl.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
-from spack.util.path import substitute_path_variables
 
 from .enums import ConfigScopePriority
 
@@ -1054,6 +1053,9 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
+        # circular dependencies
+        import spack.util.path
+
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 
@@ -1063,7 +1065,7 @@ class OptionalInclude:
         # But ensure that name is unique if there are multiple paths.
         if not self.name or (hasattr(self, "paths") and len(self.paths) > 1):
             parent_path = getattr(parent_scope, "path", None)
-            path = substitute_path_variables(path)
+            path = spack.util.path.substitute_path_variables(path)
 
             if parent_path and str(parent_path) == os.path.commonprefix([parent_path, path]):
                 included_name = os.path.relpath(path, parent_path)
