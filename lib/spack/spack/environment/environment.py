@@ -2556,7 +2556,7 @@ class ReusableSpecsFactory:
                 continue
 
             env_dir = as_env_dir(source["path"])
-            if env_dir in self.env.included_concrete_envs:
+            if env_dir in self.env.included_concrete_env_root_dirs:
                 spec_pairs_from_included_envs = [
                     x for _, x in self.env.concretized_specs_from_included_environment(env_dir)
                 ]
