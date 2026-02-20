@@ -195,7 +195,7 @@ _installed_packages() {
 _installed_compilers() {
     if [[ -z "${SPACK_INSTALLED_COMPILERS:-}" ]]
     then
-        SPACK_INSTALLED_COMPILERS="$(spack compilers | egrep -v "^(-|=)")"
+        SPACK_INSTALLED_COMPILERS="$(spack compilers)"
     fi
     SPACK_COMPREPLY="$SPACK_INSTALLED_COMPILERS"
 }
