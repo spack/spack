@@ -73,8 +73,6 @@ For example, suppose we only want to include the ``config.yaml`` and ``packages.
 And we want the configuration scope name to start ``USC``.
 We would then configure the ``include.yaml`` file as follows::
 
-.. code-block:: yaml
-
    include:
    - name: USC
      git: https://github.com/spack/spack-configs
@@ -87,8 +85,6 @@ We would then configure the ``include.yaml`` file as follows::
 If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
 Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
 In this example, the new scopes can be seen by running::
-
-.. code-block:: console
 
    $ spack config scopes -p
    Scope               Path
@@ -179,8 +175,6 @@ Named configuration scopes
 
 By default, the included scope names are constructed by appending ``:`` and the included scope's basename to the parent scope name.
 For example, Spack's own ``defaults`` scope includes a ``base`` scope and a platform-specific scope::
-
-.. code-block:: console
 
     $ spack config scopes -p
     Scope            Path
