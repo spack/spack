@@ -63,6 +63,8 @@ def test_list_format_version_json():
     output = list("--format", "version_json")
     assert '{"name": "zmpi",' in output
     assert '{"name": "dyninst",' in output
+    assert "packages/zmpi/package.py" in output
+
     import json
 
     json.loads(output)
@@ -75,6 +77,84 @@ def test_list_format_html():
 
     assert '<div class="section" id="hdf5">' in output
     assert "<h1>hdf5" in output
+    assert "packages/hdf5/package.py" in output
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "git@github.com:username/spack-packages.git",
+        "https://github.com/username/spack-packages.git",
+        "git@github.com:username/spack.git",
+        "https://github.com/username/spack.git",
+    ],
+)
+def test_list_url_schemes(mock_util_executable, url):
+    """Confirm the command handles supported repository URLs."""
+    pkg_name = "hdf5"
+
+    _, _, registered_responses = mock_util_executable
+    registered_responses["config"] = url
+    registered_responses["rev-parse"] = f"path/to/builtin/packages/{pkg_name}/"
+
+    output = list("--format", "version_json", pkg_name)
+    assert f"{registered_responses['rev-parse']}package.py" in output
+    assert os.path.basename(url).replace(".git", "") in output
+
+
+def test_list_format_local_repo(tmp_path: pathlib.Path):
+    """Confirm a file path is returned for local repository."""
+    pkg_name = "mypkg"
+    repo_root = tmp_path / "repos" / "spack_repo" / "builtin"
+    repo_root.mkdir(parents=True)
+    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    package_root = repo_root / "packages" / pkg_name
+    package_root.mkdir(parents=True)
+    (package_root / "package.py").write_text(
+        """\
+from spack.package import *
+
+class Mypkg(Package):
+    pass
+"""
+    )
+
+    test_repo = spack.repo.from_path(str(repo_root))
+    with spack.repo.use_repositories(test_repo):
+        # Confirm a path is returned when fail to retrieve the remote origin URL
+        output = list("--format", "version_json", pkg_name)
+        assert "github.com" not in output
+        assert "packages{0}{1}{0}package.py".format(os.sep, pkg_name) in output
+
+
+def test_list_format_non_github_repo(tmp_path: pathlib.Path, mock_util_executable):
+    """Confirm a file path is returned for a non-github repository."""
+    pkg_name = "mypkg"
+    repo_root = tmp_path / "my" / "project" / "spack_repo" / "builtin"
+    repo_root.mkdir(parents=True)
+    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    package_root = repo_root / "packages" / pkg_name
+    package_root.mkdir(parents=True)
+    (package_root / "package.py").write_text(
+        """\
+from spack.package import *
+
+class Mypkg(Package):
+    pass
+"""
+    )
+
+    test_repo = spack.repo.from_path(str(repo_root))
+    with spack.repo.use_repositories(test_repo):
+        # Confirm a path is returned for a non-standard spack repository
+        _, _, registered_responses = mock_util_executable
+        registered_responses["config"] = "https://gitlab.com/username/my-packages.git"
+        registered_responses["rev-parse"] = str(package_root) + os.sep
+
+        output = list("--format", "version_json", pkg_name)
+        for ln in output.split("\n"):
+            print(f"TLD: {ln}")
+        assert f"{registered_responses['rev-parse']}package.py" in output
 
 
 def test_list_update(tmp_path: pathlib.Path):
