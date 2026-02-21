@@ -1492,6 +1492,19 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 :- attr("variant_set", node(ID, Package), Variant, Value),
    not attr("variant_value", node(ID, Package), Variant, Value).
 
+% If we set a conditional variant, which depends on another variant taking a value,
+% set also the other variant. This short circuits the variant rules, and makes the
+% minimization easier for clingo. It avoids a long chain of decisions that may require
+% a lot of backtracking and result in no conflict learnt (e.g. setting "binutils+gold"
+% implies "binutils+ld")
+attr("variant_set", node(ID, Package), AnotherVariant, AnotherValue)
+  :- attr("variant_set", node(ID, Package), Variant, Value),
+     attr("variant_selected", node(ID, Package), Variant, _, _, VariantID),
+     pkg_fact(Package, variant_condition(Variant, VariantID, ConditionID)),
+     pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+     condition_requirement(TriggerID,"variant_value",Package, AnotherVariant, AnotherValue),
+     build(node(ID, Package)).
+
 % A default variant value that is not used, makes sense only for multi valued variants
 variant_default_not_used(node(ID, Package), Variant, Value)
   :- variant_default_value(node(ID, Package), Variant, Value),
