@@ -124,7 +124,7 @@ class Mypkg(Package):
         # Confirm a path is returned when fail to retrieve the remote origin URL
         output = list("--format", "version_json", pkg_name)
         assert "github.com" not in output
-        assert "packages{0}{1}{0}package.py".format(os.sep, pkg_name) in output
+        assert f"packages/{pkg_name}/package.py" in output
 
 
 def test_list_format_non_github_repo(tmp_path: pathlib.Path, mock_util_executable):
