@@ -280,7 +280,7 @@ class ErrorHandler:
         self,
         cause: Tuple[str, str],
         conditions: Dict[str, str],
-        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]],
+        condition_causes: Dict[Tuple[str, str], List[Tuple[str, str]]],
         seen: Set,
         indent: str = "        ",
     ) -> List[str]:
@@ -290,7 +290,7 @@ class ErrorHandler:
         the former held in the condition set represented by the latter.
         """
         seen.add(cause)
-        parents = [c for e, c in condition_causes if e == cause and c not in seen]
+        parents = [c for c in condition_causes.get(cause, []) if c not in seen]
         local = f"required because {conditions[cause[0]]} "
 
         return [indent + local] + [
@@ -349,10 +349,9 @@ class ErrorHandler:
         )
 
         conditions: Dict[str, str] = dict(extract_args(self.full_model, "condition_reason"))
-        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]] = list(
-            ((Effect, EID), (Cause, CID))
-            for Effect, EID, Cause, CID in extract_args(self.full_model, "condition_cause")
-        )
+        condition_causes: Dict[Tuple[str, str], List[Tuple[str, str]]] = {}
+        for Effect, EID, Cause, CID in extract_args(self.full_model, "condition_cause"):
+            condition_causes.setdefault((Effect, EID), []).append((Cause, CID))
 
         formatter = ErrorFormatter()
         try:
@@ -368,9 +367,17 @@ class ErrorHandler:
                     cause = (cond_id, cause_id)
                     if cause not in seen_causes:
                         seen_causes.add(cause)
-                        for line in self._get_cause_tree(
-                            cause, conditions, condition_causes, set()
-                        ):
+                        lines = self._get_cause_tree(cause, conditions, condition_causes, set())
+                        _constraint_chars = "@^+~%="
+                        informative = [
+                            line
+                            for line in lines
+                            if not (
+                                "requested explicitly" in line
+                                and not any(c in line for c in _constraint_chars)
+                            )
+                        ]
+                        for line in informative if informative else lines:
                             msg += f"\n{line}"
                 messages.append(msg)
 
