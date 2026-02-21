@@ -7,6 +7,7 @@ import pathlib
 from types import ModuleType
 from typing import Any, Callable, NamedTuple, Optional, Tuple
 
+import spack.error
 import spack.platforms
 from spack.llnl.util import lang
 
@@ -296,3 +297,23 @@ class SourceContext:
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
     return spack.platforms.host().name == "linux"
+
+
+class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
+    """There was an issue with the spec that was requested (i.e. a user error)."""
+
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+
+class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
+    """Errors that indicate a bug in Spack."""
+
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
