@@ -18,11 +18,7 @@
 #show opt_criterion/2.
 
 % error types
-#show error/2.
 #show error/3.
-#show error/4.
-#show error/5.
-#show error/6.
 
 % for error causation
 #show condition_reason/2.
