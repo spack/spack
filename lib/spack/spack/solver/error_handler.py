@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Error handling and message formatting for Spack's ASP-based concretizer."""
 import pathlib
-from typing import Dict, List, Optional, Set, Tuple
+import typing
+from typing import Dict, List, Sequence, Set, Tuple
 
 import spack.error
 import spack.spec
@@ -11,8 +12,12 @@ from spack.llnl.util.lang import elide_list
 
 from .core import UnsatisfiableSpecError, clingo, extract_args
 
+if typing.TYPE_CHECKING:
+    clingo()
+    import clingo as _clingo
 
-def _node_pkg_from_sym(node_sym) -> str:
+
+def _node_pkg_from_sym(node_sym: "_clingo.Symbol") -> str:
     """Extract the package name string from a raw clingo node(ID, Pkg) symbol."""
     try:
         if node_sym.name == "node" and len(node_sym.arguments) == 2:
@@ -26,7 +31,7 @@ def _node_pkg_from_sym(node_sym) -> str:
     return str(node_sym)
 
 
-def _clingo_arg_to_str(sym) -> str:
+def _clingo_arg_to_str(sym: "_clingo.Symbol") -> str:
     """Convert a raw clingo symbol argument to a display string.
 
     For node(ID, Pkg) terms, returns the package name. For string literals,
@@ -54,132 +59,122 @@ class ErrorFormatter:
     string-converted arguments of the ErrorType compound term.
     """
 
-    def format(self, error_type_sym, node_sym) -> str:
+    def format(self, error_type_sym: "_clingo.Symbol", node_sym: "_clingo.Symbol") -> str:
         """Format an error message from raw clingo symbols."""
         try:
-            name = error_type_sym.name
+            error_callback_fn = error_type_sym.name
         except RuntimeError:
-            name = str(error_type_sym)
+            error_callback_fn = str(error_type_sym)
         pkg = _node_pkg_from_sym(node_sym)
         try:
             args = [_clingo_arg_to_str(a) for a in error_type_sym.arguments]
         except RuntimeError:
             args = []
-        method = getattr(self, name, self._unknown)
+        method = getattr(self, error_callback_fn, self._unknown)
         return method(pkg, *args)
 
-    def namespace_missing(self, pkg):
+    def namespace_missing(self, pkg: str) -> str:
         return f"{pkg} does not have a namespace"
 
-    def namespace_conflict(self, pkg, ns1, ns2):
+    def namespace_conflict(self, pkg: str, ns1: str, ns2: str) -> str:
         return f"{pkg} cannot come from both {ns1} and {ns2} namespaces"
 
-    def unification_set_conflict(self, pkg, set_id):
+    def unification_set_conflict(self, pkg: str, set_id: str) -> str:
         return f"Cannot have multiple nodes for {pkg} in the same unification set {set_id}"
 
-    def literal_not_in_dag(self, pkg):
+    def literal_not_in_dag(self, pkg: str) -> str:
         return (
             f"'{pkg}' is not a direct 'build' or 'test' dependency, "
             f"or transitive 'link' or 'run' dependency of any root"
         )
 
-    def no_value(self, pkg, attribute):
+    def no_value(self, pkg: str, attribute: str) -> str:
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    def multiple_values(self, pkg, attribute):
+    def multiple_values(self, pkg: str, attribute: str) -> str:
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    def deprecated_version(self, pkg, version):
+    def deprecated_version(self, pkg: str, version: str) -> str:
         return (
             f"Package '{pkg}' needs the deprecated version '{version}', "
             f"and this is not allowed"
         )
 
-    def version_constraint_unsatisfied(self, pkg, constraint):
+    def version_constraint_unsatisfied(self, pkg: str, constraint: str) -> str:
         return f"Cannot satisfy '{pkg}@{constraint}'"
 
-    def commit_variant_incompatible(self, pkg, version):
+    def commit_variant_incompatible(self, pkg: str, version: str) -> str:
         return f"Cannot use commit variant with '{pkg}@={version}'"
 
-    def commit_mismatch(self, pkg, vsha, psha, version):
+    def commit_mismatch(self, pkg: str, vsha: str, psha: str, version: str) -> str:
         return f"Commit '{vsha}' must match package.py value '{psha}' for '{pkg}@={version}'"
 
-    def concrete_build_dep_variant(self, pkg, build_dep, variant, value):
-        return f"Cannot satisfy the request on {build_dep} to have {variant}={value}"
+    def concrete_build_dep_mismatch(
+        self, pkg: str, build_dep: str, attribute: str, *args: str
+    ) -> str:
+        start_str = f"Cannot satisfy the request on {build_dep}"
+        if attribute == "variant":
+            variant, value = args
+            return f"{start_str} to have {variant}={value}"
+        elif attribute == "target":
+            target = args[0]
+            return f"{start_str} to have the target set to {target}"
+        elif attribute == "os":
+            node_os = args[0]
+            return f"{start_str} to have the OS set to {node_os}"
+        elif attribute == "platform":
+            platform = args[0]
+            return f"{start_str} to have the platform set to {platform}"
+        elif attribute == "hash":
+            build_hash = args[0]
+            return f"{start_str} to have the following hash {build_hash}"
+        return f"Cannot satisfy a request on {build_dep}"
 
-    def concrete_build_dep_target(self, pkg, build_dep, target):
-        return f"Cannot satisfy the request on {build_dep} to have the target set to {target}"
-
-    def concrete_build_dep_os(self, pkg, build_dep, node_os):
-        return f"Cannot satisfy the request on {build_dep} to have the os set to {node_os}"
-
-    def concrete_build_dep_platform(self, pkg, build_dep, platform):
-        return f"Cannot satisfy the request on {build_dep} to have the platform set to {platform}"
-
-    def concrete_build_dep_hash(self, pkg, build_dep, build_hash):
-        return (
-            f"Cannot satisfy the request on {build_dep} "
-            f"to have the following hash {build_hash}"
-        )
-
-    def provider_edge_missing(self, pkg, build_dep, virtual):
+    def virtual_on_edge_missing(self, pkg: str, virtual: str) -> str:
         return f"{pkg} cannot have a dependency on {virtual}"
 
-    def virtual_edge_missing(self, pkg, virtual):
-        return f"{pkg} cannot have a dependency on {virtual}"
-
-    def node_not_needed(self, pkg):
+    def node_not_needed(self, pkg: str) -> str:
         return f"'{pkg}' is not a valid dependency for any package in the DAG"
 
-    def extensions_must_share(self, pkg, extension_child, extendee_pkg):
+    def extensions_must_share(self, pkg: str, extension_child: str, extendee_pkg: str) -> str:
         return f"{pkg} and {extension_child} must depend on the same {extendee_pkg}"
 
-    def conflict(self, pkg, msg):
+    def conflict(self, pkg: str, msg: str) -> str:
         return str(msg)
 
-    def provided_together_incomplete(self, pkg, virtual1, virtual2):
-        return (
-            f"Package '{pkg}' needs to provide both '{virtual1}' and '{virtual2}' "
-            f"together, but provides only '{virtual1}'"
-        )
+    def provided_together_incomplete(self, pkg: str, virtual: str) -> str:
+        return f"Package '{pkg}' must also provide '{virtual}', and it does not"
 
-    def provider_condition_unsatisfied(self, pkg, virtual):
+    def provider_condition_unsatisfied(self, pkg: str, virtual: str) -> str:
         return f"'{pkg}' cannot be a provider for the '{virtual}' virtual"
 
-    def no_valid_provider(self, pkg):
+    def no_valid_provider(self, pkg: str) -> str:
         return f"Cannot find valid provider for virtual {pkg}"
 
-    def multiple_providers(self, pkg):
+    def multiple_providers(self, pkg: str) -> str:
         return f"Cannot select a single provider for virtual '{pkg}'"
 
-    def buildable_false(self, pkg):
+    def buildable_false(self, pkg: str) -> str:
         return (
             f"Cannot build {pkg}, since it is configured `buildable:false` "
             f"and no externals satisfy the request"
         )
 
-    def required_provider_unavailable(self, pkg, provider):
+    def required_provider_unavailable(self, pkg: str, provider: str) -> str:
         return f"Cannot use {provider} for the {pkg} virtual, but that is required"
 
-    def requirement_unsatisfied(self, pkg):
+    def requirement_unsatisfied(self, pkg: str, message: str) -> str:
+        if message:
+            return str(message)
         return f"cannot satisfy a requirement for package '{pkg}'."
 
-    def requirement_unsatisfied_msg(self, pkg, message):
-        return str(message)
-
-    def variant_condition_unsatisfied(self, pkg, variant):
+    def variant_undefined(self, pkg: str, variant: str) -> str:
         return (
             f"Cannot set variant '{variant}' for package '{pkg}' "
             f"because the variant condition cannot be satisfied for the given spec"
         )
 
-    def variant_value_condition_unsatisfied(self, pkg, variant):
-        return (
-            f"Cannot set variant '{variant}' for package '{pkg}' "
-            f"because the variant condition cannot be satisfied for the given spec"
-        )
-
-    def variant_value_conflict(self, pkg, variant, value1, value2):
+    def variant_value_conflict(self, pkg: str, variant: str, value1: str, value2: str) -> str:
         spec1_str = f"{variant}={value1}"
         spec2_str = f"{variant}={value2}"
         try:
@@ -189,16 +184,16 @@ class ErrorFormatter:
             spec1, spec2 = spec1_str, spec2_str
         return f"'{pkg}' requires conflicting variant values '{spec1}' and '{spec2}'"
 
-    def variant_no_value(self, pkg, variant):
+    def variant_no_value(self, pkg: str, variant: str) -> str:
         return f"No valid value for variant '{variant}' of package '{pkg}'"
 
-    def variant_concrete_extra_value(self, pkg, variant, value):
+    def variant_concrete_extra_value(self, pkg: str, variant: str, value: str) -> str:
         return (
             f"The variant {variant} in package {pkg} "
             f"specified as := has the extra value {value}"
         )
 
-    def variant_invalid_value(self, pkg, variant, value):
+    def variant_invalid_value(self, pkg: str, variant: str, value: str) -> str:
         spec_str = f"{variant}={value}"
         try:
             spec_str = str(spack.spec.Spec(spec_str))
@@ -206,82 +201,89 @@ class ErrorFormatter:
             pass
         return f"'{spec_str}' is not a valid value for '{pkg}' variant '{variant}'"
 
-    def variant_disjoint_sets(self, pkg, variant, value1, value2):
+    def variant_disjoint_sets(self, pkg: str, variant: str, value1: str, value2: str) -> str:
         return (
             f"{pkg} variant '{variant}' cannot have values "
             f"'{value1}' and '{value2}' as they come from disjoint value sets"
         )
 
-    def variant_none_conflict(self, pkg, variant, value):
+    def variant_none_conflict(self, pkg: str, variant: str, value: str) -> str:
         return f"{pkg} variant '{variant}' cannot have values '{value}' and 'none'"
 
-    def propagation_conflict_to_dep(self, pkg, other_pkg, variant, dep_pkg):
+    def propagation_conflict_to_dep(
+        self, pkg: str, other_pkg: str, variant: str, dep_pkg: str
+    ) -> str:
         return (
             f"{pkg} and {other_pkg} cannot both propagate "
             f"variant '{variant}' to the shared dependency: {dep_pkg}"
         )
 
-    def propagation_conflict(self, pkg, other_pkg, variant):
+    def propagation_conflict(self, pkg: str, other_pkg: str, variant: str) -> str:
         return f"{pkg} and {other_pkg} cannot both propagate variant '{variant}'"
 
-    def propagation_excluded(self, pkg, variant, source):
+    def propagation_excluded(self, pkg: str, variant: str, source: str) -> str:
         return (
             f"Cannot propagate the variant '{variant}' from the package: "
             f"{source} because package: {pkg} is set to exclude it"
         )
 
-    def flag_propagation_conflict(self, pkg, source2, flag_type):
+    def flag_propagation_conflict(self, pkg: str, source2: str, flag_type: str) -> str:
         return (
             f"{pkg}: cannot propagate compiler flags '{flag_type}' "
             f"from multiple sources including {source2}"
         )
 
-    def compiler_mixing_disabled(self, pkg, language):
+    def compiler_mixing_disabled(self, pkg: str, language: str) -> str:
         return f"Compiler mixing is disabled for the {language} language"
 
-    def os_not_buildable(self, pkg, os_name):
+    def os_not_buildable(self, pkg: str, os_name: str) -> str:
         return (
             f"Cannot select '{pkg} os={os_name}' "
             f"(operating system '{os_name}' is not buildable)"
         )
 
-    def target_constraint_unsatisfied(self, pkg, target, constraint):
+    def target_constraint_unsatisfied(self, pkg: str, target: str, constraint: str) -> str:
         return f"'{pkg} target={target}' cannot satisfy constraint 'target={constraint}'"
 
-    def target_incompatible(self, pkg, dependency):
+    def target_incompatible(self, pkg: str, dependency: str) -> str:
         return f"Cannot find compatible targets for {pkg} and {dependency}"
 
-    def compiler_must_be_external(self, pkg, language):
+    def compiler_must_be_external(self, pkg: str, language: str) -> str:
         return f"Only external, or concrete, compilers are allowed for the {language} language"
 
-    def compiler_target_incompatible(self, pkg, target, compiler, version):
+    def compiler_target_incompatible(
+        self, pkg: str, target: str, compiler: str, version: str
+    ) -> str:
         return f"{pkg} compiler '{compiler}@{version}' incompatible with 'target={target}'"
 
-    def target_not_on_machine(self, pkg, target):
+    def target_not_on_machine(self, pkg: str, target: str) -> str:
         return f"'{pkg} target={target}' is not compatible with this machine"
 
-    def multiple_cli_flags(self, pkg, flag_type):
+    def multiple_cli_flags(self, pkg: str, flag_type: str) -> str:
         return f"Cannot set multiple {flag_type} values for {pkg} from cli"
 
-    def libc_incompatible(self, pkg):
+    def libc_incompatible(self, pkg: str) -> str:
         return f"Cannot reuse {pkg} since we cannot determine libc compatibility"
 
-    def _unknown(self, pkg, *args):
+    def _unknown(self, pkg: str, *args: str) -> str:
         return f"unknown error for {pkg}: {args}"
 
 
+CauseType = Tuple[str, str]
+
+
 class ErrorHandler:
-    def __init__(self, model, input_specs: List[spack.spec.Spec]):
+    def __init__(self, model: Sequence["_clingo.Symbol"], input_specs: List[spack.spec.Spec]):
         self.model = model
         self.input_specs = input_specs
-        self.full_model: Optional[List] = None
+        self.full_model: List["_clingo.Symbol"] = []
 
     def _get_cause_tree(
         self,
-        cause: Tuple[str, str],
+        cause: CauseType,
         conditions: Dict[str, str],
-        condition_causes: Dict[Tuple[str, str], List[Tuple[str, str]]],
-        seen: Set,
+        condition_causes: Dict[CauseType, List[CauseType]],
+        seen: Set[CauseType],
         indent: str = "        ",
     ) -> List[str]:
         """
@@ -301,7 +303,7 @@ class ErrorHandler:
             )
         ]
 
-    def raise_if_errors(self):
+    def raise_if_errors(self) -> None:
         initial_errors = [sym for sym in self.model if sym.name == "error"]
         if not initial_errors:
             return

@@ -694,31 +694,31 @@ compiler_penalty_from_reuse(Hash) :-
   will_build_packages().
 
 
-error(concrete_build_dep_variant(BuildDependency, Variant, Value), 100, ParentNode)
+error(concrete_build_dep_mismatch(BuildDependency, "variant", Variant, Value), 100, ParentNode)
 :- attr("direct_dependency", ParentNode, node_requirement("variant_set", BuildDependency, Variant, Value)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "variant_value", BuildDependency, Variant, Value).
 
-error(concrete_build_dep_target(BuildDependency, Target), 100, ParentNode)
+error(concrete_build_dep_mismatch(BuildDependency, "target", Target), 100, ParentNode)
 :- attr("direct_dependency", ParentNode, node_requirement("node_target_set", BuildDependency, Target)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_target", BuildDependency, Target).
 
-error(concrete_build_dep_os(BuildDependency, NodeOS), 100, ParentNode)
+error(concrete_build_dep_mismatch(BuildDependency, "os", NodeOS), 100, ParentNode)
 :- attr("direct_dependency", ParentNode, node_requirement("node_os_set", BuildDependency, NodeOS)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_os", BuildDependency, NodeOS).
 
-error(concrete_build_dep_platform(BuildDependency, Platform), 100, ParentNode)
+error(concrete_build_dep_mismatch(BuildDependency, "platform", Platform), 100, ParentNode)
 :- attr("direct_dependency", ParentNode, node_requirement("node_platform_set", BuildDependency, Platform)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_platform", BuildDependency, Platform).
 
-error(concrete_build_dep_hash(BuildDependency, BuildHash), 100, ParentNode)
+error(concrete_build_dep_mismatch(BuildDependency, "hash", BuildHash), 100, ParentNode)
 :- attr("direct_dependency", ParentNode, node_requirement("node_target_set", BuildDependency, Target)),
    concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
@@ -798,13 +798,13 @@ attr("hash", node(X, BuildDependency), BuildHash) :-
   attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
   direct_dependency(ParentNode, node(X, BuildDependency)).
 
-error(provider_edge_missing(BuildDependency, Virtual), 10, node(ID, Package))
+error(virtual_on_edge_missing(Virtual), 10, node(ID, Package))
   :- attr("direct_dependency", node(ID, Package), node_requirement("provider_set", BuildDependency, Virtual)),
      direct_dependency(node(ID, Package), node(X, BuildDependency)),
      not attr("virtual_on_edge", node(ID, Package), node(X, BuildDependency), Virtual).
 
 % For a spec like `hdf5 %cxx` we need to ensure that the virtual is needed on a direct edge
-error(virtual_edge_missing(Virtual), 10, node(ID, Package))
+error(virtual_on_edge_missing(Virtual), 10, node(ID, Package))
   :- attr("direct_dependency", node(ID, Package), node_requirement("virtual_node", Virtual)),
      not attr("virtual_on_edge", node(ID, Package), _, Virtual).
 
@@ -988,7 +988,7 @@ node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID) :-
 
 % This error is triggered if the package provides some but not all required virtuals from
 % the set that needs to be provided together
-error(error(provided_together_incomplete(Virtual), 100, node(X, Package)))
+error(provided_together_incomplete(Virtual), 100, node(X, Package))
 :- node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID),
    pkg_fact(Package, provided_together(ID, SetID, Virtual)),
    node_depends_on_virtual(ClientNode, Virtual),
@@ -1301,14 +1301,14 @@ requirement_penalty(PackageNode, Language, Group, W) :-
   attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
   attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
-error(requirement_unsatisfied, 60000, node(ID, Package)) :-
+error(requirement_unsatisfied(""), 60000, node(ID, Package)) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
-error(requirement_unsatisfied_msg(Message), 50000, node(ID, Package)) :-
+error(requirement_unsatisfied(Message), 60000, node(ID, Package)) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
@@ -1443,13 +1443,13 @@ attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
   variant_type(VariantID, VariantType).
 
 % a variant cannot be set if it is not a variant on the package
-error(variant_condition_unsatisfied(Variant), 100, node(ID, Package))
+error(variant_undefined(Variant), 100, node(ID, Package))
   :- attr("variant_set", node(ID, Package), Variant),
      not node_has_variant(node(ID, Package), Variant, _),
      build(node(ID, Package)).
 
 % a variant cannot take on a value if it is not a variant of the package
-error(variant_value_condition_unsatisfied(Variant), 100, node(ID, Package))
+error(variant_undefined(Variant), 100, node(ID, Package))
   :- attr("variant_value", node(ID, Package), Variant, _),
      not node_has_variant(node(ID, Package), Variant, _),
      build(node(ID, Package)).
