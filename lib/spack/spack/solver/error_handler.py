@@ -19,7 +19,10 @@ if typing.TYPE_CHECKING:
 
 def _is_node_symbol(clingo_symbol: "_clingo.Symbol") -> bool:
     """Returns true if the given clingo symbol is a node(ID, Pkg) term."""
-    return clingo_symbol.name == "node" and len(clingo_symbol.arguments) == 2
+    try:
+        return clingo_symbol.name == "node" and len(clingo_symbol.arguments) == 2
+    except RuntimeError:
+        return False
 
 
 def _package_from_node_symbol(node_sym: "_clingo.Symbol") -> str:
