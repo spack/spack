@@ -1301,14 +1301,14 @@ requirement_penalty(PackageNode, Language, Group, W) :-
   attr("concrete_build_dependency", PackageNode, CompilerName, CompilerHash),
   attr("virtual_on_build_edge", PackageNode, CompilerName, Language).
 
-error(requirement_unsatisfied(""), 60000, node(ID, Package)) :-
+error(requirement_unsatisfied(""), 100000, node(ID, Package)) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   not requirement_message(Package, X, _),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
-error(requirement_unsatisfied(Message), 60000, node(ID, Package)) :-
+error(requirement_unsatisfied(Message), 10000, node(ID, Package)) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
   requirement_message(Package, X, Message),
