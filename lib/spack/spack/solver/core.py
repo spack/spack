@@ -4,6 +4,7 @@
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
 import importlib
 import pathlib
+from functools import lru_cache
 from types import ModuleType
 from typing import Any, Callable, NamedTuple, Optional, Tuple
 
@@ -176,6 +177,7 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
         )
 
 
+@lru_cache(maxsize=None)
 def clingo_cffi() -> bool:
     """Returns True if clingo uses the CFFI interface"""
     return hasattr(clingo().Symbol, "_rep")
