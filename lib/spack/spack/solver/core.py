@@ -258,6 +258,11 @@ def intermediate_repr(sym):
         # that are not functions
         pass
 
+    return symbol_to_string(sym)
+
+
+def symbol_to_string(sym) -> str:
+    """Returns a string representation of a clingo symbol."""
     if clingo_cffi():
         # Clingo w/ CFFI will throw an exception on failure
         try:

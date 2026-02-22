@@ -10,45 +10,34 @@ import spack.error
 import spack.spec
 from spack.llnl.util.lang import elide_list
 
-from .core import UnsatisfiableSpecError, clingo, extract_args
+from .core import UnsatisfiableSpecError, clingo, extract_args, symbol_to_string
 
 if typing.TYPE_CHECKING:
     clingo()
     import clingo as _clingo
 
 
-def _node_pkg_from_sym(node_sym: "_clingo.Symbol") -> str:
+def _is_node_symbol(clingo_symbol: "_clingo.Symbol") -> bool:
+    """Returns true if the given clingo symbol is a node(ID, Pkg) term."""
+    return clingo_symbol.name == "node" and len(clingo_symbol.arguments) == 2
+
+
+def _package_from_node_symbol(node_sym: "_clingo.Symbol") -> str:
     """Extract the package name string from a raw clingo node(ID, Pkg) symbol."""
-    try:
-        if node_sym.name == "node" and len(node_sym.arguments) == 2:
-            pkg_sym = node_sym.arguments[1]
-            try:
-                return pkg_sym.string
-            except RuntimeError:
-                return str(pkg_sym)
-    except RuntimeError:
-        pass
-    return str(node_sym)
+    if not _is_node_symbol(node_sym):
+        raise FormattingError(f"Expected node(ID, Pkg) term, got {node_sym}")
+    return symbol_to_string(node_sym.arguments[1])
 
 
-def _clingo_arg_to_str(sym: "_clingo.Symbol") -> str:
+def _clingo_arg_to_str(clingo_symbol: "_clingo.Symbol") -> str:
     """Convert a raw clingo symbol argument to a display string.
 
     For node(ID, Pkg) terms, returns the package name. For string literals,
     returns the string. For all others, falls back to str().
     """
-    try:
-        if sym.name == "node" and len(sym.arguments) == 2:
-            return _node_pkg_from_sym(sym)
-    except RuntimeError:
-        pass
-    try:
-        val = sym.string
-        if val:
-            return val
-    except RuntimeError:
-        pass
-    return str(sym)
+    if _is_node_symbol(clingo_symbol):
+        return _package_from_node_symbol(clingo_symbol)
+    return symbol_to_string(clingo_symbol)
 
 
 class ErrorFormatter:
@@ -59,18 +48,15 @@ class ErrorFormatter:
     string-converted arguments of the ErrorType compound term.
     """
 
-    def format(self, error_type_sym: "_clingo.Symbol", node_sym: "_clingo.Symbol") -> str:
+    def format(self, error_type: "_clingo.Symbol", node: "_clingo.Symbol") -> str:
         """Format an error message from raw clingo symbols."""
+        error_callback_fn = error_type.name
+        method = getattr(self, error_callback_fn, self._unknown)
+        pkg = _package_from_node_symbol(node)
         try:
-            error_callback_fn = error_type_sym.name
-        except RuntimeError:
-            error_callback_fn = str(error_type_sym)
-        pkg = _node_pkg_from_sym(node_sym)
-        try:
-            args = [_clingo_arg_to_str(a) for a in error_type_sym.arguments]
+            args = [_clingo_arg_to_str(a) for a in error_type.arguments]
         except RuntimeError:
             args = []
-        method = getattr(self, error_callback_fn, self._unknown)
         return method(pkg, *args)
 
     def namespace_missing(self, pkg: str) -> str:
@@ -269,6 +255,7 @@ class ErrorFormatter:
         return f"unknown error for {pkg}: {args}"
 
 
+ErrorTypeTuple = Tuple[str, str]
 CauseType = Tuple[str, str]
 
 
@@ -326,26 +313,26 @@ class ErrorHandler:
             _ = error_causation.solve(on_model=on_model)
 
         # Extract error/3 and error_cause/4 as raw clingo symbols
-        error_syms = [
+        error_symbols = [
             sym for sym in self.full_model if sym.name == "error" and len(sym.arguments) == 3
         ]
-        cause_syms = [
+        cause_symbols = [
             sym for sym in self.full_model if sym.name == "error_cause" and len(sym.arguments) == 4
         ]
 
-        # Build causes lookup: (ErrorType_str, NodeTerm_str) -> [(cond_id, cause_id), ...]
-        causes_by_error: Dict[Tuple[str, str], List[Tuple[str, str]]] = {}
-        for sym in cause_syms:
-            key = (str(sym.arguments[0]), str(sym.arguments[1]))
-            cond_id = str(sym.arguments[2])
-            cause_id = str(sym.arguments[3])
-            causes_by_error.setdefault(key, []).append((cond_id, cause_id))
+        # Build causes lookup: (ErrorType, Node) -> [(cond_id, cause_id), ...]
+        causes_by_error: Dict[ErrorTypeTuple, List[CauseType]] = {}
+        for sym in cause_symbols:
+            error_key = (str(sym.arguments[0]), str(sym.arguments[1]))
+            cond_id, cause_id = str(sym.arguments[2]), str(sym.arguments[3])
+            causes_by_error.setdefault(error_key, []).append((cond_id, cause_id))
 
         # Sort errors by weight descending
         errors = sorted(
             [
-                (int(str(sym.arguments[1])), sym.arguments[0], sym.arguments[2])
-                for sym in error_syms
+                # ( Weight, ErrorType, Node )
+                (int(symbol_to_string(sym.arguments[1])), sym.arguments[0], sym.arguments[2])
+                for sym in error_symbols
             ],
             reverse=True,
         )
@@ -363,9 +350,9 @@ class ErrorHandler:
                     msg = formatter.format(error_type_sym, node_sym)
                 except Exception as e:
                     msg = f"unknown error [{e}]"
-                key = (str(error_type_sym), str(node_sym))
+                error_key = (str(error_type_sym), str(node_sym))
                 seen_causes: Set[Tuple[str, str]] = set()
-                for cond_id, cause_id in causes_by_error.get(key, []):
+                for cond_id, cause_id in causes_by_error.get(error_key, []):
                     cause = (cond_id, cause_id)
                     if cause not in seen_causes:
                         seen_causes.add(cause)
@@ -395,3 +382,7 @@ class ErrorHandler:
             )
             raise spack.error.SpackError(full_msg) from e
         raise UnsatisfiableSpecError(full_msg)
+
+
+class FormattingError(spack.error.SpackError):
+    """Raised when formatting an error message fails"""
