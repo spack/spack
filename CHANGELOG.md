@@ -238,7 +238,7 @@ See the [2025.11.0 release](https://github.com/spack/spack-packages/releases/tag
 
 # v1.0.3 (2026-02-20)
 
-Skipped due to a failure in the release process
+Skipped due to a failure in the release process.
 
 
 # v1.0.2 (2025-09-11)
