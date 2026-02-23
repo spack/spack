@@ -8,6 +8,7 @@ from collections import Counter
 import spack.caches
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.package
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
@@ -209,6 +210,15 @@ def create_mirror_from_package_object(
         True if the spec was added successfully, False otherwise
     """
     tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
+    # Skip placeholder packages
+    try:
+        pkg_obj.fetcher
+    except spack.package.InstallError:
+        tty.warn(
+            "Skipping %s: package has no fetchable source"
+            % pkg_obj.spec.format("{name}{@version}")
+        )
+        return False
     max_retries = 3
     for num_retries in range(max_retries):
         try:
