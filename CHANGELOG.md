@@ -1,4 +1,4 @@
-# v1.0.3 (2026-02-02)
+# v1.0.4 (2026-02-23)
 
 ## Bug fixes
 
@@ -25,6 +25,12 @@
 * config: relax concurrent_packages to minimum 0 #51840
   * This avoids forward-incompatibility with Spack v1.2
 * Documentation improvements (#51315, #51640)
+
+
+# v1.0.3 (2026-02-20)
+
+Skipped due to a release management failure.
+
 
 # v1.0.2 (2025-09-11)
 
