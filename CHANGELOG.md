@@ -207,7 +207,7 @@
 See the [2025.11.0 release](https://github.com/spack/spack-packages/releases/tag/v2025.11.0) of [spack-packages](https://github.com/spack/spack-packages/) for more details.
 
 
-# v1.0.3 (2026-02-02)
+# v1.0.4 (2026-02-23)
 
 ## Bug fixes
 
@@ -234,6 +234,11 @@ See the [2025.11.0 release](https://github.com/spack/spack-packages/releases/tag
 * config: relax concurrent_packages to minimum 0 #51840
   * This avoids forward-incompatibility with Spack v1.2
 * Documentation improvements (#51315, #51640)
+
+
+# v1.0.3 (2026-02-20)
+
+Skipped to to a failure in the release process
 
 
 # v1.0.2 (2025-09-11)
