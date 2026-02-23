@@ -1396,26 +1396,25 @@ variant_single_value(node(NodeID, Package), VariantName) :-
 % C: Determining variant values on each node
 
 % if a variant is sticky, but not set, its value is the default value
-attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID) :-
+attr("variant_value", node(ID, Package), Variant, Value) :-
   node_has_variant(node(ID, Package), Variant, VariantID),
   variant_default_value(node(ID, Package), Variant, Value),
   pkg_fact(Package, variant_sticky(VariantID)),
-  variant_type(VariantID, VariantType),
   not attr("variant_set", node(ID, Package), Variant),
   build(node(ID, Package)).
 
 % we can choose variant values from all the possible values for the node
 1 {
-  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
-  : variant_possible_value(PackageNode, Variant, Value)
+  attr("variant_value", PackageNode, Variant, Value) : variant_possible_value(PackageNode, Variant, Value)
 } :-
-  node_has_variant(PackageNode, Variant, VariantID),
-  variant_type(VariantID, VariantType),
+  node_has_variant(PackageNode, Variant, _),
   build(PackageNode).
 
-% variant_selected is only needed for reconstruction on the python side, so we can ignore it here
-attr("variant_value", PackageNode, Variant, Value) :-
-  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID).
+% variant_selected is only needed for reconstruction on the python side
+attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
+  attr("variant_value", PackageNode, Variant, Value),
+  node_has_variant(PackageNode, Variant, VariantID),
+  variant_type(VariantID, VariantType).
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -1565,10 +1564,9 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 %----
 
 % If a variant is propagated, and can be accepted, set its value
-attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
+attr("variant_value", PackageNode, Variant, Value) :-
   propagate(PackageNode, variant_value(Variant, Value, _)),
-  node_has_variant(PackageNode, Variant, VariantID),
-  variant_type(VariantID, VariantType),
+  node_has_variant(PackageNode, Variant, _),
   variant_possible_value(PackageNode, Variant, Value).
 
 % If a variant is propagated, we cannot have extraneous values
@@ -1578,7 +1576,7 @@ variant_is_propagated(PackageNode, Variant) :-
   not attr("variant_set", PackageNode, Variant).
 
 :- variant_is_propagated(PackageNode, Variant),
-   attr("variant_selected", PackageNode, Variant, Value, _, _),
+   attr("variant_value", PackageNode, Variant, Value),
    not propagate(PackageNode, variant_value(Variant, Value, _)).
 
 error(100, "{0} and {1} cannot both propagate variant '{2}' to the shared dependency: {3}",
