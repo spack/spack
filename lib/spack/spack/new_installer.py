@@ -117,6 +117,7 @@ class ChildInfo:
         self.control_w_conn = control_w_conn
         self.log_path = log_path
         self.explicit = explicit
+        self.prefix_lock: Optional[spack.util.lock.Lock] = None
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
         """Unregister and close file descriptors, and join the child process."""
@@ -775,7 +776,9 @@ class BuildInfo:
         "control_w_conn",
     )
 
-    def __init__(self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Connection) -> None:
+    def __init__(
+        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection]
+    ) -> None:
         self.state: str = "starting"
         self.explicit: bool = explicit
         self.version: str = str(spec.version)
@@ -821,7 +824,9 @@ class BuildStatus:
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
 
-    def add_build(self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Connection) -> None:
+    def add_build(
+        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection] = None
+    ) -> None:
         """Add a new build to the display and mark the display as dirty."""
         self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn)
         self.dirty = True
@@ -837,7 +842,9 @@ class BuildStatus:
             self.overview_mode = True
             self.dirty = True
             try:
-                os.write(self.builds[self.tracked_build_id].control_w_conn.fileno(), b"0")
+                conn = self.builds[self.tracked_build_id].control_w_conn
+                if conn is not None:
+                    os.write(conn.fileno(), b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -898,7 +905,9 @@ class BuildStatus:
         # Stop following the previous and start following the new build.
         if self.tracked_build_id:
             try:
-                os.write(self.builds[self.tracked_build_id].control_w_conn.fileno(), b"0")
+                conn = self.builds[self.tracked_build_id].control_w_conn
+                if conn is not None:
+                    os.write(conn.fileno(), b"0")
             except (KeyError, OSError):
                 pass
 
@@ -910,7 +919,9 @@ class BuildStatus:
         )
         self.stdout.flush()
         try:
-            os.write(new_build.control_w_conn.fileno(), b"1")
+            conn = new_build.control_w_conn
+            if conn is not None:
+                os.write(conn.fileno(), b"1")
         except (KeyError, OSError):
             pass
 
@@ -1284,6 +1295,8 @@ class PackageInstaller:
         elif tests is not False:
             raise NotImplementedError("Tests during install are not implemented")
 
+        self.db = spack.store.STORE.db
+
         specs = [pkg.spec for pkg in packages]
 
         self.root_policy: InstallPolicy = root_policy
@@ -1305,7 +1318,7 @@ class PackageInstaller:
             include_build_deps,
             install_package,
             install_deps,
-            spack.store.STORE.db,
+            self.db,
             self.overwrite,
         )
 
@@ -1349,17 +1362,7 @@ class PackageInstaller:
         self.reports: Dict[str, spack.report.RequestRecord] = {}
 
     def install(self) -> None:
-        # This installer has not implemented the per-spec exclusive locks during installation.
-        # Instead, take an exclusive lock on the entire range to avoid that other Spack install
-        # process start installing the same specs.
-        lock = spack.util.lock.Lock(
-            str(spack.store.STORE.prefix_locker.lock_path), desc="prefix lock"
-        )
-        lock.acquire_write()
-        try:
-            self._installer()
-        finally:
-            lock.release_write()
+        self._installer()
 
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
@@ -1380,19 +1383,20 @@ class PackageInstaller:
         failures: List[spack.spec.Spec] = []
 
         try:
-            # Start the first job immediately, as it does not require a jobserver token.
-            if self.pending_builds and not self.running_builds:
-                self._start(selector, jobserver)
+            # Try to schedule builds immediately. The first job does not require a token.
+            blocked_on_locks = self._schedule_builds(selector, jobserver)
 
             while self.pending_builds or self.running_builds or finished_builds:
-                # Only monitor the jobserver if we have pending builds and capacity.
-                can_schedule_more = self.pending_builds and self.capacity > 0
+                # Monitor the jobserver when we have pending builds, capacity, and at least one
+                # spec is not locked by another process.
+                can_schedule_more = (
+                    self.pending_builds and self.capacity > 0 and not blocked_on_locks
+                )
                 if can_schedule_more and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
                 elif not can_schedule_more and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
-                jobserver_token_available = False
                 stdin_ready = False
 
                 events = selector.select(timeout=SPINNER_INTERVAL)
@@ -1410,8 +1414,6 @@ class PackageInstaller:
                             self._handle_child_state(key.fd, child_info, selector)
                         elif data.name == "sentinel":
                             finished_pids.append(data.pid)
-                    elif data == "jobserver":
-                        jobserver_token_available = True
                     elif data == "stdin":
                         stdin_ready = True
 
@@ -1474,17 +1476,9 @@ class PackageInstaller:
                 ):
                     finished_builds.clear()
 
-                # Again, the first job should start immediately and does not require a token.
-                if self.pending_builds and not self.running_builds:
-                    self._start(selector, jobserver)
-
-                # For the rest we try to obtain tokens from the jobserver.
-                if self.pending_builds and self.capacity > 0 and jobserver_token_available:
-                    # Schedule as many jobs as we can acquire tokens for.
-                    max_new_jobs = min(len(self.pending_builds), self.capacity)
-                    num_acquired = jobserver.acquire(max_new_jobs)
-                    for _ in range(num_acquired):
-                        self._start(selector, jobserver)
+                # Try to schedule more builds, acquiring per-spec locks and jobserver tokens.
+                if self.capacity and self.pending_builds:
+                    blocked_on_locks = self._schedule_builds(selector, jobserver)
 
                 # Finally update the UI
                 self.build_status.update()
@@ -1498,9 +1492,15 @@ class PackageInstaller:
             raise
         finally:
             # Make sure to write any successful builds to the database before exiting
-            with spack.store.STORE.db.write_transaction():
+            with self.db.write_transaction():
                 for build in finished_builds:
-                    spack.store.STORE.db._add(build.spec, explicit=build.explicit)
+                    self.db._add(build.spec, explicit=build.explicit)
+
+            # Release any prefix write locks that were not yet released via _save_to_db
+            for build in finished_builds:
+                if build.prefix_lock is not None:
+                    build.prefix_lock.release_write()
+                    build.prefix_lock = None
 
             # Restore terminal settings
             if old_stdin_settings:
@@ -1528,23 +1528,109 @@ class PackageInstaller:
             )
 
     def _save_to_db(self, finished_builds: List[ChildInfo]) -> bool:
-        db = spack.store.STORE.db
         try:
             # Only try to get the lock once (non-blocking). If it fails, try it next time.
-            if db.lock.acquire_write(timeout=1e-9):
-                db._read()
+            if self.db.lock.acquire_write(timeout=1e-9):
+                self.db._read()
         except spack.util.lock.LockTimeoutError:
             return False
         try:
             for build in finished_builds:
-                db._add(build.spec, explicit=build.explicit)
-            return True
+                self.db._add(build.spec, explicit=build.explicit)
         finally:
-            db.lock.release_write(db._write)
+            self.db.lock.release_write(self.db._write)
 
-    def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
+        # DB has been written and flushed; release per-spec prefix write locks so other processes
+        # can see the specs are now installed and acquire their own locks.
+        for build in finished_builds:
+            if build.prefix_lock is not None:
+                build.prefix_lock.release_write()
+                build.prefix_lock = None
+
+        return True
+
+    def _schedule_builds(self, selector: selectors.BaseSelector, jobserver: JobServer) -> bool:
+        """Try to schedule as many pending builds as possible.
+
+        For each pending spec, attempts to acquire a non-blocking per-spec write lock. Under both
+        the DB read lock and the prefix write lock, checks whether another process has already
+        installed the spec. If so, skips it and enqueues its parents. Otherwise, acquires a
+        jobserver token (if needed) and starts the build.
+
+        Returns True if all remaining pending specs are locked by other processes (i.e., there is
+        no point in watching for jobserver tokens right now). Returns False if there are
+        schedulable specs or no pending builds remain."""
+
+        # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory
+        # snapshot stays consistent while we acquire per-spec prefix locks.
+        try:
+            self.db.lock.acquire_read(timeout=1e-9)
+        except spack.util.lock.LockTimeoutError:
+            return False
+
+        try:
+            self.db._read()  # refresh in-memory snapshot under the read lock
+            need_token = bool(self.running_builds)
+            any_lock_acquired = False
+            idx = 0
+
+            while idx < len(self.pending_builds):
+                dag_hash = self.pending_builds[idx]
+                if self.capacity <= 0:
+                    return False
+
+                spec = self.build_graph.nodes[dag_hash]
+                lock = spack.store.STORE.prefix_locker.lock(spec)
+                try:
+                    lock.acquire_write(timeout=1e-9)
+                except spack.util.lock.LockTimeoutError:
+                    idx += 1
+                    continue  # another process is building this spec; try the next one
+
+                # Successfully acquired the write lock for this spec.
+                any_lock_acquired = True
+
+                # Check installed status under the DB read lock and prefix write lock.
+                upstream, record = self.db.query_by_spec_hash(dag_hash)
+
+                # Don't schedule builds for specs from upstream databases.
+                assert not (
+                    upstream and record and not record.installed
+                ), f"Cannot install {spec}: it is uninstalled in an upstream database."
+
+                # If the spec is already installed by another process, skip it and enqueue parents.
+                if dag_hash not in self.overwrite and record and record.installed:
+                    lock.release_write()
+                    del self.pending_builds[idx]
+                    self.build_status.add_build(spec, explicit=dag_hash in self.explicit)
+                    self.build_status.update_state(dag_hash, "finished")
+                    self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
+                    continue
+
+                # Acquire a jobserver token if needed. The first (implicit) job needs no token.
+                if need_token and not jobserver.acquire(1):
+                    lock.release_write()
+                    break  # no tokens available right now; stop scheduling
+
+                del self.pending_builds[idx]
+                self._start(selector, jobserver, dag_hash, lock)
+                need_token = True
+
+        finally:
+            self.db.lock.release_read()
+
+        # If we still have pending builds and never acquired any lock, all are blocked by other
+        # processes and there is no benefit in monitoring the jobserver for tokens.
+        return bool(self.pending_builds) and not any_lock_acquired
+
+    def _start(
+        self,
+        selector: selectors.BaseSelector,
+        jobserver: JobServer,
+        dag_hash: str,
+        prefix_lock: spack.util.lock.Lock,
+    ) -> None:
         self.capacity -= 1
-        dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         spec = self.build_graph.nodes[dag_hash]
         is_develop = spec.is_develop
@@ -1568,6 +1654,7 @@ class PackageInstaller:
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path
+        child_info.prefix_lock = prefix_lock
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
