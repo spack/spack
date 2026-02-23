@@ -281,6 +281,10 @@ class SetAnXdgVarAndReadDataHome:
             f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
 
 
+def all_dirs_empty(a_dir):
+    return False
+
+
 def test_child_sanity(working_env, tmp_path, set_home, monkeypatch):
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
@@ -291,11 +295,7 @@ def test_child_sanity(working_env, tmp_path, set_home, monkeypatch):
 
     import spack.paths
 
-    pb = SpackPathsBase(base_prefix)
-    pb.old_install_path = empty_dir
-    ptest = spack.paths.SpackPaths(pb)
-
-    monkeypatch.setattr(spack.paths, "locations", ptest)
+    monkeypatch.setattr(spack.paths, "dir_is_occupied", all_dirs_empty)
 
     spack_process = spack.subprocess_context.SpackTestProcess(SetAnXdgVarAndReadDataHome(home_prefix, base_prefix, empty_dir))
     p = spack_process.create()
