@@ -51,7 +51,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.lock
 import spack.llnl.util.tty
 import spack.paths
 import spack.report
@@ -1373,13 +1372,6 @@ class PackageInstaller:
             selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
         else:
             old_stdin_settings = None
-
-        # Setup the database write lock. TODO: clean this up
-        if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
-            spack.store.STORE.db.lock._ensure_parent_directory()
-            spack.store.STORE.db.lock._file = spack.llnl.util.lock.FILE_TRACKER.get_fh(
-                spack.store.STORE.db.lock.path
-            )
 
         # Finished builds that have not yet been written to the database.
         finished_builds: List[ChildInfo] = []

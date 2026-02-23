@@ -645,22 +645,22 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == "rb+"
+    assert lock._file_ref.fh.mode == "rb+"
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock._file.mode == "rb+"
+    assert lock._file_ref.fh.mode == "rb+"
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file.mode == "rb+"
+    assert lock._file_ref.fh.mode == "rb+"
 
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert lock._file is None
+    assert not lock._file_ref.fh.closed  # recycle the file handle for next lock
 
 
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
@@ -678,14 +678,11 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
-        assert lock._file.mode == "rb"
+        assert lock._file_ref.fh.mode == "rb"
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
-
-        # TODO: lk.FILE_TRACKER does not release private_lock_path
-        lk.FILE_TRACKER.release_by_stat(os.stat(private_lock_path))
 
 
 class ComplexAcquireAndRelease:
