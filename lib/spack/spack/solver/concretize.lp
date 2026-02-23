@@ -1492,11 +1492,9 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 :- attr("variant_set", node(ID, Package), Variant, Value),
    not attr("variant_value", node(ID, Package), Variant, Value).
 
-% If we set a conditional variant, which depends on another variant taking a value,
-% set also the other variant. This short circuits the variant rules, and makes the
-% minimization easier for clingo. It avoids a long chain of decisions that may require
-% a lot of backtracking and result in no conflict learnt (e.g. setting "binutils+gold"
-% implies "binutils+ld")
+% In a case with `variant("foo", when="+bar")` and a user request for +foo or ~foo,
+% assume that +bar is set too. This gives no penalty if `+bar` is not the default value, and
+% optimizes a long chain of deductions that may cause clingo to hang
 attr("variant_set", node(ID, Package), AnotherVariant, AnotherValue)
   :- attr("variant_set", node(ID, Package), Variant, Value),
      attr("variant_selected", node(ID, Package), Variant, _, _, VariantID),
