@@ -35,6 +35,7 @@ import threading
 import time
 import traceback
 import tty
+import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
@@ -571,17 +572,18 @@ class JobServer:
         if self.created and self.num_jobs > 1:
             if self.tokens_acquired != 0:
                 # It's a non-fatal internal error to close the jobserver with acquired tokens.
-                print("Warning: Spack failed to release jobserver tokens", file=sys.stderr)
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
             else:
                 # Verify that all build processes released the tokens they acquired.
                 total = self.num_jobs - 1
                 drained = self.acquire(total)
                 if drained != total:
-                    print(
-                        f"Warning: {total - drained} jobserver tokens were not released by "
-                        "build processes. This can indicate that the build ran with limited "
-                        "parallelism.",
-                        file=sys.stderr,
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
+                        stacklevel=2,
                     )
 
         self.r_conn.close()
