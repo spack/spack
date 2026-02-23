@@ -753,3 +753,15 @@ def test_git_provenance_relative_to_mirror(
 
     spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
     assert spec_head.variants["commit"].value == head_commit
+
+
+def test_mirror_skip_placeholder_pkg(tmp_path: pathlib.Path):
+    """Test a placeholder package which should skip during mirror all"""
+    spec = spack.spec.Spec("egl@1.5")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_obj = pkg_cls(spec)
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(str(tmp_path))
+    mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(spec)
+    result = spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    assert result is False
+    assert not mirror_stats.errors
