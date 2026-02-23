@@ -8,7 +8,6 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
-import contextlib
 import os
 import pathlib
 from enum import Enum
@@ -25,31 +24,24 @@ def dir_is_occupied(x, except_for=None):
     return x.is_dir() and bool(set(x.iterdir()) - except_for)
 
 
-_data_home_parent = "SPACK_PARENT_DATA_HOME"
-_state_home_parent = "SPACK_PARENT_STATE_HOME"
-_cache_home_parent = "SPACK_PARENT_CACHE_HOME"
-
-
 class Provenance(Enum):
     # Used entirely inside this module, for recording configuration
     # or environment options that the user set in order to influence
     # the location of data that used to live in $spack and following
     # #47615 now lives outside of it
 
-    PARENT_SETTING = 1
-    SPACK_ENV = 2  # SPACK_x_HOME
-    SPACK_HOME_ENV = 3  # SPACK_HOME
-    CONFIG_VAR = 4  # config:locations:x
-    CONFIG_HOME_VAR = 5  # config:locations:home
-    XDG_VAR = 6  # XDG_x_HOME
-    NOTHING_SET = 7  # None of the above are set
+    SPACK_ENV = 1  # SPACK_x_HOME
+    SPACK_HOME_ENV = 2  # SPACK_HOME
+    CONFIG_VAR = 3  # config:locations:x
+    CONFIG_HOME_VAR = 4  # config:locations:home
+    XDG_VAR = 5  # XDG_x_HOME
+    NOTHING_SET = 6  # None of the above are set
 
     def unilateral_override(self):
         # The following mechanisms for indicating user preference
         # override the existence of data stored in its old location
         # in $spack prior to #47615
         return self in {
-            Provenance.PARENT_SETTING,
             Provenance.SPACK_ENV,
             Provenance.SPACK_HOME_ENV,
             Provenance.CONFIG_VAR,
@@ -92,7 +84,6 @@ class SpackPaths:
                 "XDG_STATE_HOME",
                 "state",
                 SpackPaths.relative_state_home,
-                _state_home_parent,
             )
         return self._state_home
 
@@ -100,11 +91,7 @@ class SpackPaths:
     def cache_home(self):
         if not self._cache_home:
             self._cache_home, self._cache_home_provenance = self.resolve_a_home(
-                "SPACK_CACHE_HOME",
-                "XDG_CACHE_HOME",
-                "cache",
-                SpackPaths.relative_cache_home,
-                _cache_home_parent,
+                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", SpackPaths.relative_cache_home
             )
         return self._cache_home
 
@@ -112,11 +99,7 @@ class SpackPaths:
     def data_home(self):
         if not self._data_home:
             self._data_home, self._data_home_provenance = self.resolve_a_home(
-                "SPACK_DATA_HOME",
-                "XDG_DATA_HOME",
-                "data",
-                SpackPaths.relative_data_home,
-                _data_home_parent,
+                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", SpackPaths.relative_data_home
             )
         return self._data_home
 
@@ -257,7 +240,7 @@ class SpackPaths:
         # paths module and access all items from paths_base
         return getattr(self.base, name)
 
-    def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel, parent_env_var):
+    def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
         """
         Data stored by spack is split into state, data, and cache components.
         This function can resolve where each of these components should be
@@ -312,11 +295,6 @@ class SpackPaths:
             if h:
                 return os.path.join(h, home_rel, "spack"), Provenance.CONFIG_HOME_VAR
 
-        def parent_env_check():
-            # This does not follow disable_env
-            if parent_env_var in os.environ:
-                return os.environ[parent_env_var], Provenance.PARENT_SETTING
-
         for check in [
             spack_env_check,
             spack_home_env_check,
@@ -367,16 +345,6 @@ class SpackPaths:
             if dir_is_occupied(os.path.join(self.base.share_path, module_dir)):
                 return self.base.share_path
         return self.data_home
-
-    @contextlib.contextmanager
-    def subprocess_override(self):
-        # This is not thread-safe
-        os.environ[_data_home_parent] = self.default_data_home
-        os.environ[_state_home_parent] = self.default_state_home
-        os.environ[_cache_home_parent] = self.default_cache_home
-        yield
-        for x in [_data_home_parent, _state_home_parent, _cache_home_parent]:
-            del os.environ[x]
 
 
 locations = SpackPaths(paths_base.locations)
