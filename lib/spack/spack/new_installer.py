@@ -568,6 +568,25 @@ class JobServer:
         self.tokens_acquired -= 1
 
     def close(self) -> None:
+        if self.created and self.num_jobs > 1:
+            if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
+                print("Warning: Spack failed to release jobserver tokens", file=sys.stderr)
+            else:
+                # Verify that all build processes released the tokens they acquired.
+                total = self.num_jobs - 1
+                drained = self.acquire(total)
+                if drained != total:
+                    print(
+                        f"Warning: {total - drained} jobserver tokens were not released by "
+                        "build processes. This can indicate that the build ran with limited "
+                        "parallelism.",
+                        file=sys.stderr,
+                    )
+
+        self.r_conn.close()
+        self.w_conn.close()
+
         # Remove the FIFO if we created it.
         if self.created and self.fifo_path:
             try:
@@ -578,11 +597,6 @@ class JobServer:
                 os.rmdir(os.path.dirname(self.fifo_path))
             except OSError:
                 pass
-        # TODO: implement a sanity check here:
-        # 1. did we release all tokens we acquired?
-        # 2. if we created the jobserver, did the children return all tokens?
-        self.r_conn.close()
-        self.w_conn.close()
 
 
 def start_build(
@@ -1439,6 +1453,7 @@ class PackageInstaller:
             for child in self.running_builds.values():
                 child.proc.terminate()
             for child in self.running_builds.values():
+                jobserver.release()
                 child.proc.join()
             raise
         finally:
