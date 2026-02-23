@@ -378,7 +378,6 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
 
 % A "condition_set(PackageNode, _)" is the set of nodes on which PackageNode can require / impose conditions
 condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
-condition_set(PackageNode, PackageNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
 condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
