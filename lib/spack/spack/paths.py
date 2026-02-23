@@ -349,6 +349,21 @@ class SpackPaths:
 
 locations = SpackPaths(paths_base.locations)
 
+
+def freeze():
+    """
+    Run this first-thing when starting a spack child process that is
+    used for builds. Resolve all variables that are XDG-dependent, in
+    case the build sets those XDG variables.
+
+    Note that for this reason, the private variables like _data_home
+    are important for more than just caching.
+    """
+    locations.state_home
+    locations.data_home
+    locations.cache_home
+
+
 # At least one builtin spack package expects that spack.paths is
 # importable and that it has spack_script as a module-level attribute.
 # Some test packages expect other paths (like test_path)

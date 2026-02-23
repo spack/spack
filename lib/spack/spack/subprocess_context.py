@@ -20,6 +20,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Optional
 
 import spack.config
+import spack.paths
 import spack.paths_base
 import spack.platforms
 import spack.repo
@@ -108,6 +109,7 @@ class GlobalStateMarshaler:
         if self.is_forked:
             return
         spack.config.CONFIG = self.config
+        spack.paths.freeze()
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
