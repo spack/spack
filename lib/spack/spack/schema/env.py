@@ -16,6 +16,15 @@ from .spec_list import spec_list_schema
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
 
+include_concrete = {
+    "type": "array",
+    "default": [],
+    "description": "List of paths to other environments. Includes concrete specs "
+    "from their spack.lock files without modifying the source environments. Useful "
+    "for phased deployments where you want to build on existing concrete specs.",
+    "items": {"type": "string"},
+}
+
 properties: Dict[str, Any] = {
     "spack": {
         "type": "object",
@@ -28,14 +37,7 @@ properties: Dict[str, Any] = {
             **spack.schema.merged.properties,
             # extra environment schema properties
             "specs": spec_list_schema,
-            "include_concrete": {
-                "type": "array",
-                "default": [],
-                "description": "List of paths to other environments. Includes concrete specs "
-                "from their spack.lock files without modifying the source environments. Useful "
-                "for phased deployments where you want to build on existing concrete specs.",
-                "items": {"type": "string"},
-            },
+            "include_concrete": include_concrete,
         },
     }
 }
@@ -49,14 +51,14 @@ schema = {
 }
 
 
-def update(data):
-    """Update the data in place to remove deprecated properties.
+def update(data: Dict[str, Any]) -> bool:
+    """Update the spack.yaml data in place to remove deprecated properties.
 
     Args:
-        data (dict): dictionary to be updated
+        data: dictionary to be updated
 
     Returns:
-        True if data was changed, False otherwise
+        ``True`` if data was changed, ``False`` otherwise
     """
     # There are not currently any deprecated attributes in this section
     # that have not been removed

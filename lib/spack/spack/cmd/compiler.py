@@ -180,11 +180,14 @@ def compiler_info(args):
 def compiler_list(args):
     compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
+    if not sys.stdout.isatty():
+        for c in sorted(compilers):  # type: ignore
+            print(c.format("{name}@{version}"))
+        return
+
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
     if len(compilers) == 0:
-        if not sys.stdout.isatty():
-            return
         msg = "No compilers available"
         if args.scope is None:
             msg += ". Run `spack compiler find` to autodetect compilers"

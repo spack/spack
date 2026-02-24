@@ -18,8 +18,6 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
-import spack.environment.environment
-import spack.environment.shell
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.link_tree
@@ -622,7 +620,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    spack.environment.shell.activate(e).apply_modifications(env_variables)
+    ev.shell.activate(e).apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
@@ -2065,8 +2063,8 @@ def test_env_include_concrete_env_yaml(env_name):
     combined = ev.read("combined_env")
     combined_yaml = combined.manifest["spack"]
 
-    assert "include_concrete" in combined_yaml
-    assert test.path in combined_yaml["include_concrete"]
+    assert ev.lockfile_include_key in combined_yaml
+    assert test.path in combined_yaml[ev.lockfile_include_key]
 
 
 @pytest.mark.regression("45766")
@@ -2101,8 +2099,8 @@ def test_env_multiple_include_concrete_envs():
 
     combined_yaml = combined.manifest["spack"]
 
-    assert test1.path in combined_yaml["include_concrete"][0]
-    assert test2.path in combined_yaml["include_concrete"][1]
+    assert test1.path in combined_yaml[ev.lockfile_include_key][0]
+    assert test2.path in combined_yaml[ev.lockfile_include_key][1]
 
     # No local specs in the combined env
     assert not combined_yaml["specs"]
@@ -2113,17 +2111,17 @@ def test_env_include_concrete_envs_lockfile():
 
     combined_yaml = combined.manifest["spack"]
 
-    assert "include_concrete" in combined_yaml
-    assert test1.path in combined_yaml["include_concrete"]
+    assert ev.lockfile_include_key in combined_yaml
+    assert test1.path in combined_yaml[ev.lockfile_include_key]
 
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
     assert set(
-        entry["hash"] for entry in lockfile_as_dict["include_concrete"][test1.path]["roots"]
+        entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test1.path]["roots"]
     ) == set(test1.specs_by_hash)
     assert set(
-        entry["hash"] for entry in lockfile_as_dict["include_concrete"][test2.path]["roots"]
+        entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test2.path]["roots"]
     ) == set(test2.specs_by_hash)
 
 
@@ -2140,13 +2138,13 @@ def test_env_include_concrete_add_env():
     new_env.write()
 
     # add new env to combined
-    combined.included_concrete_envs.append(new_env.path)
+    combined.included_concrete_env_root_dirs.append(new_env.path)
 
     # assert thing haven't changed yet
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert new_env.path not in lockfile_as_dict["include_concrete"].keys()
+    assert new_env.path not in lockfile_as_dict[ev.lockfile_include_key].keys()
 
     # concretize combined env with new env
     combined.concretize()
@@ -2156,20 +2154,20 @@ def test_env_include_concrete_add_env():
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert new_env.path in lockfile_as_dict["include_concrete"].keys()
+    assert new_env.path in lockfile_as_dict[ev.lockfile_include_key].keys()
 
 
 def test_env_include_concrete_remove_env():
     test1, test2, combined = setup_combined_multiple_env()
 
     # remove test2 from combined
-    combined.included_concrete_envs = [test1.path]
+    combined.included_concrete_env_root_dirs = [test1.path]
 
     # assert test2 is still in combined's lockfile
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert test2.path in lockfile_as_dict["include_concrete"].keys()
+    assert test2.path in lockfile_as_dict[ev.lockfile_include_key].keys()
 
     # reconcretize combined
     combined.concretize()
@@ -2179,7 +2177,7 @@ def test_env_include_concrete_remove_env():
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert test2.path not in lockfile_as_dict["include_concrete"].keys()
+    assert test2.path not in lockfile_as_dict[ev.lockfile_include_key].keys()
 
 
 def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
@@ -2352,8 +2350,11 @@ def test_concretize_nested_include_concrete_envs():
     with open(test3.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = test3._read_lockfile(f)
 
-    assert test2.path in lockfile_as_dict["include_concrete"]
-    assert test1.path in lockfile_as_dict["include_concrete"][test2.path]["include_concrete"]
+    assert test2.path in lockfile_as_dict[ev.lockfile_include_key]
+    assert (
+        test1.path
+        in lockfile_as_dict[ev.lockfile_include_key][test2.path][ev.lockfile_include_key]
+    )
 
     assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
 
@@ -2405,7 +2406,7 @@ def test_concretize_nested_included_concrete():
 
     def included_included_spec(path1, path2):
         included_path1 = test4.included_concrete_spec_data[path1]
-        included_path2 = included_path1["include_concrete"][path2]
+        included_path2 = included_path1[ev.lockfile_include_key][path2]
         return included_path2["roots"][0]["spec"]
 
     included_test2_test1 = included_included_spec(test2.path, test1.path)
@@ -3528,9 +3529,7 @@ spack:
     def _write_helper_raise(self):
         raise RuntimeError("some error")
 
-    monkeypatch.setattr(
-        spack.environment.environment.EnvironmentManifestFile, "flush", _write_helper_raise
-    )
+    monkeypatch.setattr(ev.environment.EnvironmentManifestFile, "flush", _write_helper_raise)
     with ev.Environment(str(tmp_path)) as e:
         e.concretize(force=True)
         with pytest.raises(RuntimeError):

@@ -165,8 +165,9 @@ user_speclist_name = "specs"
 default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
-# The name for any included concrete specs
-included_concrete_name = "include_concrete"
+
+# The key for any concrete specs included in a lockfile.
+lockfile_include_key = "include_concrete"
 
 
 def installed_specs():
@@ -341,7 +342,7 @@ def create(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
-        include_concrete: list of concrete environment names/paths to be included
+        include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
@@ -1019,8 +1020,8 @@ class Environment:
         #: Repository for this environment (memoized)
         self._repo = None
 
-        #: Environment paths for concrete (lockfile) included environments
-        self.included_concrete_envs: List[str] = []
+        #: Environment root dirs for concrete (lockfile) included environments
+        self.included_concrete_env_root_dirs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
         self.included_concrete_spec_data: Dict[str, Dict[str, List[str]]] = {}
         #: User specs from included environments from the last concretization
@@ -1134,19 +1135,19 @@ class Environment:
 
     def _process_concrete_includes(self):
         """Extract and load into memory included concrete spec data."""
-        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
         # Expand config and environment variables
-        self.included_concrete_envs = [
+        self.included_concrete_env_root_dirs = [
             spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
         ]
 
-        if self.included_concrete_envs:
+        if self.included_concrete_env_root_dirs:
             if os.path.exists(self.lock_path):
                 with open(self.lock_path, encoding="utf-8") as f:
                     data = self._read_lockfile(f)
 
-                if included_concrete_name in data:
-                    self.included_concrete_spec_data = data[included_concrete_name]
+                if lockfile_include_key in data:
+                    self.included_concrete_spec_data = data[lockfile_include_key]
             else:
                 self.include_concrete_envs()
 
@@ -1194,7 +1195,7 @@ class Environment:
         """Included concrete user (or root) specs from last concretization."""
         spec_list = SpecList()
 
-        if not self.included_concrete_envs:
+        if not self.included_concrete_env_root_dirs:
             return spec_list
 
         def add_root_specs(included_concrete_specs):
@@ -1203,8 +1204,8 @@ class Environment:
                 for root_list in info["roots"]:
                     spec_list.add(root_list["spec"])
 
-                if "include_concrete" in info:
-                    add_root_specs(info["include_concrete"])
+                if lockfile_include_key in info:
+                    add_root_specs(info[lockfile_include_key])
 
         add_root_specs(self.included_concrete_spec_data)
         return spec_list
@@ -1280,7 +1281,7 @@ class Environment:
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
 
-        for env_path in self.included_concrete_envs:
+        for env_path in self.included_concrete_env_root_dirs:
             # Check that environment exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
@@ -1305,7 +1306,7 @@ class Environment:
             # Copy transitive include data
             transitive = env.included_concrete_spec_data
             if transitive:
-                self.included_concrete_spec_data[env_path]["include_concrete"] = transitive
+                self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive
 
         self.unify_specs()
         self.write()
@@ -2090,8 +2091,8 @@ class Environment:
             "concrete_specs": concrete_specs,
         }
 
-        if self.included_concrete_envs:
-            data[included_concrete_name] = self.included_concrete_spec_data
+        if self.included_concrete_env_root_dirs:
+            data[lockfile_include_key] = self.included_concrete_spec_data
 
         return data
 
@@ -2129,8 +2130,8 @@ class Environment:
             if "concrete_specs" in info:
                 specs_by_hash.update(info["concrete_specs"])
 
-            if included_concrete_name in info:
-                for included_name, included_info in info[included_concrete_name].items():
+            if lockfile_include_key in info:
+                for included_name, included_info in info[lockfile_include_key].items():
                     if included_name not in self.included_concretized_order:
                         self.included_concretized_order[included_name] = []
                         self.included_concretized_user_specs[included_name] = []
@@ -2156,8 +2157,8 @@ class Environment:
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
-        if included_concrete_name in d:
-            for env_name, env_info in d[included_concrete_name].items():
+        if lockfile_include_key in d:
+            for env_name, env_info in d[lockfile_include_key].items():
                 included_json_specs_by_hash.update(
                     self.set_included_concretized_user_specs(
                         env_name, env_info, included_json_specs_by_hash
@@ -2266,7 +2267,7 @@ class Environment:
             regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
         self.manifest_uptodate_or_warn()
-        if self.specs_by_hash or self.included_concrete_envs:
+        if self.specs_by_hash or self.included_concrete_env_root_dirs:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()
@@ -2407,7 +2408,7 @@ class EnvironmentConcretizer:
             self.env.sync_concretized_specs()
 
         # If a combined env, check updated spec is in the linked envs
-        if self.env.included_concrete_envs:
+        if self.env.included_concrete_env_root_dirs:
             self.env.include_concrete_envs()
 
     def _partition_user_specs(self) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
@@ -2892,10 +2893,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.configuration[included_concrete_name] = []
+        self.configuration[lockfile_include_key] = []
 
         for env_path in include_concrete:
-            self.configuration[included_concrete_name].append(env_path)
+            self.configuration[lockfile_include_key].append(env_path)
 
         self.changed = True
 

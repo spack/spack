@@ -35,6 +35,7 @@ import threading
 import time
 import traceback
 import tty
+import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
@@ -86,7 +87,16 @@ OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 class ChildInfo:
     """Information about a child process."""
 
-    __slots__ = ("proc", "spec", "output_r_conn", "state_r_conn", "control_w_conn", "explicit")
+    __slots__ = (
+        "proc",
+        "spec",
+        "output_r_conn",
+        "state_r_conn",
+        "control_w_conn",
+        "explicit",
+        "prefix_lock",
+        "log_path",
+    )
 
     def __init__(
         self,
@@ -96,6 +106,7 @@ class ChildInfo:
         state_r_conn: Connection,
         control_w_conn: Connection,
         explicit: bool = False,
+        log_path: str = "",
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -103,6 +114,7 @@ class ChildInfo:
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
         self.explicit = explicit
+        self.log_path = log_path
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
         """Unregister and close file descriptors, and join the child process."""
@@ -330,6 +342,7 @@ def worker_function(
     js2: Optional[Connection],
     store: spack.store.Store,
     config: spack.config.Configuration,
+    log_path: str = "",
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -382,12 +395,8 @@ def worker_function(
     spack.config.CONFIG = config
     spack.paths.set_working_dir()
 
-    # Create a log file in the root of the stage dir.
-    log_fd, log_path = tempfile.mkstemp(
-        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
-        suffix=".log",
-        dir=spack.stage.get_stage_root(),
-    )
+    # Open the log file created by the parent process.
+    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC)
     tee = Tee(echo_control, parent, log_fd)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
@@ -568,6 +577,26 @@ class JobServer:
         self.tokens_acquired -= 1
 
     def close(self) -> None:
+        if self.created and self.num_jobs > 1:
+            if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
+            else:
+                # Verify that all build processes released the tokens they acquired.
+                total = self.num_jobs - 1
+                drained = self.acquire(total)
+                if drained != total:
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
+                        stacklevel=2,
+                    )
+
+        self.r_conn.close()
+        self.w_conn.close()
+
         # Remove the FIFO if we created it.
         if self.created and self.fifo_path:
             try:
@@ -578,11 +607,6 @@ class JobServer:
                 os.rmdir(os.path.dirname(self.fifo_path))
             except OSError:
                 pass
-        # TODO: implement a sanity check here:
-        # 1. did we release all tokens we acquired?
-        # 2. if we created the jobserver, did the children return all tokens?
-        self.r_conn.close()
-        self.w_conn.close()
 
 
 def start_build(
@@ -611,6 +635,13 @@ def start_build(
     makeflags = jobserver.makeflags(gmake)
     fifo = "--jobserver-auth=fifo:" in makeflags
 
+    log_fd, log_path = tempfile.mkstemp(
+        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
+        suffix=".log",
+        dir=spack.stage.get_stage_root(),
+    )
+    os.close(log_fd)  # child will open it
+
     proc = Process(
         target=worker_function,
         args=(
@@ -633,6 +664,7 @@ def start_build(
             None if fifo else jobserver.w_conn,
             spack.store.STORE,
             spack.config.CONFIG,
+            log_path,
         ),
     )
     proc.start()
@@ -646,7 +678,7 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit)
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit, log_path)
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
@@ -1238,9 +1270,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fail_fast:
-            raise NotImplementedError("Fail-fast installs are not implemented")
-        elif fake:
+        if fake:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
@@ -1250,7 +1280,6 @@ class PackageInstaller:
             raise NotImplementedError("Stopping before an install phase is not implemented")
         elif tests is not False:
             raise NotImplementedError("Tests during install are not implemented")
-        # verbose and concurrent_packages are not worth erroring out for
 
         specs = [pkg.spec for pkg in packages]
 
@@ -1260,6 +1289,7 @@ class PackageInstaller:
         #: Set of DAG hashes to overwrite (if already installed)
         self.overwrite: Set[str] = set(overwrite) if overwrite else set()
         self.keep_prefix = keep_prefix
+        self.fail_fast = fail_fast
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
@@ -1301,8 +1331,18 @@ class PackageInstaller:
             self.explicit = explicit
 
         self.running_builds: Dict[int, ChildInfo] = {}
+        self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        if concurrent_packages is None:
+            concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
+            # The value 0 in config means no limit (other than self.jobs)
+            if concurrent_packages_config == 0:
+                self.capacity = sys.maxsize
+            else:
+                self.capacity = concurrent_packages_config
+        else:
+            self.capacity = concurrent_packages
         self.reports: Dict[str, spack.report.RequestRecord] = {}
 
     def install(self) -> None:
@@ -1346,10 +1386,11 @@ class PackageInstaller:
                 self._start(selector, jobserver)
 
             while self.pending_builds or self.running_builds or to_insert_in_database:
-                # Only monitor the jobserver if we have pending builds.
-                if self.pending_builds and jobserver.r not in selector.get_map():
+                # Only monitor the jobserver if we have pending builds and capacity.
+                can_schedule_more = self.pending_builds and self.capacity > 0
+                if can_schedule_more and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not self.pending_builds and jobserver.r in selector.get_map():
+                elif not can_schedule_more and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
                 jobserver_token_available = False
@@ -1377,14 +1418,25 @@ class PackageInstaller:
 
                 for pid in finished_pids:
                     build = self.running_builds.pop(pid)
+                    self.capacity += 1
                     jobserver.release()
                     build.cleanup(selector)
                     if build.proc.exitcode == 0:
                         to_insert_in_database.append(build)
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    else:
+                    elif not self.fail_fast or not failures:
+                        # In fail-fast mode, only record the first failure. Subsequent failures may
+                        # be a consequence of us terminating other builds, and should not be
+                        # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+
+                if failures and self.fail_fast:
+                    # Terminate other builds to actually fail fast. We continue in the event loop
+                    # waiting for child processes to finish, which may take a little while.
+                    for child in self.running_builds.values():
+                        child.proc.terminate()
+                    self.pending_builds.clear()
 
                 if stdin_ready:
                     try:
@@ -1417,10 +1469,11 @@ class PackageInstaller:
                     self._start(selector, jobserver)
 
                 # For the rest we try to obtain tokens from the jobserver.
-                if self.pending_builds and jobserver_token_available:
-                    # Then we try to schedule as many jobs as we can acquire tokens for.
-                    max_new_jobs = len(self.pending_builds)
-                    for _ in range(jobserver.acquire(max_new_jobs)):
+                if self.pending_builds and self.capacity > 0 and jobserver_token_available:
+                    # Schedule as many jobs as we can acquire tokens for.
+                    max_new_jobs = min(len(self.pending_builds), self.capacity)
+                    num_acquired = jobserver.acquire(max_new_jobs)
+                    for _ in range(num_acquired):
                         self._start(selector, jobserver)
 
                 # Finally update the UI
@@ -1430,6 +1483,7 @@ class PackageInstaller:
             for child in self.running_builds.values():
                 child.proc.terminate()
             for child in self.running_builds.values():
+                jobserver.release()
                 child.proc.join()
             raise
         finally:
@@ -1445,7 +1499,15 @@ class PackageInstaller:
             jobserver.close()
 
         if failures:
-            lines = [f"{s}: {s.package.log_path}" for s in failures]
+            for s in failures:
+                log_path = self.log_paths.get(s.dag_hash())
+                if log_path and os.path.exists(log_path):
+                    out = io.StringIO()
+                    spack.build_environment.write_log_summary(out, f"{s} build", log_path)
+                    summary = out.getvalue()
+                    if summary:
+                        sys.stderr.write(summary)
+            lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
@@ -1466,6 +1528,7 @@ class PackageInstaller:
             db.lock.release_write(db._write)
 
     def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
+        self.capacity -= 1
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         spec = self.build_graph.nodes[dag_hash]
@@ -1489,6 +1552,7 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             jobserver=jobserver,
         )
+        self.log_paths[dag_hash] = child_info.log_path
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info

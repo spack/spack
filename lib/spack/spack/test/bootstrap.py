@@ -10,10 +10,12 @@ import spack.bootstrap
 import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
+import spack.bootstrap.status
 import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.store
+import spack.util.executable
 import spack.util.path
 
 from .conftest import _true
@@ -206,8 +208,6 @@ def test_nested_use_of_context_manager(mutable_config):
 def test_status_function_find_files(
     mutable_config, mock_executable, tmp_path: pathlib.Path, monkeypatch, expected_missing
 ):
-    import spack.bootstrap.status
-
     if not expected_missing:
         mock_executable("foo", "echo Hello WWorld!")
 
@@ -220,6 +220,59 @@ def test_status_function_find_files(
 
     _, missing = spack.bootstrap.status_message("optional")
     assert missing is expected_missing
+
+
+@pytest.mark.parametrize(
+    "gpg_in_path,gpg_in_store,expected_missing",
+    [
+        (True, False, False),  # gpg exists in PATH
+        (False, True, False),  # gpg exists in bootstrap store
+        (False, False, True),  # gpg is missing
+    ],
+)
+def test_gpg_status_check(
+    mutable_config,
+    mock_executable,
+    tmp_path: pathlib.Path,
+    monkeypatch,
+    gpg_in_path,
+    gpg_in_store,
+    expected_missing,
+):
+    """Test that gpg/gpg2 status is detected whether it's in PATH or in the bootstrap store."""
+    # Set up mock PATH with or without gpg
+    path_dir = tmp_path / "bin"
+    path_dir.mkdir(exist_ok=True)
+    monkeypatch.setenv("PATH", str(path_dir))
+
+    if gpg_in_path:
+        mock_executable("gpg2", "echo GPG 2.3.4")
+
+    # Mock the bootstrap store function
+    def mock_executables_in_store(exes, query_spec, query_info=None):
+        if not gpg_in_store:
+            return False
+
+        # Simulate found gpg in bootstrap store
+        if query_info is not None:
+            query_info["spec"] = "gnupg@2.5.12"
+            query_info["command"] = spack.util.executable.Executable("gpg")
+        return True
+
+    monkeypatch.setattr(spack.bootstrap.status, "_executables_in_store", mock_executables_in_store)
+
+    # Call only the buildcache requirements function directly to isolate the test
+    requirements = spack.bootstrap.status._buildcache_requirements()
+
+    # Find the gpg entry by examining the calls made to set up requirements
+    # We know the first entry in requirements is the gpg entry because of how
+    # _buildcache_requirements is structured:
+    # Make sure we're not out of bounds
+    assert len(requirements) >= 1, "No gpg requirement found"
+
+    # Check that the gpg requirement matches our expectations
+    gpg_req = requirements[0]
+    assert gpg_req[0] is not expected_missing
 
 
 @pytest.mark.regression("31042")

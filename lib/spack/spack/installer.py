@@ -1528,8 +1528,11 @@ class PackageInstaller:
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = int(spack.config.get("config:concurrent_packages", default=1))
-        self.concurrent_packages = max(1, concurrent_packages)
+            concurrent_packages = spack.config.get("config:concurrent_packages", default=1)
+        # The value 0 means no concurrency in the old installer.
+        if concurrent_packages == 0:
+            concurrent_packages = 1
+        self.concurrent_packages = concurrent_packages
 
         install_args = {
             "dependencies_policy": dependencies_policy,

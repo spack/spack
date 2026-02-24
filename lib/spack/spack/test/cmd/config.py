@@ -67,7 +67,7 @@ def test_config_scopes(path, types, mutable_mock_env_path):
         assert "command_line" in output
         assert "_builtin" in output
     if types:
-        if not any(i in ("all", "path") for i in types):
+        if not any(i in ("all", "path", "include") for i in types):
             assert "site" not in output
         if not any(i in ("all", "env", "include", "path") for i in types):
             assert not output or all(":" not in x for x in output)
@@ -133,21 +133,21 @@ def test_blame_override(mutable_config):
     # includes are present when section is specified
     output = config("blame", "include").strip()
     include_path = re.escape(os.path.join(mutable_config.scopes["site"].path, "include.yaml"))
-    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert re.search(rf"{include_path}:\d+\s+\- path: base", output)
 
     # includes are also present when section is NOT specified
     output = config("blame").strip()
-    assert re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert re.search(rf"{include_path}:\d+\s+\- path: base", output)
 
     mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
 
     # site includes are not present when overridden
     output = config("blame", "include").strip()
-    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert not re.search(rf"{include_path}:\d+\s+\- path: base", output)
     assert "include: []" in output
 
     output = config("blame").strip()
-    assert not re.search(rf"include:\n{include_path}:\d+\s+\- path: base", output)
+    assert not re.search(rf"{include_path}:\d+\s+\- path: base", output)
     assert "include: []" in output
 
 
