@@ -94,6 +94,9 @@ class GlobalStateMarshaler:
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
+        # Note: you must call "freeze" before for fork; you must call freeze
+        # after for spawn.
+        spack.paths.freeze()
         if self.is_forked:
             return
 
