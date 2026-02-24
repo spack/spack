@@ -75,7 +75,7 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
     assert _it_contains_the_source_i_expect(spec)[1]
 
 
-def test_install_source_file_placement(install_mockery, mock_fetch, monkeypatch, mutable_config):
+def test_install_source_dependent(install_mockery, mock_fetch, monkeypatch, mutable_config):
     # Check that +install_source ensures that source files are placed in the
     # install prefix
     spack.config.set(
