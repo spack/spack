@@ -9,9 +9,9 @@ import pytest
 
 import spack.config
 import spack.paths_base
+import spack.subprocess_context
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
-import spack.subprocess_context
 
 
 def _ensure_dir(pathlike):
@@ -262,6 +262,7 @@ class SetAnXdgVarAndReadDataHome:
     """Provide a function which can execute in a separate process that removes
     a spec from the database.
     """
+
     def __init__(self, home_prefix, base_prefix, empty_dir):
         self.home_prefix = home_prefix
         self.base_prefix = base_prefix
@@ -273,12 +274,10 @@ class SetAnXdgVarAndReadDataHome:
 
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
-
-        expected = str(
-            pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs"
-        )
-        assert spack.paths.locations.default_install_location == expected, \
-            f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
+        expected = str(pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs")
+        assert (
+            spack.paths.locations.default_install_location == expected
+        ), f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
 
 
 def all_dirs_empty(a_dir):
@@ -297,7 +296,9 @@ def test_child_sanity(working_env, tmp_path, set_home, monkeypatch):
 
     monkeypatch.setattr(spack.paths, "dir_is_occupied", all_dirs_empty)
 
-    spack_process = spack.subprocess_context.SpackTestProcess(SetAnXdgVarAndReadDataHome(home_prefix, base_prefix, empty_dir))
+    spack_process = spack.subprocess_context.SpackTestProcess(
+        SetAnXdgVarAndReadDataHome(home_prefix, base_prefix, empty_dir)
+    )
     p = spack_process.create()
     p.start()
     p.join()
