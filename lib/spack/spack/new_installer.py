@@ -1499,6 +1499,14 @@ class PackageInstaller:
             jobserver.close()
 
         if failures:
+            for s in failures:
+                log_path = self.log_paths.get(s.dag_hash())
+                if log_path and os.path.exists(log_path):
+                    out = io.StringIO()
+                    spack.build_environment.write_log_summary(out, f"{s} build", log_path)
+                    summary = out.getvalue()
+                    if summary:
+                        sys.stderr.write(summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
