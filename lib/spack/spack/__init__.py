@@ -10,7 +10,7 @@ import spack.paths
 import spack.util.git
 
 #: PEP440 canonical <major>.<minor>.<micro>.<devN> string
-__version__ = "1.1.0.dev0"
+__version__ = "1.2.0.dev0"
 spack_version = __version__
 
 #: The current Package API version implemented by this version of Spack. The Package API defines
@@ -18,7 +18,7 @@ spack_version = __version__
 #: version is incremented when the package API is extended in a backwards-compatible way. The major
 #: version is incremented upon breaking changes. This version is changed independently from the
 #: Spack version.
-package_api_version = (2, 3)
+package_api_version = (2, 4)
 
 #: The minimum Package API version that this version of Spack is compatible with. This should
 #: always be a tuple of the form ``(major, 0)``, since compatibility with vX.Y implies

@@ -18,7 +18,6 @@ import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
 import spack.stage
-import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url

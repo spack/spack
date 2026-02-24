@@ -22,7 +22,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.main import section_descriptions
 
 description = "list available spack commands"
-section = "developer"
+section = "config"
 level = "long"
 
 

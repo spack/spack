@@ -59,6 +59,9 @@ END_OF_SENTENCE = re.compile(
 DOCUTILS_SETTING = {"report_level": 5, "raw_enabled": False, "file_insertion_enabled": False}
 
 
+DOUBLE_COLON_WARNING = re.compile(r"\-\s*([^: ]+)::.*\n\+\s*'\1:':")
+
+
 def _warning(msg: str) -> str:
     return f"\033[1;33mwarning:\033[0m {msg}"
 
@@ -190,7 +193,13 @@ def _format_code_blocks(document: nodes.document, path: str) -> List[Warning]:
                 tofile=f"{path}:{line} (suggested, NOT required)",
             )
         )
-        if diff:
+
+        # ignore suggestions to quote double colons like this:
+        #
+        # -  build_stage::
+        # +  'build_stage:':
+        #
+        if diff and not DOUBLE_COLON_WARNING.search(diff):
             issues.append(CodeBlockWarning(path, line, "formatting suggested:", diff))
     return issues
 

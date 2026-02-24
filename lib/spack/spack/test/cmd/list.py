@@ -4,8 +4,6 @@
 
 import os
 import pathlib
-import sys
-from textwrap import dedent
 
 import pytest
 
@@ -25,25 +23,13 @@ def test_list():
 
 
 def test_list_cli_output_format(mock_tty_stdout):
-    out = list("mpileaks")
-    # Currently logging on Windows detaches stdout
-    # from the terminal so we miss some output during tests
-    # TODO: (johnwparent): Once logging is amended on Windows,
-    # restore this test
-    if not sys.platform == "win32":
-        out_str = dedent(
-            """\
-    mpileaks
-    ==> 1 packages
-    """
-        )
-    else:
-        out_str = dedent(
-            """\
-        mpileaks
-        """
-        )
-    assert out == out_str
+    assert (
+        list("mpileaks")
+        == """\
+mpileaks
+==> 1 packages
+"""
+    )
 
 
 def test_list_filter():

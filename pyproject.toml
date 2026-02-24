@@ -2,7 +2,7 @@
 name = "spack"
 description = "The spack package manager"
 requires-python = ">=3.6"
-dependencies = ["clingo", "setuptools"]
+dependencies = ["clingo"]
 dynamic = ["version"]
 
 [project.scripts]
@@ -16,7 +16,6 @@ dev = [
   "pip>=21.3",
   "pytest",
   "pytest-xdist",
-  "setuptools",
   "click",
   "black",
   "mypy",
@@ -263,11 +262,6 @@ drop = [
   "bin/",
   # interpreter and OS specific msgpack libs
   "msgpack/*.so",
-  # unneeded parts of setuptools
-  "easy_install.py",
-  "setuptools",
-  "pkg_resources/_vendor/",
-  "pkg_resources/extern/",
   # trim vendored pygments styles and lexers
   "pygments/styles/[!_]*.py",
   "^pygments/lexers/(?!python|__init__|_mapping).*\\.py$",
@@ -293,9 +287,6 @@ macholib = []
 pyrsistent = []
 ruamel = []
 six = []
-
-[tool.vendoring.license.directories]
-setuptools = "pkg_resources"
 
 [tool.vendoring.license.fallback-urls]
 CacheControl = "https://raw.githubusercontent.com/ionrock/cachecontrol/v0.12.6/LICENSE.txt"

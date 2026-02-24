@@ -1,9 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import codecs
 import collections
 import hashlib
+import io
 import os
 import platform
 import posixpath
@@ -454,7 +454,7 @@ class CDash(Reporter):
             try:
                 response = web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
                 if self.current_package_name not in self.buildIds:
-                    resp_value = codecs.getreader("utf-8")(response).read()
+                    resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
                     match = self.buildid_regexp.search(resp_value)
                     if match:
                         buildid = match.group(1)

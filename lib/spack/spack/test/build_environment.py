@@ -761,11 +761,13 @@ def test_optimization_flags_are_using_node_target(default_mock_concretization, m
             """\
 gcc:
   externals:
-  - spec: gcc@14.2.0 languages=c
+  - spec: gcc@14.2.0 languages:=c,c++,fortran
     prefix: /fake/path1
     extra_attributes:
       compilers:
         c: /fake/path1
+        cxx: /fake/path1
+        fortran: /fake/path1
       extra_rpaths:
       - /extra/rpaths1
       - /extra/rpaths2
@@ -776,11 +778,13 @@ gcc:
             """\
 gcc:
   externals:
-  - spec: gcc@14.2.0 languages=c
+  - spec: gcc@14.2.0 languages=c,c++,fortran
     prefix: /fake/path1
     extra_attributes:
       compilers:
         c: /fake/path1
+        cxx: /fake/path1
+        fortran: /fake/path1
 """,
             None,
         ),

@@ -276,7 +276,7 @@ class MockS3Client:
         raise self.ClientError
 
 
-def test_gather_s3_information(monkeypatch, capfd):
+def test_gather_s3_information(monkeypatch):
     mirror = spack.mirrors.mirror.Mirror(
         {
             "fetch": {
@@ -332,7 +332,7 @@ def test_remove_s3_url(monkeypatch, capfd):
     assert "Deleted keytwo" in err
 
 
-def test_s3_url_exists(monkeypatch, capfd):
+def test_s3_url_exists(monkeypatch):
     def get_s3_session(url, method="fetch"):
         return MockS3Client()
 

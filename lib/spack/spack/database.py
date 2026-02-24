@@ -16,6 +16,7 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
+
 import contextlib
 import datetime
 import os
@@ -66,7 +67,7 @@ from spack.directory_layout import (
 )
 from spack.error import SpackError
 from spack.util.crypto import bit_length
-from spack.util.socket import _getfqdn
+from spack.util.socket import _gethostname
 
 from .enums import InstallRecordStatus
 
@@ -751,6 +752,27 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
+    def _assign_build_spec(
+        self,
+        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        hash_key: str,
+        installs: dict,
+        data: Dict[str, InstallRecord],
+    ):
+        # Add dependencies from other records in the install DB to
+        # form a full spec.
+        spec = data[hash_key].spec
+        spec_node_dict = installs[hash_key]["spec"]
+        if "name" not in spec_node_dict:
+            # old format
+            spec_node_dict = spec_node_dict[spec.name]
+        if "build_spec" in spec_node_dict:
+            assert spec_reader.SPEC_VERSION >= 2, "SpecfileV1 spec cannot have build_spec"
+            _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
+            _, build_spec = self.query_by_spec_hash(bhash, data=data)
+            assert build_spec is not None, f"build_spec with hash {bhash} not found in database"
+            spec._build_spec = build_spec.spec
+
     def _assign_dependencies(
         self,
         spec_reader: Type["spack.spec.SpecfileReaderBase"],
@@ -865,6 +887,7 @@ class Database:
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
+                self._assign_build_spec(spec_reader, hash_key, installs, data)
                 self._assign_dependencies(spec_reader, hash_key, installs, data)
             except MissingDependenciesError:
                 raise
@@ -1103,7 +1126,7 @@ class Database:
             self._state_is_inconsistent = True
             return
 
-        temp_file = str(self._index_path) + (".%s.%s.temp" % (_getfqdn(), os.getpid()))
+        temp_file = str(self._index_path) + (".%s.%s.temp" % (_gethostname(), os.getpid()))
 
         # Write a temporary database file them move it into place
         try:
@@ -1190,6 +1213,9 @@ class Database:
                 # allow missing build / test only deps
                 allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
+
+        if spec.spliced:
+            self._add(spec.build_spec, explicit=False, allow_missing=True)
 
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and self.layout:
@@ -1761,7 +1787,7 @@ class Database:
             )
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort()  # type: ignore[call-arg]
+        results.sort()  # type: ignore[call-arg,call-overload]
         return results
 
     def query_one(

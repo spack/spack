@@ -48,7 +48,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
     # List
     list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
-        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read from",
     )
     output_group = list_parser.add_mutually_exclusive_group()
     output_group.add_argument("--names", action="store_true", help="show configuration names only")
@@ -113,10 +116,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "namespace_or_path", help="namespace or path of a Spack package repository"
     )
     remove_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
+    )
+    remove_parser.add_argument(
+        "--all-scopes",
+        action="store_true",
+        default=False,
+        help="remove from all config scopes (default: highest scope with matching repo)",
     )
 
     # Migrate
@@ -252,8 +258,18 @@ def repo_add(args):
 
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
-    namespace_or_path = args.namespace_or_path
-    repos: Dict[str, str] = spack.config.get("repos", scope=args.scope)
+    scopes = [args.scope] if args.scope else list(spack.config.CONFIG.scopes.keys())
+    found_and_removed = False
+    for scope in scopes:
+        found_and_removed |= _remove_repo(args.namespace_or_path, scope)
+        if found_and_removed and not args.all_scopes:
+            return
+    if not found_and_removed:
+        tty.die(f"No repository with path or namespace: {args.namespace_or_path}")
+
+
+def _remove_repo(namespace_or_path, scope):
+    repos: Dict[str, str] = spack.config.get("repos", scope=scope)
 
     if namespace_or_path in repos:
         # delete by name (from config)
@@ -262,7 +278,7 @@ def repo_remove(args):
         # delete by namespace or path (requires constructing the repo)
         canon_path = spack.util.path.canonicalize_path(namespace_or_path)
         descriptors = spack.repo.RepoDescriptors.from_config(
-            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=args.scope
+            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
         )
         for name, descriptor in descriptors.items():
             descriptor.initialize(fetch=False)
@@ -277,11 +293,12 @@ def repo_remove(args):
                 key = name
                 break
         else:
-            tty.die(f"No repository with path or namespace: {namespace_or_path}")
+            return False
 
     del repos[key]
-    spack.config.set("repos", repos, args.scope)
-    tty.msg(f"Removed repository '{namespace_or_path}'.")
+    spack.config.set("repos", repos, scope)
+    tty.msg(f"Removed repository '{namespace_or_path}' from scope '{scope}'.")
+    return True
 
 
 def repo_list(args):

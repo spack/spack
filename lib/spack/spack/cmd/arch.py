@@ -14,7 +14,7 @@ import spack.platforms
 import spack.spec
 
 description = "print architecture information about this machine"
-section = "system"
+section = "config"
 level = "short"
 
 

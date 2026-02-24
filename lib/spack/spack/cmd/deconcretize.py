@@ -13,7 +13,7 @@ import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
 
-description = "remove specs from the concretized lockfile of an environment"
+description = "remove specs from the lockfile of an environment"
 section = "environments"
 level = "long"
 
@@ -86,7 +86,7 @@ def deconcretize_specs(args, specs):
 
     with env.write_transaction():
         for spec in deconcretize_list:
-            env.deconcretize(spec)
+            env.deconcretize_by_hash(spec.dag_hash())
         env.write()
 
 

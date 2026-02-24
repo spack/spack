@@ -1128,6 +1128,8 @@ def _setup_pkg_and_run(
     input_pipe: Optional[Connection],
     jsfd1: Optional[Connection],
     jsfd2: Optional[Connection],
+    stdout_pipe: Optional[Connection] = None,
+    stderr_pipe: Optional[Connection] = None,
 ):
     """Main entry point in the child process for Spack builds.
 
@@ -1148,6 +1150,10 @@ def _setup_pkg_and_run(
     * The return value of ``function()``, which can be anything (except an exception).
       This is returned to the caller.
 
+    Note: ``jsfd1`` and ``jsfd2`` are passed solely to ensure that the child process
+    does not close these file descriptors. Some ``multiprocessing`` backends will close
+    them automatically in the child if they are not passed at process creation time.
+
     Arguments:
         serialized_pkg: Spack package install context object (serialized form of the
             package that we'll build in the child process).
@@ -1159,7 +1165,8 @@ def _setup_pkg_and_run(
         input_multiprocess_fd: stdin from the parent (not passed currently on Windows)
         jsfd1: gmake Jobserver file descriptor 1.
         jsfd2: gmake Jobserver file descriptor 2.
-
+        stdout_pipe: pipe to redirect stdout to
+        stderr_pipe: pipe to redirect stderr to
     """
 
     context: str = kwargs.get("context", "build")
@@ -1171,6 +1178,12 @@ def _setup_pkg_and_run(
         # child, so we undo Python's precaution. closefd=False since Connection has ownership.
         if input_pipe is not None:
             sys.stdin = os.fdopen(input_pipe.fileno(), closefd=False)
+        if stdout_pipe is not None:
+            os.dup2(stdout_pipe.fileno(), sys.stdout.fileno())
+            stdout_pipe.close()
+        if stderr_pipe is not None:
+            os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
+            stderr_pipe.close()
 
         pkg = serialized_pkg.restore()
 
@@ -1208,7 +1221,10 @@ def _setup_pkg_and_run(
                 # 'pkg' is not defined yet
                 pass
         elif context == "test":
-            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
+            logfile = os.path.join(
+                pkg.test_suite.stage,  # type: ignore[union-attr]
+                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]
+            )
 
         error_msg = str(e)
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
@@ -1341,6 +1357,8 @@ def start_build_process(
     """
     read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_fd = None
+    stdout_fd = None
+    stderr_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
 
@@ -1350,6 +1368,16 @@ def start_build_process(
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
+
+        # If our process has redirected stdout/stderr after the forkserver was started, we need to
+        # make the forked processes use the new file descriptors.
+        if multiprocessing.get_start_method() == "forkserver":
+            try:
+                stdout_fd = Connection(os.dup(sys.stdout.fileno()))
+                stderr_fd = Connection(os.dup(sys.stderr.fileno()))
+            except Exception:
+                pass
+
         mflags = os.environ.get("MAKEFLAGS")
         if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
@@ -1367,6 +1395,8 @@ def start_build_process(
                 input_fd,
                 jobserver_fd1,
                 jobserver_fd2,
+                stdout_fd,
+                stderr_fd,
             ),
             read_pipe=read_pipe,
             timeout=timeout,
@@ -1374,6 +1404,7 @@ def start_build_process(
         )
 
         p.start()
+
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
         # closes its handle for the writable end, read_pipe.recv() will
@@ -1388,6 +1419,10 @@ def start_build_process(
         # Close the input stream in the parent process
         if input_fd is not None:
             input_fd.close()
+        if stdout_fd is not None:
+            stdout_fd.close()
+        if stderr_fd is not None:
+            stderr_fd.close()
 
     return p
 
@@ -1405,18 +1440,17 @@ def complete_build_process(process: BuildProcess):
         typ = "exit" if process.exitcode >= 0 else "signal"
         return f"{typ} {abs(process.exitcode)}"
 
-    timeout = process.timeout
-    process.join(timeout=timeout)
-    if process.is_alive():
-        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        process.terminate()
-
     try:
         # Check if information from the read pipe has been received.
         child_result = process.read_pipe.recv()
     except EOFError:
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
-
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
+        if process.is_alive():
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
         raise child_result

@@ -211,11 +211,11 @@ def test_test_functions_fails():
         spack.install_test.test_functions(str)
 
 
-def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, capsys):
+def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, capfd):
     """Confirm works for package providing a package-less virtual."""
     spec = spack.concretize.concretize_one("simple-standalone-test")
     fns = spack.install_test.test_functions(spec.package, add_virtuals=True)
-    out = capsys.readouterr()
+    out = capfd.readouterr()
     assert len(fns) == 2, "Expected two test functions"
     for f in fns:
         assert f[1].__name__ in ["test_echo", "test_skip"]
@@ -265,7 +265,7 @@ def test_package_copy_test_files_fails(mock_packages):
     assert "test suite is missing" in str(exc_info)
 
 
-def test_package_copy_test_files_skips(mock_packages, ensure_debug, capsys):
+def test_package_copy_test_files_skips(mock_packages, ensure_debug, capfd):
     """Confirm copy_test_files errors as expected if no package class found."""
     # Try with a non-concrete spec and package with a test suite
     MockSuite = collections.namedtuple("TestSuite", ["specs"])
@@ -273,7 +273,7 @@ def test_package_copy_test_files_skips(mock_packages, ensure_debug, capsys):
     vspec = spack.spec.Spec("something")
     pkg = MyPackage("SomePackage", vspec, MockSuite([]))
     spack.install_test.copy_test_files(pkg, vspec)
-    out = capsys.readouterr()[1]
+    out = capfd.readouterr()[1]
     assert "skipping test data copy" in out
     assert "no package class found" in out
 

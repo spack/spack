@@ -344,11 +344,10 @@ def test_group_arguments(
 
 
 @pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
-def test_pkg_grep(mock_packages, capfd):
+def test_pkg_grep(mock_packages):
     # only splice-* mock packages have the string "splice" in them
     pkg("grep", "-l", "splice")
-    output, _ = capfd.readouterr()
-    assert output.strip() == "\n".join(
+    assert pkg.output.strip() == "\n".join(
         spack.repo.PATH.get_pkg_class(name).module.__file__
         for name in [
             "depends-on-manyvariants",
@@ -370,8 +369,7 @@ def test_pkg_grep(mock_packages, capfd):
     with pytest.raises(spack.main.SpackCommandError):
         pkg("grep", "abcdefghijklmnopqrstuvwxyz")
     assert pkg.returncode == 1
-    output, _ = capfd.readouterr()
-    assert output.strip() == ""
+    assert pkg.output.strip() == ""
 
     # ensure that we return > 1 for an error
     with pytest.raises(spack.main.SpackCommandError):

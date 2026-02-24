@@ -9,7 +9,7 @@ import spack.llnl.util.tty as tty
 from spack.util.log_parse import make_log_context, parse_log_events
 
 description = "filter errors and warnings from build logs"
-section = "build"
+section = "developer"
 level = "long"
 
 event_types = ("errors", "warnings")

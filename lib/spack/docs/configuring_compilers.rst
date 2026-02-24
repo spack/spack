@@ -17,7 +17,7 @@ Compilers can be made available to Spack by:
 
 1. Specifying them as externals in ``packages.yaml``, or
 2. Having them installed in the current Spack store, or
-3. Having them available as binaries in a buildcache
+3. Having them available as binaries in a build cache
 
 For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
 
@@ -36,7 +36,7 @@ You can see which compilers are available to Spack by running ``spack compiler l
    [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
 Compilers marked with an ``[e]`` are system compilers (externals), and those marked with a ``[+]`` have been installed by Spack.
-Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
+Compilers from remote build caches are marked as ``-``, but are not shown by default.
 To see them you need a specific option:
 
 .. code-block:: console
@@ -281,3 +281,23 @@ Mixing Compilers
 ----------------
 
 For more options on configuring Spack to mix different compilers for different languages, see :ref:`the toolchains configuration docs <toolchains>`.
+
+To disable mixing (e.g. if you have multiple compilers defined, but want each concretized DAG to use one of them consistently), you can set:
+
+.. code-block:: yaml
+
+   concretizer:
+     compiler_mixing: false
+
+This affects root specs and any (transitive) link or run dependencies.
+Build-only dependencies are allowed to use different compilers (even when this is set).
+
+Some packages are difficult to build with high performance compilers, and it may be necessary to enable compiler mixing just for those packages.
+To enable mixing for specific packages, specify an allow-list in the ``compiler_mixing`` config:
+
+.. code-block:: yaml
+
+   concretizer:
+     compiler_mixing: ["openssl"]
+
+Adding ``openssl`` to the compiler mixing allow-list does not allow mixing for dependencies of ``openssl``.

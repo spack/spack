@@ -17,7 +17,7 @@ import spack.package_prefs
 import spack.paths
 import spack.spec
 import spack.store
-from spack.util.socket import _getfqdn
+from spack.util.socket import _gethostname
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
@@ -26,6 +26,18 @@ if sys.platform == "darwin":
     system_shebang_limit = 511
 else:
     system_shebang_limit = 127
+    try:
+        # searching for line '#define BINPRM_BUF_SIZE 256' in /usr/include/linux/binfmts.h
+        # the nbr-1 is the sbang limit on the linux platform
+        sbang_limit_re = re.compile("#define BINPRM_BUF_SIZE ([0-9]+)")
+        with open("/usr/include/linux/binfmts.h", "r", encoding="utf-8") as f:
+            for line in f:
+                m = sbang_limit_re.match(line)
+                if m:
+                    system_shebang_limit = int(m.group(1)) - 1
+    except Exception:
+        # ignore any error a sane default is set already
+        pass
 
 #: Groupdb does not exist on Windows, prevent imports
 #: on supported systems
@@ -209,7 +221,7 @@ def install_sbang():
         os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
-    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_getfqdn()}.{os.getpid()}.tmp")
+    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_gethostname()}.{os.getpid()}.tmp")
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)

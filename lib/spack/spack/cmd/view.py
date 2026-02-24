@@ -45,7 +45,7 @@ from spack.config import validate
 from spack.llnl.util.link_tree import MergeConflictError
 from spack.util import spack_yaml as s_yaml
 
-description = "project packages to a compact naming scheme on the filesystem"
+description = "manipulate view directories in the filesystem"
 section = "environments"
 level = "short"
 

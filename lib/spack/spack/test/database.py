@@ -243,7 +243,7 @@ def test_missing_upstream_build_dep(
 
 
 def test_removed_upstream_dep(
-    upstream_and_downstream_db, capsys, config, repo_builder: RepoBuilder
+    upstream_and_downstream_db, capfd, config, repo_builder: RepoBuilder
 ):
     upstream_db, downstream_db = upstream_and_downstream_db
 
@@ -269,7 +269,7 @@ def test_removed_upstream_dep(
         downstream_db._read_from_file(downstream_db._index_path)
         assert (
             f"Missing dependency not in database: y/{y.dag_hash(7)} needs z"
-            in capsys.readouterr().err
+            in capfd.readouterr().err
         )
 
 
@@ -592,6 +592,22 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
+def test_016_roundtrip_spliced_spec(mutable_database):
+    build_spec = spack.concretize.concretize_one("splice-t")
+    replacement = spack.concretize.concretize_one("splice-h+foo")
+    spec = build_spec.splice(replacement)
+
+    spack.store.STORE.db.add(spec)
+    spack.store.STORE.db._state_is_inconsistent = True  # force re-read
+
+    _, spec_record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    _, buildspec_record = spack.store.STORE.db.query_by_spec_hash(spec.build_spec.dag_hash())
+
+    assert spec_record.spec == spec
+    assert spec_record.spec.build_spec == spec.build_spec
+    assert buildspec_record  # buildspec needs to be recorded in db
+
+
 def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.database, "_use_uuid", False)
     # write and read DB
@@ -838,13 +854,13 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
 
 
 @pytest.mark.regression("11118")
-def test_old_external_entries_prefix(mutable_database):
+def test_old_external_entries_prefix(mutable_database: spack.database.Database):
     with open(spack.store.STORE.db._index_path, "r", encoding="utf-8") as f:
         db_obj = json.loads(f.read())
 
     spack.vendor.jsonschema.validate(db_obj, schema)
 
-    s = spack.concretize.concretize_one("externaltool")
+    s, *_ = mutable_database.query("externaltool")
 
     db_obj["database"]["installs"][s.dag_hash()]["path"] = "None"
 
@@ -855,7 +871,7 @@ def test_old_external_entries_prefix(mutable_database):
             f.write(str(uuid.uuid4()))
 
     record = spack.store.STORE.db.get_record(s)
-
+    assert record is not None
     assert record.path is None
     assert record.spec._prefix is None
     assert record.spec.prefix == record.spec.external_path
@@ -989,7 +1005,7 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
 
 
 @pytest.mark.db
-def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capsys):
+def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
@@ -1002,7 +1018,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, caps
         monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
 
         spack.store.STORE.failure_tracker.mark(s)
-        out = str(capsys.readouterr()[1])
+        out = str(capfd.readouterr()[1])
         assert "Unable to mark pkg-a as failed" in out
 
     spack.store.STORE.failure_tracker.clear_all()

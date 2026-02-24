@@ -11,6 +11,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
+import spack.main
 import spack.repo
 import spack.spec
 import spack.store
@@ -110,7 +111,7 @@ def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
         with open(spec.package.filename, "w", encoding="utf-8") as f:
             f.write(spec.package.original_string)
 
-        with pytest.raises(SystemExit):
+        with pytest.raises(spack.main.SpackCommandError):
             dev_build("-u", "edit", "-b", "edit", "dev-build-test-install@0.0.0")
 
         bad_phase = "phase_that_does_not_exist"

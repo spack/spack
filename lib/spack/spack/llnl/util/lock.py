@@ -339,25 +339,22 @@ class Lock:
             )
         )
 
-        poll_intervals = iter(Lock._poll_interval_generator())
-        start_time = time.time()
-        num_attempts = 0
-        while (not timeout) or (time.time() - start_time) < timeout:
-            num_attempts += 1
+        start_time = time.monotonic()
+        end_time = float("inf") if not timeout else start_time + timeout
+        num_attempts = 1
+        poll_intervals = Lock._poll_interval_generator()
+
+        while True:
             if self._poll_lock(op):
-                total_wait_time = time.time() - start_time
-                return total_wait_time, num_attempts
-
+                return time.monotonic() - start_time, num_attempts
+            if time.monotonic() >= end_time:
+                break
             time.sleep(next(poll_intervals))
+            num_attempts += 1
 
-        # TBD: Is an extra attempt after timeout needed/appropriate?
-        num_attempts += 1
-        if self._poll_lock(op):
-            total_wait_time = time.time() - start_time
-            return total_wait_time, num_attempts
-
-        total_wait_time = time.time() - start_time
-        raise LockTimeoutError(op_str.lower(), self.path, total_wait_time, num_attempts)
+        raise LockTimeoutError(
+            op_str.lower(), self.path, time.monotonic() - start_time, num_attempts
+        )
 
     def _poll_lock(self, op: int) -> bool:
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -404,17 +401,7 @@ class Lock:
         # relative paths to lockfiles in the current directory have no parent
         if not parent:
             return "."
-
-        try:
-            os.makedirs(parent)
-        except OSError as e:
-            # os.makedirs can fail in a number of ways when the directory already exists.
-            # With EISDIR, we know it exists, and others like EEXIST, EACCES, and EROFS
-            # are fine if we ensure that the directory exists.
-            # Python 3 allows an exist_ok parameter and ignores any OSError as long as
-            # the directory exists.
-            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
-                raise
+        os.makedirs(parent, exist_ok=True)
         return parent
 
     def _read_log_debug_data(self) -> None:
@@ -709,16 +696,13 @@ class LockTransaction:
     """Simple nested transaction context manager that uses a file lock.
 
     Arguments:
-        lock (Lock): underlying lock for this transaction to be acquired on
-            enter and released on exit
-        acquire (typing.Callable or contextlib.contextmanager): function to be called
-            after lock is acquired, or contextmanager to enter after acquire and leave
-            before release.
-        release (typing.Callable): function to be called before release. If
-            ``acquire`` is a contextmanager, this will be called *after*
-            exiting the nexted context and before the lock is released.
-        timeout (float): number of seconds to set for the timeout when
-            acquiring the lock (default no timeout)
+        lock: underlying lock for this transaction to be acquired on enter and released on exit
+        acquire: function to be called after lock is acquired, or contextmanager to enter after
+            acquire and leave before release.
+        release: function to be called before release. If ``acquire`` is a contextmanager, this
+            will be called *after* exiting the nested context and before the lock is released.
+        timeout: number of seconds to set for the timeout when acquiring the lock (default no
+            timeout)
 
     If the ``acquire_fn`` returns a value, it is used as the return value for
     ``__enter__``, allowing it to be passed as the ``as`` argument of a

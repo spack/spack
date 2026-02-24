@@ -21,7 +21,7 @@ from spack.llnl.util.tty.colify import colify_table
 from spack.util.executable import ProcessError
 
 description = "show contributors to packages"
-section = "developer"
+section = "query"
 level = "long"
 
 git = spack.util.git.git(required=True)

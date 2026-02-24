@@ -13,7 +13,7 @@ from spack.llnl.util.tty.colify import colify
 from spack.version import infinity_versions, ver
 
 description = "list available versions of a package"
-section = "packaging"
+section = "query"
 level = "long"
 
 

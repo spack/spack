@@ -335,7 +335,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
 
 
 def canonical_source(
-    spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
 ) -> str:
     """Get canonical source for a spec's package.py by unparsing its AST.
 
@@ -347,7 +347,7 @@ def canonical_source(
     return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
 
 
-def package_hash(spec, source: Optional[bytes] = None) -> str:
+def package_hash(spec: spack.spec.Spec, source: Optional[bytes] = None) -> str:
     """Get a hash of a package's canonical source code.
 
     This function is used to determine whether a spec needs a rebuild when a
@@ -361,7 +361,9 @@ def package_hash(spec, source: Optional[bytes] = None) -> str:
     return spack.util.hash.b32_hash(source)
 
 
-def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] = None) -> ast.AST:
+def package_ast(
+    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+) -> ast.AST:
     """Get the AST for the ``package.py`` file corresponding to ``spec``.
 
     Arguments:
@@ -369,8 +371,6 @@ def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] 
             statically to be unused. Supply False to disable.
         source: Optionally provide a string to read python code from.
     """
-    spec = spack.spec.Spec(spec)
-
     if source is None:
         filename = spack.repo.PATH.filename_for_package_name(spec.name)
         with open(filename, "rb") as f:

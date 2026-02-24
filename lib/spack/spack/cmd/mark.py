@@ -15,7 +15,7 @@ from spack.llnl.util import tty
 from ..enums import InstallRecordStatus
 
 description = "mark packages as explicitly or implicitly installed"
-section = "admin"
+section = "build"
 level = "long"
 
 error_message = """You can either:

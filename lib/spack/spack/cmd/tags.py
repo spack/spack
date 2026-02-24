@@ -13,7 +13,7 @@ import spack.llnl.util.tty.colify as colify
 import spack.repo
 
 description = "show package tags and associated packages"
-section = "basic"
+section = "query"
 level = "long"
 
 

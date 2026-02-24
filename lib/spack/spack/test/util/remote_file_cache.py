@@ -9,7 +9,6 @@ import pytest
 
 import spack.config
 import spack.llnl.util.tty as tty
-import spack.paths
 import spack.util.remote_file_cache as rfc_util
 from spack.llnl.util.filesystem import join_path
 
@@ -29,21 +28,25 @@ def test_rfc_local_path_bad_scheme(path, err):
         _ = rfc_util.local_path(path, "")
 
 
-@pytest.mark.parametrize(
-    "path,expected",
-    [
-        ("/a/b/c/d/e/config.py", "/a/b/c/d/e/config.py"),
-        ("file:///this/is/a/file/url/include.yaml", "/this/is/a/file/url/include.yaml"),
-        (
-            "relative/packages.txt",
-            os.path.join(spack.paths.spack_root, "relative", "packages.txt"),
-        ),
-        (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
-        (r"D:/spack stage", "D:\\spack stage"),
-    ],
-)
-def test_rfc_local_file(path, expected):
-    assert rfc_util.local_path(path, "") == os.path.normpath(expected)
+@pytest.mark.not_on_windows("Unix path")
+def test_rfc_local_file_unix():
+    assert rfc_util.local_path("/a/b/c/d/e/config.py", "") == "/a/b/c/d/e/config.py"
+    assert (
+        rfc_util.local_path("file:///this/is/a/file/url/include.yaml", "")
+        == "/this/is/a/file/url/include.yaml"
+    )
+
+
+@pytest.mark.only_windows("Windows path")
+def test_rfc_local_file_windows():
+    assert rfc_util.local_path(r"C:\Files (x86)\Windows\10", "") == r"C:\Files (x86)\Windows\10"
+    assert rfc_util.local_path(r"D:/spack stage", "") == r"D:\spack stage"
+
+
+def test_rfc_local_file_relative():
+    path = "relative/packages.txt"
+    expected = os.path.join(os.getcwd(), "relative", "packages.txt")
+    assert rfc_util.local_path(path, "") == expected
 
 
 def test_rfc_remote_local_path_no_dest():
@@ -53,9 +56,9 @@ def test_rfc_remote_local_path_no_dest():
 
 
 packages_yaml_sha256 = (
-    "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
+    "8d428c600b215e3b4a207a08236659dfc2c9ae2782c35943a00ee4204a135702"
     if sys.platform != "win32"
-    else "ae3239d769f9e6dc137a998489b0d44c70b03e21de4ecd6a623a3463a1a5c3f4"
+    else "6c094ec3ee1eb5068860cdd97d8da965bf281be29e60ab9afc8f6e4d72d24f21"
 )
 
 
@@ -91,16 +94,15 @@ def test_rfc_remote_local_path(
         tty.debug(f"Expected {element} in '{filename}'")
         return False
 
-    def _dest_dir():
-        return join_path(str(tmp_path), "cache")
+    dest_dir = join_path(str(tmp_path), "cache")
 
     if err is not None:
         with spack.config.override("config:url_fetch_method", "curl"):
             with pytest.raises(err, match=msg):
-                rfc_util.local_path(url, sha256, _dest_dir)
+                rfc_util.local_path(url, sha256, dest_dir)
     else:
         with spack.config.override("config:url_fetch_method", "curl"):
-            path = rfc_util.local_path(url, sha256, _dest_dir)
+            path = rfc_util.local_path(url, sha256, dest_dir)
             assert os.path.exists(path)
             # Ensure correct file is "fetched"
             assert os.path.basename(path) == os.path.basename(url)

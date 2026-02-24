@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import email.message
 import errno
+import io
 import json
 import os
 import re
@@ -411,7 +411,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method.startswith("curl"):
+    if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
         curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -427,7 +427,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
         try:
             _, _, response = read_from_url(url)
 
-            output = codecs.getreader("utf-8")(response).read()
+            output = io.TextIOWrapper(response, encoding="utf-8").read()
             if output:
                 with working_dir(dest_dir, create=True):
                     with open(filename, "w", encoding="utf-8") as f:
@@ -628,6 +628,46 @@ def list_url(url, recursive=False):
         return gcs.get_all_blobs(recursive=recursive)
 
 
+def stat_url(url: str) -> Optional[Tuple[int, float]]:
+    """Get stat result for a URL.
+
+    Args:
+        url: URL to get stat result for
+    Returns:
+        A tuple of (size, mtime) if the URL exists, None otherwise.
+    """
+    parsed_url = urllib.parse.urlparse(url)
+
+    if parsed_url.scheme == "file":
+        local_file_path = url_util.local_file_path(parsed_url)
+        assert isinstance(local_file_path, str)
+        try:
+            url_stat = Path(local_file_path).stat()
+        except FileNotFoundError:
+            return None
+        return url_stat.st_size, url_stat.st_mtime
+
+    elif parsed_url.scheme == "s3":
+        s3_bucket = parsed_url.netloc
+        s3_key = parsed_url.path.lstrip("/")
+
+        s3 = get_s3_session(url, method="fetch")
+
+        try:
+            head_request = s3.head_object(Bucket=s3_bucket, Key=s3_key)
+        except s3.ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                return None
+            raise e
+
+        mtime = head_request["LastModified"].timestamp()
+        size = head_request["ContentLength"]
+        return size, mtime
+
+    else:
+        raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")
+
+
 def spider(
     root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
 ):
@@ -705,7 +745,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
-        page = codecs.getreader("utf-8")(response).read()
+        page = io.TextIOWrapper(response, encoding="utf-8").read()
         pages[response_url] = page
 
         # Parse out the include-fragments in the page
@@ -732,7 +772,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             if not fragment_response_url or not fragment_response:
                 continue
 
-            fragment = codecs.getreader("utf-8")(fragment_response).read()
+            fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
             fragments.add(fragment)
 
             pages[fragment_response_url] = fragment

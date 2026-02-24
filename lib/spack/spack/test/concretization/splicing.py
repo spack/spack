@@ -22,13 +22,7 @@ def _make_specs_non_buildable(specs: List[str]):
 
 
 @pytest.fixture
-def install_specs(
-    mutable_database,
-    mock_packages,
-    mutable_config,
-    do_not_check_runtimes_on_reuse,
-    install_mockery,
-):
+def install_specs(mutable_database, mock_packages, mutable_config, install_mockery):
     """Returns a function that concretizes and installs a list of abstract specs"""
     mutable_config.set("concretizer:reuse", True)
 
@@ -159,7 +153,7 @@ def test_virtual_multi_splices_in(original_spec, goal_spec, install_specs, mutab
     original = install_specs(original_spec)[0]
     mutable_config.set("packages", _make_specs_non_buildable(["depends-on-virtual-with-abi"]))
 
-    with pytest.raises(SolverError):
+    with pytest.raises(UnsatisfiableSpecError):
         spack.concretize.concretize_one(goal_spec)
 
     _enable_splicing()

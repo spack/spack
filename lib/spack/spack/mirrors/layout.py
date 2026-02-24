@@ -2,15 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import spack.fetch_strategy
 import spack.llnl.url
 import spack.oci.image
 import spack.repo
-import spack.spec
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp, symlink
+
+if TYPE_CHECKING:
+    import spack.spec
 
 
 class MirrorLayout:

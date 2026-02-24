@@ -13,14 +13,17 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
+import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
+from spack.solver.reuse import create_external_parser
+from spack.solver.runtimes import external_config_with_implicit_externals
 
 from ..enums import InstallRecordStatus
 
 description = "list and search installed packages"
-section = "basic"
+section = "query"
 level = "short"
 
 
@@ -87,11 +90,17 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="don't show full list of installed specs in an environment",
     )
-    subparser.add_argument(
+    concretized_vs_packages = subparser.add_mutually_exclusive_group()
+    concretized_vs_packages.add_argument(
         "-c",
         "--show-concretized",
         action="store_true",
         help="show concretized specs in an environment",
+    )
+    concretized_vs_packages.add_argument(
+        "--show-configured-externals",
+        action="store_true",
+        help="show externals defined in the 'packages' section of the configuration",
     )
     subparser.add_argument(
         "-f",
@@ -118,6 +127,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--implicit",
         action="store_true",
         help="show only specs that were installed as dependencies",
+    )
+    subparser.add_argument(
+        "-e",
+        "--external",
+        action="store_true",
+        help="show only specs that are marked as externals",
     )
     subparser.add_argument(
         "-u",
@@ -248,9 +263,10 @@ def display_env(env, args, decorator, results):
     num_roots = len(env.user_specs) or "No"
     tty.msg(f"{num_roots} root specs")
 
+    concretized_user_specs = [x.root for x in env.concretized_roots]
     concrete_specs = {
         root: concrete_root
-        for root, concrete_root in zip(env.concretized_user_specs, env.concrete_roots())
+        for root, concrete_root in zip(concretized_user_specs, env.concrete_roots())
     }
 
     def root_decorator(spec, string):
@@ -315,8 +331,17 @@ def display_env(env, args, decorator, results):
 
 def _find_query(args, env):
     q_args = query_arguments(args)
-    concretized_but_not_installed = list()
-    if env:
+    concretized_but_not_installed = []
+    if args.show_configured_externals:
+        packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
+        results = spack.solver.reuse.SpecFilter.from_packages_yaml(
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
+        ).selected_specs()
+    elif env:
         all_env_specs = env.all_specs()
         if args.constraint:
             init_specs = cmd.parse_specs(args.constraint)
@@ -336,6 +361,9 @@ def _find_query(args, env):
                     results.append(spec)
     else:
         results = args.specs(**q_args)
+
+    if args.external:
+        results = [s for s in results if s.external]
 
     # use groups by default except with format.
     if args.groups is None:

@@ -31,20 +31,20 @@ def test_immediate_dependents(mock_packages):
 def test_transitive_dependents(mock_packages):
     out = dependents("--transitive", "libelf")
     actual = set(re.split(r"\s+", out.strip()))
-    assert actual == set(
-        [
-            "callpath",
-            "dyninst",
-            "libdwarf",
-            "mpileaks",
-            "multivalue-variant",
-            "singlevalue-variant-dependent",
-            "patch-a-dependency",
-            "patch-several-dependencies",
-            "quantum-espresso",
-            "conditionally-patch-dependency",
-        ]
-    )
+    assert actual == {
+        "callpath",
+        "dyninst",
+        "libdwarf",
+        "mixing-parent",
+        "mpileaks",
+        "multivalue-variant",
+        "singlevalue-variant-dependent",
+        "trilinos",
+        "patch-a-dependency",
+        "patch-several-dependencies",
+        "quantum-espresso",
+        "conditionally-patch-dependency",
+    }
 
 
 @pytest.mark.db
@@ -70,7 +70,7 @@ def test_transitive_installed_dependents(mock_packages, database):
     with color_when(False):
         out = dependents("--installed", "--transitive", "fake")
 
-    lines = [li for li in out.strip().split("\n") if not li.startswith("--")]
+    lines = [li for li in out.strip().split("\n") if li and not li.startswith("--")]
     hashes = set([re.split(r"\s+", li)[0] for li in lines])
 
     expected = set(

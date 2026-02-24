@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import spack.bootstrap
+import spack.bootstrap.clingo
 import spack.bootstrap.config
 import spack.bootstrap.core
 import spack.compilers.config
@@ -136,6 +137,7 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, mock_packages):
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.clingo._add_compilers_if_missing()
         assert spack.compilers.config.all_compilers(init_config=False)
     assert not spack.compilers.config.all_compilers(init_config=False)
 
@@ -147,6 +149,7 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 ):
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.clingo._add_compilers_if_missing()
         assert spack.compilers.config.all_compilers(init_config=False)
     assert not spack.compilers.config.all_compilers(init_config=False)
 

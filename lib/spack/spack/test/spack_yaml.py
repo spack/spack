@@ -8,6 +8,7 @@ import pathlib
 import pytest
 
 import spack.util.spack_yaml as syaml
+from spack.util.spack_yaml import DictWithLineInfo
 
 
 @pytest.fixture()
@@ -168,7 +169,7 @@ a:
   2.0: "float key"
   1: "int key"
 """
-    allowed_types = {str, int, float, bool, type(None), dict, list}
+    allowed_types = {str, int, float, bool, type(None), DictWithLineInfo, list}
     original = syaml.load(yaml)
     copied = syaml.deepcopy_as_builtin(original)
     assert original == copied
@@ -182,7 +183,7 @@ a:
     while stack:
         obj = stack.pop()
         assert type(obj) in allowed_types
-        if type(obj) is dict:
+        if type(obj) is DictWithLineInfo:
             stack.extend(obj.keys())
             stack.extend(obj.values())
         elif type(obj) is list:

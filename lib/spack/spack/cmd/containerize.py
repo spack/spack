@@ -8,8 +8,8 @@ import spack.container
 import spack.container.images
 import spack.llnl.util.tty
 
-description = "creates recipes to build images for different container runtimes"
-section = "container"
+description = "create a container build recipe from an environment"
+section = "environments"
 level = "long"
 
 

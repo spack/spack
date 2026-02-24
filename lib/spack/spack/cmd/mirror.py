@@ -22,6 +22,7 @@ import spack.util.parallel
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.llnl.string import comma_or
 
 description = "manage mirrors (source and binary)"
 section = "config"
@@ -142,17 +143,26 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         dest="signed",
     )
+    add_parser.add_argument(
+        "--name",
+        "-n",
+        action="store",
+        dest="view_name",
+        help="Name of the index view for a binary mirror",
+    )
     arguments.add_connection_args(add_parser, False)
     # Remove
     remove_parser = sp.add_parser("remove", aliases=["rm"], help=mirror_remove.__doc__)
     remove_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
     )
-
+    remove_parser.add_argument(
+        "--all-scopes",
+        action="store_true",
+        default=False,
+        help="remove from all config scopes (default: highest scope with matching mirror)",
+    )
     # Set-Url
     set_url_parser = sp.add_parser("set-url", help=mirror_set_url.__doc__)
     set_url_parser.add_argument("name", help="mnemonic name for mirror", metavar="mirror")
@@ -303,6 +313,7 @@ def mirror_add(args):
         or args.s3_access_token_variable
         or args.s3_profile
         or args.s3_endpoint_url
+        or args.view_name
         or args.type
         or args.oci_username
         or args.oci_username_variable
@@ -341,6 +352,9 @@ def mirror_add(args):
             connection["autopush"] = args.autopush
         if args.signed is not None:
             connection["signed"] = args.signed
+        if args.view_name:
+            connection["view"] = args.view_name
+
         mirror = spack.mirrors.mirror.Mirror(connection, name=args.name)
     else:
         mirror = spack.mirrors.mirror.Mirror(args.url, name=args.name)
@@ -349,7 +363,21 @@ def mirror_add(args):
 
 def mirror_remove(args):
     """remove a mirror by name"""
-    spack.mirrors.utils.remove(args.name, args.scope)
+    name = args.name
+    scopes = [args.scope] if args.scope else list(spack.config.CONFIG.scopes.keys())
+
+    removed = False
+    for scope in scopes:
+        removed_from_this_scope = spack.mirrors.utils.remove(name, scope)
+        if removed_from_this_scope:
+            tty.msg(f"Removed mirror {name} from {scope} scope")
+
+        removed |= removed_from_this_scope
+        if removed and not args.all_scopes:
+            return
+
+    if not removed:
+        tty.die(f"No mirror with name {name} in {comma_or(scopes)} scope")
 
 
 def _configure_mirror(args):

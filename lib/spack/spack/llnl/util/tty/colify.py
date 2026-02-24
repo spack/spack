@@ -15,18 +15,20 @@ from spack.llnl.util.tty.color import cextra, clen
 
 
 class ColumnConfig:
-    def __init__(self, cols):
+    def __init__(self, cols: int) -> None:
         self.cols = cols
         self.line_length = 0
         self.valid = True
         self.widths = [0] * cols  # does not include ansi colors
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs = [(a, getattr(self, a)) for a in dir(self) if not a.startswith("__")]
-        return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
+        return f"<Config: {', '.join('%s: %r' % a for a in attrs)}>"
 
 
-def config_variable_cols(elts, console_width, padding, cols=0):
+def config_variable_cols(
+    elts: List[str], console_width: int, padding: int, cols: int = 0
+) -> ColumnConfig:
     """Variable-width column fitting algorithm.
 
     This function determines the most columns that can fit in the
@@ -35,7 +37,8 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     the width of its own longest element. This packs elements more
     efficiently on screen.
 
-    If cols is nonzero, force
+    If cols is nonzero, force the table to use that many columns and
+    just add minimal padding between the columns.
     """
     if cols < 0:
         raise ValueError("cols must be non-negative.")
@@ -54,7 +57,8 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     for i, length in enumerate(lengths):
         for conf in configs:
             if conf.valid:
-                col = i // ((len(elts) + conf.cols - 1) // conf.cols)
+                rows = (len(elts) + conf.cols - 1) // conf.cols
+                col = i // rows
                 p = padding if col < (conf.cols - 1) else 0
 
                 if conf.widths[col] < (length + p):
@@ -63,17 +67,29 @@ def config_variable_cols(elts, console_width, padding, cols=0):
                     conf.valid = conf.line_length < console_width
 
     try:
+        # take the last valid config in the list (the one with most columns)
         config = next(conf for conf in reversed(configs) if conf.valid)
     except StopIteration:
-        # If nothing was valid the screen was too narrow -- just use 1 col.
+        # If nothing was valid, the screen was too narrow -- use 1 col if cols was not
+        # specified, otherwise, use the requested columns and overflow.
         config = configs[0]
+        if cols:
+            rows = (len(lengths) + cols - 1) // cols
+            config.widths = [
+                max(length for i, length in enumerate(lengths) if i // rows == c)
+                + (padding if c < cols - 1 else 0)
+                for c in range(cols)
+            ]
 
+    # trim off any columns with nothing in them
     config.widths = [w for w in config.widths if w != 0]
     config.cols = len(config.widths)
     return config
 
 
-def config_uniform_cols(elts, console_width, padding, cols=0):
+def config_uniform_cols(
+    elts: List[str], console_width: int, padding: int, cols: int = 0
+) -> ColumnConfig:
     """Uniform-width column fitting algorithm.
 
     Determines the longest element in the list, and determines how
@@ -97,6 +113,7 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
 
 def colify(
     elts: List[Any],
+    *,
     cols: int = 0,
     output: Optional[IO] = None,
     indent: int = 0,
@@ -143,8 +160,8 @@ def colify(
         except ValueError:
             pass
 
-    # Use only one column if not a tty.
-    if not tty:
+    # Use only one column if not a tty, unless cols specified explicitly
+    if not cols and not tty:
         if tty is False or not output.isatty():
             cols = 1
 
@@ -191,6 +208,7 @@ def colify(
 
 def colify_table(
     table: List[List[Any]],
+    *,
     output: Optional[IO] = None,
     indent: int = 0,
     padding: int = 2,
@@ -234,6 +252,7 @@ def colify_table(
 
 def colified(
     elts: List[Any],
+    *,
     cols: int = 0,
     indent: int = 0,
     padding: int = 2,

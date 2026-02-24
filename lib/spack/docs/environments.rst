@@ -81,7 +81,8 @@ The ``.spack-env`` subdirectory also contains:
   It allows the environment to build the same, in theory, even on different versions of Spack with different packages!
 * ``logs/``: A subdirectory containing the build logs for the packages in this environment.
 
-Spack Environments can also be created from either the user input, or manifest, file or the lockfile.
+Spack Environments can also be created from another environment.
+Environments can be created from the manifest file (the user input), the lockfile, or the entire environment at once.
 Create an environment from a manifest using:
 
 .. code-block:: console
@@ -108,6 +109,16 @@ Create an environment from a ``spack.lock`` file using:
    $ spack env create myenv spack.lock
 
 The resulting environment, when on the same or a compatible machine, is guaranteed to initially have the same concrete specs as the original.
+
+Create an environment from an entire environment using either the environment name or path:
+
+.. code-block:: console
+
+   $ spack env create myenv /path/to/env
+   $ spack env create myenv2 myenv
+
+The resulting environment will include the concrete specs from the original if the original is concretized (as when created from a lockfile) and all of the config options and abstract specs specified in the original (as when created from a manifest file).
+It will also include any other files included in the environment directory, such as repos or source code, as they could be referenced in the environment by relative path.
 
 .. note::
 
@@ -374,16 +385,39 @@ Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``spack develop`` command allows one to develop Spack packages in an environment.
-It requires a spec containing a concrete version, and will configure Spack to install the package from local source.
-If a version is not provided from the command line interface then Spack will automatically pick the highest version the package has defined.
-This means any infinity versions (``develop``, ``main``, ``stable``) will be preferred in this selection process.
+It will configure Spack to install the package from local source.
 By default, ``spack develop`` will also clone the package to a subdirectory in the environment for the local source.
-This package will have a special variant ``dev_path`` set, and Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
-Spack's native implementation to check for modifications is to check if ``mtime`` is newer than the installation.
+These choices can be overridden with the ``--path`` argument, and the ``--no-clone`` argument.
+Relative paths provided to the ``--path`` argument will be resolved relative to the environment directory.
+All of these options are recorded in the environment manifest, although default values may be left implied.
+
+.. code-block:: console
+
+   $ spack develop --path src/foo foo@develop
+   $ cat `spack location -e`/spack.yaml
+   spack:
+     ...
+     develop
+       foo:
+         spec: foo@develop
+         path: src/foo
+
+When ``spack develop`` is run in a concretized environment, Spack will modify the concrete specs in the environment to reflect the modified provenance.
+Any package built from local source will have a ``dev_path`` variant, and the hash of any dependent of those packages will be modified to reflect the change.
+The value of the ``dev_path`` variant will be the absolute path to the package source directory.
+If the develop spec conflicts with the concrete specs in the environment, Spack will raise an exception and require the ``spack develop --no-modify-concrete-specs`` option, followed by a ``spack concretize --force`` to apply the ``dev_path`` variant and constraints from the develop spec.
+
+When concretizing an environment with develop specs, the version, variants, and other attributes of the spec provided to the ``spack develop`` command will be treated as constraints by the concretizer (in addition to any constraints from the packages ``specs`` list).
+If the ``develop`` configuration for the package does not include a spec version, Spack will choose the **highest** version of the package.
+This means that any "infinity" versions (``develop``, ``main``, etc.) will be preferred for specs marked with the ``spack develop`` command, which is different from the standard Spack behavior to prefer the highest **numeric** version.
+These packages will have an automatic ``dev_path`` variant added by the concretizer, with a value of the absolute path to the local source Spack is building from.
+
+Spack will ensure the package and its dependents are rebuilt any time the environment is installed if the package's local source code has been modified.
+Spack's native implementation is to check if ``mtime`` is newer than the installation.
 A custom check can be created by overriding the ``detect_dev_src_change`` method in your package class.
 This is particularly useful for projects using custom Spack repos to drive development and want to optimize performance.
 
-Spack ensures that all instances of a developed package in the environment are concretized to match the version (and other constraints) passed as the spec argument to the ``spack develop`` command.
+When ``spack develop`` is run without any arguments, Spack will clone any develop specs in the environment for which the specified path does not exist.
 
 When working deep in the graph it is often desirable to have multiple specs marked as ``develop`` so you don't have to restage and/or do full rebuilds each time you call ``spack install``.
 The ``--recursive`` flag can be used in these scenarios to ensure that all the dependents of the initial spec you provide are also marked as develop specs.
@@ -403,6 +437,47 @@ The supplied location will become the build-directory for that package in all fu
    Spack does not check for out-of-source build compatibility with the packages and so the onus of making sure the package supports out-of-source builds is on the user.
    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds while all ``CMake`` packages do.
    Understanding these nuances is up to the software developers and we strongly encourage developers to only redirect the build directory if they understand their package's build-system.
+
+Modifying Specs in an Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack change`` command allows the user to change individual specs in a Spack environment.
+
+By default, ``spack change`` operates on the abstract specs of an environment.
+The command a list of spec arguments.
+For each argument, the root spec with the same name as the provided spec is modified to satisfy the provided spec.
+For example, in an environment with the root spec ``hdf5+mpi+fortran``, then
+
+.. code-block:: console
+
+   spack change hdf5~mpi+cxx
+
+will change the root spec to ``hdf5~mpi+cxx+fortran``.
+
+When more complex matching semantics are necessary, the ``--match-spec`` argument replaces the spec name as the selection criterion.
+When using the ``--match-spec`` argument, the spec name is not required.
+In the same environment,
+
+.. code-block:: console
+
+   spack change --match-spec "+fortran" +hl
+
+will constrain the ``hdf5`` spec to ``+hl``.
+
+By default, the ``spack change`` command will result in an error and no change to the environment if it will modify more than one abstract spec.
+Use the ``--all`` option to allow ``spack change`` to modify multiple abstract specs.
+
+The ``--concrete`` option allows ``spack change`` to modify the concrete specs of an environment as well as the abstract specs.
+Multiple concrete specs may be modified, even for a change that modifies only a single abstract spec.
+The ``--all`` option does not affect how many concrete specs may be modified.
+
+.. warning::
+
+   Concrete specs are modified without any constraints from the packages.
+   The ``spack change --concrete`` command  may create invalid specs that will not build properly if applied without caution.
+
+The ``--concrete-only`` option allows for modifying concrete specs without modifying abstract specs.
+It allows changes to be applied to non-root nodes in the environment, and other changes that do not modify any root specs.
 
 Loading
 ^^^^^^^
@@ -561,7 +636,7 @@ For example, a ``spack.yaml`` manifest file containing some package preference c
            mpi: [openmpi]
      # ...
 
-This configuration sets the default mpi provider to be openmpi.
+This configuration sets the default ``mpi`` provider to be ``openmpi``.
 
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -801,7 +876,7 @@ The valid variables for a ``when`` clause are:
    The platform string of the default Spack architecture on the system.
 
 #. ``os``.
-   The os string of the default Spack architecture on the system.
+   The OS string of the default Spack architecture on the system.
 
 #. ``target``.
    The target string of the default Spack architecture on the system.
@@ -1048,6 +1123,13 @@ Generating Depfiles from Environments
 ------------------------------------------
 
 Spack can generate ``Makefile``\s to make it easier to build multiple packages in an environment in parallel.
+
+.. note::
+
+   Since Spack v1.1, there is a new experimental installer that supports package-level parallelism out of the box with POSIX jobserver support.
+   You can enable it with ``spack config add config:installer:new``.
+   This new installer may provide a simpler alternative to the ``spack env depfile`` workflow described in this section for users primarily interested in speeding up environment installations.
+
 Generated ``Makefile``\s expose targets that can be included in existing ``Makefile``\s, to allow other targets to depend on the environment installation.
 
 A typical workflow is as follows:
@@ -1140,7 +1222,7 @@ Adding post-install hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another advanced use-case of generated ``Makefile``\s is running a post-install command for each package.
-These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a buildcache.
+These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a build cache.
 
 This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS`` variable.
 Assuming we have an active and concrete environment, we generate the associated ``Makefile`` with a prefix ``example``:
@@ -1153,7 +1235,7 @@ And we now include it in a different ``Makefile``, in which we create a target `
 This target depends on the particular package installation.
 In this target we automatically have the target-specific ``HASH`` and ``SPEC`` variables at our disposal.
 They are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
-Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
+Finally, we have an entry point target ``push`` that will update the build cache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
 .. code-block:: Makefile

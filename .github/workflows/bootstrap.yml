@@ -43,9 +43,9 @@ jobs:
           fetch-depth: 0
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable github-actions-v0.5
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
@@ -68,12 +68,12 @@ jobs:
           python-version: "3.12"
       - name: Bootstrap clingo
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable github-actions-v0.5
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
           spack -d solve zlib
-          tree $HOME/.spack/bootstrap/store/
+          tree ~/.spack/bootstrap/store/
 
   gnupg-sources:
     if: github.repository == 'spack/spack'
@@ -96,10 +96,10 @@ jobs:
           fetch-depth: 0
       - name: Bootstrap GnuPG
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack solve zlib
+          spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable github-actions-v0.5
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -131,38 +131,30 @@ jobs:
             3.11
             3.12
             3.13
+            3.14
       - name: Set bootstrap sources
         run: |
-          source share/spack/setup-env.sh
-          spack bootstrap disable github-actions-v0.5
+          . share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.6
           spack bootstrap disable spack-install
       - name: Bootstrap clingo
         run: |
-          set -e
-          for ver in '3.8' '3.9' '3.10' '3.11' '3.12' '3.13'; do
-            not_found=1
-            ver_dir="$(find $RUNNER_TOOL_CACHE/Python -wholename "*/${ver}.*/*/bin" | grep . || true)"
-            if [[ -d "$ver_dir" ]] ; then
-              echo "Testing $ver_dir"
-              if $ver_dir/python --version ; then
-                export PYTHON="$ver_dir/python"
-                not_found=0
-                old_path="$PATH"
-                export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig -b ./.github/workflows/bin/bootstrap-test.sh
-                export PATH="$old_path"
-              fi
-            fi
-            if (($not_found)) ; then
-              echo Required python version $ver not found in runner!
+          . share/spack/setup-env.sh
+          for ver in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
+            ver_dir="$(find "$RUNNER_TOOL_CACHE/Python" -wholename "*/${ver}.*/*/bin" | grep . || true)"
+            export SPACK_PYTHON="$ver_dir/python3"
+            if [ ! -d "$ver_dir" ] || ! "$SPACK_PYTHON" --version; then
+              echo "Python $ver not found"
               exit 1
             fi
+            spack solve zlib
           done
+          tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
-          source share/spack/setup-env.sh
+          . share/spack/setup-env.sh
           spack -d gpg list
-          tree $HOME/.spack/bootstrap/store/
+          tree ~/.spack/bootstrap/store/
 
   windows:
     if: github.repository == 'spack/spack'
@@ -182,8 +174,8 @@ jobs:
       - name: Bootstrap clingo
         run: |
           ./share/spack/setup-env.ps1
+          spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack bootstrap disable github-actions-v0.5
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/

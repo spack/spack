@@ -8,6 +8,7 @@ from typing import Dict, List, NamedTuple, Set, Tuple, Union
 import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.platforms
@@ -16,6 +17,7 @@ import spack.spec
 import spack.store
 from spack.error import SpackError
 from spack.llnl.util import lang, tty
+from spack.spec import EMPTY_SPEC
 
 
 class PossibleGraph(NamedTuple):
@@ -84,10 +86,9 @@ class NoStaticAnalysis(PossibleDependencyGraph):
     def is_allowed_on_this_platform(self, *, pkg_name: str) -> bool:
         """Returns true if a package is allowed on the current host"""
         pkg_cls = self.repo.get_pkg_class(pkg_name)
-        no_condition = spack.spec.Spec()
         for when_spec, conditions in pkg_cls.requirements.items():
             # Restrict analysis to unconditional requirements
-            if when_spec != no_condition:
+            if when_spec != EMPTY_SPEC:
                 continue
             for requirements, _, _ in conditions:
                 if not any(x.intersects(self._platform_condition) for x in requirements):
@@ -164,44 +165,55 @@ class NoStaticAnalysis(PossibleDependencyGraph):
                 continue
 
             pkg_cls = self.repo.get_pkg_class(pkg_name=pkg_name)
-            for name, conditions in pkg_cls.dependencies_by_name(when=True).items():
-                if all(self.unreachable(pkg_name=pkg_name, when_spec=x) for x in conditions):
+            for when_spec, dependencies in pkg_cls.dependencies.items():
+                # Check if we need to process this condition at all. We can skip the unreachable
+                # check if all dependencies in this condition are already accounted for.
+                new_dependencies: List[str] = []
+                for name, dep in dependencies.items():
+                    if strict_depflag:
+                        if dep.depflag != allowed_deps:
+                            continue
+                    elif not (dep.depflag & allowed_deps):
+                        continue
+
+                    if name in edges[pkg_name] or name in virtuals:
+                        continue
+
+                    new_dependencies.append(name)
+
+                if not new_dependencies:
+                    continue
+
+                if self.unreachable(pkg_name=pkg_name, when_spec=when_spec):
                     tty.debug(
-                        f"[{__name__}] Not adding {name} as a dep of {pkg_name}, because "
-                        f"conditions cannot be met"
+                        f"[{__name__}] Skipping {', '.join(new_dependencies)} dependencies of "
+                        f"{pkg_name}, because {when_spec} is not met"
                     )
                     continue
 
-                if not self._has_deptypes(
-                    conditions, allowed_deps=allowed_deps, strict=strict_depflag
-                ):
-                    continue
+                for name in new_dependencies:
+                    dep_names: Set[str] = set()
+                    if self.is_virtual(name):
+                        virtuals.add(name)
+                        if expand_virtuals:
+                            providers = self.providers_for(name)
+                            dep_names = {spec.name for spec in providers}
+                    else:
+                        dep_names = {name}
 
-                if name in virtuals:
-                    continue
+                    edges[pkg_name].update(dep_names)
 
-                dep_names = set()
-                if self.is_virtual(name):
-                    virtuals.add(name)
-                    if expand_virtuals:
-                        providers = self.providers_for(name)
-                        dep_names = {spec.name for spec in providers}
-                else:
-                    dep_names = {name}
-
-                edges[pkg_name].update(dep_names)
-
-                if not transitive:
-                    continue
-
-                for dep_name in dep_names:
-                    if dep_name in edges:
+                    if not transitive:
                         continue
 
-                    if not self._is_possible(pkg_name=dep_name):
-                        continue
+                    for dep_name in dep_names:
+                        if dep_name in edges:
+                            continue
 
-                    stack.append(dep_name)
+                        if not self._is_possible(pkg_name=dep_name):
+                            continue
+
+                        stack.append(dep_name)
 
         real_packages = set(edges)
         if not transitive:
@@ -258,9 +270,9 @@ class StaticAnalysis(NoStaticAnalysis):
         store: spack.store.Store,
         binary_index: spack.binary_distribution.BinaryCacheIndex,
     ):
-        super().__init__(configuration=configuration, repo=repo)
         self.store = store
         self.binary_index = binary_index
+        super().__init__(configuration=configuration, repo=repo)
 
     @lang.memoized
     def providers_for(self, virtual_str: str) -> List[spack.spec.Spec]:
@@ -363,7 +375,10 @@ class Counter:
     """
 
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self,
+        specs: List[spack.spec.Spec],
+        tests: spack.concretize.TestsType,
+        possible_graph: PossibleDependencyGraph,
     ) -> None:
         self.possible_graph = possible_graph
         self.specs = specs
@@ -426,7 +441,10 @@ class NoDuplicatesCounter(Counter):
 
 class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def __init__(
-        self, specs: List["spack.spec.Spec"], tests: bool, possible_graph: PossibleDependencyGraph
+        self,
+        specs: List[spack.spec.Spec],
+        tests: spack.concretize.TestsType,
+        possible_graph: PossibleDependencyGraph,
     ) -> None:
         super().__init__(specs, tests, possible_graph)
         self._link_run: Set[str] = set()
@@ -465,10 +483,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
 
         gen.h2("Packages with multiple possible nodes (build-tools)")
         default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 2)
+        duplicates = spack.config.CONFIG.get("concretizer:duplicates:max_dupes", {})
         for package_name in sorted(self.possible_dependencies() & build_tools):
-            max_dupes = spack.config.CONFIG.get(
-                f"concretizer:duplicates:max_dupes:{package_name}", default
-            )
+            max_dupes = duplicates.get(package_name, default)
             gen.fact(fn.max_dupes(package_name, max_dupes))
             if max_dupes > 1:
                 gen.fact(fn.multiple_unification_sets(package_name))
@@ -481,9 +498,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
 
         gen.h2("Maximum number of nodes (other virtuals)")
         for package_name in sorted(self.possible_virtuals() - self._link_run_virtuals):
-            max_dupes = spack.config.CONFIG.get(
-                f"concretizer:duplicates:max_dupes:{package_name}", default
-            )
+            max_dupes = duplicates.get(package_name, default)
             gen.fact(fn.max_dupes(package_name, max_dupes))
         gen.newline()
 
@@ -528,7 +543,9 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
 
 
 def create_counter(
-    specs: List[spack.spec.Spec], tests: bool, possible_graph: PossibleDependencyGraph
+    specs: List[spack.spec.Spec],
+    tests: spack.concretize.TestsType,
+    possible_graph: PossibleDependencyGraph,
 ) -> Counter:
     strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":

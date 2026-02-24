@@ -85,7 +85,7 @@ From simplest to most complex, the following are the most common ways to customi
    For example, for ``AutotoolsPackage`` you can specify the command line arguments for ``./configure`` by implementing ``configure_args``:
 
    .. code-block:: python
-   
+
       class MyPkg(AutotoolsPackage):
           def configure_args(self):
               # FIXME: Add arguments other than --prefix
@@ -96,7 +96,7 @@ From simplest to most complex, the following are the most common ways to customi
    Similarly for ``CMakePackage`` you can influence how ``cmake`` is invoked by implementing ``cmake_args``:
 
    .. code-block:: python
-   
+
       class MyPkg(CMakePackage):
           def cmake_args(self):
               # FIXME: Add arguments other than
@@ -113,7 +113,7 @@ From simplest to most complex, the following are the most common ways to customi
    You can set these variables by overriding the ``setup_build_environment`` method in your package class:
 
    .. code-block:: python
-   
+
       def setup_build_environment(self, env):
           env.set("MY_ENV_VAR", "value")
 
@@ -126,7 +126,7 @@ From simplest to most complex, the following are the most common ways to customi
    This is useful for installing additional files missed by the build system, or for running custom scripts.
 
    .. code-block:: python
-   
+
       @run_after("install")
       def install_missing_files(self):
           install_tree("extra_files", self.prefix.bin)
@@ -147,9 +147,9 @@ In any of the functions above, you can
 
       if self.spec.satisfies("+variant_name"):
           ...
-   
+
    to check if a variant is enabled, or
-   
+
    .. code-block:: python
 
       self.spec["dependency_name"].prefix
@@ -363,7 +363,7 @@ This example adds a flag when the C compiler is from GCC version 8 or higher.
 The ``%c=gcc`` syntax technically means that ``gcc`` is the provider for the ``c`` language virtual.
 
 .. tip::
-   
+
     Historically, many packages have been written using ``^dep`` to refer to a dependency.
     Modern Spack packages should consider using ``%dep`` instead, which is more precise: it can only match direct dependencies, which are listed in the ``depends_on`` statements.
 
@@ -456,20 +456,20 @@ We can get the provider's (e.g. OpenBLAS or Intel MKL) prefixes like this:
                 f"--with-lapack={self.spec['lapack'].prefix}",
             ]
 
-Many build systems struggle to locate the ``blas`` and ``lapack`` libraries during configure, either because they do not know the exact names of the libraries, or because the libraries are not in typical locations --- they may not even know whether blas and lapack are a single or separate libraries.
+Many build systems struggle to locate the ``blas`` and ``lapack`` libraries during configure, either because they do not know the exact names of the libraries, or because the libraries are not in typical locations --- they may not even know whether ``blas`` and ``lapack`` are a single or separate libraries.
 In those cases, the build system could use some help, for which we give a few examples below:
 
 1. Space separated list of full paths
 
    .. code-block:: python
-   
+
       lapack_blas = spec["lapack"].libs + spec["blas"].libs
       args.append(f"--with-blas-lapack-lib={lapack_blas.joined()}")
 
 2. Names of libraries and directories which contain them
 
    .. code-block:: python
-   
+
       lapack_blas = spec["lapack"].libs + spec["blas"].libs
       args.extend(
           [
@@ -481,7 +481,7 @@ In those cases, the build system could use some help, for which we give a few ex
 3. Search and link flags
 
    .. code-block:: python
-   
+
       lapack_blas = spec["lapack"].libs + spec["blas"].libs
       args.append(f"-DMATH_LIBS={lapack_blas.ld_flags}")
 
@@ -610,7 +610,7 @@ Not all dependencies set up such variables for dependent packages, in which case
 
 1. Use the ``command`` attribute of the dependency.
    This is a good option, since it refers to an executable provided by a specific dependency.
-   
+
    .. code-block:: python
 
       def install(self, spec: Spec, prefix: Prefix) -> None:
@@ -619,7 +619,7 @@ Not all dependencies set up such variables for dependent packages, in which case
 
 2. Use the ``which`` function (from the ``spack.package`` module).
    Do note that this function relies on the order of the ``PATH`` environment variable, which may be less reliable than the first option.
-   
+
    .. code-block:: python
 
       def install(self, spec: Spec, prefix: Prefix) -> None:
@@ -1151,7 +1151,7 @@ The ``compiler-wrapper`` package has several responsibilities:
 * It sets the ``CC``, ``CXX``, and ``FC`` environment variables in the :ref:`build environment <environment-variables>`.
   These variables point to a wrapper executable in the ``compiler-wrapper``'s bin directory, which is a shell script that ultimately invokes the actual, underlying compiler executable.
 * It ensures that three kinds of compiler flags are passed to the compiler when it is invoked:
-  
+
   1. Flags requested by the user and package author (see :ref:`compiler flags <compiler_flags>`)
   2. Flags needed to locate headers and libraries (during the build as well as at runtime)
   3. Target specific flags, like ``-march=x86-64-v3``, translated from the spec's ``target=<target>`` variant.
@@ -1198,7 +1198,7 @@ Spack heavily makes use of `RPATHs <http://en.wikipedia.org/wiki/Rpath>`_ on Lin
 Executables are able to find their needed libraries *without* any of the infamous environment variables such as ``LD_LIBRARY_PATH`` on Linux or ``DYLD_LIBRARY_PATH`` on macOS.
 
 The :ref:`compiler wrapper <compiler-wrappers>` is the main component that ensures that all binaries built by Spack have the correct RPATHs set.
-As a package author, you rarely need to worry about RPATHs: the relevant compiler flags are automatically injected through the compiler wrappers, and the build system is blisfully unaware of them.
+As a package author, you rarely need to worry about RPATHs: the relevant compiler flags are automatically injected through the compiler wrappers, and the build system is blissfully unaware of them.
 
 This works for most packages and build systems, with the notable exception of CMake, which has its own RPATH handling.
 CMake has its own RPATH handling, and distinguishes between build and install RPATHs.
@@ -1260,7 +1260,7 @@ Loosely, there are three types of MPI builds:
 3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a regular library.
 
 Note that some CMake builds fall into case 2 because they either don't know about or don't like CMake's ``FindMPI`` support -- they just assume an MPI compiler.
-Also, some autotools builds fall into case 3 (e.g., `here is an autotools version of CMake's FindMPI <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
+Also, some Autotools builds fall into case 3 (e.g., `here is an autotools version of CMake's FindMPI <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
 
 Given all of this, we leave the use of the wrappers up to the packager.
 Spack will support all three ways of building MPI packages.
@@ -1298,11 +1298,11 @@ So using the MPI wrappers should really be as simple as the code above.
 ``spec["mpi"]``
 ^^^^^^^^^^^^^^^^^^^^^
 
-Ok, so how does all this work?
+Okay, so how does all this work?
 
 If your package has a virtual dependency like ``mpi``, then referring to ``spec["mpi"]`` within ``install()`` will get you the concrete ``mpi`` implementation in your dependency DAG.
 That is a spec object just like the one passed to install, only the MPI implementations all set some additional properties on it to help you out.
-E.g., in openmpi, you'll find this:
+E.g., in ``openmpi``, you'll find this:
 
 .. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.setup_dependent_package
@@ -1318,13 +1318,13 @@ Wrapping wrappers
 Spack likes to use its own compiler wrappers to make it easy to add ``RPATHs`` to builds, and to try hard to ensure that your builds use the right dependencies.
 This doesn't play nicely by default with MPI, so we have to do a couple of tricks.
 
-1. If we build MPI with Spack's wrappers, mpicc and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
-   To fix this, we patch mpicc and friends to use the regular compilers.
-   Look at the filter_compilers method in mpich, openmpi, or mvapich2 for details.
+1. If we build MPI with Spack's wrappers, ``mpicc`` and friends will be installed with hard-coded paths to Spack's wrappers, and using them from outside of Spack will fail because they only work within Spack.
+   To fix this, we patch ``mpicc`` and friends to use the regular compilers.
+   Look at the filter_compilers method in ``mpich``, ``openmpi``, or ``mvapich2`` for details.
 
-2. We still want to use the Spack compiler wrappers when Spack is calling mpicc.
-   Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by mpicc, mpicxx, etc.
-   Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for mpich derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
+2. We still want to use the Spack compiler wrappers when Spack is calling ``mpicc``.
+   Luckily, wrappers in all mainstream MPI implementations provide environment variables that allow us to dynamically set the compiler to be used by ``mpicc``, ``mpicxx``, etc.
+   Spack's build environment sets ``MPICC``, ``MPICXX``, etc. for MPICH derivatives and ``OMPI_CC``, ``OMPI_CXX``, etc. for OpenMPI.
    This makes the MPI compiler wrappers use the Spack compiler wrappers so that your dependencies still get proper RPATHs even if you use the MPI wrappers.
 
 MPI on Cray machines

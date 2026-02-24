@@ -4,7 +4,7 @@ stages:
   - packages
 
 variables:
-  SPACK_PACKAGES_CHECKOUT_VERSION: refs/pull/342/head
+  SPACK_PACKAGES_CHECKOUT_VERSION: develop
 
 .clone_packages: &clone_packages
   - mkdir -p ${REPO_DESTINATION}
@@ -23,10 +23,6 @@ dotenv:
     - export REPO_DESTINATION=etc/spack-packages
     - *clone_packages
     - repo_commit=$(git -C ${REPO_DESTINATION} rev-parse FETCH_HEAD)
-    # When running CI from spack/spack all packages are untouched
-    # so skip pruning untouched. Deferred pipelines _should_ handle
-    # most of the cases where this type of pruning would need to be
-    # applied.
     - echo "SPACK_CHECKOUT_VERSION=${repo_commit}" >> ${CI_PROJECT_DIR}/env
     - echo "SPACK_CHECKOUT_REPO=spack/spack-packages" >> ${CI_PROJECT_DIR}/env
     - cat ${CI_PROJECT_DIR}/env

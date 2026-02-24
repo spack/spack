@@ -15,7 +15,7 @@ Spack Settings (config.yaml)
 Spack's basic configuration options are set in ``config.yaml``.
 You can see the default settings by looking at ``etc/spack/defaults/config.yaml``:
 
-.. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/base/config.yaml
    :language: yaml
 
 These settings can be overridden in ``etc/spack/config.yaml`` or ``~/.spack/config.yaml``.
@@ -38,7 +38,7 @@ By default, Spack installs all packages into a unique directory relative to the 
 
 .. code-block:: text
 
-   {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
+   {architecture.platform}-{architecture.target}/{name}-{version}-{hash}
 
 In very rare cases, it may be necessary to reduce the length of this path.
 For example, very old versions of the Intel compiler are known to segfault when input paths are too long:

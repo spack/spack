@@ -6,9 +6,9 @@ import spack.cmd.common.env_utility as env_utility
 from spack.context import Context
 
 description = (
-    "run a command in a spec's test environment, or dump its environment to screen or file"
+    "run a command in a spec's test environment,\nor dump its environment to screen or file"
 )
-section = "admin"
+section = "developer"
 level = "long"
 
 setup_parser = env_utility.setup_parser

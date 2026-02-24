@@ -337,7 +337,7 @@ The remaining tasks to complete are as follows:
 #. Add a comma-separated list of maintainers.
 
    Add a list of GitHub accounts of people who want to be notified any time the package is modified.
-   See :ref:`package_maintainers`.
+   See :ref:`maintainers`.
 
 #. Change the ``license`` to the correct license.
 
@@ -1533,6 +1533,8 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
+.. _variant-conditional-values:
+
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1660,7 +1662,7 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
 ^^^^^^^^^^^^^^^^
 
 The highlighted ``depends_on("libelf")`` call tells Spack that it needs to build and install the ``libelf`` package before it builds ``libdwarf``.
-This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your libdwarf build.
+This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your ``libdwarf`` build.
 
 .. _dependency_specs:
 
@@ -2187,7 +2189,18 @@ Like many other package systems, Spack allows you to store patches alongside you
 ^^^^^^^^^
 
 You can specify patches in your package file with the ``patch()`` directive.
-``patch`` looks like this:
+The first argument can be either the filename or URL of the patch file to be applied to your source.
+
+.. note::
+
+   Use of a URL is preferred over maintaining patch files in the package repository.
+   This helps reduce the size of the package repository, which can become an issue for those with limited space (or allocations).
+
+Filename patch
+""""""""""""""
+
+You can supply the name of the patch file.
+For example, a simple conditional ``patch`` based on a file for the ``mvapich2`` package looks like:
 
 .. code-block:: python
 
@@ -2195,10 +2208,10 @@ You can specify patches in your package file with the ``patch()`` directive.
        ...
        patch("ad_lustre_rwcontig_open_source.patch", when="@1.9:")
 
-The first argument can be either a URL or a filename.
-It specifies a patch file that should be applied to your source.
-If the patch you supply is a filename, then the patch needs to live within the Spack source tree.
-For example, the patch above lives in a directory structure like this:
+This patch will only be applied when attempting to install the package at version ``1.9`` or newer.
+
+When a filename is provided, the patch needs to live within the Spack source tree.
+The above patch file lives with the package file within the package repository directory structure in the following location:
 
 .. code-block:: none
 
@@ -2207,7 +2220,21 @@ For example, the patch above lives in a directory structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, you need to supply a ``sha256`` checksum, like this:
+URL patch file
+""""""""""""""
+
+If you supply a URL instead of a filename you have two options: patch file URL or commit patch file URL.
+In either case, you must supply a checksum.
+Spack requires the ``sha256`` hash so that different patches applied to the same package will have unique identifiers.
+Patches will be fetched from their URLs, checked, and applied to your source code.
+
+.. note::
+
+   To ensure consistency, a ``sha256`` checksum must be provided for the patch.
+
+   You can use the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to generate a checksum for a patch file.
+
+Here is an example of specifying the unconditional use of a patch file URL:
 
 .. code-block:: python
 
@@ -2216,10 +2243,29 @@ If you supply a URL instead of a filename, you need to supply a ``sha256`` check
        sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
    )
 
-Spack includes the hashes of patches in its versioning information, so that the same package with different patches applied will have different hash identifiers.
-To ensure that the hashing scheme is consistent, you must use a ``sha256`` checksum for the patch.
-Patches will be fetched from their URLs, checked, and applied to your source code.
-You can use the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to generate a checksum for a patch file.
+Sometimes you can specify the patch file associated with a repository commit.
+For example, GitHub allows you to reference the commit in the name of the patch file through a URL in the form ``https://github.com/<owner>/<repository>/commit/<commit_SHA>.patch``.
+
+Below is an example of specifying a conditional commit patch:
+
+.. code-block:: python
+
+   patch(
+       "https://github.com/ornladios/ADIOS/commit/17aee8aeed64612cd8cfa0b949147091a5525bbe.patch?full_index=1",
+       sha256="aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05",
+       when="@1.12.0: +mpi",
+   )
+
+In this case the patch is only processed when attempting to install version ``1.12.0`` or higher of the package when the package's ``mpi`` variant is enabled.
+
+.. note:
+
+   Be sure to append ``?full_index=1`` to the GitHub URL to ensure the patch file consistently contains the complete, stable hash information for reproducible patching.
+
+   Use the resulting URL to get the patch file contents that you then run through the appropriate utility to get the corresponding ``sha256`` value.
+
+Compressed patches
+""""""""""""""""""
 
 Spack can also handle compressed patches.
 If you use these, Spack needs a little more help.
@@ -2250,7 +2296,7 @@ Only needed for patches fetched from URLs.
 
 If supplied, this is a spec that tells Spack when to apply the patch.
 If the installed package spec matches this spec, the patch will be applied.
-In our example above, the patch is applied when mvapich is at version ``1.9`` or higher.
+In our example above, the patch is applied when ``mvapich`` is at version ``1.9`` or higher.
 
 ``level``
 """""""""
@@ -2281,7 +2327,7 @@ Lines 1-2 show paths with synthetic ``a/`` and ``b/`` prefixes.
 These are placeholders for the two ``mvapich2`` source directories that ``diff`` compared when it created the patch file.
 This is git's default behavior when creating patch files, but other programs may behave differently.
 
-``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded mvapich2 archive.
+``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded ``mvapich2`` archive.
 If you set level to ``2``, it would strip off ``src``, and so on.
 
 It's generally easier to just structure your patch file so that it applies cleanly with ``-p1``, but if you're using a patch you didn't create yourself, ``level`` can be handy.
@@ -2438,7 +2484,7 @@ This ensures that Python in a view can always locate its Python packages, even w
 
 A package can only extend one other package at a time.
 To support packages that may extend one of a list of other packages, Spack supports multiple ``extends`` directives as long as at most one of them is selected as a dependency during concretization.
-For example, a lua package could extend either lua or luajit, but not both:
+For example, a lua package could extend either ``lua`` or ``lua-luajit``, but not both:
 
 .. code-block:: python
 
@@ -2449,7 +2495,7 @@ For example, a lua package could extend either lua or luajit, but not both:
        extends("lua-luajit", when="~use_lua")
        ...
 
-Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or luajit.
+Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or ``lua-luajit``.
 
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2519,24 +2565,26 @@ These mixins should be used as additional base classes for your package, in addi
 
 In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
-.. _package_maintainers:
+.. _maintainers:
 
 Maintainers
 -----------
 
-Each package in Spack may have one or more maintainers, i.e. one or more GitHub accounts of people who want to be notified any time the package is modified.
+Each package in Spack may have one or more GitHub accounts for people who want to be notified whenever the package is modified.
+The list also provides contacts for people needing help with build errors.
 
-When a pull request is submitted that updates the package, these people will be requested to review the PR.
-This is useful for developers who maintain a Spack package for their own software, as well as users who rely on a piece of software and want to ensure that the package doesn't break.
-It also gives users a list of people to contact for help when someone reports a build error with the package.
-
-To add maintainers to a package, simply declare them with the ``maintainers`` directive:
+Adding maintainers is easy.
+After familiarizing yourself with the responsibilities of the :ref:`Package Maintainers <package-maintainers>` role, you simply need to declare their GitHub accounts in the ``maintainers`` directive:
 
 .. code-block:: python
 
-   maintainers("user1", "user2")
+   maintainers("github_user1", "github_user2")
 
-The list of maintainers is additive, and includes all the accounts eventually declared in base classes.
+.. warning::
+
+   Please do not add accounts without consent of the owner.
+
+The final list of maintainers includes accounts declared in the package's base classes.
 
 .. _package_license:
 

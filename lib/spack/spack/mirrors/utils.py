@@ -7,7 +7,6 @@ from collections import Counter
 
 import spack.caches
 import spack.config
-import spack.error
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
@@ -133,12 +132,9 @@ def remove(name, scope):
     if not mirrors:
         mirrors = syaml.syaml_dict()
 
-    if name not in mirrors:
-        tty.die("No mirror with name %s" % name)
-
-    mirrors.pop(name)
+    removed = mirrors.pop(name, False)
     spack.config.set("mirrors", mirrors, scope=scope)
-    tty.msg("Removed mirror %s." % name)
+    return bool(removed)
 
 
 class MirrorStatsForOneSpec:
@@ -221,6 +217,7 @@ def create_mirror_from_package_object(
                 pkg_stage.cache_mirror(mirror_cache, mirror_stats)
             break
         except Exception as e:
+            pkg_obj.stage.destroy()
             if num_retries + 1 == max_retries:
                 if spack.config.get("config:debug"):
                     traceback.print_exc()

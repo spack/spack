@@ -10,6 +10,7 @@ import sys
 import pytest
 
 import spack.build_environment
+import spack.builder
 import spack.concretize
 import spack.config
 import spack.database
@@ -164,6 +165,7 @@ class RemovePrefixChecker:
 
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, working_env):
     s = spack.concretize.concretize_one("canfail")
+    s.package.succeed = False
 
     instance_rm_prefix = s.package.remove_prefix
 
@@ -177,7 +179,9 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch, wo
     # must clear failure markings for the package before re-installing it
     spack.store.STORE.failure_tracker.clear(s, True)
 
-    s.package.set_install_succeed()
+    s.package.succeed = True
+    spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
+
     PackageInstaller([s.package], explicit=True, restage=True).install()
     assert rm_prefix_checker.removed
     assert s.package.spec.installed
@@ -194,11 +198,12 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     """
     # Do a successful install
     s = spack.concretize.concretize_one("canfail")
-    s.package.set_install_succeed()
+    s.package.succeed = True
 
     # Do a failing overwrite install
     PackageInstaller([s.package], explicit=True).install()
-    s.package.set_install_fail()
+    s.package.succeed = False
+    spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
     kwargs = {"overwrite": [s.dag_hash()]}
 
     with pytest.raises(Exception):
@@ -319,6 +324,7 @@ def test_installed_upstream(install_upstream, mock_fetch):
 @pytest.mark.disable_clean_stage_check
 def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, working_env):
     s = spack.concretize.concretize_one("canfail")
+    s.package.succeed = False
 
     # If remove_prefix is called at any point in this test, that is an error
     monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
@@ -329,7 +335,8 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch, monkeypatch, w
     # must clear failure markings for the package before re-installing it
     spack.store.STORE.failure_tracker.clear(s, True)
 
-    s.package.set_install_succeed()
+    s.package.succeed = True
+    spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
     PackageInstaller([s.package], explicit=True, keep_prefix=True).install()
     assert s.package.spec.installed
 
@@ -338,12 +345,12 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch, monkeypa
     s = spack.concretize.concretize_one("canfail")
     monkeypatch.setattr(spack.package_base.PackageBase, "remove_prefix", mock_remove_prefix)
 
-    s.package.set_install_succeed()
+    s.package.succeed = True
     PackageInstaller([s.package], explicit=True).install()
     assert s.package.spec.installed
 
     # If Package.install is called after this point, it will fail
-    s.package.set_install_fail()
+    s.package.succeed = False
     PackageInstaller([s.package], explicit=True).install()
 
 
@@ -370,7 +377,7 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch, capfd):
+def test_failing_build(install_mockery, mock_fetch):
     spec = spack.concretize.concretize_one("failing-build")
     pkg = spec.package
 
@@ -397,6 +404,7 @@ def test_uninstall_by_spec_errors(mutable_database):
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.use_package_hash
 def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd, ensure_debug):
     """Test install phases with the nosource package."""
     spec = spack.concretize.concretize_one("nosource")
@@ -630,8 +638,8 @@ def test_install_from_binary_with_missing_patch_succeeds(
     PackageInstaller(
         [s.package],
         explicit=True,
-        package_cache_only=True,
-        dependencies_cache_only=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
         unsigned=True,
     ).install()
 

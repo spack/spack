@@ -21,16 +21,8 @@ version_error_messages = [
 ]
 
 external_error_messages = [
-    (
-        "Attempted to build package quantum-espresso which is not buildable and does not have"
-        " a satisfying external"
-    ),
-    (
-        "        'quantum-espresso~veritas' is an external constraint for quantum-espresso"
-        " which was not satisfied"
-    ),
-    "        'quantum-espresso+veritas' required",
-    "        required because quantum-espresso+veritas requested explicitly",
+    "Cannot build quantum-espresso, since it is configured `buildable:false` and "
+    "no externals satisfy the request"
 ]
 
 variant_error_messages = [
@@ -64,7 +56,26 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
         _ = spack.concretize.concretize_one(spec)
 
     for em in error_messages:
-        assert em in str(e.value)
+        assert em in str(e.value), str(e.value)
+
+
+@pytest.mark.parametrize(
+    "spec", ["deprecated-versions@1.1.0", "deprecated-client ^deprecated-versions@1.1.0"]
+)
+def test_deprecated_version_error(spec, mock_packages, mutable_config):
+    with pytest.raises(spack.solver.asp.DeprecatedVersionError, match="deprecated-versions@1.1.0"):
+        _ = spack.concretize.concretize_one(spec)
+
+    spack.config.set("config:deprecated", True)
+    spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.parametrize(
+    "spec", ["deprecated-versions@99.9", "deprecated-client ^deprecated-versions@99.9"]
+)
+def test_nonexistent_version_error(spec, mock_packages, mutable_config):
+    with pytest.raises(spack.solver.asp.InvalidVersionError, match="deprecated-versions@99.9"):
+        _ = spack.concretize.concretize_one(spec)
 
 
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):

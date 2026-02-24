@@ -16,7 +16,7 @@ import spack.repo
 from spack.cmd.common import arguments
 from spack.installer import PackageInstaller
 
-description = "developer build: build from code in current working directory"
+description = "build package from code in current working directory"
 section = "build"
 level = "long"
 

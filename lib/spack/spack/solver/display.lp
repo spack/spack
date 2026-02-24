@@ -41,13 +41,12 @@
 #show node_has_variant/3.
 #show build/1.
 #show external/1.
-#show external_version/3.
 #show trigger_and_effect/3.
 #show unification_set/2.
 #show provider/2.
-#show condition_nodes/3.
+#show condition_nodes/2.
 #show trigger_node/3.
-#show imposed_nodes/3.
+#show imposed_nodes/2.
 #show variant_single_value/2.
 
 % debug

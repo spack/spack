@@ -104,10 +104,9 @@ def test_blame_json(mock_packages):
 
 
 @pytest.mark.not_on_windows("git hangs")
-def test_blame_by_git(mock_packages, capfd):
+def test_blame_by_git(mock_packages):
     """Sanity check the blame command to make sure it works."""
-    with capfd.disabled():
-        out = blame("--git", "mpich")
+    out = blame("--git", "mpich")
     assert "class Mpich" in out
     assert '    homepage = "http://www.mpich.org"' in out
 
@@ -194,7 +193,7 @@ def test_ensure_full_history_shallow_works(mock_git_version_info, monkeypatch):
     ensure_full_history(repo_path, filename)
 
 
-def test_ensure_full_history_shallow_fails(mock_git_version_info, monkeypatch, capsys):
+def test_ensure_full_history_shallow_fails(mock_git_version_info, monkeypatch, capfd):
     """Ensure a git that supports '--unshallow' but fails generates useful error."""
     error_msg = "Mock git cannot fetch."
 
@@ -214,11 +213,11 @@ def test_ensure_full_history_shallow_fails(mock_git_version_info, monkeypatch, c
     with pytest.raises(SystemExit):
         ensure_full_history(repo_path, filename)
 
-    out = capsys.readouterr()
+    out = capfd.readouterr()
     assert error_msg in out[1]
 
 
-def test_ensure_full_history_shallow_old_git(mock_git_version_info, monkeypatch, capsys):
+def test_ensure_full_history_shallow_old_git(mock_git_version_info, monkeypatch, capfd):
     """Ensure a git that doesn't support '--unshallow' fails."""
 
     def _git(*args, **kwargs):
@@ -234,5 +233,5 @@ def test_ensure_full_history_shallow_old_git(mock_git_version_info, monkeypatch,
     with pytest.raises(SystemExit):
         ensure_full_history(repo_path, filename)
 
-    out = capsys.readouterr()
+    out = capfd.readouterr()
     assert "Use a newer" in out[1]

@@ -23,7 +23,7 @@ from spack.llnl.util.tty import colify
 from . import doc_dedented, doc_first_line
 
 description = "run spack's tests for an install"
-section = "admin"
+section = "build"
 level = "long"
 
 

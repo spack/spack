@@ -12,7 +12,7 @@ import spack.package_base
 import spack.traverse
 from spack.cmd.common import arguments
 
-description = "patch expanded archive sources in preparation for install"
+description = "patch expanded sources in preparation for install"
 section = "build"
 level = "long"
 

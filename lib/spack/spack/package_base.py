@@ -59,9 +59,8 @@ from spack.llnl.util.filesystem import (
     islink,
     symlink,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
-from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -447,14 +446,6 @@ def _num_definitions(when_indexed_dictionary: Dict[spack.spec.Spec, Dict[K, V]])
     return sum(len(dictionary) for dictionary in when_indexed_dictionary.values())
 
 
-def _precedence(obj) -> int:
-    """Get either a 'precedence' attribute or item from an object."""
-    precedence = getattr(obj, "precedence", None)
-    if precedence is None:
-        raise KeyError(f"Couldn't get precedence from {type(obj)}")
-    return precedence
-
-
 def _remove_overridden_defs(defs: List[Tuple[spack.spec.Spec, Any]]) -> None:
     """Remove definitions from the list if their when specs are satisfied by later ones.
 
@@ -503,7 +494,7 @@ def _definitions(
 
     # With multiple definitions, ensure precedence order and simplify overrides
     if len(defs) > 1:
-        defs.sort(key=lambda v: _precedence(v[1]))
+        defs.sort(key=lambda v: getattr(v[1], "precedence", 0))
         _remove_overridden_defs(defs)
 
     return defs
@@ -556,7 +547,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     compiler = DeprecatedCompiler()
 
     #: Class level dictionary populated by :func:`~spack.directives.version` directives
-    versions: dict
+    versions: Dict[StandardVersion, Dict[str, Any]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
@@ -592,8 +583,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: which is deprecated
     legacy_buildsystem: str
 
-    #: Must be defined in derived classes. Used when reporting the build system to users
-    build_system_class: str
+    #: Used when reporting the build system to users
+    build_system_class: str = "PackageBase"
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -793,6 +784,19 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             return next(vdef for when, vdef in highest_to_lowest if self.spec.satisfies(when))
         except StopIteration:
             raise ValueError(f"No variant '{name}' on spec: {self.spec}")
+
+    @classmethod
+    def validate_variant_names(self, spec: spack.spec.Spec):
+        """Check that all variant names on Spec exist in this package.
+
+        Raises ``UnknownVariantError`` if invalid variants are on the spec.
+        """
+        names = self.variant_names()
+        for v in spec.variants:
+            if v not in names:
+                raise spack.variant.UnknownVariantError(
+                    f"No such variant '{v}' in package {self.name}", [v]
+                )
 
     @classproperty
     def package_dir(cls):
@@ -1052,7 +1056,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             sha = spack.util.archive.retrieve_commit_from_archive(
                 pkg_instance.stage.archive_file, ref
             )
-
         if not sha:
             url = cls.version_or_package_attr("git", spec.version)
             sha = spack.util.git.get_commit_sha(url, ref)
@@ -1458,6 +1461,65 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if self.spec.intersects(when_spec)
         )
 
+    def intersects(self, spec: spack.spec.Spec) -> bool:
+        """Context-ful intersection that takes into account package information.
+
+        By design, ``Spec.intersects()`` does not know anything about package metdata.
+        This avoids unnecessary package lookups and keeps things efficient where extra
+        information is not needed, and it decouples ``Spec`` from ``PackageBase``.
+
+        In many cases, though, we can rule more cases out in ``intersects()`` if we
+        know, for example, that certain variants are always single-valued, or that
+        certain variants are conditional on other variants. This adds logic for such
+        cases when they are knowable.
+
+        Note that because ``intersects()`` is conservative, it can only give false
+        positives ("i.e., the two specs *may* overlap"), not false negatives. This
+        method can fix false positives (i.e. it may return ``False`` when
+        ``Spec.intersects()`` would return ``True``, but it will never return ``True``
+        when ``Spec.intersects()`` returns ``False``.
+
+        """
+        # Spec.intersects() is right when False
+        if not self.spec.intersects(spec):
+            return False
+
+        def sv_variant_conflicts(spec, variant):
+            name = variant.name
+            return (
+                variant.name in spec.variants
+                and all(not d[name].multi for when, d in self.variants.items() if name in d)
+                and spec.variants[name].value != variant.value
+            )
+
+        # Specs don't know if a variant is single- or multi-valued (concretization handles this)
+        # But, we know if the spec has a value for a single-valued variant, it *has* to equal the
+        # value in self.spec, if there is one.
+        for v, variant in spec.variants.items():
+            if sv_variant_conflicts(self.spec, variant):
+                return False
+
+        # if there is no intersecting condition for a conditional variant, it can't exist. e.g.:
+        # - cuda_arch=<anything> can't be satisfied when ~cuda.
+        # - generator=<anything> can't be satisfied when build_system=autotools
+        def mutually_exclusive(spec, variant_name):
+            return all(
+                not spec.intersects(when)
+                or any(sv_variant_conflicts(spec, wv) for wv in when.variants.values())
+                for when, d in self.variants.items()
+                if variant_name in d
+            )
+
+        names = self.variant_names()
+        for v in set(itertools.chain(spec.variants, self.spec.variants)):
+            if v not in names:  # treat unknown variants as intersecting
+                continue
+
+            if mutually_exclusive(self.spec, v) or mutually_exclusive(spec, v):
+                return False
+
+        return True
+
     @property
     def virtuals_provided(self):
         """
@@ -1605,7 +1667,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        if self.has_code and not self.spec.external:
+        user_dev_path = spack.config.get(f"develop:{self.name}:path", None)
+        skip = user_dev_path and os.path.exists(user_dev_path)
+        if skip:
+            tty.debug("Skipping staging because develop path exists")
+        if self.has_code and not self.spec.external and not skip:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
         else:
@@ -2511,16 +2577,77 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg: PackageBase):
-    """
-    Returns a sorted list of the preferred versions of the package.
+def preferred_version(
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> Union[StandardVersion, GitVersion]:
+    """Returns the preferred versions of the package according to package.py.
+
+    Accounts for version deprecation in the package recipe. Doesn't account for
+    any user configuration in packages.yaml.
 
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
 
-    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    def _version_order(version_info):
+        version, info = version_info
+        deprecated_key = not info.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(version_info))
+
+    version, _ = max(pkg.versions.items(), key=_version_order)
     return version
+
+
+def non_preferred_version(node: spack.spec.Spec) -> bool:
+    """Returns True if the spec version is not the preferred one, according to the package.py"""
+    if not node.versions.concrete:
+        return False
+
+    try:
+        return node.version != preferred_version(node.package)
+    except ValueError:
+        return False
+
+
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
+    """Returns True if the variant in the spec has a non-default value."""
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
+
+
+def sort_by_pkg_preference(
+    versions: Iterable[Union[GitVersion, StandardVersion]],
+    *,
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> List[Union[GitVersion, StandardVersion]]:
+    """Sorts the list of versions passed in input according to the preferences in the package. The
+    return value does not contain duplicate versions. Most preferred versions first.
+    """
+    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
+    return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
+
+
+def concretization_version_order(
+    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
+) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+    """Version order key for concretization, where preferred > not preferred,
+    finite > any infinite component; only if all are the same, do we use default version
+    ordering.
+
+    Version deprecation needs to be accounted for separately.
+    """
+    version, info = version_info
+    return (
+        info.get("preferred", False),
+        not isinstance(version, GitVersion),
+        not version.isdevelop(),
+        not version.is_prerelease(),
+        version,
+    )
 
 
 class PackageStillNeededError(InstallError):

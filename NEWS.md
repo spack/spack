@@ -1,3 +1,6 @@
+## Package API v2.4
+- Added the `%%` sigil to spec syntax, to propagate compiler preferences.
+
 ## Spack v1.0.0
 Deprecated the implicit attributes:
 - `PackageBase.legacy_buildsystem`

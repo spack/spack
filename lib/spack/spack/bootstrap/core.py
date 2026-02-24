@@ -294,8 +294,8 @@ class SourceBootstrapper(Bootstrapper):
             PackageInstaller(
                 [concrete_spec.package],
                 fail_fast=True,
-                package_use_cache=False,
-                dependencies_use_cache=False,
+                root_policy="source_only",
+                dependencies_policy="source_only",
             ).install()
 
         if _try_import_from_store(module, query_spec=concrete_spec, query_info=info):
@@ -554,7 +554,9 @@ def ensure_winsdk_external_or_raise() -> None:
     """
     if set(["win-sdk", "wgl"]).issubset(spack.config.get("packages").keys()):
         return
-    externals = spack.detection.by_path(["win-sdk", "wgl"])
+    tty.debug("Detecting Windows SDK and WGL installations")
+    # find the externals sequentially to avoid subprocesses being spawned
+    externals = spack.detection.by_path(["win-sdk", "wgl"], max_workers=1)
     if not set(["win-sdk", "wgl"]) == externals.keys():
         missing_packages_lst = []
         if "wgl" not in externals:

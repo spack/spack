@@ -14,5 +14,3 @@ config:
   checksum: true
   dirty: false
   locks: {1}
-  concretization_cache:
-    enable: false

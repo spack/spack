@@ -113,7 +113,7 @@ class TestLmod:
         self, factory, module_configuration, compiler_factory
     ):
         with spack.config.override(
-            "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3")]}}
+            "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}
         ):
             module_configuration("complex_hierarchy")
             module, spec = factory("intel-oneapi-compilers%clang@3.3")

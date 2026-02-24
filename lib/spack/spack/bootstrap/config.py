@@ -8,14 +8,12 @@ import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
 
-import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
-import spack.spec
 import spack.store
 import spack.util.path
 from spack.llnl.util import tty
@@ -138,12 +136,6 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     return config_scopes
 
 
-def _add_compilers_if_missing() -> None:
-    arch = spack.spec.ArchSpec.default_arch()
-    if not spack.compilers.config.compilers_for_arch(arch):
-        spack.compilers.config.find_compilers()
-
-
 @contextlib.contextmanager
 def _ensure_bootstrap_configuration() -> Generator:
     spack.repo.PATH.repos  # ensure this is instantiated from current config.
@@ -161,8 +153,5 @@ def _ensure_bootstrap_configuration() -> Generator:
         spack.config.set("bootstrap", user_configuration["bootstrap"])
         spack.config.set("config", user_configuration["config"])
         spack.config.set("repos", user_configuration["repos"])
-        # We may need to compile code from sources, so ensure we
-        # have compilers for the current platform
-        _add_compilers_if_missing()
         with spack.modules.disable_modules(), spack_python_interpreter():
             yield

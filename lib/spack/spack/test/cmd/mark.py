@@ -18,7 +18,7 @@ pytestmark = pytest.mark.usefixtures("mutable_mock_env_path")
 
 @pytest.mark.db
 def test_mark_mode_required(mutable_database):
-    with pytest.raises(SystemExit):
+    with pytest.raises(SpackCommandError):
         mark("-a")
 
 

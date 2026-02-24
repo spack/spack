@@ -11,7 +11,7 @@ import spack.llnl.util.tty.color as cl
 import spack.repo
 
 description = "audit configuration files, packages, etc."
-section = "system"
+section = "packaging"
 level = "short"
 
 

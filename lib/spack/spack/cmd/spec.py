@@ -11,6 +11,7 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
+import spack.package_base
 import spack.spec
 import spack.store
 import spack.traverse
@@ -59,6 +60,8 @@ for further documentation regarding the spec syntax, see:
         default=None,
         help="print concrete spec with the specified format string",
     )
+    arguments.add_common_arguments(format_group, ["show_non_defaults"])
+
     subparser.add_argument(
         "-c",
         "--cover",
@@ -120,5 +123,11 @@ def spec(parser, args):
                 status_fn=install_status_fn if args.install_status else None,
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
+                highlight_version_fn=(
+                    spack.package_base.non_preferred_version if args.non_defaults else None
+                ),
+                highlight_variant_fn=(
+                    spack.package_base.non_default_variant if args.non_defaults else None
+                ),
             )
         )

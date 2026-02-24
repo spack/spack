@@ -15,7 +15,7 @@ import spack.stage
 from spack.cmd.common import arguments
 
 description = "print out locations of packages and spack directories"
-section = "basic"
+section = "query"
 level = "long"
 
 
