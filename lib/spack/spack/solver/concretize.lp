@@ -76,7 +76,7 @@ attr("namespace", node(ID, Package), Namespace)
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 
-error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
+error(100000, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
@@ -979,13 +979,12 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
 
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+1 { attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
-  :- attr("dependency_holds", PackageNode, Virtual, Type),
-     attr("depends_on", PackageNode, ProviderNode, Type),
-     provider(ProviderNode, node(_, Virtual)).
+attr("depends_on", PackageNode, ProviderNode, Type)
+  :- attr("virtual_on_edge", PackageNode, ProviderNode, Virtual),
+     node_depends_on_virtual(PackageNode, Virtual, Type).
 
 % If a virtual node is in the answer set, it must be either a virtual root,
 % or used somewhere
