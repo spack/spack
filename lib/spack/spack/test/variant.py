@@ -884,7 +884,9 @@ def test_install_source_variant(install_mockery, mock_fetch, monkeypatch, mutabl
     unset should not be mentioned."""
     import spack.config
 
-    spec1 = spack.concretize.concretize_one("trivial-install-test-dependent ^trivial-install-test-package+install_source")
+    spec1 = spack.concretize.concretize_one(
+        "trivial-install-test-dependent ^trivial-install-test-package+install_source"
+    )
     # We don't want install_source to be mentioned at all, except on packages that
     # set +install_source
     assert not spec1.satisfies("+install_source")
