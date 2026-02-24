@@ -67,7 +67,9 @@ def _it_contains_the_source_i_expect(spec):
         )
 
 
-def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
+def test_install_source(install_mockery, mock_fetch, monkeypatch):
+    # Check that +install_source ensures that source files are placed in the
+    # install prefix
     spec = spack.concretize.concretize_one("trivial-install-test-package +install_source")
 
     PackageInstaller([spec.package], explicit=True).install()
@@ -75,9 +77,10 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
     assert _it_contains_the_source_i_expect(spec)[1]
 
 
-def test_install_source_dependent(install_mockery, mock_fetch, monkeypatch, mutable_config):
+def test_install_source_dependency(install_mockery, mock_fetch, monkeypatch, mutable_config):
     # Check that +install_source ensures that source files are placed in the
-    # install prefix
+    # install prefix; in this case +install_source is only enabled on a
+    # dependency - make sure that only the dependency installs source files.
     spack.config.set(
         "packages", {"trivial-install-test-package": {"require": [{"spec": "+install_source"}]}}
     )
