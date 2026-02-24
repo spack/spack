@@ -63,6 +63,8 @@ from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
 
+DEFAULT_USER_SPEC_GROUP = "default"
+
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
 
@@ -3054,9 +3056,6 @@ def initialize_environment_dir(
             continue
 
         shutil.copytree(orig_abspath, abspath, symlinks=True)
-
-
-DEFAULT_USER_SPEC_GROUP = "default"
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
