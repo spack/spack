@@ -977,6 +977,7 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
      virtual(Virtual).
 
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
+virtual_is_needed(Virtual) :- node_depends_on_virtual(PackageNode, Virtual).
 
 1 { attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
@@ -1001,9 +1002,8 @@ attr("virtual_on_incoming_edges", ProviderNode, Virtual)
      attr("root", ProviderNode),
      provider(ProviderNode, node(min_dupe_id, Virtual)).
 
-% dependencies on virtuals also imply that the virtual is a virtual node
-1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) }
-  :- node_depends_on_virtual(PackageNode, Virtual).
+% If a virtual is needed on an edge, choose one
+1 { attr("virtual_node", node(0..X-1, Virtual)) : max_dupes(Virtual, X) } :- virtual_is_needed(Virtual).
 
 % If there's a virtual node, we must select one and only one provider.
 % The provider must be selected among the possible providers.
