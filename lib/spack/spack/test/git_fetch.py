@@ -283,7 +283,7 @@ def test_get_full_repo(
         s.variants["commit"] = SingleValuedVariant("commit", commit)
         if can_use_direct_commit:
             path = mock_git_repository.path
-            git_exe("-C", path, "config", "set", "uploadpack.allowReachableSHA1InWant", "true")
+            git_exe("-C", path, "config", "uploadpack.allowReachableSHA1InWant", "true")
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
