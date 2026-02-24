@@ -876,9 +876,8 @@ edge_needed(ParentNode, node(X, Child)) :-
    attr("dependency_holds", ParentNode, Child, _).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
-   depends_on(ParentNode, ChildNode),
    build(ParentNode),
-   node_depends_on_virtual(ParentNode, Virtual),
+   attr("virtual_on_edge", ParentNode, ChildNode, Virtual),
    provider(ChildNode, node(X, Virtual)).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
