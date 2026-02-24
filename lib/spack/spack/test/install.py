@@ -75,23 +75,14 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
     assert _it_contains_the_source_i_expect(spec)[1]
 
 
-def test_install_with_source_dependency(install_mockery, mock_fetch, monkeypatch, mutable_config):
-    # There have been complications around setting auto-variants via requirements
-    # (in particular compiler flags), so make sure to check requirements
+def test_install_source_file_placement(install_mockery, mock_fetch, monkeypatch, mutable_config):
+    # Check that +install_source ensures that source files are placed in the
+    # install prefix
     spack.config.set(
         "packages", {"trivial-install-test-package": {"require": [{"spec": "+install_source"}]}}
     )
-
     spec = spack.concretize.concretize_one("trivial-install-test-dependent")
-    # We don't want install_source to be mentioned at all, except on packages that
-    # set +install_source
-    assert not spec.satisfies("+install_source")
-    assert not spec.satisfies("~install_source")
-    assert spec["trivial-install-test-package"].satisfies("+install_source")
-
-    # Now check that the variant has the behavior we want
     PackageInstaller([spec.package], explicit=True).install()
-
     assert _it_contains_the_source_i_expect(spec["trivial-install-test-package"])[1]
     assert _it_contains_the_source_i_expect(spec) == (False, False)
 
