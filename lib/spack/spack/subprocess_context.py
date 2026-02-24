@@ -109,11 +109,11 @@ class GlobalStateMarshaler:
         if self.is_forked:
             return
         spack.config.CONFIG = self.config
-        spack.paths.freeze()
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
         self.test_patches.restore()
+        spack.paths.freeze()
         if self.env:
             from spack.environment import activate
 

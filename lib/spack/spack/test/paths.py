@@ -293,7 +293,13 @@ def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
 
     import spack.paths
 
-    monkeypatch.setattr(spack.paths, "dir_is_occupied", all_dirs_empty)
+    #monkeypatch.setattr(spack.paths, "dir_is_occupied", all_dirs_empty)
+
+    pbtest = SpackPathsBase(base_prefix)
+    pbtest.old_install_path = empty_dir
+
+    ptest = SpackPaths(pbtest)
+    monkeypatch.setattr(spack.paths, "locations", ptest)
 
     spack_process = spack.subprocess_context.SpackTestProcess(
         SetAnXdgVarAndReadDataHome(home_prefix, base_prefix, empty_dir)
