@@ -2165,7 +2165,9 @@ class Environment:
         ]
 
     def has_groups(self) -> bool:
-        return self.manifest.groups() != {DEFAULT_USER_SPEC_GROUP}
+        groups = self.manifest.groups()
+        # True if groups != {DEFAULT_USER_SPEC_GROUP}
+        return len(groups) != 1 or DEFAULT_USER_SPEC_GROUP not in groups
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
