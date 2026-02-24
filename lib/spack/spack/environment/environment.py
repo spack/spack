@@ -12,6 +12,7 @@ import re
 import shutil
 import stat
 import warnings
+from collections.abc import KeysView
 from typing import (
     Any,
     Callable,
@@ -3183,9 +3184,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             return None
         return spack.config.InternalConfigScope(f"env:groups:{group}", data)
 
-    def groups(self) -> Set[str]:
+    def groups(self) -> KeysView:
         """Returns the list of groups defined in the manifest"""
-        return set(self._groups)
+        return self._groups.keys()
 
     def needs(self, *, group: Optional[str] = None) -> Tuple[str, ...]:
         """Returns the dependencies of a group of user specs."""

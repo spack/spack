@@ -1687,7 +1687,7 @@ class TestEnvironmentGroups:
     """
         )
         # Check manifest properties
-        assert manifest.groups() == {"default", "compiler", "apps"}
+        assert set(manifest.groups()) == {"default", "compiler", "apps"}
 
         assert manifest.user_specs(group="default") == manifest.user_specs()
         assert manifest.user_specs() == ["mpileaks", "libelf"]
