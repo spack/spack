@@ -76,7 +76,7 @@ attr("namespace", node(ID, Package), Namespace)
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
 unify(SetID, PackageName) :- unification_set(SetID, node(_, PackageName)).
 
-error(1, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
+error(100000, "Cannot have multiple nodes for {0} in the same unification set {1}", PackageName, SetID)
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
@@ -378,7 +378,6 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
 
 % A "condition_set(PackageNode, _)" is the set of nodes on which PackageNode can require / impose conditions
 condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
-condition_set(PackageNode, PackageNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
 condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
@@ -652,10 +651,12 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual).
 
-% Give a penalty if reuse introduces a node compiled with a compiler that is not used otherwise
+% Give a penalty if reuse introduces a node compiled with a compiler that is not used otherwise.
+% The only exception is if the current node is a compiler itself.
 compiler_from_reuse(Hash, DependencyPackage) :-
   attr("concrete_build_dependency", ParentNode, DependencyPackage, Hash),
   attr("virtual_on_build_edge", ParentNode, DependencyPackage, Virtual),
+  not node_compiler(_, ParentNode),
   language(Virtual).
 
 compiler_penalty_from_reuse(Hash) :-
@@ -875,9 +876,8 @@ edge_needed(ParentNode, node(X, Child)) :-
    attr("dependency_holds", ParentNode, Child, _).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
-   depends_on(ParentNode, ChildNode),
    build(ParentNode),
-   node_depends_on_virtual(ParentNode, Virtual),
+   attr("virtual_on_edge", ParentNode, ChildNode, Virtual),
    provider(ChildNode, node(X, Virtual)).
 
 virtual_edge_needed(ParentNode, ChildNode, node(X, Virtual)) :-
@@ -978,13 +978,12 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
 
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-1 { attr("depends_on", PackageNode, ProviderNode, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+1 { attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-attr("virtual_on_edge", PackageNode, ProviderNode, Virtual)
-  :- attr("dependency_holds", PackageNode, Virtual, Type),
-     attr("depends_on", PackageNode, ProviderNode, Type),
-     provider(ProviderNode, node(_, Virtual)).
+attr("depends_on", PackageNode, ProviderNode, Type)
+  :- attr("virtual_on_edge", PackageNode, ProviderNode, Virtual),
+     node_depends_on_virtual(PackageNode, Virtual, Type).
 
 % If a virtual node is in the answer set, it must be either a virtual root,
 % or used somewhere
@@ -1321,17 +1320,11 @@ variant_definition(node(NodeID, Package), Name, VariantID) :-
 % If there are any definitions for a variant on a node, the variant is "defined".
 variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
 
-% We must select one definition for each defined variant on a node.
-1 {
-  node_has_variant(PackageNode, Name, VariantID) : variant_definition(PackageNode, Name, VariantID)
-} 1 :-
-  variant_defined(PackageNode, Name).
-
 % Solver must pick the variant definition with the highest id. When conditions hold
 % for two or more variant definitions, this prefers the last one defined.
-:- node_has_variant(node(NodeID, Package), Name, SelectedVariantID),
-   variant_definition(node(NodeID, Package), Name, VariantID),
-   VariantID > SelectedVariantID.
+node_has_variant(PackageNode, Name, SelectedVariantID) :-
+  SelectedVariantID = #max { VariantID : variant_definition(PackageNode, Name, VariantID) },
+  variant_defined(PackageNode, Name).
 
 % B: Associating applicable package rules with nodes
 
@@ -1401,26 +1394,25 @@ variant_single_value(node(NodeID, Package), VariantName) :-
 % C: Determining variant values on each node
 
 % if a variant is sticky, but not set, its value is the default value
-attr("variant_selected", node(ID, Package), Variant, Value, VariantType, VariantID) :-
+attr("variant_value", node(ID, Package), Variant, Value) :-
   node_has_variant(node(ID, Package), Variant, VariantID),
   variant_default_value(node(ID, Package), Variant, Value),
   pkg_fact(Package, variant_sticky(VariantID)),
-  variant_type(VariantID, VariantType),
   not attr("variant_set", node(ID, Package), Variant),
   build(node(ID, Package)).
 
 % we can choose variant values from all the possible values for the node
 1 {
-  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID)
-  : variant_possible_value(PackageNode, Variant, Value)
+  attr("variant_value", PackageNode, Variant, Value) : variant_possible_value(PackageNode, Variant, Value)
 } :-
-  node_has_variant(PackageNode, Variant, VariantID),
-  variant_type(VariantID, VariantType),
+  node_has_variant(PackageNode, Variant, _),
   build(PackageNode).
 
-% variant_selected is only needed for reconstruction on the python side, so we can ignore it here
-attr("variant_value", PackageNode, Variant, Value) :-
-  attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID).
+% variant_selected is only needed for reconstruction on the python side
+attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
+  attr("variant_value", PackageNode, Variant, Value),
+  node_has_variant(PackageNode, Variant, VariantID),
+  variant_type(VariantID, VariantType).
 
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -1489,6 +1481,17 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come fr
 
 :- attr("variant_set", node(ID, Package), Variant, Value),
    not attr("variant_value", node(ID, Package), Variant, Value).
+
+% In a case with `variant("foo", when="+bar")` and a user request for +foo or ~foo,
+% force +bar to be set too. This gives no penalty if `+bar` is not the default value, and
+% optimizes a long chain of deductions that may cause clingo to hang.
+attr("variant_set", node(ID, Package), AnotherVariant, AnotherValue)
+  :- attr("variant_set", node(ID, Package), Variant, Value),
+     attr("variant_selected", node(ID, Package), Variant, _, _, VariantID),
+     pkg_fact(Package, variant_condition(Variant, VariantID, ConditionID)),
+     pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+     condition_requirement(TriggerID,"variant_value",Package, AnotherVariant, AnotherValue),
+     build(node(ID, Package)).
 
 % A default variant value that is not used, makes sense only for multi valued variants
 variant_default_not_used(node(ID, Package), Variant, Value)
@@ -1570,10 +1573,9 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 %----
 
 % If a variant is propagated, and can be accepted, set its value
-attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
+attr("variant_value", PackageNode, Variant, Value) :-
   propagate(PackageNode, variant_value(Variant, Value, _)),
-  node_has_variant(PackageNode, Variant, VariantID),
-  variant_type(VariantID, VariantType),
+  node_has_variant(PackageNode, Variant, _),
   variant_possible_value(PackageNode, Variant, Value).
 
 % If a variant is propagated, we cannot have extraneous values
@@ -1583,7 +1585,7 @@ variant_is_propagated(PackageNode, Variant) :-
   not attr("variant_set", PackageNode, Variant).
 
 :- variant_is_propagated(PackageNode, Variant),
-   attr("variant_selected", PackageNode, Variant, Value, _, _),
+   attr("variant_value", PackageNode, Variant, Value),
    not propagate(PackageNode, variant_value(Variant, Value, _)).
 
 error(100, "{0} and {1} cannot both propagate variant '{2}' to the shared dependency: {3}",

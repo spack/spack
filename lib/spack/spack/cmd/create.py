@@ -173,10 +173,11 @@ class AutoreconfPackageTemplate(PackageTemplate):
     )
 
     dependencies = """\
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    with default_args(type="build"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("m4")
 
     # FIXME: Add additional dependencies if required.
     # depends_on("foo")"""
@@ -316,7 +317,8 @@ class BazelPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on("bazel", type="build")"""
+    with default_args(type="build"):
+        depends_on("bazel")"""
 
     body_def = """\
     def install(self, spec, prefix):
@@ -339,7 +341,8 @@ class RacketPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
     # added implicity by the RacketPackage class.
-    # depends_on("racket@8.3:", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("racket@8.3:")"""
 
     body_def = """\
     # FIXME: specify the name of the package,
@@ -378,13 +381,15 @@ class PythonPackageTemplate(PackageTemplate):
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
-    # depends_on("py-setuptools", type="build")
-    # depends_on("py-hatchling", type="build")
-    # depends_on("py-flit-core", type="build")
-    # depends_on("py-poetry-core", type="build")
+    # with default_args(type="build"):
+    #     depends_on("py-setuptools")
+    #     depends_on("py-hatchling")
+    #     depends_on("py-flit-core")
+    #     depends_on("py-poetry-core")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("py-foo")"""
 
     body_def = """\
     def config_settings(self, spec, prefix):
@@ -458,7 +463,8 @@ class RPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("r-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -499,7 +505,8 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -526,7 +533,8 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -539,7 +547,8 @@ class OctavePackageTemplate(PackageTemplate):
     extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("octave-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("octave-foo")"""
 
     def __init__(self, name, url, versions, languages: List[str]):
         # If the user provided `--name octave-splines`, don't rename it
@@ -562,8 +571,9 @@ class RubyPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
     # added implicity by the RubyPackage class.
-    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
-    # depends_on("ruby-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("ruby@X.Y.Z:")
+    #     depends_on("ruby-foo")"""
 
     body_def = """\
     def build(self, spec, prefix):

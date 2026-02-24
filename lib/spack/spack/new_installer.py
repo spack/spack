@@ -27,6 +27,7 @@ import os
 import re
 import selectors
 import shutil
+import signal
 import sys
 import tempfile
 import termios
@@ -34,6 +35,7 @@ import threading
 import time
 import traceback
 import tty
+import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
@@ -360,6 +362,22 @@ def worker_function(
     if spec.external:
         return
 
+    # Start a new session, so our SIGTERM handler can kill all child processes.
+    os.setsid()
+
+    def handle_sigterm(signum, frame):
+        # This SIGTERM handler forwards the signal to child processes, and
+        # then resets the handler to default. It does not raise an exception,
+        # because the assumption is we're stuck in waitpid, and we want to
+        # let child processes finish with SIGTERM before we run the cleanup
+        # code in finally blocks and __exit__ functions and exit. If we exit
+        # too early, the child process may still write to the prefix or stage.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        os.killpg(0, signal.SIGTERM)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
     os.environ["MAKEFLAGS"] = makeflags
     spack.store.STORE = store
     spack.config.CONFIG = config
@@ -551,6 +569,26 @@ class JobServer:
         self.tokens_acquired -= 1
 
     def close(self) -> None:
+        if self.created and self.num_jobs > 1:
+            if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
+            else:
+                # Verify that all build processes released the tokens they acquired.
+                total = self.num_jobs - 1
+                drained = self.acquire(total)
+                if drained != total:
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
+                        stacklevel=2,
+                    )
+
+        self.r_conn.close()
+        self.w_conn.close()
+
         # Remove the FIFO if we created it.
         if self.created and self.fifo_path:
             try:
@@ -561,11 +599,6 @@ class JobServer:
                 os.rmdir(os.path.dirname(self.fifo_path))
             except OSError:
                 pass
-        # TODO: implement a sanity check here:
-        # 1. did we release all tokens we acquired?
-        # 2. if we created the jobserver, did the children return all tokens?
-        self.r_conn.close()
-        self.w_conn.close()
 
 
 def start_build(
@@ -1221,9 +1254,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fail_fast:
-            raise NotImplementedError("Fail-fast installs are not implemented")
-        elif fake:
+        if fake:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
@@ -1233,7 +1264,6 @@ class PackageInstaller:
             raise NotImplementedError("Stopping before an install phase is not implemented")
         elif tests is not False:
             raise NotImplementedError("Tests during install are not implemented")
-        # verbose and concurrent_packages are not worth erroring out for
 
         specs = [pkg.spec for pkg in packages]
 
@@ -1243,6 +1273,7 @@ class PackageInstaller:
         #: Set of DAG hashes to overwrite (if already installed)
         self.overwrite: Set[str] = set(overwrite) if overwrite else set()
         self.keep_prefix = keep_prefix
+        self.fail_fast = fail_fast
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
@@ -1286,6 +1317,15 @@ class PackageInstaller:
         self.running_builds: Dict[int, ChildInfo] = {}
         self.build_status = BuildStatus(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        if concurrent_packages is None:
+            concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
+            # The value 0 in config means no limit (other than self.jobs)
+            if concurrent_packages_config == 0:
+                self.capacity = sys.maxsize
+            else:
+                self.capacity = concurrent_packages_config
+        else:
+            self.capacity = concurrent_packages
         self.reports: Dict[str, spack.report.RequestRecord] = {}
 
     def install(self) -> None:
@@ -1303,16 +1343,15 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
+        selector = selectors.DefaultSelector()
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
             old_stdin_settings = termios.tcgetattr(sys.stdin)
             tty.setcbreak(sys.stdin.fileno())
+            selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
         else:
             old_stdin_settings = None
-
-        selector = selectors.DefaultSelector()
-        selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
 
         # Setup the database write lock. TODO: clean this up
         if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
@@ -1330,10 +1369,11 @@ class PackageInstaller:
                 self._start(selector, jobserver)
 
             while self.pending_builds or self.running_builds or to_insert_in_database:
-                # Only monitor the jobserver if we have pending builds.
-                if self.pending_builds and jobserver.r not in selector.get_map():
+                # Only monitor the jobserver if we have pending builds and capacity.
+                can_schedule_more = self.pending_builds and self.capacity > 0
+                if can_schedule_more and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not self.pending_builds and jobserver.r in selector.get_map():
+                elif not can_schedule_more and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
                 jobserver_token_available = False
@@ -1361,14 +1401,25 @@ class PackageInstaller:
 
                 for pid in finished_pids:
                     build = self.running_builds.pop(pid)
+                    self.capacity += 1
                     jobserver.release()
                     build.cleanup(selector)
                     if build.proc.exitcode == 0:
                         to_insert_in_database.append(build)
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    else:
+                    elif not self.fail_fast or not failures:
+                        # In fail-fast mode, only record the first failure. Subsequent failures may
+                        # be a consequence of us terminating other builds, and should not be
+                        # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+
+                if failures and self.fail_fast:
+                    # Terminate other builds to actually fail fast. We continue in the event loop
+                    # waiting for child processes to finish, which may take a little while.
+                    for child in self.running_builds.values():
+                        child.proc.terminate()
+                    self.pending_builds.clear()
 
                 if stdin_ready:
                     try:
@@ -1401,10 +1452,11 @@ class PackageInstaller:
                     self._start(selector, jobserver)
 
                 # For the rest we try to obtain tokens from the jobserver.
-                if self.pending_builds and jobserver_token_available:
-                    # Then we try to schedule as many jobs as we can acquire tokens for.
-                    max_new_jobs = len(self.pending_builds)
-                    for _ in range(jobserver.acquire(max_new_jobs)):
+                if self.pending_builds and self.capacity > 0 and jobserver_token_available:
+                    # Schedule as many jobs as we can acquire tokens for.
+                    max_new_jobs = min(len(self.pending_builds), self.capacity)
+                    num_acquired = jobserver.acquire(max_new_jobs)
+                    for _ in range(num_acquired):
                         self._start(selector, jobserver)
 
                 # Finally update the UI
@@ -1412,6 +1464,9 @@ class PackageInstaller:
         except KeyboardInterrupt:
             # Cleanup running builds.
             for child in self.running_builds.values():
+                child.proc.terminate()
+            for child in self.running_builds.values():
+                jobserver.release()
                 child.proc.join()
             raise
         finally:
@@ -1448,6 +1503,7 @@ class PackageInstaller:
             db.lock.release_write(db._write)
 
     def _start(self, selector: selectors.BaseSelector, jobserver: JobServer) -> None:
+        self.capacity -= 1
         dag_hash = self.pending_builds.pop()
         explicit = dag_hash in self.explicit
         spec = self.build_graph.nodes[dag_hash]

@@ -255,7 +255,7 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join(f"{loc:_url@v_version? (view: _view)}" for loc in spec_locations)
+        urls = ",".join(f"{loc.url}@v{loc.version}" for loc in spec_locations)
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 

@@ -12,7 +12,8 @@ if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
 import spack.error
-from spack.new_installer import OVERWRITE_GARBAGE_SUFFIX, PrefixPivoter
+import spack.spec
+from spack.new_installer import OVERWRITE_GARBAGE_SUFFIX, PackageInstaller, PrefixPivoter
 
 
 @pytest.fixture
@@ -199,3 +200,30 @@ class TestPrefixPivoterFailureRecovery:
         assert (existing_prefix / "partial_file").exists()
         # Backup directory, failed prefix, and empty garbage directory should exist
         assert len(list(tmp_path.iterdir())) == 3
+
+
+class TestPackageInstallerConstructor:
+    """Tests for PackageInstaller constructor, especially capacity initialization."""
+
+    def test_capacity_explicit_concurrent_packages(self, temporary_store, mock_packages):
+        """Test that capacity is set correctly when concurrent_packages is explicitly provided."""
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert PackageInstaller([spec.package], concurrent_packages=5).capacity == 5
+        assert PackageInstaller([spec.package], concurrent_packages=1).capacity == 1
+
+    def test_capacity_from_config_default_one(
+        self, temporary_store, mock_packages, mutable_config
+    ):
+        """Test that config value of 0 is treated as unlimited."""
+        mutable_config.set("config:concurrent_packages", 0)
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert PackageInstaller([spec.package]).capacity == sys.maxsize
+
+    def test_capacity_from_config_non_zero(self, temporary_store, mock_packages, mutable_config):
+        """Test that non-0 config values are used as-is."""
+        mutable_config.set("config:concurrent_packages", 1)
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert PackageInstaller([spec.package]).capacity == 1

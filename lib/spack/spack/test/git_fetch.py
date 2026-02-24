@@ -27,6 +27,7 @@ from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
 min_opt_string = ".".join(map(str, spack.util.git.MIN_OPT_VERSION))
+min_direct_commit = ".".join(map(str, spack.util.git.MIN_DIRECT_COMMIT_FETCH))
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
@@ -110,6 +111,9 @@ def test_fetch(
     # Construct the package under test
     s = default_mock_concretization("git-test")
     monkeypatch.setitem(s.package.versions, Version("git"), t.args)
+
+    if type_of_test == "commit":
+        s.variants["commit"] = SingleValuedVariant("commit", t.args["commit"])
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -241,8 +245,10 @@ def test_needs_stage(git):
 
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
+@pytest.mark.parametrize("use_commit", [True, False])
 def test_get_full_repo(
     get_full_repo,
+    use_commit,
     git_version,
     mock_git_repository,
     default_mock_concretization,
@@ -254,15 +260,27 @@ def test_get_full_repo(
     if git_version < Version(min_opt_string):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
 
+    # newer git allows for direct commit fetching
+    can_use_direct_commit = git_version >= Version(min_direct_commit)
+
     secure = True
     type_of_test = "tag-branch"
 
     t = mock_git_repository.checks[type_of_test]
 
-    s = default_mock_concretization("git-test")
+    spec_string = "git-test"
+
+    s = default_mock_concretization(spec_string)
+
     args = copy.copy(t.args)
     args["get_full_repo"] = get_full_repo
     monkeypatch.setitem(s.package.versions, Version("git"), args)
+
+    if use_commit:
+        git_exe = mock_git_repository.git_exe
+        url = mock_git_repository.url
+        commit = git_exe("ls-remote", url, t.revision, output=str).strip().split()[0]
+        s.variants["commit"] = SingleValuedVariant("commit", commit)
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
@@ -280,11 +298,27 @@ def test_get_full_repo(
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert nbranches >= 5
-            assert ncommits == 2
+            # default branch commit, plus checkout commit
+            assert ncommits == 2, commits
+            assert nbranches >= 5, branches
         else:
-            assert nbranches == 2
-            assert ncommits == 1
+            assert ncommits == 1, commits
+            if can_use_direct_commit:
+                if use_commit:
+                    # only commit (detached state)
+                    assert nbranches == 1, branches
+                else:
+                    # tag, commit (detached state)
+                    assert nbranches == 2, branches
+            else:
+                if use_commit:
+                    # default branch, tag, commit (detached state)
+                    # git does not have a rewind, avoid messing with git history by
+                    # accepting detachment
+                    assert nbranches == 3, branches
+                else:
+                    # default branch plus tag
+                    assert nbranches == 2, branches
 
 
 @pytest.mark.disable_clean_stage_check
