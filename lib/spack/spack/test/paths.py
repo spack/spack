@@ -263,10 +263,8 @@ class SetAnXdgVarAndReadDataHome:
     possible.
     """
 
-    def __init__(self, home_prefix, base_prefix, empty_dir):
+    def __init__(self, home_prefix):
         self.home_prefix = home_prefix
-        self.base_prefix = base_prefix
-        self.empty_dir = empty_dir
 
     def __call__(self):
         import spack.paths
@@ -284,6 +282,9 @@ def all_dirs_empty(a_dir):
 
 
 def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
+    # Unlike the other tests in this module, this is specifically testing
+    # the behavior of the spack.paths module vs. (the more targeted testing
+    # of) classes defined within it.
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
 
@@ -293,16 +294,13 @@ def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
 
     import spack.paths
 
-    #monkeypatch.setattr(spack.paths, "dir_is_occupied", all_dirs_empty)
-
     pbtest = SpackPathsBase(base_prefix)
     pbtest.old_install_path = empty_dir
-
     ptest = SpackPaths(pbtest)
     monkeypatch.setattr(spack.paths, "locations", ptest)
 
     spack_process = spack.subprocess_context.SpackTestProcess(
-        SetAnXdgVarAndReadDataHome(home_prefix, base_prefix, empty_dir)
+        SetAnXdgVarAndReadDataHome(home_prefix)
     )
     p = spack_process.create()
     p.start()
