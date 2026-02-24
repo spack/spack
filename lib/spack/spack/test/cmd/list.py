@@ -135,7 +135,8 @@ def test_list_format_non_github_repo(tmp_path: pathlib.Path, mock_util_executabl
     (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
     package_root = repo_root / "packages" / pkg_name
     package_root.mkdir(parents=True)
-    (package_root / "package.py").write_text(
+    package_path = package_root / "package.py"
+    package_path.write_text(
         """\
 from spack.package import *
 
@@ -152,9 +153,7 @@ class Mypkg(Package):
         registered_responses["rev-parse"] = str(package_root) + os.sep
 
         output = list("--format", "version_json", pkg_name)
-        for ln in output.split("\n"):
-            print(f"TLD: {ln}")
-        assert f"{registered_responses['rev-parse']}package.py" in output
+        assert package_path.as_uri() in output
 
 
 def test_list_update(tmp_path: pathlib.Path):
