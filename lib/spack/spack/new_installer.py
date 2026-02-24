@@ -87,7 +87,16 @@ OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 class ChildInfo:
     """Information about a child process."""
 
-    __slots__ = ("proc", "spec", "output_r_conn", "state_r_conn", "control_w_conn", "explicit")
+    __slots__ = (
+        "proc",
+        "spec",
+        "output_r_conn",
+        "state_r_conn",
+        "control_w_conn",
+        "explicit",
+        "prefix_lock",
+        "log_path",
+    )
 
     def __init__(
         self,
@@ -97,6 +106,7 @@ class ChildInfo:
         state_r_conn: Connection,
         control_w_conn: Connection,
         explicit: bool = False,
+        log_path: str = "",
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -104,6 +114,7 @@ class ChildInfo:
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
         self.explicit = explicit
+        self.log_path = log_path
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
         """Unregister and close file descriptors, and join the child process."""
@@ -331,6 +342,7 @@ def worker_function(
     js2: Optional[Connection],
     store: spack.store.Store,
     config: spack.config.Configuration,
+    log_path: str = "",
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -383,12 +395,8 @@ def worker_function(
     spack.config.CONFIG = config
     spack.paths.set_working_dir()
 
-    # Create a log file in the root of the stage dir.
-    log_fd, log_path = tempfile.mkstemp(
-        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
-        suffix=".log",
-        dir=spack.stage.get_stage_root(),
-    )
+    # Open the log file created by the parent process.
+    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC)
     tee = Tee(echo_control, parent, log_fd)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
@@ -627,6 +635,13 @@ def start_build(
     makeflags = jobserver.makeflags(gmake)
     fifo = "--jobserver-auth=fifo:" in makeflags
 
+    log_fd, log_path = tempfile.mkstemp(
+        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
+        suffix=".log",
+        dir=spack.stage.get_stage_root(),
+    )
+    os.close(log_fd)  # child will open it
+
     proc = Process(
         target=worker_function,
         args=(
@@ -649,6 +664,7 @@ def start_build(
             None if fifo else jobserver.w_conn,
             spack.store.STORE,
             spack.config.CONFIG,
+            log_path,
         ),
     )
     proc.start()
@@ -662,7 +678,7 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit)
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit, log_path)
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
@@ -1315,6 +1331,7 @@ class PackageInstaller:
             self.explicit = explicit
 
         self.running_builds: Dict[int, ChildInfo] = {}
+        self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         if concurrent_packages is None:
@@ -1482,7 +1499,7 @@ class PackageInstaller:
             jobserver.close()
 
         if failures:
-            lines = [f"{s}: {s.package.log_path}" for s in failures]
+            lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
@@ -1527,6 +1544,7 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             jobserver=jobserver,
         )
+        self.log_paths[dag_hash] = child_info.log_path
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
