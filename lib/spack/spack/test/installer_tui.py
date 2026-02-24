@@ -1370,3 +1370,46 @@ class TestBuildStatusColor:
         status.add_build(spec, explicit=True)
         status.update_state(spec.dag_hash(), "finished")
         assert "\033[" not in stdout.getvalue()
+
+
+class TestTargetJobs:
+    """Test set_jobs and its effect on the header."""
+
+    def test_set_jobs_marks_dirty(self):
+        """set_jobs with a new value should update target_jobs and mark dirty."""
+        status, _, _ = create_build_status()
+        status.dirty = False
+        status.set_jobs(3, 2)
+        assert status.actual_jobs == 3
+        assert status.target_jobs == 2
+        assert status.dirty is True
+        status.set_jobs(2, 2)
+        assert status.actual_jobs == 2
+        assert status.target_jobs == 2
+
+    def test_set_jobs_same_value_no_dirty(self):
+        """set_jobs with the same value should not mark dirty."""
+        status, _, _ = create_build_status()
+        status.set_jobs(5, 5)
+        status.dirty = False
+        status.set_jobs(5, 5)
+        assert status.dirty is False
+
+    def test_header_shows_target_jobs(self):
+        """The rendered header should contain the target_jobs count and the word 'jobs'."""
+        status, _, fake_stdout = create_build_status(total=1)
+        add_mock_builds(status, 1)
+        status.set_jobs(4, 4)
+        status.update()
+        output = fake_stdout.getvalue()
+        assert "4" in output
+        assert "jobs" in output
+
+    def test_header_shows_arrow_when_pending(self):
+        """When actual != target, the header should show 'actual=>target jobs'."""
+        status, _, fake_stdout = create_build_status(total=1)
+        add_mock_builds(status, 1)
+        status.set_jobs(4, 2)
+        status.update()
+        output = fake_stdout.getvalue()
+        assert "4=>2" in output

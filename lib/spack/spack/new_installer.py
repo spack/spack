@@ -704,7 +704,14 @@ class JobServer:
     def __init__(self, num_jobs: int) -> None:
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
+        #: The number of jobs to run concurrently. This translates to `num_jobs - 1` tokens in the
+        #: jobserver.
         self.num_jobs = num_jobs
+        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
+        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
+        #: reflect that yet. This value is used in the UI. The invariant is that self.target_jobs
+        #: can only be modified if self.created is True.
+        self.target_jobs = num_jobs
         self.fifo_path: Optional[str] = None
         self.created = False
         self._setup()
@@ -747,6 +754,35 @@ class JobServer:
         else:
             return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
 
+    def has_target_parallelism(self) -> bool:
+        return self.num_jobs == self.target_jobs
+
+    def increase_parallelism(self) -> None:
+        """Add one token to the jobserver to increase parallelism; this should always work."""
+        if not self.created:
+            return
+        os.write(self.w, b"+")
+        self.target_jobs += 1
+        self.num_jobs += 1
+
+    def decrease_parallelism(self) -> None:
+        """Request an eventual concurrency decrease by 1."""
+        if not self.created or self.target_jobs <= 1:
+            return
+        self.target_jobs -= 1
+        self.maybe_discard_tokens()
+
+    def maybe_discard_tokens(self) -> None:
+        """Try to get reduce parallelism by discarding tokens."""
+        to_discard = self.num_jobs - self.target_jobs
+        if to_discard <= 0:
+            return
+        try:
+            # The read may return zero or just fewer bytes than requested; we'll try again later.
+            self.num_jobs -= len(os.read(self.r, to_discard))
+        except BlockingIOError:
+            pass
+
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
         tokens actually acquired (may be less than requested, or zero)."""
@@ -762,8 +798,12 @@ class JobServer:
         # The last job to quit has an implicit token, so don't release if we have none.
         if self.tokens_acquired == 0:
             return
-        os.write(self.w, b"+")
         self.tokens_acquired -= 1
+        if self.target_jobs < self.num_jobs:
+            # If a decrease in parallelism is requested, discard a token instead of releasing it.
+            self.num_jobs -= 1
+        else:
+            os.write(self.w, b"+")
 
     def close(self) -> None:
         if self.created and self.num_jobs > 1:
@@ -1020,6 +1060,8 @@ class BuildStatus:
         self.search_term = ""
         self.search_mode = False
         self.log_ends_with_newline = True
+        self.actual_jobs: int = 0
+        self.target_jobs: int = 0
 
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
@@ -1176,6 +1218,14 @@ class BuildStatus:
             except (KeyError, OSError):
                 pass
 
+    def set_jobs(self, actual: int, target: int) -> None:
+        """Set the actual and target number of jobs to run concurrently."""
+        if actual == self.actual_jobs and target == self.target_jobs:
+            return
+        self.actual_jobs = actual
+        self.target_jobs = target
+        self.dirty = True
+
     def update_state(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
         build_info = self.builds[build_id]
@@ -1284,13 +1334,20 @@ class BuildStatus:
             else:
                 bold = reset = cyan = ""
 
+            if self.actual_jobs != self.target_jobs:
+                jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
+            else:
+                jobs_str = str(self.target_jobs)
             long_header_len = len(
-                f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
+                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
+                "  /: filter  v: logs  n/p: next/prev"
             )
             if long_header_len < max_width:
                 self._println(
                     buffer,
                     f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                    f"  {cyan}+{reset}/{cyan}-{reset}: "
+                    f"{jobs_str} jobs"
                     f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
                     f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
                 )
@@ -1885,6 +1942,8 @@ class PackageInstaller:
             filter_padding=spack.store.STORE.has_padding(),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        self.build_status.actual_jobs = self.jobs
+        self.build_status.target_jobs = self.jobs
         if concurrent_packages is None:
             concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
             # The value 0 in config means no limit (other than self.jobs)
@@ -1945,11 +2004,17 @@ class PackageInstaller:
 
             while self.pending_builds or self.running_builds or finished_builds:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
-                # spec is not locked by another process.
-                can_schedule_more = self.pending_builds and self.capacity and not blocked
-                if can_schedule_more and jobserver.r not in selector.get_map():
+                # spec is not locked by another process. Also listen if the target parallelism is
+                # reduced.
+                wake_on_jobserver = (
+                    self.pending_builds
+                    and self.capacity
+                    and not blocked
+                    or not jobserver.has_target_parallelism()
+                )
+                if wake_on_jobserver and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not can_schedule_more and jobserver.r in selector.get_map():
+                elif not wake_on_jobserver and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
                 stdin_ready = False
@@ -1975,6 +2040,9 @@ class PackageInstaller:
                     elif data == "sigwinch":
                         os.read(sigwinch_r, 64)  # drain the pipe
                         self.build_status.on_resize()
+                    elif data == "jobserver" and not jobserver.has_target_parallelism():
+                        jobserver.maybe_discard_tokens()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
                 for pid in finished_pids:
@@ -1983,6 +2051,7 @@ class PackageInstaller:
                     jobserver.release()
                     self._drain_child_output(build)
                     self.state_buffers.pop(build.state_r_conn.fileno(), None)
+                    self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
                     build.cleanup(selector)
                     exitcode = build.proc.exitcode
                     assert exitcode is not None, "Finished build should have exit code set"
@@ -2026,6 +2095,12 @@ class PackageInstaller:
                         self.build_status.next(1)
                     elif char == "p" or char == "N":
                         self.build_status.next(-1)
+                    elif char == "+":
+                        jobserver.increase_parallelism()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                    elif char == "-":
+                        jobserver.decrease_parallelism()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 # Insert into the database if we have any finished builds, and either the delay
                 # interval has passed, or we're done with all builds. The database save is not
