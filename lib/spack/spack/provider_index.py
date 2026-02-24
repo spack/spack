@@ -53,18 +53,8 @@ class ProviderIndex:
         self.repository = repository
         self.restrict = restrict
         self.providers = {}
-
-        specs = specs or []
-        for spec in specs:
-            if isinstance(spec, str):
-                from spack.spec import Spec
-
-                spec = Spec(spec)
-
-            if self.repository.is_virtual_safe(spec.name):
-                continue
-
-            self.update(spec)
+        if specs:
+            self.update_packages(specs)
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         """Return a list of specs of all packages that provide virtual packages with the supplied
@@ -122,57 +112,55 @@ class ProviderIndex:
     def __repr__(self):
         return repr(self.providers)
 
-    def update(self, spec: Union[str, "spack.spec.Spec"]) -> None:
+    def update_packages(self, specs: Iterable[Union[str, "spack.spec.Spec"]]):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
         """
-        if isinstance(spec, str):
-            from spack.spec import Spec
+        from spack.spec import Spec
 
-            spec = Spec(spec)
+        for spec in specs:
+            if not isinstance(spec, Spec):
+                spec = Spec(spec)
 
-        if not spec.name:
-            # Empty specs do not have a package
-            return
+            if not spec.name or self.repository.is_virtual_safe(spec.name):
+                # Only non-virtual packages with name can provide virtual specs.
+                continue
 
-        msg = "cannot update an index passing the virtual spec '{}'".format(spec.name)
-        assert not self.repository.is_virtual_safe(spec.name), msg
+            pkg_cls = self.repository.get_pkg_class(spec.name)
+            for provider_spec_readonly, provided_specs in pkg_cls.provided.items():
+                for provided_spec in provided_specs:
+                    # TODO: fix this comment.
+                    # We want satisfaction other than flags
+                    provider_spec = provider_spec_readonly.copy()
+                    provider_spec.compiler_flags = spec.compiler_flags.copy()
 
-        pkg_cls = self.repository.get_pkg_class(spec.name)
-        for provider_spec_readonly, provided_specs in pkg_cls.provided.items():
-            for provided_spec in provided_specs:
-                # TODO: fix this comment.
-                # We want satisfaction other than flags
-                provider_spec = provider_spec_readonly.copy()
-                provider_spec.compiler_flags = spec.compiler_flags.copy()
+                    if spec.intersects(provider_spec, deps=False):
+                        provided_name = provided_spec.name
 
-                if spec.intersects(provider_spec, deps=False):
-                    provided_name = provided_spec.name
+                        provider_map = self.providers.setdefault(provided_name, {})
+                        if provided_spec not in provider_map:
+                            provider_map[provided_spec] = set()
 
-                    provider_map = self.providers.setdefault(provided_name, {})
-                    if provided_spec not in provider_map:
-                        provider_map[provided_spec] = set()
+                        if self.restrict:
+                            provider_set = provider_map[provided_spec]
 
-                    if self.restrict:
-                        provider_set = provider_map[provided_spec]
+                            # If this package existed in the index before,
+                            # need to take the old versions out, as they're
+                            # now more constrained.
+                            old = {s for s in provider_set if s.name == spec.name}
+                            provider_set.difference_update(old)
 
-                        # If this package existed in the index before,
-                        # need to take the old versions out, as they're
-                        # now more constrained.
-                        old = set([s for s in provider_set if s.name == spec.name])
-                        provider_set.difference_update(old)
+                            # Now add the new version.
+                            provider_set.add(spec)
 
-                        # Now add the new version.
-                        provider_set.add(spec)
-
-                    else:
-                        # Before putting the spec in the map, constrain
-                        # it so that it provides what was asked for.
-                        constrained = spec.copy()
-                        constrained.constrain(provider_spec)
-                        provider_map[provided_spec].add(constrained)
+                        else:
+                            # Before putting the spec in the map, constrain
+                            # it so that it provides what was asked for.
+                            constrained = spec.copy()
+                            constrained.constrain(provider_spec)
+                            provider_map[provided_spec].add(constrained)
 
     def to_json(self, stream=None):
         """Dump a JSON representation of this object.
@@ -207,14 +195,14 @@ class ProviderIndex:
 
                 spdict[provided_spec] = spdict[provided_spec].union(opdict[provided_spec])
 
-    def remove_provider(self, pkg_name):
+    def remove_providers(self, pkg_names: Set[str]):
         """Remove a provider from the ProviderIndex."""
         empty_pkg_dict = []
         for pkg, pkg_dict in self.providers.items():
             empty_pset = []
             for provided, pset in pkg_dict.items():
-                same_name = set(p for p in pset if p.fullname == pkg_name)
-                pset.difference_update(same_name)
+                to_remove = {spec for spec in pset if spec.name in pkg_names}
+                pset.difference_update(to_remove)
 
                 if not pset:
                     empty_pset.append(provided)

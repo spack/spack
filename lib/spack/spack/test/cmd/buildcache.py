@@ -556,7 +556,9 @@ def test_check_mirror_for_layout(v2_buildcache_layout, mutable_config, capfd):
     assert all([word in err for word in ["Warning", "missing", "layout"]])
 
 
-def test_url_buildcache_entry_v2_exists(v2_buildcache_layout, mock_packages, mutable_config):
+def test_url_buildcache_entry_v2_exists(
+    v2_buildcache_layout, mock_packages, mutable_config, do_not_check_runtimes_on_reuse
+):
     """Test existence check for v2 buildcache entries"""
     test_mirror_path = v2_buildcache_layout("unsigned")
     mirror_url = pathlib.Path(test_mirror_path).as_uri()
@@ -603,6 +605,7 @@ def test_install_v2_layout(
     mutable_mock_env_path,
     install_mockery,
     mock_gnupghome,
+    do_not_check_runtimes_on_reuse,
 ):
     """Ensure we can still install from signed and unsigned v2 buildcache"""
     test_mirror_path = v2_buildcache_layout(signing)

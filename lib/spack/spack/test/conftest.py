@@ -18,6 +18,7 @@ import shutil
 import stat
 import sys
 import tempfile
+import textwrap
 import xml.etree.ElementTree
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
@@ -936,6 +937,40 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     modules = tmp_path / "site" / "modules.yaml"
     modules_template = test_config / "modules.yaml"
     modules.write_text(modules_template.read_text().format(tcl_root, lmod_root))
+
+    for scope in ("spack", "user", "site", "system"):
+        scope_path = tmp_path / scope
+        scope_path.mkdir(exist_ok=True)
+
+    include = tmp_path / "spack" / "include.yaml"
+    # Need to use relative include paths here so it works for mutable_config fixture too
+    with include.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """
+                include:
+                # user configuration scope
+                - name: "user"
+                  path_override_env_var: SPACK_USER_CONFIG_PATH
+                  path: ../user
+                  optional: true
+                  prefer_modify: true
+                  when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+                # site configuration scope
+                - name: "site"
+                  path: ../site
+                  optional: true
+
+                # system configuration scope
+                - name: "system"
+                  path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
+                  path: ../system
+                  optional: true
+                  when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+                """
+            )
+        )
     yield tmp_path
 
 
@@ -948,15 +983,7 @@ def _create_mock_configuration_scopes(configuration_dir):
         ),
         (
             ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("site", str(configuration_dir / "site")),
-        ),
-        (
-            ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("system", str(configuration_dir / "system")),
-        ),
-        (
-            ConfigScopePriority.CONFIG_FILES,
-            spack.config.DirectoryConfigScope("user", str(configuration_dir / "user")),
+            spack.config.DirectoryConfigScope("spack", str(configuration_dir / "spack")),
         ),
         (ConfigScopePriority.COMMAND_LINE, spack.config.InternalConfigScope("command_line")),
     ]
@@ -1756,7 +1783,9 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
             revision=tag_branch, file=tag_file, args={"git": url, "branch": tag_branch}
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
-        "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "commit": Bunch(
+            revision=r1, file=r1_file, args={"git": url, "branch": branch, "commit": r1}
+        ),
         "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
@@ -2016,7 +2045,7 @@ def clear_directive_functions():
     # Make sure any directive functions overidden by tests are cleared before
     # proceeding with subsequent tests that may depend on the original
     # functions.
-    spack.directives_meta.DirectiveMeta._directives_to_be_executed = []
+    spack.directives_meta.DirectiveMeta._directives_to_be_executed.clear()
 
 
 @pytest.fixture

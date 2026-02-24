@@ -636,7 +636,7 @@ For example, a ``spack.yaml`` manifest file containing some package preference c
            mpi: [openmpi]
      # ...
 
-This configuration sets the default mpi provider to be openmpi.
+This configuration sets the default ``mpi`` provider to be ``openmpi``.
 
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -876,7 +876,7 @@ The valid variables for a ``when`` clause are:
    The platform string of the default Spack architecture on the system.
 
 #. ``os``.
-   The os string of the default Spack architecture on the system.
+   The OS string of the default Spack architecture on the system.
 
 #. ``target``.
    The target string of the default Spack architecture on the system.
@@ -1222,7 +1222,7 @@ Adding post-install hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another advanced use-case of generated ``Makefile``\s is running a post-install command for each package.
-These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a buildcache.
+These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a build cache.
 
 This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS`` variable.
 Assuming we have an active and concrete environment, we generate the associated ``Makefile`` with a prefix ``example``:
@@ -1235,7 +1235,7 @@ And we now include it in a different ``Makefile``, in which we create a target `
 This target depends on the particular package installation.
 In this target we automatically have the target-specific ``HASH`` and ``SPEC`` variables at our disposal.
 They are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
-Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
+Finally, we have an entry point target ``push`` that will update the build cache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
 .. code-block:: Makefile

@@ -27,6 +27,7 @@ import os
 import re
 import selectors
 import shutil
+import signal
 import sys
 import tempfile
 import termios
@@ -34,6 +35,7 @@ import threading
 import time
 import traceback
 import tty
+import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
@@ -360,6 +362,22 @@ def worker_function(
     if spec.external:
         return
 
+    # Start a new session, so our SIGTERM handler can kill all child processes.
+    os.setsid()
+
+    def handle_sigterm(signum, frame):
+        # This SIGTERM handler forwards the signal to child processes, and
+        # then resets the handler to default. It does not raise an exception,
+        # because the assumption is we're stuck in waitpid, and we want to
+        # let child processes finish with SIGTERM before we run the cleanup
+        # code in finally blocks and __exit__ functions and exit. If we exit
+        # too early, the child process may still write to the prefix or stage.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        os.killpg(0, signal.SIGTERM)
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
     os.environ["MAKEFLAGS"] = makeflags
     spack.store.STORE = store
     spack.config.CONFIG = config
@@ -551,6 +569,26 @@ class JobServer:
         self.tokens_acquired -= 1
 
     def close(self) -> None:
+        if self.created and self.num_jobs > 1:
+            if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
+            else:
+                # Verify that all build processes released the tokens they acquired.
+                total = self.num_jobs - 1
+                drained = self.acquire(total)
+                if drained != total:
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
+                        stacklevel=2,
+                    )
+
+        self.r_conn.close()
+        self.w_conn.close()
+
         # Remove the FIFO if we created it.
         if self.created and self.fifo_path:
             try:
@@ -561,11 +599,6 @@ class JobServer:
                 os.rmdir(os.path.dirname(self.fifo_path))
             except OSError:
                 pass
-        # TODO: implement a sanity check here:
-        # 1. did we release all tokens we acquired?
-        # 2. if we created the jobserver, did the children return all tokens?
-        self.r_conn.close()
-        self.w_conn.close()
 
 
 def start_build(
@@ -1221,9 +1254,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fail_fast:
-            raise NotImplementedError("Fail-fast installs are not implemented")
-        elif fake:
+        if fake:
             raise NotImplementedError("Fake installs are not implemented")
         elif install_source:
             raise NotImplementedError("Installing sources is not implemented")
@@ -1243,6 +1274,7 @@ class PackageInstaller:
         #: Set of DAG hashes to overwrite (if already installed)
         self.overwrite: Set[str] = set(overwrite) if overwrite else set()
         self.keep_prefix = keep_prefix
+        self.fail_fast = fail_fast
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
@@ -1303,16 +1335,15 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
+        selector = selectors.DefaultSelector()
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
             old_stdin_settings = termios.tcgetattr(sys.stdin)
             tty.setcbreak(sys.stdin.fileno())
+            selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
         else:
             old_stdin_settings = None
-
-        selector = selectors.DefaultSelector()
-        selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
 
         # Setup the database write lock. TODO: clean this up
         if isinstance(spack.store.STORE.db.lock, spack.util.lock.Lock):
@@ -1366,9 +1397,19 @@ class PackageInstaller:
                     if build.proc.exitcode == 0:
                         to_insert_in_database.append(build)
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    else:
+                    elif not self.fail_fast or not failures:
+                        # In fail-fast mode, only record the first failure. Subsequent failures may
+                        # be a consequence of us terminating other builds, and should not be
+                        # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+
+                if failures and self.fail_fast:
+                    # Terminate other builds to actually fail fast. We continue in the event loop
+                    # waiting for child processes to finish, which may take a little while.
+                    for child in self.running_builds.values():
+                        child.proc.terminate()
+                    self.pending_builds.clear()
 
                 if stdin_ready:
                     try:
@@ -1412,6 +1453,9 @@ class PackageInstaller:
         except KeyboardInterrupt:
             # Cleanup running builds.
             for child in self.running_builds.values():
+                child.proc.terminate()
+            for child in self.running_builds.values():
+                jobserver.release()
                 child.proc.join()
             raise
         finally:

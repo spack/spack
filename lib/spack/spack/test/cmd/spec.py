@@ -32,7 +32,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
-def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
+def test_spec_concretizer_args(mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
     It's here to make sure that everything works from CLI
@@ -171,7 +171,7 @@ def test_env_aware_spec(mutable_mock_env_path):
     [
         ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=develop", None),
         ("develop-branch-version", "git." + "a" * 40 + "=develop", None),
-        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", spack.error.FetchError),
+        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", spack.error.PackageError),
         ("develop-branch-version", "git.foo=0.2.15", None),
     ],
 )

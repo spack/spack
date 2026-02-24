@@ -2,18 +2,32 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import collections.abc
+import collections
 import functools
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Type, Union
+from typing import Any, Callable, Dict, List, Set, Tuple, Type, TypeVar, Union
+
+from spack.vendor.typing_extensions import ParamSpec
 
 import spack.error
-import spack.llnl.util.lang
 import spack.repo
 import spack.spec
+from spack.llnl.util.lang import dedupe
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 #: Names of possible directives. This list is mostly populated using the @directive decorator.
 #: Some directives leverage others and in that case are not automatically added.
 directive_names = ["build_system"]
+
+SPEC_CACHE: Dict[str, spack.spec.Spec] = {}
+
+
+def get_spec(spec_str: str) -> spack.spec.Spec:
+    """Get a spec from the cache, or create it if not present."""
+    if spec_str not in SPEC_CACHE:
+        SPEC_CACHE[spec_str] = spack.spec._ImmutableSpec(spec_str)
+    return SPEC_CACHE[spec_str]
 
 
 class DirectiveMeta(type):
@@ -21,215 +35,268 @@ class DirectiveMeta(type):
     area into the package.
     """
 
-    # Set of all known directives
+    #: Registry of {directive_name: [list_of_dicts_it_modifies]} populated by @directive
+    _directive_to_dicts: Dict[str, Tuple[str, ...]] = {}
+    #: Inverted index of {dict_name: [list_of_directives_modifying_it]}
+    _dict_to_directives: Dict[str, List[str]] = collections.defaultdict(list)
+    #: Maps dictionary name to its descriptor instance
+    _descriptor_cache: Dict[str, "DirectiveDictDescriptor"] = {}
+    #: Set of all known directive dictionary names from `@directive(dicts=...)`
     _directive_dict_names: Set[str] = set()
-    _directives_to_be_executed: List[Callable] = []
-    _when_constraints_from_context: List[spack.spec.Spec] = []
-    _default_args: List[dict] = []
+    #: Lists of directives to be executed for the class being defined, grouped by directive
+    #: function name (e.g. "depends_on", "version", etc.)
+    _directives_to_be_executed: Dict[str, List[Callable]] = collections.defaultdict(list)
+    #: Stack of when constraints from `with when(...)` context managers
+    _when_constraints_stack: List[str] = []
+    #: Stack of default args from `with default_args(...)` context managers
+    _default_args_stack: List[dict] = []
+    #: This property is set *automatically* during class definition as directives are invoked,
+    #: if any ``depends_on`` or ``extends`` calls include patches for dependencies. This flag can
+    #: be used as an optimization to detect whether a package provides patches for dependencies,
+    #: without triggering the expensive deferred execution of those directives (without populating
+    #: the ``dependencies`` dictionary).
+    _patches_dependencies: bool = False
 
     def __new__(
         cls: Type["DirectiveMeta"], name: str, bases: tuple, attr_dict: dict
     ) -> "DirectiveMeta":
-        # Initialize the attribute containing the list of directives
-        # to be executed. Here we go reversed because we want to execute
-        # commands:
-        # 1. in the order they were defined
-        # 2. following the MRO
-        attr_dict["_directives_to_be_executed"] = []
-        for base in reversed(bases):
-            try:
-                directive_from_base = base._directives_to_be_executed
-                attr_dict["_directives_to_be_executed"].extend(directive_from_base)
-            except AttributeError:
-                # The base class didn't have the required attribute.
-                # Continue searching
-                pass
+        attr_dict["_patches_dependencies"] = DirectiveMeta._patches_dependencies
+        # Initialize the attribute containing the list of directives to be executed. Here we go
+        # reversed because we want to execute commands in the order they were defined, following
+        # the MRO.
+        merged: Dict[str, List[Callable]] = {}
+        sources = [getattr(b, "_directives_to_be_executed", None) or {} for b in reversed(bases)]
+        for source in sources:
+            for key, directive_list in source.items():
+                merged.setdefault(key, []).extend(directive_list)
 
-        # De-duplicates directives from base classes
-        attr_dict["_directives_to_be_executed"] = [
-            x for x in spack.llnl.util.lang.dedupe(attr_dict["_directives_to_be_executed"])
-        ]
+        merged = {key: list(dedupe(directive_list)) for key, directive_list in merged.items()}
 
-        # Move things to be executed from module scope (where they
-        # are collected first) to class scope
-        if DirectiveMeta._directives_to_be_executed:
-            attr_dict["_directives_to_be_executed"].extend(
-                DirectiveMeta._directives_to_be_executed
-            )
-            DirectiveMeta._directives_to_be_executed = []
+        # Add current class's directives (no deduplication needed here)
+        for key, directive_list in DirectiveMeta._directives_to_be_executed.items():
+            merged.setdefault(key, []).extend(directive_list)
+
+        attr_dict["_directives_to_be_executed"] = merged
+
+        DirectiveMeta._directives_to_be_executed.clear()
+        DirectiveMeta._patches_dependencies = False
+
+        # Add descriptors for all known directive dictionaries
+        for dict_name in DirectiveMeta._directive_dict_names:
+            # Where the actual data will be stored
+            attr_dict[f"_{dict_name}"] = None
+            # Descriptor to lazily initialize and populate the dictionary
+            attr_dict[dict_name] = DirectiveMeta._get_descriptor(dict_name)
 
         return super(DirectiveMeta, cls).__new__(cls, name, bases, attr_dict)
 
     def __init__(cls: "DirectiveMeta", name: str, bases: tuple, attr_dict: dict):
-        # The instance is being initialized: if it is a package we must ensure
-        # that the directives are called to set it up.
-
         if spack.repo.is_package_module(cls.__module__):
-            # Ensure the presence of the dictionaries associated with the directives.
-            # All dictionaries are defaultdicts that create lists for missing keys.
-            for d in DirectiveMeta._directive_dict_names:
-                setattr(cls, d, {})
-
-            # Lazily execute directives
-            for directive in cls._directives_to_be_executed:
+            # Historically, maintainers was not a directive. They were simply set as class
+            # attributes `maintainers = ["alice", "bob"]`. Therefore, we execute these directives
+            # eagerly.
+            for directive in cls._directives_to_be_executed.get("maintainers", ()):
                 directive(cls)
-
-            # Ignore any directives executed *within* top-level
-            # directives by clearing out the queue they're appended to
-            DirectiveMeta._directives_to_be_executed = []
-
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
     @staticmethod
-    def push_to_context(when_spec: spack.spec.Spec) -> None:
-        """Add a spec to the context constraints."""
-        DirectiveMeta._when_constraints_from_context.append(when_spec)
+    def register_directive(name: str, dicts: Tuple[str, ...]) -> None:
+        """Called by @directive to register relationships."""
+        DirectiveMeta._directive_to_dicts[name] = dicts
+        for d in dicts:
+            DirectiveMeta._dict_to_directives[d].append(name)
 
     @staticmethod
-    def pop_from_context() -> spack.spec.Spec:
+    def _get_descriptor(name: str) -> "DirectiveDictDescriptor":
+        """Returns a singleton descriptor for the given dictionary name."""
+        if name not in DirectiveMeta._descriptor_cache:
+            DirectiveMeta._descriptor_cache[name] = DirectiveDictDescriptor(name)
+        return DirectiveMeta._descriptor_cache[name]
+
+    @staticmethod
+    def push_when_constraint(when_spec: str) -> None:
+        """Add a spec to the context constraints."""
+        DirectiveMeta._when_constraints_stack.append(when_spec)
+
+    @staticmethod
+    def pop_when_constraint() -> str:
         """Pop the last constraint from the context"""
-        return DirectiveMeta._when_constraints_from_context.pop()
+        return DirectiveMeta._when_constraints_stack.pop()
 
     @staticmethod
     def push_default_args(default_args: Dict[str, Any]) -> None:
         """Push default arguments"""
-        DirectiveMeta._default_args.append(default_args)
+        DirectiveMeta._default_args_stack.append(default_args)
 
     @staticmethod
     def pop_default_args() -> dict:
         """Pop default arguments"""
-        return DirectiveMeta._default_args.pop()
+        return DirectiveMeta._default_args_stack.pop()
 
     @staticmethod
-    def _remove_directives(args):
-        # If any of the arguments are executors returned by a directive passed as an argument,
-        # don't execute them lazily. Instead, let the called directive handle them. This allows
-        # nested directive calls in packages.  The caller can return the directive if it should be
-        # queued. Nasty, but it's the best way I can think of to avoid side effects if directive
-        # results are passed as args
-        directives = DirectiveMeta._directives_to_be_executed
-        for arg in args:
-            if isinstance(arg, (list, tuple)):
-                # Descend into args that are lists or tuples
-                DirectiveMeta._remove_directives(arg)
-            elif callable(arg):  # directives are always callable, and very rare
-                # Remove directives args from the exec queue
-                for directive in directives:
-                    if arg is directive:
-                        directives.remove(directive)  # iterations ends, so mutation is fine
+    def _remove_kwarg_value_directives_from_queue(value) -> None:
+        """Remove directives found in a kwarg value from the execution queue."""
+        # Certain keyword argument values of directives may themselves be (lists of) directives. An
+        # example of this is ``depends_on(..., patches=[patch(...), ...])``. In that case, we
+        # should not execute those directives as part of the current package, but let the called
+        # directive handle them. This function removes such directives from the execution queue.
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                DirectiveMeta._remove_kwarg_value_directives_from_queue(item)
+        elif callable(value):  # directives are always callable
+            # Remove directives args from the exec queue
+            for lst in DirectiveMeta._directives_to_be_executed.values():
+                for directive in lst:
+                    if value is directive:
+                        lst.remove(directive)  # iterations ends, so mutation is fine
                         break
 
     @staticmethod
-    def directive(dicts: Optional[Union[Sequence[str], str]] = None) -> Callable:
+    def _get_execution_plan(target_dict: str) -> Tuple[List[str], List[str]]:
+        """Calculates the closure of dicts and directives needed to populate target_dict."""
+        dicts_involved = {target_dict}
+        directives_involved = set()
+        stack = [target_dict]
+
+        while stack:
+            current_dict = stack.pop()
+
+            for directive_name in DirectiveMeta._dict_to_directives.get(current_dict, ()):
+                if directive_name in directives_involved:
+                    continue
+
+                directives_involved.add(directive_name)
+
+                for other_dict in DirectiveMeta._directive_to_dicts[directive_name]:
+                    if other_dict not in dicts_involved:
+                        dicts_involved.add(other_dict)
+                        stack.append(other_dict)
+
+        return sorted(dicts_involved), sorted(directives_involved)
+
+
+class DirectiveDictDescriptor:
+    """A descriptor that lazily executes directives on first access."""
+
+    def __init__(self, name: str):
+        self.name = name
+        self.private_name = f"_{name}"
+        self.dicts_to_init, self.directives_to_run = DirectiveMeta._get_execution_plan(name)
+
+    def __get__(self, obj, objtype=None):
+        val = getattr(objtype, self.private_name)
+        if val is not None:
+            return val
+
+        # The None value is a sentinel for "not yet initialized".
+        for dictionary in self.dicts_to_init:
+            if getattr(objtype, f"_{dictionary}") is None:
+                setattr(objtype, f"_{dictionary}", {})
+
+        # Populate these dictionaries by running all directives that modify them
+        for directive_name in self.directives_to_run:
+            directives = objtype._directives_to_be_executed.get(directive_name)
+            if directives:
+                for directive in directives:
+                    directive(objtype)
+
+        return getattr(objtype, self.private_name)
+
+
+class directive:
+    def __init__(
+        self,
+        dicts: Union[Tuple[str, ...], str] = (),
+        supports_when: bool = True,
+        can_patch_dependencies: bool = False,
+    ) -> None:
         """Decorator for Spack directives.
 
-        Spack directives allow you to modify a package while it is being
-        defined, e.g. to add version or dependency information.  Directives
-        are one of the key pieces of Spack's package "language", which is
-        embedded in python.
+        Spack directives allow you to modify a package while it is being defined, e.g. to add
+        version or dependency information.  Directives are one of the key pieces of Spack's
+        package "language", which is embedded in python.
 
-        Here's an example directive:
-
-        .. code-block:: python
+        Here's an example directive::
 
             @directive(dicts="versions")
             def version(pkg, ...):
                 ...
 
-        This directive allows you write:
-
-        .. code-block:: python
+        This directive allows you write::
 
             class Foo(Package):
                 version(...)
 
         The ``@directive`` decorator handles a couple things for you:
 
-        1. Adds the class scope (pkg) as an initial parameter when
-           called, like a class method would.  This allows you to modify
-           a package from within a directive, while the package is still
-           being defined.
+        1. Adds the class scope (pkg) as an initial parameter when called, like a class method
+           would. This allows you to modify a package from within a directive, while the package is
+           still being defined.
 
-        2. It automatically adds a dictionary called ``versions`` to the
-           package so that you can refer to pkg.versions.
+        2. It automatically adds a dictionary called ``versions`` to the package so that you can
+           refer to pkg.versions.
 
-        The ``(dicts="versions")`` part ensures that ALL packages in Spack
-        will have a ``versions`` attribute after they're constructed, and
-        that if no directive actually modified it, it will just be an
-        empty dict.
-
-        This is just a modular way to add storage attributes to the
-        Package class, and it's how Spack gets information from the
-        packages to the core.
+        Arguments:
+            dicts: A tuple of names of dictionaries to add to the package class if they don't
+                already exist.
+            supports_when: If True, the directive can be used within a ``with when(...)`` context
+                manager. (To be removed when all directives support ``when=`` arguments.)
+            can_patch_dependencies: If True, the directive can patch dependencies. This is used to
+                identify nested directives so they can be removed from the execution queue, and to
+                mark the package as patching dependencies.
         """
 
         if isinstance(dicts, str):
             dicts = (dicts,)
 
-        if not isinstance(dicts, collections.abc.Sequence):
-            message = "dicts arg must be list, tuple, or string. Found {0}"
-            raise TypeError(message.format(type(dicts)))
-
         # Add the dictionary names if not already there
-        DirectiveMeta._directive_dict_names |= set(dicts)
+        DirectiveMeta._directive_dict_names.update(dicts)
 
-        # This decorator just returns the directive functions
-        def _decorator(decorated_function: Callable) -> Callable:
-            directive_names.append(decorated_function.__name__)
+        self.supports_when = supports_when
+        self.can_patch_dependencies = can_patch_dependencies
+        self.dicts = tuple(dicts)
 
-            @functools.wraps(decorated_function)
-            def _wrapper(*args, **_kwargs):
-                # First merge default args with kwargs
-                kwargs = dict()
-                for default_args in DirectiveMeta._default_args:
+    def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
+        directive_names.append(decorated_function.__name__)
+        DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
+
+        @functools.wraps(decorated_function)
+        def _wrapper(*args, **_kwargs):
+            # First merge default args with kwargs
+            if DirectiveMeta._default_args_stack:
+                kwargs = {}
+                for default_args in DirectiveMeta._default_args_stack:
                     kwargs.update(default_args)
                 kwargs.update(_kwargs)
+            else:
+                kwargs = _kwargs
 
-                # Inject when arguments from the context
-                if DirectiveMeta._when_constraints_from_context:
-                    # Check that directives not yet supporting the when= argument
-                    # are not used inside the context manager
-                    if decorated_function.__name__ == "version":
-                        msg = (
-                            'directive "{0}" cannot be used within a "when"'
-                            ' context since it does not support a "when=" '
-                            "argument"
-                        )
-                        msg = msg.format(decorated_function.__name__)
-                        raise DirectiveError(msg)
+            # Inject when arguments from the `with when(...)` stack.
+            if DirectiveMeta._when_constraints_stack:
+                if not self.supports_when:
+                    raise DirectiveError(
+                        f'directive "{decorated_function.__name__}" cannot be used within a '
+                        '"when" context since it does not support a "when=" argument'
+                    )
+                if "when" in kwargs:
+                    kwargs["when"] = (*DirectiveMeta._when_constraints_stack, kwargs["when"])
+                else:
+                    kwargs["when"] = tuple(DirectiveMeta._when_constraints_stack)
 
-                    when_constraints = [
-                        spack.spec.Spec(x) for x in DirectiveMeta._when_constraints_from_context
-                    ]
-                    if kwargs.get("when"):
-                        when_constraints.append(spack.spec.Spec(kwargs["when"]))
+            # Remove directives passed as arguments, so they are not executed as part of this
+            # class's directive execution, but handled by the called directive instead
+            if self.can_patch_dependencies and "patches" in kwargs:
+                DirectiveMeta._remove_kwarg_value_directives_from_queue(kwargs["patches"])
+                DirectiveMeta._patches_dependencies = True
 
-                    when_spec = spack.spec.Spec()
-                    for current in when_constraints:
-                        when_spec._constrain_symbolically(current, deps=True)
-                    kwargs["when"] = when_spec
+            result = decorated_function(*args, **kwargs)
 
-                DirectiveMeta._remove_directives(args)
-                DirectiveMeta._remove_directives(list(kwargs.values()))
+            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(result)
 
-                # A directive returns either something that is callable on a
-                # package or a sequence of them
-                result = decorated_function(*args, **kwargs)
+            # wrapped function returns same result as original so that we can nest directives
+            return result
 
-                # ...so if it is not a sequence make it so
-                values = result
-                if not isinstance(values, collections.abc.Sequence):
-                    values = (values,)
-
-                DirectiveMeta._directives_to_be_executed.extend(values)
-
-                # wrapped function returns same result as original so
-                # that we can nest directives
-                return result
-
-            return _wrapper
-
-        return _decorator
+        return _wrapper
 
 
 class DirectiveError(spack.error.SpackError):

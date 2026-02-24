@@ -263,9 +263,10 @@ def display_env(env, args, decorator, results):
     num_roots = len(env.user_specs) or "No"
     tty.msg(f"{num_roots} root specs")
 
+    concretized_user_specs = [x.root for x in env.concretized_roots]
     concrete_specs = {
         root: concrete_root
-        for root, concrete_root in zip(env.concretized_user_specs, env.concrete_roots())
+        for root, concrete_root in zip(concretized_user_specs, env.concrete_roots())
     }
 
     def root_decorator(spec, string):
@@ -306,7 +307,7 @@ def display_env(env, args, decorator, results):
 
     print()
 
-    if env.included_concrete_envs:
+    if env.included_concrete_env_root_dirs:
         tty.msg("Included specs")
 
         # Root specs cannot be displayed with prefixes, since those are not

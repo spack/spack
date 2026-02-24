@@ -18,7 +18,7 @@ Spack uses specs to:
 
 1. Refer to a particular build configuration of a package, or
 2. Express requirements, or preferences, on packages via configuration files, or
-3. Query installed packages, or buildcaches
+3. Query installed packages, or build caches
 
 Specs are more than a package name and a version; you can use them to specify the compiler, compiler version, architecture, compile options, and dependency options for a build.
 In this section, we'll go over the full syntax of specs.
@@ -644,7 +644,7 @@ To work around this without quoting, you can avoid whitespace between the packag
 
    mpileaks ~debug   # shell may expand this to `mpileaks /home/debug`
    mpileaks~debug    # use this instead
-   
+
 Alternatively, you can use a hyphen ``-`` character to disable a variant, but be aware that this *requires* a space between the package name and the variant:
 
 .. code-block:: spec

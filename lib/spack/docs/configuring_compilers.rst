@@ -17,7 +17,7 @@ Compilers can be made available to Spack by:
 
 1. Specifying them as externals in ``packages.yaml``, or
 2. Having them installed in the current Spack store, or
-3. Having them available as binaries in a buildcache
+3. Having them available as binaries in a build cache
 
 For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
 
@@ -36,7 +36,7 @@ You can see which compilers are available to Spack by running ``spack compiler l
    [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
 Compilers marked with an ``[e]`` are system compilers (externals), and those marked with a ``[+]`` have been installed by Spack.
-Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
+Compilers from remote build caches are marked as ``-``, but are not shown by default.
 To see them you need a specific option:
 
 .. code-block:: console

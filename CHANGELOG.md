@@ -1,3 +1,39 @@
+# v1.1.1 (2026-01-14)
+
+## Usability and performance enhancements
+
+* solver: do a precheck for non-existing and deprecated versions #51555
+* improvements to solver performance (PRs 51591, 51605, 51612, 51625)
+* python 3.14 support (PRs 51686, 51687, 51688, 51689, 51663)
+* display when conditions with dependencies in spack info #51588
+* spack repo remove: allow removing from unspecified scope #51563
+* spack compiler info: show non-external compilers too #51718
+
+## Improvements to the experimental new installer
+
+* support forkserver #51788 (for python 3.14 support)
+* support --dirty, --keep-stage, and `skip patch` arguments #51558
+* implement --use-buildcache, --cache-only, --use-cache and --only arguments #51593
+* implement overwrite, keep_prefix #51622
+* implement --dont-restage #51623
+* fix logging #51787
+
+## Bugfixes
+
+* repo.py: support rhel 7 #51617
+* solver: match glibc constraints by hash #51559
+* buildache list: list the component prefix not the root #51635
+* solver: fix issue with conditional language dependencies #51692
+* repo.py: fix checking out commits #51695
+* spec parser: ensure toolchains are expanded to different objects #51731
+* RHEL7 git 1.8.3.1 fix #51779
+* RewireTask.complete: return value from \_process\_binary\_cache\_tarball #51825
+
+## Documentation
+
+* docs: fix default projections setting discrepancy #51640
+
+
 # v1.1.0 (2025-11-14)
 
 `v1.1.0` features major improvements to **compiler handling** and **configuration management**, a significant refactoring of **externals**, and exciting new **experimental features** like a console UI for parallel installations and concretization caching.
@@ -169,6 +205,40 @@
 * 31 committers to core
 
 See the [2025.11.0 release](https://github.com/spack/spack-packages/releases/tag/v2025.11.0) of [spack-packages](https://github.com/spack/spack-packages/) for more details.
+
+
+# v1.0.4 (2026-02-23)
+
+## Bug fixes
+
+* Concretizer bugfixes:
+  * solver: remove a special case for provider weighting #51347
+  * solver: improve timeout handling and add Ctrl-C interrupt safety #51341
+  * solver: simplify interrupt/timeout logic #51349
+* Repo management bugfixes:
+  * repo.py: support rhel 7 #51617
+  * repo.py: fix checking out commits #51695
+  * git: pull_checkout_branch RHEL7 git 1.8.3.1 fix #51779
+  * git: fix locking issue in pull_checkout_branch #51854
+  * spack repo remove: allow removing from unspecified scope #51563
+* build_environment.py: Prevent deadlock on install process join #51429
+* Fix typo in untrack_env #51554
+* audit.py: fix re.sub(..., N) positional count arg #51735
+
+## Enhancements
+
+* Support Macos Tahoe (#51373, #51394, #51479)
+* Support for Python 3.14, except for t-strings (#51686, #51687, #51688, #51697, #51663)
+* spack info: show conditional dependencies and licenses; allow filtering #51137
+* Spack fetch less likely to fail due to AI download protections #51496
+* config: relax concurrent_packages to minimum 0 #51840
+  * This avoids forward-incompatibility with Spack v1.2
+* Documentation improvements (#51315, #51640)
+
+
+# v1.0.3 (2026-02-20)
+
+Skipped due to a failure in the release process.
 
 
 # v1.0.2 (2025-09-11)

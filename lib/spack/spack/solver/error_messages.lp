@@ -88,7 +88,7 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10000, "Cannot satisfy '{0}@{1}' 3({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
+error(10000, "Cannot satisfy '{0}@{1}' (selected version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
@@ -97,7 +97,7 @@ error(10000, "Cannot satisfy '{0}@{1}' 3({2})", Package, Constraint, Version, st
      not pkg_fact(Package, version_satisfies(Constraint, Version)),
      choose_version(node(ID, Package), Version).
 
-error(100, "Cannot satisfy '{0}@{1}' 4({2})", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
+error(100, "Cannot satisfy '{0}@{1}' (version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
@@ -157,6 +157,11 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
      unification_set(X, node(ID2, Package)),
      unification_set(X, node(ID1, TriggerPackage)),
      build(node(ID, Package)).  % ignore conflicts for concrete packages
+
+pkg_fact(Package, version_satisfies(Constraint, Version)) :-
+    pkg_fact(Package, version_order(Version, VersionIdx)),
+    pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
+    VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
 
 % variables to show
 #show error/2.
