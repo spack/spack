@@ -338,6 +338,8 @@ class PackageViewMixin:
     overriding these functions.
     """
 
+    spec: spack.spec.Spec
+
     def view_source(self):
         """The source root directory that will be added to the view: files are
         added such that their path relative to the view destination matches
