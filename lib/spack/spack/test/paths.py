@@ -259,8 +259,8 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
 
 
 class SetAnXdgVarAndReadDataHome:
-    """Provide a function which can execute in a separate process that removes
-    a spec from the database.
+    """Access an XDG-dependent variable from spack.paths as quickly as
+    possible.
     """
 
     def __init__(self, home_prefix, base_prefix, empty_dir):
@@ -270,7 +270,6 @@ class SetAnXdgVarAndReadDataHome:
 
     def __call__(self):
         import spack.paths
-        import spack.paths_base
 
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
@@ -284,7 +283,7 @@ def all_dirs_empty(a_dir):
     return False
 
 
-def test_child_sanity(working_env, tmp_path, set_home, monkeypatch):
+def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
 
