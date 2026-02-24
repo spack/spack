@@ -242,9 +242,7 @@ class ReusableSpecsSelector:
                 if source["type"] == "environment" and "path" in source:
                     env_dir = spack.environment.as_env_dir(source["path"])
                     active_env = spack.environment.active_environment()
-                    if active_env and env_dir in active_env.included_concrete_env_root_dirs:
-                        pass
-                    else:
+                    if not active_env or env_dir not in active_env.included_concrete_env_root_dirs:
                         # If the environment is not included as a concrete environment, use the
                         # current specs from its lockfile.
                         self.reuse_sources.append(
