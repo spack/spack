@@ -464,6 +464,11 @@ class BaseConfiguration:
         return hidden_as_implicit
 
     @property
+    def hierarchical(self):
+        """Returns if hierarchical mode has been enabled, False if not set."""
+        return self.module.configuration(self.name).get("hierarchical", False)
+
+    @property
     def context(self):
         return self.conf.get("context", {})
 

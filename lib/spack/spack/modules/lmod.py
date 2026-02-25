@@ -237,6 +237,11 @@ class LmodConfiguration(BaseConfiguration):
             return False
         return super().hidden
 
+    @property
+    def hierarchical(self):
+        """Returns if hierarchical mode has been enabled, True if not set."""
+        return self.module.configuration(self.name).get("hierarchical", True)
+
 
 class LmodFileLayout(BaseFileLayout):
     """File layout for lmod module files."""
