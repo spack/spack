@@ -31,13 +31,16 @@ import datetime
 import inspect
 import itertools
 import os
+import pathlib
 import re
 import string
+import warnings
 from typing import Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jinja2
 
 import spack.build_environment
+import spack.compilers.config
 import spack.config
 import spack.deptypes as dt
 import spack.environment
@@ -56,6 +59,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
+from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
 
@@ -143,6 +147,42 @@ def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec
         return list(spec.traverse(order="topo", deptype=dt.LINK | dt.RUN, root=False))
 
     raise ValueError(f'request "{request}" is not one of "none", "direct", "run", "all"')
+
+
+def guess_core_compilers(name, module_system, store=False) -> List[spack.spec.Spec]:
+    """Guesses the list of core compilers installed in the system.
+
+    Args:
+        module_system (str): module system in use ("tcl" or "lmod")
+        store (bool): if True writes the core compilers to the
+            modules.yaml configuration file
+
+    Returns:
+        List of found core compilers
+    """
+    core_compilers = []
+    for compiler in spack.compilers.config.all_compilers(init_config=False):
+        try:
+            cc_dir = pathlib.Path(compiler.package.cc).parent
+            is_system_compiler = str(cc_dir) in spack.util.environment.SYSTEM_DIRS
+            if is_system_compiler:
+                core_compilers.append(compiler)
+        except (KeyError, TypeError, AttributeError):
+            continue
+
+    if store and core_compilers:
+        # If we asked to store core compilers, update the entry
+        # in the default modify scope (i.e. within the directory hierarchy
+        # of Spack itself)
+        modules_cfg = spack.config.get(
+            "modules:" + name, {}, scope=spack.config.default_modify_scope()
+        )
+        modules_cfg.setdefault(module_system, {})["core_compilers"] = [
+            str(x) for x in core_compilers
+        ]
+        spack.config.set("modules:" + name, modules_cfg, scope=spack.config.default_modify_scope())
+
+    return core_compilers
 
 
 def merge_config_rules(configuration, spec):
@@ -320,7 +360,9 @@ class BaseConfiguration:
     querying easier. It needs to be sub-classed for specific module types.
     """
 
-    default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
+    default_projections: Dict[str, str]
+
+    compiler: Optional[spack.spec.Spec]
 
     #: Name of the module system (must be set by each subclass)
     module_system: str
@@ -355,6 +397,39 @@ class BaseConfiguration:
         self.explicit = explicit
         # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self.configuration(self.name), self.spec)
+
+        self.default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
+        if self.hierarchical:
+            self.default_projections = {"all": "{name}/{version}"}
+
+        self.compiler = None
+        if self.hierarchical:
+            candidates = collections.defaultdict(list)
+            language_virtuals = ("c", "cxx", "fortran")
+
+            for node in spec.traverse(deptype=("link", "run")):
+                for language in language_virtuals:
+                    candidates[language].extend(node.dependencies(virtuals=(language,)))
+
+            for language in language_virtuals:
+                if candidates[language]:
+                    self.compiler = candidates[language][0]
+                    if len(set(candidates[language])) > 1:
+                        warnings.warn(
+                            f"{spec.short_spec} uses more than one compiler, and might not fit "
+                            f"the module hierarchy. Using {self.compiler.short_spec} as the "
+                            "compiler."
+                        )
+                    break
+
+    @property
+    def module(self):
+        return inspect.getmodule(self)
+
+    @property
+    def module_system(self):
+        """Returns name of used module system."""
+        return str(self.module.__name__).rsplit(".", maxsplit=1)[-1]
 
     @property
     def projections(self):
@@ -456,6 +531,13 @@ class BaseConfiguration:
     def hidden(self):
         """Returns True if the module has been hidden, False otherwise."""
 
+        if self.hierarchical:
+            # Never hide a module that opens a hierarchy
+            if any(
+                self.spec.name == x or self.spec.package.provides(x) for x in self.hierarchy_tokens
+            ):
+                return False
+
         conf = self.configuration(self.name)
 
         hidden_as_implicit = not self.explicit and conf.get("hide_implicits", False)
@@ -508,6 +590,137 @@ class BaseConfiguration:
         otherwise
         """
         return self.conf.get("verbose")
+
+    @property
+    def core_compilers(self) -> List[spack.spec.Spec]:
+        """Returns the list of "Core" compilers
+
+        Raises:
+            CoreCompilersNotFoundError: if the key was not specified in the configuration file or
+                the sequence is empty
+        """
+        compilers = []
+        for c in self.module.configuration(self.name).get("core_compilers", []):
+            compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
+
+        if not compilers:
+            compilers = guess_core_compilers(self.name, self.module_system, store=True)
+
+        if not compilers:
+            msg = 'the key "core_compilers" must be set in modules.yaml'
+            raise CoreCompilersNotFoundError(msg)
+
+        return compilers
+
+    @property
+    def core_specs(self):
+        """Returns the list of "Core" specs"""
+        return self.module.configuration(self.name).get("core_specs", [])
+
+    @property
+    def filter_hierarchy_specs(self):
+        """Returns the dict of specs with modified hierarchies"""
+        return self.module.configuration(self.name).get("filter_hierarchy_specs", {})
+
+    @property
+    @memoized
+    def hierarchy_tokens(self):
+        """Returns the list of tokens that are part of the modulefile
+        hierarchy. ``compiler`` is always present.
+        """
+        tokens = self.module.configuration(self.name).get("hierarchy", [])
+
+        # Append 'compiler' which is always implied
+        tokens.append("compiler")
+
+        # Deduplicate tokens in case duplicates have been coded
+        tokens = list(dedupe(tokens))
+
+        return tokens
+
+    @property
+    @memoized
+    def requires(self):
+        """Returns a dictionary mapping all the requirements of this spec to the actual provider.
+
+        The ``compiler`` key is always present among the requirements.
+
+        Returns an empty dictionary if hierarchical mode is disabled.
+        """
+        if not self.hierarchical:
+            return {}
+
+        # If it's a core_spec, lie and say it requires a core compiler
+        if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
+            return {"compiler": self.core_compilers[0]}
+
+        hierarchy_filter_list = []
+        for spec, filter_list in self.filter_hierarchy_specs.items():
+            if self.spec.satisfies(spec):
+                hierarchy_filter_list = filter_list
+                break
+
+        # Keep track of the requirements that this package has in terms
+        # of virtual packages that participate in the hierarchical structure
+        requirements = {"compiler": self.compiler or self.core_compilers[0]}
+
+        # For each dependency in the hierarchy
+        for x in self.hierarchy_tokens:
+            # Skip anything filtered for this spec
+            if x in hierarchy_filter_list:
+                continue
+
+            # If I depend on it
+            if x in self.spec and not (self.spec.name == x or self.spec.package.provides(x)):
+                requirements[x] = self.spec[x]  # record the actual provider
+        return requirements
+
+    @property
+    def provides(self):
+        """Returns a dictionary mapping all the services provided by this
+        spec to the spec itself.
+
+        Returns an empty dictionary if hierarchical mode is disabled.
+        """
+        if not self.hierarchical:
+            return {}
+
+        provides = {}
+
+        # Treat the 'compiler' case in a special way, as compilers are not
+        # virtual dependencies in spack
+
+        # If it is in the list of supported compilers family -> compiler
+        if self.spec.name in spack.compilers.config.supported_compilers():
+            provides["compiler"] = spack.spec.Spec(self.spec.format("{name}{@versions}"))
+        elif self.spec.name in BUILTIN_TO_LEGACY_COMPILER:
+            # If it is the package for a supported compiler, but of a different name
+            cname = BUILTIN_TO_LEGACY_COMPILER[self.spec.name]
+            provides["compiler"] = spack.spec.Spec(cname, self.spec.versions)
+
+        # All the other tokens in the hierarchy must be virtual dependencies
+        for x in self.hierarchy_tokens:
+            if self.spec.name == x or self.spec.package.provides(x):
+                provides[x] = self.spec
+        return provides
+
+    @property
+    def available(self):
+        """Returns a dictionary of the services that are currently
+        available.
+        """
+        available = {}
+        # What is available is what I require plus what I provide.
+        # 'compiler' is the only key that may be overridden.
+        available.update(self.requires)
+        available.update(self.provides)
+        return available
+
+    @property
+    @memoized
+    def missing(self):
+        """Returns the list of tokens that are not available."""
+        return [x for x in self.hierarchy_tokens if x not in self.available]
 
 
 class BaseFileLayout:
@@ -1243,3 +1456,9 @@ class ModulercHeaderNotDefined(AttributeError, ModulesError):
 
 class ModulesTemplateNotFoundError(ModulesError, RuntimeError):
     """Raised if the template for a module file was not found."""
+
+
+class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
+    """Error raised if the key ``core_compilers`` has not been specified
+    in the configuration file.
+    """

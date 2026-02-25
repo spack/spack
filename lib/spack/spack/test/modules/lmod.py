@@ -322,14 +322,14 @@ class TestLmod:
         module_configuration("missing_core_compilers")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
             module.write()
 
         # Here we have an empty list
         module_configuration("core_compilers_empty")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
             module.write()
 
     def test_conflicts(self, modulefile_content, module_configuration):
