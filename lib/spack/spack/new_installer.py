@@ -929,8 +929,17 @@ class BuildStatus:
 
         # For non-TTY output, print state changes immediately without colors
         if not self.is_tty:
+            if build_info.external:
+                indicator = "[e]"
+            elif state == "finished":
+                indicator = "[+]"
+            elif state == "failed":
+                indicator = "[x]"
+            else:
+                indicator = "[ ]"
+            suffix = build_info.prefix if state == "finished" else state
             self.stdout.write(
-                f"{build_info.hash} {build_info.name}@{build_info.version}: {state}\n"
+                f"{indicator} {build_info.hash} {build_info.name}@{build_info.version} {suffix}\n"
             )
             self.stdout.flush()
 

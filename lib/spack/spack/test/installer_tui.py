@@ -198,9 +198,10 @@ class TestOutputRendering:
         status.update_state(build_id, "finished")
 
         output = fake_stdout.getvalue()
+        assert "[+]" in output
         assert "mypackage" in output
         assert "1.0" in output
-        assert "finished" in output
+        assert "/fake/prefix/mypackage" in output  # prefix is shown for finished builds
         # Non-TTY output should not contain ANSI escape codes
         assert "\033[" not in output
 
