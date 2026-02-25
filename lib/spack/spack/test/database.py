@@ -1009,7 +1009,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capf
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
-        raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
+        raise lk.LockTimeoutError(lk.LockType.WRITE, "/mock-lock", 1.234, 10)
 
     with fs.working_dir(str(tmp_path)):
         s = spack.concretize.concretize_one("pkg-a")

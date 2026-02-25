@@ -48,6 +48,10 @@ class Lock(Llnl_lock):
             desc=desc,
         )
 
+    def _reaffirm_lock(self) -> None:
+        if self._enable:
+            super()._reaffirm_lock()
+
     def _lock(self, op: int, timeout: Optional[float] = 0.0) -> Tuple[float, int]:
         if self._enable:
             return super()._lock(op, timeout)
