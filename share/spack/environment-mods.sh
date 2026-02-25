@@ -130,7 +130,7 @@ _spack_env_remove_first() {
 
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
-        if [[ "$val" != "$value" || "$done" == "yes" ]]; then
+         if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
             accumulator=$accumulator$val$sep
         else
             done="yes"
@@ -173,7 +173,7 @@ _spack_env_remove_last() {
     # Put the entries back in in reverse order to get back original order
     accumulator=$sep
     for val in $reversed; do
-        if [[ "$val" != "$value" || "$done" == "yes" ]]; then
+        if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
             accumulator=$sep$val$accumulator
         else
             done="yes"
@@ -204,7 +204,7 @@ _spack_env_prune_duplicates() {
     IFS=$sep
 
     eval "varname_value=\"\${${varname}}\""
-    while [[ "$varname_value" != "" ]]; do
+    while [ "$varname_value" != "" ]; do
         # for-loop to get the first entry, then break
         for val in $varname_value; do
             prune_accumulator=$prune_accumulator$val$sep
