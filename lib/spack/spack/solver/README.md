@@ -6,25 +6,32 @@ and produce fully-concrete specs.
 
 ## Files
 
+### Python
+
 | File | Purpose |
 |------|---------|
-| `asp.py` | Main Python driver: generates facts, runs clingo, reconstructs specs |
+| `asp.py` | Main driver: generates facts, runs clingo, reconstructs specs |
 | `core.py` | Low-level clingo helpers (`intermediate_repr`, `extract_args`, `NodeArgument`) |
-| `concretize.lp` | Core ASP logic: node creation, versioning, variants, platform/OS/target, flags, conditions |
+| `input_analysis.py` | Analyses input specs to bound the set of packages considered |
+| `requirements.py` | Translates `spack.yaml` `require:` directives into ASP facts |
+| `reuse.py` | Identifies already-installed specs that can be reused |
+| `runtimes.py` | Handles runtime dependencies (compilers, libc) |
+| `splicing.py` | Python-side splice application after the solve |
+| `versions.py` | Version weight and ordering fact generation |
+
+### ASP
+
+| File | Purpose |
+|------|---------|
+| `concretize.lp` | Core logic: node creation, versioning, variants, platform/OS/target, flags, conditions |
 | `display.lp` | `#show` directives controlling which atoms appear in the answer set |
-| `heuristic.lp` | Domain heuristics to guide search and speed up solving |
-| `error_messages.lp` | Human-readable error message templates |
 | `direct_dependency.lp` | Rules for direct-dependency constraints |
+| `error_messages.lp` | Human-readable error message templates |
+| `heuristic.lp` | Domain heuristics to guide search and speed up solving |
 | `libc_compatibility.lp` | Linux libc compatibility rules |
 | `os_compatibility.lp` | OS compatibility rules |
 | `splices.lp` | ABI-splice rules: when a dependency of a reused spec can be swapped |
 | `when_possible.lp` | "Reuse when possible" strategy rules |
-| `requirements.py` | Translates `spack.yaml` `require:` directives into ASP facts |
-| `reuse.py` | Identifies already-installed specs that can be reused |
-| `runtimes.py` | Handles runtime dependencies (compilers, libc) |
-| `versions.py` | Version weight and ordering fact generation |
-| `input_analysis.py` | Analyses input specs to bound the set of packages considered |
-| `splicing.py` | Python-side splice application after the solve |
 
 ---
 
@@ -54,7 +61,7 @@ SpecBuilder.build_specs(function_tuples)   [asp.py]
 dict of NodeArgument → spack.spec.Spec
 ```
 
-`extract_args` (`core.py:270`) filters the raw clingo symbols to those named
+`extract_args` (`core.py`) filters the raw clingo symbols to those named
 `"attr"` and converts each argument through `intermediate_repr`:
 
 - A `node(ID, Package)` function becomes a `NodeArgument(id, pkg)` named tuple.
@@ -90,21 +97,21 @@ steps in order:
 
 These atoms appear in the answer set and have a matching method on `SpecBuilder`.
 
-| Fact | Arity | `SpecBuilder` method | Effect on `Spec` |
-|------|:-----:|----------------------|-----------------|
-| `attr("node", node(ID, Pkg))` | 2 | `node()` | Creates a new empty `Spec(Pkg)` in `_specs`, keyed by `NodeArgument(ID, Pkg)`. Every other attr for this package requires `"node"` to be processed first. |
-| `attr("hash", node(ID, Pkg), Hash)` | 3 | `hash()` | Reuse path: looks up a pre-built concrete spec in `_hash_lookup` (populated by `reuse.py`) and stores it as-is. All subsequent attrs for that node are skipped, except `splice_at_hash`. |
-| `attr("namespace", node(ID, Pkg), NS)` | 3 | `namespace()` | Sets `spec.namespace` (e.g. `"builtin"`). |
-| `attr("version", node(ID, Pkg), Ver)` | 3 | `version()` | Sets `spec.versions` to the single chosen version. Exactly one version per node is required; violations produce a solver error. |
-| `attr("node_platform", node(ID, Pkg), P)` | 3 | `node_platform()` | Sets `spec.architecture.platform`. |
-| `attr("node_os", node(ID, Pkg), OS)` | 3 | `node_os()` | Sets `spec.architecture.os`. |
-| `attr("node_target", node(ID, Pkg), T)` | 3 | `node_target()` | Sets `spec.architecture.target`. |
-| `attr("node_flag", node(ID, Pkg), node_flag(Type, Flag, Group, Src))` | 3 | `node_flag()` | Appends one compiler flag to `spec.compiler_flags`. The structured `node_flag/4` term carries the flag type (e.g. `"cflags"`), the value, the flag group, and the source (e.g. `"compiler"`, `"literal"`, or a package name). Multiple atoms accumulate all flags; `reorder_flags()` sorts them into canonical order afterwards. |
-| `attr("variant_selected", node(ID, Pkg), Name, Value, Type, VID)` | 6 | `variant_selected()` | Adds a variant value to the spec. Derived from `variant_value` plus variant metadata (`variant_type`, `node_has_variant`), providing the Python side with the type information (`"bool"`, `"single"`, `"multi"`) needed to instantiate the right `VariantValue` subclass. For multi-valued variants, one atom is emitted per value; the second and subsequent calls append to the existing variant. |
-| `attr("depends_on", Parent, Child, Type)` | 4 | `depends_on()` | Adds a directed dependency edge with the given type (`"link"`, `"run"`, `"build"`, or `"test"`). The edge is added with `virtuals=()` as a placeholder; `virtual_on_edge` atoms fill in the actual virtual names afterwards. |
-| `attr("virtual_on_edge", Parent, Provider, Virtual)` | 4 | `virtual_on_edge()` | Annotates an existing dependency edge with the virtual interface it satisfies. Processed last (priority +2) so that the edge already exists. |
-| `attr("deprecated", node(ID, Pkg), Ver)` | 3 | `deprecated()` | Emits a `tty.warn` deprecation warning. Has no effect on the `Spec` object itself. |
-| `attr("splice_at_hash", Parent, SpliceNode, ChildName, ChildHash)` | 5 | `splice_at_hash()` | Records that the dependency `ChildName`/`ChildHash` inside the reused spec at `Parent` should be replaced by `SpliceNode` (an ABI-compatible alternative). Stored in `_splices` and applied in a post-processing pass via `spack.solver.splicing._resolve_collected_splices()`. The only action called on nodes that already hold a concrete spec. |
+| Fact | `SpecBuilder` method | Effect on `Spec` |
+|------|----------------------|-----------------|
+| `attr("node", node(ID, Pkg))` | `node()` | Creates a new empty `Spec(Pkg)` in `_specs`, keyed by `NodeArgument(ID, Pkg)`. Every other attr for this package requires `"node"` to be processed first. |
+| `attr("hash", node(ID, Pkg), Hash)` | `hash()` | Reuse path: looks up a pre-built concrete spec in `_hash_lookup` (populated by `reuse.py`) and stores it as-is. All subsequent attrs for that node are skipped, except `splice_at_hash`. |
+| `attr("namespace", node(ID, Pkg), NS)` | `namespace()` | Sets `spec.namespace` (e.g. `"builtin"`). |
+| `attr("version", node(ID, Pkg), Ver)` | `version()` | Sets `spec.versions` to the single chosen version. Exactly one version per node is required; violations produce a solver error. |
+| `attr("node_platform", node(ID, Pkg), P)` | `node_platform()` | Sets `spec.architecture.platform`. |
+| `attr("node_os", node(ID, Pkg), OS)` | `node_os()` | Sets `spec.architecture.os`. |
+| `attr("node_target", node(ID, Pkg), T)` | `node_target()` | Sets `spec.architecture.target`. |
+| `attr("node_flag", node(ID, Pkg), node_flag(Type, Flag, Group, Src))` | `node_flag()` | Appends one compiler flag to `spec.compiler_flags`. The structured `node_flag/4` term carries the flag type (e.g. `"cflags"`), the value, the flag group, and the source (e.g. `"compiler"`, `"literal"`, or a package name). Multiple atoms accumulate all flags; `reorder_flags()` sorts them into canonical order afterwards. |
+| `attr("variant_selected", node(ID, Pkg), Name, Value, Type, VID)` | `variant_selected()` | Adds a variant value to the spec. Derived from `variant_value` plus variant metadata (`variant_type`, `node_has_variant`), providing the Python side with the type information (`"bool"`, `"single"`, `"multi"`) needed to instantiate the right `VariantValue` subclass. For multi-valued variants, one atom is emitted per value; the second and subsequent calls append to the existing variant. |
+| `attr("depends_on", Parent, Child, Type)` | `depends_on()` | Adds a directed dependency edge with the given type (`"link"`, `"run"`, `"build"`, or `"test"`). The edge is added with `virtuals=()` as a placeholder; `virtual_on_edge` atoms fill in the actual virtual names afterwards. |
+| `attr("virtual_on_edge", Parent, Provider, Virtual)` | `virtual_on_edge()` | Annotates an existing dependency edge with the virtual interface it satisfies. Processed last (priority +2) so that the edge already exists. |
+| `attr("deprecated", node(ID, Pkg), Ver)` | `deprecated()` | Emits a `tty.warn` deprecation warning. Has no effect on the `Spec` object itself. |
+| `attr("splice_at_hash", Parent, SpliceNode, ChildName, ChildHash)` | `splice_at_hash()` | Records that the dependency `ChildName`/`ChildHash` inside the reused spec at `Parent` should be replaced by `SpliceNode` (an ABI-compatible alternative). Stored in `_splices` and applied in a post-processing pass via `spack.solver.splicing._resolve_collected_splices()`. The only action called on nodes that already hold a concrete spec. |
 
 ---
 
