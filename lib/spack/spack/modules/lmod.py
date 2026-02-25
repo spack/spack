@@ -406,50 +406,6 @@ class LmodContext(BaseContext):
     """Context class for lmod module files."""
 
     @tengine.context_property
-    def has_modulepath_modifications(self):
-        """True if this module modifies MODULEPATH, False otherwise."""
-        return bool(self.conf.provides)
-
-    @tengine.context_property
-    def has_conditional_modifications(self):
-        """True if this module modifies MODULEPATH conditionally to the
-        presence of other services in the environment, False otherwise.
-        """
-        # In general we have conditional modifications if we have modifications
-        # and we are not providing **only** a compiler
-        provides = self.conf.provides
-        provide_compiler_only = "compiler" in provides and len(provides) == 1
-        has_modifications = self.has_modulepath_modifications
-        return has_modifications and not provide_compiler_only
-
-    @tengine.context_property
-    def name_part(self):
-        """Name of this provider."""
-        return self.spec.name
-
-    @tengine.context_property
-    def version_part(self):
-        """Version of this provider."""
-        s = self.spec
-        return "-".join([str(s.version), s.dag_hash(length=7)])
-
-    @tengine.context_property
-    def provides(self):
-        """Returns the dictionary of provided services."""
-        return self.conf.provides
-
-    @tengine.context_property
-    def missing(self):
-        """Returns a list of missing services."""
-        return self.conf.missing
-
-    @tengine.context_property
-    @lang.memoized
-    def unlocked_paths(self):
-        """Returns the list of paths that are unlocked unconditionally."""
-        return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
-
-    @tengine.context_property
     def conditionally_unlocked_paths(self):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
