@@ -1047,7 +1047,12 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
+    tmp_path: pathlib.Path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    mock_binary_index,
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"
