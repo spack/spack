@@ -105,16 +105,16 @@ class ChildInfo:
         output_r_conn: Connection,
         state_r_conn: Connection,
         control_w_conn: Connection,
+        log_path: str,
         explicit: bool = False,
-        log_path: str = "",
     ) -> None:
         self.proc = proc
         self.spec = spec
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
-        self.explicit = explicit
         self.log_path = log_path
+        self.explicit = explicit
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
         """Unregister and close file descriptors, and join the child process."""
@@ -342,7 +342,7 @@ def worker_function(
     js2: Optional[Connection],
     store: spack.store.Store,
     config: spack.config.Configuration,
-    log_path: str = "",
+    log_path: str,
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -368,6 +368,7 @@ def worker_function(
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
         store: global store instance from parent
         config: global config instance from parent
+        log_path: Path to the log file to write build output to
     """
 
     # TODO: don't start a build for external packages
@@ -396,7 +397,7 @@ def worker_function(
     spack.paths.set_working_dir()
 
     # Open the log file created by the parent process.
-    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC)
+    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
     tee = Tee(echo_control, parent, log_fd)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
@@ -636,7 +637,7 @@ def start_build(
     fifo = "--jobserver-auth=fifo:" in makeflags
 
     log_fd, log_path = tempfile.mkstemp(
-        prefix=f"spack-stage-{spec.name}-{spec.dag_hash()}-",
+        prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
         suffix=".log",
         dir=spack.stage.get_stage_root(),
     )
@@ -678,7 +679,7 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, explicit, log_path)
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
