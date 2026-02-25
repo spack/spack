@@ -17,7 +17,6 @@ import pytest
 import spack.cmd.env
 import spack.concretize
 import spack.config
-import spack.environment
 import spack.environment as ev
 import spack.environment.cache_shell_script as shell_script
 import spack.environment.depfile as depfile
