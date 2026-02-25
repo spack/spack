@@ -135,6 +135,7 @@ def load(parser, args):
             if not os.path.isfile(load_script):
                 mods = _get_environment_modifications(spec, shell)
                 _create_load_shell_script(mods, load_script)
-            commands = f"source {load_script}"
+            source = "." if shell == "sh" else "source"
+            commands = f"{source} {load_script}"
 
         print(f"{commands}")
