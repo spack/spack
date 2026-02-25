@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import itertools
 import os
 import pathlib
 import warnings
@@ -12,7 +11,6 @@ from typing import ClassVar, Dict, List, Optional
 import spack.compilers.config
 import spack.config
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
 import spack.spec
 import spack.tengine as tengine
@@ -250,156 +248,9 @@ class LmodFileLayout(BaseFileLayout):
     extension = "lua"
 
     @property
-    def arch_dirname(self):
-        """Returns the root folder for THIS architecture"""
-        # Architecture sub-folder
-        arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
-        if arch_folder_conf:
-            # include an arch specific folder between root and filename
-            arch_folder = "-".join(
-                [str(self.spec.platform), str(self.spec.os), str(self.spec.target.family)]
-            )
-            return os.path.join(self.dirname(), arch_folder)
-        return self.dirname()
-
-    @property
-    def filename(self):
-        """Returns the filename for the current module file"""
-
-        # Get the list of requirements and build an **ordered**
-        # list of the path parts
-        requires = self.conf.requires
-        hierarchy = self.conf.hierarchy_tokens
-        path_parts = lambda x: self.token_to_path(x, requires[x])
-        parts = [path_parts(x) for x in hierarchy if x in requires]
-
-        # My relative path if just a join of all the parts
-        hierarchy_name = os.path.join(*parts)
-
-        # Compute the absolute path
-        return os.path.join(
-            self.arch_dirname,  # root for lmod files on this architecture
-            hierarchy_name,  # relative path
-            f"{self.use_name}.{self.extension}",  # file name
-        )
-
-    @property
     def modulerc(self):
         """Returns the modulerc file associated with current module file"""
         return os.path.join(os.path.dirname(self.filename), f".modulerc.{self.extension}")
-
-    def token_to_path(self, name, value):
-        """Transforms a hierarchy token into the corresponding path part.
-
-        Args:
-            name (str): name of the service in the hierarchy
-            value: actual provider of the service
-
-        Returns:
-            str: part of the path associated with the service
-        """
-
-        # General format for the path part
-        def path_part_fmt(token):
-            return fs.polite_path([f"{token.name}", f"{token.version}"])
-
-        # If we are dealing with a core compiler, return 'Core'
-        core_compilers = self.conf.core_compilers
-        if name == "compiler" and any(spack.spec.Spec(value).satisfies(c) for c in core_compilers):
-            return "Core"
-
-        # Spec does not have a hash, as we are not allowed to
-        # use different flavors of the same compiler
-        if name == "compiler":
-            return path_part_fmt(token=value)
-
-        # In case the hierarchy token refers to a virtual provider
-        # we need to append a hash to the version to distinguish
-        # among flavors of the same library (e.g. openblas~openmp vs.
-        # openblas+openmp)
-        return f"{path_part_fmt(token=value)}-{value.dag_hash(length=7)}"
-
-    @property
-    def available_path_parts(self):
-        """List of path parts that are currently available. Needed to
-        construct the file name.
-        """
-        # List of available services
-        available = self.conf.available
-        # List of services that are part of the hierarchy
-        hierarchy = self.conf.hierarchy_tokens
-        # Tokenize each part that is both in the hierarchy and available
-        return [self.token_to_path(x, available[x]) for x in hierarchy if x in available]
-
-    @property
-    @lang.memoized
-    def unlocked_paths(self):
-        """Returns a dictionary mapping conditions to a list of unlocked
-        paths.
-
-        The paths that are unconditionally unlocked are under the
-        key 'None'. The other keys represent the list of services you need
-        loaded to unlock the corresponding paths.
-        """
-
-        unlocked = collections.defaultdict(list)
-
-        # Get the list of services we require and we provide
-        requires_key = list(self.conf.requires)
-        provides_key = list(self.conf.provides)
-
-        # A compiler is always required. To avoid duplication pop the
-        # 'compiler' item from required if we also **provide** one
-        if "compiler" in provides_key:
-            requires_key.remove("compiler")
-
-        # Compute the unique combinations of the services we provide
-        combinations = []
-        for ii in range(len(provides_key)):
-            combinations += itertools.combinations(provides_key, ii + 1)
-
-        # Attach the services required to each combination
-        to_be_processed = [x + tuple(requires_key) for x in combinations]
-
-        # Compute the paths that are unconditionally added
-        # and append them to the dictionary (key = None)
-        available_combination = []
-        for item in to_be_processed:
-            hierarchy = self.conf.hierarchy_tokens
-            available = self.conf.available
-            ac = [x for x in hierarchy if x in item]
-            available_combination.append(tuple(ac))
-            parts = [self.token_to_path(x, available[x]) for x in ac]
-            unlocked[None].append(tuple([self.arch_dirname] + parts))
-
-        # Deduplicate the list
-        unlocked[None] = list(lang.dedupe(unlocked[None]))
-
-        # Compute the combination of missing requirements: this will lead to
-        # paths that are unlocked conditionally
-        missing = self.conf.missing
-
-        missing_combinations = []
-        for ii in range(len(missing)):
-            missing_combinations += itertools.combinations(missing, ii + 1)
-
-        # Attach the services required to each combination
-        for m in missing_combinations:
-            to_be_processed = [m + x for x in available_combination]
-            for item in to_be_processed:
-                hierarchy = self.conf.hierarchy_tokens
-                available = self.conf.available
-                token2path = lambda x: self.token_to_path(x, available[x])
-                parts = []
-                for x in hierarchy:
-                    if x not in item:
-                        continue
-                    value = token2path(x) if x in available else x
-                    parts.append(value)
-                unlocked[m].append(tuple([self.arch_dirname] + parts))
-            # Deduplicate the list
-            unlocked[m] = list(lang.dedupe(unlocked[m]))
-        return unlocked
 
 
 class LmodContext(BaseContext):
