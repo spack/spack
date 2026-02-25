@@ -1418,9 +1418,7 @@ def mock_gnupghome(monkeypatch, tmp_path):
     short_name_tmpdir = tempfile.mkdtemp()
     # Redirect bootstrap root before gpg.init() so each xdist worker writes
     # bootstrap config to its own isolated directory.
-    monkeypatch.setattr(
-        spack.paths, "default_user_bootstrap_path", str(tmp_path / "bootstrap")
-    )
+    monkeypatch.setattr(spack.paths, "default_user_bootstrap_path", str(tmp_path / "bootstrap"))
     try:
         spack.util.gpg.init()
     except spack.util.gpg.SpackGPGError:
