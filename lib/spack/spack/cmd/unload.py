@@ -128,6 +128,7 @@ def unload(parser, args):
             if not os.path.isfile(unload_script):
                 mods = _get_environment_modifications(spec, shell)
                 _create_unload_shell_script(mods, unload_script)
-            commands = f"source {unload_script}"
+            source = "." if shell == "sh" else "source"
+            commands = f"{source} {unload_script}"
 
         print(f"{commands}")
