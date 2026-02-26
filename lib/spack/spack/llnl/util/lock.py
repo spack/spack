@@ -35,6 +35,7 @@ __all__ = [
 
 
 ReleaseFnType = Optional[Callable[[], bool]]
+DevIno = Tuple[int, int]  # (st_dev, st_ino) from os.stat_result
 
 
 def true_fn() -> bool:
@@ -47,14 +48,14 @@ class OpenFile:
 
     __slots__ = ("fh", "key", "refs")
 
-    def __init__(self, fh: IO[bytes], key: Tuple[int, int]):
+    def __init__(self, fh: IO[bytes], key: DevIno):
         self.fh = fh
         self.key = key  # (dev, ino)
         self.refs = 0
 
 
 class OpenFileTracker:
-    """Track open lockfiles by inode, to minimise the number of open file descriptors.
+    """Track open lockfiles by inode, to minimize the number of open file descriptors.
 
     ``fcntl`` locks are associated with an inode. If a process closes *any* file descriptor for an
     inode, all fcntl locks the process holds on that inode are released, even if other descriptors
@@ -71,9 +72,9 @@ class OpenFileTracker:
     """
 
     def __init__(self):
-        self._descriptors: Dict[Tuple[int, int], OpenFile] = {}
+        self._descriptors: Dict[DevIno, OpenFile] = {}
 
-    def get_ref_for_inode(self, key: Tuple[int, int]) -> Optional[OpenFile]:
+    def get_ref_for_inode(self, key: DevIno) -> Optional[OpenFile]:
         """Fast lookup: do we already have this inode open?"""
         return self._descriptors.get(key)
 
@@ -215,7 +216,7 @@ class Lock:
         self._reads = 0
         self._writes = 0
         self._file_ref: Optional[OpenFile] = None
-        self._cached_key: Optional[Tuple[int, int]] = None
+        self._cached_key: Optional[DevIno] = None
 
         # byte range parameters
         self._start = start
@@ -417,15 +418,6 @@ class Lock:
                 raise
 
         return False
-
-    def _ensure_parent_directory(self) -> str:
-        parent = os.path.dirname(self.path)
-
-        # relative paths to lockfiles in the current directory have no parent
-        if not parent:
-            return "."
-        os.makedirs(parent, exist_ok=True)
-        return parent
 
     def _read_log_debug_data(self) -> None:
         """Read PID and host data out of the file if it is there."""
