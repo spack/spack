@@ -47,8 +47,8 @@ from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
-from .list import SpecList, SpecListError, SpecListParser
 from .cache_shell_script import update_env_activate_script
+from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
 
