@@ -1055,6 +1055,13 @@ class OptionalInclude:
         # circular dependencies
         import spack.util.path
 
+        # Ignore included concrete environment files (i.e., ``spack.lock``)
+        # since they are not normal configuration (scope) files and their
+        # processing is handled when the environment is processed.
+        if path and os.path.splitext(path)[1] == ".lock":
+            tty.debug(f"Ignoring inclusion of '{path}' since not a configuration file")
+            return None
+
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 

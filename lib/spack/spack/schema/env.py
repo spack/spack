@@ -101,7 +101,7 @@ schema = {
 
 
 def update(data: Dict[str, Any]) -> bool:
-    """Update the spack.yaml data in place to remove deprecated properties.
+    """Update the spack.yaml data to the new format.
 
     Args:
         data: dictionary to be updated
@@ -109,6 +109,28 @@ def update(data: Dict[str, Any]) -> bool:
     Returns:
         ``True`` if data was changed, ``False`` otherwise
     """
-    # There are not currently any deprecated attributes in this section
-    # that have not been removed
-    return False
+    if not isinstance(data, dict):
+        return False
+
+    import os
+
+    if "include_concrete" not in data:
+        return False
+
+    # Move the old 'include_concrete' paths to reside under the 'include',
+    # ensuring that the lock file name is appended.
+    includes = []
+    for path in data["include_concrete"]:
+        if os.path.basename(path) != "spack.lock":
+            path = os.path.join(path, "spack.lock")
+        includes.append(path)
+
+    # Now add back the includes the environment file already has.
+    if "include" in data:
+        for path in data["include"]:
+            includes.append(path)
+
+    data["include"] = includes
+    del data["include_concrete"]
+
+    return True

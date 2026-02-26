@@ -1369,7 +1369,7 @@ class Environment:
         self.included_concrete_spec_data = {}
 
         for env_path in self.included_concrete_env_root_dirs:
-            # Check that environment exists
+            # Check that the environment (lockfile) exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
