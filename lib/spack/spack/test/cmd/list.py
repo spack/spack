@@ -7,9 +7,12 @@ import pathlib
 
 import pytest
 
+import spack.cmd.list
 import spack.paths
 import spack.repo
+import spack.util.git
 from spack.main import SpackCommand
+from spack.test.conftest import RepoBuilder
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -219,3 +222,34 @@ def test_list_repos():
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs
+
+
+@pytest.mark.usefixtures("config")
+def test_list_github_url_fails(repo_builder: RepoBuilder, monkeypatch):
+    with spack.repo.use_repositories(repo_builder.root):
+        repo_builder.add_package("pkg-a")
+        repo = spack.repo.PATH.repos[0]
+        pkg = repo.get_pkg_class("pkg-a")
+
+        old_path = repo.python_path
+        try:
+            # Check that a repository with no python path has no URL
+            monkeypatch.setattr(repo, "python_path", None)
+            assert (
+                spack.cmd.list.github_url(pkg) is None
+            ), "Expected no python path means unable to determine the repo URL"
+
+            # Check that a repository path that doesn't exist has no URL
+            monkeypatch.setattr(repo, "python_path", "/repo/root/does/not/exists")
+            assert (
+                spack.cmd.list.github_url(pkg) is None
+            ), "Expected bad repo path means unable to determine the repo URL"
+        finally:
+            monkeypatch.setattr(repo, "python_path", old_path)
+
+        # Check that missing git results in the file path
+        monkeypatch.setattr(spack.util.git, "git", lambda: None)
+        filepath = spack.cmd.list.github_url(pkg)
+        assert filepath and filepath.startswith(
+            "file://"
+        ), "Expected missing 'git' results in a file URI"
