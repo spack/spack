@@ -659,7 +659,8 @@ class Configuration:
 
         else:
             raise ValueError(
-                f"Invalid config scope: '{scope}'.  Must be one of {self.scopes.keys()}"
+                f"Invalid config scope: '{scope}'.  Must be one of "
+                f"{[k for k in self.scopes.keys()]}"
             )
 
     def get_config_filename(self, scope: str, section: str) -> str:
