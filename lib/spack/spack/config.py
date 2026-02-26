@@ -1015,7 +1015,7 @@ def _remove_prefix(path: str, prefix: str) -> str:
         path = path.removeprefix(prefix)
     except AttributeError:
         if path.startswith(prefix):
-            path = path[len(prefix) :]
+            path = path[len(prefix):]
     return path
 
 
@@ -1060,10 +1060,10 @@ class OptionalInclude:
         self._validate_parent_scope(parent_scope)
 
         # Determine the configuration scope name
-        config_name = self.name if self.name else parent_scope.name
+        config_name = self.name or parent_scope.name
 
         # But ensure that name is unique if there are multiple paths.
-        if not self.name or (hasattr(self, "paths") and len(self.paths) > 1):
+        if not self.name or len(getattr(self, "paths", [])) > 1:
             parent_path = getattr(parent_scope, "path", None)
             path = spack.util.path.substitute_path_variables(path)
 
