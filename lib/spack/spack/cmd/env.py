@@ -29,7 +29,6 @@ from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.traverse import traverse_nodes
-from spack.util.environment import EnvironmentModifications
 
 description = "manage environments"
 section = "environments"
@@ -391,7 +390,7 @@ def env_activate(args):
     active_env.manifest.prepare_config_scope()
     shell_script.update_env_activate_script(active_env, env_prompt, view)
 
-    ev.activate(active_env, prompt=env_prompt, view=view)
+    ev.activate(active_env)
 
     cmds = shell_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
 
@@ -400,6 +399,7 @@ def env_activate(args):
 
     source = "." if args.shell == "sh" else "source"
     print(f"{source} {env_activate_script}")
+
     shell_script.write_env_deactivate_script(ev.active_environment(), view)
 
 

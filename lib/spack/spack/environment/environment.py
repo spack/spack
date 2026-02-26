@@ -192,7 +192,7 @@ def validate_env_name(name):
     return name
 
 
-def activate(env, use_env_repo=False, prompt="", view=""):
+def activate(env, use_env_repo=False):
     """Activate an environment.
 
     To activate an environment, we add its manifest's configuration scope to the
@@ -202,11 +202,8 @@ def activate(env, use_env_repo=False, prompt="", view=""):
         env (Environment): the environment to activate
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
-        prompt (str): name of environment's prompt
-        view (str): name of environment's view
     """
     global _active_environment
-    # add from import for cache_shell_script
 
     try:
         _active_environment = env
@@ -2658,14 +2655,13 @@ def no_active_environment():
     """Deactivate the active environment for the duration of the context. Has no
     effect when there is no active environment."""
     env = active_environment()
-    view_var = os.environ.get(spack_env_view_var, "")
     try:
         deactivate()
         yield
     finally:
         # TODO: we don't handle `use_env_repo` here.
         if env:
-            activate(env, view=view_var)
+            activate(env)
 
 
 def initialize_environment_dir(
