@@ -48,6 +48,7 @@ from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
 from .list import SpecList, SpecListError, SpecListParser
+from .cache_shell_script import update_env_activate_script
 
 SpecPair = spack.concretize.SpecPair
 
@@ -2286,6 +2287,7 @@ class Environment:
 
         for x in self.concretized_roots:
             x.new = False
+        update_env_activate_script(self, os.environ.get(spack_env_view_var, ""))
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:

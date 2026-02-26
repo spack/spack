@@ -97,12 +97,12 @@ def write_env_activate_script(env, view):
 
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.now()}\n\n"
+                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
             )
             f.write(cmds)
 
 
-def update_env_activate_script(env, prompt="", view=""):
+def update_env_activate_script(env, view=""):
     """Overwrite existing environment activation script with new environment modifications
 
     Args:
@@ -137,7 +137,7 @@ def update_env_activate_script(env, prompt="", view=""):
 
         with open(activate_script_path, "w", encoding="utf-8") as f:
             f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.now()}\n\n"
+                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
             )
             f.write(cmds)
 
