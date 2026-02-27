@@ -514,8 +514,6 @@ To create a combined concrete environment, you must have at least one existing c
 You will use the command ``spack env create`` with the argument ``--include-concrete`` followed by the name or path of the environment you'd like to include.
 Here is an example of how to create a combined environment from the command line::
 
-.. code-block:: spec
-
    $ spack env create myenv
    $ spack -e myenv add python
    $ spack -e myenv concretize
@@ -549,8 +547,6 @@ Updating a combined environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you want changes made to one of the included environments reflected in the combined environment, then you will need to re-concretize the included environment **then** the combined environment for the change to be incorporated.
 For example::
-
-.. code-block:: spec
 
    $ spack env create myenv
    $ spack -e myenv add python
@@ -984,25 +980,25 @@ That can be done with the following manifest file:
 .. code-block:: yaml
 
    spack:
-     - group: apps-x86_64_v3
-       specs:
-       - gromacs
-       - quantum-espresso
-       override:
-         packages:
-           all:
-             prefer:
-             - target=x86_64_v3
+   - group: apps-x86_64_v3
+     specs:
+     - gromacs
+     - quantum-espresso
+     override:
+       packages:
+         all:
+           prefer:
+           - target=x86_64_v3
 
-     - group: apps-x86_64_v4
-       specs:
-       - gromacs
-       - quantum-espresso
-       override:
-         packages:
-           all:
-             prefer:
-             - target=x86_64_v4
+   - group: apps-x86_64_v4
+     specs:
+     - gromacs
+     - quantum-espresso
+     override:
+       packages:
+         all:
+           prefer:
+           - target=x86_64_v4
 
 The ``override:`` attribute allows us to override the configuration for a single group of specs.
 The overridden part is always added as the *topmost* scope when the current group is concretized.
