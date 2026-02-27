@@ -11,7 +11,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Union
 
 import spack.caches
 import spack.config

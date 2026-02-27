@@ -27,7 +27,7 @@ def get_version_lines(
         checksum = version_hashes_dict[version]
 
         url = url_overrides.get(version)
-        url_parameter = f', url={repr(url)}' if url is not None else ""
+        url_parameter = f", url={repr(url)}" if url is not None else ""
 
         line = f'{INDENT}version("{version}", sha256="{checksum}"{url_parameter})'
         version_lines.append(line)

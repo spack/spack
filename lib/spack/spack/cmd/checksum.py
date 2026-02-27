@@ -154,7 +154,10 @@ def checksum(parser, args):
         tty.die(f"Could not find any remote versions for {pkg.name}")
     elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
         filtered_url_dict = spack.stage.interactive_version_filter(
-            url_dict, pkg.versions, url_overrides=url_overrides, initial_verion_filter=spec.versions
+            url_dict,
+            pkg.versions,
+            url_overrides=url_overrides,
+            initial_verion_filter=spec.versions,
         )
         if not filtered_url_dict:
             exit(0)
@@ -207,13 +210,8 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict, url_dict: dict
             msg = "No previous checksum"
             status = "-"
 
-        elif version not in url_dict:
-            msg = "URL not found"
-            status = "x"
-            failed = True
-
         elif url_dict[version] not in pkg.all_urls_for_version(version):
-            msg = "URL for version does not exist"
+            msg = "URL for version not found"
             status = "x"
             failed = True
 
