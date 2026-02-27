@@ -139,7 +139,7 @@ def checksum(parser, args):
     # We wanna ensure that `spack checksum` and `spack install` ultimately use the same URL, so
     # here we check whether the crawled and computed URLs disagree, and if so, prioritize the
     # former if that URL exists (just sending a HEAD request that is).
-    url_changed_for_version = set()
+    url_overrides: Dict[StandardVersion, str] = {}
     for version, url in url_dict.items():
         possible_urls = pkg.all_urls_for_version(version)
         if url not in possible_urls:
@@ -148,16 +148,13 @@ def checksum(parser, args):
                     url_dict[version] = possible_url
                     break
             else:
-                url_changed_for_version.add(version)
+                url_overrides[version] = url
 
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
     elif len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
         filtered_url_dict = spack.stage.interactive_version_filter(
-            url_dict,
-            pkg.versions,
-            url_changes=url_changed_for_version,
-            initial_verion_filter=spec.versions,
+            url_dict, pkg.versions, url_overrides=url_overrides, initial_verion_filter=spec.versions
         )
         if not filtered_url_dict:
             exit(0)
@@ -174,10 +171,7 @@ def checksum(parser, args):
         sys.exit(0)
 
     # convert dict into package.py version statements
-    version_lines = get_version_lines(
-        version_hashes,
-        url_changed_for_version={v: url_dict.get(v) for v in url_changed_for_version},
-    )
+    version_lines = get_version_lines(version_hashes, url_overrides=url_overrides)
     print()
     print(version_lines)
     print()
@@ -198,6 +192,7 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict, url_dict: dict
     Args:
         pkg (spack.package_base.PackageBase): A package class for a given package in Spack.
         version_hashes (dict): A dictionary of the form: version -> checksum.
+        url_dict (dict): A dictionary of the form: version -> url.
 
     """
     results = []
@@ -211,6 +206,11 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict, url_dict: dict
         if version not in pkg.versions:
             msg = "No previous checksum"
             status = "-"
+
+        elif version not in url_dict:
+            msg = "URL not found"
+            status = "x"
+            failed = True
 
         elif url_dict[version] not in pkg.all_urls_for_version(version):
             msg = "URL for version does not exist"
