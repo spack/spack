@@ -12,7 +12,7 @@ import spack.modules.lmod
 
 
 def add_command(parser, command_dict):
-    lmod_parser = parser.add_parser("lmod", help="manipulate hierarchical module files")
+    lmod_parser = parser.add_parser("lmod", help="manipulate lua module files")
     sp = spack.cmd.modules.setup_parser(lmod_parser)
 
     # Set default module file for a package

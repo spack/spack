@@ -11,7 +11,7 @@ import spack.modules.tcl
 
 
 def add_command(parser, command_dict):
-    tcl_parser = parser.add_parser("tcl", help="manipulate non-hierarchical module files")
+    tcl_parser = parser.add_parser("tcl", help="manipulate tcl module files")
     sp = spack.cmd.modules.setup_parser(tcl_parser)
 
     # Set default module file for a package

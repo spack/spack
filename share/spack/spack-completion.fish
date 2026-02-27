@@ -2565,8 +2565,8 @@ complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -d 'conf
 
 # spack module
 set -g __fish_spack_optspecs_spack_module h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a lmod -d 'manipulate hierarchical module files'
-complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a tcl -d 'manipulate non-hierarchical module files'
+complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a lmod -d 'manipulate lua module files'
+complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a tcl -d 'manipulate tcl module files'
 complete -c spack -n '__fish_spack_using_command module' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command module' -s h -l help -d 'show this help message and exit'
 
