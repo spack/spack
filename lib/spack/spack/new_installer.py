@@ -241,7 +241,7 @@ def install_from_buildcache(
 
 
 class PrefixPivoter:
-    """Manages the installation prefix during overwrite installations."""
+    """Manages the installation prefix of a build."""
 
     def __init__(self, prefix: str, keep_prefix: bool = False) -> None:
         """Initialize the prefix pivoter.
