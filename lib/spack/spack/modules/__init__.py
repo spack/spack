@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This package contains code for creating environment modules, which can
-include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
+include Tcl or Lua modules, and others.
 """
 
 import os

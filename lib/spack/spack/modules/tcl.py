@@ -2,9 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""This module implements the classes necessary to generate Tcl
-non-hierarchical modules.
-"""
+"""This module implements the classes necessary to generate Tcl modules."""
 
 import os
 from typing import ClassVar, Dict, Optional
