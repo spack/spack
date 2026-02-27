@@ -1290,6 +1290,7 @@ def schedule_builds(
     db: spack.database.Database,
     prefix_locker: spack.database.SpecLocker,
     overwrite: Set[str],
+    overwrite_time: float,
     capacity: int,
     needs_jobserver_token: bool,
     jobserver: JobServer,
@@ -1312,6 +1313,9 @@ def schedule_builds(
         db: Package database; used for read lock and installed-status queries.
         prefix_locker: Per-spec write locker.
         overwrite: Set of dag hashes to overwrite even if already installed.
+        overwrite_time: Timestamp (from time.time()) at which the overwrite install was requested.
+            A spec in ``overwrite`` whose DB installation_time >= overwrite_time was installed by
+            a concurrent process after our request started and should be treated as done.
         capacity: Maximum number of new builds to add to to_start in this call.
         needs_jobserver_token: True if a jobserver token is required for the first new build.
         jobserver: Jobserver for acquiring tokens.
@@ -1358,7 +1362,13 @@ def schedule_builds(
             upstream, record = db.query_by_spec_hash(dag_hash)
 
             # If the spec is already installed, treat it as done regardless of lock type.
-            if dag_hash not in overwrite and record and record.installed:
+            # A spec in the overwrite set is also treated as done if another process installed it
+            # after our overwrite request was created (installation_time >= overwrite_time).
+            if (
+                record
+                and record.installed
+                and (dag_hash not in overwrite or record.installation_time >= overwrite_time)
+            ):
                 if have_write:
                     lock.downgrade_write_to_read()
                 # keep the read lock (either downgraded or already a read lock)
@@ -1446,6 +1456,8 @@ class PackageInstaller:
         self.include_build_deps = include_build_deps
         #: Set of DAG hashes to overwrite (if already installed)
         self.overwrite: Set[str] = set(overwrite) if overwrite else set()
+        #: Time at which the overwrite install was requested; used to detect concurrent overwrites.
+        self.overwrite_time: float = time.time()
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
 
@@ -1785,6 +1797,7 @@ class PackageInstaller:
             db=self.db,
             prefix_locker=spack.store.STORE.prefix_locker,
             overwrite=self.overwrite,
+            overwrite_time=self.overwrite_time,
             capacity=self.capacity,
             needs_jobserver_token=bool(self.running_builds),
             jobserver=jobserver,
