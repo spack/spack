@@ -1269,14 +1269,22 @@ def schedule_builds(
     capacity: int,
     needs_jobserver_token: bool,
     jobserver: JobServer,
-) -> Tuple[bool, List[Tuple[str, spack.util.lock.Lock]], List[Tuple[str, spack.spec.Spec]]]:
+) -> Tuple[
+    bool,
+    List[Tuple[str, spack.util.lock.Lock]],
+    List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]],
+]:
     """Try to schedule as many pending builds as possible.
 
-    For each pending spec, attempts to acquire a non-blocking per-spec write lock. Under both the
-    DB read lock and the prefix write lock, checks whether another process has already installed
-    the spec. If so, captures it as newly_installed (caller enqueues parents) and releases the
-    lock. Otherwise, acquires a jobserver token if needed and adds the (dag_hash, lock) pair to
-    to_start (caller launches the build).
+    For each pending spec, attempts to acquire a non-blocking per-spec write lock. If the write
+    lock times out, a read lock is tried as a fallback: a successful read lock means the first
+    process finished and downgraded its write lock. If the DB confirms the spec is installed, it
+    is captured as newly_installed; if the DB says it is not installed, the concurrent process was
+    likely killed mid-build, and the spec is retried next iteration. Under both the DB read lock
+    and the prefix lock, checks whether another process has already installed the spec. If so,
+    captures it as newly_installed (caller enqueues parents) and keeps a read lock on the prefix
+    to prevent concurrent uninstall. Otherwise, acquires a jobserver token if needed and adds the
+    (dag_hash, lock) pair to to_start (caller launches the build).
 
     Args:
         pending: List of dag hashes pending installation; modified in-place.
@@ -1292,11 +1300,12 @@ def schedule_builds(
         A (blocked, to_start, newly_installed) tuple where ``blocked`` is True if any pending
         builds were blocked on locks; ``to_start`` contains ``(dag_hash, lock)`` pairs where the
         write lock is held and the caller must start the build and eventually release the lock;
-        and ``newly_installed`` contains ``(dag_hash, spec)`` pairs found already installed by
-        another process for which the caller must update the UI and enqueue parents.
+        and ``newly_installed`` contains ``(dag_hash, spec, lock)`` triples found already installed
+        by another process; the read lock is held and the caller must retain it to prevent
+        concurrent uninstall.
     """
     to_start: List[Tuple[str, spack.util.lock.Lock]] = []
-    newly_installed: List[Tuple[str, spack.spec.Spec]] = []
+    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
     blocked = True
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
@@ -1318,26 +1327,41 @@ def schedule_builds(
             try:
                 lock.acquire_write(timeout=1e-9)
                 blocked = False
+                have_write = True
             except spack.util.lock.LockTimeoutError:
-                # another process is building this spec; try the next one
+                # Write lock failed: either another process is actively building, or it
+                # finished and downgraded to a read lock. Try a read lock to find out.
+                try:
+                    lock.acquire_read(timeout=1e-9)
+                except spack.util.lock.LockTimeoutError:
+                    idx += 1
+                    continue  # active build in progress; try the next spec
+                have_write = False
+
+            # Check installed status under the DB read lock and prefix lock.
+            upstream, record = db.query_by_spec_hash(dag_hash)
+
+            # If the spec is already installed, treat it as done regardless of lock type.
+            if dag_hash not in overwrite and record and record.installed:
+                if have_write:
+                    lock.downgrade_write_to_read()
+                # keep the read lock (either downgraded or already a read lock)
+                del pending[idx]
+                newly_installed.append((dag_hash, spec, lock))
+                build_graph.enqueue_parents(dag_hash, pending)
+                continue
+
+            if not have_write:
+                # Read lock but not installed: concurrent process was likely killed; retry later.
+                lock.release_read()
                 idx += 1
                 continue
 
-            # Check installed status under the DB read lock and prefix write lock.
-            upstream, record = db.query_by_spec_hash(dag_hash)
-
+            # Write lock acquired, spec not yet installed. Proceed with scheduling.
             # Don't schedule builds for specs from upstream databases.
             assert not (
                 upstream and record and not record.installed
             ), f"Cannot install {spec}: it is uninstalled in an upstream database."
-
-            # If the spec is already installed by another process, capture it and enqueue parents.
-            if dag_hash not in overwrite and record and record.installed:
-                lock.release_write()
-                del pending[idx]
-                newly_installed.append((dag_hash, spec))
-                build_graph.enqueue_parents(dag_hash, pending)
-                continue
 
             # Acquire a jobserver token if needed. The first (implicit) job needs no token.
             if needs_jobserver_token and not jobserver.acquire(1):
@@ -1493,13 +1517,15 @@ class PackageInstaller:
 
         # Finished builds that have not yet been written to the database.
         finished_builds: List[ChildInfo] = []
+        # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
+        retained_read_locks: List[spack.util.lock.Lock] = []
         next_database_write = 0.0
 
         failures: List[spack.spec.Spec] = []
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
-            blocked = self._schedule_builds(selector, jobserver)
+            blocked = self._schedule_builds(selector, jobserver, retained_read_locks)
 
             while self.pending_builds or self.running_builds or finished_builds:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
@@ -1588,13 +1614,13 @@ class PackageInstaller:
                         current_time >= next_database_write
                         or not (self.pending_builds or self.running_builds)
                     )
-                    and self._save_to_db(finished_builds)
+                    and self._save_to_db(finished_builds, retained_read_locks)
                 ):
                     finished_builds.clear()
 
                 # Try to schedule more builds, acquiring per-spec locks and jobserver tokens.
                 if self.capacity and self.pending_builds:
-                    blocked = self._schedule_builds(selector, jobserver)
+                    blocked = self._schedule_builds(selector, jobserver, retained_read_locks)
 
                 # Finally update the UI
                 self.build_status.update()
@@ -1611,6 +1637,10 @@ class PackageInstaller:
             with self.db.write_transaction():
                 for build in finished_builds:
                     self.db._add(build.spec, explicit=build.explicit)
+
+            # Release prefix read locks retained after DB flush
+            for lock in retained_read_locks:
+                lock.release_read()
 
             # Release any prefix write locks that were not yet released via _save_to_db
             for build in finished_builds:
@@ -1649,7 +1679,9 @@ class PackageInstaller:
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
 
-    def _save_to_db(self, finished_builds: List[ChildInfo]) -> bool:
+    def _save_to_db(
+        self, finished_builds: List[ChildInfo], retained_read_locks: List[spack.util.lock.Lock]
+    ) -> bool:
         try:
             # Only try to get the lock once (non-blocking). If it fails, try it next time.
             if self.db.lock.acquire_write(timeout=1e-9):
@@ -1662,16 +1694,22 @@ class PackageInstaller:
         finally:
             self.db.lock.release_write(self.db._write)
 
-        # DB has been written and flushed; release per-spec prefix write locks so other processes
-        # can see the specs are now installed and acquire their own locks.
+        # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
+        # other processes can see the specs are installed, while preventing concurrent uninstalls.
         for build in finished_builds:
             if build.prefix_lock is not None:
-                build.prefix_lock.release_write()
+                build.prefix_lock.downgrade_write_to_read()
+                retained_read_locks.append(build.prefix_lock)
                 build.prefix_lock = None
 
         return True
 
-    def _schedule_builds(self, selector: selectors.BaseSelector, jobserver: JobServer) -> bool:
+    def _schedule_builds(
+        self,
+        selector: selectors.BaseSelector,
+        jobserver: JobServer,
+        retained_read_locks: List[spack.util.lock.Lock],
+    ) -> bool:
         """Try to schedule as many pending builds as possible.
 
         Delegates to the module-level schedule_builds() function and then performs the
@@ -1695,7 +1733,8 @@ class PackageInstaller:
             jobserver=jobserver,
         )
         # Specs installed by another process.
-        for dag_hash, spec in newly_installed:
+        for dag_hash, spec, lock in newly_installed:
+            retained_read_locks.append(lock)
             self.build_status.add_build(spec, explicit=dag_hash in self.explicit)
             self.build_status.update_state(dag_hash, "finished")
         # Specs we can start building ourselves.
