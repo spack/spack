@@ -13,7 +13,14 @@ if sys.platform == "win32":
 
 import spack.error
 import spack.spec
-from spack.new_installer import OVERWRITE_GARBAGE_SUFFIX, PackageInstaller, PrefixPivoter
+import spack.util.lock
+from spack.new_installer import (
+    OVERWRITE_GARBAGE_SUFFIX,
+    JobServer,
+    PackageInstaller,
+    PrefixPivoter,
+    schedule_builds,
+)
 
 
 @pytest.fixture
@@ -227,3 +234,205 @@ class TestPackageInstallerConstructor:
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
         assert PackageInstaller([spec.package]).capacity == 1
+
+
+class _FakeBuildGraph:
+    """Minimal stand-in for BuildGraph in schedule_builds unit tests.
+
+    Provides the two interface points that schedule_builds calls:
+      - .nodes  (dict: dag_hash -> Spec)
+      - .enqueue_parents(dag_hash, pending_builds)
+    """
+
+    def __init__(self, specs):
+        self.nodes = {spec.dag_hash(): spec for spec in specs}
+
+    def enqueue_parents(self, dag_hash, pending_builds):
+        """Remove dag_hash from nodes; no parents in these simple unit tests."""
+        self.nodes.pop(dag_hash, None)
+
+
+class TestScheduleBuilds:
+    """Unit tests for the module-level schedule_builds() function."""
+
+    def _make_spec(self, name):
+        """Return a minimal concrete spec suitable for locking and DB queries."""
+        spec = spack.spec.Spec(name)
+        spec._mark_concrete()
+        return spec
+
+    def _mark_installed(self, spec, store):
+        """Create the install directory structure and register the spec in the DB as installed."""
+        store.layout.create_install_directory(spec)
+        store.db.add(spec, explicit=True)
+
+    def test_not_installed_no_running_starts_build(self, temporary_store, mock_packages):
+        """A fresh spec with no running builds is added to to_start."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert len(to_start) == 1
+            assert to_start[0][0] == spec.dag_hash()
+            assert not newly_installed
+            assert not pending  # removed from the pending list
+        finally:
+            for _, lock in to_start:
+                lock.release_write()
+            jobserver.close()
+
+    def test_already_installed_yields_newly_installed(self, temporary_store, mock_packages):
+        """A spec already in the DB is returned in newly_installed, not in to_start."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert not to_start
+            assert len(newly_installed) == 1
+            assert newly_installed[0][0] == spec.dag_hash()
+            assert not pending  # removed from the pending list
+        finally:
+            jobserver.close()
+
+    def test_no_jobserver_token_returns_empty(self, temporary_store, mock_packages):
+        """When has_running_builds=True and no token is available, nothing is started."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
+        jobserver = JobServer(num_jobs=1)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                capacity=2,
+                needs_jobserver_token=True,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert not to_start
+            assert not newly_installed
+            assert len(pending) == 1
+        finally:
+            jobserver.close()
+
+    def test_all_locked_returns_blocked(self, temporary_store, mock_packages, monkeypatch):
+        """When all pending specs are locked externally, blocked_on_locks is True."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        # Pre-register the lock in the prefix_locker cache, then patch acquire_write to fail.
+        lock = temporary_store.prefix_locker.lock(spec)
+
+        def always_timeout(timeout=None):
+            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
+
+        monkeypatch.setattr(lock, "acquire_write", always_timeout)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                capacity=2,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert blocked
+            assert not to_start
+            assert not newly_installed
+            assert len(pending) == 1
+        finally:
+            jobserver.close()
+
+    def test_overwrite_installed_spec_is_started(self, temporary_store, mock_packages):
+        """A spec in the overwrite set is scheduled even when already installed."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite={spec.dag_hash()},
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert len(to_start) == 1
+            assert to_start[0][0] == spec.dag_hash()
+            assert not newly_installed
+        finally:
+            for _, lock in to_start:
+                lock.release_write()
+            jobserver.close()
+
+    def test_mixed_locked_unlocked(self, temporary_store, mock_packages, monkeypatch):
+        """Only the unlocked spec enters to_start when one spec is externally locked."""
+        spec_a = self._make_spec("trivial-install-test-package")
+        spec_b = self._make_spec("trivial-smoke-test")
+        pending = [spec_a.dag_hash(), spec_b.dag_hash()]
+        bg = _FakeBuildGraph([spec_a, spec_b])
+        jobserver = JobServer(num_jobs=4)
+        # Patch spec_a's lock to always time out, simulating an external write lock.
+        lock_a = temporary_store.prefix_locker.lock(spec_a)
+
+        def always_timeout(timeout=None):
+            raise spack.util.lock.LockTimeoutError("write", lock_a.path, 0, 1)
+
+        monkeypatch.setattr(lock_a, "acquire_write", always_timeout)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                capacity=2,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked  # spec_b was schedulable
+            started_hashes = {h for h, _ in to_start}
+            assert spec_b.dag_hash() in started_hashes
+            assert spec_a.dag_hash() not in started_hashes
+            assert not newly_installed
+        finally:
+            for _, lock in to_start:
+                lock.release_write()
+            jobserver.close()
