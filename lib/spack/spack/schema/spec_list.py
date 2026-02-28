@@ -11,6 +11,15 @@ matrix_schema = {
     },
 }
 
+spec_list_properties = {
+    "matrix": matrix_schema,
+    "exclude": {
+        "type": "array",
+        "description": "List of specific spec combinations to exclude from the " "matrix",
+        "items": {"type": "string"},
+    },
+}
+
 spec_list_schema = {
     "type": "array",
     "description": "List of specs to include in the environment, supporting both simple specs and "
@@ -23,15 +32,7 @@ spec_list_schema = {
                 "description": "Matrix configuration for generating multiple specs from "
                 "combinations of constraints",
                 "additionalProperties": False,
-                "properties": {
-                    "matrix": matrix_schema,
-                    "exclude": {
-                        "type": "array",
-                        "description": "List of specific spec combinations to exclude from the "
-                        "matrix",
-                        "items": {"type": "string"},
-                    },
-                },
+                "properties": {**spec_list_properties},
             },
             {"type": "string", "description": "Simple spec string"},
             {"type": "null"},

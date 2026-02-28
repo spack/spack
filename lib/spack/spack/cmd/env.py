@@ -28,6 +28,7 @@ from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.traverse import traverse_nodes
 from spack.util.environment import EnvironmentModifications
 
 description = "manage environments"
@@ -141,15 +142,15 @@ def _env_create(
     """Create a new environment, with an optional yaml description.
 
     Arguments:
-        name_or_path (str): name of the environment to create, or path to it
-        init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json), YAML manifest file, or env dir
-        dir (bool): if True, create an environment in a directory instead
-            of a named environment
-        keep_relative (bool): if True, develop paths are copied verbatim into
-            the new environment file, otherwise they may be made absolute if the
-            new environment is in a different location
-        include_concrete (list): list of the included concrete environments
+        name_or_path: name of the environment to create, or path to it
+        init_file: optional initialization file -- can be a JSON lockfile
+            (*.lock, *.json), YAML manifest file, or env dir
+        dir: if True, create an environment in a directory instead of a named
+            environment
+        keep_relative: if True, develop paths are copied verbatim into the new
+            environment file, otherwise they may be made absolute if the new
+            environment is in a different location
+        include_concrete: list of the included concrete environments
     """
     if not dir:
         env = ev.create(
@@ -558,8 +559,8 @@ def _env_untrack_or_remove(
             if env.name == remove_env.name:
                 continue
 
-            # check if an environment is included un another
-            if remove_env.path in env.included_concrete_envs:
+            # check if an environment is included in another
+            if remove_env.path in env.included_concrete_env_root_dirs:
                 msg = f"Environment '{remove_env.name}' is used by environment '{env.name}'"
                 if force:
                     tty.warn(msg)
@@ -870,8 +871,10 @@ def env_loads(args):
 
     loads_file = fs.join_path(env.path, "loads")
     with open(loads_file, "w", encoding="utf-8") as f:
-        specs = env._get_environment_specs(recurse_dependencies=recurse_dependencies)
-
+        if not recurse_dependencies:
+            specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots]
+        else:
+            specs = list(traverse_nodes(env.concrete_roots(), deptype=("link", "run")))
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")

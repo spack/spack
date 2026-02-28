@@ -12,6 +12,7 @@
 spack-db.*
 *.in.log
 *.out.log
+CLAUDE.md
 
 # Configuration: Ignore everything in /etc/spack,
 # except defaults and site scopes that ship with spack

@@ -104,9 +104,11 @@ def view_copy(
 
 #: Type alias for link types
 LinkType = Literal["hardlink", "hard", "copy", "relocate", "add", "symlink", "soft"]
+CanonicalLinkType = Literal["hardlink", "copy", "symlink"]
+
 
 #: supported string values for `link_type` in an env, mapped to canonical values
-_LINK_TYPES = {
+_LINK_TYPES: Dict[LinkType, CanonicalLinkType] = {
     "hardlink": "hardlink",
     "hard": "hardlink",
     "copy": "copy",
@@ -119,7 +121,7 @@ _LINK_TYPES = {
 _VALID_LINK_TYPES = sorted(set(_LINK_TYPES.values()))
 
 
-def canonicalize_link_type(link_type: LinkType) -> str:
+def canonicalize_link_type(link_type: LinkType) -> CanonicalLinkType:
     """Return canonical"""
     canonical = _LINK_TYPES.get(link_type)
     if not canonical:

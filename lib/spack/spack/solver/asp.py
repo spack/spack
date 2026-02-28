@@ -43,7 +43,6 @@ import spack.compilers.flags
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
-import spack.environment as ev
 import spack.error
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
@@ -81,7 +80,7 @@ from .core import (
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector, create_external_parser
+from .reuse import ReusableSpecsSelector, SpecFiltersFactory, create_external_parser
 from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
 from .versions import Provenance
 
@@ -1143,6 +1142,8 @@ class PyclingoDriver:
         if conc_cache_enabled and self._conc_cache:
             result, concretization_stats = self._conc_cache.fetch(cache_key)
         timer.stop("cache-check")
+
+        tty.debug("Starting concretizer")
 
         # run the solver and store the result, if it wasn't cached already
         if not result:
@@ -2317,15 +2318,18 @@ class SpackSolverSetup:
             if spec.external:
                 clauses.append(fn.attr("external", name))
 
+        # TODO: a loop over `edges_to_dependencies` is preferred over `edges_from_dependents`
+        # since dependents can point to specs out of scope for the solver.
         edges = spec.edges_from_dependents()
-        virtuals = sorted(
-            {x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])}
-        )
         if not body and not spec.concrete:
+            virtuals = sorted(set(itertools.chain.from_iterable(edge.virtuals for edge in edges)))
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))
         else:
+            # direct dependencies are handled under `edges_to_dependencies()`
+            virtual_iter = (edge.virtuals for edge in edges if not edge.direct)
+            virtuals = sorted(set(itertools.chain.from_iterable(virtual_iter)))
             for virtual in virtuals:
                 clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
 
@@ -2425,6 +2429,9 @@ class SpackSolverSetup:
                 for dependency_type in dt.flag_to_tuple(dspec.depflag):
                     edge_clauses.append(fn.attr("depends_on", name, dep.name, dependency_type))
 
+                for virtual in dspec.virtuals:
+                    dependency_clauses.append(fn.attr("virtual_on_edge", name, dep.name, virtual))
+
                 # By default, wrap head of rules, unless the context says otherwise
                 wrap_node_requirement = body is False
                 if context and context.wrap_node_requirement is not None:
@@ -2473,17 +2480,17 @@ class SpackSolverSetup:
             from_packages_yaml: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
-                v = vn.ver(vstr)
+                cfg_ver = vn.ver(vstr)
 
-                if isinstance(v, vn.GitVersion):
-                    if not require_checksum or v.is_commit:
-                        from_packages_yaml.append(v)
+                if isinstance(cfg_ver, vn.GitVersion):
+                    if not require_checksum or cfg_ver.is_commit:
+                        from_packages_yaml.append(cfg_ver)
                 else:
-                    matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(v)]
+                    matches = [x for x in self.possible_versions[pkg_name] if x.satisfies(cfg_ver)]
                     matches.sort(reverse=True)
                     if not matches:
                         raise spack.error.ConfigError(
-                            f"Preference for version {v} does not match any known "
+                            f"Preference for version {cfg_ver} does not match any known "
                             f"version of {pkg_name}"
                         )
                     from_packages_yaml.extend(matches)
@@ -2896,6 +2903,9 @@ class SpackSolverSetup:
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
         """
+        # TODO: remove this local import and get rid of dependency on globals
+        import spack.environment as ev
+
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
@@ -3052,8 +3062,11 @@ class SpackSolverSetup:
 
         # once we've done a full traversal and know possible versions, check that the
         # requested solve is at least consistent.
-        self.impossible_dependencies_check(specs)
-        self.input_spec_version_check(specs, allow_deprecated)
+        # do not check dependency and version availability for already concrete specs
+        # as they come from reusable specs
+        abstract_specs = [s for s in specs if not s.concrete]
+        self.impossible_dependencies_check(abstract_specs)
+        self.input_spec_version_check(abstract_specs, allow_deprecated)
 
         return self.gen
 
@@ -3662,6 +3675,8 @@ class SpecBuilder:
         self._splices.setdefault(parent_spec, []).append(splice)
 
     def build_specs(self, function_tuples: List[FunctionTupleT]) -> List[spack.spec.Spec]:
+        # TODO: remove this local import and get rid of dependency on globals
+        import spack.environment as ev
 
         attr_key = {
             # hash attributes are handled first, since they imply entire concrete specs
@@ -3880,7 +3895,7 @@ class Solver:
     and passes the setup method to the driver, as well.
     """
 
-    def __init__(self):
+    def __init__(self, *, specs_factory: Optional[SpecFiltersFactory] = None):
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(init_config=True)
 
@@ -3893,6 +3908,7 @@ class Solver:
         self.selector = ReusableSpecsSelector(
             configuration=spack.config.CONFIG,
             external_parser=create_external_parser(self.packages_with_externals, completion_mode),
+            factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
         )
 

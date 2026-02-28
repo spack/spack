@@ -385,15 +385,6 @@ package_attributes = AuditClass(
     kwargs=("pkgs",),
 )
 
-
-package_deprecated_attributes = AuditClass(
-    group="packages",
-    tag="PKG-DEPRECATED-ATTRIBUTES",
-    description="Sanity checks to preclude use of deprecated package attributes",
-    kwargs=("pkgs",),
-)
-
-
 package_properties = AuditClass(
     group="packages",
     tag="PKG-PROPERTIES",
@@ -538,46 +529,6 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
                 "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
             ]
             errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
-
-    return errors
-
-
-@package_deprecated_attributes
-def _search_for_deprecated_package_methods(pkgs, error_cls):
-    """Ensure the package doesn't define or use deprecated methods"""
-    DEPRECATED_METHOD = (("test", "a name starting with 'test_'"),)
-    DEPRECATED_USE = (
-        ("self.cache_extra_test_sources(", "cache_extra_test_sources(self, ..)"),
-        ("self.install_test_root(", "install_test_root(self, ..)"),
-        ("self.run_test(", "test_part(self, ..)"),
-    )
-    errors = []
-    for pkg_name in pkgs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
-        method_errors = collections.defaultdict(list)
-        for name, function in methods:
-            for deprecated_name, alternate in DEPRECATED_METHOD:
-                if name == deprecated_name:
-                    msg = f"Rename '{deprecated_name}' method to {alternate} instead."
-                    method_errors[name].append(msg)
-
-            source = inspect.getsource(function)
-            for deprecated_name, alternate in DEPRECATED_USE:
-                if deprecated_name in source:
-                    msg = f"Change '{deprecated_name}' to '{alternate}' in '{name}' method."
-                    method_errors[name].append(msg)
-
-        num_methods = len(method_errors)
-        if num_methods > 0:
-            methods = plural(num_methods, "method", show_n=False)
-            error_msg = (
-                f"Package '{pkg_name}' implements or uses unsupported deprecated {methods}."
-            )
-            instr = [f"Make changes to '{pkg_cls.__module__}':"]
-            for name in sorted(method_errors):
-                instr.extend([f"    {msg}" for msg in method_errors[name]])
-            errors.append(error_cls(error_msg, instr))
 
     return errors
 

@@ -275,3 +275,22 @@ class TestJobServer:
             assert js.w_conn is not None and js.w_conn.fileno() == js.w
         finally:
             js.close()
+
+    def test_close_warns_when_spack_holds_tokens(self):
+        """Should warn when Spack closes the jobserver while still holding acquired tokens."""
+        js = JobServer(4)
+        js.acquire(1)  # Spack acquires a token without releasing it
+        with pytest.warns(UserWarning, match="Spack failed to release jobserver tokens"):
+            js.close()
+
+    def test_close_warns_when_subprocess_holds_tokens(self):
+        """Should warn when a subprocess acquired a token but never released it."""
+        js1 = JobServer(4)
+        os.read(js1.r, 1)  # A subprocess acquires a token without releasing it
+        with pytest.warns(UserWarning, match="1 jobserver token was not released"):
+            js1.close()
+
+        js2 = JobServer(4)
+        os.read(js2.r, 2)  # A subprocess acquires two tokens without releasing them
+        with pytest.warns(UserWarning, match="2 jobserver tokens were not released"):
+            js2.close()

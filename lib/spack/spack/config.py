@@ -144,11 +144,12 @@ def _include_cache_location():
 
 
 class ConfigScope:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, included: bool = False) -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
+        self.included = included
 
         #: names of any included scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -220,9 +221,15 @@ class DirectoryConfigScope(ConfigScope):
     """Config scope backed by a directory containing one file per section."""
 
     def __init__(
-        self, name: str, path: str, *, writable: bool = True, prefer_modify: bool = True
+        self,
+        name: str,
+        path: str,
+        *,
+        writable: bool = True,
+        prefer_modify: bool = True,
+        included: bool = False,
     ) -> None:
-        super().__init__(name)
+        super().__init__(name, included)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -283,6 +290,7 @@ class SingleFileScope(ConfigScope):
         yaml_path: Optional[List[str]] = None,
         writable: bool = True,
         prefer_modify: bool = True,
+        included: bool = False,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -301,7 +309,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name)
+        super().__init__(name, included)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -653,7 +661,8 @@ class Configuration:
 
         else:
             raise ValueError(
-                f"Invalid config scope: '{scope}'.  Must be one of {self.scopes.keys()}"
+                f"Invalid config scope: '{scope}'.  Must be one of "
+                f"{[k for k in self.scopes.keys()]}"
             )
 
     def get_config_filename(self, scope: str, section: str) -> str:
@@ -755,23 +764,42 @@ class Configuration:
             self.get_config(section, scope=scope), line_info=line_info
         )
 
-    def _filter_overridden(self, scopes: List[ConfigScope]):
+    def _filter_overridden(self, scopes: List[ConfigScope], includes: bool = False):
         """Filter out overridden scopes.
 
         NOTE: this does not yet handle diamonds or nested `include::` in lists. It is
         sufficient for include::[] in an env, which allows isolation.
+
+        The ``includes`` option controls whether to return all active scopes (``includes=False``)
+        or all scopes whose includes have not been overridden (``includes=True``).
         """
         # find last override in scopes
         i = next((i for i, s in reversed(list(enumerate(scopes))) if s.override_include()), -1)
         if i < 0:
             return scopes  # no overrides
 
-        keep = scopes[i].transitive_includes()
+        keep = _set(s.name for s in scopes[i:])
         keep |= _set(s.name for s in self.scopes.priority_values(ConfigScopePriority.DEFAULTS))
-        keep |= _set(s.name for s in scopes[i:])
+
+        if not includes:
+            # For all sections except for the include section:
+            # non-included scopes are still active, as are scopes included
+            # from the overriding scope
+            # Transitive scopes from the overriding scope are not included
+            keep |= _set([s.name for s in scopes[i].included_scopes])
+            keep |= _set([s.name for s in scopes if not s.included])
 
         # return scopes to keep, with order preserved
         return [s for s in scopes if s.name in keep]
+
+    @property
+    def active_include_section_scopes(self) -> List[ConfigScope]:
+        """Return a list of all scopes whose includes have not been overridden by include::.
+
+        This is different from the active scopes because the ``spack`` scope can be active
+        while its includes are overwritten, as can the transitive includes from the overriding
+        scope."""
+        return self._filter_overridden([s for s in self.scopes.values()], includes=True)
 
     @property
     def active_scopes(self) -> List[ConfigScope]:
@@ -806,8 +834,12 @@ class Configuration:
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
         for config_scope in scopes:
+            if section == "include" and config_scope not in self.active_include_section_scopes:
+                continue
+
             # read potentially cached data from the scope.
             data = config_scope.get_section(section)
+
             if data and section == "include":
                 # Include overrides are handled by `_filter_overridden` above. Any remaining
                 # includes at this point are *not* actually overridden -- they're scopes with
@@ -1013,9 +1045,8 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        assert self._valid_parent_scope(
-            parent_scope
-        ), "Optional includes must have valid parent_scope object"
+        # Ensure the parent scope is valid
+        self._validate_parent_scope(parent_scope)
 
         # use specified name if there is one
         config_name = self.name
@@ -1055,6 +1086,7 @@ class OptionalInclude:
                 config_path,
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
+                included=True,
             )
 
         if ext and not is_dir:
@@ -1066,17 +1098,18 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         # directories are treated as regular ConfigScopes
         # assign by "default"
         tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(config_name, config_path, prefer_modify=self.prefer_modify)
+        return DirectoryConfigScope(
+            config_name, config_path, prefer_modify=self.prefer_modify, included=True
+        )
 
-    def _valid_parent_scope(self, parent_scope: ConfigScope) -> bool:
+    def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
         # enforced by type checking but those can always be # type: ignore'd
         assert isinstance(
             parent_scope, ConfigScope
-        ), f"Optional include must have valid parent scope,\
- of type ConfigScope; Type:{type(parent_scope)} is not valid."
-        # naive check that parent scope name isn't empty or just whitespace
-        return bool(re.sub(r"\s", "", parent_scope.name))
+        ), f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"
+
+        assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
     def evaluate_condition(self) -> bool:
         # circular dependencies

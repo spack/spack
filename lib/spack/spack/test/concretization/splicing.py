@@ -22,13 +22,7 @@ def _make_specs_non_buildable(specs: List[str]):
 
 
 @pytest.fixture
-def install_specs(
-    mutable_database,
-    mock_packages,
-    mutable_config,
-    do_not_check_runtimes_on_reuse,
-    install_mockery,
-):
+def install_specs(mutable_database, mock_packages, mutable_config, install_mockery):
     """Returns a function that concretizes and installs a list of abstract specs"""
     mutable_config.set("concretizer:reuse", True)
 

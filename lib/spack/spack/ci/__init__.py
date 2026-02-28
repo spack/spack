@@ -255,7 +255,7 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join(f"{loc:_url@v_version? (view: _view)}" for loc in spec_locations)
+        urls = ",".join(f"{loc.url}@v{loc.version}" for loc in spec_locations)
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -495,13 +495,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     # Build a pipeline from the specs in the concrete environment
-    pipeline = PipelineDag(
-        [
-            concrete
-            for abstract, concrete in env.concretized_specs()
-            if abstract in env.spec_lists["specs"]
-        ]
-    )
+    pipeline = PipelineDag([env.specs_by_hash[x.hash] for x in env.concretized_roots])
 
     # Optionally add various pruning filters
     pruning_filters = []

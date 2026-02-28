@@ -198,7 +198,6 @@ def test_test_list_all(mock_packages):
     assert set(pkgs) == {
         "py-numpy",
         "fail-test-audit",
-        "fail-test-audit-deprecated",
         "fail-test-audit-docstring",
         "fail-test-audit-impl",
         "mpich",

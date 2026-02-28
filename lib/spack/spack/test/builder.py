@@ -215,3 +215,21 @@ def test_reading_api_v22_attributes():
     assert attributes == ("foo", "bar")
     long_methods = spack.builder.package_long_methods(TestBuilder)
     assert long_methods == ("baz", "fee")
+
+
+@pytest.mark.regression("51917")
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_builder_when_inheriting_just_package(working_env):
+    """Tests that if we inherit a package from another package that has a builder defined,
+    but we don't need to modify the builder ourselves, we'll get the builder of the base
+    package class.
+    """
+    base_spec = spack.concretize.concretize_one("callbacks")
+    derived_spec = spack.concretize.concretize_one("inheritance-only-package")
+
+    base_builder = spack.builder.create(base_spec.package)
+    derived_builder = spack.builder.create(derived_spec.package)
+
+    # The derived class doesn't redefine a builder, so we should
+    # get the builder of the base class.
+    assert type(base_builder) is type(derived_builder)

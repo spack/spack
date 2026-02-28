@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Test environment internals without CLI"""
+
 import filecmp
 import os
 import pathlib
@@ -15,12 +16,15 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+from spack.enums import ConfigScopePriority
+from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
 from spack.environment.list import UndefinedReferenceError
+from spack.traverse import traverse_nodes
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -70,9 +74,10 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     read_in = ev.Environment(env_path)
 
     # Ensure read hashes are used (rewritten hash seen on read)
-    assert read_in.concretized_order
-    assert read_in.concretized_order[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[read_in.concretized_order[0]]._hash  # type: ignore[attr-defined]
+    hashes = [x.hash for x in read_in.concretized_roots]
+    assert hashes
+    assert hashes[0] in read_in.specs_by_hash
+    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
     assert _hash == new_hash
 
 
@@ -551,9 +556,8 @@ spack:
     )
     mutable_config.set("concretizer:unify", unify_in_lower_scope)
     assert mutable_config.get("concretizer:unify") == unify_in_lower_scope
-    with ev.Environment(manifest.parent) as e:
+    with ev.Environment(manifest.parent):
         assert mutable_config.get("concretizer:unify") == unify_in_spack_yaml
-        assert e.unify == unify_in_spack_yaml
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
@@ -571,8 +575,8 @@ spack:
     )
 
     with spack.config.override("concretizer:unify", unify_in_config):
-        with ev.Environment(manifest.parent) as e:
-            assert e.unify == unify_in_config
+        with ev.Environment(manifest.parent):
+            assert spack.config.CONFIG.get("concretizer:unify") == unify_in_config
 
 
 @pytest.mark.parametrize(
@@ -1645,3 +1649,334 @@ spack:
         if node.satisfies("%c"):
             assert node.satisfies("%c=gcc@12"), node.tree()
             assert not node.satisfies("%c=gcc@7"), node.tree()
+
+
+@pytest.fixture()
+def create_temporary_manifest(tmp_path):
+    manifest_path = tmp_path / "spack.yaml"
+
+    def _create(spack_yaml: str):
+        manifest_path.write_text(spack_yaml)
+        return EnvironmentManifestFile(tmp_path)
+
+    return _create
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestEnvironmentGroups:
+    """Tests for the environment "groups" feature"""
+
+    def test_manifest_and_groups(self, create_temporary_manifest):
+        """Tests a basic case of reading groups from a manifest file"""
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - group: apps
+        needs: [compiler]
+        specs:
+        - matrix:
+          - [mpileaks]
+          - ["%gcc@14"]
+        - mpich
+      - libelf
+    """
+        )
+        # Check manifest properties
+        assert set(manifest.groups()) == {"default", "compiler", "apps"}
+
+        assert manifest.user_specs(group="default") == manifest.user_specs()
+        assert manifest.user_specs() == ["mpileaks", "libelf"]
+        assert manifest.user_specs(group="compiler") == [{"matrix": [["gcc@14"]]}]
+        assert manifest.user_specs(group="apps") == [
+            {"matrix": [["mpileaks"], ["%gcc@14"]]},
+            "mpich",
+        ]
+
+        assert manifest.needs(group="default") == ()
+        assert manifest.needs(group="compiler") == ()
+        assert manifest.needs(group="apps") == ("compiler",)
+
+        # Check user specs within the environment
+        e = ev.Environment(manifest.manifest_dir)
+        assert e.user_specs.specs == [spack.spec.Spec("mpileaks"), spack.spec.Spec("libelf")]
+
+        compiler_specs = e.user_specs_by(group="compiler")
+        assert compiler_specs.name == "specs:compiler"
+        assert compiler_specs.specs == [spack.spec.Spec("gcc@14")]
+
+        apps_specs = e.user_specs_by(group="apps")
+        assert apps_specs.name == "specs:apps"
+        assert apps_specs.specs == [spack.spec.Spec("mpileaks %gcc@14"), spack.spec.Spec("mpich")]
+
+    def test_cannot_define_group_twice(self, create_temporary_manifest):
+        """Tests that defining the same group twice raises an error"""
+        with pytest.raises(SpackEnvironmentConfigError, match="defined more than once"):
+            create_temporary_manifest(
+                """
+    spack:
+      specs:
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - group: compiler
+        matrix:
+        - [llvm@20]
+"""
+            )
+
+    def test_matrix_can_be_expanded_in_groups(self, create_temporary_manifest):
+        """Tests that definitions can be expanded also for matrix groups"""
+        manifest = create_temporary_manifest(
+            """
+spack:
+  definitions:
+  - compilers: ["%gcc", "%clang"]
+  - desired_specs: ["mpileaks@2.1"]
+  specs:
+  - group: apps
+    specs:
+    - matrix:
+      - [$desired_specs]
+      - [$compilers]
+    - mpich
+"""
+        )
+        e = ev.Environment(manifest.manifest_dir)
+        assert e.user_specs.specs == []
+        assert e.user_specs_by(group="apps").specs == [
+            spack.spec.Spec("mpileaks@2.1 %gcc"),
+            spack.spec.Spec("mpileaks@2.1 %clang"),
+            spack.spec.Spec("mpich"),
+        ]
+
+    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - mpileaks
+  - pkg-a
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+            lockfile_data = e._to_lockfile_dict()
+            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert all("group" not in x for x in lockfile_data["roots"])
+
+    def test_independent_groups_concretization(self, create_temporary_manifest):
+        """Tests that groups of specs without dependencies among them can be concretized
+        correctly
+        """
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks
+      - group: compiler
+        matrix:
+        - [gcc@14]
+      - libelf
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+            roots = e.concrete_roots()
+            assert len(roots) == 3
+
+            default_specs = list(e.concretized_specs_by(group="default"))
+            assert len(default_specs) == 2
+
+            compiler_specs = list(e.concretized_specs_by(group="compiler"))
+            assert len(compiler_specs) == 1
+
+    def test_independent_group_dont_reuse(self, create_temporary_manifest):
+        """Tests that there is no cross-groups reuse among groups of specs without dependencies."""
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - mpileaks@2.2
+      - group: app
+        matrix:
+        - [mpileaks]
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            _, default_mpileaks = list(e.concretized_specs_by(group="default"))[0]
+            assert default_mpileaks.satisfies("@2.2")
+
+            _, app_mpileaks = list(e.concretized_specs_by(group="app"))[0]
+            assert app_mpileaks.satisfies("@2.3")
+
+    def test_relying_on_a_dependency_group(self, create_temporary_manifest):
+        """Tests that a group of specs that would not concretize without a dependency group
+        works correctly.
+        """
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - group: app
+        matrix:
+        - [mpileaks]
+        - ["%c,cxx=gcc@14"]
+    """
+        )
+
+        # We have no gcc@14 configured, so this will raise an error
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+                e.concretize()
+
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      specs:
+      - group: compiler
+        specs:
+        - gcc@14
+      - group: mpileaks
+        needs: [compiler]
+        matrix:
+        - [mpileaks]
+        - ["%c,cxx=gcc@14"]
+    """
+        )
+
+        # In this case gcc@14 is taken from the "needed" group
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            _, gcc = next(iter(e.concretized_specs_by(group="compiler")))
+            assert gcc.satisfies("gcc@14")
+            _, mpileaks = next(iter(e.concretized_specs_by(group="mpileaks")))
+            assert mpileaks["c"].dag_hash() == gcc.dag_hash()
+
+    def test_manifest_can_contain_config_override(self, mutable_config, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      concretizer:
+        unify: False
+      specs:
+      - group: compiler
+        override:
+          concretizer:
+            unify: True
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+            # Assert the internal scope works when used manually
+            override = manifest.config_override(group="compiler")
+            mutable_config.push_scope(
+                override, priority=ConfigScopePriority.ENVIRONMENT_SPEC_GROUPS
+            )
+            assert mutable_config.get_config("concretizer")["unify"] is True
+            mutable_config.remove_scope(override.name)
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+            # Assert the context manager works too
+            with e.config_override_for_group(group="compiler"):
+                assert mutable_config.get_config("concretizer")["unify"] is True
+            assert mutable_config.get_config("concretizer")["unify"] is False
+
+    def test_overriding_concretization_properties_per_group(self, create_temporary_manifest):
+        manifest = create_temporary_manifest(
+            """
+    spack:
+      concretizer:
+        unify: True
+      specs:
+      - group: compiler
+        specs:
+        - gcc@14
+      - group: scalapacks
+        needs: [compiler]
+        matrix:
+        - [netlib-scalapack]
+        - ["%mpi=mpich", "%mpi=mpich2"]
+        - ["%lapack=openblas-with-lapack", "%lapack=netlib-lapack"]
+        override:
+          concretizer:
+            unify: False
+          packages:
+            c:
+              prefer: [gcc@14]
+            cxx:
+              prefer: [gcc@14]
+            fortran:
+              prefer: [gcc@14]
+    """
+        )
+
+        with ev.Environment(manifest.manifest_dir) as e:
+            e.concretize()
+
+            assert len(list(e.concretized_specs_by(group="compiler"))) == 1
+
+            gcc = next(x for _, x in e.concretized_specs_by(group="compiler"))
+            assert gcc.satisfies("gcc@14") and not gcc.external
+            assert gcc.satisfies("%c,cxx,fortran=gcc")
+            gcc_hash = gcc.dag_hash()
+
+            assert len(list(e.concretized_specs_by(group="scalapacks"))) == 4
+            scalapacks = [x for _, x in e.concretized_specs_by(group="scalapacks")]
+            for node in traverse_nodes(scalapacks, deptype=("link", "run")):
+                assert node.satisfies(f"%[when=c]c=gcc/{gcc_hash}")
+                assert node.satisfies(f"%[when=cxx]cxx=gcc/{gcc_hash}")
+                assert node.satisfies(f"%[when=fortran]fortran=gcc/{gcc_hash}")
+
+    def test_missing_needs_group_gives_clear_error(self, create_temporary_manifest):
+        """Tests that referencing a non-existent group in 'needs' gives a clear error message
+        that includes the name of the blocked group and the missing dependency.
+        """
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - group: apps
+    needs: [nonexistent]
+    specs:
+    - mpileaks
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(
+                ev.SpackEnvironmentConfigError, match=r"but 'nonexistent' is not a defined group"
+            ):
+                e.concretize()
+
+    def test_cyclic_group_dependencies_give_clear_error(self, create_temporary_manifest):
+        """Tests that cyclic group dependencies give a clear error message that mentions
+        the groups involved in the cycle.
+        """
+        manifest = create_temporary_manifest(
+            """
+spack:
+  specs:
+  - group: alpha
+    needs: [beta]
+    specs:
+    - mpileaks
+  - group: beta
+    needs: [alpha]
+    specs:
+    - zlib
+"""
+        )
+        with ev.Environment(manifest.manifest_dir) as e:
+            with pytest.raises(ev.SpackEnvironmentConfigError, match=r"among groups: alpha, beta"):
+                e.concretize()

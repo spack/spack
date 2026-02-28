@@ -1533,6 +1533,8 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
+.. _variant-conditional-values:
+
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

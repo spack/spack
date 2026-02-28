@@ -380,7 +380,7 @@ spack:
     with ev.read("combined_env"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -417,7 +417,7 @@ spack:
     with ev.read("test3"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -536,3 +536,52 @@ def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     install("--fake", f"git-test-commit commit={commits[0]}")
     output = find(f"commit={commits[0]}")
     assert "git-test-commit" in output
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "spack_yaml,expected,not_expected",
+    [
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  - group: extras
+    specs:
+    - libelf
+""",
+            [
+                "2 root specs",
+                # Group names
+                "extras",
+                "default",
+                # root specs
+                "mpileaks",
+                "libelf",
+            ],
+            [],
+        ),
+        (
+            """
+spack:
+  specs:
+  - group: tools
+    specs:
+    - libelf
+""",
+            ["1 root spec", "tools", "libelf"],
+            ["1 root specs", "default"],
+        ),
+    ],
+)
+def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: pathlib.Path):
+    """Tests that the output of spack find contains expected matches when using an
+    environment with groups.
+    """
+    (tmp_path / "spack.yaml").write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        output = find()
+
+    assert all(x in output for x in expected)
+    assert all(x not in output for x in not_expected)
