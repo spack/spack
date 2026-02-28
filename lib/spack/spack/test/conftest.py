@@ -1424,7 +1424,7 @@ def module_configuration(monkeypatch, request, mutable_config):
 
 
 @pytest.fixture()
-def mock_gnupghome(monkeypatch, tmp_path):
+def mock_gnupghome(tmp_path, mutable_config):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
     # have to make our own tmp_path with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
@@ -1432,7 +1432,7 @@ def mock_gnupghome(monkeypatch, tmp_path):
     short_name_tmpdir = tempfile.mkdtemp()
     # Redirect bootstrap root before gpg.init() so each xdist worker writes
     # bootstrap config to its own isolated directory.
-    monkeypatch.setattr(spack.paths, "default_user_bootstrap_path", str(tmp_path / "bootstrap"))
+    mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap-test"))
     try:
         spack.util.gpg.init()
     except spack.util.gpg.SpackGPGError:
