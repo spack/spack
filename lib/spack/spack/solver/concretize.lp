@@ -95,15 +95,13 @@ unification_set(("build", ID), node(X, Child))
      needs_build_unification_set(ParentNode).
 
 % A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
-unification_set(SetID, node(VirtualID, Virtual)) :-
-  virtual_on_edge(ParentNode, ProviderNode, Virtual, Type), Type != "build",
-  provider(ProviderNode, node(VirtualID, Virtual)),
+unification_set(SetID, VirtualNode) :-
+  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, Type), Type != "build",
   unification_set(SetID, ParentNode).
 
 % A virtual that is on a build edge, goes in the build set id of the parent of the provider
-unification_set(("build", ID), node(VirtualID, Virtual)) :-
-  virtual_on_edge(ParentNode, ProviderNode, Virtual, "build"),
-  provider(ProviderNode, node(VirtualID, Virtual)),
+unification_set(("build", ID), VirtualNode) :-
+  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, "build"),
   build_set_id(ParentNode, ID),
   needs_build_unification_set(ParentNode).
 
@@ -1006,10 +1004,10 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 virtual_is_needed(Virtual) :- node_depends_on_virtual(PackageNode, Virtual).
 
-1 { virtual_on_edge(PackageNode, ProviderNode, Virtual, Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+1 { virtual_on_edge(PackageNode, ProviderNode, node(VirtualID, Virtual), Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) :- virtual_on_edge(PackageNode, ProviderNode, Virtual, _).
+attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) :- virtual_on_edge(PackageNode, ProviderNode, node(_, Virtual), _).
 attr("depends_on", PackageNode, ProviderNode, Type) :- virtual_on_edge(PackageNode, ProviderNode, _, Type).
 
 % If a virtual node is in the answer set, it must be either a virtual root,
