@@ -182,13 +182,9 @@ class LmodConfiguration(BaseConfiguration):
                 hierarchy_filter_list = filter_list
                 break
 
-        requirements = {}
-
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
-        # "compiler" is treated as a single virtual across all languages
-        if self.compiler:
-            requirements = {"compiler": self.compiler}
+        requirements = {"compiler": self.compiler or self.core_compilers[0]}
 
         # For each dependency in the hierarchy
         for x in self.hierarchy_tokens:
@@ -200,10 +196,6 @@ class LmodConfiguration(BaseConfiguration):
             if x in self.spec and not (self.spec.name == x or self.spec.package.provides(x)):
                 requirements[x] = self.spec[x]  # record the actual provider
 
-        if not requirements:
-            # Packages with no compiler and no other hierarchy components go in Core
-            # Lie and say it requires a core compiler
-            return {"compiler": self.core_compilers[0]}
         return requirements
 
     @property
@@ -502,10 +494,4 @@ class LmodModulefileWriter(BaseModuleFileWriter):
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
     """Error raised if the key ``core_compilers`` has not been specified
     in the configuration file.
-    """
-
-
-class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):
-    """Error raised if non-virtual specs are used as hierarchy tokens in
-    the lmod section of ``modules.yaml``.
     """
