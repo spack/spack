@@ -1983,7 +1983,7 @@ spack:
 
 
 @pytest.mark.regression("51995")
-def test_mixed_compilers_and_libllvm(tmp_path, mutable_config):
+def test_mixed_compilers_and_libllvm(tmp_path, config):
     """Tests that we divide virtual nodes correctly among unification sets.
 
     This test concretizes a unified environment where one package uses gcc as a C++ compiler
