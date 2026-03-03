@@ -4,7 +4,9 @@
 
 import json
 import os
+import types
 
+import pytest
 import spack.concretize
 from spack.hooks.sbom_generate import post_install
 from spack.store import STORE
@@ -113,3 +115,93 @@ def test_sbom_license_and_download_fields(mock_packages, install_mockery):
     assert "licenseDeclared" in pkg
     assert "licenseConcluded" in pkg
     assert "downloadLocation" in pkg
+
+
+def test_sbom_supplier_prefers_package_supplier(mock_packages, install_mockery, monkeypatch):
+    """When present, the package supplier field is used."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    monkeypatch.setattr(spec.package, "supplier", "Person: Unit Test", raising=False)
+
+    post_install(spec)
+
+    with open(_sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["packages"][0]["supplier"] == "Person: Unit Test"
+
+
+@pytest.mark.parametrize(
+    "git_url,expected",
+    [
+        ("git@github.com:spack/spack.git", "Organization: spack"),
+        ("https://github.com/spack/spack.git", "Organization: spack"),
+        ("git@github.com", "NOASSERTION"),  # malformed/unsupported ssh URL
+    ],
+)
+def test_sbom_supplier_derived_from_git_url(mock_packages, install_mockery, monkeypatch, git_url, expected):
+    """Supplier is derived from common git URL formats when no explicit supplier is set."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    monkeypatch.setattr(spec.package, "supplier", None, raising=False)
+    monkeypatch.setattr(spec.package, "git", git_url, raising=False)
+
+    post_install(spec)
+
+    with open(_sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["packages"][0]["supplier"] == expected
+
+
+@pytest.mark.parametrize(
+    "licenses,expected",
+    [
+        ({"main": "MIT"}, "MIT"),
+        ({}, "NOASSERTION"),
+        (None, None),
+    ],
+)
+def test_sbom_license_declared_from_package_licenses(
+    mock_packages, install_mockery, monkeypatch, licenses, expected
+):
+    """License declared comes from the package's licenses attribute (including dict forms)."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    monkeypatch.setattr(spec.package, "licenses", licenses, raising=False)
+
+    post_install(spec)
+
+    with open(_sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["packages"][0]["licenseDeclared"] == expected
+
+
+def test_sbom_download_location_and_checksum_from_version_metadata(
+    mock_packages, install_mockery, monkeypatch
+):
+    """Download URL and SHA256 are taken from package version metadata when present."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    version = spec.version
+
+    # The hook looks up version metadata by both string and Version key in different places.
+    monkeypatch.setattr(
+        spec.package,
+        "versions",
+        {
+            str(version): types.SimpleNamespace(url="https://example.com/src.tar.gz"),
+            version: {"sha256": "a" * 64},
+        },
+        raising=False,
+    )
+
+    post_install(spec)
+
+    with open(_sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    pkg = sbom["packages"][0]
+    assert pkg["downloadLocation"] == "https://example.com/src.tar.gz"
+    assert pkg["checksum"] == [{"algorithm": "SHA256", "checksumValue": "a" * 64}]
