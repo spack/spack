@@ -9,8 +9,11 @@ import pytest
 import spack.vendor.archspec.cpu
 
 import spack.concretize
+import spack.config
 import spack.modules.common
 import spack.modules.tcl
+import spack.spec
+import spack.util.environment
 
 mpich_spec_string = "mpich@3.0.4"
 mpileaks_spec_string = "mpileaks"
@@ -25,7 +28,28 @@ pytestmark = [
 ]
 
 
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "mock_module_filename")
+@pytest.fixture(params=["clang@=15.0.0", "gcc@=10.2.1"])
+def compiler(request):
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        ("mpich@3.0.4", ("mpi",), True, False),
+        ("mpich@3.0.1", [], True, True),
+        ("openblas@0.2.15", ("blas",), True, False),
+        ("openblas-with-lapack@0.2.15", ("blas", "lapack"), True, False),
+        ("mpileaks@2.3", ("mpi",), True, False),
+        ("mpileaks@2.1", [], True, False),
+        ("py-extension1@2.0", ("python",), False, True),
+        ("python@3.8.0", ("python",), False, True),
+    ]
+)
+def provider(request):
+    return request.param
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
@@ -266,12 +290,12 @@ class TestTcl:
         projection = writer.spec.format(writer.conf.projections["all"])
         assert projection in writer.layout.use_name
 
-    def test_projections_specific(self, factory, module_configuration):
+    def test_projections_specific_non_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_non_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("mpileaks")
@@ -281,12 +305,12 @@ class TestTcl:
         projection = writer.spec.format(writer.conf.projections["mpileaks"])
         assert projection in writer.layout.use_name
 
-    def test_projections_all(self, factory, module_configuration):
+    def test_projections_all_non_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_non_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("libelf")
@@ -586,3 +610,197 @@ class TestTcl:
         assert len([x for x in content if hide_cmd == x]) == 1
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
+
+    @pytest.mark.regression("37788")
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_layout_for_specs_compiled_with_core_compilers(
+        self, modules_config, module_configuration, factory
+    ):
+        """Tests that specs compiled with core compilers are in the 'Core' folder. Also tests that
+        we can use both ``compiler@version`` and ``compiler@=version`` to specify a core compiler.
+        """
+        module_configuration(modules_config)
+        module, spec = factory("libelf%clang@15.0.0")
+        assert "Core" in module.layout.available_path_parts
+
+    def test_file_layout(self, compiler, provider, factory, module_configuration):
+        """Tests the layout of files in the hierarchy is the one expected."""
+        module_configuration("complex_hierarchy")
+        spec_string, services, use_compiler, place_in_core = provider
+
+        # Non-python specs add compiler
+        factory_string = spec_string
+        if use_compiler:
+            factory_string += "%" + compiler
+
+        module, spec = factory(factory_string)
+
+        layout = module.layout
+
+        # Check that the services provided are in the hierarchy
+        for s in services:
+            assert s in layout.conf.hierarchy_tokens
+
+        # Check that the compiler part of the path has no hash and that it
+        # is transformed to r"Core" if the compiler is listed among core
+        # compilers
+        # Check that specs listed as core_specs are transformed to "Core"
+        # Check that specs with no hierarchy components are transformed to "Core"
+        if "clang@=15.0.0" in factory_string or place_in_core:
+            assert "Core" in layout.available_path_parts
+        else:
+            assert compiler.replace("@=", "/") in layout.available_path_parts
+
+        # Check that the provider part instead has always an hash even if
+        # hash has been disallowed in the configuration file
+        path_parts = layout.available_path_parts
+        service_part = spec_string.replace("@", "/")
+        service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
+
+        if "mpi" in spec:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        elif "python" in spec:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["python"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
+
+        # Check that multi-providers have repetitions in path parts
+        repetitions = len([x for x in path_parts if service_part == x])
+        if spec_string == "openblas-with-lapack@0.2.15":
+            assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
+        else:
+            assert repetitions == 1
+
+    def test_compilers_provided_different_name(
+        self, factory, module_configuration, compiler_factory
+    ):
+        with spack.config.override(
+            "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}
+        ):
+            module_configuration("complex_hierarchy")
+            module, spec = factory("intel-oneapi-compilers%clang@3.3")
+
+            provides = module.conf.provides
+
+            assert "compiler" in provides
+            assert provides["compiler"] == spack.spec.Spec("intel-oneapi-compilers@=3.0")
+
+    @pytest.mark.parametrize("language", ["c", "cxx", "fortran"])
+    def test_compiler_language_virtuals(self, factory, module_configuration, language):
+        """Tests all compiler virtuals for hierarchical module placement."""
+        module_configuration("complex_hierarchy")
+        module, spec = factory(f"single-language-virtual +{language} %{language}=gcc@=10.2.1")
+
+        requires = module.conf.requires
+
+        assert "gcc@=10.2.1" in requires["compiler"]
+
+    def test_no_hash(self, factory, module_configuration):
+        """Makes sure that virtual providers (in the hierarchy) always
+        include a hash. Make sure that the module file for the spec
+        does not include a hash if hash_length is 0.
+        """
+
+        module_configuration("no_hash")
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
+        mpi_spec = spec["mpi"]
+
+        mpi_element = "{0}/{1}-{2}/".format(
+            mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
+        )
+
+        assert mpi_element in path
+
+        mpileaks_spec = spec
+        mpileaks_element = "{0}/{1}".format(mpileaks_spec.name, mpileaks_spec.version)
+
+        assert path.endswith(mpileaks_element)
+
+    def test_no_core_compilers(self, factory, module_configuration):
+        """Ensures that missing 'core_compilers' in the configuration file
+        raises the right exception.
+        """
+
+        # In this case we miss the entry completely
+        module_configuration("missing_core_compilers")
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+            module.write()
+
+        # Here we have an empty list
+        module_configuration("core_compilers_empty")
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+            module.write()
+
+    def test_guess_core_compilers(self, factory, module_configuration, monkeypatch):
+        """Check that we can guess core compilers."""
+
+        # In this case we miss the entry completely
+        module_configuration("missing_core_compilers")
+
+        # Our mock paths must be detected as system paths
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/bin"])
+
+        # We don't want to really write into user configuration
+        # when running tests
+        def no_op_set(*args, **kwargs):
+            pass
+
+        monkeypatch.setattr(spack.config, "set", no_op_set)
+
+        # Assert we have core compilers now
+        writer, _ = factory(mpileaks_spec_string)
+        assert writer.conf.core_compilers
+
+    @pytest.mark.parametrize(
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
+    )
+    @pytest.mark.regression("13005")
+    def test_only_generic_microarchitectures_in_root(
+        self, spec_str, factory, module_configuration
+    ):
+        module_configuration("complex_hierarchy")
+        writer, spec = factory(spec_str)
+
+        assert str(spec.target.family) in writer.layout.arch_dirname
+        if spec.target.family != spec.target:
+            assert str(spec.target) not in writer.layout.arch_dirname
+
+    def test_projections_specific_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme in hierarchical mode."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("mpileaks")
+        expected = {"all": "{name}/v{version}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["mpileaks"])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme in hierarchical mode."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("libelf")
+        expected = {"all": "{name}/v{version}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["all"])
+        assert projection in writer.layout.use_name
