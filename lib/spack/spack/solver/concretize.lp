@@ -988,12 +988,10 @@ error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but pr
    pkg_fact(Package, provided_together(ID, SetID, Virtual2)),
    Virtual1 != Virtual2,
    % One node depends on those virtuals AND on this package
-   node_depends_on_virtual(ClientNode, Virtual1),
-   node_depends_on_virtual(ClientNode, Virtual2),
-   depends_on(ClientNode, node(X, Package)),
+   virtual_on_edge(ClientNode, node(X, Package), node(Virtual1ID, Virtual1), _),
+   virtual_on_edge(ClientNode, node(ID2, Package2), node(Virtual2ID, Virtual2), _),
    % But this package is a provider of only one of them
-   provider(node(X, Package), node(_, Virtual1)),
-   not provider(node(X, Package), node(_, Virtual2)).
+   node(X, Package) != node(ID2, Package2).
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
