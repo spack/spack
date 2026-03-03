@@ -7,6 +7,7 @@ import os
 import types
 
 import pytest
+
 import spack.concretize
 from spack.hooks.sbom_generate import post_install
 from spack.store import STORE
@@ -139,7 +140,9 @@ def test_sbom_supplier_prefers_package_supplier(mock_packages, install_mockery, 
         ("git@github.com", "NOASSERTION"),  # malformed/unsupported ssh URL
     ],
 )
-def test_sbom_supplier_derived_from_git_url(mock_packages, install_mockery, monkeypatch, git_url, expected):
+def test_sbom_supplier_derived_from_git_url(
+    mock_packages, install_mockery, monkeypatch, git_url, expected
+):
     """Supplier is derived from common git URL formats when no explicit supplier is set."""
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
@@ -155,12 +158,7 @@ def test_sbom_supplier_derived_from_git_url(mock_packages, install_mockery, monk
 
 
 @pytest.mark.parametrize(
-    "licenses,expected",
-    [
-        ({"main": "MIT"}, "MIT"),
-        ({}, "NOASSERTION"),
-        (None, None),
-    ],
+    "licenses,expected", [({"main": "MIT"}, "MIT"), ({}, "NOASSERTION"), (None, None)]
 )
 def test_sbom_license_declared_from_package_licenses(
     mock_packages, install_mockery, monkeypatch, licenses, expected
