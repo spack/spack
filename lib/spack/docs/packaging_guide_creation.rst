@@ -1771,13 +1771,23 @@ For example, if you need Boost 1.59.0 or newer, but there are known issues with 
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
-To avoid overconstraining version ranges, which can lead to concretization errors, specify them with an open-world assumption:
+or, if those particular versions are excluded due to bugs rather than removed
+and reintroduced features:
 
-- all "ground truths" about exclusions and inclusions must satisfy the range, and
+.. code-block:: python
+
+   depends_on("boost@1.59.0:")
+   conflicts("boost@1.64.0,1.65.0,1.66.0")
+
+Always specify version ranges with an open-world assumption:
+
+- all "ground truths" (i.e., feature added or removed, or about exclusions and inclusions must satisfy the range, and
 - no potential but unknown versions are excluded from the range.
 
-In the above example, it is known that ``@:1.58`` are incompatible (due to a missing feature) and ``@1.67`` is compatible but unknown whether future versions ``@1.68:`` are incompatible.
-If and when future versions are known incompatible, the version range should be constained with an upper bound.
+This practice avoids overconstraining version ranges, which can lead to concretization errors, and ensures that every version in a package is *meaningful* and not just *incidental*.
+In the above example, it is known that ``@:1.58`` are incompatible due to a missing feature, and ``@1.67`` is compatible.
+It is *not* known whether future versions ``@1.68:`` are incompatible, so they must be included by the range.
+If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
 .. _dependency-types:
 
