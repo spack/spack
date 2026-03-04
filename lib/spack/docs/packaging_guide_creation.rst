@@ -1781,7 +1781,7 @@ and reintroduced features:
 
 Always specify version ranges with an open-world assumption:
 
-- all "ground truths" (i.e., feature added or removed, or about exclusions and inclusions must satisfy the range, and
+- all "ground truths" about exclusions and inclusions (e.g., versions with features added or removed) must satisfy the range, and
 - no potential but unknown versions are excluded from the range.
 
 This practice avoids overconstraining version ranges, which can lead to concretization errors, and ensures that every version in a package is *meaningful* and not just *incidental*.
