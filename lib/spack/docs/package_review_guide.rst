@@ -300,7 +300,7 @@ They only need to be checked in a review when versions are being added or remove
 Dependencies affected by such changes should be confirmed, when possible, and *at least* when the Contributor is not a Maintainer of the package.
 
 **Solutions.**
-In some cases, the needed change may be as simple as ensuring the version range and or variant options in the dependency are accurate.
+In some cases, the needed change may be as simple as ensuring the version ranges (see :ref:`version_compatibility`) and/or variant options in the dependency are accurate.
 In others, one or more of the dependencies needed by new versions are missing and need to be added.
 Or there may be dependencies that are no longer relevant when versions requiring them are removed, meaning the dependencies should be removed as well.
 
