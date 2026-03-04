@@ -986,12 +986,13 @@ node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID) :-
   pkg_fact(Package, provided_together(ID, SetID, V)),
   attr("virtual_on_edge", ClientNode, node(X, Package), V).
 
-% Error: package provides some but not all required virtuals from the set
-error(100, "Package '{0}' needs to also provide '{1}' (provided_together constraint)", Package, Virtual2)
+% This error is triggered if the package provides some but not all required virtuals from
+% the set that needs to be provided together
+error(100, "Package '{0}' needs to also provide '{1}' (provided_together constraint)", Package, Virtual)
 :- node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID),
-   pkg_fact(Package, provided_together(ID, SetID, Virtual2)),
-   node_depends_on_virtual(ClientNode, Virtual2),
-   not attr("virtual_on_edge", ClientNode, node(X, Package), Virtual2).
+   pkg_fact(Package, provided_together(ID, SetID, Virtual)),
+   node_depends_on_virtual(ClientNode, Virtual),
+   not attr("virtual_on_edge", ClientNode, node(X, Package), Virtual).
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
