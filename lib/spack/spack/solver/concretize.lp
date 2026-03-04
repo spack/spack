@@ -980,18 +980,18 @@ error(1, Msg) :-
 % Virtual dependencies
 %-----------------------------------------------------------------------------
 
-% Enforces all virtuals to be provided, if multiple of them are provided together
-error(100, "Package '{0}' needs to provide both '{1}' and '{2}' together, but provides only '{1}'", Package, Virtual1, Virtual2)
-:- % This package provides 2 or more virtuals together
-   condition_holds(ID, node(X, Package)),
-   pkg_fact(Package, provided_together(ID, SetID, Virtual1)),
+% Package provides to this client at least one virtual from those that need to be provided together
+node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID) :-
+  condition_holds(ID, node(X, Package)),
+  pkg_fact(Package, provided_together(ID, SetID, V)),
+  attr("virtual_on_edge", ClientNode, node(X, Package), V).
+
+% Error: package provides some but not all required virtuals from the set
+error(100, "Package '{0}' needs to also provide '{1}' (provided_together constraint)", Package, Virtual2)
+:- node_uses_provider_with_constraints(ClientNode, node(X, Package), ID, SetID),
    pkg_fact(Package, provided_together(ID, SetID, Virtual2)),
-   Virtual1 != Virtual2,
-   % One node depends on those virtuals AND on this package
-   virtual_on_edge(ClientNode, node(X, Package), node(Virtual1ID, Virtual1), _),
-   virtual_on_edge(ClientNode, node(ID2, Package2), node(Virtual2ID, Virtual2), _),
-   % But this package is a provider of only one of them
-   node(X, Package) != node(ID2, Package2).
+   node_depends_on_virtual(ClientNode, Virtual2),
+   not attr("virtual_on_edge", ClientNode, node(X, Package), Virtual2).
 
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
