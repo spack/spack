@@ -324,8 +324,9 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
 
     filter_args = FILTER_BLOB_NONE(version)
     if filter_args:
-        fetch.extend([*filter_args, url, ref])
+        fetch.extend(filter_args)
         cmds.insert(1, ["config", "extensions.partialClone", "true"])
+    fetch.extend([url, ref])
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 
