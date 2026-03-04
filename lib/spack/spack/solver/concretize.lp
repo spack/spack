@@ -80,6 +80,9 @@ error(100000, "Cannot have multiple nodes for {0} in the same unification set {1
   :- 2 { unification_set(SetID, node(_, PackageName)) }, unify(SetID, PackageName).
 
 unification_set("root", PackageNode) :- attr("root", PackageNode).
+unification_set("root", PackageNode) :- attr("virtual_root", PackageNode).
+
+% A package with a dependency that *is not* build belongs to the same unification set as the parent
 unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, Type), Type != "build", unification_set(SetID, ParentNode).
 
 % A separate unification set can be created if any of the build dependencies can be duplicated
@@ -89,15 +92,31 @@ needs_build_unification_set(ParentNode) :- attr("depends_on", ParentNode, _, "bu
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
      build_set_id(ParentNode, ID),
-     unification_set(_, ParentNode).
+     needs_build_unification_set(ParentNode).
+
+% A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
+unification_set(SetID, VirtualNode) :-
+  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, Type), Type != "build",
+  unification_set(SetID, ParentNode).
+
+% A virtual that is on a build edge, goes in the build set id of the parent of the provider
+unification_set(("build", ID), VirtualNode) :-
+  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, "build"),
+  build_set_id(ParentNode, ID),
+  needs_build_unification_set(ParentNode).
+
+% Needed for reused dependencies. A reused dependency has its build edges trimmed, so we
+% only care about the non-build edges.
+unification_set(SetID, node(VirtualID, Virtual)) :-
+  concrete(ParentNode),
+  attr("virtual_on_edge", ParentNode, ProviderNode, Virtual),
+  provider(ProviderNode, node(VirtualID, Virtual)),
+  unification_set(SetID, ParentNode).
 
 % Limit the number of unification sets to a reasonable number to avoid combinatorial explosion
 #const max_build_unification_sets = 4.
 1 { build_set_id(ParentNode, 0..max_build_unification_sets-1) } 1 :- needs_build_unification_set(ParentNode).
 
-unification_set(SetID, VirtualNode)
-  :- provider(PackageNode, VirtualNode),
-     unification_set(SetID, PackageNode).
 
 % Compute sub-sets of the nodes, if requested. These can be either the nodes connected
 % to another node by "link" edges, or the nodes connected to another node by "link and
@@ -593,7 +612,10 @@ attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constrai
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
-attr("provider_set", node(min_dupe_id, Provider), node(min_dupe_id, Virtual))
+1 {
+  attr("provider_set", node(0..MaxProvider-1, Provider), node(0..MaxVirtual-1, Virtual)):
+  max_dupes(Provider, MaxProvider), max_dupes(Virtual, MaxVirtual)
+} 1
   :- solve_literal(TriggerID),
      trigger_and_effect(_, TriggerID, EffectID),
      impose(EffectID, _),
@@ -820,6 +842,9 @@ attr("uses_virtual", PackageNode, Virtual) :-
    attr("node_flag", node(ID, Package), node_flag(FlagType, Flag, _, _)),
    not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)).
 
+% we cannot have two nodes with the same hash
+:- attr("hash", PackageNode1, Hash), attr("hash", PackageNode2, Hash), PackageNode1 < PackageNode2.
+
 #defined condition/1.
 #defined subcondition/2.
 #defined condition_requirement/3.
@@ -979,12 +1004,11 @@ node_depends_on_virtual(PackageNode, Virtual, Type)
 node_depends_on_virtual(PackageNode, Virtual) :- node_depends_on_virtual(PackageNode, Virtual, Type).
 virtual_is_needed(Virtual) :- node_depends_on_virtual(PackageNode, Virtual).
 
-1 { attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
+1 { virtual_on_edge(PackageNode, ProviderNode, node(VirtualID, Virtual), Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
-attr("depends_on", PackageNode, ProviderNode, Type)
-  :- attr("virtual_on_edge", PackageNode, ProviderNode, Virtual),
-     node_depends_on_virtual(PackageNode, Virtual, Type).
+attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) :- virtual_on_edge(PackageNode, ProviderNode, node(_, Virtual), _).
+attr("depends_on", PackageNode, ProviderNode, Type) :- virtual_on_edge(PackageNode, ProviderNode, _, Type).
 
 % If a virtual node is in the answer set, it must be either a virtual root,
 % or used somewhere

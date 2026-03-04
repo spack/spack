@@ -40,12 +40,14 @@ def compiler(request):
 
 @pytest.fixture(
     params=[
-        ("mpich@3.0.4", ("mpi",)),
-        ("mpich@3.0.1", []),
-        ("openblas@0.2.15", ("blas",)),
-        ("openblas-with-lapack@0.2.15", ("blas", "lapack")),
-        ("mpileaks@2.3", ("mpi",)),
-        ("mpileaks@2.1", []),
+        ("mpich@3.0.4", ("mpi",), True, False),
+        ("mpich@3.0.1", [], True, True),
+        ("openblas@0.2.15", ("blas",), True, False),
+        ("openblas-with-lapack@0.2.15", ("blas", "lapack"), True, False),
+        ("mpileaks@2.3", ("mpi",), True, False),
+        ("mpileaks@2.1", [], True, False),
+        ("py-extension1@2.0", ("python",), False, True),
+        ("python@3.8.0", ("python",), False, True),
     ]
 )
 def provider(request):
@@ -69,8 +71,14 @@ class TestLmod:
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
         module_configuration("complex_hierarchy")
-        spec_string, services = provider
-        module, spec = factory(spec_string + "%" + compiler)
+        spec_string, services, use_compiler, place_in_core = provider
+
+        # Non-python specs add compiler
+        factory_string = spec_string
+        if use_compiler:
+            factory_string += "%" + compiler
+
+        module, spec = factory(factory_string)
 
         layout = module.layout
 
@@ -82,7 +90,8 @@ class TestLmod:
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
         # Check that specs listed as core_specs are transformed to "Core"
-        if compiler == "clang@=15.0.0" or spec_string == "mpich@3.0.1":
+        # Check that specs with no hierarchy components are transformed to "Core"
+        if "clang@=15.0.0" in factory_string or place_in_core:
             assert "Core" in layout.available_path_parts
         else:
             assert compiler.replace("@=", "/") in layout.available_path_parts
@@ -93,9 +102,12 @@ class TestLmod:
         service_part = spec_string.replace("@", "/")
         service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
 
-        if "mpileaks" in spec_string:
+        if "mpi" in spec:
             # It's a user, not a provider, so create the provider string
             service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        elif "python" in spec:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["python"].format("{name}/{version}-{hash:7}")
         else:
             # Only relevant for providers, not users, of virtuals
             assert service_part in path_parts
@@ -308,16 +320,6 @@ class TestLmod:
 
         module, spec = factory(mpileaks_spec_string)
         with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
-            module.write()
-
-    def test_non_virtual_in_hierarchy(self, factory, module_configuration):
-        """Ensures that if a non-virtual is in hierarchy, an exception will
-        be raised.
-        """
-        module_configuration("non_virtual_in_hierarchy")
-
-        module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.lmod.NonVirtualInHierarchyError):
             module.write()
 
     def test_conflicts(self, modulefile_content, module_configuration):

@@ -1816,11 +1816,11 @@ _spack_repo_create() {
 }
 
 _spack_repo_list() {
-    SPACK_COMPREPLY="-h --help --scope --names --namespaces"
+    SPACK_COMPREPLY="-h --help --scope --names --namespaces --json"
 }
 
 _spack_repo_ls() {
-    SPACK_COMPREPLY="-h --help --scope --names --namespaces"
+    SPACK_COMPREPLY="-h --help --scope --names --namespaces --json"
 }
 
 _spack_repo_add() {

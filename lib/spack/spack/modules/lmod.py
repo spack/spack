@@ -14,7 +14,6 @@ import spack.config
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
-import spack.repo
 import spack.spec
 import spack.tengine as tengine
 import spack.util.environment
@@ -158,15 +157,6 @@ class LmodConfiguration(BaseConfiguration):
         """
         tokens = configuration(self.name).get("hierarchy", [])
 
-        # Check if all the tokens in the hierarchy are virtual specs.
-        # If not warn the user and raise an error.
-        not_virtual = [t for t in tokens if t != "compiler" and not spack.repo.PATH.is_virtual(t)]
-        if not_virtual:
-            msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
-            msg += "Please check the 'modules.yaml' configuration files"
-            msg = msg.format(", ".join(not_virtual))
-            raise NonVirtualInHierarchyError(msg)
-
         # Append 'compiler' which is always implied
         tokens.append("compiler")
 
@@ -183,10 +173,7 @@ class LmodConfiguration(BaseConfiguration):
         The ``compiler`` key is always present among the requirements.
         """
         # If it's a core_spec, lie and say it requires a core compiler
-        if (
-            any(self.spec.satisfies(core_spec) for core_spec in self.core_specs)
-            or self.compiler is None
-        ):
+        if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
             return {"compiler": self.core_compilers[0]}
 
         hierarchy_filter_list = []
@@ -197,17 +184,18 @@ class LmodConfiguration(BaseConfiguration):
 
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
+        requirements = {"compiler": self.compiler or self.core_compilers[0]}
 
-        requirements = {"compiler": self.compiler}
-        # For each virtual dependency in the hierarchy
+        # For each dependency in the hierarchy
         for x in self.hierarchy_tokens:
             # Skip anything filtered for this spec
             if x in hierarchy_filter_list:
                 continue
 
             # If I depend on it
-            if x in self.spec and not self.spec.package.provides(x):
+            if x in self.spec and not (self.spec.name == x or self.spec.package.provides(x)):
                 requirements[x] = self.spec[x]  # record the actual provider
+
         return requirements
 
     @property
@@ -230,7 +218,7 @@ class LmodConfiguration(BaseConfiguration):
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
-            if self.spec.package.provides(x):
+            if self.spec.name == x or self.spec.package.provides(x):
                 provides[x] = self.spec
         return provides
 
@@ -255,7 +243,9 @@ class LmodConfiguration(BaseConfiguration):
     @property
     def hidden(self):
         # Never hide a module that opens a hierarchy
-        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+        if any(
+            self.spec.name == x or self.spec.package.provides(x) for x in self.hierarchy_tokens
+        ):
             return False
         return super().hidden
 
@@ -504,10 +494,4 @@ class LmodModulefileWriter(BaseModuleFileWriter):
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
     """Error raised if the key ``core_compilers`` has not been specified
     in the configuration file.
-    """
-
-
-class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):
-    """Error raised if non-virtual specs are used as hierarchy tokens in
-    the lmod section of ``modules.yaml``.
     """

@@ -5,6 +5,7 @@
 import argparse
 import os
 import shlex
+import sys
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
@@ -16,6 +17,7 @@ import spack.repo
 import spack.util.executable
 import spack.util.git
 import spack.util.path
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
@@ -57,6 +59,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     output_group.add_argument("--names", action="store_true", help="show configuration names only")
     output_group.add_argument(
         "--namespaces", action="store_true", help="show repository namespaces only"
+    )
+    output_group.add_argument(
+        "--json", action="store_true", help="output repositories as machine-readable json records"
     )
 
     # Add
@@ -302,7 +307,19 @@ def _remove_repo(namespace_or_path, scope):
 
 
 def repo_list(args):
-    """show registered repositories and their namespaces"""
+    """show registered repositories and their namespaces
+
+    List all package repositories known to Spack. Repositories
+    can be local directories or remote git repositories.
+
+    The output can be filtered by:
+      --scope=<name>    to list repositories from a specific scope
+
+    The output format can be controlled using one of:
+      --names           to show only configuration names
+      --namespaces      to show only repository namespaces
+      --json            to output repositories as machine-readable json records
+    """
     descriptors = spack.repo.RepoDescriptors.from_config(
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
@@ -320,25 +337,61 @@ def repo_list(args):
                 print(maybe_repo.namespace)
         return
 
-    # Default table format: collect all repository information for aligned output
+    # Collect all repository information
     repo_info = []
 
     for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
         if isinstance(maybe_repo, spack.repo.Repo):
-            repo_info.append(
-                ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
-            )
+            status = "installed"
+            namespace = maybe_repo.namespace
+            api = maybe_repo.package_api_str
+            repo_path = maybe_repo.root
         elif maybe_repo is None:  # Uninitialized Git-based repo case
-            repo_info.append(("@K{ - }", name, "", path))
+            status = "uninitialized"
+            namespace = name
+            api = ""
+            repo_path = path
         else:  # Exception/error case
-            repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
+            status = "error"
+            namespace = name
+            api = ""
+            repo_path = path
 
-    if repo_info:
-        max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
-        max_api_width = max(len(api) for _, _, api, _ in repo_info) + 3
+        # Add the repo info to our list
+        repo_info.append(
+            {
+                "name": name,
+                "namespace": namespace,
+                "path": repo_path,
+                "api_version": api,
+                "status": status,
+                "error": str(maybe_repo) if isinstance(maybe_repo, Exception) else None,
+            }
+        )
+
+    # Output in JSON format if requested
+    if args.json:
+        sjson.dump(repo_info, sys.stdout)
+        return
+
+    # Default table format with aligned output
+    formatted_repo_info = []
+    for repo in repo_info:
+        if repo["status"] == "installed":
+            status = "@g{[+]}"
+        elif repo["status"] == "uninitialized":
+            status = "@K{ - }"
+        else:  # error
+            status = "@r{[-]}"
+
+        formatted_repo_info.append((status, repo["namespace"], repo["api_version"], repo["path"]))
+
+    if formatted_repo_info:
+        max_namespace_width = max(len(namespace) for _, namespace, _, _ in formatted_repo_info) + 3
+        max_api_width = max(len(api) for _, _, api, _ in formatted_repo_info) + 3
 
         # Print aligned output
-        for status, namespace, api, path in repo_info:
+        for status, namespace, api, path in formatted_repo_info:
             cpath = color.cescape(path)
             color.cprint(
                 f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {cpath}"

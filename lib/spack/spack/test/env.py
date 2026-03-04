@@ -1980,3 +1980,61 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             with pytest.raises(ev.SpackEnvironmentConfigError, match=r"among groups: alpha, beta"):
                 e.concretize()
+
+
+@pytest.mark.regression("51995")
+def test_mixed_compilers_and_libllvm(tmp_path, config):
+    """Tests that we divide virtual nodes correctly among unification sets.
+
+    This test concretizes a unified environment where one package uses gcc as a C++ compiler
+    and depends on llvm as a provider of libllvm, while the other package uses llvm as a C++
+    compiler.
+    """
+    spack_yaml = """
+spack:
+  specs:
+  - paraview %cxx=llvm
+  - mesa %cxx=gcc %libllvm=llvm
+  packages:
+    c:
+      prefer:
+      - gcc
+    cxx:
+      prefer:
+      - gcc
+    gcc::
+      externals:
+      - spec: gcc@13.2.0 languages:='c,c++,fortran'
+        prefix: /path
+        extra_attributes:
+          compilers:
+            c: /path/bin/gcc
+            cxx: /path/bin/g++
+            fortran: /path/bin/gfortran
+    llvm::
+      externals:
+      - spec: llvm@20.1.8+clang+flang+lld+lldb
+        prefix: /usr
+        extra_attributes:
+          compilers:
+            c: /usr/bin/gcc
+            cxx: /usr/bin/g++
+            fortran: /usr/bin/gfortran
+  concretizer:
+    unify: true
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+
+    for x in e.concrete_roots():
+        if x.name == "mesa":
+            mesa = x
+        else:
+            paraview = x
+
+    assert paraview.satisfies("%cxx=llvm@20")
+    assert paraview.satisfies(f"%{mesa}")
+    assert mesa.satisfies("%cxx=gcc %libllvm=llvm")
+    assert paraview["cxx"].dag_hash() == mesa["libllvm"].dag_hash()

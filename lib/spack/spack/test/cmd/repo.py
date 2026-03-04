@@ -813,6 +813,82 @@ def test_repo_list_format_flags(
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
 
 
+def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_path: pathlib.Path):
+    """Test the --json flag for repo list command.
+
+    This test verifies that:
+    1. The --json flag produces valid JSON output
+    2. The output contains the expected repository information
+    3. Different repository types (installed, uninitialized, error)
+       are correctly represented
+    """
+    import json
+
+    # Fake a git monorepo with two package repositories
+    monorepo_path = tmp_path / "monorepo"
+    (monorepo_path / ".git").mkdir(parents=True)
+    repo("create", str(monorepo_path), "repo_one")
+    repo("create", str(monorepo_path), "repo_two")
+
+    # Configure repositories in Spack
+    test_repos = {
+        # git repo that provides two package repositories
+        "monorepo": {
+            "git": "https://example.com/monorepo.git",
+            "destination": str(monorepo_path),
+            "paths": ["spack_repo/repo_one", "spack_repo/repo_two"],
+        },
+        # git repo that is not yet cloned
+        "uninitialized": {
+            "git": "https://example.com/uninitialized.git",
+            "destination": str(tmp_path / "uninitialized"),
+        },
+        # invalid local repository
+        "misconfigured": str(tmp_path / "misconfigured"),
+    }
+    mutable_config.set("repos", test_repos, scope="site")
+
+    # Get and parse JSON output
+    json_output = repo("list", "--json")
+    repo_data = json.loads(json_output)
+
+    # Verify we got a list of repositories
+    assert isinstance(repo_data, list), "Expected JSON output to be a list"
+
+    # Index repositories by namespace for easier validation
+    repos_by_namespace = {}
+    for item in repo_data:
+        # Check all required fields are present
+        required_fields = ["name", "namespace", "path", "api_version", "status", "error"]
+        for field in required_fields:
+            assert field in item, f"Repository missing required field: {field}"
+
+        # Store by namespace for later validation
+        repos_by_namespace[item["namespace"]] = item
+
+    # Verify installed repositories (repo_one and repo_two)
+    for namespace in ["repo_one", "repo_two"]:
+        assert namespace in repos_by_namespace, f"Missing repository: {namespace}"
+        repo_info = repos_by_namespace[namespace]
+        assert repo_info["name"] == "monorepo", f"Incorrect name for {namespace}"
+        assert repo_info["status"] == "installed", f"Incorrect status for {namespace}"
+        assert repo_info["error"] is None, f"Unexpected error for {namespace}"
+        assert repo_info["api_version"], f"Missing API version for {namespace}"
+
+    # Verify uninitialized repository
+    assert "uninitialized" in repos_by_namespace, "Missing uninitialized repository"
+    uninit_repo = repos_by_namespace["uninitialized"]
+    assert uninit_repo["name"] == "uninitialized", "Incorrect name for uninitialized repo"
+    assert uninit_repo["status"] == "uninitialized", "Incorrect status for uninitialized repo"
+
+    # Verify misconfigured repository
+    assert "misconfigured" in repos_by_namespace, "Missing misconfigured repository"
+    misc_repo = repos_by_namespace["misconfigured"]
+    assert misc_repo["name"] == "misconfigured", "Incorrect name for misconfigured repo"
+    assert misc_repo["status"] == "error", "Incorrect status for misconfigured repo"
+    assert misc_repo["error"] is not None, "Missing error message for misconfigured repo"
+
+
 @pytest.mark.parametrize(
     "repo_name,flags",
     [
