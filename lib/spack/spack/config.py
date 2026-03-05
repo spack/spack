@@ -1045,29 +1045,32 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
+        # circular dependencies
+        import spack.util.path
+
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 
-        # use specified name if there is one
-        config_name = self.name
-        if not config_name:
-            # Try to use the relative path to create the included scope name
-            parent_path = getattr(parent_scope, "path", None)
-            if parent_path and str(parent_path) == os.path.commonprefix(
-                [parent_path, config_path]
-            ):
-                included_name = os.path.relpath(config_path, parent_path)
-            else:
-                included_name = config_path
+        # Determine the configuration scope name
+        config_name = self.name or parent_scope.name
+
+        # But ensure that name is unique if there are multiple paths.
+        if not self.name or len(getattr(self, "paths", [])) > 1:
+            parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
+            real_path = pathlib.Path(spack.util.path.substitute_path_variables(path))
+
+            try:
+                included_name = real_path.relative_to(parent_path)
+            except ValueError:
+                included_name = real_path
 
             if sys.platform == "win32":
                 # Clean windows path for use in config name that looks nicer
                 # ie. The path: C:\\some\\path\\to\\a\\file
                 # becomes C/some/path/to/a/file
-                included_name = included_name.replace("\\", "/")
-                included_name = included_name.replace(":", "")
+                included_name = included_name.as_posix().replace(":", "")
 
-            config_name = f"{parent_scope.name}:{included_name}"
+            config_name = f"{config_name}:{included_name}"
 
         _, ext = os.path.splitext(config_path)
         ext_is_yaml = ext == ".yaml" or ext == ".yml"
@@ -1079,7 +1082,6 @@ class OptionalInclude:
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
         if (exists and not is_dir) or ext_is_yaml:
-            # files are assumed to be SingleFileScopes
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
                 config_name,
@@ -1324,9 +1326,9 @@ class GitIncludePaths(OptionalInclude):
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []
-        for relative_path in self.paths:
-            config_path = os.path.join(destination, relative_path)
-            scope = self._scope(relative_path, config_path, parent_scope)
+        for path in self.paths:
+            config_path = os.path.join(destination, path)
+            scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
 

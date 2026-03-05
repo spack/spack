@@ -2038,3 +2038,52 @@ spack:
     assert paraview.satisfies(f"%{mesa}")
     assert mesa.satisfies("%cxx=gcc %libllvm=llvm")
     assert paraview["cxx"].dag_hash() == mesa["libllvm"].dag_hash()
+
+
+@pytest.mark.regression("51512")
+def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
+    """Tests that we can concretize a unified environment using two C/C++ compilers for the root
+    specs and GCC for Fortran, where both roots depend on Fortran.
+    """
+    spack_yaml = """
+    spack:
+      specs:
+      - mpich %c,cxx=llvm
+      - openblas %c,fortran=gcc
+      packages:
+        gcc::
+          externals:
+          - spec: gcc@13.2.0 languages:='c,c++,fortran'
+            prefix: /path
+            extra_attributes:
+              compilers:
+                c: /path/bin/gcc
+                cxx: /path/bin/g++
+                fortran: /path/bin/gfortran
+        llvm::
+          externals:
+          - spec: llvm@20.1.8+clang~flang
+            prefix: /usr
+            extra_attributes:
+              compilers:
+                c: /usr/bin/gcc
+                cxx: /usr/bin/g++
+                fortran: /usr/bin/gfortran
+      concretizer:
+        unify: true
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+
+    for x in e.concrete_roots():
+        if x.name == "mpich":
+            mpich = x
+        else:
+            openblas = x
+
+    assert mpich.satisfies("%c,cxx=llvm")
+    assert mpich.satisfies("%fortran=gcc")
+    assert openblas.satisfies("%c,fortran=gcc")
+    assert mpich["fortran"].dag_hash() == openblas["fortran"].dag_hash()

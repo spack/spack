@@ -292,7 +292,7 @@ def _config_scope_info(args, scope, active, included):
             result.append(
                 section_path
                 if section_path and os.path.exists(section_path)
-                else f"{scope.path}{os.sep}"
+                else f"{scope.path}{'' if os.path.isfile(scope.path) else os.sep}"
             )
         else:
             result.append(" ")

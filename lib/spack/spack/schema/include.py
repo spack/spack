@@ -92,6 +92,7 @@ properties: Dict[str, Any] = {
                             "description": "List of relative paths within the repository where "
                             "configuration files are located",
                         },
+                        "name": {"type": "string"},
                         "when": {
                             "type": "string",
                             "description": "Include this config only when the condition (as "

@@ -13,6 +13,8 @@ Include Settings (include.yaml)
 ===============================
 
 Spack allows you to include configuration files through ``include.yaml``, or in the ``include:`` section in an environment.
+You can specify includes using local paths, remote paths, and ``git`` URLs.
+Included paths become configuration scopes in Spack and can even be used to override built-in scopes.
 
 Local files
 ~~~~~~~~~~~
@@ -62,27 +64,50 @@ The ``config.yaml`` file would be cached locally to a special include location a
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can also include configuration files from a ``git`` repository.
-The `branch`, `commit`, or `tag` to be checked out is required.
+The ``branch``, ``commit``, or ``tag`` to be checked out is required.
 A list of relative paths in which to find the configuration files is also required.
 Inclusion of the repository (and its paths) can be optional or conditional.
+If you want to control the :ref:`name of the configuration scope <named-config-scopes>`, you can provide a ``name``.
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
-We would then configure the ``include.yaml`` file as follows:
-
-.. code-block:: yaml
+And we want the configuration scope name to start ``USC``.
+We would then configure the ``include.yaml`` file as follows::
 
    include:
-   - git: https://github.com/spack/spack-configs
+   - name: USC
+     git: https://github.com/spack/spack-configs
      branch: main
      when: os == "centos7"
      paths:
      - USC/config/config.yaml
      - USC/config/packages.yaml
 
-If the condition is satisfied, then the ``main`` branch of the repository will be cloned and the settings for the two files integrated into Spack's configuration.
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
+Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
+In this example, the new scopes can be seen by running::
+
+   $ spack config scopes -p
+   Scope               Path
+   command_line
+   spack               /Users/username/spack/etc/spack/
+   user                /Users/username/.spack/
+   USC:config.yaml     /Users/username/.spack/includes/nncrh7v/USC/config/config.yaml
+   USC:packages.yaml   /Users/username/.spack/includes/nncrh7v/USC/config/packages.yaml
+   site                /Users/username/spack/etc/spack/site/
+   system              /etc/spack/
+   defaults            /Users/username/spack/etc/spack/defaults/
+   defaults:darwin     /Users/username/spack/etc/spack/defaults/darwin/
+   defaults:base       /Users/username/spack/etc/spack/defaults/base/
+   _builtin
+
+Since there are two unique paths, each results in a separate configuration scope.
+If only the ``USC/config`` directory was listed under ``paths``, then there would be only one configuration scope, named ``USC``, and the configuration settings from all of the configuration files within that directory would be integrated.
 
 .. versionadded:: 1.1
    ``git:``, ``branch:``, ``commit:``, and ``tag:`` attributes.
+
+.. versionadded:: 1.2
+   ``name:`` attribute.
 
 Precedence
 ~~~~~~~~~~
@@ -143,13 +168,15 @@ If not, Spack will instead use the ``path:`` specified in configuration.
 .. versionadded:: 1.1
    The ``path_override_env_var:`` attribute.
 
+.. _named-config-scopes:
+
 Named configuration scopes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, the included scope names are is constructed by appending ``:`` and the included scope's basename to the parent scope name.
+By default, the included scope names are constructed by appending ``:`` and the included scope's basename to the parent scope name.
 For example, Spack's own ``defaults`` scope includes a ``base`` scope and a platform-specific scope::
 
-    > spack config scopes -p
+    $ spack config scopes -p
     Scope            Path
     command_line
     spack            /home/username/spack/etc/spack/
@@ -200,8 +227,8 @@ You can see that all three of these scopes are given meaningful names, and all t
 The ``user`` and ``system`` scopes can also be disabled by setting ``SPACK_DISABLE_LOCAL_CONFIG``.
 Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set.
 
-Overriding scopes by name:
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding scopes by name
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configuration scopes have unique names.
 This means that you can use the ``name:`` attribute to *replace* a builtin scope.
@@ -230,7 +257,7 @@ The newly included ``user`` scope will *completely* override the builtin ``user`
 
 .. warning::
 
-   Using ``name:`` to override the ``defaults`` scope can have *very* unexpected consequences and is not advised.
+   Overriding the ``defaults`` scope can have **very** unexpected consequences and is not advised.
 
 .. versionadded:: 1.1
    The ``name:`` attribute.

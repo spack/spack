@@ -33,6 +33,7 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.core
+import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.solver.runtimes
 import spack.spec
@@ -659,11 +660,15 @@ spack:
         """
         spack.concretize.concretize_one("hypre ^openblas-with-lapack")
 
-    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
+    @pytest.mark.parametrize("max_dupes_default", [1, 2, 3])
+    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(
+        self, max_dupes_default, mutable_config
+    ):
         """Test a package with multiple virtual dependencies and force a
         provider that provides both, and another conflicting package that
         provides one.
         """
+        mutable_config.set("concretizer:duplicates:max_dupes:default", max_dupes_default)
         s = Spec("hypre ^openblas-with-lapack ^netlib-lapack")
         with pytest.raises(spack.error.SpackError):
             spack.concretize.concretize_one(s)
@@ -4928,3 +4933,25 @@ def test_default_values_used_if_subset_required_by_dependent(mock_packages):
     a = spack.concretize.concretize_one("multivalue-variant-multi-defaults-dependent")
     # we still end up using baz, and we don't drop it to avoid an extra dependency.
     assert a.satisfies("%multivalue-variant-multi-defaults myvariant=bar,baz")
+
+
+def test_virtual_gets_multiple_dupes(mock_packages, config):
+    """Tests that virtual packages always get multiple dupes, according to what we have in
+    the configuration files.
+    """
+    specs = [spack.spec.Spec("pkg-with-c-link-dep")]
+    possible_graph = spack.solver.input_analysis.NoStaticAnalysis(
+        configuration=spack.config.CONFIG, repo=spack.repo.PATH
+    )
+    counter = spack.solver.input_analysis.MinimalDuplicatesCounter(
+        specs, tests=False, possible_graph=possible_graph
+    )
+    gen = spack.solver.asp.ProblemInstanceBuilder()
+    counter.possible_packages_facts(gen, spack.solver.core.fn)
+
+    asp = gen.asp_problem
+    # "c" is a compiler language virtual and must allow multiple nodes, not be capped at 1
+    selected_lines = [line for line in asp if line.startswith('max_dupes("c"')]
+    assert len(selected_lines) == 1
+    max_dupes_c = selected_lines[0]
+    assert 'max_dupes("c",2).' == max_dupes_c, f"should have max_dupes=2, but got: {max_dupes_c}"

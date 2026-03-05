@@ -1786,10 +1786,12 @@ def test_included_path_git(
 
             return ""
 
-    paths = ["config.yaml", "packages.yaml"]
+    # Specifying two relative paths, one explicit, one implicit
+    paths = ["./config.yaml", "packages.yaml"]
     entry = {
         "git": "https://example.com/windows/configs.git",
         key: value,
+        "name": "site",
         "paths": paths,
         "when": 'platform == "test"',
     }
@@ -1819,9 +1821,12 @@ def test_included_path_git(
     parent_scope = mock_low_high_config.scopes["low"]
     scopes = include.scopes(parent_scope)
     assert scopes and len(scopes) == len(paths)
+
+    base_paths = [os.path.basename(p) for p in paths]
     for scope in scopes:
         assert isinstance(scope, spack.config.SingleFileScope)
-        assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+        assert os.path.basename(scope.path) in base_paths  # type: ignore[union-attr]
+        assert scope.name.split(":")[1] in base_paths
 
     # Second pass uses the scopes previously built.
     # Only need to do this for one of the parameters.
@@ -1999,6 +2004,6 @@ def test_include_bad_parent_scope(tmp_path: pathlib.Path):
 
 
 def test_config_invalid_scope(mock_low_high_config):
-    err = "Must be one of \['low', 'high'\]"  # noqa: W605
+    err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
