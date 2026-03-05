@@ -1009,16 +1009,6 @@ def override(
         assert scope is overrides
 
 
-def _remove_prefix(path: str, prefix: str) -> str:
-    try:
-        # TODO: Retain only this call once the minimum version is Python 3.9
-        path = path.removeprefix(prefix)
-    except AttributeError:
-        if path.startswith(prefix):
-            path = path[len(prefix):]
-    return path
-
-
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
@@ -1064,26 +1054,19 @@ class OptionalInclude:
 
         # But ensure that name is unique if there are multiple paths.
         if not self.name or len(getattr(self, "paths", [])) > 1:
-            parent_path = getattr(parent_scope, "path", None)
-            path = spack.util.path.substitute_path_variables(path)
+            parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
+            real_path = pathlib.Path(spack.util.path.substitute_path_variables(path))
 
-            if parent_path and str(parent_path) == os.path.commonprefix([parent_path, path]):
-                included_name = os.path.relpath(path, parent_path)
-            else:
-                included_name = path
-
-            # Remove relative prefix from linux local and git repo paths
-            included_name = _remove_prefix(included_name, "./")
+            try:
+                included_name = real_path.relative_to(parent_path)
+            except ValueError:
+                included_name = real_path
 
             if sys.platform == "win32":
-                # Remove relative prefix from windows paths
-                included_name = _remove_prefix(included_name, ".\\")
-
                 # Clean windows path for use in config name that looks nicer
                 # ie. The path: C:\\some\\path\\to\\a\\file
                 # becomes C/some/path/to/a/file
-                included_name = included_name.replace("\\", "/")
-                included_name = included_name.replace(":", "")
+                included_name = included_name.as_posix().replace(":", "")
 
             config_name = f"{config_name}:{included_name}"
 
@@ -1341,13 +1324,8 @@ class GitIncludePaths(OptionalInclude):
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []
-        prefix = os.path.commonpath(self.paths)
-        if prefix:
-            prefix += os.sep
-
         for path in self.paths:
             config_path = os.path.join(destination, path)
-            path = _remove_prefix(path, prefix)
             scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
