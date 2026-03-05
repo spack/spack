@@ -1969,7 +1969,6 @@ imposed_constraint(Hash, "hash", PackageName, Hash) :- installed_hash(PackageNam
 % can get by with a much smaller search space.
 avoid_link_dependency(Hash, DepName) :-
   hash_attr(Hash, "depends_on", PackageName, DepName, "link"),
-  not hash_attr(Hash, "depends_on", PackageName, DepName, "run"),
   hash_attr(Hash, "hash", DepName, DepHash),
   compiler_package(PackageName),
   not compiler_used_as_a_library(node(_, PackageName), Hash).
