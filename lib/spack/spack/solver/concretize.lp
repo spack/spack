@@ -1006,6 +1006,11 @@ virtual_is_needed(Virtual) :- node_depends_on_virtual(PackageNode, Virtual).
 1 { virtual_on_edge(PackageNode, ProviderNode, node(VirtualID, Virtual), Type) : provider(ProviderNode, node(VirtualID, Virtual)) } 1
   :- node_depends_on_virtual(PackageNode, Virtual, Type).
 
+% A package that depends on a virtual with type ("build", "link") cannot have two providers
+% (one for the "build" and one for the "link")
+:- node_depends_on_virtual(PackageNode, Virtual), M = #count { VirtualID : virtual_on_edge(PackageNode, ProviderNode, node(VirtualID, Virtual), _) }, M > 1.
+
+
 attr("virtual_on_edge", PackageNode, ProviderNode, Virtual) :- virtual_on_edge(PackageNode, ProviderNode, node(_, Virtual), _).
 attr("depends_on", PackageNode, ProviderNode, Type) :- virtual_on_edge(PackageNode, ProviderNode, _, Type).
 

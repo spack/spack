@@ -660,11 +660,15 @@ spack:
         """
         spack.concretize.concretize_one("hypre ^openblas-with-lapack")
 
-    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
+    @pytest.mark.parametrize("max_dupes_default", [1, 2, 3])
+    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(
+        self, max_dupes_default, mutable_config
+    ):
         """Test a package with multiple virtual dependencies and force a
         provider that provides both, and another conflicting package that
         provides one.
         """
+        mutable_config.set("concretizer:duplicates:max_dupes:default", max_dupes_default)
         s = Spec("hypre ^openblas-with-lapack ^netlib-lapack")
         with pytest.raises(spack.error.SpackError):
             spack.concretize.concretize_one(s)
