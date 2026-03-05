@@ -2920,12 +2920,11 @@ class SpackSolverSetup:
         candidate_compilers, self.rejected_compilers = possible_compilers(
             configuration=spack.config.CONFIG
         )
-        for x in candidate_compilers:
-            if x.external or x in reuse:
-                continue
-            reuse.append(x)
-            for dep in x.traverse(root=False, deptype="run"):
-                reuse.extend(dep.traverse(deptype=("link", "run")))
+        reuse_from_compilers = traverse.traverse_nodes(
+            [x for x in candidate_compilers if not x.external], deptype=("link", "run")
+        )
+        reused_set = set(reuse)
+        reuse += [x for x in reuse_from_compilers if x not in reused_set]
 
         candidate_compilers.update(compilers_from_reuse)
         self.possible_compilers = list(candidate_compilers)

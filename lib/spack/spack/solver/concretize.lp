@@ -1979,6 +1979,31 @@ avoid_link_dependency(Hash, DepName) :-
   compiler_package(PackageName),
   not compiler_used_as_a_library(node(_, PackageName), Hash).
 
+% When a compiler is not used as a library, its transitive run-type dependencies are unified in the
+% build environment (they appear in PATH etc.), but their pure link-type dependencies are NOT. This
+% is different from unification sets that include all link/run deps: the goal is to avoid imposing
+% transitive link constraints from the toolchain, which would add to max_dupes and require us to
+% increase the max_dupes threshold for many packages.
+
+% Base case: direct run dep of a non-library compiler
+compiler_non_lib_run_dep(DepHash, DepName) :-
+  compiler_package(CompilerName),
+  not compiler_used_as_a_library(node(_, CompilerName), CompilerHash),
+  hash_attr(CompilerHash, "depends_on", CompilerName, DepName, "run"),
+  hash_attr(CompilerHash, "hash", DepName, DepHash).
+
+% Recursive case: run deps of run deps (full transitive closure)
+compiler_non_lib_run_dep(TransDepHash, TransDepName) :-
+  compiler_non_lib_run_dep(DepHash, DepName),
+  hash_attr(DepHash, "depends_on", DepName, TransDepName, "run"),
+  hash_attr(DepHash, "hash", TransDepName, TransDepHash).
+
+% Pure link deps (link but not run) of any node in that closure are avoided
+avoid_link_dependency(DepHash, LinkDepName) :-
+  compiler_non_lib_run_dep(DepHash, DepName),
+  hash_attr(DepHash, "depends_on", DepName, LinkDepName, "link"),
+  not hash_attr(DepHash, "depends_on", DepName, LinkDepName, "run").
+
 % Without splicing, we simply recover the exact semantics
 imposed_constraint(ParentHash, "hash", ChildName, ChildHash) :-
   hash_attr(ParentHash, "hash", ChildName, ChildHash),

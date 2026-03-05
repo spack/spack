@@ -570,6 +570,29 @@ class TestConcretize:
             assert x.satisfies("%c=gcc")
             assert "llvm" in x
 
+    def test_compiler_run_dep_link_dep_not_forced(self, temporary_store):
+        """When a compiler is used as a pure build dependency, its transitive run-reachable deps
+        are unified in the build environment, but their pure link-type dependencies must NOT be
+        forced onto the package.
+
+        Scenario: compiler-with-deps has a run+link dep on binutils-for-test, which has a pure
+        link dep on zlib. A package that depends on zlib and uses compiler-with-deps as its C
+        compiler should be free to pick its own zlib (here: zlib@1.2.8) independently of the
+        toolchain's zlib (zlib@1.2.11). Without the fix the imposed hash from binutils-for-test
+        forces the toolchain version onto the package, causing a conflict.
+        """
+        # Pre-install the compiler with its transitive deps binutils-for-test and zlib@1.2.11
+        compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.11")
+        assert compiler["zlib"].satisfies("@1.2.11")
+        PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+        # Concretize a package that depends on a different zlib from its compiler's toolchain.
+        pkg = spack.concretize.concretize_one(
+            "pkg-with-zlib-dep %c=compiler-with-deps ^zlib@1.2.8"
+        )
+
+        assert pkg["zlib"].satisfies("@1.2.8")
+
     def test_disable_mixing_env(
         self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
     ):
