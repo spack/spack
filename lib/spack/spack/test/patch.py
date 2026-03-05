@@ -505,6 +505,34 @@ def test_sha256_setter(mock_packages, mock_patch_stage, config):
     patch.sha256 = "abc"
 
 
+def test_patch_index_cross_repo_dependency(mock_packages, tmp_path, config):
+    """A package that patches a dependency from another repo should not break
+    the patch index (#51505, #34961)."""
+    # Create a second repo containing only 'patch-a-dependency', which patches 'libelf'.
+    # 'libelf' is only in the builtin_mock repo, not in this second repo.
+    local_root = tmp_path / "spack_repo" / "local_test"
+    local_root.mkdir(parents=True)
+    (local_root / "repo.yaml").write_text("repo:\n  namespace: local_test\n  api: v2.1\n")
+    src = pathlib.Path(spack.paths.mock_packages_path) / "packages" / "patch_a_dependency"
+    shutil.copytree(src, local_root / "packages" / "patch_a_dependency")
+
+    local_repo = spack.repo.from_path(str(local_root))
+
+    # Use local_repo first, then the mock repo (which provides libelf).
+    with spack.repo.use_repositories(local_repo, mock_packages.repos[0], override=True):
+        # Directly call _index_patches on the local repo's package class with
+        # the local repo as repository (as happens when building a single repo's
+        # patch index). This must not fail with UnknownPackageError for 'libelf'.
+        pkg_cls = local_repo.get_pkg_class("patch-a-dependency")
+        index = spack.patch.PatchCache._index_patches(pkg_cls, local_repo)
+        # The index must contain a patch entry whose target is libelf (the cross-repo dep).
+        assert any(
+            "libelf" in fullname
+            for package_to_patch in index.values()
+            for fullname in package_to_patch
+        )
+
+
 def test_invalid_from_dict(mock_packages, config):
     dictionary = {}
     with pytest.raises(ValueError, match="Invalid patch dictionary:"):
