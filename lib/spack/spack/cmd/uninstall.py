@@ -163,9 +163,14 @@ def dependent_environments(
     if current_env:
         env_names = (name for name in env_names if name != current_env.name)
 
+    # needs to be a list, since it causes an issue as generator expression.
+    # cases have been observed where a customized config:environment_root does
+    # not propagate to all iterations otherwise.
+    env_roots = list(ev.root(name) for name in env_names)
+
     # Mapping from Environment -> non-zero list of specs contained in it.
     other_envs_to_specs: Dict[ev.Environment, List[spack.spec.Spec]] = {}
-    for other_env in (ev.Environment(ev.root(name)) for name in env_names):
+    for other_env in (ev.Environment(r) for r in env_roots):
         specs_in_other_env = all_specs_in_env(other_env, specs)
         if specs_in_other_env:
             other_envs_to_specs[other_env] = specs_in_other_env
