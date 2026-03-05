@@ -19,7 +19,7 @@ To register the other Spack instance, you can add it as an entry to ``upstreams.
     install-tree-1:
       install_tree: /path/to/another/spack/install/tree
     install-tree-2:
-      install_tree: /path/to/old/spack/opt/spack
+      install_tree: /path/to/yet/another/spack/install/tree
 
 The ``install_tree`` must point to a directory containing a Spack install tree, as defined in :ref:`config.yaml <config-yaml>`.
 For a given instance of Spack, you can determine the directory to add here by running ``spack location --install-root`` in that instance, or with ``spack config get config``.
