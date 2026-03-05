@@ -34,6 +34,7 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.core
+import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.solver.runtimes
 import spack.spec
@@ -4930,3 +4931,25 @@ def test_default_values_used_if_subset_required_by_dependent(mock_packages):
     a = spack.concretize.concretize_one("multivalue-variant-multi-defaults-dependent")
     # we still end up using baz, and we don't drop it to avoid an extra dependency.
     assert a.satisfies("%multivalue-variant-multi-defaults myvariant=bar,baz")
+
+
+def test_virtual_gets_multiple_dupes(mock_packages, config):
+    """Tests that virtual packages always get multiple dupes, according to what we have in
+    the configuration files.
+    """
+    specs = [spack.spec.Spec("pkg-with-c-link-dep")]
+    possible_graph = spack.solver.input_analysis.NoStaticAnalysis(
+        configuration=spack.config.CONFIG, repo=spack.repo.PATH
+    )
+    counter = spack.solver.input_analysis.MinimalDuplicatesCounter(
+        specs, tests=False, possible_graph=possible_graph
+    )
+    gen = spack.solver.asp.ProblemInstanceBuilder()
+    counter.possible_packages_facts(gen, spack.solver.core.fn)
+
+    asp = gen.asp_problem
+    # "c" is a compiler language virtual and must allow multiple nodes, not be capped at 1
+    selected_lines = [line for line in asp if line.startswith('max_dupes("c"')]
+    assert len(selected_lines) == 1
+    max_dupes_c = selected_lines[0]
+    assert 'max_dupes("c",2).' == max_dupes_c, f"should have max_dupes=2, but got: {max_dupes_c}"
