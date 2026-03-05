@@ -2035,6 +2035,6 @@ def test_include_bad_parent_scope(tmp_path: pathlib.Path):
 
 
 def test_config_invalid_scope(mock_low_high_config):
-    err = "Must be one of \['low', 'high'\]"  # noqa: W605
+    err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
