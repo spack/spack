@@ -63,7 +63,7 @@ def test_gc_with_externals(mutable_database):
     # Confirm the external is not listed
     output = gc("-y")
     assert "Successfully uninstalled cmake@3.4.3" in output  # not external, is gc'd
-    assert not "Successfully uninstalled cmake@3.23.1" in output  # external, not gc'd
+    assert "Successfully uninstalled cmake@3.23.1" not in output  # external, not gc'd
 
     # Confirm it's still not removed when no other specs to remove
     assert "There are no unused specs." in gc("-y")
