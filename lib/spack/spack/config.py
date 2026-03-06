@@ -1058,8 +1058,11 @@ class OptionalInclude:
         # Ignore included concrete environment files (i.e., ``spack.lock``)
         # since they are not normal configuration (scope) files and their
         # processing is handled when the environment is processed.
-        if path and os.path.splitext(path)[1] == ".lock":
-            tty.debug(f"Ignoring inclusion of '{path}' since not a configuration file")
+        if path and os.path.basename(path) == "spack.lock":
+            tty.debug(
+                f"Ignoring inclusion of '{path}' since environment lock files "
+                "are processed elsewhere"
+            )
             return None
 
         # Ensure the parent scope is valid
