@@ -11,6 +11,7 @@ dependencies.
 import os
 import pathlib
 from enum import Enum
+from functools import partial
 
 import spack.config as config
 import spack.llnl.util.tty as tty
@@ -244,7 +245,7 @@ class SpackPaths:
             raise AttributeError(name)
         return getattr(base, name)
 
-    def resolve_a_home(self, env_vars, xdg_var, config_var, home_rel):
+    def resolve_a_home(self, spack_vars, xdg_var, config_var, home_rel):
         """
         Data stored by spack is split into state, data, and cache components.
         This function can resolve where each of these components should be
@@ -263,32 +264,6 @@ class SpackPaths:
         """
         disable_env = config.get("config:locations:disable_env", False)
 
-        def spack_env_check():
-            if disable_env:
-                return
-            if isinstance(env_vars, str):
-                x = [env_vars]
-            else:
-                x = env_vars
-            for n in x:
-                if n in os.environ:
-                    return os.environ[n], Provenance.SPACK_ENV
-
-        def xdg_env_check():
-            if disable_env:
-                return
-            if xdg_var in os.environ:
-                return os.path.join(os.environ[xdg_var], "spack"), Provenance.XDG_VAR
-
-        def spack_home_env_check():
-            if disable_env:
-                return
-            if "SPACK_HOME" in os.environ:
-                return (
-                    os.path.join(os.environ["SPACK_HOME"], home_rel, "spack"),
-                    Provenance.SPACK_HOME_ENV,
-                )
-
         def cfg_check():
             val = config.get(f"config:locations:{config_var}", None)
             if val:
@@ -298,6 +273,21 @@ class SpackPaths:
             h = config.get("config:locations:home", None)
             if h:
                 return os.path.join(h, home_rel, "spack"), Provenance.CONFIG_HOME_VAR
+
+        def env_check(env_vars, provenance, rel=None):
+            if disable_env:
+                return
+
+            rel = rel or ""
+
+            for v in env_vars:
+                if v in os.environ:
+                    return os.path.join(os.environ[v], rel), provenance
+
+        spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
+        spack_env_check = partial(env_check, spack_vars, Provenance.SPACK_ENV)
+        spack_home_env_check = partial(env_check, ["SPACK_HOME"], Provenance.SPACK_HOME_ENV, rel=os.path.join(home_rel, "spack"))
+        xdg_env_check = partial(env_check, [xdg_var], Provenance.XDG_VAR, rel="spack")
 
         for check in [
             spack_env_check,
