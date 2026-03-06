@@ -271,8 +271,15 @@ class SpackPaths:
             if found:
                 return append_rel(found, rel), provenance
 
-        spack_cfg_check = partial(cfg_check, f"config:locations:{config_var}", Provenance.CONFIG_VAR)
-        spack_home_cfg_check = partial(cfg_check, "config:locations:home", Provenance.CONFIG_HOME_VAR, rel=os.path.join(home_rel, "spack"))
+        spack_cfg_check = partial(
+            cfg_check, f"config:locations:{config_var}", Provenance.CONFIG_VAR
+        )
+        spack_home_cfg_check = partial(
+            cfg_check,
+            "config:locations:home",
+            Provenance.CONFIG_HOME_VAR,
+            rel=os.path.join(home_rel, "spack"),
+        )
 
         def env_check(env_vars, provenance, rel=None):
             if disable_env:
