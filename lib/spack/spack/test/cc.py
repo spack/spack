@@ -340,7 +340,7 @@ def test_expected_args(wrapper_environment, wrapper_dir):
 
     # Xlinker_parsing
     #
-    # -Xlinker <x> ... -Xlinker <y> may have compiler flags inbetween, like -O3 in this
+    # -Xlinker <x> ... -Xlinker <y> may have compiler flags in between, like -O3 in this
     # example. Also check that a trailing -Xlinker (which is a compiler error) is not
     # dropped or given an empty argument.
     check_args(

@@ -98,7 +98,7 @@ class Graph(object):
         :param create_nodes: (optional) creates the head_id or tail_id
             node in case they did not exist
         """
-        # shorcut
+        # shortcut
         edge = self.next_edge
 
         # add nodes if on automatic node creation
@@ -653,7 +653,7 @@ class Graph(object):
         """
         Computes the hop distance to all nodes centered around a node.
 
-        First order neighbours are at hop 1, their neigbours are at hop 2 etc.
+        First order neighbours are at hop 1, their neighbours are at hop 2 etc.
         Uses :py:meth:`forw_bfs` or :py:meth:`back_bfs` depending on the value
         of the forward parameter.  If the distance between all neighbouring
         nodes is 1 the hop number corresponds to the shortest distance between

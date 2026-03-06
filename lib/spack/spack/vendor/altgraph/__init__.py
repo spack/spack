@@ -82,7 +82,7 @@ This will print the nodes in some breadth first order::
     [1, 2, 3, 4, 5, 7, 8, 13, 11, 10, 12, 9]
 
 If we wanted to get the hop-distance from node 1 to node 8
-we coud write::
+we could write::
 
     print(graph.get_hops(1, 8))
 

@@ -418,7 +418,7 @@ class Scanner:
         # ####
         # if self.flow_level and self.indent > column:
         #     raise ScannerError(None, None,
-        #             "invalid intendation or unclosed '[' or '{'",
+        #             "invalid indentation or unclosed '[' or '{'",
         #             self.reader.get_mark())
 
         # In the flow context, indentation is ignored. We make the scanner less
@@ -454,7 +454,7 @@ class Scanner:
 
     def fetch_stream_end(self):
         # type: () -> None
-        # Set the current intendation to -1.
+        # Set the current indentation to -1.
         self.unwind_indent(-1)
         # Reset simple keys.
         self.remove_possible_simple_key()
@@ -469,7 +469,7 @@ class Scanner:
 
     def fetch_directive(self):
         # type: () -> None
-        # Set the current intendation to -1.
+        # Set the current indentation to -1.
         self.unwind_indent(-1)
 
         # Reset simple keys.
@@ -489,7 +489,7 @@ class Scanner:
 
     def fetch_document_indicator(self, TokenClass):
         # type: (Any) -> None
-        # Set the current intendation to -1.
+        # Set the current indentation to -1.
         self.unwind_indent(-1)
 
         # Reset simple keys. Note that there could not be a block collection
@@ -597,7 +597,7 @@ class Scanner:
         # Block context needs additional checks.
         if not self.flow_level:
 
-            # Are we allowed to start a key (not nessesary a simple)?
+            # Are we allowed to start a key (not necessary a simple)?
             if not self.allow_simple_key:
                 raise ScannerError(
                     None, None, 'mapping keys are not allowed here', self.reader.get_mark()
@@ -1460,7 +1460,7 @@ class Scanner:
                                 'while scanning a double-quoted scalar',
                                 start_mark,
                                 _F(
-                                    'expected escape sequence of {length:d} hexdecimal '
+                                    'expected escape sequence of {length:d} hexadecimal '
                                     'numbers, but found {srp_call!r}',
                                     length=length,
                                     srp_call=srp(k),
@@ -1748,7 +1748,7 @@ class Scanner:
                         _F('while scanning an {name!s}', name=name),
                         start_mark,
                         _F(
-                            'expected URI escape sequence of 2 hexdecimal numbers,'
+                            'expected URI escape sequence of 2 hexadecimal numbers,'
                             ' but found {srp_call!r}',
                             srp_call=srp(k),
                         ),
@@ -2325,7 +2325,7 @@ class RoundTripScannerSC(Scanner):  # RoundTripScanner Split Comments
             if ch == '#':
                 comment_start_mark = self.reader.get_mark()
                 comment = ch
-                srf()  # skipt the '#'
+                srf()  # skip the '#'
                 while ch not in _THE_END:
                     ch = srp()
                     if ch == '\0':  # don't gobble the end-of-stream character

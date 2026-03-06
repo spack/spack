@@ -140,7 +140,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="path to the root of the artifacts directory\n\n"
         "The spack ci module assumes it will normally be run from within your project "
         "directory, wherever that is checked out to run your ci.  The artifacts root directory "
-        "should specifiy a name that can safely be used for artifacts within your project "
+        "should specify a name that can safely be used for artifacts within your project "
         "directory.",
     )
     generate.add_argument(

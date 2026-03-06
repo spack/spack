@@ -14,7 +14,7 @@ There are two parts to the build environment:
    This is how things are set up when install() is called.  Spack
    takes advantage of each package being in its own module by adding a
    bunch of command-like functions (like configure(), make(), etc.) in
-   the package's module scope.  Ths allows package writers to call
+   the package's module scope.  This allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
    readable and more like the shell script from which someone is

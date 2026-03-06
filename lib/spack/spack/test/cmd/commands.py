@@ -65,7 +65,7 @@ def test_subcommands():
 
 
 def test_alias_overrides_builtin(mutable_config: spack.config.Configuration, capfd):
-    """Test that spack commands cannot be overriden by aliases."""
+    """Test that spack commands cannot be overridden by aliases."""
     mutable_config.set("config:aliases", {"install": "find"})
     cmd, args = spack.main.resolve_alias("install", ["install", "-v"])
     assert cmd == "install" and args == ["install", "-v"]

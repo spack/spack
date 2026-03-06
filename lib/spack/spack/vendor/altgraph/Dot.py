@@ -12,7 +12,7 @@ features.
 To display the graphs or to generate image files the
 `graphviz <http://www.research.att.com/sw/tools/graphviz/>`_
 package needs to be installed on the system, moreover the :command:`dot` and
-:command:`dotty` programs must be accesible in the program path so that they
+:command:`dotty` programs must be accessible in the program path so that they
 can be ran from processes spawned within the module.
 
 Example usage
@@ -121,7 +121,7 @@ class Dot(object):
     displayed.
 
     If the :command:`dot` and :command:`dotty` programs are not in the current
-    system path their location needs to be specified in the contructor.
+    system path their location needs to be specified in the constructor.
     """
 
     def __init__(

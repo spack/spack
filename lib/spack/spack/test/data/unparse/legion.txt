@@ -42,7 +42,7 @@ class Legion(CMakePackage):
 
     depends_on("cmake@3.16:", type='build')
     # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
-    # layer. At present the MPI layer is still experimental and we discourge its
+    # layer. At present the MPI layer is still experimental and we discourage its
     # use for general (not legion development) use cases.
     depends_on('mpi', when='network=mpi')
     depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).

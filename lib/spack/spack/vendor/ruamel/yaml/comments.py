@@ -63,7 +63,7 @@ class IDX:
 
 cidx = IDX()
 
-# more or less in order of subjective expected likelyhood
+# more or less in order of subjective expected likelihood
 # the _POST and _PRE ones are lists themselves
 C_VALUE_EOL = C_ELEM_EOL = cidx()
 C_KEY_EOL = cidx()

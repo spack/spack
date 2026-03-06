@@ -1180,7 +1180,7 @@ def test_single_file_scope_cache_clearing(env_yaml):
     assert before
     # Clear the cache of the Single file scope
     scope.clear()
-    # Check that the section can be retireved again and it's
+    # Check that the section can be retrieved again and it's
     # the same as before
     after = scope.get_section("config")
     assert after
@@ -1526,7 +1526,7 @@ def test_config_file_read_perms_failure(tmp_path: pathlib.Path, mutable_empty_co
 
 
 def test_config_file_read_invalid_yaml(tmp_path: pathlib.Path, mutable_empty_config):
-    """Test reading a configuration file with invalid (unparseable) YAML
+    """Test reading a configuration file with invalid (unparsable) YAML
     raises a ConfigFileError."""
     filename = join_path(str(tmp_path), "test.yaml")
     with open(filename, "w", encoding="utf-8") as f:
@@ -1943,7 +1943,7 @@ def test_missing_include_scope_not_readable_list(mock_missing_dir_include_scopes
 
 
 def test_missing_include_scope_default_created_as_dir_scope(mock_missing_dir_include_scopes):
-    """Tests that an optional include with no existing file/directory and no yaml extention
+    """Tests that an optional include with no existing file/directory and no yaml extension
     is created as a directoryscope object"""
     missing_inc_scope = spack.config.CONFIG.scopes["sub_base"]
     assert isinstance(missing_inc_scope, spack.config.DirectoryConfigScope)

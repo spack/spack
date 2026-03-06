@@ -4,7 +4,7 @@ to add toolz as a dependency.
 
 See https://github.com/pytoolz/toolz/.
 
-toolz is relased under BSD licence. Below is the licence text
+toolz is released under BSD licence. Below is the licence text
 from toolz as it appeared when copying the code.
 
 --------------------------------------------------------------

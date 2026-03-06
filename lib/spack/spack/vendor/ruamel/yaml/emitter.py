@@ -122,7 +122,7 @@ class Emitter:
             self.dumper._emitter = self
         self.stream = stream
 
-        # Encoding can be overriden by STREAM-START.
+        # Encoding can be overridden by STREAM-START.
         self.encoding = None  # type: Optional[Text]
         self.allow_space_break = None
 
@@ -152,7 +152,7 @@ class Emitter:
         # Characteristics of the last emitted character:
         #  - current position.
         #  - is it a whitespace?
-        #  - is it an indention character
+        #  - is it an indentation character
         #    (indentation space, '-', '?', or ':')?
         self.line = 0
         self.column = 0
@@ -160,7 +160,7 @@ class Emitter:
         self.indention = True
         self.compact_seq_seq = True  # dash after dash
         self.compact_seq_map = True  # key after dash
-        # self.compact_ms = False   # dash after key, only when excplicit key with ?
+        # self.compact_ms = False   # dash after key, only when explicit key with ?
         self.no_newline = None  # type: Optional[bool]  # set if directly after `- `
 
         # Whether the document requires an explicit document end indicator

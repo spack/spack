@@ -101,7 +101,7 @@ def gzip_compressed_tarfile(
     path: str,
 ) -> Generator[Tuple[tarfile.TarFile, ChecksumWriter, ChecksumWriter], None, None]:
     """Create a reproducible, gzip compressed tarfile, and keep track of shasums of both the
-    compressed and uncompressed tarfile. Reproduciblity is achived by normalizing the gzip header
+    compressed and uncompressed tarfile. Reproducibility is achieved by normalizing the gzip header
     (no file name and zero mtime).
 
     Yields:
@@ -114,7 +114,7 @@ def gzip_compressed_tarfile(
     # Create gzip compressed tarball of the install prefix
     # 1) Use explicit empty filename and mtime 0 for gzip header reproducibility.
     #    If the filename="" is dropped, Python will use fileobj.name instead.
-    #    This should effectively mimick `gzip --no-name`.
+    #    This should effectively mimic `gzip --no-name`.
     # 2) On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
     # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
     # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
@@ -259,7 +259,7 @@ def retrieve_commit_from_archive(archive_path, ref):
     try:
         with tarfile.open(archive_path, "r") as tar:
             names = tar.getnames()
-            # since we always have a prefix and can't gaurantee the value we need this lookup.
+            # since we always have a prefix and can't guarantee the value we need this lookup.
             prefix = ""
             for name in names:
                 if name.endswith(".git"):

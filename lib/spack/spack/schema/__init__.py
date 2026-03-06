@@ -128,7 +128,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
     parent instead of merging.
 
     ``+:`` will extend the default prepend merge strategy to include string concatenation
-    ``-:`` will change the merge strategy to append, it also includes string concatentation
+    ``-:`` will change the merge strategy to append, it also includes string concatenation
     """
 
     def they_are(t):
