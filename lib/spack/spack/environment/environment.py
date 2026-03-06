@@ -1215,12 +1215,12 @@ class Environment:
         self.included_concrete_env_root_dirs = []
 
         paths = [
-            path
+            spack.util.path.canonicalize_path(path)
             for path in spack.config.paths_from_includes(includes)
-            if os.path.basename(path) == lockfile_name
         ]
         for path in paths:
-            path = spack.util.path.canonicalize_path(path)
+            if os.path.basename(path) != lockfile_name:
+                continue
 
             tty.debug(f"Adding {path} to the concrete environment root directories")
             self.included_concrete_env_root_dirs.append(os.path.dirname(path))
