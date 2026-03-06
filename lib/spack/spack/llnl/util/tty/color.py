@@ -265,6 +265,9 @@ def colorize(
         semi = ";" if color_number else ""
         ansi_code = _escape(f"{styles[style]}{semi}{color_number}", color, enclose, zsh)
         if text:
+            # must be here, not in the final return: top-level @@ is already handled by
+            # the regex, and its @-results could form new @@ pairs.
+            text = text.replace("@@", "@")
             return f"{ansi_code}{text}{_escape(0, color, enclose, zsh)}"
         else:
             return ansi_code
