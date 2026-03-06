@@ -1560,7 +1560,9 @@ def _oci_push(
 
     def extra_config(spec: spack.spec.Spec):
         spec_dict = spec.to_dict(hash=ht.dag_hash)
-        spec_dict["buildcache_layout_version"] = CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        spec_dict["buildcache_layout_version"] = (
+            2  # OCI Binary layout hasn't changed. Continue using v2
+        )
         spec_dict["binary_cache_checksum"] = {
             "hash_algorithm": "sha256",
             "hash": checksums[spec.dag_hash()].compressed_digest.digest,
