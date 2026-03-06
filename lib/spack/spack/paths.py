@@ -252,7 +252,7 @@ class SpackPaths:
         stored.
 
         Args:
-            env_vars: spack-specific environment variables that indicate the
+            spack_vars: spack-specific environment variables that indicate the
                 component location. Can be a list or a single variable. If this
                 is a list, earlier elements have precedence.
             xdg_var: the XDG-based environment variable that indicates the
