@@ -289,7 +289,12 @@ class SpackPaths:
 
         spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
         spack_env_check = partial(env_check, spack_vars, Provenance.SPACK_ENV)
-        spack_home_env_check = partial(env_check, ["SPACK_HOME"], Provenance.SPACK_HOME_ENV, rel=os.path.join(home_rel, "spack"))
+        spack_home_env_check = partial(
+            env_check,
+            ["SPACK_HOME"],
+            Provenance.SPACK_HOME_ENV,
+            rel=os.path.join(home_rel, "spack"),
+        )
         xdg_env_check = partial(env_check, [xdg_var], Provenance.XDG_VAR, rel="spack")
 
         for check in [
