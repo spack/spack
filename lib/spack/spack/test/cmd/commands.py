@@ -297,12 +297,8 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, mutable_confi
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
-    # If there is a diff, something is wrong: in that case output what the diff is.
-    # TODO: if someone runs `spack commands --update-completion` when a non-default
-    # scope is available, it will be added to the autocompletion scripts, and
-    # cause a discrepancy with the runner; it might be worth changing the update
-    # command to omit that.
     if not filecmp.cmp(old_script, new_script):
+        # If there is a diff, something is wrong: in that case output what the diff is.
         import difflib
 
         with open(old_script, "r", encoding="utf-8") as f1, open(
@@ -311,5 +307,5 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, mutable_confi
             l1 = f1.readlines()
             l2 = f2.readlines()
         diff = difflib.unified_diff(l1, l2, fromfile=old_script, tofile=new_script)
-        msg = "Diff failure:\n\n" + "".join(diff)
-        assert False, msg
+        msg += "\nDiff failure:\n\n" + "".join(diff)
+        raise AssertionError(msg)

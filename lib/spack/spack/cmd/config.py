@@ -46,6 +46,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         choices=spack.config.SECTION_SCHEMAS,
     )
     get_parser.add_argument("--json", action="store_true", help="output configuration as JSON")
+    get_parser.add_argument(
+        "--group",
+        metavar="group",
+        default=None,
+        help="show configuration as seen by this environment spec group (requires active env)",
+    )
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -56,6 +62,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         nargs="?",
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
+    )
+    blame_parser.add_argument(
+        "--group",
+        metavar="group",
+        default=None,
+        help="show configuration as seen by this environment spec group (requires active env)",
     )
 
     edit_parser = sp.add_parser("edit", help="edit configuration file")
@@ -183,6 +195,22 @@ def print_configuration(args, *, blame: bool) -> None:
     if args.scope and args.section is None:
         tty.die(f"the argument --scope={args.scope} requires specifying a section.")
 
+    group = getattr(args, "group", None)
+    if group is not None:
+        env = ev.active_environment()
+        if env is None:
+            tty.die("the argument --group requires an active environment")
+        try:
+            with env.config_override_for_group(group=group):
+                _print_configuration_helper(args, blame=blame)
+        except ValueError as e:
+            tty.die(str(e))
+        return
+
+    _print_configuration_helper(args, blame=blame)
+
+
+def _print_configuration_helper(args, *, blame: bool) -> None:
     yaml = blame or not args.json
 
     if args.section is not None:

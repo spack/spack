@@ -718,3 +718,52 @@ spack:
 
     with ev.Environment(str(tmp_path)) as e:
         assert not e.manifest.yaml_content["spack"]["config"]["ccache"]
+
+
+_GROUP_OVERRIDE_SPACK_YAML = """\
+spack:
+  specs:
+  - group: mygroup
+    specs:
+    - zlib
+    override:
+      packages:
+        zlib:
+          version: ['1.2.13']
+"""
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_group_shows_override_packages(cmd_str, tmp_path, mutable_config):
+    """Tests that packages should show that group's override packages config,
+    when the option is given.
+    """
+    (tmp_path / "spack.yaml").write_text(_GROUP_OVERRIDE_SPACK_YAML)
+
+    with ev.Environment(str(tmp_path)):
+        output = config(cmd_str, "packages")
+        assert "1.2.13" not in output
+        if cmd_str == "blame":
+            assert "env:groups:mygroup" not in output
+        output = config(cmd_str, "--group=mygroup", "packages")
+        assert "1.2.13" in output
+        if cmd_str == "blame":
+            assert "env:groups:mygroup" in output
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_group_requires_active_environment(cmd_str, mutable_config):
+    """Tests that using groups outside an environment should give a clear error."""
+    output = config(cmd_str, "--group=mygroup", "packages", fail_on_error=False)
+    assert config.returncode != 0
+    assert "--group requires an active environment" in output
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_config):
+    """Tests that using a non-existing group gives a clear error."""
+    (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - zlib\n")
+    with ev.Environment(str(tmp_path)):
+        output = config(cmd_str, "--group=nonexistent", "packages", fail_on_error=False)
+    assert config.returncode != 0
+    assert "'nonexistent' not found in" in output

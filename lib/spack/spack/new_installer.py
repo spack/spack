@@ -785,7 +785,7 @@ class BuildStatus:
         self,
         total: int,
         stdout: io.TextIOWrapper = sys.stdout,  # type: ignore[assignment]
-        get_terminal_size: Callable[[], Tuple[int, int]] = os.get_terminal_size,
+        get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
     ) -> None:
@@ -808,8 +808,15 @@ class BuildStatus:
 
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
+        self.terminal_size = os.terminal_size((0, 0))
+        self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
+
+    def on_resize(self) -> None:
+        """Refresh cached terminal size and trigger a redraw."""
+        self.terminal_size_changed = True
+        self.dirty = True
 
     def add_build(
         self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection] = None
@@ -990,7 +997,10 @@ class BuildStatus:
         if self.active_area_rows > 0:
             buffer.write(f"\033[{self.active_area_rows}F")
 
-        max_width, max_height = self.get_terminal_size()
+        if self.terminal_size_changed:
+            self.terminal_size = self.get_terminal_size()
+            self.terminal_size_changed = False
+        max_width, max_height = self.terminal_size
 
         self.total_lines = 0
         total_finished = len(self.finished_builds)
@@ -1458,6 +1468,7 @@ class PackageInstaller:
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
+        sigwinch_r = sigwinch_w = -1
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
@@ -1466,6 +1477,19 @@ class PackageInstaller:
             selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
         else:
             old_stdin_settings = None
+
+        if sys.stdout.isatty():
+            # Listen to terminal resizing events with self-pipe trick.
+            sigwinch_r, sigwinch_w = os.pipe()
+
+            def _handle_sigwinch(signum: int, frame: object) -> None:
+                try:
+                    os.write(sigwinch_w, b"\x00")
+                except OSError:
+                    pass
+
+            signal.signal(signal.SIGWINCH, _handle_sigwinch)
+            selector.register(sigwinch_r, selectors.EVENT_READ, "sigwinch")
 
         # Finished builds that have not yet been written to the database.
         finished_builds: List[ChildInfo] = []
@@ -1505,6 +1529,9 @@ class PackageInstaller:
                             finished_pids.append(data.pid)
                     elif data == "stdin":
                         stdin_ready = True
+                    elif data == "sigwinch":
+                        os.read(sigwinch_r, 64)  # drain the pipe
+                        self.build_status.on_resize()
 
                 current_time = time.monotonic()
                 for pid in finished_pids:
@@ -1594,6 +1621,12 @@ class PackageInstaller:
             # Restore terminal settings
             if old_stdin_settings:
                 termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
+
+            if sigwinch_r >= 0:
+                signal.signal(signal.SIGWINCH, signal.SIG_DFL)
+                selector.unregister(sigwinch_r)
+                os.close(sigwinch_r)
+                os.close(sigwinch_w)
 
             # Clean up resources
             # Final cleanup of any remaining finished packages before exit

@@ -103,20 +103,23 @@ class LmodConfiguration(BaseConfiguration):
         super().__init__(spec, module_set_name, explicit)
 
         candidates = collections.defaultdict(list)
+        language_virtuals = ("c", "cxx", "fortran")
+
         for node in spec.traverse(deptype=("link", "run")):
-            candidates["c"].extend(node.dependencies(virtuals=("c",)))
-            candidates["cxx"].extend(node.dependencies(virtuals=("c",)))
+            for language in language_virtuals:
+                candidates[language].extend(node.dependencies(virtuals=(language,)))
 
-        if candidates["c"]:
-            self.compiler = candidates["c"][0]
-            if len(set(candidates["c"])) > 1:
-                warnings.warn(
-                    f"{spec.short_spec} uses more than one compiler, and might not fit the "
-                    f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler."
-                )
+        self.compiler = None
 
-        elif not candidates["c"]:
-            self.compiler = None
+        for language in language_virtuals:
+            if candidates[language]:
+                self.compiler = candidates[language][0]
+                if len(set(candidates[language])) > 1:
+                    warnings.warn(
+                        f"{spec.short_spec} uses more than one compiler, and might not fit the "
+                        f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler."
+                    )
+                break
 
     @property
     def core_compilers(self) -> List[spack.spec.Spec]:
