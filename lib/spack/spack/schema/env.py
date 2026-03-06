@@ -8,6 +8,7 @@
    :lines: 19-
 """
 
+import os
 from typing import Any, Dict
 
 import spack.schema.merged
@@ -111,8 +112,6 @@ def update(data: Dict[str, Any]) -> bool:
     """
     if not isinstance(data, dict):
         return False
-
-    import os
 
     if "include_concrete" not in data:
         return False
