@@ -142,6 +142,8 @@ def stack_changed(env_path: str) -> bool:
     if git_dir is None:
         return False
 
+    rel_env_path = os.path.relpath(env_path, git_dir)
+
     with fs.working_dir(git_dir):
         diff = git(
             "diff",
@@ -157,8 +159,8 @@ def stack_changed(env_path: str) -> bool:
             return False
 
         for path in diff.split():
-            if ".gitlab-ci.yml" in path or path in env_path:
-                tty.debug(f"env represented by {env_path} changed")
+            if ".gitlab-ci.yml" in path or rel_env_path in path:
+                tty.debug(f"env represented by {rel_env_path} changed")
                 tty.debug(f"touched file: {path}")
                 return True
     return False
