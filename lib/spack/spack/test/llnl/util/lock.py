@@ -1386,11 +1386,13 @@ def test_acquire_after_fork(tmp_path: pathlib.Path, acquire: str):
             result.put("timed_out")
 
     lock.acquire_write()
-    p = ctx.Process(target=child)
-    p.start()
-    p.join()
-    lock.release_write()
-    assert result.get() == "timed_out"
+    try:
+        p = ctx.Process(target=child)
+        p.start()
+        p.join()
+        assert result.get() == "timed_out"
+    finally:
+        lock.release_write()
 
 
 def _child_fails_to_acquire_read(_lock: lk.Lock):
@@ -1407,10 +1409,12 @@ def test_read_after_write_does_not_accidentally_downgrade(tmp_path: pathlib.Path
     lock = lk.Lock(str(tmp_path / "lockfile"))
     lock.acquire_write()
     lock.acquire_read()  # should not downgrade the write lock
-    # No matter the start method, the child process shouldn't be able to acquire a read lock.
-    p = multiprocessing.Process(target=_child_fails_to_acquire_read, args=(lock,))
-    p.start()
-    p.join()
-    assert p.exitcode == 0
-    lock.release_read()
-    lock.release_write()
+    try:
+        # No matter the start method, the child process shouldn't be able to acquire a read lock.
+        p = multiprocessing.Process(target=_child_fails_to_acquire_read, args=(lock,))
+        p.start()
+        p.join()
+        assert p.exitcode == 0
+    finally:
+        lock.release_read()
+        lock.release_write()
