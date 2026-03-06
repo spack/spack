@@ -39,7 +39,18 @@ import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 from spack.vendor.typing_extensions import Literal
 
@@ -1260,6 +1271,19 @@ class BuildGraph:
                 pending_builds.append(parent)
 
 
+class ScheduleResult(NamedTuple):
+    """Return value of :func:`schedule_builds`."""
+
+    #: True if any pending builds were blocked on locks held by other processes.
+    blocked: bool
+    #: ``(dag_hash, lock)`` pairs where the write lock is held and the caller must start the build
+    #: and eventually release the lock.
+    to_start: List[Tuple[str, spack.util.lock.Lock]]
+    #: ``(dag_hash, spec, lock)`` triples found already installed by another process; the read lock
+    #: is held and the caller must add it to retained_read_locks.
+    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
+
+
 def schedule_builds(
     pending: List[str],
     build_graph: BuildGraph,
@@ -1269,11 +1293,7 @@ def schedule_builds(
     capacity: int,
     needs_jobserver_token: bool,
     jobserver: JobServer,
-) -> Tuple[
-    bool,
-    List[Tuple[str, spack.util.lock.Lock]],
-    List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]],
-]:
+) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
 
     For each pending spec, attempts to acquire a non-blocking per-spec write lock. If the write
@@ -1297,12 +1317,8 @@ def schedule_builds(
         jobserver: Jobserver for acquiring tokens.
 
     Returns:
-        A (blocked, to_start, newly_installed) tuple where ``blocked`` is True if any pending
-        builds were blocked on locks; ``to_start`` contains ``(dag_hash, lock)`` pairs where the
-        write lock is held and the caller must start the build and eventually release the lock;
-        and ``newly_installed`` contains ``(dag_hash, spec, lock)`` triples found already installed
-        by another process; the read lock is held and the caller must retain it to prevent
-        concurrent uninstall.
+        A :class:`ScheduleResult` with ``blocked``, ``to_start``, and ``newly_installed``
+        fields; see :class:`ScheduleResult` for field semantics.
     """
     to_start: List[Tuple[str, spack.util.lock.Lock]] = []
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
@@ -1313,7 +1329,7 @@ def schedule_builds(
     try:
         db.lock.acquire_read(timeout=1e-9)
     except spack.util.lock.LockTimeoutError:
-        return blocked, to_start, newly_installed
+        return ScheduleResult(blocked, to_start, newly_installed)
 
     try:
         db._read()  # refresh in-memory snapshot under the read lock
@@ -1352,12 +1368,13 @@ def schedule_builds(
                 continue
 
             if not have_write:
-                # Read lock but not installed: concurrent process was likely killed; retry later.
+                # If have to install but only got a read lock, try it in next iteration of the
+                # event loop.
                 lock.release_read()
                 idx += 1
                 continue
 
-            # Write lock acquired, spec not yet installed. Proceed with scheduling.
+            # Write lock acquired: proceed with scheduling.
             # Don't schedule builds for specs from upstream databases.
             assert not (
                 upstream and record and not record.installed
@@ -1376,7 +1393,7 @@ def schedule_builds(
     finally:
         db.lock.release_read()
 
-    return blocked, to_start, newly_installed
+    return ScheduleResult(blocked, to_start, newly_installed)
 
 
 class PackageInstaller:
@@ -1624,46 +1641,81 @@ class PackageInstaller:
 
                 # Finally update the UI
                 self.build_status.update()
-        except KeyboardInterrupt:
-            # Cleanup running builds.
-            for child in self.running_builds.values():
-                child.proc.terminate()
-            for child in self.running_builds.values():
-                jobserver.release()
-                child.proc.join()
-            raise
         finally:
-            # Make sure to write any successful builds to the database before exiting
-            with self.db.write_transaction():
-                for build in finished_builds:
-                    self.db._add(build.spec, explicit=build.explicit)
+            # Flush any not-yet-written successful builds to the DB; save the exception on error
+            # to be re-raised after best-effort cleanup.
+            db_exc = None
+            try:
+                with self.db.write_transaction():
+                    for build in finished_builds:
+                        self.db._add(build.spec, explicit=build.explicit)
+            except Exception as e:
+                db_exc = e
 
-            # Release prefix read locks retained after DB flush
+            # Send SIGTERM to running builds; this is a no-op in the successful case.
+            for child in self.running_builds.values():
+                try:
+                    child.proc.terminate()
+                except Exception:
+                    pass
+
+            # Release our jobserver token for each terminated build and then join.
+            for child in self.running_builds.values():
+                try:
+                    jobserver.release()
+                    child.proc.join()
+                except Exception:
+                    pass
+
+            # Release all held locks best-effort, so that one failure does not prevent the others
+            # from being released.
+            for child in self.running_builds.values():
+                try:
+                    if child.prefix_lock is not None:
+                        child.prefix_lock.release_write()
+                        child.prefix_lock = None
+                except Exception:
+                    pass
             for lock in retained_read_locks:
-                lock.release_read()
-
-            # Release any prefix write locks that were not yet released via _save_to_db
+                try:
+                    lock.release_read()
+                except Exception:
+                    pass
             for build in finished_builds:
-                if build.prefix_lock is not None:
-                    build.prefix_lock.release_write()
-                    build.prefix_lock = None
+                try:
+                    if build.prefix_lock is not None:
+                        build.prefix_lock.release_write()
+                        build.prefix_lock = None
+                except Exception:
+                    pass
 
-            # Restore terminal settings
+            # Terminal related cleanup
             if old_stdin_settings:
-                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
+                try:
+                    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
+                except Exception:
+                    pass
 
             if sigwinch_r >= 0:
-                signal.signal(signal.SIGWINCH, signal.SIG_DFL)
-                selector.unregister(sigwinch_r)
-                os.close(sigwinch_r)
-                os.close(sigwinch_w)
+                try:
+                    signal.signal(signal.SIGWINCH, signal.SIG_DFL)
+                    selector.unregister(sigwinch_r)
+                    os.close(sigwinch_r)
+                    os.close(sigwinch_w)
+                except Exception:
+                    pass
 
-            # Clean up resources
-            # Final cleanup of any remaining finished packages before exit
-            self.build_status.overview_mode = True
-            self.build_status.update(finalize=True)
-            selector.close()
-            jobserver.close()
+            try:
+                self.build_status.overview_mode = True
+                self.build_status.update(finalize=True)
+                selector.close()
+                jobserver.close()
+            except Exception:
+                pass
+
+            # Re-raise the DB exception if any.
+            if db_exc is not None:
+                raise db_exc
 
         if failures:
             for s in failures:
@@ -1698,9 +1750,14 @@ class PackageInstaller:
         # other processes can see the specs are installed, while preventing concurrent uninstalls.
         for build in finished_builds:
             if build.prefix_lock is not None:
-                build.prefix_lock.downgrade_write_to_read()
-                retained_read_locks.append(build.prefix_lock)
-                build.prefix_lock = None
+                try:
+                    build.prefix_lock.downgrade_write_to_read()
+                    retained_read_locks.append(build.prefix_lock)
+                except Exception:
+                    build.prefix_lock.release_write()
+                    raise
+                finally:
+                    build.prefix_lock = None
 
         return True
 
