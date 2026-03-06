@@ -270,7 +270,7 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 # Note: this test is never expected to be supported on Windows
 @pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
+def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, mutable_config):
     """Make sure our shell tab completion scripts remain up-to-date."""
 
     width = 72
@@ -297,4 +297,15 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
-    assert filecmp.cmp(old_script, new_script), msg
+    if not filecmp.cmp(old_script, new_script):
+        # If there is a diff, something is wrong: in that case output what the diff is.
+        import difflib
+
+        with open(old_script, "r", encoding="utf-8") as f1, open(
+            new_script, "r", encoding="utf-8"
+        ) as f2:
+            l1 = f1.readlines()
+            l2 = f2.readlines()
+        diff = difflib.unified_diff(l1, l2, fromfile=old_script, tofile=new_script)
+        msg += "\nDiff failure:\n\n" + "".join(diff)
+        raise AssertionError(msg)
