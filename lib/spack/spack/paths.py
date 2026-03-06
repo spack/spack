@@ -278,11 +278,14 @@ class SpackPaths:
             if disable_env:
                 return
 
-            rel = rel or ""
+            if rel:
+                full_path = lambda x: os.path.join(x, rel)
+            else:
+                full_path = lambda x: x
 
             for v in env_vars:
                 if v in os.environ:
-                    return os.path.join(os.environ[v], rel), provenance
+                    return full_path(os.environ[v]), provenance
 
         spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
         spack_env_check = partial(env_check, spack_vars, Provenance.SPACK_ENV)
