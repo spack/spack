@@ -264,28 +264,23 @@ class SpackPaths:
         """
         disable_env = config.get("config:locations:disable_env", False)
 
-        def cfg_check():
-            val = config.get(f"config:locations:{config_var}", None)
-            if val:
-                return val, Provenance.CONFIG_VAR
+        append_rel = lambda base, rel: str(pathlib.Path(base) / (rel or ""))
 
-        def spack_home_cfg_check():
-            h = config.get("config:locations:home", None)
-            if h:
-                return os.path.join(h, home_rel, "spack"), Provenance.CONFIG_HOME_VAR
+        def cfg_check(path, provenance, rel=None):
+            found = config.get(path, None)
+            if found:
+                return append_rel(found, rel), provenance
+
+        spack_cfg_check = partial(cfg_check, f"config:locations:{config_var}", Provenance.CONFIG_VAR)
+        spack_home_cfg_check = partial(cfg_check, "config:locations:home", Provenance.CONFIG_HOME_VAR, rel=os.path.join(home_rel, "spack"))
 
         def env_check(env_vars, provenance, rel=None):
             if disable_env:
                 return
 
-            if rel:
-                full_path = lambda x: os.path.join(x, rel)
-            else:
-                full_path = lambda x: x
-
             for v in env_vars:
                 if v in os.environ:
-                    return full_path(os.environ[v]), provenance
+                    return append_rel(os.environ[v], rel), provenance
 
         spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
         spack_env_check = partial(env_check, spack_vars, Provenance.SPACK_ENV)
@@ -300,7 +295,7 @@ class SpackPaths:
         for check in [
             spack_env_check,
             spack_home_env_check,
-            cfg_check,
+            spack_cfg_check,
             spack_home_cfg_check,
             xdg_env_check,
         ]:
