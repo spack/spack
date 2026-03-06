@@ -138,11 +138,11 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 def _unconditional_path_override_checks(tmp_path, base_paths_generator):
     # "config:locations:home" variable overrides the above (even if there
     # are no installs there and there are installs in the old location)
-    spack_home_prefix = _ensure_dir(tmp_path / "spack-home")
-    spack.config.set("config:locations:home", spack_home_prefix)
+    spack_home_cfg_prefix = _ensure_dir(tmp_path / "spack-home2")
+    spack.config.set("config:locations:home", spack_home_cfg_prefix)
     p2 = SpackPaths(base_paths_generator())
     assert p2.default_install_location == str(
-        pathlib.Path(spack_home_prefix) / ".local" / "share" / "spack" / "installs"
+        pathlib.Path(spack_home_cfg_prefix) / ".local" / "share" / "spack" / "installs"
     )
     assert not p2.bypassed_old_installs_warning(_show=False)
 
@@ -151,6 +151,15 @@ def _unconditional_path_override_checks(tmp_path, base_paths_generator):
     spack.config.set("config:locations:data", spack_data_prefix)
     p3 = SpackPaths(base_paths_generator())
     assert p3.default_install_location == str(pathlib.Path(spack_data_prefix) / "installs")
+
+    # SPACK_HOME env variable overrides the above (even if there
+    # are no installs there and there are installs in the old location)
+    spack_home_env_prefix = _ensure_dir(tmp_path / "spack-home1")
+    os.environ["SPACK_HOME"] = spack_home_env_prefix
+    p1 = SpackPaths(base_paths_generator())
+    assert p1.default_install_location == str(
+        pathlib.Path(spack_home_env_prefix) / ".local" / "share" / "spack" / "installs"
+    )
 
     # Check that $SPACK_DATA_HOME overrides all the above
     spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
