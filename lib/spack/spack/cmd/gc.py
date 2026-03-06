@@ -96,7 +96,11 @@ def gc(parser, args):
             # consider all explicit specs roots (the default for db.unused_specs())
             root_hashes = None
 
-        specs = spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptype=deptype)
+        specs = [
+            s
+            for s in spack.store.STORE.db.unused_specs(root_hashes=root_hashes, deptype=deptype)
+            if not s.external
+        ]
 
         # limit search to constraint specs if provided
         if args.constraint:
