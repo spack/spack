@@ -613,7 +613,7 @@ def repo_update(args: Any) -> int:
                 )
 
             else:
-                tty.msg(f"{name}: Updated sucessfully.")
+                tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)

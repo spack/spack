@@ -332,7 +332,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "-a",
         action="store_true",
         help="Append the listed specs to the current view index if it already exists. "
-        "This operation does not guarentee atomic write and should be run with care.",
+        "This operation does not guarantee atomic write and should be run with care.",
     )
     update_index_view_mode_args.add_argument(
         "--force",
@@ -757,7 +757,7 @@ def sync_fn(args):
         # specified, the second is ignored and the first is the override
         # destination.
         if args.dest_mirror:
-            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+            tty.warn(f"Ignoring unused argument: {args.dest_mirror.name}")
 
         manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0

@@ -595,7 +595,7 @@ def _env_untrack_or_remove(
             real_env_path = os.path.realpath(env.path)
             os.unlink(env.path)
             tty.msg(
-                f"Sucessfully untracked environment '{name}', "
+                f"Successfully untracked environment '{name}', "
                 "but it can still be found at:\n\n"
                 f"        {real_env_path}\n"
             )
