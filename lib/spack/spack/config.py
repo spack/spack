@@ -34,6 +34,7 @@ import os.path
 import pathlib
 import re
 import sys
+import tempfile
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
@@ -270,8 +271,14 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            with open(filename, "w", encoding="utf-8") as f:
-                syaml.dump_config(data, stream=f, default_flow_style=False)
+            fd, tmp = tempfile.mkstemp(dir=self.path, suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    syaml.dump_config(data, stream=f, default_flow_style=False)
+                filesystem.rename(tmp, filename)
+            except Exception:
+                os.unlink(tmp)
+                raise
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -409,12 +416,14 @@ class SingleFileScope(ConfigScope):
         try:
             parent = os.path.dirname(self.path)
             filesystem.mkdirp(parent)
-
-            tmp = os.path.join(parent, f".{os.path.basename(self.path)}.tmp")
-            with open(tmp, "w", encoding="utf-8") as f:
-                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-            filesystem.rename(tmp, self.path)
-
+            fd, tmp = tempfile.mkstemp(dir=parent, suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
+                filesystem.rename(tmp, self.path)
+            except Exception:
+                os.unlink(tmp)
+                raise
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
