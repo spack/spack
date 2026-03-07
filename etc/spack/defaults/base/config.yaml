@@ -166,7 +166,7 @@ config:
   concurrent_packages: 0
 
   # Which installer to use: "old" or "new". The new installer is experimental.
-  installer: old
+  installer: new
 
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
