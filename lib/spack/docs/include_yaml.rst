@@ -48,7 +48,7 @@ Only the ``file``, ``ftp``, ``http``, and ``https`` protocols (or schemes) are s
 Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
-A ``sha256`` is required and must be specified as follows::
+A ``sha256`` is required and must be specified as follows:
 
 .. code-block:: yaml
 
