@@ -270,7 +270,7 @@ class FilesystemView:
 
         * ..they are active in the view.
         * ..they are active but the activated version differs.
-        * ..they are not activate in the view.
+        * ..they are not active in the view.
 
         Takes ``with_dependencies`` keyword argument so that the status of
         dependencies is printed as well.
