@@ -1163,12 +1163,17 @@ class IncludePath(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
+        # circular dependencies
+        import spack.util.path
+
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
         if path_override_env_var and path_override_env_var in os.environ:
-            self.path = os.environ[path_override_env_var]
+            path = os.environ[path_override_env_var]
         else:
-            self.path = entry.get("path", "")
+            path = entry.get("path", "")
+        self.path = spack.util.path.substitute_path_variables(path)
+
         self.sha256 = entry.get("sha256", "")
         self.destination = None
 
@@ -1229,7 +1234,7 @@ class IncludePath(OptionalInclude):
 
 
 class GitIncludePaths(OptionalInclude):
-    repo: str
+    git: str
     branch: str
     commit: str
     tag: str
@@ -1237,12 +1242,17 @@ class GitIncludePaths(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
+        # circular dependencies
+        import spack.util.path
+
         super().__init__(entry)
-        self.repo = entry.get("git", "")
+        self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self._paths = entry.get("paths", [])
+        self._paths = [
+            spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
+        ]
         self.destination = None
 
         if not self.branch and not self.commit and not self.tag:
@@ -1262,28 +1272,28 @@ class GitIncludePaths(OptionalInclude):
             identifier = f"commit={self.commit}, tag={self.tag}"
 
         return (
-            f"GitIncludePaths({self.repo}, paths={self.paths}, "
+            f"GitIncludePaths({self.git}, paths={self.paths}, "
             f"{identifier}, when='{self.when}', optional={self.optional})"
         )
 
     def _destination(self):
-        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        dir_name = spack.util.hash.b32_hash(self.git)[-7:]
         return os.path.join(_include_cache_location(), dir_name)
 
     def _clone(self) -> Optional[str]:
         """Clone the repository."""
         if self.fetched():
-            tty.debug(f"Repository ({self.repo}) already cloned to {self.destination}")
+            tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
             return self.destination
 
         destination = self._destination()
         with filesystem.working_dir(destination, create=True):
             if not os.path.exists(".git"):
                 try:
-                    spack.util.git.init_git_repo(self.repo)
+                    spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
-                        f"Unable to initialize repository ({self.repo}) under {destination}: {e}"
+                        f"Unable to initialize repository ({self.git}) under {destination}: {e}"
                     )
 
             try:
