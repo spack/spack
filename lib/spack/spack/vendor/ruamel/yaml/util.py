@@ -53,7 +53,7 @@ timestamp_regexp = RegExp(
     """^(?P<year>[0-9][0-9][0-9][0-9])
        -(?P<month>[0-9][0-9]?)
        -(?P<day>[0-9][0-9]?)
-       (?:((?P<t>[Tt])|[ \\t]+)   # explicitly not retaining extra spaces
+       (?:((?P<t>[Tt])|[ \\t]+)   # explictly not retaining extra spaces
        (?P<hour>[0-9][0-9]?)
        :(?P<minute>[0-9][0-9])
        :(?P<second>[0-9][0-9])
