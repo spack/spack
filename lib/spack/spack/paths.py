@@ -16,7 +16,6 @@ from functools import partial
 import spack.config as config
 import spack.llnl.util.tty as tty
 import spack.paths_base as paths_base
-import spack.util.hash as hash
 
 
 def dir_is_occupied(x, except_for=None):
@@ -71,11 +70,6 @@ class SpackPaths:
                 SpackPaths.relative_cache_home,
             ]
         )
-
-        #: Not a location itself, but used for when Spack instances
-        #: share the same cache base directory for caches that should
-        #: not be shared between those instances.
-        self.spack_instance_id = hash.b32_hash(base.prefix)[:7]
 
     @property
     def state_home(self):
@@ -269,6 +263,9 @@ class SpackPaths:
         def cfg_check(path, provenance, rel=None):
             found = config.get(path, None)
             if found:
+                import spack.util.path
+                with spack.util.path.limited_paths():
+                    found = spack.util.path.canonicalize_path(found)
                 return append_rel(found, rel), provenance
 
         spack_cfg_check = partial(

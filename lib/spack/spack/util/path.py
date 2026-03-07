@@ -7,6 +7,7 @@
 TODO: this is really part of spack.config. Consolidate it.
 """
 import contextlib
+from enum import Enum
 import getpass
 import os
 import pathlib
@@ -52,31 +53,37 @@ def get_user():
 NOMATCH = object()
 
 
+class ResolutionContext(Enum):
+    IN_PATHS = 1
+    ABOVE_PATHS = 2
+
+
+_resolution_context = ResolutionContext.ABOVE_PATHS
+
+
+@contextlib.contextmanager
+def limited_paths():
+    global _resolution_context
+    _resolution_context = ResolutionContext.IN_PATHS
+    yield
+    _resolution_context = ResolutionContext.ABOVE_PATHS
+
+
 # Substitutions to perform
 def replacements():
     # break circular imports
     import spack
     import spack.environment as ev
-    import spack.paths
+
     import spack.paths_base
 
     arch = architecture()
 
-    paths = spack.paths.locations
-
-    return {
-        "spack": lambda: spack.paths_base.prefix,
+    replace = {
+        "spack": lambda: spack.paths_base.locations.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: paths.user_cache_path,
-        "default_install_root": lambda: paths.default_install_location,
-        "default_envs_root": lambda: paths.default_envs_path,
-        "modules_base": lambda: paths.modules_base,
-        "data_home": lambda: paths.data_home,
-        "cache_home": lambda: paths.cache_home,
-        "state_home": lambda: paths.state_home,
-        "spack_home": lambda: paths.spack_home,
-        "spack_instance_id": lambda: paths.spack_instance_id,
+        "spack_instance_id": lambda: spack.paths_base.locations.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,
@@ -88,6 +95,23 @@ def replacements():
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
+
+    global _resolution_context
+    if _resolution_context == ResolutionContext.ABOVE_PATHS:
+        import spack.paths
+        paths = spack.paths.locations
+        replace.update({
+            "user_cache_path": lambda: paths.user_cache_path,
+            "default_install_root": lambda: paths.default_install_location,
+            "default_envs_root": lambda: paths.default_envs_path,
+            "modules_base": lambda: paths.modules_base,
+            "data_home": lambda: paths.data_home,
+            "cache_home": lambda: paths.cache_home,
+            "state_home": lambda: paths.state_home,
+            "spack_home": lambda: paths.spack_home,
+        })
+
+    return replace
 
 
 # This is intended to be longer than the part of the install path

@@ -7,6 +7,7 @@ import os
 from enum import Enum
 from pathlib import PurePath
 
+import spack.util.hash as hash
 import spack.llnl.util.filesystem
 
 
@@ -88,6 +89,11 @@ class SpackPathsBase:
             os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
         )
 
+        #: Not a location itself, but used for when Spack instances
+        #: share the same cache base directory for caches that should
+        #: not be shared between those instances.
+        self.spack_instance_id = hash.b32_hash(self.prefix)[:7]
+
     @property
     def env_based_state_home(self):
         """Spack has config-based logic for choosing a home for most state, but
@@ -127,6 +133,7 @@ mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
 system_config_path = locations.system_config_path
 user_config_path = locations.user_config_path
+spack_instance_id = locations.spack_instance_id
 
 
 #: Recorded directory where spack command was originally invoked

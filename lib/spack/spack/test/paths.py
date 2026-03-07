@@ -10,6 +10,7 @@ import pytest
 import spack.config
 import spack.paths_base
 import spack.subprocess_context
+import spack.paths
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
@@ -265,6 +266,22 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
     assert (
         str(pathlib.Path(homedir) / os.path.join(".local", "state", "spack")) == p1.user_cache_path
     )
+
+
+def test_location_vars_that_use_other_location_vars(tmp_path, set_home, mutable_config, monkeypatch):
+    homedir = _ensure_dir(tmp_path / "test-home")
+    set_home(homedir)
+
+    basedir = _ensure_dir(tmp_path / "spack-root")
+
+    mutable_config.set("config", {"locations": {"home": "$spack/home"}})
+
+    p1 = SpackPaths(SpackPathsBase(str(basedir)))
+    # This is a bit strange but resolution of the config variable involves accessing
+    # the module, so we need to monkeypatch that
+    monkeypatch.setattr(spack.paths_base, "locations", p1.base)
+    install_rel = pathlib.Path(".local") / "share" / "spack" / "installs"
+    assert p1.default_install_location == str(pathlib.Path(basedir) / "home" / install_rel)
 
 
 class SetAnXdgVarAndReadDataHome:
