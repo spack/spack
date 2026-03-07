@@ -308,7 +308,7 @@ def test_buildcache_sync(
         # Trigger the warning
         output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
 
-        assert "Ignoring unused arguemnt: ignored" in output
+        assert "Ignoring unused argument: ignored" in output
 
         verify_mirror_contents()
         shutil.rmtree(str(dest_mirror_dir))
