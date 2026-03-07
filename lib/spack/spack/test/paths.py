@@ -8,9 +8,9 @@ import pathlib
 import pytest
 
 import spack.config
+import spack.paths
 import spack.paths_base
 import spack.subprocess_context
-import spack.paths
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
@@ -268,7 +268,9 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
     )
 
 
-def test_location_vars_that_use_other_location_vars(tmp_path, set_home, mutable_config, monkeypatch):
+def test_location_vars_that_use_other_location_vars(
+    tmp_path, set_home, mutable_config, monkeypatch
+):
     homedir = _ensure_dir(tmp_path / "test-home")
     set_home(homedir)
 

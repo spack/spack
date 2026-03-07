@@ -7,8 +7,8 @@ import os
 from enum import Enum
 from pathlib import PurePath
 
-import spack.util.hash as hash
 import spack.llnl.util.filesystem
+import spack.util.hash as hash
 
 
 class XDG_vars(Enum):
