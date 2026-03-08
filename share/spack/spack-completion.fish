@@ -3388,9 +3388,9 @@ complete -c spack -n '__fish_spack_using_command_pos 0 versions' -f -a '(__fish_
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command versions' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -f -a safe
-complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -d 'only list safe versions of the package'
+complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -d 'only list safe versions of the package (default, deprecated)'
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a remote
-complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
+complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'include remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -d 'only list remote versions newer than the latest checksummed version'
 complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -f -a jobs
