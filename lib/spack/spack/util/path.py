@@ -15,7 +15,6 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
-from enum import Enum
 from typing import Optional
 
 import spack.llnl.util.tty as tty
@@ -53,24 +52,8 @@ def get_user():
 NOMATCH = object()
 
 
-class ResolutionContext(Enum):
-    IN_PATHS = 1
-    ABOVE_PATHS = 2
-
-
-_resolution_context = ResolutionContext.ABOVE_PATHS
-
-
-@contextlib.contextmanager
-def limited_paths():
-    global _resolution_context
-    _resolution_context = ResolutionContext.IN_PATHS
-    yield
-    _resolution_context = ResolutionContext.ABOVE_PATHS
-
-
 # Substitutions to perform
-def replacements():
+def replacements(_use_config=True):
     # break circular imports
     import spack
     import spack.environment as ev
@@ -95,7 +78,7 @@ def replacements():
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
-    if _resolution_context == ResolutionContext.ABOVE_PATHS:
+    if _use_config:
         import spack.paths
 
         paths = spack.paths.locations
@@ -187,7 +170,7 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-def substitute_config_variables(path):
+def substitute_config_variables(path, _use_config):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -218,7 +201,7 @@ def substitute_config_variables(path):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    _replacements = replacements()
+    _replacements = replacements(_use_config=_use_config)
 
     # Look up replacements
     def repl(match):
@@ -231,9 +214,9 @@ def substitute_config_variables(path):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path):
+def substitute_path_variables(path, _use_config=True):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path)
+    path = substitute_config_variables(path, _use_config=_use_config)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
@@ -278,7 +261,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
+def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=True) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -291,6 +274,9 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     Returns: An absolute path or non-file URL with path variable substitution
     """
+    # _use_config: whether or not to use config to resolve spack config
+    # variables. This should be false if this function is called in a context that
+    # is defining one of these variables.
     import urllib.parse
     import urllib.request
 
@@ -301,7 +287,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
         filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
         assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path)
+    path = substitute_path_variables(path, _use_config=_use_config)
 
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)

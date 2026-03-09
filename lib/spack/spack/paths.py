@@ -265,8 +265,7 @@ class SpackPaths:
             if found:
                 import spack.util.path
 
-                with spack.util.path.limited_paths():
-                    found = spack.util.path.canonicalize_path(found)
+                found = spack.util.path.canonicalize_path(found, _use_config=False)
                 return append_rel(found, rel), provenance
 
         spack_cfg_check = partial(
