@@ -1067,7 +1067,9 @@ class OptionalInclude:
         if not self.name or len(getattr(self, "paths", [])) > 1:
             parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
             try:
-                real_path = pathlib.Path(spack.util.path.substitute_path_variables(path, _use_config=False))
+                real_path = pathlib.Path(
+                    spack.util.path.substitute_path_variables(path, _use_config=False)
+                )
             except spack.util.path.ResolutionContextError as e:
                 if self.name:
                     context = self.name
@@ -1075,8 +1077,10 @@ class OptionalInclude:
                     context = parent_scope.name
                 else:
                     context = "(no context)"
-                msg = (f"Included scope is defined in terms of config variable ({e.var}): {path}"
-                       + f"\nContext: {context}")
+                msg = (
+                    f"Included scope is defined in terms of config variable ({e.var}): {path}"
+                    + f"\nContext: {context}"
+                )
                 raise ValueError(msg)
             try:
                 included_name = real_path.relative_to(parent_path)

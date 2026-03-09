@@ -1646,9 +1646,7 @@ def test_included_optional_include_scopes():
         spack.config.OptionalInclude({}).scopes(spack.config.ConfigScope("fail"))
 
 
-def test_included_path_forbidden_var(
-    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug,
-):
+def test_included_path_forbidden_var(tmp_path: pathlib.Path, mock_low_high_config, ensure_debug):
     include = spack.config.included_path("$data_home/test")
     parent_scope = mock_low_high_config.scopes["low"]
     with pytest.raises(ValueError, match="defined in terms of.*data_home"):

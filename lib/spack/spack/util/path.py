@@ -297,7 +297,9 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=True, _recursive=False) -> str:
+def canonicalize_path(
+    path: str, default_wd: Optional[str] = None, _use_config=True, _recursive=False
+) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
