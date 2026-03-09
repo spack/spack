@@ -349,7 +349,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
-    arguments.add_common_arguments(update_index, ["yes_to_all"])
+    arguments.add_common_arguments(update_index, ["jobs", "yes_to_all"])
     update_index.set_defaults(func=update_index_fn)
 
     # Migrate a buildcache from layout_version 2 to version 3
@@ -826,7 +826,10 @@ def manifest_copy(
 
 
 def update_index(
-    mirror: spack.mirrors.mirror.Mirror, update_keys=False, timer=timer_mod.NULL_TIMER
+    mirror: spack.mirrors.mirror.Mirror,
+    update_keys=False,
+    timer=timer_mod.NULL_TIMER,
+    jobs: Optional[int] = None,
 ):
     timer.start()
     # Special case OCI images for now.
@@ -846,7 +849,7 @@ def update_index(
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer)
+        spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer, jobs=jobs)
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -1109,7 +1112,7 @@ def update_index_fn(args):
             yes_to_all=args.yes_to_all,
         )
     else:
-        update_index(args.mirror, update_keys=args.keys, timer=t)
+        update_index(args.mirror, update_keys=args.keys, timer=t, jobs=args.jobs)
 
     if tty.is_verbose():
         tty.msg("Timing summary:")
