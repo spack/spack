@@ -285,11 +285,11 @@ def test_location_vars_that_use_other_location_vars(
     install_rel = pathlib.Path(".local") / "share" / "spack" / "installs"
     assert p1.default_install_location == str(pathlib.Path(basedir) / "home" / install_rel)
 
+    # Now try defining a $data_home -> $spack_home -> $spack
     p2 = SpackPaths(SpackPathsBase(str(basedir)))
     monkeypatch.setattr(spack.paths_base, "locations", p2.base)
     mutable_config.set("config", {"locations": {"home": "$spack/home", "data": "$spack_home"}})
-    with pytest.raises(ValueError, match=r"config\:locations\:data.*spack_home"):
-        p2.default_install_location
+    assert p2.default_install_location == str(pathlib.Path(basedir) / "home" / "installs")
 
 
 class SetAnXdgVarAndReadDataHome:

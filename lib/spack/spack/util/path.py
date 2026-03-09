@@ -245,11 +245,16 @@ def substitute_config_variables(path, _use_config):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path, _use_config=True):
+def substitute_path_variables(path, _use_config=True, _recursive=False):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path, _use_config=_use_config)
-    path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
+    prev = path
+    while True:
+        path = substitute_config_variables(path, _use_config=_use_config)
+        path = os.path.expandvars(path)
+        path = os.path.expanduser(path)
+        if (not _recursive) or (path == prev):
+            break
+        prev = path
     return path
 
 
@@ -292,7 +297,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=True) -> str:
+def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=True, _recursive=False) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -318,7 +323,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=T
         filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
         assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path, _use_config=_use_config)
+    path = substitute_path_variables(path, _use_config=_use_config, _recursive=_recursive)
 
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)
