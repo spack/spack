@@ -265,7 +265,11 @@ class SpackPaths:
             if found:
                 import spack.util.path
 
-                found = spack.util.path.canonicalize_path(found, _use_config=False)
+                try:
+                    found = spack.util.path.canonicalize_path(found, _use_config=False)
+                except spack.util.path.ResolutionContextError as e:
+                    msg = f"{path} is defined in terms of another location ({e.var})"
+                    raise ValueError(msg)
                 return append_rel(found, rel), provenance
 
         spack_cfg_check = partial(

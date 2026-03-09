@@ -52,6 +52,21 @@ def get_user():
 NOMATCH = object()
 
 
+class ResolutionContextError(ValueError):
+    def __init__(self, var):
+        msg = f"Cannot resolve {var}"
+        super().__init__(msg)
+        self.var = var
+
+
+class CannotResolve:
+    def __init__(self, var):
+        self.var = var
+
+    def __call__(self):
+        raise ResolutionContextError(self.var)
+
+
 # Substitutions to perform
 def replacements(_use_config=True):
     # break circular imports
@@ -94,6 +109,22 @@ def replacements(_use_config=True):
                 "spack_home": lambda: paths.spack_home,
             }
         )
+    else:
+        error_resolution = lambda x: CannotResolve(x)
+        mappings = list(
+            (x, error_resolution(x))
+            for x in [
+                "user_cache_path",
+                "default_install_root",
+                "default_envs_root",
+                "modules_base",
+                "data_home",
+                "cache_home",
+                "state_home",
+                "spack_home",
+            ]
+        )
+        replace.update(dict(mappings))
 
     return replace
 
