@@ -799,6 +799,7 @@ class BuildStatus:
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
+        verbose: bool = False,
     ) -> None:
         #: Ordered dict of build ID -> info
         self.total = total
@@ -823,6 +824,8 @@ class BuildStatus:
         self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
+        #: Verbose mode only applies to non-TTY where we want to track a single build log.
+        self.verbose = verbose and not self.is_tty
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -835,6 +838,14 @@ class BuildStatus:
         """Add a new build to the display and mark the display as dirty."""
         self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn)
         self.dirty = True
+        # Track the new build's logs when we're not already following another build. This applies
+        # only in non-TTY verbose mode.
+        if self.verbose and not self.tracked_build_id and control_w_conn is not None:
+            self.tracked_build_id = spec.dag_hash()
+            try:
+                os.write(control_w_conn.fileno(), b"1")
+            except OSError:
+                pass
 
     def toggle(self) -> None:
         """Toggle between overview mode and following a specific build."""
@@ -940,8 +951,12 @@ class BuildStatus:
             self.completed += 1
             build_info.finished_time = self.get_time() + CLEANUP_TIMEOUT
 
-            if build_id == self.tracked_build_id and not self.overview_mode:
-                self.toggle()
+            # Stop tracking the finished build's logs.
+            if build_id == self.tracked_build_id:
+                if not self.overview_mode:
+                    self.toggle()
+                if self.verbose:
+                    self.tracked_build_id = ""
 
         self.dirty = True
 
@@ -1083,9 +1098,8 @@ class BuildStatus:
         # Discard logs we are not following. Generally this should not happen as we tell the child
         # to only send logs when we are following it. It could maybe happen while transitioning
         # between builds.
-        if self.overview_mode or build_id != self.tracked_build_id:
+        if build_id != self.tracked_build_id:
             return
-        # TODO: drop initial bytes from data until first newline (?)
         self.stdout.buffer.write(data)
         self.stdout.flush()
 
@@ -1500,9 +1514,10 @@ class PackageInstaller:
         else:
             self.explicit = explicit
 
+        self.verbose = verbose
         self.running_builds: Dict[int, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
-        self.build_status = BuildStatus(len(self.build_graph.nodes))
+        self.build_status = BuildStatus(len(self.build_graph.nodes), verbose=verbose)
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         if concurrent_packages is None:
             concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)

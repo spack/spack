@@ -3,15 +3,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the BuildStatus terminal UI in new_installer.py"""
 
-import io
-import os
 import sys
-from typing import List, Optional, Tuple
 
 import pytest
 
 if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
+
+
+import io
+import os
+from multiprocessing import Pipe
+from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
 from spack.new_installer import BuildStatus
@@ -64,7 +67,11 @@ class SimpleTextIOWrapper(io.TextIOWrapper):
 
 
 def create_build_status(
-    is_tty: bool = True, terminal_cols: int = 80, terminal_rows: int = 24, total: int = 0
+    is_tty: bool = True,
+    terminal_cols: int = 80,
+    terminal_rows: int = 24,
+    total: int = 0,
+    verbose: bool = False,
 ) -> Tuple[BuildStatus, List[float], SimpleTextIOWrapper]:
     """Helper function to create BuildStatus with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
@@ -83,6 +90,7 @@ def create_build_status(
         get_terminal_size=mock_get_terminal_size,
         get_time=mock_get_time,
         is_tty=is_tty,
+        verbose=verbose,
     )
 
     return status, time_values, fake_stdout
@@ -1102,3 +1110,97 @@ class TestEdgeCases:
 
         status.update_progress(build_id, 3, 3)
         assert status.builds[build_id].progress_percent == 100
+
+
+class TestBuildStatusVerbose:
+    """Tests for verbose non-TTY log tracking in BuildStatus."""
+
+    def test_verbose_tracks_first_build(self):
+        """First add_build() in verbose non-TTY mode sets tracked_build_id and enables echoing."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+
+            assert bs.tracked_build_id == spec.dag_hash()
+            written = os.read(r_conn.fileno(), 1)
+            assert written == b"1"
+
+    def test_verbose_does_not_track_when_already_tracking(self):
+        """Second add_build() while already tracking does not switch tracking."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec1 = MockSpec("pkg1", "1.0")
+        spec2 = MockSpec("pkg2", "1.0")
+
+        r1, w1 = Pipe(duplex=False)
+        r2, w2 = Pipe(duplex=False)
+        with r1, w1, r2, w2:
+            bs.add_build(spec1, explicit=True, control_w_conn=w1)
+            first_tracked = bs.tracked_build_id
+
+            bs.add_build(spec2, explicit=False, control_w_conn=w2)
+            assert bs.tracked_build_id == first_tracked
+            assert bs.tracked_build_id == spec1.dag_hash()
+
+            # Second build should not have received b"1"
+            assert not r2.poll(), "Second build should not be enabled"
+
+    def test_verbose_switches_on_finish(self):
+        """After the tracked build finishes, tracked_build_id is cleared."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            assert bs.tracked_build_id == spec.dag_hash()
+
+            bs.update_state(spec.dag_hash(), "finished")
+            assert bs.tracked_build_id == ""
+
+    def test_verbose_print_logs_tracked(self):
+        """print_logs() for the tracked build writes to stdout."""
+        bs, _, stdout = create_build_status(is_tty=False, verbose=True, total=1)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            bs.print_logs(spec.dag_hash(), b"hello log\n")
+
+            stdout.flush()
+            assert stdout.buffer.getvalue() == b"hello log\n"
+
+    def test_verbose_print_logs_untracked(self):
+        """print_logs() for an untracked build discards data."""
+        bs, _, stdout = create_build_status(is_tty=False, verbose=True, total=2)
+        spec1 = MockSpec("pkg1", "1.0")
+        spec2 = MockSpec("pkg2", "1.0")
+
+        r1, w1 = Pipe(duplex=False)
+
+        with r1, w1:
+            bs.add_build(spec1, explicit=True, control_w_conn=w1)
+            bs.add_build(spec2, explicit=False, control_w_conn=None)
+
+            # Only spec1 is tracked; spec2 logs should be discarded
+            bs.print_logs(spec2.dag_hash(), b"ignored\n")
+
+            stdout.flush()
+            assert stdout.buffer.getvalue() == b""
+
+    def test_verbose_tty_no_effect(self):
+        """In TTY mode, add_build() does not set tracked_build_id automatically."""
+        bs, _, _ = create_build_status(is_tty=True, verbose=True, total=4)
+        spec = MockSpec("trivial-install-test-package", "1.0")
+
+        r_conn, w_conn = Pipe(duplex=False)
+
+        with r_conn, w_conn:
+            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
+            assert bs.tracked_build_id == ""
