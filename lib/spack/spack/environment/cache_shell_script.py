@@ -102,7 +102,7 @@ def write_env_activate_script(env, view):
             f.write(cmds)
 
 
-def update_env_activate_script(env, view=""):
+def update_env_activate_script(env, view="default"):
     """Overwrite existing environment activation script with new environment modifications
 
     Args:
@@ -127,6 +127,8 @@ def update_env_activate_script(env, view=""):
         if lockfile_date != 0.00 and not lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
+            spack.environment.shell.activate(env=env, view=view)
+
             continue
 
         env_mods = EnvironmentModifications()
