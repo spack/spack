@@ -68,10 +68,11 @@ class CannotResolve:
 
 
 # Substitutions to perform
-def replacements(_use_config=True):
+def replacements():
     # break circular imports
     import spack
     import spack.environment as ev
+    import spack.paths
     import spack.paths_base
 
     arch = architecture()
@@ -91,40 +92,15 @@ def replacements(_use_config=True):
         "date": lambda: date.today().strftime("%Y-%m-%d"),
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "user_cache_path": lambda: spack.paths.locations.user_cache_path,
+        "default_install_root": lambda: spack.paths.locations.default_install_location,
+        "default_envs_root": lambda: spack.paths.locations.default_envs_path,
+        "modules_base": lambda: spack.paths.locations.modules_base,
+        "data_home": lambda: spack.paths.locations.data_home,
+        "cache_home": lambda: spack.paths.locations.cache_home,
+        "state_home": lambda: spack.paths.locations.state_home,
+        "spack_home": lambda: spack.paths.locations.spack_home,
     }
-
-    if _use_config:
-        import spack.paths
-
-        paths = spack.paths.locations
-        replace.update(
-            {
-                "user_cache_path": lambda: paths.user_cache_path,
-                "default_install_root": lambda: paths.default_install_location,
-                "default_envs_root": lambda: paths.default_envs_path,
-                "modules_base": lambda: paths.modules_base,
-                "data_home": lambda: paths.data_home,
-                "cache_home": lambda: paths.cache_home,
-                "state_home": lambda: paths.state_home,
-                "spack_home": lambda: paths.spack_home,
-            }
-        )
-    else:
-        error_resolution = lambda x: CannotResolve(x)
-        mappings = list(
-            (x, error_resolution(x))
-            for x in [
-                "user_cache_path",
-                "default_install_root",
-                "default_envs_root",
-                "modules_base",
-                "data_home",
-                "cache_home",
-                "state_home",
-                "spack_home",
-            ]
-        )
-        replace.update(dict(mappings))
 
     return replace
 
@@ -201,7 +177,7 @@ def get_system_path_max():
     return sys_max_path_length
 
 
-def substitute_config_variables(path, _use_config):
+def substitute_config_variables(path):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -232,7 +208,7 @@ def substitute_config_variables(path, _use_config):
     replaced if there is an active environment, and should only be used in
     environment yaml files.
     """
-    _replacements = replacements(_use_config=_use_config)
+    _replacements = replacements()
 
     # Look up replacements
     def repl(match):
@@ -245,11 +221,11 @@ def substitute_config_variables(path, _use_config):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path, _use_config=True, _recursive=False):
+def substitute_path_variables(path, _recursive=False):
     """Substitute config vars, expand environment vars, expand user home."""
     prev = path
     while True:
-        path = substitute_config_variables(path, _use_config=_use_config)
+        path = substitute_config_variables(path)
         path = os.path.expandvars(path)
         path = os.path.expanduser(path)
         if (not _recursive) or (path == prev):
@@ -297,7 +273,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=True, _recursive=False) -> str:
+def canonicalize_path(path: str, default_wd: Optional[str] = None, _recursive=False) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
     If the string is a yaml object with file annotations, make absolute paths
@@ -310,9 +286,6 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=T
 
     Returns: An absolute path or non-file URL with path variable substitution
     """
-    # _use_config: whether or not to use config to resolve spack config
-    # variables. This should be false if this function is called in a context that
-    # is defining one of these variables.
     import urllib.parse
     import urllib.request
 
@@ -323,7 +296,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None, _use_config=T
         filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
         assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path, _use_config=_use_config, _recursive=_recursive)
+    path = substitute_path_variables(path, _recursive=_recursive)
 
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)

@@ -266,7 +266,7 @@ class SpackPaths:
                 import spack.util.path
 
                 try:
-                    found = spack.util.path.canonicalize_path(found, _use_config=True, _recursive=True)
+                    found = spack.util.path.canonicalize_path(found, _recursive=True)
                 except spack.util.path.ResolutionContextError as e:
                     msg = f"{path} is defined in terms of another location ({e.var})"
                     raise ValueError(msg)
