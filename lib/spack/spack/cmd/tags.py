@@ -93,7 +93,7 @@ def tags(parser, args):
     tag_pkgs = packages_with_tags(tags, args.installed, False)
     missing = "No installed packages" if args.installed else "None"
     for tag in sorted(tag_pkgs):
-        # TODO: Remove the sorting once we're sure noone has an old
+        # TODO: Remove the sorting once we're sure no one has an old
         # TODO: tag cache since it can accumulate duplicates.
         packages = sorted(list(set(tag_pkgs[tag])))
         if isatty:

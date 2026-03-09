@@ -5,6 +5,7 @@
 
 import pathlib
 import sys
+import time
 
 import pytest
 
@@ -298,6 +299,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -326,6 +328,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -336,6 +339,8 @@ class TestScheduleBuilds:
             assert newly_installed[0][0] == spec.dag_hash()
             assert not pending  # removed from the pending list
         finally:
+            for _, _, lock in newly_installed:
+                lock.release_read()
             jobserver.close()
 
     def test_no_jobserver_token_returns_empty(self, temporary_store, mock_packages):
@@ -352,6 +357,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=True,
                 jobserver=jobserver,
@@ -383,6 +389,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -408,6 +415,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite={spec.dag_hash()},
+                overwrite_time=time.time() + 100,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -442,6 +450,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -454,4 +463,113 @@ class TestScheduleBuilds:
         finally:
             for _, lock in to_start:
                 lock.release_write()
+            jobserver.close()
+
+    def test_write_locked_read_locked_installed_yields_newly_installed(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        """Write lock fails but read lock succeeds and spec is installed: treated as done.
+
+        Simulates the case where another process finished building and downgraded its write lock
+        to a read lock. The spec should appear in newly_installed. blocked remains True because no
+        write lock was obtained, preventing the jobserver from firing unnecessarily.
+        """
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        lock = temporary_store.prefix_locker.lock(spec)
+
+        def write_timeout(timeout=None):
+            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
+
+        monkeypatch.setattr(lock, "acquire_write", write_timeout)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                overwrite_time=0.0,
+                capacity=2,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert blocked  # no write lock was obtained; jobserver should not fire
+            assert not to_start
+            assert len(newly_installed) == 1
+            dag_hash, installed_spec, lock = newly_installed[0]
+            assert dag_hash == spec.dag_hash()
+            assert installed_spec == spec
+            assert not pending  # spec was removed from pending
+        finally:
+            for _, _, lock in newly_installed:
+                lock.release_read()
+            jobserver.close()
+
+    def test_write_locked_read_locked_not_installed_still_blocked(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        """Write lock fails, read lock succeeds, but spec is not in DB: retry later.
+
+        Simulates the case where a concurrent process was killed mid-build. The read lock is
+        released and the spec stays in pending; blocked should remain True.
+        """
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        lock = temporary_store.prefix_locker.lock(spec)
+
+        def write_timeout(timeout=None):
+            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
+
+        monkeypatch.setattr(lock, "acquire_write", write_timeout)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                overwrite_time=0.0,
+                capacity=2,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert blocked
+            assert not to_start
+            assert not newly_installed
+            assert pending == [spec.dag_hash()]  # spec stays in pending for retry
+        finally:
+            jobserver.close()
+
+    def test_overwrite_handled_by_concurrent_process(self, temporary_store, mock_packages):
+        """When a spec in overwrite was installed AFTER overwrite_time, another process did it."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)  # installation_time = now()
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite={spec.dag_hash()},
+                overwrite_time=0.0,  # earlier than now()
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert not to_start
+            assert len(newly_installed) == 1
+            assert newly_installed[0][0] == spec.dag_hash()
+        finally:
+            for _, _, lock in newly_installed:
+                lock.release_read()
             jobserver.close()

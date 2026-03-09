@@ -302,7 +302,7 @@ class ColorMapping(NamedTuple):
 def cmapping(string: str) -> ColorMapping:
     """Return a mapping for translating indices in a plain string to indices in colored text.
 
-    The returned dictionary maps indices in the plain string to the offset of the cooresponding
+    The returned dictionary maps indices in the plain string to the offset of the corresponding
     indices in the colored string.
 
     """

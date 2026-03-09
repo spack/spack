@@ -1326,7 +1326,7 @@ error(50000, Message) :-
 % Variant semantics
 %-----------------------------------------------------------------------------
 % Packages define potentially several definitions for each variant, and depending
-% on their attibutes, duplicate nodes for the same package may use different
+% on their attributes, duplicate nodes for the same package may use different
 % definitions. So the variant logic has several jobs:
 % A. Associate a variant definition with a node, by VariantID
 % B. Associate defaults and attributes (sticky, etc.) for the selected variant ID with the node.
@@ -2014,7 +2014,7 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 
 % Minimizing builds is tricky. We want a minimizing criterion
 
-% because we want to reuse what is avaialble, but
+% because we want to reuse what is available, but
 % we also want things that are built to stick to *default preferences* from
 % the package and from the user. We therefore treat built specs differently and apply
 % a different set of optimization criteria to them. Spack's *first* priority is to

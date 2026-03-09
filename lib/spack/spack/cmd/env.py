@@ -547,7 +547,7 @@ def _env_untrack_or_remove(
     else:
         env_names_to_remove = known_env_names
 
-    # initalize all environments with valid spack.yaml configs
+    # initialize all environments with valid spack.yaml configs
     all_valid_envs = get_valid_envs(all_env_names)
 
     # build a task list of environments and bad env names to remove
@@ -569,7 +569,7 @@ def _env_untrack_or_remove(
                     envs_to_remove.remove(remove_env)
 
     # ask the user if they really want to remove the known environments
-    # force should do the same as yes to all here following the symantics of rm
+    # force should do the same as yes to all here following the semantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
         environments = string.plural(len(env_names_to_remove), "environment", show_n=False)
         envs = string.comma_and(list(env_names_to_remove))
@@ -595,7 +595,7 @@ def _env_untrack_or_remove(
             real_env_path = os.path.realpath(env.path)
             os.unlink(env.path)
             tty.msg(
-                f"Sucessfully untracked environment '{name}', "
+                f"Successfully untracked environment '{name}', "
                 "but it can still be found at:\n\n"
                 f"        {real_env_path}\n"
             )
@@ -615,7 +615,7 @@ def _env_untrack_or_remove(
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
     # However, we should still process all the environments we know about
-    # and delete them instead of failing on the first unknown enviornment.
+    # and delete them instead of failing on the first unknown environment.
     if len(removed_env_names) < len(known_env_names):
         sys.exit(1)
 

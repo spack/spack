@@ -8,7 +8,7 @@
   us to access file and line information later.
 
 - ``Our load methods use ``OrderedDict`` class instead of YAML's
-  default unorderd dict.
+  default unordered dict.
 
 """
 import ctypes

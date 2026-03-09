@@ -327,7 +327,7 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class RacketPackageTemplate(PackageTemplate):
-    """Provides approriate overrides for Racket extensions"""
+    """Provides appropriate overrides for Racket extensions"""
 
     base_class_name = "RacketPackage"
     package_class_import = "from spack_repo.builtin.build_systems.racket import RacketPackage"
@@ -340,7 +340,7 @@ class RacketPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
-    # added implicity by the RacketPackage class.
+    # added implicitly by the RacketPackage class.
     # with default_args(type=("build", "run")):
     #     depends_on("racket@8.3:")"""
 
@@ -374,7 +374,7 @@ class PythonPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
     # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
+    # added implicitly by the PythonPackage base class.
     # depends_on("python@2.X:2.Y,3.Z:", type=("build", "run"))
     # depends_on("py-pip@X.Y:", type="build")
     # depends_on("py-wheel@X.Y:", type="build")
@@ -570,7 +570,7 @@ class RubyPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
-    # added implicity by the RubyPackage class.
+    # added implicitly by the RubyPackage class.
     # with default_args(type=("build", "run")):
     #     depends_on("ruby@X.Y.Z:")
     #     depends_on("ruby-foo")"""

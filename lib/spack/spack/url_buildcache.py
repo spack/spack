@@ -159,7 +159,7 @@ class URLBuildcacheEntry:
 
     This class manages access to a versioned buildcache entry by providing
     a means to download both the metadata (spec file) and compressed archive.
-    It also provides methods for accessing the paths/urls associcated with
+    It also provides methods for accessing the paths/urls associated with
     buildcache entries.
 
     Starting with buildcache layout version 3, it is not possible to know
@@ -448,7 +448,7 @@ class URLBuildcacheEntry:
         if self.manifest:
             if not manifest_url or manifest_url == self.remote_manifest_url:
                 # We already have a manifest, so now calling this method without a specific
-                # manifiest url, or with the same one we have internally, then skip reading
+                # manifest url, or with the same one we have internally, then skip reading
                 # again, and just return the manifest we already read.
                 return self.manifest
 

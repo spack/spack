@@ -444,7 +444,7 @@ class TestSpecSemantics:
         assert set(propagated_rhs) <= _propagated_flags(c2)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
-        """Test that Specs specified only by their hashes can constrain eachother."""
+        """Test that Specs specified only by their hashes can constrain each other."""
         mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
         spec = Spec(mpich_dag_hash[:7])
         assert spec.constrain(Spec(mpich_dag_hash)) is False
@@ -1169,7 +1169,7 @@ class TestSpecSemantics:
         assert spliced["pkg-e"]._build_spec is None
         # Because a copy of e is used, it does not have dependnets in the original specs
         assert set(spliced["pkg-e"].dependents()) == {spliced["pkg-b"], spliced["pkg-f"]}
-        # Build dependent edge to f because f originally dependended on the e this was copied from
+        # Build dependent edge to f because f originally depended on the e this was copied from
         assert set(spliced["pkg-e"].dependents(deptype=dt.BUILD)) == {spliced["pkg-b"]}
 
         assert spliced["pkg-f"].satisfies("pkg-f color=blue ^pkg-e color=red ^pkg-g@2 color=red")

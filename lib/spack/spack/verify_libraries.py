@@ -110,7 +110,7 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
         # We work with byte strings for paths.
         path = os.path.join(root, rel_path).encode("utf-8")
 
-        # For $ORIGIN interpolation: should not have trailing dir seperator.
+        # For $ORIGIN interpolation: should not have trailing dir separator.
         origin = os.path.dirname(path)
 
         # Retrieve the needed libs + rpaths.
