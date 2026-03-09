@@ -20,9 +20,8 @@ def _ensure_dir(pathlike):
     return str(pathlike)
 
 
-@pytest.fixture(scope="module", autouse=True)
-def clear_env_vars():
-    saved = os.environ.copy()
+@pytest.fixture(autouse=True)
+def clear_env_vars(working_env):
     spack.paths_base._unset_xdg_vars(os.environ)
     for x in [
         "SPACK_USER_CACHE_PATH",
@@ -32,8 +31,6 @@ def clear_env_vars():
         "SPACK_CACHE_HOME",
     ]:
         os.environ.pop(x, None)
-    yield
-    os.environ.update(saved)
 
 
 @pytest.fixture
@@ -42,7 +39,6 @@ def set_home():
         # Clear some env vars that can interfere w/ expanduser(~) on Windows
         os.environ.pop("USERPROFILE", None)
         os.environ.pop("HOMEDRIVE", None)
-        os.environ.pop("HOMEPATH", None)
         os.environ["HOMEPATH"] = val
 
         # For expanduser on Linux
