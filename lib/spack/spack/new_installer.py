@@ -376,6 +376,7 @@ def worker_function(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    run_tests: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
@@ -400,6 +401,7 @@ def worker_function(
         restage: Whether to restage the source before building
         keep_prefix: Whether to keep a failed installation prefix
         skip_patch: Whether to skip the patch phase
+        run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
         echo_control: Connection to receive echo control messages from
@@ -458,6 +460,7 @@ def worker_function(
                 state_stream,
                 log_path,
                 spack.store.STORE,
+                run_tests,
             )
     except Exception:
         traceback.print_exc()  # log the traceback to the log file
@@ -564,11 +567,13 @@ def _install(
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
+    run_tests: bool = False,
 ) -> None:
     """Install a spec from build cache or source."""
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+    pkg.run_tests = run_tests
 
     if fake:
         store.layout.create_install_directory(spec)
@@ -640,6 +645,7 @@ def _install(
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
+        pkg.archive_install_test_log()
 
 
 class JobServer:
@@ -754,6 +760,7 @@ def start_build(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    run_tests: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -793,6 +800,7 @@ def start_build(
             keep_prefix,
             skip_patch,
             fake,
+            run_tests,
             state_w_conn,
             output_w_conn,
             control_r_conn,
@@ -1298,6 +1306,7 @@ class BuildGraph:
         install_deps: bool,
         database: spack.database.Database,
         overwrite_set: Optional[Set[str]] = None,
+        tests: Union[bool, List[str], Set[str]] = False,
     ):
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
@@ -1334,7 +1343,10 @@ class BuildGraph:
                 elif install_policy == "cache_only" and not include_build_deps:
                     dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
                 else:
-                    dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
+                    deptype = dt.BUILD | dt.LINK | dt.RUN
+                    if tests is True or (tests and spec.name in tests):
+                        deptype |= dt.TEST
+                    dependencies = spec.dependencies(deptype=deptype)
 
                 self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
@@ -1576,8 +1588,7 @@ class PackageInstaller:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
             raise NotImplementedError("Stopping before an install phase is not implemented")
-        elif tests is not False:
-            raise NotImplementedError("Tests during install are not implemented")
+        self.tests: Union[bool, List[str], Set[str]] = tests
 
         self.db = spack.store.STORE.db
 
@@ -1606,6 +1617,7 @@ class PackageInstaller:
             install_deps,
             self.db,
             self.overwrite,
+            tests,
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
@@ -1956,6 +1968,8 @@ class PackageInstaller:
         explicit = dag_hash in self.explicit
         spec = self.build_graph.nodes[dag_hash]
         is_develop = spec.is_develop
+        tests = self.tests
+        run_tests = tests is True or bool(tests and spec.name in tests)
         child_info = start_build(
             spec,
             explicit=explicit,
@@ -1973,6 +1987,7 @@ class PackageInstaller:
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
             fake=self.fake,
+            run_tests=run_tests,
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path
