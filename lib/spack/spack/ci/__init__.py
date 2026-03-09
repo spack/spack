@@ -54,9 +54,9 @@ from .common import (
 )
 from .generator_registry import UnknownGeneratorException, get_generator
 
-# Import any modules with generator functions from here, so they get
+# Import any modules with generator functions and from here, so they get
 # registered without introducing any import cycles.
-from .gitlab import generate_gitlab_yaml  # noqa: F401
+from .gitlab import GitlabJob, generate_gitlab_yaml  # noqa: F401
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -356,7 +356,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     os environment variables"""
     pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
     if "buildcache-destination" not in pipeline_mirrors:
-        raise SpackCIError("spack ci generate requires a mirror named 'buildcache-destination'")
+        raise SpackCIError("'spack ci generate' requires a mirror named 'buildcache-destination'")
 
     buildcache_destination = pipeline_mirrors["buildcache-destination"]
     options = PipelineOptions(env, buildcache_destination)
@@ -536,7 +536,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     if options.broken_specs_url and not options.pipeline_type == PipelineType.COPY_ONLY:
         broken = check_for_broken_specs(pipeline_specs, options.broken_specs_url)
         if broken and not rebuild_everything:
-            raise SpackCIError("spack ci generate failed broken specs check")
+            raise SpackCIError("'spack ci generate' failed broken specs check")
 
     spack_ci_config = SpackCIConfig(ci_config)
     spack_ci_config.init_pipeline_jobs(pipeline)
@@ -1367,7 +1367,7 @@ def run_standalone_tests(
         test_args.extend(["--timeout", str(timeout)])
 
     if cdash:
-        test_args.extend(cdash.args())
+        test_args.extend(cdash.args())  # type: ignore
     else:
         test_args.extend(["--log-format", "junit"])
         if log_file:

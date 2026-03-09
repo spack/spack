@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import enum
 import errno
 import glob
 import gzip
@@ -12,9 +13,9 @@ import shutil
 import sys
 import time
 from collections import deque
-from enum import Enum
-from typing import Dict, Generator, List, Optional, Set, Tuple
-from urllib.parse import quote, urlencode, urlparse
+from itertools import chain
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from urllib.parse import ParseResult, quote, urlencode, urlparse
 from urllib.request import Request
 
 import spack.binary_distribution
@@ -36,11 +37,41 @@ from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
 
+from .job_class_registry import UnknownCIJobClass, get_ci_job_class
+
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
 # this exists purely for testing purposes
 _urlopen = web_util.urlopen
+
+#: Names of the core CI job types, which are those not dependent on a specs
+core_job_names = ["cleanup", "copy", "noop", "reindex", "signing"]
+
+#: Names of all job types that can have a spec
+spec_job_names = ["build", "test"]
+
+#: Names of all possible named job types
+all_job_type_names = ["any"] + spec_job_names + core_job_names
+
+#: Names of script stages
+script_stage_names = ["before_script", "script", "after_script"]
+
+#: default job settings, keyed by job stage
+default_job_settings: Dict[str, Dict[str, Any]] = {
+    "build-job": {
+        "script": ["cd {env_dir}", "spack env activate --without-view .", "spack ci rebuild"]
+    },
+    "noop-job": {"script": ['echo "All specs already up-to-date, nothing to rebuild."']},
+}
+
+#: Override job settings, keyed by job stage
+override_job_settings: Dict[str, Dict[str, Any]] = {
+    "any-job-remove": {"tags": SPACK_RESERVED_TAGS},
+    "cleanup-job": {"script": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]},
+    "reindex-job": {"script": ["spack buildcache update-index --keys {index_target_mirror}"]},
+    "signing-job": {"tags": ["aws", "protected", "notary"]},
+}
 
 
 def copy_gzipped(glob_or_path: str, dest: str) -> None:
@@ -53,13 +84,13 @@ def copy_gzipped(glob_or_path: str, dest: str) -> None:
 
     files = glob.glob(glob_or_path)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
+        raise OSError(f"No such file or directory: '{glob_or_path}'", errno.ENOENT)
     if len(files) > 1 and not os.path.isdir(dest):
         raise ValueError(
-            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+            f"'{glob_or_path}' matches multiple files but '{dest}' is not a directory"
         )
 
-    def is_gzipped(path):
+    def is_gzipped(path) -> bool:
         with open(path, "rb") as fd:
             return compression.GZipFileType().matches_magic(fd)
 
@@ -112,24 +143,8 @@ def win_quote(quote_str: str) -> str:
     return quote_str
 
 
-def _spec_matches(spec, match_string):
+def _spec_matches(spec, match_string) -> bool:
     return spec.intersects(match_string)
-
-
-def _noop(x):
-    return x
-
-
-def unpack_script(script_section, op=_noop):
-    script = []
-    for cmd in script_section:
-        if isinstance(cmd, list):
-            for subcmd in cmd:
-                script.append(op(subcmd))
-        else:
-            script.append(op(cmd))
-
-    return script
 
 
 def ensure_expected_target_path(path: str) -> str:
@@ -143,7 +158,7 @@ def ensure_expected_target_path(path: str) -> str:
     return path
 
 
-def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
+def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file) -> None:
     """Write out the file describing specs that should be copied"""
     buildcache_copies = {}
 
@@ -166,12 +181,353 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
         fd.write(json.dumps(buildcache_copies))
 
 
+class CIScript:
+    """Job script."""
+
+    def __init__(self, contents: List[Union[str, List[str]]]) -> None:
+        """
+        Instantiate the CI script
+
+        Args:
+            contents: the script's contents
+        """
+        self.contents = contents
+
+    def convert(self, converter: Optional[Callable[[str], str]]):
+        """Return the converted commands.
+
+        Args:
+            converter: optional function that takes a string and returns a string
+        """
+        if converter and not callable(converter):
+            raise ValueError(
+                f"Expected {converter} to be a conversion function, not {type(converter)}."
+            )
+
+        def _noop(line: str) -> str:
+            return line
+
+        convert = converter or _noop
+
+        script: List[Union[str, List[str]]] = []
+        for cmd in self.contents:
+            if isinstance(cmd, list):
+                for subcmd in cmd:
+                    script.append(convert(subcmd))
+            else:
+                script.append(convert(cmd))
+
+        self.contents = script
+
+
+class CIDynamicMap:
+    """Dynamic mapping options."""
+
+    def __init__(self, mapping: Dict[str, Any]) -> None:
+        # Ensure additional properties readily available when needed
+        self.mapping = mapping
+
+        self.name: Optional[str] = mapping.get("name")
+        self.endpoint: str = mapping.get("endpoint", "")
+        self.header: Dict[str, Any] = mapping.get("header", {})
+
+        self.require: List[str] = mapping.get("require", [])
+        self.allow: List[str] = mapping.get("allow", [])
+        self.ignore: List[str] = mapping.get("ignore", [])
+
+    @property
+    def allowed(self) -> List[str]:
+        return sorted(set(self.allow + self.require))
+
+    @property
+    def ignored(self) -> List[str]:
+        return sorted(set(self.ignore))
+
+    @property
+    def required(self) -> List[str]:
+        return sorted(set(self.require))
+
+    def endpoint_url(self) -> ParseResult:
+        return urlparse(self.endpoint)
+
+    def request_header(self) -> Dict[str, str]:
+        header = {"User-Agent": web_util.SPACK_USER_AGENT}
+        header.update(self.header)
+
+        # Expand header environment variables, ie. if tokens are passed
+        for value in header.values():
+            value = os.path.expandvars(value)
+
+        return header
+
+    def clean_config_attrs(self, query: str) -> Optional[Dict[str, Any]]:
+        """Build the clean configuration attributes for the spec query.
+
+        Args:
+           query: the spec query
+
+        Returns: resulting clean configuration attributes
+        """
+        request = Request(
+            str(self.endpoint_url()._replace(query=query).geturl()),
+            headers=self.request_header(),
+            method="GET",
+        )
+
+        try:
+            response = _urlopen(request)
+            config = json.load(response)
+        except Exception as e:
+            # For now just ignore any errors from dynamic mapping and continue
+            # This is still experimental, and failures should not stop CI
+            # from running normally
+            tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}: {e}")
+            return None
+
+        # Strip ignore keys
+        if self.ignored:
+            for key in self.ignored:
+                if key in config:
+                    config.pop(key)
+
+        # Only keep allowed keys
+        clean_config = {}
+        if self.allowed:
+            for key in self.allowed:
+                if key in config:
+                    clean_config[key] = config[key]
+        else:
+            clean_config = config
+
+        # Verify all of the required keys are present
+        if self.required:
+            missing_keys = []
+            for key in self.required:
+                if key not in clean_config.keys():
+                    missing_keys.append(key)
+
+            if missing_keys:
+                tty.warn(f"Response missing required keys: {missing_keys}")
+
+        return clean_config
+
+    def skip(self):
+        """Returns ``True`` if the section should be skipped; else ``False``."""
+        skip_mapping = os.environ.get("SPACK_CI_SKIP_DYNAMIC_MAPPING")
+        return self.name and skip_mapping and re.match(skip_mapping, self.name)
+
+
+class CIJobData:
+    """Job data for a given job name (and spec)."""
+
+    def __init__(
+        self, name: str, spec: Optional[spack.spec.Spec] = None, remove: bool = False
+    ) -> None:
+        """
+        Initialize the job data based on default settings.
+
+        Args:
+            name: standard job name
+            spec: release spec
+            remove: ``True`` if a remove job; otherwise, ``False``
+        """
+        self.name: str = name
+        self.hash: str = spec.dag_hash() if spec else ""
+        self.remove: bool = remove
+        self.job_name = f"{self.name}-job{'-remove' if remove else ''}"
+        self.spec: Optional[spack.spec.Spec] = spec
+
+        self.attributes: Dict[str, Any] = {}
+
+        # Use script instances to facilitate conversions
+        self.script: Dict[str, CIScript] = {}
+        if self.job_name in default_job_settings:
+            for key, value in default_job_settings[self.job_name].items():
+                try:
+                    if key in script_stage_names:
+                        # Scripts will be saved as attributes later
+                        self.script[key] = CIScript(value)
+                    else:
+                        self.attributes[key] = value
+                except KeyError:
+                    try:
+                        setattr(self, key, value)
+                    except Exception as e:
+                        tty.error(f"Failed to set {key} attribute with {value}: {str(e)}")
+
+        if spec:
+            self.attributes["variables"] = {
+                "SPACK_JOB_SPEC_ARCH": spec.format("{architecture}"),
+                "SPACK_JOB_SPEC_COMPILER_NAME": spec.format("{compiler.name}"),
+                "SPACK_JOB_SPEC_COMPILER_VERSION": spec.format("{compiler.version}"),
+                "SPACK_JOB_SPEC_DAG_HASH": spec.dag_hash(),
+                "SPACK_JOB_SPEC_PKG_NAME": spec.name,
+                "SPACK_JOB_SPEC_PKG_VERSION": spec.format("{version}"),
+                "SPACK_JOB_SPEC_VARIANTS": spec.format("{variants}"),
+            }
+
+    def __str__(self) -> str:
+        return f"CIJob({self.job_name}, spec={self.spec})"
+
+    def add_tags(self, tags: List[str]) -> None:
+        if "tags" not in self.attributes:
+            self.attributes["tags"] = []
+        self.attributes["tags"].extend(tags)
+
+    def remove_tags(self, tags: List[str]) -> None:
+        if "tags" not in self.attributes:
+            return
+
+        for tag in tags:
+            try:
+                self.attributes["tags"].remove(tag)
+            except ValueError:
+                # value is not in the list
+                pass
+
+    def add_stage(self, stage: str) -> None:
+        """Sets the job state.
+
+        Args:
+            stage: name of the job stage
+        """
+        self.attributes["stage"] = stage
+
+    def has_script(self, stage: str) -> bool:
+        """Returns whether the script stage is implemented for the job.
+
+        Args:
+            stage: stage of the script
+
+        Returns: ``True`` if the script stage is implemented; ``False`` otherwise
+        """
+        return stage in self.script
+
+    def remove_reserved_tags(self) -> None:
+        self.remove_tags(SPACK_RESERVED_TAGS)
+
+    def spec_query(self) -> Optional[str]:
+        """Return the job's spec query."""
+        if not self.spec:
+            return None
+
+        query = (
+            "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
+            # The preceding spaces are required (ref.
+            # https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
+            " {SPACK_JOB_SPEC_VARIANTS}"
+            " arch={SPACK_JOB_SPEC_ARCH}"
+            "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
+        ).format_map(self.attributes["variables"])
+        return f"spec={quote(query)}"
+
+    def merge_attributes(self, attrs: Dict[str, Any]) -> None:
+        """Merge the attributes into those of the job
+
+        Args:
+            attrs: attributes to be be merged
+        """
+        self.attributes = copy.copy(spack.schema.merge_yaml(self.attributes, attrs))
+        for stage in script_stage_names:
+            if stage in attrs:
+                self.script[stage] = self.attributes[stage]
+
+    def remove_attributes(self, attrs: Dict[str, Any]) -> None:
+        """Remove the attributes from the job
+
+        Args:
+            attrs: attributes to be removed
+        """
+        self.attributes = cfg.remove_yaml(self.attributes, attrs)
+        for stage in script_stage_names:
+            if stage in attrs and stage in self.script:
+                del self.script[stage]
+
+    def update_attributes(self, section: Dict[str, Any]) -> None:
+        """Update the job attributes with the attribute data for the job's name.
+
+        The attributes will be removed if this is a ``remove`` job; otherwise,
+        they will be merged.
+
+        Args:
+            section: section possibly containing relevant job attributes
+        """
+        if self.job_name not in section:
+            tty.debug(f"Skipping attribute ({section}) since does not contain '{self.job_name}'")
+            return
+
+        attrs = section[self.job_name]
+
+        if self.remove:
+            tty.debug(f"Removing {attrs} from {self.job_name} job")
+            self.remove_attributes(attrs)
+        else:
+            tty.debug(f"Merging {attrs} into {self.job_name} job")
+            self.merge_attributes(attrs)
+
+    def update_submapping_attributes(self, section: Dict[str, Any]) -> None:
+        """Update attributes with relevant submapping data.
+
+        Args:
+            section: section possibly containing relevant job attributes
+        """
+        if "submapping" not in section or self.name not in spec_job_names:
+            tty.debug(f"Skipping submapping update for {self.job_name} job using '{section}'")
+            return
+
+        # Assumes the attributes are job name-specific.
+        matched = False
+        only_first = section.get("match_behavior", "first") == "first"
+
+        for match_attrs in reversed(section["submapping"]):
+            section = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
+            for match_string in match_attrs["match"]:
+                if _spec_matches(self.spec, match_string):
+                    matched = True
+
+                    # Assumes only update if the remove property values match
+                    job_names = ["build-job", "test-job"]
+
+                    for name in job_names:
+                        section_name = f"{name}-remove" if self.remove else name
+                        if section_name in match_attrs:
+                            self.update_attributes(section[section_name])
+                    break
+
+            if matched and only_first:
+                break
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Build a minimal dictionary representation of job options.
+
+        Returns: dictionary of the populated job options.
+        """
+        result: Dict[str, Any] = {}
+        if self.spec:
+            result["spec"] = self.spec
+
+        # Save assumed to be already converted scripts as attributes
+        for stage in self.script:
+            try:
+                self.attributes[stage] = self.script[stage]
+            except KeyError:
+                # TODO/TLD: Remove this once finish debugging
+                result["failure"] = f"{stage} does not exist in {self.script}"
+                raise
+
+        if self.attributes:
+            result["attributes"] = self.attributes
+        tty.msg(f"TLD: to_dict: scripts: {self.script}")
+
+        return result
+
+
 class CDashHandler:
     """
     Class for managing CDash data and processing.
     """
 
-    def __init__(self, ci_cdash):
+    def __init__(self, ci_cdash) -> None:
         # start with the gitlab ci configuration
         self.url = ci_cdash.get("url")
         self.build_group = ci_cdash.get("build-group")
@@ -188,7 +544,7 @@ class CDashHandler:
         if runner:
             self.site += f" ({runner})"
 
-    def args(self):
+    def args(self) -> List[Union[str, None]]:
         return [
             "--cdash-upload-url",
             win_quote(self.upload_url),
@@ -200,26 +556,27 @@ class CDashHandler:
             win_quote(self.build_stamp),
         ]
 
-    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
+    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> str:
         """Returns the CDash build name.
 
         A name will be generated if the ``spec`` is provided,
         otherwise, the value will be retrieved from the environment
-        through the ``SPACK_CDASH_BUILD_NAME`` variable.
+        through the ``SPACK_CDASH_BUILD_NAME`` variable
 
-        Returns: (str) given spec's CDash build name."""
+        Returns: given spec's CDash build name
+        """
         if spec:
             spec_str = spec.format("{name}{@version}{%compiler} hash={hash} arch={architecture}")
             build_name = f"{spec_str} ({self.build_group})"
             tty.debug(f"Generated CDash build name ({build_name}) from the {spec.name}")
             return build_name
 
-        env_build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
+        env_build_name = os.environ.get("SPACK_CDASH_BUILD_NAME", default="")
         tty.debug(f"Using CDash build name ({env_build_name}) from the environment")
         return env_build_name
 
     @property  # type: ignore
-    def build_stamp(self):
+    def build_stamp(self) -> str:
         """Returns the CDash build stamp.
 
         The one defined by SPACK_CDASH_BUILD_STAMP environment variable
@@ -238,23 +595,23 @@ class CDashHandler:
 
     @property  # type: ignore
     @memoized
-    def project_enc(self):
+    def project_enc(self) -> str:
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")
         encode = urlencode({"project": self.project})
         index = encode.find("=") + 1
         return encode[index:]
 
     @property
-    def upload_url(self):
+    def upload_url(self) -> str:
         url_format = f"{self.url}/submit.php?project={self.project_enc}"
         return url_format
 
-    def copy_test_results(self, source, dest):
+    def copy_test_results(self, source, dest) -> None:
         """Copy test results to artifacts directory."""
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self):
+    def create_buildgroup(self) -> None:
         """Create the CDash buildgroup if it does not already exist."""
         headers = {
             "Authorization": f"Bearer {self.auth_token}",
@@ -282,7 +639,9 @@ class CDashHandler:
         if not group_id:
             tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
-    def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
+    def report_skipped(
+        self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]
+    ) -> None:
         """Explicitly report skipping testing of a spec (e.g., it's CI
         configuration identifies it as known to have broken tests or
         the CI installation failed).
@@ -304,7 +663,7 @@ class CDashHandler:
         reporter.test_skipped_report(report_dir, spec, reason)
 
 
-class PipelineType(Enum):
+class PipelineType(enum.Enum):
     COPY_ONLY = 1
     spack_copy_only = 1
     PROTECTED_BRANCH = 2
@@ -336,7 +695,7 @@ class PipelineOptions:
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
-    ):
+    ) -> None:
         """
         Args:
             env: Active spack environment
@@ -381,13 +740,13 @@ class PipelineNode:
     parents: Set[str]
     children: Set[str]
 
-    def __init__(self, spec: spack.spec.Spec):
-        self.spec = spec
-        self.parents = set()
-        self.children = set()
+    def __init__(self, spec: spack.spec.Spec) -> None:
+        self.spec: spack.spec.Spec = spec
+        self.parents: set[PipelineNode] = set()
+        self.children: set[PipelineNode] = set()
 
     @property
-    def key(self):
+    def key(self) -> str:
         """Return key of the stored spec"""
         return PipelineDag.key(self.spec)
 
@@ -417,7 +776,7 @@ class PipelineDag:
             self.nodes[parent_key].children.add(child_key)
             self.nodes[child_key].parents.add(parent_key)
 
-    def prune(self, node_key: str):
+    def prune(self, node_key: str) -> None:
         """Remove a node from the graph, and reconnect its parents and children"""
         node = self.nodes[node_key]
         for parent in node.parents:
@@ -479,286 +838,262 @@ class SpackCIConfig:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config):
-        """Given the information from the ci section of the config
-        and the staged jobs, set up meta data needed for generating Spack
-        CI IR.
+    def __init__(self, ci_config: Dict[str, Any]) -> None:
+        """Given the information from the ci section of the config and the jobs,
+        set up meta data needed for generating Spack CI IR.
         """
-
+        # Retain the original ci_config for generator-specific customizations
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
 
-        self.ir = {
-            "jobs": {},
-            "rebuild-index": self.ci_config.get("rebuild-index", True),
-            "broken-specs-url": self.ci_config.get("broken-specs-url", None),
-            "broken-tests-packages": self.ci_config.get("broken-tests-packages", []),
-            "target": self.ci_config.get("target", "gitlab"),
-        }
-        jobs = self.ir["jobs"]
+        self.broken_specs_url: Optional[str] = ci_config.get("broken-specs-url", None)
+        self.broken_tests: List[str] = ci_config.get("broken-tests-packages", [])
+        self.rebuild_index: bool = ci_config.get("rebuild-index", True)
 
-        for name in self.named_jobs:
-            # Skip the special named jobs
-            if name not in ["any", "build"]:
-                jobs[name] = self.__init_job("")
+        self.pipeline_gen: List[Dict[str, Dict]] = ci_config.get("pipeline-gen", [])
 
-    def __init_job(self, release_spec):
-        """Initialize job object"""
-        job_object = {"spec": release_spec, "attributes": {}}
-        if release_spec:
-            job_vars = job_object["attributes"].setdefault("variables", {})
-            job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
-            job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
-            job_vars["SPACK_JOB_SPEC_PKG_VERSION"] = release_spec.format("{version}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_NAME"] = release_spec.format("{compiler.name}")
-            job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
-            job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
-            job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-        return job_object
+        self.add_tests = "test-job" in self.pipeline_gen
 
-    def __is_named(self, section):
-        """Check if a pipeline-gen configuration section is for a named job,
-        and if so return the name otherwise return none.
+        #: registered or default job class used for pipeline job creation
+        self.job_class = self._get_job_class()
+        assert issubclass(
+            self.job_class, CIJobData
+        ), f"Job class {self.job_class} does not inherit from CIJobData"
+
+        # List of jobs keyed by job type name
+        # TODO: switch CIJobData to typing.Self once Python 3.11+
+        self.jobs: Dict[str, List[CIJobData]] = {}
+        for job_type_name in all_job_type_names:
+            self.jobs[job_type_name] = []
+
+        # Add each core job with its defaults
+        for job_type_name in core_job_names:
+            class_object = self.job_class
+            self.jobs[job_type_name].append(class_object(job_type_name))
+
+    def _get_job_class(self):
+        """Get the registered or default job class path for the target pipeline."""
+        ci_target = self.ci_config.get("target", "gitlab")
+
+        try:
+            job_class = get_ci_job_class(ci_target)
+        except UnknownCIJobClass:
+            tty.warn(
+                f"No registered job class detected for {ci_target}. " "Using default CIJobData."
+            )
+            job_class = CIJobData
+
+        return job_class
+
+    def init_pipeline_jobs(self, pipeline: PipelineDag) -> None:
+        """Create jobs for all of the pipeline specs"""
+        names = ["build"]
+
+        # Be sure to use the registered job type, if available
+        # TODO/TLD: Do we want to add these here or should we be
+        # TODO/TLD: adding them when the spec stages are processed?
+        if self.add_tests:
+            names.append("test")
+
+        class_object = self.job_class
+        for _, node in pipeline.traverse_nodes():
+            for job_type_name in names:
+                self.jobs[job_type_name].append(class_object(job_type_name, node.spec))
+
+    # TODO: switch CIJobData to typing.Self once Python 3.11+
+    def all_jobs(self, job_names: Optional[List[str]] = None) -> List[CIJobData]:
+        """Return a list of all jobs of the given type(s).
+
+        Args:
+            job_names: names of job type(s) to be returned; default all types
+
+        Returns: list of all jobs of the given type(s) or all jobs if ``None``
         """
-        for _name in self.named_jobs:
+        if job_names:
+            return list(
+                chain.from_iterable(self.jobs[name] for name in job_names if name in self.jobs)
+            )
+
+        return list(chain.from_iterable(self.jobs.values()))
+
+    # TODO: switch CIJobData to typing.Self once Python 3.11+
+    def job(self, name: str, spec: Optional[spack.spec.Spec] = None) -> Optional[CIJobData]:
+        """Retrieve the matching job
+
+        Args:
+            name: the job type name of the desired job
+            spec: the job spec
+
+        Returns: the job instance or ``None`` if none match
+        """
+        spec_hash = spec.dag_hash() if spec else ""
+
+        if name in self.jobs:
+            for job in self.jobs[name]:
+                if not spec or job.hash == spec_hash:
+                    return job
+
+        return None
+
+    def ir(self) -> Dict[str, Any]:
+        """Return the intermediate representation of the Spack CI configuration."""
+        intermediate_rep: Dict[str, Any] = {
+            "broken-specs-url": self.broken_specs_url,
+            "broken-tests-packages": self.broken_tests,
+            "rebuild-index": self.rebuild_index,
+        }
+
+        # Include the representation of all of the jobs
+        jobs_dict = {}
+        for job in self.all_jobs():
+            if job.name == "any":
+                # Not expecting 'any' jobs to be stored in memory since their
+                # data should've been applied to the other types of named jobs.
+                tty.debug(f"Skipping adding {job} to the intermediate representation")
+                continue
+
+            # TODO/TLD: how should these really be keyed given build and
+            # TODO/TLD: test jobs will now have the same spec?
+            jobs_dict[job.name] = job.to_dict()
+        intermediate_rep["jobs"] = jobs_dict
+
+        return intermediate_rep
+
+    def _named_job_name(self, section: Dict[str, Any]) -> Optional[str]:
+        """Determine if there is a pipeline-gen configuration section for a
+        named job.
+
+        Args:
+            section: pipeline-gen configuration section
+
+        Returns: the base job name if the section exists; otherwise ``None``
+        """
+        for _name in all_job_type_names:
             keys = [f"{_name}-job", f"{_name}-job-remove"]
             if any([key for key in keys if key in section]):
                 return _name
 
         return None
 
-    @staticmethod
-    def __job_name(name, suffix=""):
-        """Compute the name of a named job with appropriate suffix.
-        Valid suffixes are either '-remove' or empty string or None
+    def update_job_attributes(self, job_name: str, section: Dict[str, Any]) -> None:
+        """Update the specified job attributes for corresponding jobs
+
+        Args:
+            job_name: the job name of jobs whose attributes are to be updated
+            section: attributes to be merged or removed, depending on the job
         """
-        assert isinstance(name, str)
+        if job_name in spec_job_names:
+            # Apply the same attributes to all matching jobs that can have a spec
+            for job in self.jobs[job_name]:
+                # tty.debug(
+                tty.msg(
+                    f"TLD: .. {job_name}, {job.spec}, {job.remove}: applying "
+                    f"'{job_name}' section to attributes"
+                )
+                job.update_attributes(section)
+            return
 
-        jname = name
-        if suffix:
-            jname = f"{name}-job{suffix}"
-        else:
-            jname = f"{name}-job"
-
-        return jname
-
-    def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
-        matched = False
-        only_first = section.get("match_behavior", "first") == "first"
-
-        for match_attrs in reversed(section["submapping"]):
-            attrs = cfg.InternalConfigScope._process_dict_keyname_overrides(match_attrs)
-            for match_string in match_attrs["match"]:
-                if _spec_matches(spec, match_string):
-                    matched = True
-                    if "build-job-remove" in match_attrs:
-                        cfg.remove_yaml(dest, attrs["build-job-remove"])
-                    if "build-job" in match_attrs:
-                        spack.schema.merge_yaml(dest, attrs["build-job"])
-                    break
-            if matched and only_first:
-                break
-
-        return dest
-
-    # Create jobs for all the pipeline specs
-    def init_pipeline_jobs(self, pipeline: PipelineDag):
-        for _, node in pipeline.traverse_nodes():
-            dag_hash = node.spec.dag_hash()
-            self.ir["jobs"][dag_hash] = self.__init_job(node.spec)
-
-    # Generate IR from the configs
-    def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
-
-        jobs = self.ir["jobs"]
-
-        # Implicit job defaults
-        defaults = [
-            {
-                "build-job": {
-                    "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
-                        "spack ci rebuild",
-                    ]
-                }
-            },
-            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
-        ]
-
-        # Job overrides
-        overrides = [
-            # Reindex script
-            {
-                "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
-                }
-            },
-            # Add signing job tags
-            {"signing-job": {"tags": ["aws", "protected", "notary"]}},
-            # Remove reserved tags
-            {"any-job-remove": {"tags": SPACK_RESERVED_TAGS}},
-        ]
-
-        pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
-
-        for section in reversed(pipeline_gen):
-            name = self.__is_named(section)
-            has_submapping = "submapping" in section
-            has_dynmapping = "dynamic-mapping" in section
-            section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
-
-            if name:
-                remove_job_name = self.__job_name(name, suffix="-remove")
-                merge_job_name = self.__job_name(name)
-                do_remove = remove_job_name in section
-                do_merge = merge_job_name in section
-
-                def _apply_section(dest, src):
-                    if do_remove:
-                        dest = cfg.remove_yaml(dest, src[remove_job_name])
-                    if do_merge:
-                        dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
-
-                if name == "build":
-                    # Apply attributes to all build jobs
-                    for _, job in jobs.items():
-                        if job["spec"]:
-                            _apply_section(job["attributes"], section)
-                elif name == "any":
-                    # Apply section attributes too all jobs
-                    for _, job in jobs.items():
-                        _apply_section(job["attributes"], section)
-                else:
-                    # Create a signing job if there is script and the job hasn't
-                    # been initialized yet
-                    if name == "signing" and name not in jobs:
-                        if "signing-job" in section:
-                            if "script" not in section["signing-job"]:
-                                continue
-                            else:
-                                jobs[name] = self.__init_job("")
-                    # Apply attributes to named job
-                    _apply_section(jobs[name]["attributes"], section)
-
-            elif has_submapping:
-                # Apply section jobs with specs to match
-                for _, job in jobs.items():
-                    if job["spec"]:
-                        job["attributes"] = self.__apply_submapping(
-                            job["attributes"], job["spec"], section
-                        )
-            elif has_dynmapping:
-                mapping = section["dynamic-mapping"]
-
-                dynmap_name = mapping.get("name")
-
-                # Check if this section should be skipped
-                dynmap_skip = os.environ.get("SPACK_CI_SKIP_DYNAMIC_MAPPING")
-                if dynmap_name and dynmap_skip:
-                    if re.match(dynmap_skip, dynmap_name):
-                        continue
-
-                # Get the endpoint
-                endpoint = mapping["endpoint"]
-                endpoint_url = urlparse(endpoint)
-
-                # Configure the request header
-                header = {"User-Agent": web_util.SPACK_USER_AGENT}
-                header.update(mapping.get("header", {}))
-
-                # Expand header environment variables
-                # ie. if tokens are passed
-                for value in header.values():
-                    value = os.path.expandvars(value)
-
-                required = mapping.get("require", [])
-                allowed = mapping.get("allow", [])
-                ignored = mapping.get("ignore", [])
-
-                # required keys are implicitly allowed
-                allowed = sorted(set(allowed + required))
-                ignored = sorted(set(ignored))
-                required = sorted(set(required))
-
-                # Make sure required things are not also ignored
-                assert not any([ikey in required for ikey in ignored])
-
-                def job_query(job):
-                    job_vars = job["attributes"]["variables"]
-                    query = (
-                        "{SPACK_JOB_SPEC_PKG_NAME}@{SPACK_JOB_SPEC_PKG_VERSION}"
-                        # The preceding spaces are required (ref. https://github.com/spack/spack-gantry/blob/develop/docs/api.md#allocation)
-                        " {SPACK_JOB_SPEC_VARIANTS}"
-                        " arch={SPACK_JOB_SPEC_ARCH}"
-                        "%{SPACK_JOB_SPEC_COMPILER_NAME}@{SPACK_JOB_SPEC_COMPILER_VERSION}"
-                    ).format_map(job_vars)
-                    return f"spec={quote(query)}"
-
-                for job in jobs.values():
-                    if not job["spec"]:
-                        continue
-
-                    # Create request for this job
-                    query = job_query(job)
-                    request = Request(
-                        endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
+        if job_name == "any":
+            # Apply section attributes to all jobs
+            for name, jobs in self.jobs.items():
+                for job in jobs:
+                    # tty.debug(
+                    tty.msg(
+                        f"TLD: .. {name}, {job.spec}, {job.remove}: applying "
+                        f"'{job_name}' section to attributes"
                     )
-                    try:
-                        response = _urlopen(request)
-                        config = json.load(response)
-                    except Exception as e:
-                        # For now just ignore any errors from dynamic mapping and continue
-                        # This is still experimental, and failures should not stop CI
-                        # from running normally
-                        tty.warn(f"Failed to fetch dynamic mapping for query:\n\t{query}: {e}")
-                        continue
+                    job.update_attributes(section)
+            return
 
-                    # Strip ignore keys
-                    if ignored:
-                        for key in ignored:
-                            if key in config:
-                                config.pop(key)
+        # Create a signing job if there is a script and the job
+        # hasn't been initialized yet
+        if job_name == "signing" and len(self.jobs[job_name]) == 0:
+            if "signing-job" in section:
+                if "script" not in section["signing-job"]:
+                    # tty.debug("TLD: .. .. skipping signing job missing script")
+                    tty.msg("TLD: .. .. skipping signing job missing script")
+                    return
 
-                    # Only keep allowed keys
-                    clean_config = {}
-                    if allowed:
-                        for key in allowed:
-                            if key in config:
-                                clean_config[key] = config[key]
-                    else:
-                        clean_config = config
+                class_object = self.job_class
+                self.jobs[job_name].append(class_object(job_name))
 
-                    # Verify all of the required keys are present
-                    if required:
-                        missing_keys = []
-                        for key in required:
-                            if key not in clean_config.keys():
-                                missing_keys.append(key)
+        # Apply attributes to any other type of named job
+        tty.debug(
+            f"TLD: .. applying section {section} to ({len(self.jobs[job_name])}) {job_name} job(s)"
+        )
+        for job in self.jobs[job_name]:
+            job.update_attributes(section)
 
-                        if missing_keys:
-                            tty.warn(f"Response missing required keys: {missing_keys}")
+    def update_submapping_job_attributes(self, section: Dict[str, Any]) -> None:
+        """Update spec job attributes with submapping data.
 
-                    if clean_config:
-                        job["attributes"] = spack.schema.merge_yaml(
-                            job.get("attributes", {}), clean_config
-                        )
+        Submapping attributes can be used to customize the tags and variables
+        used to ensure the runner has sufficient resources for the job.
 
-        for _, job in jobs.items():
-            if job["spec"]:
-                job["spec"] = job["spec"].name
+        Args:
+            section: section possibly containing relevant job attributes
+        """
+        if "submapping" not in section:
+            return
 
-        return self.ir
+        tty.debug(f"TLD: updating 'submapping' of section '{section}'")
+
+        # Apply section jobs with specs to match
+        for job in self.all_jobs(spec_job_names):
+            tty.debug(f"TLD: .. for job {job}")
+            job.update_submapping_attributes(section)
+
+    def process_dynamic_job_mapping(self, section: Dict[str, Any]) -> None:
+        """Process cost optimization options for large scale CI."""
+        if "dynamic-mapping" not in section:
+            return
+
+        # Check if this section should be skipped
+        mapping = CIDynamicMap(section["dynamic-mapping"])
+        if mapping.skip():
+            return
+
+        # Make sure required things are not also ignored
+        assert not any([ikey in mapping.required for ikey in mapping.ignored])
+
+        for job in self.all_jobs(spec_job_names):
+            # Create request for this spec job
+            query = job.spec_query()
+            if not query:
+                tty.warn(f"Unable to formulate a spec query for {job}")
+                continue
+
+            clean_config = mapping.clean_config_attrs(query)
+            if clean_config:
+                job.merge_attributes(clean_config)
+
+    def customize_ci_configs(self) -> None:
+        """Merge/override default CI configurations."""
+
+        # Merge/override the default CI job configurations
+        pipeline_gen = [override_job_settings] + self.ci_config.get("pipeline-gen", [])
+        for section in reversed(pipeline_gen):
+            section = cfg.InternalConfigScope._process_dict_keyname_overrides(section)
+            job_name = self._named_job_name(section)
+            if job_name:
+                self.update_job_attributes(job_name, section)
+                continue
+
+            if "submapping" in section:
+                self.update_submapping_job_attributes(section)
+                continue
+
+            if "dynamic-mapping" in section:
+                self.process_dynamic_job_mapping(section)
+
+        # Replace the spec job's spec with the spec's name
+        for job in self.all_jobs(spec_job_names):
+            job.spec = job.spec.name  # type: ignore
+
+    def generate_ir(self) -> Dict[str, Any]:
+        self.customize_ci_configs()
+        return self.ir()
 
 
 class SpackCIError(spack.error.SpackError):
-    def __init__(self, msg):
+    def __init__(self, msg) -> None:
         super().__init__(msg)

@@ -66,6 +66,8 @@ submapping_schema = {
                     "match": {"type": "array", "items": {"type": "string"}},
                     "build-job": attributes_schema,
                     "build-job-remove": attributes_schema,
+                    "test-job": attributes_schema,
+                    "test-job-remove": attributes_schema,
                 },
             },
         },
