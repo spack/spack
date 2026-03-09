@@ -5,6 +5,7 @@
 
 import pathlib
 import sys
+import time
 
 import pytest
 
@@ -298,6 +299,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -326,6 +328,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -354,6 +357,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=True,
                 jobserver=jobserver,
@@ -385,6 +389,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -410,6 +415,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite={spec.dag_hash()},
+                overwrite_time=time.time() + 100,
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -444,6 +450,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -485,6 +492,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -526,6 +534,7 @@ class TestScheduleBuilds:
                 temporary_store.db,
                 temporary_store.prefix_locker,
                 overwrite=set(),
+                overwrite_time=0.0,
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
@@ -535,4 +544,32 @@ class TestScheduleBuilds:
             assert not newly_installed
             assert pending == [spec.dag_hash()]  # spec stays in pending for retry
         finally:
+            jobserver.close()
+
+    def test_overwrite_handled_by_concurrent_process(self, temporary_store, mock_packages):
+        """When a spec in overwrite was installed AFTER overwrite_time, another process did it."""
+        spec = self._make_spec("trivial-install-test-package")
+        self._mark_installed(spec, temporary_store)  # installation_time = now()
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            blocked, to_start, newly_installed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite={spec.dag_hash()},
+                overwrite_time=0.0,  # earlier than now()
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+            )
+            assert not blocked
+            assert not to_start
+            assert len(newly_installed) == 1
+            assert newly_installed[0][0] == spec.dag_hash()
+        finally:
+            for _, _, lock in newly_installed:
+                lock.release_read()
             jobserver.close()
