@@ -137,11 +137,6 @@ YamlConfigDict = Dict[str, Any]
 MAX_RECURSIVE_INCLUDES = 100
 
 
-def _include_cache_location():
-    """Location to cache included configuration files."""
-    return os.path.join(spack.paths.user_cache_path, "includes")
-
-
 class ConfigScope:
     def __init__(self, name: str, included: bool = False) -> None:
         self.name = name
@@ -1048,24 +1043,27 @@ class OptionalInclude:
             path_or_url: the path or URL under consideration
             parent_scope: including scope
 
-        Returns:  the appropriate enclosing scope subdirectory or standard
-            include cache directory for remote configuration content; otherwise,
-            ``None``
+        Returns:  ``None`` for an absolute path, an appropriate, writable
+           enclosing scope subdirectory of the parent scope path (if available);
+           otherwise a temporary directory
         """
+        def _destination(root: Optional[str]) -> str:
+            # Ensure the destination is a writable location.
+            if root and filesystem.can_write_to_dir(root):
+                return root
 
-        def _default_include_directory():
-            dir_name = spack.util.hash.b32_hash(path_or_url)[-7:]
-            return os.path.join(_include_cache_location(), dir_name)
+            return tempfile.TemporaryDirectory().name
 
         # An absolute path does not have a destination directory.
         if os.path.isabs(path_or_url):
             return None
 
         # A relative path's destination depends on the enclosing scope.
+        # If there is no path, then use a suitable destination.
         if not parent_scope:
-            return _default_include_directory() if self.remote else None
+            return tempfile.TemporaryDirectory().name if self.remote else None
 
-        root = parent_scope.path if hasattr(parent_scope, "path") else None
+        root = getattr(parent_scope, "path", "")
         if not root:
             tty.debug(
                 f"Enclosing scope ({parent_scope}) of the include ({self}) does not have a path"
@@ -1074,12 +1072,17 @@ class OptionalInclude:
 
         root = os.path.dirname(root) if os.path.isfile(root) else root
         if self.remote:
+            if not filesystem.can_write_to_dir(root):
+                return tempfile.TemporaryDirectory().name
+
+            # Use a special subdirectory for environments
             if parent_scope.name.startswith("env:"):
                 return os.path.join(root, ".spack-env", "includes")
 
-            return _default_include_directory()
+            return os.path.join(root, "includes")
 
         return root
+
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -1250,8 +1253,8 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        # Make sure to use the proper (default) working directory when obtaining
-        # the local path for a local (or remote) file.
+        # Make sure to use a proper working directory when obtaining the local
+        # path for a local (or remote) file.
         destination = self._destination_directory(self.path, parent_scope)
         tty.debug(
             f"Local cache destination for {self.path} is {destination} (None for local path)"
@@ -1288,6 +1291,7 @@ class GitIncludePaths(OptionalInclude):
 
         super().__init__(entry)
         self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
+
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
@@ -1402,7 +1406,7 @@ class GitIncludePaths(OptionalInclude):
 
         scopes: List[ConfigScope] = []
         for path in self.paths:
-            config_path = os.path.join(destination, path)
+            config_path = pathlib.Path(destination) / pathlib.Path(path)
             scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
