@@ -24,6 +24,7 @@ import fcntl
 import glob
 import io
 import json
+import multiprocessing
 import os
 import re
 import selectors
@@ -71,6 +72,7 @@ import spack.report
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
@@ -259,6 +261,36 @@ def install_from_buildcache(
     return True
 
 
+class GlobalState:
+    """Global state needed in a build subprocess. This is similar to spack.subprocess_context,
+    but excludes the Spack environment, which is slow to serialize and should not be needed
+    during the build."""
+
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir")
+
+    if multiprocessing.get_start_method() == "fork":
+
+        def __init__(self):
+            pass
+
+        def restore(self):
+            pass
+
+    else:
+
+        def __init__(self):
+            self.config = spack.config.CONFIG.ensure_unwrapped()
+            self.store = spack.store.STORE
+            self.monkey_patches = spack.subprocess_context.TestPatches.create()
+            self.spack_working_dir = spack.paths.spack_working_dir
+
+        def restore(self):
+            spack.store.STORE = self.store
+            spack.config.CONFIG = self.config
+            self.monkey_patches.restore()
+            spack.paths.spack_working_dir = self.spack_working_dir
+
+
 class PrefixPivoter:
     """Manages the installation prefix of a build."""
 
@@ -349,9 +381,8 @@ def worker_function(
     makeflags: str,
     js1: Optional[Connection],
     js2: Optional[Connection],
-    store: spack.store.Store,
-    config: spack.config.Configuration,
     log_path: str,
+    global_state: GlobalState,
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -374,14 +405,15 @@ def worker_function(
         makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
         js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
-        store: global store instance from parent
-        config: global config instance from parent
         log_path: Path to the log file to write build output to
+        global_state: Global state to restore
     """
 
     # TODO: don't start a build for external packages
     if spec.external:
         return
+
+    global_state.restore()
 
     # Start a new session, so our SIGTERM handler can kill all child processes.
     os.setsid()
@@ -400,9 +432,6 @@ def worker_function(
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
-    spack.store.STORE = store
-    spack.config.CONFIG = config
-    spack.paths.set_working_dir()
 
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
@@ -426,7 +455,7 @@ def worker_function(
                 skip_patch,
                 state_stream,
                 log_path,
-                store,
+                spack.store.STORE,
             )
     except Exception:
         traceback.print_exc()  # log the traceback to the log file
@@ -755,9 +784,8 @@ def start_build(
             makeflags,
             None if fifo else jobserver.r_conn,
             None if fifo else jobserver.w_conn,
-            spack.store.STORE,
-            spack.config.CONFIG,
             log_path,
+            GlobalState(),
         ),
     )
     proc.start()
