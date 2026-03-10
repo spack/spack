@@ -288,6 +288,32 @@ def test_location_vars_that_use_other_location_vars(
     assert p2.default_install_location == str(pathlib.Path(basedir) / "home" / "installs")
 
 
+def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch, set_home):
+    """Ensure license directory is customizable"""
+    import spack.config
+    import spack.package_base
+    import spack.repo
+
+    basedir = _ensure_dir(tmp_path / "spack-root")
+    homedir = _ensure_dir(tmp_path / "base-prefix")
+    set_home(homedir)
+
+    p1 = SpackPaths(SpackPathsBase(str(basedir)))
+    monkeypatch.setattr(spack.paths, "locations", p1)
+
+    default_cfg_val = os.path.join("$data_home", "licenses")
+    resolved_dir = str(pathlib.Path(homedir) / ".local" / "share" / "spack" / "licenses")
+    assert spack.config.get("config:license_dir") == default_cfg_val
+    assert spack.package_base.PackageBase.global_license_dir == resolved_dir
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == resolved_dir
+
+    abs_path = str(tmp_path / "foo" / "bar" / "baz")
+    spack.config.set("config:license_dir", abs_path)
+    assert spack.config.get("config:license_dir") == abs_path
+    assert spack.package_base.PackageBase.global_license_dir == abs_path
+    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == abs_path
+
+
 class SetAnXdgVarAndReadDataHome:
     """Access an XDG-dependent variable from spack.paths as quickly as
     possible.

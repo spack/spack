@@ -19,9 +19,7 @@ import spack.directory_layout
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
-import spack.package_base
 import spack.platforms
-import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -1154,20 +1152,6 @@ def test_bad_path_double_override(config):
     with pytest.raises(syaml.SpackYAMLError, match="Meaningless second override"):
         with spack.config.override("bad::double:override::directive", ""):
             pass
-
-
-def test_license_dir_config(mutable_config, mock_packages, tmp_path):
-    """Ensure license directory is customizable"""
-    expected_dir = os.path.join("$data_home", "licenses")
-    assert spack.config.get("config:license_dir") == expected_dir
-    assert spack.package_base.PackageBase.global_license_dir == expected_dir
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
-
-    abs_path = str(tmp_path / "foo" / "bar" / "baz")
-    spack.config.set("config:license_dir", abs_path)
-    assert spack.config.get("config:license_dir") == abs_path
-    assert spack.package_base.PackageBase.global_license_dir == abs_path
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == abs_path
 
 
 @pytest.mark.regression("22547")
