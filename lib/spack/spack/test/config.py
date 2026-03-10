@@ -1158,7 +1158,7 @@ def test_bad_path_double_override(config):
 
 def test_license_dir_config(mutable_config, mock_packages, tmp_path):
     """Ensure license directory is customizable"""
-    expected_dir = os.path.join(spack_paths.etc_path, "licenses")
+    expected_dir = os.path.join("$data_home", "licenses")
     assert spack.config.get("config:license_dir") == expected_dir
     assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == expected_dir
