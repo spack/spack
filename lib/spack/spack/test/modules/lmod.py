@@ -135,6 +135,16 @@ class TestLmod:
             assert "compiler" in provides
             assert provides["compiler"] == spack.spec.Spec("intel-oneapi-compilers@=3.0")
 
+    @pytest.mark.parametrize("language", ["c", "cxx", "fortran"])
+    def test_compiler_language_virtuals(self, factory, module_configuration, language):
+        """Tests all compiler virtuals for hierarchical module placement."""
+        module_configuration("complex_hierarchy")
+        module, spec = factory(f"single-language-virtual +{language} %{language}=gcc@=10.2.1")
+
+        requires = module.conf.requires
+
+        assert "gcc@=10.2.1" in requires["compiler"]
+
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Lua module file."""
 

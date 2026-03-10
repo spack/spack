@@ -191,7 +191,7 @@ class FilesystemView:
         Add given specs to view.
 
         Should accept ``with_dependencies`` as keyword argument (default
-        True) to indicate wether or not dependencies should be activated as
+        True) to indicate whether or not dependencies should be activated as
         well.
 
         Should except an ``exclude`` keyword argument containing a list of
@@ -218,11 +218,11 @@ class FilesystemView:
         Removes given specs from view.
 
         Should accept ``with_dependencies`` as keyword argument (default
-        True) to indicate wether or not dependencies should be deactivated
+        True) to indicate whether or not dependencies should be deactivated
         as well.
 
         Should accept ``with_dependents`` as keyword argument (default True)
-        to indicate wether or not dependents on the deactivated specs
+        to indicate whether or not dependents on the deactivated specs
         should be removed as well.
 
         Should except an ``exclude`` keyword argument containing a list of
@@ -270,7 +270,7 @@ class FilesystemView:
 
         * ..they are active in the view.
         * ..they are active but the activated version differs.
-        * ..they are not activte in the view.
+        * ..they are not active in the view.
 
         Takes ``with_dependencies`` keyword argument so that the status of
         dependencies is printed as well.

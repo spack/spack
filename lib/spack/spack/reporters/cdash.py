@@ -174,7 +174,7 @@ class CDash(Reporter):
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
 
         # something went wrong pre-cdash "configure" phase b/c we have an exception and only
-        # "update" was encounterd.
+        # "update" was encountered.
         # dump the report in the configure line so teams can see what the issue is
         if len(phases_encountered) == 1 and package.get("exception"):
             # TODO this mapping is not ideal since these are pre-configure errors
@@ -184,7 +184,7 @@ class CDash(Reporter):
             phases_encountered.append(cdash_phase)
 
             log_message = (
-                "Pre-configure errors occured in Spack's process that terminated the "
+                "Pre-configure errors occurred in Spack's process that terminated the "
                 "build process prematurely.\nSpack output::\n{0}".format(
                     xml.sax.saxutils.escape(package["exception"])
                 )

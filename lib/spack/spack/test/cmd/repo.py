@@ -84,7 +84,7 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
 def test_env_repo_path_vars_substitution(
     tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
 ):
-    """Test Spack correctly substitues repo paths with environment variables when creating an
+    """Test Spack correctly substitutes repo paths with environment variables when creating an
     environment from a manifest file."""
 
     monkeypatch.setenv("CUSTOM_REPO_PATH", ".")

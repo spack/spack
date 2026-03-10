@@ -99,6 +99,27 @@ def add_mock_builds(status: BuildStatus, count: int) -> List[MockSpec]:
 class TestBasicStateManagement:
     """Test basic state management operations"""
 
+    def test_on_resize(self):
+        """Test that on_resize sets terminal_size_changed and update() fetches lazily"""
+        sizes = [os.terminal_size((80, 24))]
+        fake_stdout = SimpleTextIOWrapper(tty=True)
+        status = BuildStatus(
+            total=0, stdout=fake_stdout, get_terminal_size=lambda: sizes[-1], is_tty=True
+        )
+        # terminal_size_changed is True from __init__; terminal_size is placeholder
+        assert status.terminal_size_changed is True
+
+        # After on_resize the flag stays set and dirty is True
+        sizes.append(os.terminal_size((120, 40)))
+        status.on_resize()
+        assert status.terminal_size_changed is True
+        assert status.dirty is True
+
+        # The actual size is fetched lazily on the first update()
+        status.update()
+        assert status.terminal_size == os.terminal_size((120, 40))
+        assert status.terminal_size_changed is False
+
     def test_add_build(self):
         """Test that add_build adds builds correctly"""
         status, _, _ = create_build_status(total=2)

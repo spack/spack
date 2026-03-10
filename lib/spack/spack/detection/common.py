@@ -185,7 +185,7 @@ def library_prefix(library_dir: str) -> str:
     assert os.path.isdir(library_dir)
 
     components = library_dir.split(os.sep)
-    # covert to lowercase to match lib, LIB, Lib, etc.
+    # convert to lowercase to match lib, LIB, Lib, etc.
     lowered_components = library_dir.lower().split(os.sep)
     if "lib64" in lowered_components:
         idx = lowered_components.index("lib64")

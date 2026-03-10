@@ -265,7 +265,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
     monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
 
-    # Use the earliest commit in the respository
+    # Use the earliest commit in the repository
     spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-1]}")
     PackageInstaller([spec.package], explicit=True).install()
 

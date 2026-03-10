@@ -617,7 +617,7 @@ class ConcretizationCache:
         """Returns concretization statistic from the
         concretization associated with the cache.
 
-        Deserialzes the the json representation of the
+        Deserializes the the json representation of the
         statistics covering the cached concretization run
         and returns the Python data structures
         """
@@ -645,13 +645,13 @@ class ConcretizationCache:
         except OSError as e:
             # Catch other timing/access related issues
             tty.debug(
-                f"Exception occured while attempting to remove Concretization Cache entry, {e}"
+                f"Exception occurred while attempting to remove Concretization Cache entry, {e}"
             )
             pass
         return False
 
     def _lock(self, path: pathlib.Path) -> lk.Lock:
-        """Returns a lock over the byte range correspnding to the hash of the asp problem.
+        """Returns a lock over the byte range corresponding to the hash of the asp problem.
 
         ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
 
@@ -853,7 +853,7 @@ class ErrorHandler:
         msg = msg.format(*msg_args)
 
         # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurances of
+        # to format values properly. Find/replace all occurrences of
         # Spec(...) with the string representation of the spec mentioned
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
         for spec_str in specs_to_construct:
@@ -966,7 +966,7 @@ class PyclingoDriver:
         fetch a result from cache. See ``solve()`` for caching and setup logic.
         """
         # We could just take the cache_key and add it to clingo (since it is the
-        # full problem representation), but we load conrol files separately as it
+        # full problem representation), but we load control files separately as it
         # makes clingo give us better, file-aware error messages.
         with timer.measure("load"):
             # Add the problem instance
@@ -1248,7 +1248,7 @@ ConditionSpecCache = Dict[str, Dict[ConditionSpecKey, ConditionIdFunctionPair]]
 
 
 class ConstraintOrigin(enum.Enum):
-    """Generates identifiers that can be pased into the solver attached
+    """Generates identifiers that can be passed into the solver attached
     to constraints, and then later retrieved to determine the origin of
     those constraints when ``SpecBuilder`` creates Specs from the solve
     result.
@@ -1434,7 +1434,7 @@ class SpackSolverSetup:
     ) -> List[AspFunction]:
         """Return list of clauses expressing spec's version constraints."""
         name = spec.name or name
-        assert name, "Internal Error: spec with no name occured. Please file an issue."
+        assert name, "Internal Error: spec with no name occurred. Please file an issue."
 
         if spec.concrete:
             return [fn.attr("version", name, spec.version)]
@@ -1450,7 +1450,7 @@ class SpackSolverSetup:
         self, spec: spack.spec.Spec, single_target_fn, *, name: Optional[str] = None
     ) -> List[AspFunction]:
         name = spec.name or name
-        assert name, "Internal Error: spec with no name occured. Please file an issue."
+        assert name, "Internal Error: spec with no name occurred. Please file an issue."
         target = spec.architecture.target
 
         # Check if the target is a concrete target
@@ -2213,7 +2213,7 @@ class SpackSolverSetup:
             concrete_build_deps: if False, do not include pure build deps of concrete specs
                 (as they have no effect on runtime constraints)
             include_runtimes: generate full dependency clauses from runtime libraries that
-                are ommitted from the solve.
+                are omitted from the solve.
             context: tracks what constraint this clause set is generated for (e.g. a
                 ``depends_on`` constraint in a package.py file)
             seen: set of ids of specs that have already been processed (for internal use only)

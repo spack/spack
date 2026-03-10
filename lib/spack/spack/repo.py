@@ -1173,7 +1173,7 @@ class Repo:
         package directory. From Package API v2.0 there is a one-to-one mapping between Spack
         package names and Python module names, so there is no guessing.
 
-        For Packge API v1.x we support the following one-to-many mappings:
+        For Package API v1.x we support the following one-to-many mappings:
 
         * ``num3proxy`` -> ``3proxy``
         * ``foo_bar`` -> ``foo_bar``, ``foo-bar``
@@ -1879,7 +1879,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
 class BrokenRepoDescriptor(RepoDescriptor):
     """A descriptor for a broken repository, used to indicate errors in the configuration that
-    aren't fatal untill the repository is used."""
+    aren't fatal until the repository is used."""
 
     def __init__(self, name: Optional[str], error: str) -> None:
         super().__init__(name)
