@@ -77,7 +77,7 @@ import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
-from spack.installer import dump_packages
+from spack.installer import _do_fake_install, dump_packages
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -375,6 +375,7 @@ def worker_function(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
@@ -453,6 +454,7 @@ def worker_function(
                 keep_stage,
                 restage,
                 skip_patch,
+                fake,
                 state_stream,
                 log_path,
                 spack.store.STORE,
@@ -558,6 +560,7 @@ def _install(
     keep_stage: bool,
     restage: bool,
     skip_patch: bool,
+    fake: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -566,6 +569,12 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+
+    if fake:
+        store.layout.create_install_directory(spec)
+        _do_fake_install(pkg)
+        spack.hooks.post_install(spec, explicit)
+        return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -744,6 +753,7 @@ def start_build(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -778,6 +788,7 @@ def start_build(
             restage,
             keep_prefix,
             skip_patch,
+            fake,
             state_w_conn,
             output_w_conn,
             control_r_conn,
@@ -1555,9 +1566,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fake:
-            raise NotImplementedError("Fake installs are not implemented")
-        elif install_source:
+        if install_source:
             raise NotImplementedError("Installing sources is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
@@ -1603,6 +1612,7 @@ class PackageInstaller:
         }
         self.unsigned = unsigned
         self.dirty = dirty
+        self.fake = fake
         self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
@@ -1958,6 +1968,7 @@ class PackageInstaller:
             restage=self.restage and not is_develop,
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
+            fake=self.fake,
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path
