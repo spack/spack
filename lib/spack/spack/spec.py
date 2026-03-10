@@ -866,7 +866,7 @@ class DependencySpec:
         return f"{parent_str} {dep_sigil}{child_str}"
 
     def flip(self) -> "DependencySpec":
-        """Flips the dependency and keeps its type. Drops all othe information."""
+        """Flips the dependency and keeps its type. Drops all other information."""
         return DependencySpec(
             parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
@@ -3976,7 +3976,7 @@ class Spec:
         #     to do fast equality comparison. See _cmp_fast_eq() above for the
         #     short-circuit logic for hashes.
         #
-        # A full traversal involves constructing data structurs, visitor objects, etc.,
+        # A full traversal involves constructing data structures, visitor objects, etc.,
         # and it can be expensive if we have to do it to compare a bunch of tiny
         # abstract specs. Therefore, there are 3 cases below, which avoid calling
         # `spack.traverse.traverse_edges()` unless necessary.

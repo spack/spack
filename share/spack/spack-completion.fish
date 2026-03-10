@@ -3362,7 +3362,7 @@ complete -c spack -n '__fish_spack_using_command verify manifest' -s h -l help -
 complete -c spack -n '__fish_spack_using_command verify manifest' -s l -l local -f -a local
 complete -c spack -n '__fish_spack_using_command verify manifest' -s l -l local -d 'verify only locally installed packages'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -f -a json
-complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -d 'ouptut json-formatted errors'
+complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -d 'output json-formatted errors'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command verify manifest' -s a -l all -d 'verify all packages'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s s -l specs -f -a type

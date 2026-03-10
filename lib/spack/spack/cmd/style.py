@@ -220,7 +220,7 @@ def cwd_relative(path, root, initial_working_dir):
 def rewrite_and_print_output(
     output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
-    """rewrite ouput with <file>:<line>: format to respect path args"""
+    """rewrite output with <file>:<line>: format to respect path args"""
 
     # print results relative to current working directory
     def translate(match):

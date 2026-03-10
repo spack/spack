@@ -22,7 +22,7 @@ from spack.llnl.util import tty
 from spack.llnl.util.lang import dedupe
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
-# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it
+# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exclude it
 # in the type hint. So, use an awkward union type to allow (mixed) str and PurePath items.
 ListOfPaths = Union[List[str], List[pathlib.PurePath], List[Union[str, pathlib.PurePath]]]
 
@@ -165,7 +165,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 
     Args:
         path: path of the file to write
-        environment: environment to be writte. If None os.environ is used.
+        environment: environment to be written. If None os.environ is used.
     """
     use_env = environment or os.environ
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}

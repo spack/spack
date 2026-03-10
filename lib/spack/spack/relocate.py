@@ -197,7 +197,7 @@ def _set_elf_rpaths_and_interpreter(
 
 def relocate_macho_binaries(path_names, prefix_to_prefix):
     """
-    Use macholib python package to get the rpaths, depedent libraries
+    Use macholib python package to get the rpaths, dependent libraries
     and library identity for libraries from the MachO object. Modify them
     with the replacement paths queried from the dictionary mapping old layout
     prefixes to hashes and the dictionary mapping hashes to the new layout

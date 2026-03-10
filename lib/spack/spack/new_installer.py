@@ -21,11 +21,13 @@ runs an event loop to listen for control messages from the UI process (to enable
 of logs), and for output from the build process."""
 
 import fcntl
+import glob
 import io
 import json
 import os
 import re
 import selectors
+import shlex
 import shutil
 import signal
 import sys
@@ -62,6 +64,7 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.paths
 import spack.report
@@ -70,7 +73,9 @@ import spack.stage
 import spack.store
 import spack.traverse
 import spack.url_buildcache
+import spack.util.environment
 import spack.util.lock
+from spack.installer import dump_packages
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -445,6 +450,75 @@ def worker_function(
     sys.exit(exit_code)
 
 
+def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
+    """Copy build metadata from stage to install prefix .spack directory.
+
+    Mirrors what the old installer's log() function does in the parent process.
+    Only called after a successful source build (not for binary cache installs).
+    Errors are suppressed to avoid failing the build over metadata archiving."""
+
+    try:
+        if os.path.lexists(pkg.env_mods_path):
+            shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
+    except OSError as e:
+        spack.llnl.util.tty.debug(e)
+    try:
+        if os.path.lexists(pkg.configure_args_path):
+            shutil.copy2(pkg.configure_args_path, pkg.install_configure_args_path)
+    except OSError as e:
+        spack.llnl.util.tty.debug(e)
+
+    # Archive install-phase test log if present
+    try:
+        pkg.archive_install_test_log()
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    # Archive package-specific files matched by archive_files glob patterns
+    try:
+        with fs.working_dir(pkg.stage.path):
+            target_dir = os.path.join(
+                spack.store.STORE.layout.metadata_path(pkg.spec), "archived-files"
+            )
+            errors = io.StringIO()
+            for glob_expr in spack.builder.create(pkg).archive_files:
+                abs_expr = os.path.realpath(glob_expr)
+                if os.path.realpath(pkg.stage.path) not in abs_expr:
+                    errors.write(f"[OUTSIDE SOURCE PATH]: {glob_expr}\n")
+                    continue
+                if os.path.isabs(glob_expr):
+                    glob_expr = os.path.relpath(glob_expr, pkg.stage.path)
+                for f in glob.glob(glob_expr):
+                    try:
+                        target = os.path.join(target_dir, f)
+                        fs.mkdirp(os.path.dirname(target))
+                        fs.install(f, target)
+                    except Exception as e:
+                        spack.llnl.util.tty.debug(e)
+                        errors.write(f"[FAILED TO ARCHIVE]: {f}")
+            if errors.getvalue():
+                error_file = os.path.join(target_dir, "errors.txt")
+                fs.mkdirp(target_dir)
+                with open(error_file, "w", encoding="utf-8") as err:
+                    err.write(errors.getvalue())
+                spack.llnl.util.tty.warn(
+                    f"Errors occurred when archiving files.\n\tSee: {error_file}"
+                )
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    try:
+        packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
+        dump_packages(pkg.spec, packages_dir)
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    try:
+        spack.store.STORE.layout.write_host_environment(pkg.spec)
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -474,7 +548,8 @@ def _install(
             send_state("no binary available", state_stream)
             raise spack.error.InstallError(f"No binary available for {spec}")
 
-    spack.build_environment.setup_package(pkg, dirty=dirty)
+    unmodified_env = os.environ.copy()
+    env_mods = spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
@@ -485,6 +560,21 @@ def _install(
         if restage:
             stage.destroy()
         stage.create()
+
+        # Write build environment and env-mods to stage
+        spack.util.environment.dump_environment(pkg.env_path)
+        with open(pkg.env_mods_path, "w", encoding="utf-8") as f:
+            f.write(env_mods.shell_modifications(explicit=True, env=unmodified_env))
+
+        # Try to snapshot configure/cmake args before phases run
+        for attr in ("configure_args", "cmake_args"):
+            try:
+                args = getattr(pkg, attr)()
+                with open(pkg.configure_args_path, "w", encoding="utf-8") as f:
+                    f.write(" ".join(shlex.quote(a) for a in args))
+                break
+            except Exception:
+                pass
 
         # For develop packages or non-develop packages with --keep-stage there may be a
         # pre-existing symlink at pkg.log_path which would cause the new symlink to fail.
@@ -510,6 +600,7 @@ def _install(
             send_state(phase.name, state_stream)
             phase.execute()
 
+        _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
 
 

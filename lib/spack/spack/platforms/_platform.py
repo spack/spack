@@ -83,7 +83,7 @@ class Platform:
     def setup_platform_environment(self, pkg, env):
         """Platform-specific build environment modifications.
 
-        This method is meant toi be overridden by subclasses, when needed.
+        This method is meant to be overridden by subclasses, when needed.
         """
         pass
 

@@ -989,7 +989,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
 
     # Regular expressions for parsing that HEAD commit.  If the pipeline
     # was on the gitlab spack mirror, it will have been a merge commit made by
-    # gitub and pushed by the sync script.  If the pipeline was run on some
+    # github and pushed by the sync script.  If the pipeline was run on some
     # environment repo, then the tested spack commit will likely have been
     # a regular commit.
     commit_1 = None
