@@ -216,15 +216,6 @@ class SpackPaths:
             self._data_home_provenance,
         )
 
-    @property
-    def default_misc_cache_path(self):
-        #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-        #: overridden by `config:misc_cache`
-        # TODO: restore when .ci/gitlab/configs/ci.yaml in spack-packages is
-        # updated to tolerate this relocation of misc caches
-        # return os.path.join(self.state_home, self.spack_instance_id, "cache")
-        return os.path.join(self.state_home, "cache")
-
     def __getattr__(self, name):
         # Things that aren't sensitive to import cycles can import the
         # paths module and access all items from paths_base
