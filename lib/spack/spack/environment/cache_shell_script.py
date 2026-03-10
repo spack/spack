@@ -107,7 +107,6 @@ def update_env_activate_script(env, view="default"):
 
     Args:
         env: the environment the activation script is written for
-        prompt: name of environment's prompt
         view: the name of the environment's view
     """
 

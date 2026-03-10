@@ -2287,7 +2287,7 @@ class Environment:
 
         for x in self.concretized_roots:
             x.new = False
-        update_env_activate_script(self, os.environ.get(spack_env_view_var, ""))
+        update_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
