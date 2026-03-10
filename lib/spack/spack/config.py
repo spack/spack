@@ -136,6 +136,22 @@ YamlConfigDict = Dict[str, Any]
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
 
+#: configurable config vars -- these cannot be used by include paths
+#: nor by other paths that can affect config values
+CONFIGURABLE_VARS = (
+    "config_home",
+    "state_home",
+    "cache_home",
+    "data_home",
+    "spack_home",
+    "modules_base",
+    "default_envs_root",
+    "default_install_root",
+    "user_cache_path",
+)
+_CVARS_RE = "|".join(CONFIGURABLE_VARS)
+CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
 
 def _include_cache_location():
     """Location to cache included configuration files."""
@@ -1065,23 +1081,20 @@ class OptionalInclude:
 
         # But ensure that name is unique if there are multiple paths.
         if not self.name or len(getattr(self, "paths", [])) > 1:
-            parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
-            try:
-                real_path = pathlib.Path(
-                    spack.util.path.substitute_path_variables(path, _use_config=False)
-                )
-            except spack.util.path.ResolutionContextError as e:
-                if self.name:
-                    context = self.name
-                elif parent_scope:
-                    context = parent_scope.name
-                else:
-                    context = "(no context)"
+            banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+            if banned_var:
+                context = self.name or (parent_scope.name if parent_scope else "(no context)")
                 msg = (
-                    f"Included scope is defined in terms of config variable ({e.var}): {path}"
-                    + f"\nContext: {context}"
+                    "Included scope is defined in terms of prohibited config variable."
+                    f" ({banned_var.group(0)}): {path}"
+                    f"\n    Context: {context}"
+                    "\n\n    Include config paths may not refer to configurable config variables."
                 )
                 raise ValueError(msg)
+
+            real_path = pathlib.Path(spack.util.path.substitute_path_variables(path))
+            parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
+
             try:
                 included_name = real_path.relative_to(parent_path)
             except ValueError:
