@@ -13,7 +13,9 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.mirrors.utils
 import spack.package_base
+import spack.repo
 import spack.spec
 import spack.util.git
 import spack.util.url as url_util
@@ -762,6 +764,8 @@ def test_mirror_skip_placeholder_pkg(tmp_path: pathlib.Path):
     pkg_obj = pkg_cls(spec)
     mirror_cache = spack.mirrors.utils.get_mirror_cache(str(tmp_path))
     mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(spec)
-    result = spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    result = spack.mirrors.utils.create_mirror_from_package_object(
+        pkg_obj, mirror_cache, mirror_stats
+    )
     assert result is False
     assert not mirror_stats.errors
