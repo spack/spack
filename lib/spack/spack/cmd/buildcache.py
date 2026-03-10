@@ -25,6 +25,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.util.parallel
+import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
 from spack.binary_distribution import BINARY_INDEX
@@ -347,6 +348,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=False,
         action="store_true",
         help="if provided, key index will be updated as well as package index",
+    )
+    update_index.add_argument(
+        "--instrument",
+        default=False,
+        action="store_true",
+        help="print a timing summary of where time was spent",
     )
     arguments.add_common_arguments(update_index, ["yes_to_all"])
     update_index.set_defaults(func=update_index_fn)
@@ -824,7 +831,10 @@ def manifest_copy(
         copy_buildcache_entry(src_cache_entry, destination_url)
 
 
-def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
+def update_index(
+    mirror: spack.mirrors.mirror.Mirror, update_keys=False, timer=timer_mod.NULL_TIMER
+):
+    timer.start()
     # Special case OCI images for now.
     try:
         image_ref = spack.oci.oci.image_from_mirror(mirror)
@@ -842,7 +852,7 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        spack.binary_distribution._url_generate_package_index(url, tmpdir)
+        spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer)
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -1083,6 +1093,8 @@ def check_index_fn(args):
 def update_index_fn(args):
     """update a buildcache index or index view if extra arguments are provided."""
 
+    t = timer_mod.Timer() if args.instrument else timer_mod.NullTimer()
+
     update_view_index = (
         args.append or args.force or args.name or args.sources or args.mirror.push_view
     )
@@ -1103,7 +1115,12 @@ def update_index_fn(args):
             yes_to_all=args.yes_to_all,
         )
     else:
-        return update_index(args.mirror, update_keys=args.keys)
+        update_index(args.mirror, update_keys=args.keys, timer=t)
+
+    if args.instrument:
+        tty.msg("Timing summary:")
+        t.stop()
+        t.write_tty()
 
 
 def migrate_fn(args):

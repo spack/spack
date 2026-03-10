@@ -874,7 +874,7 @@ complete -c spack -n '__fish_spack_using_command buildcache check-index' -l outp
 complete -c spack -n '__fish_spack_using_command buildcache check-index' -l output -s o -r -d 'File to write check details to'
 
 # spack buildcache update-index
-set -g __fish_spack_optspecs_spack_buildcache_update_index h/help n/name= a/append f/force k/keys y/yes-to-all
+set -g __fish_spack_optspecs_spack_buildcache_update_index h/help n/name= a/append f/force k/keys instrument y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -l help -d 'show this help message and exit'
@@ -886,11 +886,13 @@ complete -c spack -n '__fish_spack_using_command buildcache update-index' -l for
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l instrument -f -a instrument
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l instrument -d 'print a timing summary of where time was spent'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache rebuild-index
-set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help n/name= a/append f/force k/keys y/yes-to-all
+set -g __fish_spack_optspecs_spack_buildcache_rebuild_index h/help n/name= a/append f/force k/keys instrument y/yes-to-all
 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -d 'show this help message and exit'
@@ -902,6 +904,8 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l fo
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l instrument -f -a instrument
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l instrument -d 'print a timing summary of where time was spent'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 

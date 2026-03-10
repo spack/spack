@@ -670,6 +670,8 @@ def _read_specs_and_push_index(
     cache_prefix: str,
     db: BuildCacheDatabase,
     temp_dir: str,
+    *,
+    timer=timer.NULL_TIMER,
 ):
     """Read listed specs, generate the index, and push it to the mirror.
 
@@ -681,32 +683,34 @@ def _read_specs_and_push_index(
         db: A spack database used for adding specs and then writing the index.
         temp_dir: Location to write index.json and hash for pushing
     """
-    for file in file_list:
-        # All supported versions of build caches put the hash as the last
-        # parameter before the extension
-        try:
-            x = file.split("/")[-1].split("-")[-1].split(".")[0]
-        except IndexError:
-            raise GenerateIndexError(f"Malformed metadata file name detected {file}")
+    with timer.measure("read"):
+        for file in file_list:
+            # All supported versions of build caches put the hash as the last
+            # parameter before the extension
+            try:
+                x = file.split("/")[-1].split("-")[-1].split(".")[0]
+            except IndexError:
+                raise GenerateIndexError(f"Malformed metadata file name detected {file}")
 
-        if not filter_fn(x):
-            continue
+            if not filter_fn(x):
+                continue
 
-        cache_entry: Optional[URLBuildcacheEntry] = None
-        try:
-            cache_entry = read_method(file)
-            spec_dict = cache_entry.fetch_metadata()
-            fetched_spec = spack.spec.Spec.from_dict(spec_dict)
-        except Exception as e:
-            tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
-            continue
-        finally:
-            if cache_entry:
-                cache_entry.destroy()
-        db.add(fetched_spec)
-        db.mark(fetched_spec, "in_buildcache", True)
+            cache_entry: Optional[URLBuildcacheEntry] = None
+            try:
+                cache_entry = read_method(file)
+                spec_dict = cache_entry.fetch_metadata()
+                fetched_spec = spack.spec.Spec.from_dict(spec_dict)
+            except Exception as e:
+                tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+                continue
+            finally:
+                if cache_entry:
+                    cache_entry.destroy()
+            db.add(fetched_spec)
+            db.mark(fetched_spec, "in_buildcache", True)
 
-    _push_index(db, temp_dir, cache_prefix, name)
+    with timer.measure("push"):
+        _push_index(db, temp_dir, cache_prefix, name)
 
 
 def _url_generate_package_index(
@@ -715,6 +719,8 @@ def _url_generate_package_index(
     db: Optional[BuildCacheDatabase] = None,
     name: str = "",
     filter_fn: Callable[[str], bool] = lambda x: True,
+    *,
+    timer=timer.NULL_TIMER,
 ):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
@@ -728,9 +734,10 @@ def _url_generate_package_index(
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
         try:
-            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-            )
+            with timer.measure("list"):
+                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
+                )
             file_list = list(filename_to_mtime_mapping.keys())
         except ListMirrorSpecsError as e:
             raise GenerateIndexError(f"Unable to generate package index: {e}") from e
@@ -743,7 +750,14 @@ def _url_generate_package_index(
 
         try:
             _read_specs_and_push_index(
-                file_list, read_fn, name, filter_fn, url, db, str(db.database_directory)
+                file_list,
+                read_fn,
+                name,
+                filter_fn,
+                url,
+                db,
+                str(db.database_directory),
+                timer=timer,
             )
         except Exception as e:
             raise GenerateIndexError(
