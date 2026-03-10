@@ -15,7 +15,6 @@ import spack.environment as ev
 import spack.error
 import spack.mirrors.utils
 import spack.package_base
-import spack.repo
 import spack.spec
 import spack.util.git
 import spack.util.url as url_util
@@ -759,8 +758,9 @@ def test_git_provenance_relative_to_mirror(
 
 def test_mirror_skip_placeholder_pkg(tmp_path: pathlib.Path):
     """Test a placeholder package which should skip during mirror all"""
+    from spack.repo import PATH
     spec = spack.spec.Spec("egl@1.5")
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = PATH.get_pkg_class(spec.name)
     pkg_obj = pkg_cls(spec)
     mirror_cache = spack.mirrors.utils.get_mirror_cache(str(tmp_path))
     mirror_stats = spack.mirrors.utils.MirrorStatsForOneSpec(spec)
