@@ -205,6 +205,8 @@ class Tee:
     def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
+        self.saved_stdout = os.dup(sys.stdout.fileno())
+        self.saved_stderr = os.dup(sys.stderr.fileno())
         #: The file descriptor of the log file
         self.log_fd = log_fd
         r, w = os.pipe()
@@ -220,11 +222,15 @@ class Tee:
 
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit.
+        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
+        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
+        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
         sys.stdout.flush()
         sys.stderr.flush()
-        os.close(sys.stdout.fileno())
-        os.close(sys.stderr.fileno())
+        os.dup2(self.saved_stdout, sys.stdout.fileno())
+        os.dup2(self.saved_stderr, sys.stderr.fileno())
+        os.close(self.saved_stdout)
+        os.close(self.saved_stderr)
         self.tee_thread.join()
         # Only then close the other fds.
         self.control.close()
