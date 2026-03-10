@@ -97,7 +97,7 @@ def get_test_stage_dir() -> str:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.util.path.canonicalize_path(
-        spack.config.get("config:test_stage", paths.default_test_path)
+        spack.config.get("config:test_stage", "$state_home/test")
     )
 
 

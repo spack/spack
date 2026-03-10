@@ -24,9 +24,8 @@ class XDG_overrides(Enum):
 
 
 # This is for tests that want to clean the environment of XDG_ variables that
-# affect spack behavior (and the corresponding SPACK_ overrides). Note that
-# these vars will affect .default_test_path for the running instance, but
-# the unit tests will not see the env vars
+# affect spack behavior. Note that this will not influence install_test.py's
+# view of config:test_stage
 def _unset_xdg_vars(env):
     for xdg_var in itertools.chain(XDG_vars, XDG_overrides):
         env.pop(xdg_var.value, None)

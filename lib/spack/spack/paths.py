@@ -177,11 +177,6 @@ class SpackPaths:
         return os.path.join(self.state_home, "reports")
 
     @property
-    def default_test_path(self):
-        #: installation test (spack test) output
-        return os.path.join(self.state_home, "test")
-
-    @property
     def default_monitor_path(self):
         #: spack monitor analysis directories
         return os.path.join(self.reports_path, "monitor")
