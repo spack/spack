@@ -385,7 +385,6 @@ test_path = locations.test_path
 hooks_path = locations.hooks_path
 share_path = locations.share_path
 etc_path = locations.etc_path
-default_license_dir = locations.default_license_dir
 var_path = locations.var_path
 test_repos_path = locations.test_repos_path
 mock_packages_path = locations.mock_packages_path
