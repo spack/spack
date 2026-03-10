@@ -8,11 +8,11 @@ from collections import Counter
 import spack.caches
 import spack.config
 import spack.llnl.util.tty as tty
-import spack.package
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.package import InstallError
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
@@ -213,7 +213,7 @@ def create_mirror_from_package_object(
     # Skip placeholder packages
     try:
         pkg_obj.fetcher
-    except spack.package.InstallError:
+    except InstallError:
         tty.warn(
             "Skipping %s: package has no fetchable source"
             % pkg_obj.spec.format("{name}{@version}")
