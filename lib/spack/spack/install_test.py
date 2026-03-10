@@ -30,7 +30,6 @@ from spack.error import InstallError
 from spack.llnl.string import plural
 from spack.llnl.util.lang import nullcontext
 from spack.llnl.util.tty.color import colorize
-from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 

@@ -11,7 +11,6 @@ import spack.llnl.util.lang
 import spack.util.file_cache
 import spack.util.path
 from spack.llnl.util.filesystem import mkdirp
-from spack.paths import locations as paths
 
 
 def misc_cache_location():
