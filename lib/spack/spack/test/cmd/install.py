@@ -277,7 +277,9 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert content == "[0]"  # contents are weird for another test
 
 
-def test_install_overwrite_multiple(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_overwrite_multiple(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     # Try to install a spec and then to reinstall it.
     libdwarf = spack.concretize.concretize_one("libdwarf")
     cmake = spack.concretize.concretize_one("cmake")

@@ -24,6 +24,7 @@ import fcntl
 import glob
 import io
 import json
+import multiprocessing
 import os
 import re
 import selectors
@@ -71,11 +72,12 @@ import spack.report
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
-from spack.installer import dump_packages
+from spack.installer import _do_fake_install, dump_packages
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -265,6 +267,36 @@ def install_from_buildcache(
     return True
 
 
+class GlobalState:
+    """Global state needed in a build subprocess. This is similar to spack.subprocess_context,
+    but excludes the Spack environment, which is slow to serialize and should not be needed
+    during the build."""
+
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir")
+
+    if multiprocessing.get_start_method() == "fork":
+
+        def __init__(self):
+            pass
+
+        def restore(self):
+            pass
+
+    else:
+
+        def __init__(self):
+            self.config = spack.config.CONFIG.ensure_unwrapped()
+            self.store = spack.store.STORE
+            self.monkey_patches = spack.subprocess_context.TestPatches.create()
+            self.spack_working_dir = spack.paths.spack_working_dir
+
+        def restore(self):
+            spack.store.STORE = self.store
+            spack.config.CONFIG = self.config
+            self.monkey_patches.restore()
+            spack.paths.spack_working_dir = self.spack_working_dir
+
+
 class PrefixPivoter:
     """Manages the installation prefix of a build."""
 
@@ -349,15 +381,15 @@ def worker_function(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
     makeflags: str,
     js1: Optional[Connection],
     js2: Optional[Connection],
-    store: spack.store.Store,
-    config: spack.config.Configuration,
     log_path: str,
+    global_state: GlobalState,
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -380,14 +412,15 @@ def worker_function(
         makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
         js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
-        store: global store instance from parent
-        config: global config instance from parent
         log_path: Path to the log file to write build output to
+        global_state: Global state to restore
     """
 
     # TODO: don't start a build for external packages
     if spec.external:
         return
+
+    global_state.restore()
 
     # Start a new session, so our SIGTERM handler can kill all child processes.
     os.setsid()
@@ -406,9 +439,6 @@ def worker_function(
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
-    spack.store.STORE = store
-    spack.config.CONFIG = config
-    spack.paths.set_working_dir()
 
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
@@ -430,9 +460,10 @@ def worker_function(
                 keep_stage,
                 restage,
                 skip_patch,
+                fake,
                 state_stream,
                 log_path,
-                store,
+                spack.store.STORE,
             )
     except Exception:
         traceback.print_exc()  # log the traceback to the log file
@@ -535,6 +566,7 @@ def _install(
     keep_stage: bool,
     restage: bool,
     skip_patch: bool,
+    fake: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -543,6 +575,12 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+
+    if fake:
+        store.layout.create_install_directory(spec)
+        _do_fake_install(pkg)
+        spack.hooks.post_install(spec, explicit)
+        return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -721,6 +759,7 @@ def start_build(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -759,15 +798,15 @@ def start_build(
             restage,
             keep_prefix,
             skip_patch,
+            fake,
             state_w_conn,
             output_w_conn,
             control_r_conn,
             makeflags,
             None if fifo else jobserver.r_conn,
             None if fifo else jobserver.w_conn,
-            spack.store.STORE,
-            spack.config.CONFIG,
             log_path,
+            GlobalState(),
         ),
     )
     proc.start()
@@ -1537,9 +1576,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fake:
-            raise NotImplementedError("Fake installs are not implemented")
-        elif install_source:
+        if install_source:
             raise NotImplementedError("Installing sources is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
@@ -1585,6 +1622,7 @@ class PackageInstaller:
         }
         self.unsigned = unsigned
         self.dirty = dirty
+        self.fake = fake
         self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
@@ -1940,6 +1978,7 @@ class PackageInstaller:
             restage=self.restage and not is_develop,
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
+            fake=self.fake,
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path
