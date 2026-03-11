@@ -1357,8 +1357,8 @@ class BuildTask(Task):
             self.fail(self.error_result)
 
         # hook that allows tests to inspect the Package before installation
-        # see unit_test_check() docs.
-        if not pkg.unit_test_check():
+        # see _unit_test_check() docs.
+        if not pkg._unit_test_check():
             self.succeed()
             return ExecuteResult.FAILED
 
