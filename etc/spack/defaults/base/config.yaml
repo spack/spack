@@ -94,7 +94,7 @@ config:
   # TODO: restore when .ci/gitlab/configs/ci.yaml in spack-packages is
   # updated to tolerate this relocation of misc caches
   # misc_cache: $state_home/$spack_instance_id/cache
-  misc_cache: $state_home/cache
+  misc_cache: $state_home/$spack_instance_id/cache
 
 
   # Abort downloads after this many seconds if not data is received.
