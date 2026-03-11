@@ -21,11 +21,14 @@ runs an event loop to listen for control messages from the UI process (to enable
 of logs), and for output from the build process."""
 
 import fcntl
+import glob
 import io
 import json
+import multiprocessing
 import os
 import re
 import selectors
+import shlex
 import shutil
 import signal
 import sys
@@ -62,15 +65,19 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.paths_base
 import spack.report
 import spack.spec
 import spack.stage
 import spack.store
+import spack.subprocess_context
 import spack.traverse
 import spack.url_buildcache
+import spack.util.environment
 import spack.util.lock
+from spack.installer import _do_fake_install, dump_packages
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -200,6 +207,8 @@ class Tee:
     def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
+        self.saved_stdout = os.dup(sys.stdout.fileno())
+        self.saved_stderr = os.dup(sys.stderr.fileno())
         #: The file descriptor of the log file
         self.log_fd = log_fd
         r, w = os.pipe()
@@ -215,11 +224,15 @@ class Tee:
 
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit.
+        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
+        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
+        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
         sys.stdout.flush()
         sys.stderr.flush()
-        os.close(sys.stdout.fileno())
-        os.close(sys.stderr.fileno())
+        os.dup2(self.saved_stdout, sys.stdout.fileno())
+        os.dup2(self.saved_stderr, sys.stderr.fileno())
+        os.close(self.saved_stdout)
+        os.close(self.saved_stderr)
         self.tee_thread.join()
         # Only then close the other fds.
         self.control.close()
@@ -252,6 +265,30 @@ def install_from_buildcache(
     pkg.installed_from_binary_cache = True
 
     return True
+
+
+class GlobalState:
+    """Global state needed in a build subprocess. This is similar to spack.subprocess_context,
+    but excludes the Spack environment, which is slow to serialize and should not be needed
+    during the build."""
+
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir")
+
+    def __init__(self):
+        if multiprocessing.get_start_method() == "fork":
+            return
+        self.config = spack.config.CONFIG.ensure_unwrapped()
+        self.store = spack.store.STORE
+        self.monkey_patches = spack.subprocess_context.TestPatches.create()
+        self.spack_working_dir = spack.paths.spack_working_dir
+
+    def restore(self):
+        if multiprocessing.get_start_method() == "fork":
+            return
+        spack.store.STORE = self.store
+        spack.config.CONFIG = self.config
+        self.monkey_patches.restore()
+        spack.paths.spack_working_dir = self.spack_working_dir
 
 
 class PrefixPivoter:
@@ -338,15 +375,15 @@ def worker_function(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
     makeflags: str,
     js1: Optional[Connection],
     js2: Optional[Connection],
-    store: spack.store.Store,
-    config: spack.config.Configuration,
     log_path: str,
+    global_state: GlobalState,
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -369,14 +406,15 @@ def worker_function(
         makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
         js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
-        store: global store instance from parent
-        config: global config instance from parent
         log_path: Path to the log file to write build output to
+        global_state: Global state to restore
     """
 
     # TODO: don't start a build for external packages
     if spec.external:
         return
+
+    global_state.restore()
 
     # Start a new session, so our SIGTERM handler can kill all child processes.
     os.setsid()
@@ -395,9 +433,6 @@ def worker_function(
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
-    spack.store.STORE = store
-    spack.config.CONFIG = config
-    spack.paths_base.set_working_dir()
 
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
@@ -419,9 +454,10 @@ def worker_function(
                 keep_stage,
                 restage,
                 skip_patch,
+                fake,
                 state_stream,
                 log_path,
-                store,
+                spack.store.STORE,
             )
     except Exception:
         traceback.print_exc()  # log the traceback to the log file
@@ -445,6 +481,75 @@ def worker_function(
     sys.exit(exit_code)
 
 
+def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
+    """Copy build metadata from stage to install prefix .spack directory.
+
+    Mirrors what the old installer's log() function does in the parent process.
+    Only called after a successful source build (not for binary cache installs).
+    Errors are suppressed to avoid failing the build over metadata archiving."""
+
+    try:
+        if os.path.lexists(pkg.env_mods_path):
+            shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
+    except OSError as e:
+        spack.llnl.util.tty.debug(e)
+    try:
+        if os.path.lexists(pkg.configure_args_path):
+            shutil.copy2(pkg.configure_args_path, pkg.install_configure_args_path)
+    except OSError as e:
+        spack.llnl.util.tty.debug(e)
+
+    # Archive install-phase test log if present
+    try:
+        pkg.archive_install_test_log()
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    # Archive package-specific files matched by archive_files glob patterns
+    try:
+        with fs.working_dir(pkg.stage.path):
+            target_dir = os.path.join(
+                spack.store.STORE.layout.metadata_path(pkg.spec), "archived-files"
+            )
+            errors = io.StringIO()
+            for glob_expr in spack.builder.create(pkg).archive_files:
+                abs_expr = os.path.realpath(glob_expr)
+                if os.path.realpath(pkg.stage.path) not in abs_expr:
+                    errors.write(f"[OUTSIDE SOURCE PATH]: {glob_expr}\n")
+                    continue
+                if os.path.isabs(glob_expr):
+                    glob_expr = os.path.relpath(glob_expr, pkg.stage.path)
+                for f in glob.glob(glob_expr):
+                    try:
+                        target = os.path.join(target_dir, f)
+                        fs.mkdirp(os.path.dirname(target))
+                        fs.install(f, target)
+                    except Exception as e:
+                        spack.llnl.util.tty.debug(e)
+                        errors.write(f"[FAILED TO ARCHIVE]: {f}")
+            if errors.getvalue():
+                error_file = os.path.join(target_dir, "errors.txt")
+                fs.mkdirp(target_dir)
+                with open(error_file, "w", encoding="utf-8") as err:
+                    err.write(errors.getvalue())
+                spack.llnl.util.tty.warn(
+                    f"Errors occurred when archiving files.\n\tSee: {error_file}"
+                )
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    try:
+        packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
+        dump_packages(pkg.spec, packages_dir)
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+    try:
+        spack.store.STORE.layout.write_host_environment(pkg.spec)
+    except Exception as e:
+        spack.llnl.util.tty.debug(e)
+
+
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -455,6 +560,7 @@ def _install(
     keep_stage: bool,
     restage: bool,
     skip_patch: bool,
+    fake: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -463,6 +569,12 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+
+    if fake:
+        store.layout.create_install_directory(spec)
+        _do_fake_install(pkg)
+        spack.hooks.post_install(spec, explicit)
+        return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
@@ -474,7 +586,8 @@ def _install(
             send_state("no binary available", state_stream)
             raise spack.error.InstallError(f"No binary available for {spec}")
 
-    spack.build_environment.setup_package(pkg, dirty=dirty)
+    unmodified_env = os.environ.copy()
+    env_mods = spack.build_environment.setup_package(pkg, dirty=dirty)
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
@@ -485,6 +598,21 @@ def _install(
         if restage:
             stage.destroy()
         stage.create()
+
+        # Write build environment and env-mods to stage
+        spack.util.environment.dump_environment(pkg.env_path)
+        with open(pkg.env_mods_path, "w", encoding="utf-8") as f:
+            f.write(env_mods.shell_modifications(explicit=True, env=unmodified_env))
+
+        # Try to snapshot configure/cmake args before phases run
+        for attr in ("configure_args", "cmake_args"):
+            try:
+                args = getattr(pkg, attr)()
+                with open(pkg.configure_args_path, "w", encoding="utf-8") as f:
+                    f.write(" ".join(shlex.quote(a) for a in args))
+                break
+            except Exception:
+                pass
 
         # For develop packages or non-develop packages with --keep-stage there may be a
         # pre-existing symlink at pkg.log_path which would cause the new symlink to fail.
@@ -510,6 +638,7 @@ def _install(
             send_state(phase.name, state_stream)
             phase.execute()
 
+        _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
 
 
@@ -624,6 +753,7 @@ def start_build(
     restage: bool,
     keep_prefix: bool,
     skip_patch: bool,
+    fake: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -638,12 +768,16 @@ def start_build(
     makeflags = jobserver.makeflags(gmake)
     fifo = "--jobserver-auth=fifo:" in makeflags
 
-    log_fd, log_path = tempfile.mkstemp(
-        prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
-        suffix=".log",
-        dir=spack.stage.get_stage_root(),
-    )
-    os.close(log_fd)  # child will open it
+    # TODO: remove once external specs do not create a build process
+    if spec.external:
+        log_path = os.devnull
+    else:
+        log_fd, log_path = tempfile.mkstemp(
+            prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
+            suffix=".log",
+            dir=spack.stage.get_stage_root(),
+        )
+        os.close(log_fd)  # child will open it
 
     proc = Process(
         target=worker_function,
@@ -658,15 +792,15 @@ def start_build(
             restage,
             keep_prefix,
             skip_patch,
+            fake,
             state_w_conn,
             output_w_conn,
             control_r_conn,
             makeflags,
             None if fifo else jobserver.r_conn,
             None if fifo else jobserver.w_conn,
-            spack.store.STORE,
-            spack.config.CONFIG,
             log_path,
+            GlobalState(),
         ),
     )
     proc.start()
@@ -1436,9 +1570,7 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if fake:
-            raise NotImplementedError("Fake installs are not implemented")
-        elif install_source:
+        if install_source:
             raise NotImplementedError("Installing sources is not implemented")
         elif stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
@@ -1484,6 +1616,7 @@ class PackageInstaller:
         }
         self.unsigned = unsigned
         self.dirty = dirty
+        self.fake = fake
         self.restage = restage
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
@@ -1839,6 +1972,7 @@ class PackageInstaller:
             restage=self.restage and not is_develop,
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
+            fake=self.fake,
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path

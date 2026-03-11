@@ -200,7 +200,8 @@ spack:
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
     assert (
-        rebuild_job["script"][0] == f"spack buildcache update-index --keys {mirror_url.as_uri()}"
+        rebuild_job["script"][0]
+        == f"spack -v buildcache update-index --keys {mirror_url.as_uri()}"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 

@@ -381,9 +381,7 @@ class Lock:
             time.sleep(next(poll_intervals))
             num_attempts += 1
 
-        raise LockTimeoutError(
-            op_str.lower(), self.path, time.monotonic() - start_time, num_attempts
-        )
+        raise LockTimeoutError(op, self.path, time.monotonic() - start_time, num_attempts)
 
     def _poll_lock(self, op: int) -> bool:
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -482,6 +480,7 @@ class Lock:
             return True
         else:
             # Increment the read count for nested lock tracking
+            self._reaffirm_lock()
             self._reads += 1
             return False
 
@@ -510,8 +509,24 @@ class Lock:
             return self._reads == 0
         else:
             # Increment the write count for nested lock tracking
+            self._reaffirm_lock()
             self._writes += 1
             return False
+
+    def _reaffirm_lock(self) -> None:
+        """Fork-safety: always re-affirm the lock with one non-blocking attempt. In the same
+        process, re-locking an already-held byte range succeeds instantly (POSIX). In a forked
+        child that doesn't own the POSIX lock, the call fails immediately and we raise. Use WRITE
+        if we hold an exclusive lock so we don't accidentally downgrade it."""
+        if self._writes > 0:
+            op = LockType.WRITE
+        elif self._reads > 0:
+            op = LockType.READ
+        else:
+            return
+        self._ensure_valid_handle()
+        if not self._poll_lock(op):
+            raise LockTimeoutError(op, self.path, time=0, attempts=1)
 
     def is_write_locked(self) -> bool:
         """Returns ``True`` if the path is write locked, otherwise, ``False``"""
@@ -790,7 +805,7 @@ class LockError(Exception):
 class LockDowngradeError(LockError):
     """Raised when unable to downgrade from a write to a read lock."""
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         msg = "Cannot downgrade lock from write to read on file: %s" % path
         super().__init__(msg)
 
@@ -798,11 +813,12 @@ class LockDowngradeError(LockError):
 class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
 
-    def __init__(self, lock_type, path, time, attempts):
+    def __init__(self, lock_type: int, path: str, time: float, attempts: int) -> None:
+        lock_type_str = LockType.to_str(lock_type).lower()
         fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
         super().__init__(
             fmt.format(
-                lock_type,
+                lock_type_str,
                 lang.pretty_seconds(time),
                 attempts,
                 "attempt" if attempts == 1 else "attempts",
@@ -814,7 +830,7 @@ class LockTimeoutError(LockError):
 class LockUpgradeError(LockError):
     """Raised when unable to upgrade from a read to a write lock."""
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         msg = "Cannot upgrade lock from read to write on file: %s" % path
         super().__init__(msg)
 
@@ -826,7 +842,7 @@ class LockPermissionError(LockError):
 class LockROFileError(LockPermissionError):
     """Tried to take an exclusive lock on a read-only file."""
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         msg = "Can't take write lock on read-only file: %s" % path
         super().__init__(msg)
 
@@ -834,7 +850,7 @@ class LockROFileError(LockPermissionError):
 class CantCreateLockError(LockPermissionError):
     """Attempt to create a lock in an unwritable location."""
 
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         msg = "cannot create lock '%s': " % path
         msg += "file does not exist and location is not writable"
         super().__init__(msg)

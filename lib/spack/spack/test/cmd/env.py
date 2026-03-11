@@ -514,7 +514,7 @@ def test_env_install_all(install_mockery, mock_fetch):
     assert spec.installed
 
 
-def test_env_install_single_spec(install_mockery, mock_fetch):
+def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant):
     env("create", "test")
     install = SpackCommand("install")
 
