@@ -49,9 +49,7 @@ Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
 A ``sha256`` is required.
-For example, suppose you have a ``/etc/spack/include.yaml`` file that specifies a remote ``config.yaml`` file as follows:
-
-.. code-block:: yaml
+For example, suppose you have a ``/etc/spack/include.yaml`` file that specifies a remote ``config.yaml`` file as follows::
 
    include:
    - path: https://github.com/path/to/raw/config/config.yaml
