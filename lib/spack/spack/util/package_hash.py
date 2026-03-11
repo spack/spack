@@ -170,6 +170,37 @@ class RemoveDirectives(ast.NodeTransformer):
         return node
 
 
+EXTERNAL_DETECTION_METHODS = (
+    "determine_version",
+    "determine_variants",
+    "determine_spec_details",
+    "validate_detected_spec",
+    "filter_detected_exes",
+)
+
+
+class RemoveDetectionMethods(ast.NodeTransformer):
+    """Removes methods that are only used for external detection
+
+    These methods affect the external spec and are already represented through that
+    spec in dag_hash, without needing to be included in the package_hash."""
+
+    def visit_FunctionDef(self, node):
+        if node.name in EXTERNAL_DETECTION_METHODS:
+            return None
+        return node
+
+    def visit_ClassDef(self, node):
+        self.generic_visit(node)
+
+        # replace class definition with `pass` if it's empty (e.g., child class that
+        # only overrides detection methods)
+        if not node.body:
+            node.body = [ast.Pass()]
+
+        return node
+
+
 def _is_when_decorator(node: ast.Call) -> bool:
     """Check if the node is a @when decorator."""
     return isinstance(node.func, ast.Name) and node.func.id == "when" and len(node.args) == 1
@@ -382,6 +413,9 @@ def package_ast(
     # remove docstrings, comments, and directives from the package AST
     root = RemoveDocstrings().visit(root)
     root = RemoveDirectives(spec).visit(root)
+
+    # remove methods for external spec detection from the package AST
+    root = RemoveDetectionMethods().visit(root)
 
     if filter_multimethods:
         # visit nodes and build up a dictionary of methods (no need to assign)
