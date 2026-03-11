@@ -50,7 +50,12 @@ def noop_install(monkeypatch):
 
 
 def test_install_package_and_dependency(
-    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    installer_variant,
 ):
     log = "test"
     with fs.working_dir(str(tmp_path)):
@@ -98,7 +103,12 @@ def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
 
 
 def test_install_package_already_installed(
-    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    installer_variant,
 ):
     with fs.working_dir(str(tmp_path)):
         install("--fake", "libdwarf")
@@ -353,7 +363,7 @@ def test_install_invalid_spec():
     "exc_typename,msg",
     [("RuntimeError", "something weird happened"), ("ValueError", "spec is not concrete")],
 )
-def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg):
+def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, installer_variant):
     with fs.working_dir(str(tmp_path)):
         install(
             "--verbose",
@@ -365,9 +375,11 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg):
             fail_on_error=False,
         )
 
-    assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.name == exc_typename
-    assert install.error.pkg.name == "raiser"
+    # New installer considers Python exceptions ordinary build failures.
+    if installer_variant == "old":
+        assert isinstance(install.error, spack.build_environment.ChildError)
+        assert install.error.name == exc_typename
+        assert install.error.pkg.name == "raiser"
 
     files = list(tmp_path.iterdir())
     filename = tmp_path / "test.xml"
@@ -539,7 +551,9 @@ def test_cdash_upload_build_error(capfd, tmp_path: pathlib.Path, mock_fetch, ins
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmp_path: pathlib.Path, mock_fetch, install_mockery):
+def test_cdash_upload_clean_build(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         install("--log-file=cdash_reports", "--log-format=cdash", "pkg-c")
         report_dir = tmp_path / "cdash_reports"
@@ -552,7 +566,9 @@ def test_cdash_upload_clean_build(tmp_path: pathlib.Path, mock_fetch, install_mo
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_extra_params(tmp_path: pathlib.Path, mock_fetch, install_mockery):
+def test_cdash_upload_extra_params(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         install(
             "--log-file=cdash_reports",
@@ -573,7 +589,9 @@ def test_cdash_upload_extra_params(tmp_path: pathlib.Path, mock_fetch, install_m
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_buildstamp_param(tmp_path: pathlib.Path, mock_fetch, install_mockery):
+def test_cdash_buildstamp_param(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         cdash_track = "some_mocked_track"
         buildstamp_format = f"%Y%m%d-%H%M-{cdash_track}"
@@ -594,7 +612,12 @@ def test_cdash_buildstamp_param(tmp_path: pathlib.Path, mock_fetch, install_mock
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_json(
-    tmp_path: pathlib.Path, mock_fetch, install_mockery, mock_packages, mock_archive
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    installer_variant,
 ):
     with fs.working_dir(str(tmp_path)):
         spec_json_path = str(tmp_path / "spec.json")

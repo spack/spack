@@ -636,6 +636,7 @@ def _install(
 
         for phase in spack.builder.create(pkg):
             send_state(phase.name, state_stream)
+            print(f"==> {pkg.name}: Executing phase: '{phase.name}'")
             phase.execute()
 
         _archive_build_metadata(pkg)
@@ -1540,6 +1541,51 @@ def schedule_builds(
     return ScheduleResult(blocked, to_start, newly_installed)
 
 
+class ReportData:
+    """Data collected for reports during installation."""
+
+    def __init__(self, roots: List[spack.spec.Spec]):
+        self.roots = roots
+        self.build_records: Dict[str, spack.report.InstallRecord] = {}
+
+    def start_record(self, spec: spack.spec.Spec) -> None:
+        """Begin an InstallRecord for a spec that is about to be built."""
+        if spec.external:
+            return
+        record = spack.report.InstallRecord(spec)
+        record.start()
+        self.build_records[spec.dag_hash()] = record
+
+    def finish_record(self, spec: spack.spec.Spec, exitcode: int) -> None:
+        """Mark the InstallRecord for a spec as succeeded or failed."""
+        record = self.build_records.get(spec.dag_hash())
+        if record is None or spec.external:
+            return
+        if exitcode == 0:
+            record.succeed()
+        else:
+            record.fail(
+                spack.error.InstallError(
+                    f"Installation of {spec.name} failed; see log for details"
+                )
+            )
+
+    def finalize(self, reports: Dict[str, spack.report.RequestRecord]) -> None:
+        """Finalize InstallRecords and append them to RequestRecords after all builds finish."""
+        node_to_roots = spack.traverse.propagate_roots(self.roots)
+
+        for spec in spack.traverse.traverse_nodes(self.roots):
+            h = spec.dag_hash()
+            if h in self.build_records:
+                record = self.build_records[h]
+            else:
+                record = spack.report.InstallRecord(spec)
+                record.skip(msg="Spec external, already installed, or dependencies failed")
+
+            for root_hash in node_to_roots[h]:
+                reports[root_hash].append_record(record)
+
+
 class PackageInstaller:
 
     def __init__(
@@ -1646,7 +1692,11 @@ class PackageInstaller:
                 self.capacity = concurrent_packages_config
         else:
             self.capacity = concurrent_packages
-        self.reports: Dict[str, spack.report.RequestRecord] = {}
+
+        #: The reports property is what the old installer has and used as public interface.
+        self.reports = {spec.dag_hash(): spack.report.RequestRecord(spec) for spec in specs}
+        #: Internal data collected for reports during installation.
+        self.report_data = ReportData(specs)
 
     def install(self) -> None:
         self._installer()
@@ -1727,6 +1777,7 @@ class PackageInstaller:
                     self.capacity += 1
                     jobserver.release()
                     build.cleanup(selector)
+                    self.report_data.finish_record(build.spec, build.proc.exitcode or 0)
                     if build.proc.exitcode == 0:
                         # Add successful builds for database insertion (after a short delay)
                         finished_builds.append(build)
@@ -1862,6 +1913,11 @@ class PackageInstaller:
             if db_exc is not None:
                 raise db_exc
 
+        try:
+            self.report_data.finalize(self.reports)
+        except Exception:
+            pass
+
         if failures:
             for s in failures:
                 log_path = self.log_paths.get(s.dag_hash())
@@ -1990,6 +2046,7 @@ class PackageInstaller:
         self.build_status.add_build(
             child_info.spec, explicit=explicit, control_w_conn=child_info.control_w_conn
         )
+        self.report_data.start_record(spec)
 
     def _handle_child_logs(
         self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
