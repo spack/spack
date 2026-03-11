@@ -653,7 +653,13 @@ def _install(
             send_state(phase.name, state_stream)
             spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
             sys.stdout.flush()
-            phase.execute()
+            # Run the install phase with debug output enabled.
+            old_debug = spack.llnl.util.tty.debug_level()
+            spack.llnl.util.tty.set_debug(1)
+            try:
+                phase.execute()
+            finally:
+                spack.llnl.util.tty.set_debug(old_debug)
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
