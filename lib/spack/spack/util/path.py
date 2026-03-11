@@ -72,8 +72,8 @@ def replacements():
     # break circular imports
     import spack
     import spack.environment as ev
-    import spack.paths_base
     import spack.paths
+    import spack.paths_base
 
     paths = spack.paths.locations
     arch = architecture()
