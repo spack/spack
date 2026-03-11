@@ -115,23 +115,20 @@ def update_env_activate_script(env, view="default"):
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
 
-    if os.path.isfile(env.lock_path):
-        lockfile_date = os.stat(env.lock_path).st_mtime
-    else:
-        lockfile_date = 0.00
+    # Check if the lockfile exists and get its modification time
+    lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
 
     for shell in shells_avail:
         activate_script_path = path_to_env_activate_shell_script(env, shell)
 
+        env_mods = EnvironmentModifications()
+        env_mods.extend(spack.environment.shell.activate(env=env, view=view))
+
+        # Update the script only if the lockfile doesn't exist or is newer than script
         if lockfile_date != 0.00 and not lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
-            spack.environment.shell.activate(env=env, view=view)
-
             continue
-
-        env_mods = EnvironmentModifications()
-        env_mods.extend(spack.environment.shell.activate(env=env, view=view))
 
         cmds = spack.environment.shell.activate_commands(env, shell, view=view)
         cmds += env_mods.shell_modifications(shell)
@@ -143,12 +140,13 @@ def update_env_activate_script(env, view="default"):
             f.write(cmds)
 
 
-def write_env_deactivate_script(env, view):
+def write_env_deactivate_script(env, view: str):
     """Gets and writes the environment modifications to deactivate the specified
     environment to a cached shell script
 
     Args:
         env: the environment the deactivation script is written for
+        view: the name of the environment's view
     """
 
     shells_avail = ["sh", "csh", "fish"]
@@ -156,29 +154,25 @@ def write_env_deactivate_script(env, view):
     if sys.platform == "win32":
         shells_avail.extend(["bat", "pwsh"])
 
-    if os.path.isfile(env.lock_path):
-        lockfile_date = os.stat(env.lock_path).st_mtime
-    else:
-        lockfile_date = 0.00
+    # Check if the lockfile exists and get its modification time
+    lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
 
     for shell in shells_avail:
         deactivate_script_path = path_to_env_deactivate_shell_script(env, shell)
 
-        if lockfile_date != 0.00 and not lockfile_newer_than_script(
+        # Update the script only if the lockfile doesn't exist or is newer than script
+        if lockfile_date == 0.00 or lockfile_newer_than_script(
             lockfile_date, deactivate_script_path
         ):
-            continue
 
-        cmds = spack.environment.shell.deactivate_commands(shell)
-        env_mods = spack.environment.shell.deactivate(env, view)
+            cmds = spack.environment.shell.deactivate_commands(shell)
+            env_mods = spack.environment.shell.deactivate(env, view)
 
-        cmds += env_mods.shell_modifications(shell)
+            cmds += env_mods.shell_modifications(shell)
 
-        deactivate_script_path = os.path.join(env.path, ".spack-env", f"deactivate.{shell}")
-
-        with spack.store.STORE.db.write_transaction():
-            with open(deactivate_script_path, "w", encoding="utf-8") as f:
-                f.write(
-                    f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-                )
-                f.write(cmds)
+            with spack.store.STORE.db.write_transaction():
+                with open(deactivate_script_path, "w", encoding="utf-8") as f:
+                    f.write(
+                        f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
+                    )
+                    f.write(cmds)

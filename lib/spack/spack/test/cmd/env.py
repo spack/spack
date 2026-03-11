@@ -129,7 +129,7 @@ def test_env_track_nonexistent_path_fails():
     "shell",
     (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
-def test_env_create_shell_scripts(shell):
+def test_env_write_shell_scripts(shell):
     """Tests that the activation and deactivation scripts are written when an environment
     is created"""
     env("create", "script_test")
@@ -159,10 +159,13 @@ def test_env_sh_shell_script_content():
     assert f"_spack_env_set SPACK_ENV {environ.path}" in out
 
 
-def test_env_activate_script_concretize():
-    """Test does a thing"""
+@pytest.mark.parametrize(
+    "shell",
+    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+)
+def test_env_update_activate_script(shell):
+    """Test activatrion script is updated after installation of new specs"""
     env("create", "test")
-    shell = "sh"
     environ = ev.read("test")
 
     env("activate", f"--{shell}", "test")
@@ -171,7 +174,8 @@ def test_env_activate_script_concretize():
     script_creation = os.stat(path_to_activate_script).st_mtime
 
     environ.add("mpi")
-    environ.install_specs()
+    environ.concretize()
+    environ.write()
 
     path_to_activate_script = shell_script.path_to_env_activate_shell_script(environ, shell)
     script_update = os.stat(path_to_activate_script).st_mtime
@@ -180,7 +184,7 @@ def test_env_activate_script_concretize():
 
 
 def test_env_missing_deactivation_script():
-    """Test does a thing"""
+    """Test that environment deactivation script is recreated if missing"""
     env("create", "test")
     shell = "sh"
     environ = ev.read("test")
