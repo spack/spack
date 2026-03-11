@@ -201,7 +201,8 @@ spack:
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
     assert (
-        rebuild_job["script"][1] == "spack -v buildcache update-index --keys  buildcache-destination"
+        rebuild_job["script"][1]
+        == "spack -v buildcache update-index --keys  buildcache-destination"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 

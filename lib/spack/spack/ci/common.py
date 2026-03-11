@@ -617,7 +617,7 @@ class SpackCIConfig:
                 "reindex-job": {
                     "script:": [
                         "spack env activate --without-view {env_dir}",
-                        "spack buildcache -v update-index --keys "
+                        "spack -v buildcache update-index --keys "
                         + f"{' '.join(update_index_extra_args)} buildcache-destination",
                     ]
                 }

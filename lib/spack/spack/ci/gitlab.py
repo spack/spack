@@ -112,7 +112,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
     artifacts_root = pathlib.Path(options.artifacts_root)
-    if artifacts_root.is_relative_to(ci_project_dir):
+    if ci_project_dir == artifacts_root or ci_project_dir in artifacts_root.parents:
         artifacts_root = artifacts_root.relative_to(ci_project_dir)
     pipeline_artifacts_dir = (ci_project_dir / artifacts_root).absolute().resolve()
     output_file = options.output_file
