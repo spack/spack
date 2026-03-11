@@ -7,6 +7,8 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
+    FrozenSet,
     Iterable,
     List,
     NamedTuple,
@@ -703,3 +705,29 @@ def traverse_tree(
 def by_dag_hash(s: "spack.spec.Spec") -> str:
     """Used very often as a key function for traversals."""
     return s.dag_hash()
+
+
+def propagate_roots(roots: List["spack.spec.Spec"]) -> Dict[str, FrozenSet[str]]:
+    """Map each node in a graph to the set of root node DAG hashes that can reach it.
+
+    Args:
+        roots: List of root specs.
+
+    Returns:
+        A dictionary mapping each node's dag_hash to a frozenset of root dag_hashes.
+    """
+    node_to_roots: Dict[str, FrozenSet[str]] = {
+        s.dag_hash(): frozenset([s.dag_hash()]) for s in roots
+    }
+
+    for edge in traverse_edges(roots, order="topo", cover="edges", root=False, key=by_dag_hash):
+        parent_roots = node_to_roots[edge.parent.dag_hash()]
+        child_hash = edge.spec.dag_hash()
+        existing = node_to_roots.get(child_hash)
+
+        if existing is None:
+            node_to_roots[child_hash] = parent_roots  # keep a reference if no mutation is needed
+        elif not parent_roots.issubset(existing):
+            node_to_roots[child_hash] = existing | parent_roots
+
+    return node_to_roots
