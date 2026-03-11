@@ -349,12 +349,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="if provided, key index will be updated as well as package index",
     )
-    update_index.add_argument(
-        "--instrument",
-        default=False,
-        action="store_true",
-        help="print a timing summary of where time was spent",
-    )
     arguments.add_common_arguments(update_index, ["yes_to_all"])
     update_index.set_defaults(func=update_index_fn)
 
@@ -1093,7 +1087,7 @@ def check_index_fn(args):
 def update_index_fn(args):
     """update a buildcache index or index view if extra arguments are provided."""
 
-    t = timer_mod.Timer() if args.instrument else timer_mod.NullTimer()
+    t = timer_mod.Timer() if tty.is_verbose() else timer_mod.NullTimer()
 
     update_view_index = (
         args.append or args.force or args.name or args.sources or args.mirror.push_view
@@ -1117,7 +1111,7 @@ def update_index_fn(args):
     else:
         update_index(args.mirror, update_keys=args.keys, timer=t)
 
-    if args.instrument:
+    if tty.is_verbose():
         tty.msg("Timing summary:")
         t.stop()
         t.write_tty()
