@@ -372,9 +372,8 @@ def test_remove_detection_logic(name):
     filtered_name = name + "_canonical"
 
     tree = ast.parse(detection_logic_tests[full_name])
-    spec = Spec(full_name)
-    tree = ph.RemoveDetectionMethods().visit(tree)
-    unparsed = unparse(tree, py_ver_consistent=True)
+    filtered_tree = ph.RemoveDetectionMethods().visit(tree)
+    unparsed = unparse(filtered_tree, py_ver_consistent=True)
 
     assert unparsed == detection_logic_tests[filtered_name]
 
