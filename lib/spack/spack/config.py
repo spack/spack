@@ -65,7 +65,6 @@ import spack.schema.upstreams
 import spack.schema.view
 import spack.util.executable
 import spack.util.git
-import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1047,6 +1046,7 @@ class OptionalInclude:
            enclosing scope subdirectory of the parent scope path (if available);
            otherwise a temporary directory
         """
+
         def _destination(root: Optional[str]) -> str:
             # Ensure the destination is a writable location.
             if root and filesystem.can_write_to_dir(root):
@@ -1082,7 +1082,6 @@ class OptionalInclude:
             return os.path.join(root, "includes")
 
         return root
-
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -1406,7 +1405,7 @@ class GitIncludePaths(OptionalInclude):
 
         scopes: List[ConfigScope] = []
         for path in self.paths:
-            config_path = pathlib.Path(destination) / pathlib.Path(path)
+            config_path = str(pathlib.Path(destination) / pathlib.Path(path))
             scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)

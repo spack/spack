@@ -4375,10 +4375,7 @@ def test_unify_when_possible_works_around_conflicts(mutable_config):
 
 
 def test_env_include_packages_url(
-    tmp_path: pathlib.Path,
-    mutable_empty_config,
-    mock_fetch_url_text,
-    mock_curl_configs,
+    tmp_path: pathlib.Path, mutable_empty_config, mock_fetch_url_text, mock_curl_configs
 ):
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
