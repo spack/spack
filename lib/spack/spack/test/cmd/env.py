@@ -4817,3 +4817,40 @@ spack:
 
     _, err = capfd.readouterr()
     assert "should be 'include'" in err
+
+
+def test_env_include_concrete_relative_path(tmp_path, mock_packages, mutable_config):
+    """Tests that a relative path in 'include' for a spack.lock is resolved relative to the
+    manifest file, not the current working directory.
+    """
+    # Create and concretize the included environment.
+    include_dir = tmp_path / "include_env"
+    include_dir.mkdir()
+    (include_dir / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - libdwarf
+"""
+    )
+    with ev.Environment(str(include_dir)) as e:
+        e.concretize()
+        e.write()
+        assert os.path.exists(e.lock_path)
+
+    # Create the main environment in a sibling directory, using a *relative* path
+    main_dir = tmp_path / "main_env"
+    main_dir.mkdir()
+    relative_lockfile = f"../include_env/{ev.lockfile_name}"
+    (main_dir / ev.manifest_name).write_text(
+        f"""\
+spack:
+  include:
+  - {relative_lockfile}
+"""
+    )
+    with ev.Environment(str(main_dir)) as e:
+        e.concretize()
+        e.write()
+        assert len(e.user_specs) == 0
+        assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]
