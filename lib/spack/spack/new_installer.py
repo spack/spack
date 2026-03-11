@@ -280,7 +280,7 @@ class GlobalState:
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
-        self.spack_working_dir = spack.paths.spack_working_dir
+        self.spack_working_dir = spack.paths_base.spack_working_dir
 
     def restore(self):
         if multiprocessing.get_start_method() == "fork":
@@ -288,7 +288,7 @@ class GlobalState:
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
-        spack.paths.spack_working_dir = self.spack_working_dir
+        spack.paths_base.spack_working_dir = self.spack_working_dir
 
 
 class PrefixPivoter:
