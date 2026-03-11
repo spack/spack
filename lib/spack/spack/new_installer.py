@@ -735,12 +735,16 @@ def start_build(
     makeflags = jobserver.makeflags(gmake)
     fifo = "--jobserver-auth=fifo:" in makeflags
 
-    log_fd, log_path = tempfile.mkstemp(
-        prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
-        suffix=".log",
-        dir=spack.stage.get_stage_root(),
-    )
-    os.close(log_fd)  # child will open it
+    # TODO: remove once external specs do not create a build process
+    if spec.external:
+        log_path = os.devnull
+    else:
+        log_fd, log_path = tempfile.mkstemp(
+            prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
+            suffix=".log",
+            dir=spack.stage.get_stage_root(),
+        )
+        os.close(log_fd)  # child will open it
 
     proc = Process(
         target=worker_function,
