@@ -144,7 +144,7 @@ class ConfigScope:
         self.prefer_modify = False
         self.included = included
 
-        #: names of any included scopes
+        #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
 
     @property
@@ -549,7 +549,7 @@ class Configuration:
         # TODO: includes AND ensure properly sorted such that the order included
         # TODO: at the highest level is reflected in the value of an option that
         # TODO: is set in multiple included files.
-        # before pushing the scope itself, push any included scopes recursively, at same priority
+        # before pushing the scope itself, push included scopes recursively, at the same priority
         for included_scope in reversed(scope.included_scopes):
             if _depth + 1 > MAX_RECURSIVE_INCLUDES:  # make sure we're not recursing endlessly
                 mark = ""
@@ -1177,6 +1177,10 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
     def evaluate_condition(self) -> bool:
+        """Evaluate the include condition:
+
+        Returns: ``True`` if the include condition is satisfied; else ``False``.
+        """
         # circular dependencies
         import spack.spec
 
@@ -1188,8 +1192,8 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         Args:
             parent_scope: including scope
 
-        Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, an empty list.
+        Returns: configuration scopes for configuration files IF the when
+            condition is satisfied; otherwise, an empty list.
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -1341,6 +1345,7 @@ class GitIncludePaths(OptionalInclude):
         with filesystem.working_dir(destination, create=True):
             if not os.path.exists(".git"):
                 try:
+                    tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
@@ -1349,12 +1354,15 @@ class GitIncludePaths(OptionalInclude):
 
             try:
                 if self.commit:
+                    tty.debug(f"Pulling commit {self.commit}")
                     spack.util.git.pull_checkout_commit(self.commit)
                 elif self.tag:
+                    tty.debug(f"Pulling tag {self.tag}")
                     spack.util.git.pull_checkout_tag(self.tag)
                 elif self.branch:
                     # if the branch already exists we should use the
                     # previously configured remote
+                    tty.debug(f"Pulling branch {self.branch}")
                     try:
                         git = spack.util.git.git(required=True)
                         output = git("config", f"branch.{self.branch}.remote", output=str)
