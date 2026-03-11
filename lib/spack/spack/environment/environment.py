@@ -1215,7 +1215,7 @@ class Environment:
         self.included_concrete_env_root_dirs = []
 
         paths = [
-            spack.util.path.canonicalize_path(path)
+            spack.util.path.canonicalize_path(path, default_wd=self.path)
             for path in spack.config.paths_from_includes(includes)
         ]
         for path in paths:
