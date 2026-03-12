@@ -1494,6 +1494,7 @@ def test_mirror_metadata_format():
     mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
     mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
     mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+    mirror_metadata_check_format(mirror_metadata, "{0}", "{0.url}@{0.version}")
 
     # Empty view
     mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "")
@@ -1516,6 +1517,7 @@ def test_mirror_metadata_format_with_view():
     mirror_metadata_check_format(mirror_metadata, "{0:_url}", "{0.url}")
     mirror_metadata_check_format(mirror_metadata, "{0:_version}", "{0.version}")
     mirror_metadata_check_format(mirror_metadata, "{0:_view}", "{0.view}")
+    mirror_metadata_check_format(mirror_metadata, "{0}", "{0.url}@{0.version}-{0.view}")
 
     # View exists
     mirror_metadata_check_format(mirror_metadata, "{0:?_view}", "{0.view}")

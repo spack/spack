@@ -1395,8 +1395,7 @@ class MirrorMetadata:
                 https://my-mirror.com/prefix^my-view@v3
         """
         if not format_spec:
-            format_spec = "_url@v3?-_view"
-            return
+            format_spec = "_url@_version?-_view"
         out = format_spec.replace("_url", self.url)
         out = out.replace("_version", str(self.version))
         out = out.replace("_view", str(self.view))
