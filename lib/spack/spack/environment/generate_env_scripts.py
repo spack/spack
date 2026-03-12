@@ -6,11 +6,11 @@ import sys
 from datetime import datetime
 
 import spack.environment.shell
-import spack.store
+import spack.llnl.util.tty as tty
 from spack.util.environment import EnvironmentModifications
 
 
-def path_to_env_activate_shell_script(env, shell) -> str:
+def path_to_env_activate_shell_script(env, shell: str) -> str:
     """Returns to path to the shell script to activate the specified env for the shell that
     the user is running
 
@@ -18,14 +18,11 @@ def path_to_env_activate_shell_script(env, shell) -> str:
         env: the environment whose shell script we are returning the path of
         shell: the shell that the user is running
     """
-    if shell == "sh" or shell == "csh" or shell == "fish":
-        shell = ""
-    else:
-        shell = f".{shell}"
-    return os.path.join(env.path, ".spack-env", f"activate{shell}")
+    extension = f".{shell}" if shell == "bat" or shell == "pwsh" else ""
+    return os.path.join(env.path, ".spack-env", f"activate{extension}")
 
 
-def path_to_env_deactivate_shell_script(env, shell) -> str:
+def path_to_env_deactivate_shell_script(env, shell: str) -> str:
     """Returns to path to the shell script to activate the specified env for the shell that
     the user is running
 
@@ -37,7 +34,7 @@ def path_to_env_deactivate_shell_script(env, shell) -> str:
     return os.path.join(env.path, ".spack-env", f"deactivate.{shell}")
 
 
-def get_shell_unique_env_cmds(shell, prompt, view) -> str:
+def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
     """Returns the prompt, view, and despacktivate commands which are unique
     to each shell
 
@@ -57,7 +54,7 @@ def get_shell_unique_env_cmds(shell, prompt, view) -> str:
 
 
 def lockfile_newer_than_script(lockfile_date, script_path) -> bool:
-    """Returns true of the environment's lockfile has been change more recently than the
+    """Returns true if the environment's lockfile has been change more recently than the
     activation or deactivations script
 
     Args:
@@ -73,7 +70,25 @@ def lockfile_newer_than_script(lockfile_date, script_path) -> bool:
     return lockfile_date > script_path_date
 
 
-def write_env_activate_script(env, view):
+def write_scripts(shell_script_path: str, mods: str):
+    """Helper function to write spec's shell scripts
+
+    Args:
+        shell_script_path: Path to the shell script.
+        mods: Modifications to write to the script.
+    """
+
+    try:
+        with open(shell_script_path, "w", encoding="utf-8") as f:
+            f.write(
+                f"### Script created by spack (https://github.com/spack/spack) {datetime.now().strftime('%Y-%m-%d')}\n\n"
+            )
+            f.write(mods)
+    except OSError as e:
+        tty.error(f"Error writing to {shell_script_path}: {e}")
+
+
+def write_env_activate_script(env, view: str):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
 
@@ -94,12 +109,7 @@ def write_env_activate_script(env, view):
         cmds += env_mods.shell_modifications(shell)
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
-
-        with open(activate_script_path, "w", encoding="utf-8") as f:
-            f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-            )
-            f.write(cmds)
+        write_scripts(activate_script_path, cmds)
 
 
 def update_env_activate_script(env, view="default"):
@@ -119,10 +129,10 @@ def update_env_activate_script(env, view="default"):
     lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
 
     for shell in shells_avail:
-        activate_script_path = path_to_env_activate_shell_script(env, shell)
-
         env_mods = EnvironmentModifications()
         env_mods.extend(spack.environment.shell.activate(env=env, view=view))
+
+        activate_script_path = path_to_env_activate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
         if lockfile_date != 0.00 and not lockfile_newer_than_script(
@@ -133,11 +143,7 @@ def update_env_activate_script(env, view="default"):
         cmds = spack.environment.shell.activate_commands(env, shell, view=view)
         cmds += env_mods.shell_modifications(shell)
 
-        with open(activate_script_path, "w", encoding="utf-8") as f:
-            f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-            )
-            f.write(cmds)
+        write_scripts(activate_script_path, cmds)
 
 
 def write_env_deactivate_script(env, view: str):
@@ -161,18 +167,14 @@ def write_env_deactivate_script(env, view: str):
         deactivate_script_path = path_to_env_deactivate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date == 0.00 or lockfile_newer_than_script(
+        if lockfile_date != 0.00 and not lockfile_newer_than_script(
             lockfile_date, deactivate_script_path
         ):
+            continue
 
-            cmds = spack.environment.shell.deactivate_commands(shell)
-            env_mods = spack.environment.shell.deactivate(env, view)
+        cmds = spack.environment.shell.deactivate_commands(shell)
+        env_mods = spack.environment.shell.deactivate(env, view)
 
-            cmds += env_mods.shell_modifications(shell)
+        cmds += env_mods.shell_modifications(shell)
 
-            with spack.store.STORE.db.write_transaction():
-                with open(deactivate_script_path, "w", encoding="utf-8") as f:
-                    f.write(
-                        f"### Script created by spack (https://github.com/spack/spack) {datetime.today().strftime('%Y-%m-%d')}\n\n"
-                    )
-                    f.write(cmds)
+        write_scripts(deactivate_script_path, cmds)

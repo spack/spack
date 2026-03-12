@@ -10,7 +10,7 @@ import spack.llnl.util.tty as tty
 import spack.user_environment as uenv
 
 
-def path_to_load_shell_script(spec, shell):
+def path_to_load_shell_script(spec, shell: str) -> str:
     """"Returns the path to the shell script to load the specified spec for the shell.
 
     Args:
@@ -18,11 +18,10 @@ def path_to_load_shell_script(spec, shell):
         shell: The shell that the user is running on
     """
     extension = f".{shell}" if shell == "bat" or shell == "pwsh" else ""
-
     return os.path.join(spec.prefix, ".spack", f"load{extension}")
 
 
-def path_to_unload_shell_script(spec, shell):
+def path_to_unload_shell_script(spec, shell: str) -> str:
     """Returns the path to the shell script to unload the specified spec for the shell.
 
     Args:
@@ -45,7 +44,8 @@ def write_spec_scripts(shell_script_path, mods):
     try:
         with open(shell_script_path, "w", encoding="utf-8") as f:
             f.write(
-                f"### Script created by spack (https://github.com/spack/spack) {datetime.now().strftime('%Y-%m-%d')}\n\n"
+                f"### Script created by spack (https://github.com/spack/spack) "
+                f"{datetime.now().strftime('%Y-%m-%d')}\n\n"
             )
             f.write(mods)
     except OSError as e:
@@ -82,5 +82,7 @@ def post_install(spec, explicit=None):
 
         # Write shell script to unload
         unload_mods = unload_env_mod.shell_modifications(shell)
-        unload_mods += f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {spec.dag_hash()} :"
+        unload_mods += (
+            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {spec.dag_hash()} :"
+        )
         write_spec_scripts(unload_script_path, unload_mods)
