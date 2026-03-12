@@ -7,6 +7,7 @@ import concurrent.futures
 import contextlib
 import copy
 import datetime
+import functools
 import hashlib
 import io
 import itertools
@@ -662,6 +663,19 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
     cache_class.maybe_push_layout_json(cache_prefix)
 
 
+def _fetch_one(read_method: Callable[[str], URLBuildcacheEntry], file: str) -> Optional[dict]:
+    cache_entry: Optional[URLBuildcacheEntry] = None
+    try:
+        cache_entry = read_method(file)
+        return cache_entry.fetch_metadata()
+    except Exception as e:
+        tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+        return None
+    finally:
+        if cache_entry:
+            cache_entry.destroy()
+
+
 def _read_specs_and_push_index(
     file_list: List[str],
     read_method: Callable[[str], URLBuildcacheEntry],
@@ -698,20 +712,10 @@ def _read_specs_and_push_index(
                 files_to_fetch.append(file)
 
         # Fetch all spec dicts concurrently
-        def fetch_one(file: str) -> Optional[dict]:
-            cache_entry: Optional[URLBuildcacheEntry] = None
-            try:
-                cache_entry = read_method(file)
-                return cache_entry.fetch_metadata()
-            except Exception as e:
-                tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
-                return None
-            finally:
-                if cache_entry:
-                    cache_entry.destroy()
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
-            spec_dicts = list(executor.map(fetch_one, files_to_fetch))
+        with spack.util.parallel.make_concurrent_executor(jobs, require_fork=False) as executor:
+            spec_dicts = list(
+                executor.map(functools.partial(_fetch_one, read_method), files_to_fetch)
+            )
 
         # Populate the database sequentially in the main thread.
         for spec_dict in spec_dicts:
