@@ -322,6 +322,39 @@ def test_checksum_verification_fails(default_mock_concretization, capfd, can_fet
     assert "Invalid checksum" in out
 
 
+def test_checksum_new(mock_packages, no_add, monkeypatch):
+    """--new checksums only the newest version in each branch derived from known versions."""
+    from spack_repo.builtin_mock.packages.brillig.package import Brillig  # type: ignore[import]
+
+    safe = {Version("3.2"): {}, Version("1.0.0"): {}}
+    remote = {
+        Version("99.99.99"): "https://example.com/brillig-99.99.99.tar.gz",  # new in () bucket
+        Version("3.2.1"): "https://example.com/brillig-3.2.1.tar.gz",  # new in (3,) bucket
+        Version("3.2"): "https://example.com/brillig-3.2.tar.gz",
+        Version("1.2.0"): "https://example.com/brillig-1.2.0.tar.gz",  # new in (1,) bucket
+        Version("1.1.0"): "https://example.com/brillig-1.1.0.tar.gz",
+        Version("1.0.1"): "https://example.com/brillig-1.0.1.tar.gz",  # new in (1, 0) bucket
+        Version("1.0.0"): "https://example.com/brillig-1.0.0.tar.gz",
+    }
+    expected_new = {Version("99.99.99"), Version("3.2.1"), Version("1.2.0"), Version("1.0.1")}
+
+    monkeypatch.setattr(Brillig, "versions", safe)
+    monkeypatch.setattr(Brillig, "fetch_remote_versions", lambda self, concurrency: remote)
+
+    checksummed: set = set()
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        checksummed.update(url_by_version.keys())
+        return {v: "abc" * 21 + "ab" for v in url_by_version}
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, curl=None: True)
+
+    spack_checksum("--new", "--batch", "brillig")
+
+    assert checksummed == expected_new
+
+
 def test_checksum_manual_download_fails(mock_packages, monkeypatch):
     """Confirm that checksumming a manually downloadable package fails."""
     name = "zlib"

@@ -695,7 +695,7 @@ _spack_change() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage --batch -b --latest -l --preferred -p --add-to-package -a --verify -j --jobs"
+        SPACK_COMPREPLY="-h --help --keep-stage --batch -b --latest -l --new -n --preferred -p --add-to-package -a --verify -j --jobs"
     else
         _all_packages
     fi

@@ -962,7 +962,7 @@ complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -
 complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -d 'change only concrete specs in the environment'
 
 # spack checksum
-set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
+set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest n/new p/preferred a/add-to-package verify j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos 0 checksum' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 checksum' -f -a '(__fish_spack_package_versions $__fish_spack_argparse_argv[1])'
 complete -c spack -n '__fish_spack_using_command checksum' -s h -l help -f -a help
@@ -973,6 +973,8 @@ complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -f -a b
 complete -c spack -n '__fish_spack_using_command checksum' -l batch -s b -d 'don'"'"'t ask which versions to checksum'
 complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -f -a latest
 complete -c spack -n '__fish_spack_using_command checksum' -l latest -s l -d 'checksum the latest available version'
+complete -c spack -n '__fish_spack_using_command checksum' -l new -s n -f -a new
+complete -c spack -n '__fish_spack_using_command checksum' -l new -s n -d 'checksum remote versions newer than the known versions'
 complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -f -a preferred
 complete -c spack -n '__fish_spack_using_command checksum' -l preferred -s p -d 'checksum the known Spack preferred version'
 complete -c spack -n '__fish_spack_using_command checksum' -l add-to-package -s a -f -a add_to_package
@@ -3392,7 +3394,7 @@ complete -c spack -n '__fish_spack_using_command versions' -s s -l safe -d 'only
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -f -a remote
 complete -c spack -n '__fish_spack_using_command versions' -s r -l remote -d 'only list remote versions of the package'
 complete -c spack -n '__fish_spack_using_command versions' -s n -l new -f -a new
-complete -c spack -n '__fish_spack_using_command versions' -s n -l new -d 'only list remote versions newer than the latest checksummed version'
+complete -c spack -n '__fish_spack_using_command versions' -s n -l new -d 'only list remote versions newer than the checksummed versions'
 complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command versions' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
