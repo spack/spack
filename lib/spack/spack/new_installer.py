@@ -170,6 +170,12 @@ def send_progress(current: int, total: int, state_pipe: io.TextIOWrapper) -> Non
     state_pipe.write("\n")
 
 
+def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
+    """Send a notification that the package was installed from binary cache."""
+    json.dump({"installed_from_binary_cache": True}, state_pipe, separators=(",", ":"))
+    state_pipe.write("\n")
+
+
 def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
@@ -264,6 +270,9 @@ def install_from_buildcache(
     if hasattr(pkg, "_post_buildcache_install_hook"):
         pkg._post_buildcache_install_hook()
     pkg.installed_from_binary_cache = True
+
+    # inform also the parent that this package was installed from binary cache.
+    send_installed_from_binary_cache(state_stream)
 
     return True
 
@@ -2154,3 +2163,5 @@ class PackageInstaller:
                 self.build_status.update_progress(
                     child_info.spec.dag_hash(), message["progress"], message["total"]
                 )
+            elif "installed_from_binary_cache" in message:
+                child_info.spec.package.installed_from_binary_cache = True
