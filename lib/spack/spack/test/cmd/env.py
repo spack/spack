@@ -18,7 +18,7 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.environment.cache_shell_script as shell_script
+import spack.environment.generate_env_scripts as shell_script
 import spack.environment.depfile as depfile
 import spack.error
 import spack.llnl.util.filesystem as fs

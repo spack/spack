@@ -8,7 +8,7 @@ import os
 import spack.cmd
 import spack.cmd.common
 import spack.error
-import spack.hooks.cache_shell_script as shell_script
+import spack.hooks.generate_spec_scripts as shell_script
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments

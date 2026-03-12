@@ -7,7 +7,7 @@ import sys
 import pytest
 
 import spack.concretize
-import spack.hooks.cache_shell_script as shell_script
+import spack.hooks.generate_spec_scripts as shell_script
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 

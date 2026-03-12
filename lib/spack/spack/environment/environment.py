@@ -46,8 +46,7 @@ from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
-from ..enums import ConfigScopePriority
-from .cache_shell_script import update_env_activate_script
+from .generate_env_scripts import update_env_activate_script
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair

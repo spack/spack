@@ -9,7 +9,7 @@ import sys
 import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
-import spack.hooks.cache_shell_script as shell_script
+import spack.hooks.generate_spec_scripts as shell_script
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
 
