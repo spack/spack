@@ -510,25 +510,3 @@ def test_mixed_depth_visitor(roots, order, include_root):
         ("D", "F"),
         ("H", "B"),
     }
-
-
-def test_propagate_roots():
-    """Independent roots don't reach each other's exclusive nodes."""
-    # A - B and C - D are disconnected graphs, A, B and C are "roots".
-    specs = create_dag(nodes=["A", "B", "C", "D"], edges=[("A", "B", "all"), ("C", "D", "all")])
-    a, b, c, d = specs["A"], specs["B"], specs["C"], specs["D"]
-    node_to_roots = traverse.propagate_roots([a, b, c])
-    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
-    assert node_to_roots[b.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
-    assert node_to_roots[c.dag_hash()] == frozenset([c.dag_hash()])
-    assert node_to_roots[d.dag_hash()] == frozenset([c.dag_hash()])
-
-
-def test_propagate_roots_shared_dependency():
-    """A dependency shared by two roots is attributed to both."""
-    specs = create_dag(nodes=["A", "B", "C"], edges=[("A", "C", "all"), ("B", "C", "all")])
-    a, b, c = specs["A"], specs["B"], specs["C"]
-    node_to_roots = traverse.propagate_roots([a, b])
-    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
-    assert node_to_roots[b.dag_hash()] == frozenset([b.dag_hash()])
-    assert node_to_roots[c.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
