@@ -446,6 +446,16 @@ def worker_function(
 
     os.environ["MAKEFLAGS"] = makeflags
 
+    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
+    # much ourselves, but what we print should appear before output from `make` and other build
+    # tools.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
+    )
+
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
     tee = Tee(echo_control, parent, log_fd)
@@ -652,7 +662,6 @@ def _install(
         for phase in spack.builder.create(pkg):
             send_state(phase.name, state_stream)
             spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
-            sys.stdout.flush()
             # Run the install phase with debug output enabled.
             old_debug = spack.llnl.util.tty.debug_level()
             spack.llnl.util.tty.set_debug(1)
