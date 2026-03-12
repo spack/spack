@@ -1920,6 +1920,57 @@ def test_included_path_git(
         assert "already cloned" in captured
 
 
+@pytest.mark.parametrize("path", ["./config.yaml", "/path/to/my/special/package.yaml"])
+def test_included_path_local_no_dest(path):
+    """Confirm that local paths have no cache destination."""
+    entry = {"path": path}
+    include = spack.config.included_path(entry)
+    destination = include.destination_directory(entry["path"])
+    assert not destination, f"Expected local include ({include}) to NOT have a cache destination"
+
+
+def test_included_path_url_temp_dest(mock_low_high_config):
+    """Check that remote (raw) path under different scopes end up with temporary
+    cache destinations."""
+    entry = {
+        "path": "https://github.com/path/to/raw/config/config.yaml",
+        "sha256": "26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b",
+    }
+    include = spack.config.included_path(entry)
+
+    parent_scope = mock_low_high_config.scopes["low"]
+    parent_scope.path = ""
+    pre = f"Expected temporary cache destination for raw include path ({include}) for "
+
+    for scope in [None, parent_scope]:
+        rest = "parent scope with no path" if scope else "no parent scope"
+        destination = include.destination_directory(entry["path"], parent_scope=scope)
+        dest_dir = str(pathlib.Path(destination).parent)
+        temp_dir = tempfile.gettempdir()
+        assert dest_dir == temp_dir, pre + rest
+
+
+def test_included_path_git_temp_dest(mock_low_high_config):
+    """Check a remote (relative) path with different parent scope options that
+    result in a temporary cache destination."""
+    entry = {
+        "git": "https://example.com/linux/configs.git",
+        "branch": "develop",
+        "paths": ["config.yaml"],
+    }
+    include = spack.config.included_path(entry)
+    parent_scope = mock_low_high_config.scopes["low"]
+    parent_scope.path = ""
+    pre = f"Expected temporary cache destination for git include path ({include}) for "
+
+    for scope in [None, parent_scope]:
+        rest = "parent scope with no path" if scope else "no parent scope"
+        destination = include.destination_directory(entry["git"], parent_scope=scope)
+        dest_dir = str(pathlib.Path(destination).parent)
+        temp_dir = tempfile.gettempdir()
+        assert dest_dir == temp_dir, pre + rest
+
+
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
     monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 

@@ -1033,55 +1033,54 @@ class OptionalInclude:
         self.remote = False
         self._scopes = []
 
-    def _destination_directory(
+    def destination_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
     ) -> Optional[str]:
-        """Return the appropriate directory for relative or remote content
+        """Return the appropriate local directory for remote content.
 
         Args:
             path_or_url: the path or URL under consideration
             parent_scope: including scope
 
-        Returns:  ``None`` for an absolute path, an appropriate, writable
-           enclosing scope subdirectory of the parent scope path (if available);
-           otherwise a temporary directory
+        Returns:  ``None`` for a local path; an appropriate subdirectory of the enclosing (parent)
+            scope's writable directory (when available); otherwise a temporary directory.
         """
-
-        def _destination(root: Optional[str]) -> str:
-            # Ensure the destination is a writable location.
-            if root and filesystem.can_write_to_dir(root):
-                return root
-
-            return tempfile.TemporaryDirectory().name
-
-        # An absolute path does not have a destination directory.
-        if os.path.isabs(path_or_url):
+        # A local path does not have a destination directory.
+        if not self.remote:
+            tty.debug(f"The include ({self}) is not remote so it has no local cache directory.")
             return None
 
-        # A relative path's destination depends on the enclosing scope.
-        # If there is no path, then use a suitable destination.
+        # A relative path's destination depends on the enclosing scope's path.
+        # If there is no path, then use a temporary directory.
         if not parent_scope:
-            return tempfile.TemporaryDirectory().name if self.remote else None
+            tty.debug(
+                f"There is no parent scope of the include ({self}). "
+                "Using a temporary cache directory."
+            )
+            return tempfile.TemporaryDirectory().name
 
         root = getattr(parent_scope, "path", "")
         if not root:
             tty.debug(
-                f"Enclosing scope ({parent_scope}) of the include ({self}) does not have a path"
+                f"Enclosing scope ({parent_scope}) of the include ({self}) has "
+                "no path. Using a temporary cache directory."
             )
-            return None
+            return tempfile.TemporaryDirectory().name
 
+        # Return a temporary directory if the parent scope's directory is unwritable.
         root = os.path.dirname(root) if os.path.isfile(root) else root
-        if self.remote:
-            if not filesystem.can_write_to_dir(root):
-                return tempfile.TemporaryDirectory().name
+        if not filesystem.can_write_to_dir(root):
+            tty.debug(
+                f"Cannot write to parent scope {parent_scope.name}'s directory "
+                f"({root}). Using a temporary directory.)"
+            )
+            return tempfile.TemporaryDirectory().name
 
-            # Use a special subdirectory for environments
-            if parent_scope.name.startswith("env:"):
-                return os.path.join(root, ".spack-env", "includes")
+        # Use an appropriate subdirectory for caching remote content locally.
+        if parent_scope.name.startswith("env:"):
+            return os.path.join(root, ".spack-env", "includes")
 
-            return os.path.join(root, "includes")
-
-        return root
+        return os.path.join(root, "includes")
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -1258,7 +1257,7 @@ class IncludePath(OptionalInclude):
 
         # Make sure to use a proper working directory when obtaining the local
         # path for a local (or remote) file.
-        destination = self._destination_directory(self.path, parent_scope)
+        destination = self.destination_directory(self.path, parent_scope)
         tty.debug(
             f"Local cache destination for {self.path} is {destination} (None for local path)"
         )
