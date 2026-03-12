@@ -134,11 +134,20 @@ def ci_generate_test(
     return _func
 
 
-def test_ci_generate_with_env(ci_generate_test, tmp_path: pathlib.Path, mock_binary_index):
+@pytest.mark.parametrize("with_view", (False, True, "append", "force"))
+def test_ci_generate_with_env(
+    ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, with_view
+):
     """Make sure we can get a .gitlab-ci.yml from an environment file
     which has the gitlab-ci, cdash, and mirrors sections.
     """
     mirror_url = tmp_path / "ci-mirror"
+    mirror_config = {"url": str(mirror_url)}
+    if with_view:
+        mirror_config["view"] = "someview"
+        if isinstance(with_view, str):
+            os.environ["SPACK_CI_BUILDCACHE_VIEW"] = with_view
+
     spack_yaml, outputfile, _ = ci_generate_test(
         f"""\
 spack:
@@ -155,7 +164,7 @@ spack:
     - matrix:
       - [$old-gcc-pkgs]
   mirrors:
-    buildcache-destination: {mirror_url}
+    buildcache-destination: {mirror_config}
   ci:
     pipeline-gen:
     - submapping:
@@ -200,9 +209,18 @@ spack:
 
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
+    # Handle view parameter
+    if isinstance(with_view, bool):
+        with_view = "append" if with_view else ""
+
+    if with_view == "append":
+        with_view = "--name someview -y --append"
+    elif with_view == "force":
+        with_view = "--name someview --force"
+
     assert (
         rebuild_job["script"][1]
-        == "spack -v buildcache update-index --keys  buildcache-destination"
+        == f"spack -v buildcache update-index --keys {with_view} buildcache-destination"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 
