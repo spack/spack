@@ -70,7 +70,7 @@ def lockfile_newer_than_script(lockfile_date, script_path) -> bool:
     return lockfile_date > script_path_date
 
 
-def write_scripts(shell_script_path: str, mods: str):
+def generate_script(shell_script_path: str, mods: str):
     """Helper function to write spec's shell scripts
 
     Args:
@@ -88,7 +88,7 @@ def write_scripts(shell_script_path: str, mods: str):
         tty.error(f"Error writing to {shell_script_path}: {e}")
 
 
-def write_env_activate_script(env, view: str):
+def write_env_activate_script(env, view: str = "default"):
     """Gets and writes the environment modifications for an activated environment to a
     cached shell script
 
@@ -105,14 +105,14 @@ def write_env_activate_script(env, view: str):
     for shell in shells_avail:
         env_mods = EnvironmentModifications()
 
-        cmds = spack.environment.shell.activate_commands(env, shell, view=view)
+        cmds = spack.environment.shell.activate_commands(env, shell, view)
         cmds += env_mods.shell_modifications(shell)
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
-        write_scripts(activate_script_path, cmds)
+        generate_script(activate_script_path, cmds)
 
 
-def update_env_activate_script(env, view="default"):
+def update_env_activate_script(env, view: str = "default"):
     """Overwrite existing environment activation script with new environment modifications
 
     Args:
@@ -140,10 +140,10 @@ def update_env_activate_script(env, view="default"):
         ):
             continue
 
-        cmds = spack.environment.shell.activate_commands(env, shell, view=view)
+        cmds = spack.environment.shell.activate_commands(env, shell, view)
         cmds += env_mods.shell_modifications(shell)
 
-        write_scripts(activate_script_path, cmds)
+        generate_script(activate_script_path, cmds)
 
 
 def write_env_deactivate_script(env, view: str):
@@ -177,4 +177,4 @@ def write_env_deactivate_script(env, view: str):
 
         cmds += env_mods.shell_modifications(shell)
 
-        write_scripts(deactivate_script_path, cmds)
+        generate_script(deactivate_script_path, cmds)

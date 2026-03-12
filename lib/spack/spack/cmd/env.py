@@ -175,7 +175,7 @@ def _env_create(
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    shell_script.write_env_activate_script(env, view=with_view)
+    shell_script.write_env_activate_script(env)
     return env
 
 
