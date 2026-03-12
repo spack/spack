@@ -1973,8 +1973,8 @@ class PackageInstaller:
 
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
-        except Exception:
-            pass
+        except Exception as e:
+            spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
 
         if failures:
             for s in failures:
