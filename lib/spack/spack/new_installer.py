@@ -1835,8 +1835,10 @@ class PackageInstaller:
                     self.capacity += 1
                     jobserver.release()
                     build.cleanup(selector)
-                    self.report_data.finish_record(build.spec, build.proc.exitcode or 0)
-                    if build.proc.exitcode == 0:
+                    exitcode = build.proc.exitcode
+                    assert exitcode is not None, "Finished build should have exit code set"
+                    self.report_data.finish_record(build.spec, exitcode)
+                    if exitcode == 0:
                         # Add successful builds for database insertion (after a short delay)
                         finished_builds.append(build)
                         self.build_graph.enqueue_parents(
