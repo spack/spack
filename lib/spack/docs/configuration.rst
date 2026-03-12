@@ -548,7 +548,12 @@ The corresponding variables that describe where this data is placed are:
 * Config file locations are an exception: they can only be controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>`
 
 You can refer to these variables when configuring locations for stages, misc cache, etc.
-Furthermore each is controlled by a fall-through scheme.
+
+Each of these variables are the *default* (fallback) for data in their category: more-specific data in that category may have config that overrides these defaults.
+For example while build stages would reasonably be placed in ``$cache_home``, Spack's default configuration sets ``config:build_stage`` to the user's tempdir.
+Any configuration controlling location that is more-specific than the above variables will always take precedence (e.g. ``config:install_tree:root``).
+
+Each of these variables can be set with config or with environment variables.
 For example ``$data_home`` evaluates to one of the following (highest-priority first):
 
 #. ``SPACK_DATA_HOME`` env var if that is set
