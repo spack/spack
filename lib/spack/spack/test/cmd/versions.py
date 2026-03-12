@@ -55,7 +55,7 @@ def test_new_versions_utility():
         v("1.0.0"): {},  # already checksummed
         v("0.1.0"): {},  # loses to 99.99.99 in the () bucket
     }
-    expected = {v("99.99.99"), v("3.3.0"), v("3.2.1"), v("1.2.0"), v("1.0.1")}
+    expected = {v("99.99.99"), v("3.3.0"), v("1.2.0"), v("1.0.1")}
     assert new_versions(safe, fetched) == expected
 
 
@@ -67,10 +67,9 @@ def test_new_versions_only(monkeypatch):
         mock_remote_versions = {
             # new version, we expect this to be in output:
             Version("99.99.99"): {},  # new major version in the () bucket
-            Version("3.3.0"): {},  # new minor version in the (3,) bucket
             # some packages use '3.2' equivalently to '3.2.0'
             # thus '3.2.1' is considered to be a new version
-            Version("3.2.1"): {},  # new patch version in the (3, 2) bucket
+            Version("3.2.1"): {},  # new patch version in the (3,) bucket
             Version("3.2"): {},  # already checksummed
             Version("1.2.0"): {},  # new minor version in the (1,) bucket
             Version("1.1.0"): {},  # loses to 1.2.0
@@ -88,7 +87,7 @@ def test_new_versions_only(monkeypatch):
     monkeypatch.setattr(Brillig, "versions", mock_versions)
     monkeypatch.setattr(Brillig, "fetch_remote_versions", mock_fetch_remote_versions)
     v = versions("--new", "brillig")
-    assert v.strip(" \n\t") == "99.99.99\n  3.3.0\n  3.2.1\n  1.2.0\n  1.0.1"
+    assert v.strip(" \n\t") == "99.99.99\n  3.2.1\n  1.2.0\n  1.0.1"
 
 
 def test_no_unchecksummed_versions(monkeypatch):

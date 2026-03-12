@@ -51,9 +51,9 @@ def new_versions(
     numeric_safe = [v for v in safe_versions if not v.isdevelop()]
     fetched_list = sorted((v for v in fetched_versions if not v.isdevelop()), reverse=True)
 
-    # Prefixes of the form (3,), (3, 14), (3, 14, 3).
+    # Prefixes of the form (3,), (3, 14), etc.
     prefixes: Set[tuple] = {
-        v.version[0][:n] for v in numeric_safe for n in range(1, len(v.version[0]) + 1)
+        v.version[0][:n] for v in numeric_safe for n in range(1, len(v.version[0]))
     }
     # Look for new major versions (empty prefix).
     prefixes.add(())
