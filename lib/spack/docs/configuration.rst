@@ -533,18 +533,19 @@ These special variables are substituted first, so any environment variables with
 Spack-specific variables controlling data location
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Files generated and stored by spack are organized roughly into three categories:
+Files generated and used by spack are organized roughly into four categories:
 
 * Persistent, large quantities of data (e.g. installs and environments)
 * Temporary (or assumed temporary) large quantities of data (e.g. stages for installs)
 * Persistent caches/indices used by spack to speed up its commands (small quantities of data)
+* The configuration files themselves
 
 The corresponding variables that describe where this data is placed are:
 
 * ``$data_home``
 * ``$cache_home``
-* ``$state_home``
-* ``$user_cache_path``: legacy variable, equivalent to ``$state_home``
+* ``$state_home`` (also known as ``$user_cache_path``)
+* Config file locations are an exception: they can only be controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>`
 
 You can refer to these variables when configuring locations for stages, misc cache, etc.
 Furthermore each is controlled by a fall-through scheme.
@@ -557,8 +558,10 @@ For example ``$data_home`` evaluates to one of the following (highest-priority f
 #. ``XDG_DATA_HOME/spack`` if XDG_DATA_HOME is set
 #. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
 
+``config:locations:home`` / ``SPACK_HOME`` can be used to control all 3 of ``data_home``, ``cache_home``, and ``state_home``.
+
 Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
-Generally speaking these are controlled by ``$data_home``.
+These are controlled by ``$data_home``.
 Older installs of spack placed these within ``$spack``, and fallback scheme in these cases is augmented to prefer these old locations if no data is detected in the corresponding new locations:
 
 * ``$default_install_root``: the location where installs go by default.
@@ -703,10 +706,6 @@ Spack provides three environment variables that allow you to override or opt out
 * ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the ``system`` scope (``/etc/spack`` by default).
 * ``SPACK_DISABLE_LOCAL_CONFIG``: Set this environment variable to completely disable **all** configurations from the system and user directories.
   Spack will then only consider its own defaults and ``site`` configuration locations.
-
-And one that allows you to move the default cache location:
-
-* ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data (misc_cache, tests, reports, etc.).
 
 With these settings, if you want to isolate Spack in a CI environment, you can do this:
 
