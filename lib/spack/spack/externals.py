@@ -287,8 +287,20 @@ class ExternalSpecsParser:
                     f"in the 'dependencies' field{line_info}"
                 )
 
+            pkg_class = spack.repo.PATH.get_pkg_class(current_node.name)
+
             # Transform inline entries like 'mpich %gcc' to a canonical form using 'dependencies'
             for edge in current_node.edges_to_dependencies():
+                if edge.direct:
+                    dep_pkg_class = spack.repo.PATH.get_pkg_class(edge.spec.name)
+                    what_could_it_answer = set([edge.spec.name])
+                    what_could_it_answer.update(dep_pkg_class.provided_virtual_names())
+                    if not set(pkg_class.dependency_names()) & what_could_it_answer:
+                        raise ExternalDependencyError(
+                            f"{current_node.name} specified a direct dependency on"
+                            f" {edge.spec.name}, but the package does not indicate"
+                            f" this spec is required (this means the spec is not usable)."
+                        )
                 entry: DependencyDict = {"spec": str(edge.spec)}
 
                 # Handle entries with more options specified

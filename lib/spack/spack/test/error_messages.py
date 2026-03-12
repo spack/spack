@@ -12,6 +12,7 @@ import pytest
 
 import spack.config
 import spack.error
+import spack.externals
 import spack.repo
 import spack.util.file_cache
 import spack.util.spack_yaml as syaml
@@ -384,7 +385,7 @@ def expect_failure_and_print(should_mention=None):
     err_msg = None
     try:
         yield
-    except spack.error.UnsatisfiableSpecError as e:
+    except (spack.error.UnsatisfiableSpecError, spack.externals.ExternalDependencyError) as e:
         got_an_error_as_expected = True
         err_msg = str(e)
     if not got_an_error_as_expected:
@@ -540,3 +541,49 @@ packages:
 
     with expect_failure_and_print(should_mention=important_points):
         concretize_one("t1")
+
+
+def test_errmsg_external_wants_compiler(concretize_scope, mock_packages):
+    """A package specifies an external with a direct dependency on
+    a package that is not listed as a dependency in its package.
+
+    Check that an appropriate error message is generated when attempting
+    to concretize that package.
+    """
+    conf_str = """\
+packages:
+  dependent-install:
+    buildable: false
+    externals:
+    - spec: "dependent-install@2.0 %gcc@10.2.1"
+      prefix: /a/path/that/doesnt/need/to/exist/
+"""
+    update_packages_config(conf_str)
+
+    important_points = ["dependent-install specified a direct dependency on gcc"]
+
+    with expect_failure_and_print(should_mention=important_points):
+        concretize_one("dependent-install")
+
+
+def test_errmsg_external_wants_compiler_dependency(concretize_scope, mock_packages):
+    """A package specifies an external with a direct dependency on
+    a package that is not listed as a dependency in its package.
+
+    Check that an appropriate error message is generated when attempting
+    to concretize a parent of that package.
+    """
+    conf_str = """\
+packages:
+  dependency-install:
+    buildable: false
+    externals:
+    - spec: "dependency-install@2.0 %gcc@10.2.1"
+      prefix: /a/path/that/doesnt/need/to/exist/
+"""
+    update_packages_config(conf_str)
+
+    important_points = ["dependency-install specified a direct dependency on gcc"]
+
+    with expect_failure_and_print(should_mention=important_points):
+        concretize_one("dependent-install")

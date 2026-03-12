@@ -31,6 +31,9 @@ class IntelOneapiCompilers(Package, CompilerPackage):
 
     depends_on("c", type="build")
 
+    provides("c", "cxx")
+    provides("fortran")
+
     @property
     def compiler_search_prefix(self):
         return self.prefix.foo.bar.baz.bin

@@ -20,7 +20,7 @@ MPIS = [
     "multi-provider-mpi",
     "zmpi",
 ]
-COMPILERS = ["gcc", "llvm"]
+COMPILERS = ["gcc", "llvm", "intel-oneapi-compilers"]
 MPI_DEPS = ["fake"]
 
 
