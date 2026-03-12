@@ -298,9 +298,7 @@ class SpecParser:
 
         # TODO: Move toolchains out of the parser, and expand them as a separate step
         self.toolchains = {}
-        configuration = getattr(spack.config, "CONFIG", None)
-        if configuration is not None:
-            self.toolchains = configuration.get_config("toolchains")
+        self.toolchains = spack.config.CONFIG.get_config("toolchains")
         self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
