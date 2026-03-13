@@ -154,10 +154,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if parsed.scheme not in file_schemes:
                 return path
 
-            if os.path.isabs(expanded_path):
+            if os.path.isabs(parsed.path):
                 return path
             abs_path = path_util.canonicalize_path(path, orig_root)
-            return os.path.relpath(abs_path, start=new_root)
+            return pathlib.Path(os.path.relpath(abs_path, new_root)).as_posix()
 
         # If there are no includes, just copy
         if "include" in data["spack"]:
