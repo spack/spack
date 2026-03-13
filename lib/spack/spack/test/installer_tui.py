@@ -72,6 +72,7 @@ def create_build_status(
     terminal_rows: int = 24,
     total: int = 0,
     verbose: bool = False,
+    filter_padding: bool = False,
 ) -> Tuple[BuildStatus, List[float], SimpleTextIOWrapper]:
     """Helper function to create BuildStatus with mocked dependencies"""
     fake_stdout = SimpleTextIOWrapper(tty=is_tty)
@@ -91,6 +92,7 @@ def create_build_status(
         get_time=mock_get_time,
         is_tty=is_tty,
         verbose=verbose,
+        filter_padding=filter_padding,
     )
 
     return status, time_values, fake_stdout
@@ -942,6 +944,25 @@ class TestToggle:
         # Should have toggled back to overview mode
         assert status.overview_mode is True
         assert status.tracked_build_id == ""
+
+    @pytest.mark.parametrize("filter_padding", [True, False])
+    def test_print_logs_filters_padding(self, filter_padding):
+        """print_logs strips path-padding placeholders before writing to stdout."""
+        status, _, fake_stdout = create_build_status(filter_padding=filter_padding)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+        log_output = b"--with-foo=/base/__spack_path_placeholder__/__spack_path_placeholder__/bin"
+
+        # track the build and print logs with the relevant path.
+        status.overview_mode = False
+        status.tracked_build_id = build_id
+        status.print_logs(build_id, log_output)
+        written = fake_stdout._buffer.getvalue()
+
+        if filter_padding:
+            assert written == b"--with-foo=/base/[padded-to-59-chars]/bin"
+        else:
+            assert written == log_output
 
 
 class TestSearchFilteringIntegration:

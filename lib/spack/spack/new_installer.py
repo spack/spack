@@ -78,6 +78,7 @@ import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
+import spack.util.path
 from spack.installer import _do_fake_install, dump_packages
 
 if TYPE_CHECKING:
@@ -969,6 +970,7 @@ class BuildStatus:
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
         verbose: bool = False,
+        filter_padding: bool = False,
     ) -> None:
         #: Ordered dict of build ID -> info
         self.total = total
@@ -995,6 +997,7 @@ class BuildStatus:
         self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
+        self.log_filter = spack.util.path.padding_filter_bytes if filter_padding else None
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -1269,6 +1272,8 @@ class BuildStatus:
         # between builds.
         if build_id != self.tracked_build_id:
             return
+        if self.log_filter is not None:
+            data = self.log_filter(data)
         self.stdout.buffer.write(data)
         self.stdout.flush()
 
@@ -1781,7 +1786,11 @@ class PackageInstaller:
         self.verbose = verbose
         self.running_builds: Dict[int, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
-        self.build_status = BuildStatus(len(self.build_graph.nodes), verbose=verbose)
+        self.build_status = BuildStatus(
+            len(self.build_graph.nodes),
+            verbose=verbose,
+            filter_padding=spack.store.STORE.has_padding(),
+        )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         if concurrent_packages is None:
             concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)

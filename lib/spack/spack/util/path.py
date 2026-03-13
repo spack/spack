@@ -15,7 +15,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
-from typing import Optional
+from typing import Optional, Union
 
 import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
@@ -98,6 +98,9 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 #: It starts with two underscores to make it unlikely that prefix matches would
 #: include some other component of the installation path.
 SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
+
+#: Bytes equivalent of SPACK_PATH_PADDING_CHARS.
+SPACK_PATH_PADDING_BYTES = SPACK_PATH_PADDING_CHARS.encode("ascii")
 
 #: Special padding char if the padded string would otherwise end with a path
 #: separator (since the path separator would otherwise get collapsed out,
@@ -318,12 +321,29 @@ def longest_prefix_re(string, capture=True):
     )
 
 
-#: regex cache for padding_filter function
-_filter_re = None
+def _build_padding_re(as_bytes: bool = False):
+    """Build and return a compiled regex for filtering path padding placeholders."""
+    pad = re.escape(SPACK_PATH_PADDING_CHARS)
+    extra = SPACK_PATH_PADDING_EXTRA_CHAR
+    longest_prefix = longest_prefix_re(SPACK_PATH_PADDING_CHARS, capture=False)
+
+    regex = (
+        r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
+        r"(?:/{pad})+"  # the padding string repeated one or more times
+        # trailing prefix of padding as path component
+        r"(?:/{longest_prefix}|/{longest_prefix}{extra})?(?=/)"
+    )
+    regex = regex.replace("/", re.escape(os.sep))
+    regex = regex.format(pad=pad, extra=extra, longest_prefix=longest_prefix)
+
+    if as_bytes:
+        return re.compile(regex.encode("ascii"))
+    else:
+        return re.compile(regex)
 
 
-def padding_filter(string):
-    """Filter used to reduce output from path padding in log output.
+class _PaddingFilter:
+    """Callable that filters path-padding placeholders from a string or bytes buffer.
 
     This turns paths like this:
 
@@ -335,7 +355,7 @@ def padding_filter(string):
 
     Where ``padded-to-512-chars`` indicates that the prefix was padded with
     placeholders until it hit 512 characters. The actual value of this number
-    depends on what the `install_tree``'s ``padded_length`` is configured to.
+    depends on what the ``install_tree``'s ``padded_length`` is configured to.
 
     For a path to match and be filtered, the placeholder must appear in its
     entirety at least one time. e.g., "/spack/" would not be filtered, but
@@ -343,29 +363,32 @@ def padding_filter(string):
 
     Note that only the first padded path in the string is filtered.
     """
-    global _filter_re
 
-    pad = SPACK_PATH_PADDING_CHARS
-    if not _filter_re:
-        longest_prefix = longest_prefix_re(pad)
-        regex = (
-            r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
-            r"(/{pad})+"  # the padding string repeated one or more times
-            # trailing prefix of padding as path component
-            r"(/{longest_prefix}|/{longest_prefix}{extra_pad_character})?(?=/)"
-        )
-        regex = regex.replace("/", re.escape(os.sep))
-        regex = regex.format(
-            pad=pad,
-            extra_pad_character=SPACK_PATH_PADDING_EXTRA_CHAR,
-            longest_prefix=longest_prefix,
-        )
-        _filter_re = re.compile(regex)
+    __slots__ = ("_re", "_needle", "_fmt")
 
-    def replacer(match):
-        return "%s%s[padded-to-%d-chars]" % (match.group(1), os.sep, len(match.group(0)))
+    def __init__(self, as_bytes: bool = False) -> None:
+        self._re = _build_padding_re(as_bytes=as_bytes)
+        if as_bytes:
+            self._needle: Union[str, bytes] = SPACK_PATH_PADDING_BYTES
+            self._fmt: Union[str, bytes] = b"%b" + os.sep.encode("ascii") + b"[padded-to-%d-chars]"
+        else:
+            self._needle = SPACK_PATH_PADDING_CHARS
+            self._fmt = "%s" + os.sep + "[padded-to-%d-chars]"
 
-    return _filter_re.sub(replacer, string)
+    def _replace(self, match):
+        return self._fmt % (match.group(1), len(match.group(0)))
+
+    def __call__(self, data):
+        if self._needle not in data:
+            return data
+        return self._re.sub(self._replace, data)
+
+
+#: Callable that filters path-padding placeholders from strings
+padding_filter = _PaddingFilter(as_bytes=False)
+
+#: Callable that filters path-padding placeholders from bytes buffers
+padding_filter_bytes = _PaddingFilter(as_bytes=True)
 
 
 @contextlib.contextmanager
