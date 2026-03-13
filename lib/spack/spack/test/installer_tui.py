@@ -966,6 +966,22 @@ class TestToggle:
         else:
             assert written == log_output
 
+    @pytest.mark.parametrize("filter_padding", [True, False])
+    def test_prefix_padding_filter_in_status(self, filter_padding):
+        """Test that prefix in status indicator applies padding filter."""
+        padded_prefix = "/base/__spack_path_placeholder__/__spack_path_placeholder__/mypackage"
+        status, _, fake_stdout = create_build_status(is_tty=False, filter_padding=filter_padding)
+        spec = MockSpec("mypackage", "1.0", prefix=padded_prefix)
+        status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+        build_id = spec.dag_hash()
+        status.update_state(build_id, "finished")
+        output = fake_stdout.getvalue()
+        common = f"[+] {spec.dag_hash(7)} {spec.name}@{spec.version}"
+        if filter_padding:
+            assert output == f"{common} /base/[padded-to-59-chars]/mypackage\n"
+        else:
+            assert output == f"{common} {padded_prefix}\n"
+
 
 class TestSearchFilteringIntegration:
     """Test search mode with display filtering"""

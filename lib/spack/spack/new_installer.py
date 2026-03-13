@@ -79,8 +79,8 @@ import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
-import spack.util.path
 from spack.installer import _do_fake_install, dump_packages
+from spack.util.path import padding_filter, padding_filter_bytes
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -1003,7 +1003,7 @@ class BuildStatus:
             self.color = spack.llnl.util.tty.color.get_color_when(stdout)
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
-        self.log_filter = spack.util.path.padding_filter_bytes if filter_padding else None
+        self.filter_padding = filter_padding
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -1276,8 +1276,8 @@ class BuildStatus:
         # between builds.
         if build_id != self.tracked_build_id:
             return
-        if self.log_filter is not None:
-            data = self.log_filter(data)
+        if self.filter_padding:
+            data = padding_filter_bytes(data)
         self.stdout.buffer.write(data)
         self.stdout.flush()
 
@@ -1346,7 +1346,8 @@ class BuildStatus:
             yield " fetching"
             yield f": {build_info.progress_percent}%"
         elif build_info.state == "finished":
-            yield f" {build_info.prefix}"
+            prefix = build_info.prefix
+            yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
         else:
             yield f" {build_info.state}"
 
