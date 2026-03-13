@@ -1214,16 +1214,27 @@ class Environment:
         # indicated by the inclusion of lock files.
         self.included_concrete_env_root_dirs = []
 
-        paths = [
-            spack.util.path.canonicalize_path(path, default_wd=self.path)
-            for path in spack.config.paths_from_includes(includes)
-        ]
-        for path in paths:
-            if os.path.basename(path) != lockfile_name:
-                continue
+        for entry in includes:
+            include = spack.config.included_path(entry)
+            if isinstance(include, spack.config.GitIncludePaths):
+                # Git includes must be cloned first; paths are relative to the
+                # clone destination, not to the manifest directory.
+                destination = include._clone()
+                if destination is None:
+                    continue
+                resolved = [os.path.join(destination, p) for p in include.paths]
+            else:
+                resolved = [
+                    spack.util.path.canonicalize_path(p, default_wd=self.path)
+                    for p in include.paths
+                ]
 
-            tty.debug(f"Adding {path} to the concrete environment root directories")
-            self.included_concrete_env_root_dirs.append(os.path.dirname(path))
+            for path in resolved:
+                if os.path.basename(path) != lockfile_name:
+                    continue
+
+                tty.debug(f"Adding {path} to the concrete environment root directories")
+                self.included_concrete_env_root_dirs.append(os.path.dirname(path))
 
         # Cache concrete environments for required lock files.
         self._load_concrete_include_data()
