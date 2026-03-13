@@ -315,7 +315,6 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     remote = ["remote", "add", "origin", url]
     config = ["config", "remote.origin.fetch", "+refs/heads/*:origin/refs/*"]
     fetch = ["fetch"]
-    cmds = [init, remote, config, fetch]
 
     if not debug:
         fetch.append("--quiet")
@@ -325,8 +324,13 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     filter_args = FILTER_BLOB_NONE(version)
     if filter_args:
         fetch.extend(filter_args)
-        cmds.insert(1, ["config", "extensions.partialClone", "true"])
     fetch.extend([url, ref])
+
+    partial_clone = ["config", "extensions.partialClone", "true"] if filter_args else None
+    if partial_clone is not None:
+        cmds = [init, partial_clone, remote, config, fetch]
+    else:
+        cmds = [init, remote, config, fetch]
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 
