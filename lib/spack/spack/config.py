@@ -1033,54 +1033,59 @@ class OptionalInclude:
         self.remote = False
         self._scopes = []
 
-    def destination_directory(
+    def local_root_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
     ) -> Optional[str]:
-        """Return the appropriate local directory for remote content.
+        """Return the appropriate local directory for relative or remote content.
 
         Args:
             path_or_url: the path or URL under consideration
             parent_scope: including scope
 
-        Returns:  ``None`` for a local path; an appropriate subdirectory of the enclosing (parent)
-            scope's writable directory (when available); otherwise a temporary directory.
+        Returns:  ``None`` for an absolute path or a local relative path without an enclosing
+            parent scope; an appropriate subdirectory of the enclosing (parent) scope's writable
+            directory (when available); otherwise a temporary directory.
         """
-        # A local path does not have a destination directory.
-        if not self.remote:
-            tty.debug(f"The include ({self}) is not remote so it has no local cache directory.")
+        # An absolute path does need a local root directory.
+        if os.path.isabs(path_or_url):
+            tty.debug(f"The included path ({self}) is absolute so needs no root directory")
             return None
 
-        # A relative path's destination depends on the enclosing scope's path.
-        # If there is no path, then use a temporary directory.
+        # A relative path's root directory depends on the enclosing scope's path.
+        # If there is no path, then a remote include will use a temporary directory while a local
+        # will return ``None``.
         if not parent_scope:
-            tty.debug(
-                f"There is no parent scope of the include ({self}). "
-                "Using a temporary cache directory."
-            )
-            return tempfile.TemporaryDirectory().name
+            temp_root = tempfile.TemporaryDirectory().name if self.remote else None
+            tty.debug(f"There is no parent scope of the include ({self}). Using {temp_root}.")
+            return temp_root
 
         root = getattr(parent_scope, "path", "")
         if not root:
+            temp_root = tempfile.TemporaryDirectory().name if self.remote else None
             tty.debug(
-                f"Enclosing scope ({parent_scope}) of the include ({self}) has "
-                "no path. Using a temporary cache directory."
+                f"Enclosing scope ({parent_scope.name}) of the include ({self}) "
+                f"has no path. Using {temp_root}."
             )
-            return tempfile.TemporaryDirectory().name
+            return temp_root
 
         # Return a temporary directory if the parent scope's directory is unwritable.
         root = os.path.dirname(root) if os.path.isfile(root) else root
-        if not filesystem.can_write_to_dir(root):
-            tty.debug(
-                f"Cannot write to parent scope {parent_scope.name}'s directory "
-                f"({root}). Using a temporary directory.)"
-            )
-            return tempfile.TemporaryDirectory().name
+        if self.remote:
+            if not filesystem.can_write_to_dir(root):
+                temp_root = tempfile.TemporaryDirectory().name
+                tty.debug(
+                    f"Cannot write to parent scope {parent_scope.name}'s directory "
+                    f"({root}). Using {temp_root}."
+                )
+                return temp_root
 
-        # Use an appropriate subdirectory for caching remote content locally.
-        if parent_scope.name.startswith("env:"):
-            return os.path.join(root, ".spack-env", "includes")
+            # Use an appropriate subdirectory for caching remote content locally.
+            if parent_scope.name.startswith("env:"):
+                return os.path.join(root, ".spack-env", "includes")
 
-        return os.path.join(root, "includes")
+            return os.path.join(root, "includes")
+
+        return root
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -1257,12 +1262,10 @@ class IncludePath(OptionalInclude):
 
         # Make sure to use a proper working directory when obtaining the local
         # path for a local (or remote) file.
-        destination = self.destination_directory(self.path, parent_scope)
-        tty.debug(
-            f"Local cache destination for {self.path} is {destination} (None for local path)"
-        )
+        root = self.local_root_directory(self.path, parent_scope)
+        tty.debug(f"Local root for {self.path} is {root}")
 
-        config_path = rfc_util.local_path(self.path, self.sha256, destination)
+        config_path = rfc_util.local_path(self.path, self.sha256, root)
         assert config_path
         self.destination = config_path
 
