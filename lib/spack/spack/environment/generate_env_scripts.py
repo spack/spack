@@ -135,15 +135,13 @@ def update_env_activate_script(env, view: str = "default"):
         activate_script_path = path_to_env_activate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date != 0.00 and not lockfile_newer_than_script(
+        if lockfile_date == 0.00 or lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
-            continue
+            cmds = spack.environment.shell.activate_commands(env, shell, view=view)
+            cmds += env_mods.shell_modifications(shell)
 
-        cmds = spack.environment.shell.activate_commands(env, shell, view)
-        cmds += env_mods.shell_modifications(shell)
-
-        generate_script(activate_script_path, cmds)
+            generate_script(activate_script_path, cmds)
 
 
 def write_env_deactivate_script(env, view: str):
@@ -167,14 +165,12 @@ def write_env_deactivate_script(env, view: str):
         deactivate_script_path = path_to_env_deactivate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date != 0.00 and not lockfile_newer_than_script(
+        if lockfile_date == 0.00 or lockfile_newer_than_script(
             lockfile_date, deactivate_script_path
         ):
-            continue
+            env_mods = spack.environment.shell.deactivate(env, view)
 
-        cmds = spack.environment.shell.deactivate_commands(shell)
-        env_mods = spack.environment.shell.deactivate(env, view)
+            cmds = spack.environment.shell.deactivate_commands(shell)
+            cmds += env_mods.shell_modifications(shell)
 
-        cmds += env_mods.shell_modifications(shell)
-
-        generate_script(deactivate_script_path, cmds)
+            generate_script(deactivate_script_path, cmds)

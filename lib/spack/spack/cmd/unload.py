@@ -8,7 +8,7 @@ import os
 import spack.cmd
 import spack.cmd.common
 import spack.error
-import spack.hooks.generate_spec_scripts as shell_script
+import spack.hooks.generate_spec_scripts as generate_script
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
@@ -79,18 +79,6 @@ def _get_environment_modifications(spec, shell) -> str:
     return env_mod.shell_modifications(shell)
 
 
-def _create_unload_shell_script(cmds, unload_script_location):
-    """Creates & writes environment modification for spec's unload shell script
-
-    Args:
-        cmds: the commands to write in script
-        unload_script_location: where to write unload shell script
-    """
-
-    with open(unload_script_location, "w", encoding="utf-8") as f:
-        f.write(cmds)
-
-
 def unload(parser, args):
     """unload spack packages from the user environment"""
     if args.specs and args.all:
@@ -123,11 +111,12 @@ def unload(parser, args):
         if spec.external:
             commands = _get_environment_modifications(spec, shell)
         else:
-            unload_script = shell_script.path_to_unload_shell_script(spec, shell)
+            unload_script = generate_script.path_to_unload_shell_script(spec, shell)
 
             if not os.path.isfile(unload_script):
                 mods = _get_environment_modifications(spec, shell)
-                _create_unload_shell_script(mods, unload_script)
+                generate_script.write_spec_scripts(unload_script, mods)
+
             source = "." if shell == "sh" else "source"
             commands = f"{source} {unload_script}"
 

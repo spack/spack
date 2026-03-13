@@ -19,7 +19,7 @@ import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
-import spack.environment.generate_env_scripts as shell_script
+import spack.environment.generate_env_scripts as generate_script
 import spack.llnl.string as string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
@@ -175,7 +175,7 @@ def _env_create(
         tty.msg(colorize(f"Created independent environment in: @c{{{cescape(env.path)}}}"))
     tty.msg(f"Activate with: {colorize(f'@c{{spack env activate {cescape(name_or_path)}}}')}")
 
-    shell_script.write_env_activate_script(env)
+    generate_script.write_env_activate_script(env)
     return env
 
 
@@ -364,7 +364,7 @@ def env_activate(args):
     if ev.active_environment():
         # run deactivate script
         active_env = ev.active_environment()
-        env_deactivate_script = shell_script.path_to_env_deactivate_shell_script(
+        env_deactivate_script = generate_script.path_to_env_deactivate_shell_script(
             active_env, shell=args.shell
         )
 
@@ -383,16 +383,16 @@ def env_activate(args):
     elif not args.without_view and active_env.has_view(ev.default_view_name):
         view = ev.default_view_name
 
-    env_activate_script = shell_script.path_to_env_activate_shell_script(
+    env_activate_script = generate_script.path_to_env_activate_shell_script(
         active_env, shell=args.shell
     )
 
     active_env.manifest.prepare_config_scope()
-    shell_script.update_env_activate_script(active_env, view)
+    generate_script.update_env_activate_script(active_env, view)
 
     ev.activate(active_env)
 
-    cmds = shell_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
+    cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
 
     if cmds:
         sys.stdout.write(cmds)
@@ -400,7 +400,7 @@ def env_activate(args):
     source = "." if args.shell == "sh" else "source"
     print(f"{source} {env_activate_script}")
 
-    shell_script.write_env_deactivate_script(ev.active_environment(), view)
+    generate_script.write_env_deactivate_script(ev.active_environment(), view)
 
 
 #
@@ -460,12 +460,12 @@ def env_deactivate(args):
     if ev.active_environment() is None:
         tty.die("No environment is currently active.")
 
-    env_deactivate_script_path = shell_script.path_to_env_deactivate_shell_script(
+    env_deactivate_script_path = generate_script.path_to_env_deactivate_shell_script(
         ev.active_environment(), shell=args.shell
     )
 
     if not os.path.isfile(env_deactivate_script_path):
-        shell_script.write_env_deactivate_script(
+        generate_script.write_env_deactivate_script(
             ev.active_environment(), os.environ.get("SPACK_ENV_VIEW", "")
         )
 
@@ -835,8 +835,8 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
-        shell_script.write_env_activate_script(env, args.view)
-        shell_script.write_env_deactivate_script(env, args.view)
+        generate_script.write_env_activate_script(env, args.view)
+        generate_script.write_env_deactivate_script(env, args.view)
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path

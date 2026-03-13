@@ -9,7 +9,7 @@ import sys
 import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
-import spack.hooks.generate_spec_scripts as shell_script
+import spack.hooks.generate_spec_scripts as generate_script
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
 
@@ -90,17 +90,6 @@ def _get_environment_modifications(spec, shell) -> str:
     return env_mod.shell_modifications(shell)
 
 
-def _create_load_shell_script(cmds, load_script_location):
-    """Create load shell script
-
-    Args:
-        cmds: the commands to write in script
-        load_script_location: where to write the load shell script
-    """
-    with open(load_script_location, "w", encoding="utf-8") as f:
-        f.write(cmds)
-
-
 def load(parser, args):
     env = ev.active_environment()
 
@@ -130,11 +119,12 @@ def load(parser, args):
         if spec.external:
             commands = _get_environment_modifications(spec, shell)
         else:
-            load_script = shell_script.path_to_load_shell_script(spec, shell)
+            load_script = generate_script.path_to_load_shell_script(spec, shell)
 
             if not os.path.isfile(load_script):
                 mods = _get_environment_modifications(spec, shell)
-                _create_load_shell_script(mods, load_script)
+                generate_script.write_spec_scripts(load_script, mods)
+
             source = "." if shell == "sh" else "source"
             commands = f"{source} {load_script}"
 
