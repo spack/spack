@@ -267,6 +267,6 @@ If you need to install to your home directory or need to install a module with n
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You can find more information on installing Perl modules from source at: http://www.perlmonks.org/?node_id=128077
+You can find more information on installing Perl modules from source at: https://www.perlmonks.org/?node_id=128077
 
-More generic Perl module installation instructions can be found at: http://www.cpan.org/modules/INSTALL.html
+More generic Perl module installation instructions can be found at: https://www.cpan.org/modules/INSTALL.html
