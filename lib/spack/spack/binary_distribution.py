@@ -1714,7 +1714,7 @@ def download_tarball(
         spack.mirrors.mirror.MirrorCollection(binary=True).values()
     )
     if not configured_mirrors:
-        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
+        raise NoConfiguredBinaryMirrors()
 
     # Note on try_first and try_next:
     # mirrors_for_spec mostly likely came from spack caching remote
@@ -2958,3 +2958,10 @@ class CannotListKeys(GenerateIndexError):
 
 class PushToBuildCacheError(spack.error.SpackError):
     """Raised when unable to push objects to binary mirror"""
+
+
+class NoConfiguredBinaryMirrors(spack.error.SpackError):
+    """Raised when no binary mirrors are configured but an operation requires them"""
+
+    def __init__(self):
+        super().__init__("Please add a spack mirror to allow download of pre-compiled packages.")
