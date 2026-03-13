@@ -97,7 +97,7 @@ So that you can familiarize yourself with the project, we will start with a high
                test/              <- unit test modules
                util/              <- common code
 
-Spack is designed so that it could live within a `standard UNIX directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``, ``var``, and ``opt`` all contain a ``spack`` subdirectory in case Spack is installed alongside other software.
+Spack is designed so that it could live within a `standard UNIX directory hierarchy <https://linux.die.net/man/7/hier>`_, so ``lib``, ``var``, and ``opt`` all contain a ``spack`` subdirectory in case Spack is installed alongside other software.
 Most of the interesting parts of Spack live in ``lib/spack``.
 
 .. note::
@@ -654,7 +654,7 @@ In order to debug Spack's URL parsing support, the ``spack url`` command can be 
 
 If you need to debug a single URL, you can use the following command:
 
-.. command-output:: spack url parse http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz
+.. command-output:: spack url parse https://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz
 
 You will notice that the name and version of this URL are correctly detected, and you can even see which regular expressions it was matched to.
 However, you will notice that when it substitutes the version number in, it does not replace the ``2.2`` with ``9.9`` where we would expect ``9.9.9b`` to live.

@@ -272,4 +272,4 @@ Note that this may involve passing additional flags to the build to locate depen
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on the SCons build system, see: http://scons.org/documentation.html
+For more information on the SCons build system, see: https://scons.org/documentation.html

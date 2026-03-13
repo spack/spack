@@ -117,4 +117,4 @@ If the ``*.pro`` file used to tell QMake how to build the package is found in a 
 External documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-For more information on the QMake build system, see: http://doc.qt.io/qt-5/qmake-manual.html
+For more information on the QMake build system, see: https://doc.qt.io/qt-5/qmake-manual.html

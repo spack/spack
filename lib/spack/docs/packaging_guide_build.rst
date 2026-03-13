@@ -1426,8 +1426,8 @@ The ``spack graph <spec>`` command can help you visualize the dependency graph b
 
 By default it generates an ASCII rendering of a spec's dependency graph, which can be complementary to the output of ``spack spec``.
 
-Much more powerful is the set of flags ``spack graph --color --dot ...``, which turns the dependency graph into `Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.
-Tools such as `Graphviz <http://www.graphviz.org>`_ can render this.
+Much more powerful is the set of flags ``spack graph --color --dot ...``, which turns the dependency graph into `Dot <https://www.graphviz.org/doc/info/lang.html>`_ format.
+Tools such as `Graphviz <https://www.graphviz.org>`_ can render this.
 For example, you can generate a PDF of the dependency graph of a package with the following command:
 
 .. code-block:: console

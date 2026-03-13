@@ -430,7 +430,7 @@ The most straightforward way to add new versions to your package is to add a lin
 
    class Foo(Package):
 
-       url = "http://example.com/foo-8.2.1.tar.gz"
+       url = "https://example.com/foo-8.2.1.tar.gz"
 
        version("8.2.1", sha256="85f477fdd6f8194ab6a0e7afd1cb34eae46c775278d5db9d7ebc9ddaf50c23b1")
        version("8.2.0", sha256="427b2e244e73385515b8ad4f75358139d44a4c792d9b26ddffe2582835cedd8c")
@@ -447,7 +447,7 @@ The most straightforward way to add new versions to your package is to add a lin
 
 
 Notice how you only have to specify the URL once, in the ``url`` field.
-Spack is smart enough to extrapolate the URL for each version based on the version number and download version ``8.2.0`` of the ``Foo`` package above from ``http://example.com/foo-8.2.0.tar.gz``.
+Spack is smart enough to extrapolate the URL for each version based on the version number and download version ``8.2.0`` of the ``Foo`` package above from ``https://example.com/foo-8.2.0.tar.gz``.
 
 If the URL is particularly complicated or changes based on the release, you can override the default URL generation algorithm by defining your own :py:meth:`~spack.package.PackageBase.url_for_version` function.
 For example, the download URL for OpenMPI contains the ``major.minor`` version in one spot and the ``major.minor.patch`` version in another:
@@ -465,13 +465,13 @@ With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.
 
 .. code-block:: text
 
-   http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+   https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
 but download OpenMPI ``1.10.7`` from
 
 .. code-block:: text
 
-   http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2
+   https://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2
 
 You'll notice that OpenMPI's ``url_for_version()`` function makes use of a special ``Version`` function called ``up_to()``.
 When you call ``version.up_to(2)`` on a version like ``1.10.0``, it returns ``1.10``.
@@ -521,7 +521,7 @@ If a URL cannot be derived systematically, or there is a special URL for one of 
    version(
        "8.2.1",
        sha256="91ee5e9f42ba3d34e414443b36a27b797a56a47aad6bb1e4c1769e69c77ce0ca",
-       url="http://example.com/foo-8.2.1-special-version.tar.gz",
+       url="https://example.com/foo-8.2.1-special-version.tar.gz",
    )
 
 
@@ -580,17 +580,17 @@ Using ``spack checksum`` is straightforward:
 
    $ spack checksum libelf
    ==> Found 16 versions of libelf.
-     0.8.13    http://www.mr511.de/software/libelf-0.8.13.tar.gz
-     0.8.12    http://www.mr511.de/software/libelf-0.8.12.tar.gz
-     0.8.11    http://www.mr511.de/software/libelf-0.8.11.tar.gz
-     0.8.10    http://www.mr511.de/software/libelf-0.8.10.tar.gz
-     0.8.9     http://www.mr511.de/software/libelf-0.8.9.tar.gz
-     0.8.8     http://www.mr511.de/software/libelf-0.8.8.tar.gz
-     0.8.7     http://www.mr511.de/software/libelf-0.8.7.tar.gz
-     0.8.6     http://www.mr511.de/software/libelf-0.8.6.tar.gz
-     0.8.5     http://www.mr511.de/software/libelf-0.8.5.tar.gz
+     0.8.13    https://www.mr511.de/software/libelf-0.8.13.tar.gz
+     0.8.12    https://www.mr511.de/software/libelf-0.8.12.tar.gz
+     0.8.11    https://www.mr511.de/software/libelf-0.8.11.tar.gz
+     0.8.10    https://www.mr511.de/software/libelf-0.8.10.tar.gz
+     0.8.9     https://www.mr511.de/software/libelf-0.8.9.tar.gz
+     0.8.8     https://www.mr511.de/software/libelf-0.8.8.tar.gz
+     0.8.7     https://www.mr511.de/software/libelf-0.8.7.tar.gz
+     0.8.6     https://www.mr511.de/software/libelf-0.8.6.tar.gz
+     0.8.5     https://www.mr511.de/software/libelf-0.8.5.tar.gz
      ...
-     0.5.2     http://www.mr511.de/software/libelf-0.5.2.tar.gz
+     0.5.2     https://www.mr511.de/software/libelf-0.5.2.tar.gz
 
    How many would you like to checksum? (default is 1, q to abort)
 
@@ -611,7 +611,7 @@ It fetches the tarballs you ask for and prints out a list of ``version`` command
    If that's not possible, e.g., if the package's developers don't name their source archive consistently, you'll need to manually add ``version`` calls yourself.
 
 By default, Spack will search for new versions by scraping the parent URL component of the source archive you gave it in the ``url`` attribute.
-So, if the sources are at ``http://example.com/downloads/foo-1.0.tar.gz``, Spack computes a *list URL* from it ``http://example.com/downloads/``, and scans that for links to other versions of the package.
+So, if the sources are at ``https://example.com/downloads/foo-1.0.tar.gz``, Spack computes a *list URL* from it ``https://example.com/downloads/``, and scans that for links to other versions of the package.
 If you need to search another path for download links, you can supply some extra attributes that control how your package finds new versions.
 See the documentation on :ref:`attribute_list_url` and :ref:`attribute_list_depth`.
 
@@ -661,9 +661,9 @@ For example, the following package has a ``list_url`` attribute that points to a
    :linenos:
 
    class Example(Package):
-       homepage = "http://www.example.com"
-       url = "http://www.example.com/libexample-1.2.3.tar.gz"
-       list_url = "http://www.example.com/downloads/all-versions.html"
+       homepage = "https://www.example.com"
+       url = "https://www.example.com/libexample-1.2.3.tar.gz"
+       list_url = "https://www.example.com/downloads/all-versions.html"
 
 .. _attribute_list_depth:
 
@@ -675,18 +675,18 @@ For example, ``mpich`` has a tarball URL that looks like this:
 
 .. code-block:: python
 
-   url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+   url = "https://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
 
-But its downloads are a few clicks away from ``http://www.mpich.org/static/downloads/``.
+But its downloads are a few clicks away from ``https://www.mpich.org/static/downloads/``.
 So, we need to add a ``list_url`` *and* a ``list_depth`` attribute:
 
 .. code-block:: python
    :linenos:
 
    class Mpich(Package):
-       homepage = "http://www.mpich.org"
-       url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-       list_url = "http://www.mpich.org/static/downloads/"
+       homepage = "https://www.mpich.org"
+       url = "https://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+       list_url = "https://www.mpich.org/static/downloads/"
        list_depth = 1
 
 By default, Spack only looks at the top-level page available at ``list_url``.
@@ -705,7 +705,7 @@ Spack supports listing mirrors of the main URL in a package by defining the ``ur
 
   class Foo(Package):
 
-      urls = ["http://example.com/foo-1.0.tar.gz", "http://mirror.com/foo-1.0.tar.gz"]
+      urls = ["https://example.com/foo-1.0.tar.gz", "https://mirror.com/foo-1.0.tar.gz"]
 
 instead of just a single ``url``.
 This attribute is a list of possible URLs that will be tried in order when fetching packages.
@@ -1290,7 +1290,7 @@ If you want to skip this step (e.g., for self-extracting executables and other c
    version(
        "8.2.1",
        sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
-       url="http://example.com/foo-8.2.1-special-version.sh",
+       url="https://example.com/foo-8.2.1-special-version.sh",
        expand=False,
    )
 
@@ -1647,8 +1647,8 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
    :linenos:
 
    class Libdwarf(Package):
-       homepage = "http://www.prevanders.net/dwarf.html"
-       url = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
+       homepage = "https://www.prevanders.net/dwarf.html"
+       url = "https://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
        version("20130729", sha256="092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6")
@@ -1935,9 +1935,9 @@ Virtual dependencies
 
 In some cases, more than one package can satisfy another package's dependency.
 One way this can happen is if a package depends on a particular *interface*, but there are multiple *implementations* of the interface, and the package could be built with any of them.
-A *very* common interface in HPC is the `Message Passing Interface (MPI) <http://www.mcs.anl.gov/research/projects/mpi/>`_, which is used in many large-scale parallel applications.
+A *very* common interface in HPC is the `Message Passing Interface (MPI) <https://www.mcs.anl.gov/research/projects/mpi/>`_, which is used in many large-scale parallel applications.
 
-MPI has several different implementations (e.g., `MPICH <http://www.mpich.org>`_, `OpenMPI <http://www.open-mpi.org>`_, and `MVAPICH <http://mvapich.cse.ohio-state.edu>`_) and scientific applications can be built with any one of them.
+MPI has several different implementations (e.g., `MPICH <https://www.mpich.org>`_, `OpenMPI <https://www.open-mpi.org>`_, and `MVAPICH <https://mvapich.cse.ohio-state.edu>`_) and scientific applications can be built with any one of them.
 Many package managers handle interfaces like this by requiring many variations of the package recipe for each implementation of MPI, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``.
 In Spack every package is defined in a single ``package.py`` file, and avoids the combinatorial explosion through *virtual dependencies*.
 
@@ -2239,7 +2239,7 @@ Here is an example of specifying the unconditional use of a patch file URL:
 .. code-block:: python
 
    patch(
-       "http://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
+       "https://www.nwchem-sw.org/images/Tddft_mxvec20.patch",
        sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
    )
 
@@ -2278,7 +2278,7 @@ Both the archive and patch checksum are checked when patch archives are download
 .. code-block:: python
 
    patch(
-       "http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
+       "https://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz",
        sha256="252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866",
        archive_sha256="4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e",
    )

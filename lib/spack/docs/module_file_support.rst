@@ -13,7 +13,7 @@ Modules (modules.yaml)
 ======================
 
 The use of module systems to manage user environments in a controlled way is a common practice at HPC centers that is sometimes embraced also by individual programmers on their development machines.
-To support this common practice Spack integrates with `Environment Modules <http://modules.sourceforge.net/>`_ and `Lmod <http://lmod.readthedocs.io/en/latest/>`_ by providing post-install hooks that generate module files and commands to manipulate them.
+To support this common practice Spack integrates with `Environment Modules <https://modules.sourceforge.net/>`_ and `Lmod <https://lmod.readthedocs.io/en/latest/>`_ by providing post-install hooks that generate module files and commands to manipulate them.
 
 Modules are one of several ways you can use Spack packages.
 For other options that may fit your use case better, you should also look at :ref:`spack load <spack-load>` and :ref:`environments <environments>`.
@@ -669,7 +669,7 @@ Scripts to load modules recursively may be made with the command:
 
    $ spack module tcl loads --dependencies <spec>
 
-An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
+An equivalent alternative using `process substitution <https://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
 .. code-block:: console
 

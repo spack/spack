@@ -98,7 +98,7 @@ And this would run the ``test_platform`` test from that file:
    $ spack unit-test lib/spack/spack/test/architecture.py::test_platform
 
 This allows you to develop iteratively: make a change, test that change, make another change, test that change, etc.
-We use `pytest <http://pytest.org/>`_ as our tests framework, and these types of arguments are just passed to the ``pytest`` command underneath.
+We use `pytest <https://pytest.org/>`_ as our tests framework, and these types of arguments are just passed to the ``pytest`` command underneath.
 See `the pytest docs <https://doc.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run>`_ for more details on test selection syntax.
 
 ``spack unit-test`` has a few special options that can help you understand what tests are available.
@@ -139,7 +139,7 @@ To see the output *live*, use the ``-s`` argument to ``pytest``:
 Unit tests are crucial to making sure bugs are not introduced into Spack.
 If you are modifying core Spack libraries or adding new functionality, please add new unit tests for your feature and consider strengthening existing tests.
 You will likely be asked to do this if you submit a pull request to the Spack project on GitHub.
-Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask for guidance on how to write tests!
+Check out the `pytest documentation <https://pytest.org/>`_ and feel free to ask for guidance on how to write tests!
 
 .. note::
 
@@ -151,7 +151,7 @@ Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask 
 Style Tests
 ^^^^^^^^^^^^
 
-Spack uses `Flake8 <http://flake8.pycqa.org/en/latest/>`_ to test for `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
+Spack uses `Flake8 <https://flake8.pycqa.org/en/latest/>`_ to test for `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_ conformance and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
 PEP 8 is a series of style guides for Python that provide suggestions for everything from variable naming to indentation.
 In order to limit the number of PRs that were mostly style changes, we decided to enforce PEP 8 conformance.
 Your PR needs to comply with PEP 8 in order to be accepted, and if it modifies the Spack library, it needs to successfully type-check with mypy as well.

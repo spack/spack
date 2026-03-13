@@ -737,7 +737,7 @@ You can assign class-level attributes in the configuration:
      mpileaks:
        package_attributes:
          # Override existing attributes
-         url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+         url: https://www.somewhereelse.com/mpileaks-1.0.tar.gz
          # ... or add new ones
          x: 1
 

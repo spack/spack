@@ -81,23 +81,23 @@ Here is what it looks like:
 
    $ spack mirror create libelf libdwarf
    ==> Created new mirror in spack-mirror-2014-06-24
-   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
+   ==> Trying to fetch from https://www.mr511.de/software/libelf-0.8.13.tar.gz
    ##########################################################                81.6%
    ==> Checksum passed for libelf@0.8.13
    ==> Added libelf@0.8.13
-   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.12.tar.gz
+   ==> Trying to fetch from https://www.mr511.de/software/libelf-0.8.12.tar.gz
    ######################################################################    98.6%
    ==> Checksum passed for libelf@0.8.12
    ==> Added libelf@0.8.12
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130207.tar.gz
+   ==> Trying to fetch from https://www.prevanders.net/libdwarf-20130207.tar.gz
    ######################################################################    97.3%
    ==> Checksum passed for libdwarf@20130207
    ==> Added libdwarf@20130207
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130126.tar.gz
+   ==> Trying to fetch from https://www.prevanders.net/libdwarf-20130126.tar.gz
    ########################################################                  78.9%
    ==> Checksum passed for libdwarf@20130126
    ==> Added libdwarf@20130126
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130729.tar.gz
+   ==> Trying to fetch from https://www.prevanders.net/libdwarf-20130729.tar.gz
    #############################################################             84.7%
    ==> Added libdwarf@20130729
    ==> Added spack-mirror-2014-06-24/libdwarf/libdwarf-20130729.tar.gz to mirror
