@@ -68,6 +68,7 @@ import spack.error
 import spack.hooks
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
+import spack.llnl.util.tty.color
 import spack.paths
 import spack.report
 import spack.spec
@@ -969,6 +970,7 @@ class BuildStatus:
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
+        color: Optional[bool] = None,
         verbose: bool = False,
         filter_padding: bool = False,
     ) -> None:
@@ -994,7 +996,11 @@ class BuildStatus:
         self.terminal_size = os.terminal_size((0, 0))
         self.terminal_size_changed: bool = True
         self.get_time = get_time
-        self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
+        self.is_tty = is_tty if is_tty is not None else stdout.isatty()
+        if color is not None:
+            self.color = color
+        else:
+            self.color = spack.llnl.util.tty.color.get_color_when(stdout)
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.log_filter = spack.util.path.padding_filter_bytes if filter_padding else None
@@ -1102,9 +1108,10 @@ class BuildStatus:
         self.tracked_build_id = new_build_id
 
         # Tell the user we're following new logs, and instruct the child to start sending them.
-        self.stdout.write(
-            f"\n==> Following logs of {new_build.name}" f"\033[0;36m@{new_build.version}\033[0m\n"
+        version_str = (
+            f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
         )
+        self.stdout.write(f"\n==> Following logs of {new_build.name}{version_str}\n")
         self.stdout.flush()
         try:
             conn = new_build.control_w_conn
@@ -1132,20 +1139,10 @@ class BuildStatus:
 
         self.dirty = True
 
-        # For non-TTY output, print state changes immediately without colors
+        # For non-TTY output, print state changes immediately
         if not self.is_tty:
-            if build_info.external:
-                indicator = "[e]"
-            elif state == "finished":
-                indicator = "[+]"
-            elif state == "failed":
-                indicator = "[x]"
-            else:
-                indicator = "[ ]"
-            suffix = build_info.prefix if state == "finished" else state
-            self.stdout.write(
-                f"{indicator} {build_info.hash} {build_info.name}@{build_info.version} {suffix}\n"
-            )
+            line = "".join(self._generate_line_components(build_info, static=True))
+            self.stdout.write(line + "\n")
             self.stdout.flush()
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
@@ -1209,18 +1206,25 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+        if self.color:
+            bold = "\033[1m"
+            reset = "\033[0m"
+            cyan = "\033[36m"
+        else:
+            bold = reset = cyan = ""
+
         long_header_len = len(
             f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
         )
         if long_header_len < max_width:
             self._println(
                 buffer,
-                f"\033[1mProgress:\033[0m {self.completed}/{self.total}"
-                "  \033[36m/\033[0m: filter  \033[36mv\033[0m: logs"
-                "  \033[36mn\033[0m/\033[36mp\033[0m: next/prev",
+                f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
             )
         else:
-            self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
+            self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
         displayed_builds = (
             [b for b in self.builds.values() if self._is_displayed(b)]
@@ -1288,7 +1292,9 @@ class BuildStatus:
             buffer.write(component)
         self._println(buffer)
 
-    def _generate_line_components(self, build_info: BuildInfo) -> Generator[str, None, None]:
+    def _generate_line_components(
+        self, build_info: BuildInfo, static: bool = False
+    ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
         if build_info.external:
@@ -1297,33 +1303,43 @@ class BuildStatus:
             indicator = "[+]"
         elif build_info.state == "failed":
             indicator = "[x]"
+        elif static:
+            indicator = "[ ]"
         else:
             indicator = f"[{self.spinner_chars[self.spinner_index]}]"
 
-        if build_info.state == "failed":
-            yield "\033[31m"  # red
-        elif build_info.state == "finished":
-            yield "\033[32m"  # green
+        if self.color:
+            if build_info.state == "failed":
+                yield "\033[31m"  # red
+            elif build_info.state == "finished":
+                yield "\033[32m"  # green
 
         yield indicator
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
         yield " "
-        yield "\033[0;90m"  # dark gray
+        if self.color:
+            yield "\033[0;90m"  # dark gray
         yield build_info.hash
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
         yield " "
 
         # Package name in bold white if explicit, default otherwise
         if build_info.explicit:
-            yield "\033[1;37m"  # bold white
+            if self.color:
+                yield "\033[1;37m"  # bold white
             yield build_info.name
-            yield "\033[0m"  # reset
+            if self.color:
+                yield "\033[0m"  # reset
         else:
             yield build_info.name
 
-        yield "\033[0;36m"  # cyan
+        if self.color:
+            yield "\033[0;36m"  # cyan
         yield f"@{build_info.version}"
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
 
         # progress or state
         if build_info.progress_percent is not None:
