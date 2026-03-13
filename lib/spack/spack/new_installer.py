@@ -603,7 +603,7 @@ def _install(
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if mirrors and install_from_buildcache(mirrors, spec, unsigned, state_stream):
+        if install_from_buildcache(mirrors, spec, unsigned, state_stream):
             spack.hooks.post_install(spec, explicit)
             return
         elif install_policy == "cache_only":
