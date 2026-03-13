@@ -2178,24 +2178,13 @@ opt_criterion(55, "default values of variants not being used (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-% Try to use default variants or variants that have been set
-opt_criterion(50, "variant penalty (non-roots)").
-#minimize{ 0@250: #true }.
-#minimize{ 0@50: #true }.
-#minimize {
-    Penalty@50+Priority,PackageNode,Variant,Value
-    : variant_penalty(PackageNode, Variant, Value, Penalty),
-      not attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
-}.
-
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(48, "preferred providers (non-roots)").
-#minimize{ 0@248: #true }.
-#minimize{ 0@48: #true }.
+opt_criterion(50, "preferred providers (non-roots)").
+#minimize{ 0@250: #true }.
+#minimize{ 0@50: #true }.
 #minimize{
-    Weight@48+Priority,ProviderNode,X,Virtual
+    Weight@50+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
@@ -2207,20 +2196,19 @@ compiler_penalty(PackageNode, C-1) :-
    C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
    node_compiler(PackageNode, _), C > 0.
 
-opt_criterion(46, "number of compilers used on the same node").
-#minimize{ 0@246: #true }.
-#minimize{ 0@46: #true }.
+opt_criterion(48, "number of compilers used on the same node").
+#minimize{ 0@248: #true }.
+#minimize{ 0@48: #true }.
 #minimize{
-    Penalty@46+Priority,PackageNode
+    Penalty@48+Priority,PackageNode
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-
-opt_criterion(40, "preferred compilers").
-#minimize{ 0@240: #true }.
-#minimize{ 0@40: #true }.
+opt_criterion(46, "preferred compilers").
+#minimize{ 0@246: #true }.
+#minimize{ 0@46: #true }.
 #minimize{
-    Weight@40+Priority,ProviderNode,X,Virtual
+    Weight@46+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
       build_priority(ProviderNode, Priority)
@@ -2230,6 +2218,17 @@ opt_criterion(41, "compiler penalty from reuse").
 #minimize{ 0@241: #true }.
 #minimize{ 0@41: #true }.
 #minimize{1@41,Hash : compiler_penalty_from_reuse(Hash)}.
+
+% Try to use default variants or variants that have been set
+opt_criterion(40, "variant penalty (non-roots)").
+#minimize{ 0@240: #true }.
+#minimize{ 0@40: #true }.
+#minimize {
+    Penalty@40+Priority,PackageNode,Variant,Value
+    : variant_penalty(PackageNode, Variant, Value, Penalty),
+      not attr("root", PackageNode),
+      build_priority(PackageNode, Priority)
+}.
 
 opt_criterion(30, "non-preferred OS's").
 #minimize{ 0@230: #true }.
