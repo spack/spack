@@ -9,6 +9,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import ssl
 import stat
 import sys
@@ -34,6 +35,21 @@ from spack.llnl.util.filesystem import mkdirp, rename, working_dir
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+
+
+def is_transient_error(e: Exception) -> bool:
+    """Return True for HTTP/network errors that are worth retrying."""
+
+    if isinstance(e, HTTPError) and (500 <= e.code < 600 or e.code == 429):
+        return True
+    if isinstance(e, URLError) and isinstance(e.reason, socket.timeout):
+        return True
+    if isinstance(e, socket.timeout):
+        return True
+    # botocore.exceptions.ResponseStreamingError (IncompleteRead mid-stream)
+    if type(e).__name__ == "ResponseStreamingError":
+        return True
+    return False
 
 
 class DetailedHTTPError(HTTPError):

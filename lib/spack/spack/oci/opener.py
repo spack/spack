@@ -7,7 +7,6 @@
 import base64
 import json
 import re
-import socket
 import time
 import urllib.error
 import urllib.parse
@@ -441,20 +440,10 @@ def default_retry(f, retries: int = 5, sleep=None):
             try:
                 return f(*args, **kwargs)
             except OSError as e:
-                # Retry on internal server errors, and rate limit errors
+                # Retry on internal server errors, rate limits, and timeouts.
                 # Potentially this could take into account the Retry-After header
                 # if registries support it
-                if i + 1 != retries and (
-                    (
-                        isinstance(e, urllib.error.HTTPError)
-                        and (500 <= e.code < 600 or e.code == 429)
-                    )
-                    or (
-                        isinstance(e, urllib.error.URLError)
-                        and isinstance(e.reason, socket.timeout)
-                    )
-                    or isinstance(e, socket.timeout)
-                ):
+                if i + 1 != retries and spack.util.web.is_transient_error(e):
                     # Exponential backoff
                     sleep(2**i)
                     continue
