@@ -79,6 +79,7 @@ from spack.vendor.typing_extensions import Literal
 import spack
 import spack.aliases
 import spack.compilers.flags
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
@@ -1488,7 +1489,9 @@ class Spec:
         s.architecture = ArchSpec.default_arch()
         return s
 
-    def __init__(self, spec_like=None, *, external_path=None, external_modules=None):
+    def __init__(
+        self, spec_like=None, *, external_path=None, external_modules=None, expand_toolchains=True
+    ):
         """Create a new Spec.
 
         Arguments:
@@ -1497,8 +1500,8 @@ class Spec:
 
         Keyword arguments:
             external_path: prefix, if this is a spec for an external package
-            external_modules: list of external modules, if this is an external package
-                using modules.
+            external_modules: list of external modules, for an external package using modules
+            expand_toolchains: whether to expand toolchains from configuration
         """
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
@@ -1548,7 +1551,12 @@ class Spec:
         self.annotations = SpecAnnotations()
 
         if isinstance(spec_like, str):
-            spack.spec_parser.parse_one_or_raise(spec_like, self)
+            toolchains = {}
+            if expand_toolchains:
+                configuration = getattr(spack.config, "CONFIG", None)
+                if configuration is not None:
+                    toolchains = configuration.get_config("toolchains")
+            spack.spec_parser.parse_one_or_raise(spec_like, self, toolchains=toolchains)
 
         elif spec_like is not None:
             raise TypeError(f"Can't make spec out of {type(spec_like)}")

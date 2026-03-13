@@ -12,7 +12,6 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
-import spack.config
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.platforms.test
@@ -26,6 +25,7 @@ from spack.spec_parser import (
     SpecParsingError,
     SpecTokenizationError,
     SpecTokens,
+    expand_toolchains,
     parse_one_or_raise,
 )
 from spack.tokenize import Token
@@ -1211,10 +1211,12 @@ def test_cli_spec_roundtrip(args, expected):
     ],
 )
 def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
-    spack.config.CONFIG.set("toolchains", toolchain)
+    """Tests that toolchains are expanded correctly"""
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
-        assert expected == str(parser.next_spec())
+        result = parser.next_spec()
+        expand_toolchains(result, toolchain)
+        assert expected == str(result)
 
 
 @pytest.mark.parametrize(

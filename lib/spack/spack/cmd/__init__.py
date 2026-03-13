@@ -182,7 +182,8 @@ def parse_specs(
     args = [args] if isinstance(args, str) else args
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    specs = spack.spec_parser.parse(arg_string)
+    toolchains = spack.config.CONFIG.get("toolchains", {})
+    specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
     if not concretize:
         return specs
 
