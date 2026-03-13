@@ -17,9 +17,9 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.environment as ev
-import spack.environment.generate_env_scripts as shell_script
 import spack.environment.depfile as depfile
 import spack.environment.environment
+import spack.environment.generate_env_scripts as shell_script
 import spack.llnl.string as string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty

@@ -11,7 +11,7 @@ import spack.user_environment as uenv
 
 
 def path_to_load_shell_script(spec, shell: str) -> str:
-    """"Returns the path to the shell script to load the specified spec for the shell.
+    """ "Returns the path to the shell script to load the specified spec for the shell.
 
     Args:
         spec: The spec whose shell script we are returning the path of
