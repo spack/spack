@@ -302,7 +302,10 @@ class Executable:
                     # stdout/stderr (e.g. if 'output' is not specified)
                     long_msg += "\n" + result
 
-                raise ProcessError("Command exited with status %d:" % proc.returncode, long_msg)
+                raise ProcessError(
+                    "Command in %s exited with status %d:" % (os.getcwd(), proc.returncode),
+                    long_msg,
+                )
         except OSError as e:
             message = "Command: " + cmd_line_string
             if " " in self.exe[0]:
