@@ -1885,6 +1885,7 @@ class PackageInstaller:
                     build = self.running_builds.pop(pid)
                     self.capacity += 1
                     jobserver.release()
+                    self._drain_child_output(build)
                     build.cleanup(selector)
                     exitcode = build.proc.exitcode
                     assert exitcode is not None, "Finished build should have exit code set"
@@ -2181,6 +2182,19 @@ class PackageInstaller:
             return
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
+
+    def _drain_child_output(self, child_info: ChildInfo) -> None:
+        """Read and print any remaining output from a finished child's pipe."""
+        dag_hash = child_info.spec.dag_hash()
+        r_fd = child_info.output_r_conn.fileno()
+        try:
+            while True:
+                data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+                if not data:
+                    break
+                self.build_status.print_logs(dag_hash, data)
+        except OSError:
+            pass
 
     def _handle_child_state(
         self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
