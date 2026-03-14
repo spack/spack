@@ -25,6 +25,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.util.parallel
+import spack.util.timer as timer_mod
 import spack.util.web as web_util
 from spack import traverse
 from spack.binary_distribution import BINARY_INDEX
@@ -332,7 +333,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "-a",
         action="store_true",
         help="Append the listed specs to the current view index if it already exists. "
-        "This operation does not guarentee atomic write and should be run with care.",
+        "This operation does not guarantee atomic write and should be run with care.",
     )
     update_index_view_mode_args.add_argument(
         "--force",
@@ -757,7 +758,7 @@ def sync_fn(args):
         # specified, the second is ignored and the first is the override
         # destination.
         if args.dest_mirror:
-            tty.warn(f"Ignoring unused arguemnt: {args.dest_mirror.name}")
+            tty.warn(f"Ignoring unused argument: {args.dest_mirror.name}")
 
         manifest_copy(glob.glob(args.manifest_glob), args.src_mirror)
         return 0
@@ -796,7 +797,7 @@ def manifest_copy(
     manifest_file_list: List[str], dest_mirror: Optional[spack.mirrors.mirror.Mirror] = None
 ):
     """Read manifest files containing information about specific specs to copy
-    from source to destination, remove duplicates since any binary packge for
+    from source to destination, remove duplicates since any binary package for
     a given hash should be the same as any other, and copy all files specified
     in the manifest files."""
     deduped_manifest = {}
@@ -824,7 +825,10 @@ def manifest_copy(
         copy_buildcache_entry(src_cache_entry, destination_url)
 
 
-def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
+def update_index(
+    mirror: spack.mirrors.mirror.Mirror, update_keys=False, timer=timer_mod.NULL_TIMER
+):
+    timer.start()
     # Special case OCI images for now.
     try:
         image_ref = spack.oci.oci.image_from_mirror(mirror)
@@ -842,7 +846,7 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
     url = mirror.push_url
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-        spack.binary_distribution._url_generate_package_index(url, tmpdir)
+        spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer)
 
     if update_keys:
         mirror_update_keys(mirror)
@@ -1083,6 +1087,8 @@ def check_index_fn(args):
 def update_index_fn(args):
     """update a buildcache index or index view if extra arguments are provided."""
 
+    t = timer_mod.Timer() if tty.is_verbose() else timer_mod.NullTimer()
+
     update_view_index = (
         args.append or args.force or args.name or args.sources or args.mirror.push_view
     )
@@ -1103,7 +1109,12 @@ def update_index_fn(args):
             yes_to_all=args.yes_to_all,
         )
     else:
-        return update_index(args.mirror, update_keys=args.keys)
+        update_index(args.mirror, update_keys=args.keys, timer=t)
+
+    if tty.is_verbose():
+        tty.msg("Timing summary:")
+        t.stop()
+        t.write_tty()
 
 
 def migrate_fn(args):

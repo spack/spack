@@ -67,7 +67,7 @@ def compute_stage_name(spec):
     else:
         spec_stage_structure += "{name}-{version}"
     # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
-    # config:stage_name. This is a fix for how to handle staging an abstact spec (see #51305)
+    # config:stage_name. This is a fix for how to handle staging an abstract spec (see #51305)
     stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     return spec.format_path(format_string=stage_name_structure)
 
@@ -396,7 +396,7 @@ class Stage(AbstractStage):
 
     When used as a context manager, the stage is automatically
     destroyed if no exception is raised by the context. If an
-    excpetion is raised, the stage is left in the filesystem and NOT
+    exception is raised, the stage is left in the filesystem and NOT
     destroyed, for potential reuse later.
 
     You can also use the stage's create/destroy functions manually,

@@ -570,6 +570,29 @@ class TestConcretize:
             assert x.satisfies("%c=gcc")
             assert "llvm" in x
 
+    def test_compiler_run_dep_link_dep_not_forced(self, temporary_store):
+        """When a compiler is used as a pure build dependency, its transitive run-reachable deps
+        are unified in the build environment, but their pure link-type dependencies must NOT be
+        forced onto the package.
+
+        Scenario: compiler-with-deps has a run+link dep on binutils-for-test, which has a pure
+        link dep on zlib. A package that depends on zlib and uses compiler-with-deps as its C
+        compiler should be free to pick its own zlib (here: zlib@1.2.8) independently of the
+        toolchain's zlib (zlib@1.2.11). Without the fix the imposed hash from binutils-for-test
+        forces the toolchain version onto the package, causing a conflict.
+        """
+        # Pre-install the compiler with its transitive deps binutils-for-test and zlib@1.2.11
+        compiler = spack.concretize.concretize_one("compiler-with-deps ^zlib@1.2.11")
+        assert compiler["zlib"].satisfies("@1.2.11")
+        PackageInstaller([compiler.package], fake=True, explicit=True).install()
+
+        # Concretize a package that depends on a different zlib from its compiler's toolchain.
+        pkg = spack.concretize.concretize_one(
+            "pkg-with-zlib-dep %c=compiler-with-deps ^zlib@1.2.8"
+        )
+
+        assert pkg["zlib"].satisfies("@1.2.8")
+
     def test_disable_mixing_env(
         self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
     ):
@@ -764,7 +787,7 @@ spack:
 
     def test_concretize_propagate_through_first_level_deps(self):
         """Test that boolean valued variants can be propagated past first level
-        dependecies even if the first level dependency does have the variant"""
+        dependencies even if the first level dependency does have the variant"""
         spec = Spec("parent-foo-bar-fee ++fee")
         spec = spack.concretize.concretize_one(spec)
 
@@ -802,7 +825,7 @@ spack:
 
     def test_concretize_propagate_multivalue_variant(self):
         """Test that multivalue variants are propagating the specified value(s)
-        to their dependecies. The dependencies should not have the default value"""
+        to their dependencies. The dependencies should not have the default value"""
         spec = Spec("multivalue-variant foo==baz,fee")
         spec = spack.concretize.concretize_one(spec)
 
@@ -1921,7 +1944,7 @@ spack:
             assert len(matches) == expected_count
 
     @pytest.mark.parametrize(
-        "specs,expected_spec,occurances",
+        "specs,expected_spec,occurrences",
         [
             # The algorithm is greedy, and it might decide to solve the "best"
             # spec early in which case reuse is suboptimal. In this case the most
@@ -1950,7 +1973,7 @@ spack:
             (["hdf5+mpi", "zmpi", "mpich"], "mpich", 2),
         ],
     )
-    def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurances):
+    def test_best_effort_coconcretize_preferences(self, specs, expected_spec, occurrences):
         """Test package preferences during coconcretization."""
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
@@ -1963,7 +1986,7 @@ spack:
         for spec in concrete_specs.values():
             if expected_spec in spec:
                 counter += 1
-        assert counter == occurances, concrete_specs
+        assert counter == occurrences, concrete_specs
 
     def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages):
         specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]

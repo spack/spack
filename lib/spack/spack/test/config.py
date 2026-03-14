@@ -1180,7 +1180,7 @@ def test_single_file_scope_cache_clearing(env_yaml):
     assert before
     # Clear the cache of the Single file scope
     scope.clear()
-    # Check that the section can be retireved again and it's
+    # Check that the section can be retrieved again and it's
     # the same as before
     after = scope.get_section("config")
     assert after
@@ -1526,7 +1526,7 @@ def test_config_file_read_perms_failure(tmp_path: pathlib.Path, mutable_empty_co
 
 
 def test_config_file_read_invalid_yaml(tmp_path: pathlib.Path, mutable_empty_config):
-    """Test reading a configuration file with invalid (unparseable) YAML
+    """Test reading a configuration file with invalid (unparsable) YAML
     raises a ConfigFileError."""
     filename = join_path(str(tmp_path), "test.yaml")
     with open(filename, "w", encoding="utf-8") as f:
@@ -1727,6 +1727,20 @@ def test_included_path_string_no_parent_path(
     assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
 
 
+def test_included_path_substitution():
+    # check a straight path substitution
+    entry = {"path": "$user_cache_path/path/to/config.yaml"}
+    include = spack.config.included_path(entry)
+    assert spack.paths.user_cache_path in include.path
+
+    # check path through an environment variable
+    path = "/path/to/project/packages.yaml"
+    os.environ["SPACK_TEST_PATH_SUB"] = path
+    entry = {"name": "vartest", "path": "$SPACK_TEST_PATH_SUB"}
+    include = spack.config.included_path(entry)
+    assert path in include.path
+
+
 def test_included_path_conditional_bad_when(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, capfd
 ):
@@ -1787,7 +1801,7 @@ def test_included_path_git_unsat(
     }
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
-    assert include.repo == entry["git"]
+    assert include.git == entry["git"]
     assert include.tag == entry["tag"]
     assert include.paths == entry["paths"]
     assert include.when == entry["when"]
@@ -1797,6 +1811,31 @@ def test_included_path_git_unsat(
     captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
+
+
+def test_included_path_git_substitutions():
+    # check path substitutions for the git url *and* paths
+    paths = ["./$platform/config.yaml", "$platform/packages.yaml"]
+    entry = {
+        "git": "https://example.com/$platform/configs.git",
+        "branch": "develop",
+        "name": "site",
+        "paths": paths,
+        "when": 'platform == "test"',
+    }
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+    assert not include.optional and include.evaluate_condition()
+    assert "test" in include.git, "Expected the git url to contain the platform"
+    for path in include.paths:
+        assert "test" in path, "Expected the included git path to contain the platform"
+
+    # check environment substitution for the git url
+    url = "https://example.com/path/to/configs.git"
+    os.environ["SPACK_TEST_URL_SUB"] = url
+    entry["git"] = "$SPACK_TEST_URL_SUB"
+    include = spack.config.included_path(entry)
+    assert include.git == url, "Expected git url environment var substitution"
 
 
 @pytest.mark.parametrize(
@@ -1943,7 +1982,7 @@ def test_missing_include_scope_not_readable_list(mock_missing_dir_include_scopes
 
 
 def test_missing_include_scope_default_created_as_dir_scope(mock_missing_dir_include_scopes):
-    """Tests that an optional include with no existing file/directory and no yaml extention
+    """Tests that an optional include with no existing file/directory and no yaml extension
     is created as a directoryscope object"""
     missing_inc_scope = spack.config.CONFIG.scopes["sub_base"]
     assert isinstance(missing_inc_scope, spack.config.DirectoryConfigScope)

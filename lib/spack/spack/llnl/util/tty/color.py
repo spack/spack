@@ -265,6 +265,9 @@ def colorize(
         semi = ";" if color_number else ""
         ansi_code = _escape(f"{styles[style]}{semi}{color_number}", color, enclose, zsh)
         if text:
+            # must be here, not in the final return: top-level @@ is already handled by
+            # the regex, and its @-results could form new @@ pairs.
+            text = text.replace("@@", "@")
             return f"{ansi_code}{text}{_escape(0, color, enclose, zsh)}"
         else:
             return ansi_code
@@ -299,7 +302,7 @@ class ColorMapping(NamedTuple):
 def cmapping(string: str) -> ColorMapping:
     """Return a mapping for translating indices in a plain string to indices in colored text.
 
-    The returned dictionary maps indices in the plain string to the offset of the cooresponding
+    The returned dictionary maps indices in the plain string to the offset of the corresponding
     indices in the colored string.
 
     """

@@ -584,3 +584,83 @@ class TestBuildGraph:
         # dep1 should not appear in any mappings
         assert dep1_hash not in graph.parent_to_child
         assert dep1_hash not in graph.child_to_parent
+
+
+@pytest.fixture
+def specs_with_test_deps():
+    """Create specs with test-typed dependencies.
+
+    DAG structure:
+        root -> dep (link) + test_dep (test)
+        dep -> dep_test_dep (test)
+    """
+    return create_dag(
+        nodes=["root", "dep", "test_dep", "dep_test_dep"],
+        edges=[
+            ("root", "dep", ("build", "link")),
+            ("root", "test_dep", "test"),
+            ("dep", "dep_test_dep", "test"),
+        ],
+    )
+
+
+class TestBuildGraphTestDeps:
+    """Tests for BuildGraph handling of TEST-typed dependencies."""
+
+    def test_tests_false_excludes_test_deps(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=False excludes TEST-typed dependencies."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+            tests=False,
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() not in graph.nodes
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() not in graph.nodes
+
+    def test_tests_root_includes_test_deps_for_root(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=[root_name] includes test deps only for the root package."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+            tests=["root"],
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() in graph.nodes
+        # dep's test dep is NOT included because tests=["root"] only applies to "root"
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() not in graph.nodes
+
+    def test_tests_all_includes_test_deps_for_all(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=True includes TEST-typed deps for all packages."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+            tests=True,
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() in graph.nodes

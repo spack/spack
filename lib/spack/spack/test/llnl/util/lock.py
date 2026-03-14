@@ -29,6 +29,7 @@ import collections
 import errno
 import getpass
 import glob
+import multiprocessing
 import os
 import pathlib
 import shutil
@@ -1356,4 +1357,64 @@ def test_upgrade_read_fails(tmp_path: pathlib.Path):
         msg = "Cannot upgrade lock from read to write on file: lockfile"
         with pytest.raises(lk.LockUpgradeError, match=msg):
             lock.upgrade_read_to_write()
+        lock.release_write()
+
+
+@pytest.mark.parametrize("acquire", ["acquire_write", "acquire_read"])
+def test_acquire_after_fork(tmp_path: pathlib.Path, acquire: str):
+    """After fork, acquire_write/read must not silently succeed due to inherited counters."""
+    try:
+        ctx = multiprocessing.get_context("fork")
+    except ValueError:
+        pytest.skip("fork start method not available on this platform")
+
+    lockfile = str(tmp_path / "lockfile")
+    lock = lk.Lock(lockfile)
+    result = ctx.Queue()
+
+    def child():
+        assert lock._writes == 1  # due to forking, but POSIX lock is NOT held by this process
+        try:
+            if acquire == "acquire_write":
+                lock.acquire_write(lock_fail_timeout)
+            elif acquire == "acquire_read":
+                lock.acquire_read(lock_fail_timeout)
+            else:
+                assert False  # should never get here
+            result.put("no_error")
+        except lk.LockTimeoutError:
+            result.put("timed_out")
+
+    lock.acquire_write()
+    try:
+        p = ctx.Process(target=child)
+        p.start()
+        p.join()
+        assert result.get() == "timed_out"
+    finally:
+        lock.release_write()
+
+
+def _child_fails_to_acquire_read(_lock: lk.Lock):
+    try:
+        _lock.acquire_read(timeout=1e-9)
+    except lk.LockTimeoutError:
+        return
+    assert False, "Child process should not have been able to acquire read lock"
+
+
+def test_read_after_write_does_not_accidentally_downgrade(tmp_path: pathlib.Path):
+    """Test that acquiring a read lock after a write lock does not accidentally downgrade the
+    write lock, by having another process attempt to acquire a read lock."""
+    lock = lk.Lock(str(tmp_path / "lockfile"))
+    lock.acquire_write()
+    lock.acquire_read()  # should not downgrade the write lock
+    try:
+        # No matter the start method, the child process shouldn't be able to acquire a read lock.
+        p = multiprocessing.Process(target=_child_fails_to_acquire_read, args=(lock,))
+        p.start()
+        p.join()
+        assert p.exitcode == 0
+    finally:
+        lock.release_read()
         lock.release_write()

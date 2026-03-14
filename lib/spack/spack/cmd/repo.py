@@ -288,7 +288,7 @@ def _remove_repo(namespace_or_path, scope):
         for name, descriptor in descriptors.items():
             descriptor.initialize(fetch=False)
 
-            # For now you cannot delete monorepos with multipe package repositories from config,
+            # For now you cannot delete monorepos with multiple package repositories from config,
             # hence "all" and not "any". We can improve this later if needed.
             if all(
                 r.namespace == namespace_or_path or r.root == canon_path
@@ -613,7 +613,7 @@ def repo_update(args: Any) -> int:
                 )
 
             else:
-                tty.msg(f"{name}: Updated sucessfully.")
+                tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)

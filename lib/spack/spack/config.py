@@ -34,6 +34,7 @@ import os.path
 import pathlib
 import re
 import sys
+import tempfile
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
@@ -270,8 +271,14 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            with open(filename, "w", encoding="utf-8") as f:
-                syaml.dump_config(data, stream=f, default_flow_style=False)
+            fd, tmp = tempfile.mkstemp(dir=self.path, suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    syaml.dump_config(data, stream=f, default_flow_style=False)
+                filesystem.rename(tmp, filename)
+            except Exception:
+                os.unlink(tmp)
+                raise
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -409,12 +416,14 @@ class SingleFileScope(ConfigScope):
         try:
             parent = os.path.dirname(self.path)
             filesystem.mkdirp(parent)
-
-            tmp = os.path.join(parent, f".{os.path.basename(self.path)}.tmp")
-            with open(tmp, "w", encoding="utf-8") as f:
-                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-            filesystem.rename(tmp, self.path)
-
+            fd, tmp = tempfile.mkstemp(dir=parent, suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
+                filesystem.rename(tmp, self.path)
+            except Exception:
+                os.unlink(tmp)
+                raise
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
@@ -1046,6 +1055,16 @@ class OptionalInclude:
         # circular dependencies
         import spack.util.path
 
+        # Ignore included concrete environment files (i.e., ``spack.lock``)
+        # since they are not normal configuration (scope) files and their
+        # processing is handled when the environment is processed.
+        if path and os.path.basename(path) == "spack.lock":
+            tty.debug(
+                f"Ignoring inclusion of '{path}' since environment lock files "
+                "are processed elsewhere"
+            )
+            return None
+
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
 
@@ -1144,12 +1163,17 @@ class IncludePath(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
+        # circular dependencies
+        import spack.util.path
+
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
         if path_override_env_var and path_override_env_var in os.environ:
-            self.path = os.environ[path_override_env_var]
+            path = os.environ[path_override_env_var]
         else:
-            self.path = entry.get("path", "")
+            path = entry.get("path", "")
+        self.path = spack.util.path.substitute_path_variables(path)
+
         self.sha256 = entry.get("sha256", "")
         self.destination = None
 
@@ -1210,7 +1234,7 @@ class IncludePath(OptionalInclude):
 
 
 class GitIncludePaths(OptionalInclude):
-    repo: str
+    git: str
     branch: str
     commit: str
     tag: str
@@ -1218,12 +1242,17 @@ class GitIncludePaths(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
+        # circular dependencies
+        import spack.util.path
+
         super().__init__(entry)
-        self.repo = entry.get("git", "")
+        self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self._paths = entry.get("paths", [])
+        self._paths = [
+            spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
+        ]
         self.destination = None
 
         if not self.branch and not self.commit and not self.tag:
@@ -1243,28 +1272,28 @@ class GitIncludePaths(OptionalInclude):
             identifier = f"commit={self.commit}, tag={self.tag}"
 
         return (
-            f"GitIncludePaths({self.repo}, paths={self.paths}, "
+            f"GitIncludePaths({self.git}, paths={self.paths}, "
             f"{identifier}, when='{self.when}', optional={self.optional})"
         )
 
     def _destination(self):
-        dir_name = spack.util.hash.b32_hash(self.repo)[-7:]
+        dir_name = spack.util.hash.b32_hash(self.git)[-7:]
         return os.path.join(_include_cache_location(), dir_name)
 
     def _clone(self) -> Optional[str]:
         """Clone the repository."""
         if self.fetched():
-            tty.debug(f"Repository ({self.repo}) already cloned to {self.destination}")
+            tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
             return self.destination
 
         destination = self._destination()
         with filesystem.working_dir(destination, create=True):
             if not os.path.exists(".git"):
                 try:
-                    spack.util.git.init_git_repo(self.repo)
+                    spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
-                        f"Unable to initialize repository ({self.repo}) under {destination}: {e}"
+                        f"Unable to initialize repository ({self.git}) under {destination}: {e}"
                     )
 
             try:
@@ -2145,7 +2174,7 @@ class ConfigFormatError(spack.error.ConfigError):
         super().__init__(message)
 
     def _get_mark(self, validation_error, data):
-        """Get the file/line mark fo a validation error from a Spack YAML file."""
+        """Get the file/line mark for a validation error from a Spack YAML file."""
 
         # Try various places, starting with instance and parent
         for obj in (validation_error.instance, validation_error.parent):

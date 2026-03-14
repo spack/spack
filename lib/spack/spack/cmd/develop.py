@@ -108,7 +108,7 @@ def assure_concrete_spec(env: spack.environment.Environment, spec: spack.spec.Sp
                 if not m_spec.satisfies(test_spec):
                     raise SpackError(
                         f"{spec.name}: has multiple concrete instances in the graph that can't be"
-                        " satisified by a single develop spec. To use `spack develop` ensure one"
+                        " satisfied by a single develop spec. To use `spack develop` ensure one"
                         " of the following:"
                         f"\n a) {spec.name} nodes can satisfy the same develop spec (minimally "
                         "this means they all share the same version)"

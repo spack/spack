@@ -247,10 +247,10 @@ class Variant:
         )
 
 
-def _flatten(values) -> Tuple:
+def _flatten(values) -> Collection:
     """Flatten instances of _ConditionalVariantValues for internal representation"""
     if isinstance(values, DisjointSetsOfValues):
-        return tuple(values)
+        return values
 
     flattened: List = []
     for item in values:
@@ -511,7 +511,9 @@ class VariantValueRemoval(VariantValue):
         super().__init__(VariantType.INDICATOR, name, (None,))
 
 
-class DisjointSetsOfValues(collections.abc.Iterable):
+# The class below inherit from Sequence to disguise as a tuple and comply
+# with the semantic expected by the 'values' argument of the variant directive
+class DisjointSetsOfValues(collections.abc.Sequence):
     """Allows combinations from one of many mutually exclusive sets.
 
     The value ``('none',)`` is reserved to denote the empty set
@@ -595,8 +597,11 @@ class DisjointSetsOfValues(collections.abc.Iterable):
         )
         return object_without_empty_set
 
-    def __iter__(self):
-        return itertools.chain.from_iterable(self.sets)
+    def __getitem__(self, idx):
+        return tuple(itertools.chain.from_iterable(self.sets))[idx]
+
+    def __len__(self):
+        return sum(len(x) for x in self.sets)
 
     @property
     def validator(self):

@@ -47,7 +47,7 @@ class AutotoolsConfigReplacement(AutotoolsPackage):
     def create_the_package_sources(self):
         # Creates the following file structure:
         # ./broken/config.sub    -- not executable
-        # ./broken/config.guess  -- exectuable & exit code 1
+        # ./broken/config.guess  -- executable & exit code 1
         # ./working/config.sub   -- executable & exit code 0
         # ./working/config.guess -- executable & exit code 0
         # Automatic config helper script substitution should replace the two
@@ -70,7 +70,7 @@ class AutotoolsConfigReplacement(AutotoolsPackage):
         with open(broken_config_sub, "w", encoding="utf-8") as f:
             f.write("#!/bin/sh\nexit 0")
 
-        # broken config.guess (exectuable but with error return code)
+        # broken config.guess (executable but with error return code)
         broken_config_guess = join_path(broken, "config.guess")
         with open(broken_config_guess, "w", encoding="utf-8") as f:
             f.write("#!/bin/sh\nexit 1")
