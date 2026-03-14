@@ -2231,7 +2231,10 @@ class PackageInstaller:
         for line in lines:
             if not line:
                 continue
-            message = json.loads(line)
+            try:
+                message = json.loads(line)
+            except json.JSONDecodeError:
+                continue
             if "state" in message:
                 self.build_status.update_state(child_info.spec.dag_hash(), message["state"])
             elif "progress" in message and "total" in message:
