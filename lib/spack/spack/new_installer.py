@@ -1976,7 +1976,10 @@ class PackageInstaller:
             for child in self.running_builds.values():
                 try:
                     jobserver.release()
-                    child.proc.join()
+                    child.proc.join(timeout=30)
+                    if child.proc.is_alive():
+                        child.proc.kill()
+                        child.proc.join()
                 except Exception:
                     pass
 
