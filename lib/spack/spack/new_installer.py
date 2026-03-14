@@ -1891,6 +1891,7 @@ class PackageInstaller:
                     self.capacity += 1
                     jobserver.release()
                     self._drain_child_output(build)
+                    self.state_buffers.pop(build.state_r_conn.fileno(), None)
                     build.cleanup(selector)
                     exitcode = build.proc.exitcode
                     assert exitcode is not None, "Finished build should have exit code set"
