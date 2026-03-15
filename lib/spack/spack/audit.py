@@ -888,15 +888,14 @@ def _linting_package_file(pkgs, error_cls):
         # Does the homepage have http, and if so, does https work?
         if homepage.startswith("http://"):
             try:
-                response = urlopen(f"https://{homepage[7:]}")
+                with urlopen(f"https://{homepage[7:]}") as response:
+                    if response.getcode() == 200:
+                        msg = 'Package "{0}" uses http but has a valid https endpoint.'
+                        errors.append(msg.format(pkg_cls.name))
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
-
-            if response.getcode() == 200:
-                msg = 'Package "{0}" uses http but has a valid https endpoint.'
-                errors.append(msg.format(pkg_cls.name))
 
     return spack.llnl.util.lang.dedupe(errors)
 
