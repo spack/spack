@@ -995,6 +995,7 @@ class BuildStatus:
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
         self.search_term = ""
         self.search_mode = False
+        self.log_ends_with_newline = True
 
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
@@ -1035,6 +1036,9 @@ class BuildStatus:
         if self.overview_mode:
             self.next()
         else:
+            if not self.log_ends_with_newline:
+                self.stdout.buffer.write(b"\n")
+                self.log_ends_with_newline = True
             self.active_area_rows = 0
             self.search_term = ""
             self.search_mode = False
@@ -1116,7 +1120,9 @@ class BuildStatus:
         version_str = (
             f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
         )
-        self.stdout.write(f"\n==> Following logs of {new_build.name}{version_str}\n")
+        prefix = "" if self.log_ends_with_newline else "\n"
+        self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
+        self.log_ends_with_newline = True
         self.stdout.flush()
         try:
             conn = new_build.control_w_conn
@@ -1285,6 +1291,7 @@ class BuildStatus:
             data = padding_filter_bytes(data)
         self.stdout.buffer.write(data)
         self.stdout.flush()
+        self.log_ends_with_newline = data.endswith(b"\n")
 
     def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
         line_width = 0

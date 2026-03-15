@@ -947,6 +947,33 @@ class TestToggle:
         assert status.overview_mode is True
         assert status.tracked_build_id == ""
 
+    def test_partial_line_newline_on_toggle_and_next(self):
+        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
+        status, _, fake_stdout = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_a, build_b = specs[0].dag_hash(), specs[1].dag_hash()
+
+        # Follow a build, toggle back and forth between logs and overview mode, and receive logs
+        # that may or may not end with newlines.
+        status.next()
+        status.print_logs(build_a, b"checking for foo...")
+        status.toggle()
+        status.next()
+        status.print_logs(build_a, b"checking for bar... yes\n")
+        status.next(1)
+        status.print_logs(build_b, b"checking for baz...")
+        status.next(-1)
+
+        written = fake_stdout.getvalue()
+
+        # There shouldn't be any double newlines:
+        assert "\n\n" not in written
+
+        # All partial and newline-terminated logs should be present with appropriate newlines:
+        assert "checking for foo...\n" in written
+        assert "checking for bar... yes\n" in written
+        assert "checking for baz...\n" in written
+
     @pytest.mark.parametrize("filter_padding", [True, False])
     def test_print_logs_filters_padding(self, filter_padding):
         """print_logs strips path-padding placeholders before writing to stdout."""
