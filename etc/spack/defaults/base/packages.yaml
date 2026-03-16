@@ -18,7 +18,7 @@ packages:
     providers:
       awk: [gawk]
       armci: [armcimpi]
-      blas: [openblas, amdblis]
+      blas: [openblas]
       c: [gcc, llvm, intel-oneapi-compilers]
       cxx: [gcc, llvm, intel-oneapi-compilers]
       daal: [intel-oneapi-daal]
@@ -36,7 +36,7 @@ packages:
       ipp: [intel-oneapi-ipp]
       java: [openjdk, jdk]
       jpeg: [libjpeg-turbo, libjpeg]
-      lapack: [openblas, amdlibflame]
+      lapack: [openblas]
       libc: [glibc, musl]
       libgfortran: [gcc-runtime]
       libglx: [mesa+glx]
