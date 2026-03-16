@@ -516,6 +516,17 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     return None
 
 
+def _url_exists_urllib_impl(url):
+    with urlopen(
+        Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+        timeout=spack.config.get("config:connect_timeout", 10),
+    ) as _:
+        pass
+
+
+_url_exists_urllib = retry_on_transient_error(_url_exists_urllib_impl)
+
+
 def url_exists(url, curl=None):
     """Determines whether url exists.
 
@@ -549,11 +560,8 @@ def url_exists(url, curl=None):
 
     # Otherwise use urllib.
     try:
-        with urlopen(
-            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-            timeout=spack.config.get("config:connect_timeout", 10),
-        ) as _:
-            return True
+        _url_exists_urllib(url)
+        return True
     except OSError as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
