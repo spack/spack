@@ -99,9 +99,8 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
 
     if not dest:
         raise ValueError("Requires the destination argument to cache remote files")
-    assert os.path.isabs(dest), (
-        f"Remote file destination '{dest}' must be an absolute path"
-    )
+
+    assert os.path.isabs(dest), f"Remote file destination '{dest}' must be an absolute path"
 
     # Stage the remote configuration file
     tmpdir = tempfile.mkdtemp()
@@ -111,9 +110,7 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
         # Ensure the sha256 is expected.
         checksum = spack.util.crypto.checksum(hashlib.sha256, staged_path)
         if sha256 and checksum != sha256:
-            raise ValueError(
-                f"Actual sha256 ('{checksum}') does not match expected ('{sha256}')"
-            )
+            raise ValueError(f"Actual sha256 ('{checksum}') does not match expected ('{sha256}')")
 
         # Help the user by reporting the required checksum.
         if not sha256:

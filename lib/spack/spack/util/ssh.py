@@ -89,7 +89,8 @@ class SSHConnection(object):
                 return io.BytesIO(tmp.read())
             except Exception as e:
                 raise SpackSSHError(
-                    f"Download of ssh://{self.netloc}:{remote_path} failed: {e.__class__.__name__}: {e}"
+                    f"Download of ssh://{self.netloc}:{remote_path} failed: "
+                    f"{e.__class__.__name__}: {e}"
                 )
 
     def push(self, local_path, remote_path, keep_original=True):
