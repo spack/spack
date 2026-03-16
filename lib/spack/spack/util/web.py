@@ -4,6 +4,7 @@
 
 import email.message
 import errno
+import functools
 import io
 import json
 import os
@@ -13,13 +14,16 @@ import socket
 import ssl
 import stat
 import sys
+import time
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
+
+from spack.vendor.typing_extensions import ParamSpec
 
 import spack
 import spack.config
@@ -50,6 +54,31 @@ def is_transient_error(e: Exception) -> bool:
     if type(e).__name__ == "ResponseStreamingError":
         return True
     return False
+
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def retry_on_transient_error(
+    f: Callable[_P, _R], retries: int = 5, sleep: Optional[Callable[[float], None]] = None
+) -> Callable[_P, _R]:
+    """Retry a function on transient HTTP/network errors with exponential backoff."""
+    sleep = sleep or time.sleep
+
+    @functools.wraps(f)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        for i in range(retries):
+            try:
+                return f(*args, **kwargs)
+            except OSError as e:
+                if i + 1 != retries and is_transient_error(e):
+                    sleep(2**i)  # type: ignore[misc]  # mypy still thinks it's possibly None.
+                    continue
+                raise
+        raise AssertionError("unreachable")
+
+    return wrapper
 
 
 class DetailedHTTPError(HTTPError):
@@ -268,22 +297,34 @@ def read_from_url(url, accept_content_type=None):
     return response.url, response.headers, response
 
 
+def _read_text(url: str) -> str:
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return io.TextIOWrapper(response, encoding="utf-8").read()
+
+
+def _read_json(url: str):
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return json.load(response)
+
+
+_read_text_with_retry = retry_on_transient_error(_read_text)
+_read_json_with_retry = retry_on_transient_error(_read_json)
+
+
 def read_text(url: str) -> str:
     """Fetch url and return the response body decoded as UTF-8 text."""
-    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
     try:
-        with urlopen(request) as response:
-            return io.TextIOWrapper(response, encoding="utf-8").read()
+        return _read_text_with_retry(url)
     except OSError as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
 def read_json(url: str):
     """Fetch url and return the response body parsed as JSON."""
-    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
     try:
-        with urlopen(request) as response:
-            return json.load(response)
+        return _read_json_with_retry(url)
     except OSError as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
