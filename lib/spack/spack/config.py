@@ -1340,7 +1340,7 @@ class GitIncludePaths(OptionalInclude):
             return self.destination
 
         # environment includes should be located under the environment
-        destination = self._destination_directory(self.git, parent_scope)
+        destination = self.local_root_directory(self.git, parent_scope)
         assert destination, f"{self} requires a local cache directory"
         tty.debug(f"Cloning {self.git} into {destination}")
 

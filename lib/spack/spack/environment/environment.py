@@ -1220,7 +1220,7 @@ class Environment:
             if isinstance(include, spack.config.GitIncludePaths):
                 # Git includes must be cloned first; paths are relative to the
                 # clone destination, not to the manifest directory.
-                destination = include._clone()
+                destination = include._clone(self.manifest.env_config_scope)
                 if destination is None:
                     continue
                 resolved = [os.path.join(destination, p) for p in include.paths]

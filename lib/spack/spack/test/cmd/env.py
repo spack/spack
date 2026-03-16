@@ -4879,7 +4879,9 @@ spack:
         shutil.copy(os.path.join(e.path, ev.manifest_name), lock_in_clone.parent)
 
     # Prevent actual git operations; return the pre-built clone destination.
-    monkeypatch.setattr(spack.config.GitIncludePaths, "_clone", lambda self: str(clone_dest))
+    monkeypatch.setattr(
+        spack.config.GitIncludePaths, "_clone", lambda self, parent_scope: str(clone_dest)
+    )
 
     main_dir = tmp_path / "main_env"
     main_dir.mkdir()
