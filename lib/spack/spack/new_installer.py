@@ -301,6 +301,14 @@ class GlobalState:
 
     def restore(self):
         if multiprocessing.get_start_method() == "fork":
+            # In the forking case we must erase SSL contexts.
+            from spack.oci import opener
+            from spack.util import web
+            from spack.util.s3 import s3_client_cache
+
+            web.urlopen._instance = None
+            opener.urlopen._instance = None
+            s3_client_cache.clear()
             return
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
