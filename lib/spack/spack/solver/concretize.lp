@@ -2168,20 +2168,7 @@ opt_criterion(55, "default values of variants not being used (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-% Minimize the weights of the providers, i.e. use as much as
-% possible the most preferred providers
-opt_criterion(50, "preferred providers (compilers excluded)").
-#minimize{ 0@250: #true }.
-#minimize{ 0@50: #true }.
-#minimize{
-    Weight@50+Priority,ProviderNode,X,Virtual
-    : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      not language(Virtual), not language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
-}.
-
 % Minimize the number of compilers used on nodes
-
 compiler_penalty(PackageNode, C-1) :-
    C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
    node_compiler(PackageNode, _), C > 0.
@@ -2194,13 +2181,15 @@ opt_criterion(48, "number of compilers used on the same node").
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(46, "preferred compilers").
+% Minimize the weights of the providers, i.e. use as much as
+% possible the most preferred providers
+opt_criterion(46, "preferred providers (excluded language runtimes)").
 #minimize{ 0@246: #true }.
 #minimize{ 0@46: #true }.
 #minimize{
     Weight@46+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      language(Virtual),
+      not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
