@@ -2158,16 +2158,6 @@ opt_criterion(65, "variant penalty (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(60, "preferred providers for roots").
-#minimize{ 0@260: #true }.
-#minimize{ 0@60: #true }.
-#minimize{
-    Weight@60+Priority,ProviderNode,X,Virtual
-    : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
-}.
-
 opt_criterion(55, "default values of variants not being used (roots)").
 #minimize{ 0@255: #true }.
 #minimize{ 0@55: #true }.
@@ -2180,13 +2170,13 @@ opt_criterion(55, "default values of variants not being used (roots)").
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(50, "preferred providers (non-roots)").
+opt_criterion(50, "preferred providers (compilers excluded)").
 #minimize{ 0@250: #true }.
 #minimize{ 0@50: #true }.
 #minimize{
     Weight@50+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      not attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
+      not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
