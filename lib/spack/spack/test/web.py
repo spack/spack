@@ -486,3 +486,28 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
     else:
         assert retrying() == "ok"
         assert sleep_times == [2**i for i in range(num_errors)]
+
+
+def test_retry_on_transient_error_non_oserror():
+    """Non-OSError exceptions with transient names (e.g. botocore) should be retried."""
+
+    class ResponseStreamingError(Exception):
+        pass
+
+    call_count = 0
+    sleep_times = []
+
+    def flaky_func():
+        nonlocal call_count
+        call_count += 1
+        if call_count <= 2:
+            raise ResponseStreamingError("IncompleteRead")
+        return "ok"
+
+    retrying = spack.util.web.retry_on_transient_error(
+        flaky_func, retries=5, sleep=sleep_times.append
+    )
+
+    assert retrying() == "ok"
+    assert call_count == 3
+    assert sleep_times == [1, 2]

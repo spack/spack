@@ -18,6 +18,7 @@ import time
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
 from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
@@ -48,10 +49,16 @@ def is_transient_error(e: Exception) -> bool:
         return True
     if isinstance(e, URLError) and isinstance(e.reason, socket.timeout):
         return True
-    if isinstance(e, socket.timeout):
+    if isinstance(e, (socket.timeout, IncompleteRead)):
         return True
-    # botocore.exceptions.ResponseStreamingError (IncompleteRead mid-stream)
-    if type(e).__name__ == "ResponseStreamingError":
+    # exceptions not inherited from the above used in urllib3 and botocore.
+    if type(e).__name__ in (
+        "ConnectionClosedError",
+        "IncompleteReadError",
+        "ProtocolError",
+        "ReadTimeoutError",
+        "ResponseStreamingError",
+    ):
         return True
     return False
 
@@ -71,7 +78,7 @@ def retry_on_transient_error(
         for i in range(retries):
             try:
                 return f(*args, **kwargs)
-            except OSError as e:
+            except Exception as e:
                 if i + 1 != retries and is_transient_error(e):
                     sleep(2**i)  # type: ignore[misc]  # mypy still thinks it's possibly None.
                     continue
@@ -317,7 +324,7 @@ def read_text(url: str) -> str:
     """Fetch url and return the response body decoded as UTF-8 text."""
     try:
         return _read_text_with_retry(url)
-    except OSError as e:
+    except Exception as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -325,7 +332,7 @@ def read_json(url: str):
     """Fetch url and return the response body parsed as JSON."""
     try:
         return _read_json_with_retry(url)
-    except OSError as e:
+    except Exception as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -562,7 +569,7 @@ def url_exists(url, curl=None):
     try:
         _url_exists_urllib(url)
         return True
-    except OSError as e:
+    except Exception as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
 
