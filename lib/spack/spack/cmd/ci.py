@@ -464,7 +464,7 @@ def ci_rebuild(args):
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
-    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose", "install"]
+    spack_cmd = [SPACK_COMMAND, "--color=always", "install"]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
@@ -490,7 +490,7 @@ def ci_rebuild(args):
 
     # Arguments when installing the root from sources
     deps_install_args = install_args + ["--only=dependencies"]
-    root_install_args = install_args + ["--keep-stage", "--only=package"]
+    root_install_args = install_args + ["--verbose", "--keep-stage", "--only=package"]
 
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
