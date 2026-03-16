@@ -115,8 +115,9 @@ setenv MODULES_{{ name|upper() }}_VERSION {{ '{' }}{{ version_part }}{{ '}' }}
 
 {% block autoloads %}
 {% if autoload|length > 0 %}
-# define missing command if using Environment Modules <5.1
-if {![llength [info commands depends-on]]} {
+# define missing command if using Environment Modules <5.1 or fix it to
+# properly handle multi-word specification if using Environment Modules <5.7
+if {![info exists ::env(LMOD_VERSION_MAJOR)]} {
     proc depends-on {args} {
         module load {*}$args
     }
