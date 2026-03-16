@@ -623,9 +623,7 @@ def parse_one_or_raise(
     return result
 
 
-def _parse_toolchain_config(
-    toolchain_config: Union[str, List[Dict]], name: str
-) -> "spack.spec.Spec":
+def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.spec.Spec":
     """Parse a toolchain config entry (string or list) into a Spec."""
     if isinstance(toolchain_config, str):
         toolchain = parse_one_or_raise(toolchain_config)
@@ -694,7 +692,7 @@ def expand_toolchains(
 
             # Parse and cache toolchain
             if name not in _cache:
-                _cache[name] = _parse_toolchain_config(toolchains[name], name)
+                _cache[name] = _parse_toolchain_config(toolchains[name])
 
             propagation = edge.propagation
             propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation

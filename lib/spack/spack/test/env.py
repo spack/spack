@@ -16,6 +16,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.spec_parser
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import (
@@ -1602,7 +1603,8 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        s = spack.spec.Spec("mpileaks %gnu ^callpath %gnu")
+        toolchains = spack.config.CONFIG.get("toolchains", {})
+        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 

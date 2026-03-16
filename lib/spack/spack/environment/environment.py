@@ -1247,6 +1247,9 @@ class Environment:
         self._process_included_lockfiles()
 
     def _sync_speclists(self):
+        self._spec_lists_parser = SpecListParser(
+            toolchains=spack.config.CONFIG.get("toolchains", {})
+        )
         self.spec_lists = {}
         self.spec_lists.update(
             self._spec_lists_parser.parse_definitions(
