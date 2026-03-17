@@ -504,17 +504,26 @@ def worker_function(
         tee.close()
         state_stream.close()
 
-    if exit_code == 0 and not os.path.lexists(spec.package.install_log_path):
+    if exit_code == 0:
         # Try to install the compressed log file
-        try:
-            with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
-                # Use GzipFile directly so we can omit filename / mtime in header
-                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
-                shutil.copyfileobj(f, gzip_file)
-                gzip_file.close()
-            os.unlink(log_path)
-        except Exception:
-            pass  # don't fail the build just because log compression failed
+        if not os.path.lexists(spec.package.install_log_path):
+            try:
+                with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
+                    # Use GzipFile directly so we can omit filename / mtime in header
+                    gzip_file = GzipFile(
+                        filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g
+                    )
+                    shutil.copyfileobj(f, gzip_file)
+                    gzip_file.close()
+            except Exception:
+                pass  # don't fail the build just because log compression failed
+
+        # Remove the uncompressed log file from the stage dir on successful install.
+        if not keep_stage:
+            try:
+                os.unlink(log_path)
+            except OSError:
+                pass
 
     sys.exit(exit_code)
 
@@ -687,7 +696,6 @@ def _install(
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
-        pkg.archive_install_test_log()
 
 
 class JobServer:
