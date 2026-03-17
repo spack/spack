@@ -204,7 +204,9 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, install_mo
     )
 
 
-def test_install_env_variables(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_env_variables(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
     assert os.path.isfile(spec.package.install_env_path)
@@ -223,7 +225,9 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
     assert "See build log for details:" in out
 
 
-def test_install_overwrite(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_overwrite(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     """Tests installing a spec, and then re-installing it in the same prefix."""
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
@@ -255,7 +259,9 @@ def test_install_overwrite(mock_packages, mock_archive, mock_fetch, install_mock
     assert fs.hash_directory(spec.prefix, ignore=ignores) != bad_md5
 
 
-def test_install_overwrite_not_installed(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_overwrite_not_installed(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     """Tests that overwrite doesn't fail if the package is not installed"""
     spec = spack.concretize.concretize_one("pkg-c")
     assert not os.path.exists(spec.prefix)
@@ -499,7 +505,9 @@ def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmp_path: p
     assert install.returncode == 0
 
 
-def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_extra_files_are_archived(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     s = spack.concretize.concretize_one("archive-files")
 
     install("archive-files")
@@ -514,7 +522,7 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch, insta
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_report_concretization_error(
-    tmp_path: pathlib.Path, mock_fetch, install_mockery, conflict_spec
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, conflict_spec, installer_variant
 ):
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(SpackError):
@@ -533,7 +541,9 @@ def test_cdash_report_concretization_error(
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_build_error(capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery):
+def test_cdash_upload_build_error(
+    capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(SpackError):
             install(
@@ -686,7 +696,7 @@ def test_cache_only_fails(mock_fetch, install_mockery):
     assert "libdwarf" in failed_packages
 
 
-def test_install_only_dependencies(mock_fetch, install_mockery):
+def test_install_only_dependencies(mock_fetch, install_mockery, installer_variant):
     dep = spack.concretize.concretize_one("dependency-install")
     root = spack.concretize.concretize_one("dependent-install")
 
@@ -707,7 +717,7 @@ def test_install_only_package(mock_fetch, install_mockery):
     assert "1 uninstalled dependency" in msg
 
 
-def test_install_deps_then_package(mock_fetch, install_mockery):
+def test_install_deps_then_package(mock_fetch, install_mockery, installer_variant):
     dep = spack.concretize.concretize_one("dependency-install")
     root = spack.concretize.concretize_one("dependent-install")
 
@@ -722,7 +732,9 @@ def test_install_deps_then_package(mock_fetch, install_mockery):
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 @pytest.mark.regression("12002")
-def test_install_only_dependencies_in_env(mutable_mock_env_path, mock_fetch, install_mockery):
+def test_install_only_dependencies_in_env(
+    mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
+):
     env("create", "test")
 
     with ev.read("test"):
@@ -738,7 +750,7 @@ def test_install_only_dependencies_in_env(mutable_mock_env_path, mock_fetch, ins
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.regression("12002")
 def test_install_only_dependencies_of_all_in_env(
-    mutable_mock_env_path, mock_fetch, install_mockery
+    mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
 ):
     env("create", "--without-view", "test")
 
@@ -760,7 +772,7 @@ def test_install_only_dependencies_of_all_in_env(
 
 # Unit tests should not be affected by the user's managed environments
 def test_install_no_add_in_env(
-    tmp_path: pathlib.Path, mutable_mock_env_path, mock_fetch, install_mockery
+    tmp_path: pathlib.Path, mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
 ):
     # To test behavior of --add option, we create the following environment:
     #
@@ -877,7 +889,9 @@ def test_install_help_cdash():
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmp_path: pathlib.Path, mock_fetch, install_mockery, monkeypatch):
+def test_cdash_auth_token(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, monkeypatch, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "asdf")
         out = install("--fake", "-v", "--log-file=cdash_reports", "--log-format=cdash", "pkg-a")
@@ -886,7 +900,9 @@ def test_cdash_auth_token(tmp_path: pathlib.Path, mock_fetch, install_mockery, m
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
-def test_cdash_configure_warning(tmp_path: pathlib.Path, mock_fetch, install_mockery):
+def test_cdash_configure_warning(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
     with fs.working_dir(str(tmp_path)):
         # Test would fail if install raised an error.
 
@@ -934,7 +950,7 @@ def test_install_fails_no_args_suggests_env_activation(tmp_path: pathlib.Path):
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 def test_install_env_with_tests_all(
-    mutable_mock_env_path, mock_packages, mock_fetch, install_mockery
+    mutable_mock_env_path, mock_packages, mock_fetch, install_mockery, installer_variant
 ):
     env("create", "test")
     with ev.read("test"):
@@ -947,7 +963,7 @@ def test_install_env_with_tests_all(
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
 def test_install_env_with_tests_root(
-    mutable_mock_env_path, mock_packages, mock_fetch, install_mockery
+    mutable_mock_env_path, mock_packages, mock_fetch, install_mockery, installer_variant
 ):
     env("create", "test")
     with ev.read("test"):
@@ -959,7 +975,9 @@ def test_install_env_with_tests_root(
 
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
-def test_install_empty_env(mutable_mock_env_path, mock_packages, mock_fetch, install_mockery):
+def test_install_empty_env(
+    mutable_mock_env_path, mock_packages, mock_fetch, install_mockery, installer_variant
+):
     env_name = "empty"
     env("create", env_name)
     with ev.read(env_name):
