@@ -179,6 +179,40 @@ class TestBasicStateManagement:
         assert status.completed == 1
         assert status.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
+    def test_parse_log_summary(self, tmp_path):
+        """Test that parse_log_summary parses the build log and stores the summary."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        # Create a fake log file with an error
+        log_file = tmp_path / "build.log"
+        log_file.write_text("error: something went wrong\n")
+
+        status.builds[build_id].log_path = str(log_file)
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is not None
+        assert "error" in status.builds[build_id].log_summary.lower()
+
+    def test_parse_log_summary_no_log_path(self):
+        """Test that parse_log_summary is a no-op when log_path is not set."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is None
+
+    def test_parse_log_summary_missing_file(self, tmp_path):
+        """Test that parse_log_summary is a no-op when log file doesn't exist."""
+        status, _, _ = create_build_status()
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.builds[build_id].log_path = str(tmp_path / "nonexistent.log")
+        status.parse_log_summary(build_id)
+        assert status.builds[build_id].log_summary is None
+
     def test_update_progress(self):
         """Test that update_progress updates percentages"""
         status, _, _ = create_build_status()
@@ -757,22 +791,41 @@ class TestLogFollowing:
         # Nothing should be printed since we're tracking pkg1, not pkg2
         assert fake_stdout.getvalue() == ""
 
-    def test_cannot_follow_failed_build(self):
-        """Test that navigation skips failed builds"""
+    def test_can_navigate_to_failed_build(self):
+        """Test that navigating to a failed build shows log summary and path"""
+        status, _, fake_stdout = create_build_status(total=3)
+        specs = add_mock_builds(status, 3)
+
+        # Mark the middle build as failed and set log info
+        status.update_state(specs[1].dag_hash(), "failed")
+        build_info = status.builds[specs[1].dag_hash()]
+        build_info.log_summary = "Error: something went wrong\n"
+        build_info.log_path = "/tmp/spack/pkg1.log"
+
+        # Navigate from pkg0 to next -- should land on failed pkg1
+        status.tracked_build_id = specs[0].dag_hash()
+        next_id = status._get_next(1)
+        assert next_id == specs[1].dag_hash()
+
+        # Actually navigate to it
+        status.next(1)
+        output = fake_stdout.getvalue()
+        assert "Log summary of pkg1" in output
+        assert "Error: something went wrong" in output
+        assert "/tmp/spack/pkg1.log" in output
+
+    def test_navigation_skips_finished_build(self):
+        """Test that navigation skips successfully finished builds"""
         status, _, _ = create_build_status(total=3)
         specs = add_mock_builds(status, 3)
 
-        # Mark the middle build as failed
-        status.update_state(specs[1].dag_hash(), "failed")
+        # Mark the middle build as finished (successful)
+        status.update_state(specs[1].dag_hash(), "finished")
 
-        # The failed build should have finished_time set
-        assert status.builds[specs[1].dag_hash()].finished_time is not None
-
-        # Try to get next build, should skip the failed one
+        # Try to get next build, should skip the finished one
         status.tracked_build_id = specs[0].dag_hash()
         next_id = status._get_next(1)
 
-        # Should skip pkg1 (failed) and return pkg2
         assert next_id == specs[2].dag_hash()
 
 

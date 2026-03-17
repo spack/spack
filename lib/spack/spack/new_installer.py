@@ -956,10 +956,16 @@ class BuildInfo:
         "finished_time",
         "progress_percent",
         "control_w_conn",
+        "log_path",
+        "log_summary",
     )
 
     def __init__(
-        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection]
+        self,
+        spec: spack.spec.Spec,
+        explicit: bool,
+        control_w_conn: Optional[Connection],
+        log_path: Optional[str] = None,
     ) -> None:
         self.state: str = "starting"
         self.explicit: bool = explicit
@@ -971,6 +977,8 @@ class BuildInfo:
         self.finished_time: Optional[float] = None
         self.progress_percent: Optional[int] = None
         self.control_w_conn = control_w_conn
+        self.log_path: Optional[str] = log_path
+        self.log_summary: Optional[str] = None
 
 
 class BuildStatus:
@@ -1025,10 +1033,14 @@ class BuildStatus:
         self.dirty = True
 
     def add_build(
-        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection] = None
+        self,
+        spec: spack.spec.Spec,
+        explicit: bool,
+        control_w_conn: Optional[Connection] = None,
+        log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
-        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn)
+        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn, log_path)
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
@@ -1063,6 +1075,7 @@ class BuildStatus:
     def search_input(self, input: str) -> None:
         """Handle keyboard input when in search mode"""
         if input in ("\r", "\n"):
+            self.log_ends_with_newline = False
             self.next(1)
         elif input == "\x1b":  # Escape
             self.search_mode = False
@@ -1090,7 +1103,8 @@ class BuildStatus:
         matching = [
             build_id
             for build_id, build in self.builds.items()
-            if build.finished_time is None and self._is_displayed(build)
+            if (build.finished_time is None or build.state == "failed")
+            and self._is_displayed(build)
         ]
         if not matching:
             return None
@@ -1124,20 +1138,35 @@ class BuildStatus:
 
         self.tracked_build_id = new_build_id
 
-        # Tell the user we're following new logs, and instruct the child to start sending them.
         version_str = (
             f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
         )
         prefix = "" if self.log_ends_with_newline else "\n"
-        self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
-        self.log_ends_with_newline = True
-        self.stdout.flush()
-        try:
-            conn = new_build.control_w_conn
-            if conn is not None:
-                os.write(conn.fileno(), b"1")
-        except (KeyError, OSError):
-            pass
+
+        if new_build.state == "failed":
+            # For failed builds, show the stored log summary instead of following live logs.
+            self.stdout.write(f"{prefix}==> Log summary of {new_build.name}{version_str}\n")
+            self.log_ends_with_newline = True
+            if new_build.log_summary:
+                self.stdout.write(new_build.log_summary)
+            if new_build.log_path:
+                if not new_build.log_summary:
+                    self.stdout.write("No errors parsed from log, see full log: ")
+                else:
+                    self.stdout.write("Full log: ")
+                self.stdout.write(f"{new_build.log_path}\n")
+            self.stdout.flush()
+        else:
+            # Tell the user we're following new logs, and instruct the child to start sending.
+            self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
+            self.log_ends_with_newline = True
+            self.stdout.flush()
+            try:
+                conn = new_build.control_w_conn
+                if conn is not None:
+                    os.write(conn.fileno(), b"1")
+            except (KeyError, OSError):
+                pass
 
     def update_state(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
@@ -1163,6 +1192,19 @@ class BuildStatus:
             line = "".join(self._generate_line_components(build_info, static=True))
             self.stdout.write(line + "\n")
             self.stdout.flush()
+
+    def parse_log_summary(self, build_id: str) -> None:
+        """Parse the build log for errors/warnings and store the summary."""
+        build_info = self.builds[build_id]
+        if not build_info.log_path or not os.path.exists(build_info.log_path):
+            return
+        buf = io.StringIO()
+        spack.build_environment.write_log_summary(
+            buf, f"{build_info.name}@{build_info.version} build", build_info.log_path
+        )
+        summary = buf.getvalue()
+        if summary:
+            build_info.log_summary = summary
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -1368,6 +1410,10 @@ class BuildStatus:
         elif build_info.state == "finished":
             prefix = build_info.prefix
             yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
+        elif build_info.state == "failed":
+            yield " failed"
+            if build_info.log_path:
+                yield f": {build_info.log_path}"
         else:
             yield f" {build_info.state}"
 
@@ -1945,6 +1991,7 @@ class PackageInstaller:
                         # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+                        self.build_status.parse_log_summary(build.spec.dag_hash())
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -2076,13 +2123,9 @@ class PackageInstaller:
 
         if failures:
             for s in failures:
-                log_path = self.log_paths.get(s.dag_hash())
-                if log_path and os.path.exists(log_path):
-                    out = io.StringIO()
-                    spack.build_environment.write_log_summary(out, f"{s} build", log_path)
-                    summary = out.getvalue()
-                    if summary:
-                        sys.stderr.write(summary)
+                build_info = self.build_status.builds[s.dag_hash()]
+                if build_info and build_info.log_summary:
+                    sys.stderr.write(build_info.log_summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
@@ -2203,7 +2246,10 @@ class PackageInstaller:
         )
         selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         self.build_status.add_build(
-            child_info.spec, explicit=explicit, control_w_conn=child_info.control_w_conn
+            child_info.spec,
+            explicit=explicit,
+            control_w_conn=child_info.control_w_conn,
+            log_path=child_info.log_path,
         )
         self.report_data.start_record(spec)
 
