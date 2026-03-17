@@ -4,6 +4,7 @@
 """Test environment internals without CLI"""
 
 import filecmp
+import json
 import os
 import pathlib
 import pickle
@@ -1982,6 +1983,46 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             with pytest.raises(ev.SpackEnvironmentConfigError, match=r"among groups: alpha, beta"):
                 e.concretize()
+
+    def test_from_lockfile_preserves_groups(self, tmp_path):
+        """Tests that EnvironmentManifestFile.from_lockfile reconstructs groups correctly
+        from a v7 lockfile that contains group information in its roots.
+        """
+        lockfile_data = {
+            "_meta": {"file-type": "spack-lockfile", "lockfile-version": 7, "specfile-version": 5},
+            "roots": [
+                {"hash": "aaa", "spec": "mpileaks", "group": "default"},
+                {"hash": "bbb", "spec": "libelf", "group": "default"},
+                {"hash": "ccc", "spec": "gcc@14", "group": "compilers"},
+            ],
+            "concrete_specs": {},
+        }
+        lockfile_path = tmp_path / "spack.lock"
+        lockfile_path.write_text(json.dumps(lockfile_data))
+
+        manifest = EnvironmentManifestFile.from_lockfile(tmp_path)
+
+        # The reconstructed manifest must have both groups
+        assert set(manifest.groups()) == {"default", "compilers"}
+        assert manifest.user_specs(group="default") == ["mpileaks", "libelf"]
+        assert manifest.user_specs(group="compilers") == ["gcc@14"]
+
+    def test_from_lockfile_without_groups_stays_default(self, tmp_path):
+        """Tests that a lockfile without group info (v6 and earlier) reconstructs all specs
+        into the default group only.
+        """
+        lockfile_data = {
+            "_meta": {"file-type": "spack-lockfile", "lockfile-version": 6, "specfile-version": 5},
+            "roots": [{"hash": "aaa", "spec": "mpileaks"}, {"hash": "bbb", "spec": "libelf"}],
+            "concrete_specs": {},
+        }
+        lockfile_path = tmp_path / "spack.lock"
+        lockfile_path.write_text(json.dumps(lockfile_data))
+
+        manifest = EnvironmentManifestFile.from_lockfile(tmp_path)
+
+        assert set(manifest.groups()) == {"default"}
+        assert manifest.user_specs(group="default") == ["mpileaks", "libelf"]
 
 
 @pytest.mark.regression("51995")
