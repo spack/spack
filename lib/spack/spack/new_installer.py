@@ -1275,25 +1275,27 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
-        if self.color:
-            bold = "\033[1m"
-            reset = "\033[0m"
-            cyan = "\033[36m"
-        else:
-            bold = reset = cyan = ""
 
-        long_header_len = len(
-            f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
-        )
-        if long_header_len < max_width:
-            self._println(
-                buffer,
-                f"{bold}Progress:{reset} {self.completed}/{self.total}"
-                f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
-                f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
+        if not finalize:
+            if self.color:
+                bold = "\033[1m"
+                reset = "\033[0m"
+                cyan = "\033[36m"
+            else:
+                bold = reset = cyan = ""
+
+            long_header_len = len(
+                f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
             )
-        else:
-            self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
+            if long_header_len < max_width:
+                self._println(
+                    buffer,
+                    f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                    f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                    f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
+                )
+            else:
+                self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
         displayed_builds = (
             [b for b in self.builds.values() if self._is_displayed(b)]

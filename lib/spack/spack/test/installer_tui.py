@@ -1197,6 +1197,23 @@ class TestEdgeCases:
         assert "Progress:" in output
         assert "0/0" in output
 
+    def test_no_header_with_finalize(self):
+        """Test that we don't print a header with finalize=True"""
+        status, _, fake_stdout = create_build_status(total=2, color=False)
+        spec_a, spec_b = add_mock_builds(status, 2)
+        status.update_state(spec_a.dag_hash(), "finished")
+        status.update_state(spec_b.dag_hash(), "failed")
+        status.update(finalize=True)
+
+        output = fake_stdout.getvalue()
+
+        # Should not contain header
+        assert "Progress:" not in output
+
+        # Should contain final status lines for both builds
+        assert f"[+] {spec_a.dag_hash(7)} {spec_a.name}@{spec_a.version}" in output
+        assert f"[x] {spec_b.dag_hash(7)} {spec_b.name}@{spec_b.version}" in output
+
     def test_all_builds_finished(self):
         """Test when all builds are finished"""
         status, fake_time, _ = create_build_status(total=2)
