@@ -9,12 +9,13 @@ import sys
 import pytest
 
 import spack.concretize
-import spack.hooks.generate_spec_scripts as shell_script
+import spack.hooks.generate_spec_scripts as spec_script
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 
 install = SpackCommand("install")
+# TODO: Add shells for windows when shell script is written
 
 
 @pytest.mark.parametrize(
@@ -34,12 +35,12 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
 
     for pkg in spec.traverse():
         pkg_load_script = os.path.join(pkg.prefix, ".spack", f"load{extension}")
-        path_to_load_script = shell_script.path_to_load_shell_script(pkg, shell)
+        path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
 
         assert path_to_load_script == pkg_load_script
 
         pkg_unload_script = os.path.join(pkg.prefix, ".spack", f"unload{extension}")
-        path_to_unload_script = shell_script.path_to_unload_shell_script(pkg, shell)
+        path_to_unload_script = spec_script.path_to_unload_shell_script(pkg, shell)
 
         assert path_to_unload_script == pkg_unload_script
 
@@ -59,14 +60,13 @@ def test_load_unload_scripts_exist(shell, install_mockery, mock_fetch, mock_arch
     for pkg in spec.traverse():
 
         if not pkg.external:
-            path_to_load_shell = shell_script.path_to_load_shell_script(pkg, shell)
-            path_to_unload_shell = shell_script.path_to_unload_shell_script(pkg, shell)
+            path_to_load_shell = spec_script.path_to_load_shell_script(pkg, shell)
+            path_to_unload_shell = spec_script.path_to_unload_shell_script(pkg, shell)
 
             assert os.path.isfile(path_to_load_shell)
             assert os.path.isfile(path_to_unload_shell)
 
 
-# TODO: Reinstate shells for windows when shell script is written
 @pytest.mark.parametrize(
     "shell, set_command",
     (
@@ -99,8 +99,8 @@ def test_contents_of_shell_scripts(
         if pkg.external:
             continue
 
-        path_to_load_shell = shell_script.path_to_load_shell_script(pkg, shell)
-        path_to_unload_shell = shell_script.path_to_unload_shell_script(pkg, shell)
+        path_to_load_shell = spec_script.path_to_load_shell_script(pkg, shell)
+        path_to_unload_shell = spec_script.path_to_unload_shell_script(pkg, shell)
 
         with open(path_to_load_shell, "r", encoding="utf-8") as f:
             load_script = f.read()
@@ -115,7 +115,6 @@ def test_contents_of_shell_scripts(
         )
 
 
-# TODO: Reinstate shells for windows when shell script is written
 @pytest.mark.parametrize(
     "shell,set_command",
     (
@@ -151,8 +150,8 @@ def test_install_individual_specs_scripts(
     install("--fake", mpich_spec.name)
 
     # no overlap in load shell script
-    path_to_dyninst = shell_script.path_to_load_shell_script(dyninst_spec, shell)
-    path_to_mpich = shell_script.path_to_load_shell_script(mpich_spec, shell)
+    path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
+    path_to_mpich = spec_script.path_to_load_shell_script(mpich_spec, shell)
 
     with open(path_to_dyninst, "r", encoding="utf-8") as f:
         dyninst_load = f.read()
@@ -166,7 +165,6 @@ def test_install_individual_specs_scripts(
     assert dyninst_spec.name not in mpich_load
 
 
-# TODO: Reinstate shells for windows when shell script is written
 @pytest.mark.parametrize(
     "shell,set_command",
     (
@@ -201,8 +199,8 @@ def test_install_multiple_specs_shell_scripts(
     install("--fake", dyninst_spec.name, hypre_spec.name)
 
     # no overlap in load shell script
-    path_to_dyninst = shell_script.path_to_load_shell_script(dyninst_spec, shell)
-    path_to_hypre = shell_script.path_to_load_shell_script(hypre_spec, shell)
+    path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
+    path_to_hypre = spec_script.path_to_load_shell_script(hypre_spec, shell)
 
     with open(path_to_dyninst, "r", encoding="utf-8") as f:
         dyninst_load = f.read()
@@ -217,3 +215,23 @@ def test_install_multiple_specs_shell_scripts(
 
     assert hypre_spec.name not in dyninst_load
     assert dyninst_spec.name not in hypre_load
+
+
+@pytest.mark.parametrize(
+    "shell",
+    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+)
+def test_no_scripts_for_external_spec(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test that no shell scripts are written for external specs"""
+
+    spec = Spec("externalprereq")
+    spec = spack.concretize.concretize_one(spec.name)
+
+    install("--fake", spec.name)
+
+    for pkg in spec.traverse():
+        path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
+        path_to_unload_script = spec_script.path_to_unload_shell_script(pkg, shell)
+
+        assert not os.path.isfile(path_to_load_script)
+        assert not os.path.isfile(path_to_unload_script)
