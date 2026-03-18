@@ -99,7 +99,7 @@ _spack_shell_wrapper() {
             else
                 LOC="$(SPACK_COLOR="${SPACK_COLOR:-always}" spack location $_sp_arg "$@")"
                 if [ -d "$LOC" ] ; then
-                    cd "$LOC"
+                    command cd "$LOC"
                 else
                     return 1
                 fi
@@ -243,7 +243,7 @@ _spack_determine_shell() {
     elif [ -n "${ZSH_NAME:-}" ]; then
         echo zsh
     else
-        PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+        PS_FORMAT= ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | command xargs basename
     fi
 }
 _sp_shell=$(_spack_determine_shell)
@@ -261,7 +261,7 @@ elif [ "$_sp_shell" = zsh ]; then
 else
     # Try to read the /proc filesystem (works on linux without lsof)
     # In dash, the sourced file is the last one opened (and it's kept open)
-    _sp_source_file_fd="$(\ls /proc/$$/fd 2>/dev/null | sort -n | tail -1)"
+    _sp_source_file_fd="$(command ls /proc/$$/fd 2>/dev/null | sort -n | tail -1)"
     if ! _sp_source_file="$(readlink /proc/$$/fd/$_sp_source_file_fd)"; then
         # Last resort: try lsof. This works in dash on macos -- same reason.
         # macos has lsof installed by default; some linux containers don't.
@@ -285,8 +285,8 @@ if [ "$_sp_shell" = zsh ]; then
     _sp_share_dir="${_sp_source_file:A:h}"
     _sp_prefix="${_sp_share_dir:h:h}"
 else
-    _sp_share_dir="$(cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
-    _sp_prefix="$(cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
+    _sp_share_dir="$(command cd "$(dirname $_sp_source_file)" > /dev/null && pwd)"
+    _sp_prefix="$(command cd "$(dirname $(dirname $_sp_share_dir))" > /dev/null && pwd)"
 fi
 if [ -x "$_sp_prefix/bin/spack" ]; then
     export SPACK_ROOT="${_sp_prefix}"
@@ -313,7 +313,7 @@ _spack_pathadd PATH "${_sp_prefix%/}/bin"
 # Check whether a function of the given name is defined
 #
 _spack_fn_exists() {
-    LANG= type $1 2>&1 | grep -q 'function'
+    LANG= type $1 2>&1 | command grep -q 'function'
 }
 
 # Define the spack shell function with some informative no-ops, so when users
