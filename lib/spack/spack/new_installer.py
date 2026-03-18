@@ -309,10 +309,6 @@ class GlobalState:
             web.urlopen._instance = None
             opener.urlopen._instance = None
             s3_client_cache.clear()
-
-            # The build process shouldn't inherit the UI's signal handlers.
-            signal.signal(signal.SIGUSR1, signal.SIG_DFL)
-            signal.signal(signal.SIGUSR2, signal.SIG_DFL)
             return
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
@@ -1970,7 +1966,6 @@ class PackageInstaller:
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
         sigwinch_r = sigwinch_w = -1
-        sigusr_r = sigusr_w = -1
 
         # Set stdin to non-blocking for key press detection
         if sys.stdin.isatty():
@@ -1994,29 +1989,6 @@ class PackageInstaller:
 
             signal.signal(signal.SIGWINCH, _handle_sigwinch)
             selector.register(sigwinch_r, selectors.EVENT_READ, "sigwinch")
-
-        sigusr_r, sigusr_w = os.pipe()
-        os.set_blocking(sigusr_r, False)
-        os.set_blocking(sigusr_w, False)
-
-        def _handle_sigusr1(signum: int, frame: object) -> None:
-            try:
-                os.write(sigusr_w, b"+")
-            except OSError:
-                pass
-
-        def _handle_sigusr2(signum: int, frame: object) -> None:
-            try:
-                os.write(sigusr_w, b"-")
-            except OSError:
-                pass
-
-        try:
-            signal.signal(signal.SIGUSR1, _handle_sigusr1)
-            signal.signal(signal.SIGUSR2, _handle_sigusr2)
-            selector.register(sigusr_r, selectors.EVENT_READ, "sigusr")
-        except Exception:
-            pass  # not a necessary feature; ignore if signals are not supported
 
         # Finished builds that have not yet been written to the database.
         finished_builds: List[ChildInfo] = []
@@ -2068,13 +2040,6 @@ class PackageInstaller:
                     elif data == "sigwinch":
                         os.read(sigwinch_r, 64)  # drain the pipe
                         self.build_status.on_resize()
-                    elif data == "sigusr":
-                        for c in os.read(sigusr_r, 64):  # drain the pipe
-                            if c == ord("+"):
-                                jobserver.increase_parallelism()
-                            elif c == ord("-"):
-                                jobserver.decrease_parallelism()
-                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
                     elif data == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
@@ -2221,16 +2186,6 @@ class PackageInstaller:
                     selector.unregister(sigwinch_r)
                     os.close(sigwinch_r)
                     os.close(sigwinch_w)
-                except Exception:
-                    pass
-
-            if sigusr_r >= 0:
-                try:
-                    signal.signal(signal.SIGUSR1, signal.SIG_DFL)
-                    signal.signal(signal.SIGUSR2, signal.SIG_DFL)
-                    selector.unregister(sigusr_r)
-                    os.close(sigusr_r)
-                    os.close(sigusr_w)
                 except Exception:
                     pass
 
