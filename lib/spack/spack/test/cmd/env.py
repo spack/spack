@@ -644,6 +644,44 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
     assert os.path.islink(filepath_mid)
 
 
+def test_compiler_target_env(
+    install_mockery, tmp_path: pathlib.Path,
+):
+    path = tmp_path / "spack.yaml"
+
+    with fs.working_dir(str(tmp_path)):
+        with open(str(path), "w", encoding="utf-8") as f:
+            cflags = "-Wall"
+            f.write(
+               f"""\
+spack:
+  specs:
+  - pkg-a
+  - libdwarf %gcc@12.100.100
+  packages:
+    all:
+      require:
+      - spec: target=x86_64_v3
+    gcc:
+      externals:
+      - spec: gcc@12.100.100 languages:=c,c++
+        prefix: /fake
+        extra_attributes:
+          compilers:
+            c: /fake/bin/gcc
+            cxx: /fake/bin/g++
+          flags:
+            cflags: {cflags}
+      require: "gcc"
+""")
+        env("create", "test", "spack.yaml")
+
+    with ev.read("test") as e:
+        e.concretize()
+        import pdb; pdb.set_trace()
+        print('hi')
+
+
 def test_env_install_two_specs_same_dep(
     install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
