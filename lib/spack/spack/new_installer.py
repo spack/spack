@@ -216,8 +216,10 @@ class Tee:
     def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
-        self.saved_stdout = os.dup(sys.stdout.fileno())
-        self.saved_stderr = os.dup(sys.stderr.fileno())
+        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+        # redirect their file descriptors in addition to the original fds 1 and 2.
+        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+        self.saved_fds = {fd: os.dup(fd) for fd in fds}
         #: The file descriptor of the log file
         self.log_fd = log_fd
         r, w = os.pipe()
@@ -227,8 +229,8 @@ class Tee:
             daemon=True,
         )
         self.tee_thread.start()
-        os.dup2(w, sys.stdout.fileno())
-        os.dup2(w, sys.stderr.fileno())
+        for fd in fds:
+            os.dup2(w, fd)
         os.close(w)
 
     def close(self) -> None:
@@ -238,10 +240,9 @@ class Tee:
         # can cause exit code 120 (witnessed under pytest+coverage on macOS).
         sys.stdout.flush()
         sys.stderr.flush()
-        os.dup2(self.saved_stdout, sys.stdout.fileno())
-        os.dup2(self.saved_stderr, sys.stderr.fileno())
-        os.close(self.saved_stdout)
-        os.close(self.saved_stderr)
+        for fd, saved_fd in self.saved_fds.items():
+            os.dup2(saved_fd, fd)
+            os.close(saved_fd)
         self.tee_thread.join()
         # Only then close the other fds.
         self.control.close()
