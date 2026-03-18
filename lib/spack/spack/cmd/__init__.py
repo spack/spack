@@ -182,7 +182,8 @@ def parse_specs(
     args = [args] if isinstance(args, str) else args
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
-    specs = spack.spec_parser.parse(arg_string)
+    toolchains = spack.config.CONFIG.get("toolchains", {})
+    specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
     if not concretize:
         return specs
 
@@ -760,7 +761,7 @@ def group_arguments(
         prefix_length: length of any additional arguments (including spaces) to be passed before
             the groups from args; default is 0 characters
         max_group_length: max length of characters that if a group of args is joined by ``" "``
-            On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
+            On unix, this defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 
     """
@@ -770,7 +771,7 @@ def group_arguments(
         max_group_length = 32766
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
-                # returns -1 if an option isn't present (soem older POSIXes)
+                # returns -1 if an option isn't present (some older POSIXes)
                 sysconf_max = os.sysconf("SC_ARG_MAX")
                 max_group_length = sysconf_max if sysconf_max != -1 else max_group_length
             except (ValueError, OSError):

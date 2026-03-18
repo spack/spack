@@ -268,7 +268,8 @@ class CDashHandler:
         group_id = None
 
         try:
-            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
+            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                response_text = response.read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
 
@@ -543,7 +544,7 @@ class SpackCIConfig:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -553,7 +554,7 @@ class SpackCIConfig:
                 if _spec_matches(spec, match_string):
                     matched = True
                     if "build-job-remove" in match_attrs:
-                        spack.config.remove_yaml(dest, attrs["build-job-remove"])
+                        cfg.remove_yaml(dest, attrs["build-job-remove"])
                     if "build-job" in match_attrs:
                         spack.schema.merge_yaml(dest, attrs["build-job"])
                     break
@@ -593,7 +594,7 @@ class SpackCIConfig:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
+                    "script:": ["spack -v buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
@@ -624,7 +625,7 @@ class SpackCIConfig:
 
                 def _apply_section(dest, src):
                     if do_remove:
-                        dest = spack.config.remove_yaml(dest, src[remove_job_name])
+                        dest = cfg.remove_yaml(dest, src[remove_job_name])
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 
@@ -713,8 +714,8 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _urlopen(request)
-                        config = json.load(response)
+                        with _urlopen(request) as response:
+                            config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI

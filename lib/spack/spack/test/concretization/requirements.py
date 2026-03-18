@@ -20,7 +20,8 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
-from spack.solver.reuse import SpecFilter
+from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
+from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
@@ -311,7 +312,7 @@ packages:
 """
     update_packages_config(conf_str)
     s2 = spack.concretize.concretize_one("x")
-    # The requirement forces choosing the eariler version
+    # The requirement forces choosing the earlier version
     assert s2.satisfies("@1.0")
 
 
@@ -1320,8 +1321,13 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
-    external_specs = SpecFilter.from_packages_yaml(
-        mutable_config, include=[], exclude=[]
+    packages_with_externals = external_config_with_implicit_externals(mutable_config)
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    external_specs = spec_filter_from_packages_yaml(
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+        include=[],
+        exclude=[],
     ).selected_specs()
 
     with spack.config.override("concretizer:reuse", True):
@@ -1505,8 +1511,13 @@ packages:
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
-    external_specs = SpecFilter.from_packages_yaml(
-        mutable_config, include=[], exclude=[]
+    packages_with_externals = external_config_with_implicit_externals(mutable_config)
+    completion_mode = mutable_config.get("concretizer:externals:completion")
+    external_specs = spec_filter_from_packages_yaml(
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        packages_with_externals=packages_with_externals,
+        include=[],
+        exclude=[],
     ).selected_specs()
 
     # Ask for just "mpileaks" and check the spec is reused

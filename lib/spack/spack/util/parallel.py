@@ -10,6 +10,9 @@ from typing import Optional
 
 import spack.config
 
+#: Used in tests to disable parallelism, as tests themselves are parallelized
+ENABLE_PARALLELISM = sys.platform != "win32"
+
 
 class ErrorFromWorker:
     """Wrapper class to report an error from a worker process"""
@@ -73,11 +76,12 @@ def imap_unordered(
     Raises:
         RuntimeError: if any error occurred in the worker processes
     """
-    from spack.subprocess_context import GlobalStateMarshaler
 
-    if sys.platform in ("darwin", "win32") or len(list_of_args) == 1:
+    if not ENABLE_PARALLELISM or len(list_of_args) <= 1:
         yield from map(f, list_of_args)
         return
+
+    from spack.subprocess_context import GlobalStateMarshaler
 
     marshaler = GlobalStateMarshaler()
     with multiprocessing.Pool(
@@ -109,13 +113,15 @@ def make_concurrent_executor(
     if the platform does not enable forking as the default start method. Effectively
     require_fork=True makes the executor sequential in the current process on Windows, macOS, and
     Linux from Python 3.14+ (which changes defaults)"""
+
+    if (
+        not ENABLE_PARALLELISM
+        or (require_fork and multiprocessing.get_start_method() != "fork")
+        or sys.version_info[:2] == (3, 6)
+    ):
+        return SequentialExecutor()
+
     from spack.subprocess_context import GlobalStateMarshaler
-
-    if require_fork and multiprocessing.get_start_method() != "fork":
-        return SequentialExecutor()
-
-    if sys.version_info[:2] == (3, 6):
-        return SequentialExecutor()
 
     jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
     marshaler = GlobalStateMarshaler()

@@ -7,6 +7,7 @@ import argparse
 import spack.cmd
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.spec
 from spack.cmd.common import arguments
 
 description = "remove specs from an environment"
@@ -32,7 +33,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["specs"])
 
 
-def _update_config(specs_to_remove, remove_all=False):
+def _update_config(specs_to_remove):
     def change_fn(dev_config):
         modified = False
         for spec in specs_to_remove:
@@ -40,38 +41,31 @@ def _update_config(specs_to_remove, remove_all=False):
                 tty.msg("Undevelop: removing {0}".format(spec.name))
                 del dev_config[spec.name]
                 modified = True
-        if remove_all and dev_config:
-            dev_config.clear()
-            modified = True
         return modified
 
     spack.config.update_all("develop", change_fn)
 
 
 def undevelop(parser, args):
-    remove_specs = None
-    remove_all = False
-    if args.all:
-        remove_all = True
-    else:
-        remove_specs = spack.cmd.parse_specs(args.specs)
-
     # TODO: when https://github.com/spack/spack/pull/35307 is merged,
     # an active env is not required if a scope is specified
     env = spack.cmd.require_active_env(cmd_name="undevelop")
+
+    if args.all:
+        remove_specs = [spack.spec.Spec(s) for s in env.dev_specs]
+    else:
+        remove_specs = spack.cmd.parse_specs(args.specs)
+
     with env.write_transaction():
-        _update_config(remove_specs, remove_all)
+        _update_config(remove_specs)
         if args.apply_changes:
             for spec in remove_specs:
                 env.apply_develop(spec, path=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
-    remove_spec_names = set(x.name for x in remove_specs)
 
-    if remove_all:
-        not_fully_removed = updated_all_dev_specs
-    else:
-        not_fully_removed = updated_all_dev_specs & remove_spec_names
+    remove_spec_names = set(x.name for x in remove_specs)
+    not_fully_removed = updated_all_dev_specs & remove_spec_names
 
     if not_fully_removed:
         tty.msg(

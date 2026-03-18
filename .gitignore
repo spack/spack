@@ -12,12 +12,13 @@
 spack-db.*
 *.in.log
 *.out.log
+CLAUDE.md
 
 # Configuration: Ignore everything in /etc/spack,
-# except spack and site scopes that ship with spack
+# except defaults and site scopes that ship with spack
 /etc/spack/*
 !/etc/spack/defaults
-!/etc/spack/site
+!/etc/spack/site/README.md
 
 ###########################
 # Python-specific ignores #

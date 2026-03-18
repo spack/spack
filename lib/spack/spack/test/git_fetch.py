@@ -16,6 +16,7 @@ import spack.fetch_strategy
 import spack.package_base
 import spack.platforms
 import spack.repo
+import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
 from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.package_base import PackageBase
@@ -25,6 +26,8 @@ from spack.variant import SingleValuedVariant
 from spack.version import Version
 
 _mock_transport_error = "Mock HTTP transport error"
+min_opt_string = ".".join(map(str, spack.util.git.MIN_OPT_VERSION))
+min_direct_commit = ".".join(map(str, spack.util.git.MIN_DIRECT_COMMIT_FETCH))
 
 
 @pytest.fixture(params=[None, "1.8.5.2", "1.8.5.1", "1.7.10", "1.7.1", "1.7.0"])
@@ -36,7 +39,7 @@ def git_version(git, request, monkeypatch):
     paths for old versions still work, we fake it out here and make it
     use the backward-compatibility code paths with newer git versions.
     """
-    real_git_version = spack.fetch_strategy.GitFetchStrategy.version_from_git(git)
+    real_git_version = Version(spack.util.git.extract_git_version_str(git))
 
     if request.param is None:
         # Don't patch; run with the real git_version method.
@@ -49,26 +52,20 @@ def git_version(git, request, monkeypatch):
         # Patch the fetch strategy to think it's using a lower git version.
         # we use this to test what we'd need to do with older git versions
         # using a newer git installation.
-        monkeypatch.setattr(GitFetchStrategy, "git_version", test_git_version)
+        monkeypatch.setattr(spack.util.git, "extract_git_version_str", lambda _: request.param)
         yield test_git_version
 
 
 @pytest.fixture
-def mock_bad_git(monkeypatch):
+def mock_bad_git(mock_util_executable):
     """
     Test GitFetchStrategy behavior with a bad git command for git >= 1.7.1
     to trigger a SpackError.
     """
 
-    def bad_git(*args, **kwargs):
-        """Raise a SpackError with the transport message."""
-        raise spack.error.SpackError(_mock_transport_error)
-
-    # Patch the fetch strategy to think it's using a git version that
-    # will error out when git is called.
-    monkeypatch.setattr(GitFetchStrategy, "git", bad_git)
-    monkeypatch.setattr(GitFetchStrategy, "git_version", Version("1.7.1"))
-    yield
+    _, should_fail, registered_respones = mock_util_executable
+    should_fail.extend(["clone", "fetch"])
+    registered_respones["--version"] = "1.7.1"
 
 
 def test_bad_git(tmp_path: pathlib.Path, mock_bad_git):
@@ -114,6 +111,9 @@ def test_fetch(
     # Construct the package under test
     s = default_mock_concretization("git-test")
     monkeypatch.setitem(s.package.versions, Version("git"), t.args)
+
+    if type_of_test == "commit":
+        s.variants["commit"] = SingleValuedVariant("commit", t.args["commit"])
 
     # Enter the stage directory and check some properties
     with s.package.stage:
@@ -181,13 +181,18 @@ def test_fetch_pkg_attr_submodule_init(
 )
 @pytest.mark.disable_clean_stage_check
 def test_adhoc_version_submodules(
-    mock_git_repository, config, mutable_mock_repo, monkeypatch, mock_stage
+    mock_git_repository,
+    config,
+    mutable_mock_repo,
+    monkeypatch,
+    mock_stage,
+    override_git_repos_cache_path,
 ):
     t = mock_git_repository.checks["tag"]
     # Construct the package under test
     pkg_class = spack.repo.PATH.get_pkg_class("git-test")
     monkeypatch.setitem(pkg_class.versions, Version("git"), t.args)
-    monkeypatch.setattr(pkg_class, "git", "file://%s" % mock_git_repository.path, raising=False)
+    monkeypatch.setattr(pkg_class, "git", mock_git_repository.url, raising=False)
 
     spec = spack.concretize.concretize_one(
         Spec("git-test@{0}".format(mock_git_repository.unversioned_commit))
@@ -240,8 +245,10 @@ def test_needs_stage(git):
 
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
+@pytest.mark.parametrize("use_commit", [True, False])
 def test_get_full_repo(
     get_full_repo,
+    use_commit,
     git_version,
     mock_git_repository,
     default_mock_concretization,
@@ -250,18 +257,30 @@ def test_get_full_repo(
 ):
     """Ensure that we can clone a full repository."""
 
-    if git_version < Version("1.7.1"):
+    if git_version < Version(min_opt_string):
         pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
+
+    # newer git allows for direct commit fetching
+    can_use_direct_commit = git_version >= Version(min_direct_commit)
 
     secure = True
     type_of_test = "tag-branch"
 
     t = mock_git_repository.checks[type_of_test]
 
-    s = default_mock_concretization("git-test")
+    spec_string = "git-test"
+
+    s = default_mock_concretization(spec_string)
+
     args = copy.copy(t.args)
     args["get_full_repo"] = get_full_repo
     monkeypatch.setitem(s.package.versions, Version("git"), args)
+
+    if use_commit:
+        git_exe = mock_git_repository.git_exe
+        url = mock_git_repository.url
+        commit = git_exe("ls-remote", url, t.revision, output=str).strip().split()[0]
+        s.variants["commit"] = SingleValuedVariant("commit", commit)
 
     with s.package.stage:
         with spack.config.override("config:verify_ssl", secure):
@@ -279,11 +298,27 @@ def test_get_full_repo(
                 ncommits = len(commits)
 
         if get_full_repo:
-            assert nbranches >= 5
-            assert ncommits == 2
+            # default branch commit, plus checkout commit
+            assert ncommits == 2, commits
+            assert nbranches >= 5, branches
         else:
-            assert nbranches == 2
-            assert ncommits == 1
+            assert ncommits == 1, commits
+            if can_use_direct_commit:
+                if use_commit:
+                    # only commit (detached state)
+                    assert nbranches == 1, branches
+                else:
+                    # tag, commit (detached state)
+                    assert nbranches == 2, branches
+            else:
+                if use_commit:
+                    # default branch, tag, commit (detached state)
+                    # git does not have a rewind, avoid messing with git history by
+                    # accepting detachment
+                    assert nbranches == 3, branches
+                else:
+                    # default branch plus tag
+                    assert nbranches == 2, branches
 
 
 @pytest.mark.disable_clean_stage_check

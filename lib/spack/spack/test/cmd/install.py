@@ -50,7 +50,12 @@ def noop_install(monkeypatch):
 
 
 def test_install_package_and_dependency(
-    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    installer_variant,
 ):
     log = "test"
     with fs.working_dir(str(tmp_path)):
@@ -81,24 +86,29 @@ def _check_runtests_all(pkg):
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_none)
+    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_none)
     install("-v", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_dttop)
+    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_dttop)
     install("--test=root", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_all)
+    monkeypatch.setattr(spack.package_base.PackageBase, "_unit_test_check", _check_runtests_all)
     install("--test=all", "pkg-a")
 
 
 def test_install_package_already_installed(
-    tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    install_mockery,
+    installer_variant,
 ):
     with fs.working_dir(str(tmp_path)):
         install("--fake", "libdwarf")
@@ -132,7 +142,7 @@ def test_install_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_package_output(capsys, install_mockery, mock_fetch):
+def test_package_output(install_mockery, mock_fetch):
     """
     Ensure output printed from pkgs is captured by output redirection.
     """
@@ -164,17 +174,14 @@ def test_package_output(capsys, install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_output_on_build_error(
-    mock_packages, mock_archive, mock_fetch, install_mockery, capfd
-):
+def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch, install_mockery):
     """
     This test used to assume receiving full output, but since we've updated
     spack to generate logs on the level of phases, it will only return the
     last phase, install.
     """
     # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        out = install("-v", "build-error", fail_on_error=False)
+    out = install("-v", "build-error", fail_on_error=False)
     assert "Installing build-error" in out
 
 
@@ -204,12 +211,11 @@ def test_install_env_variables(mock_packages, mock_archive, mock_fetch, install_
 
 
 @pytest.mark.disable_clean_stage_check
-def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mockery, capfd):
+def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mockery):
     """
     Make sure --show-log-on-error works.
     """
-    with capfd.disabled():
-        out = install("--show-log-on-error", "build-error", fail_on_error=False)
+    out = install("--show-log-on-error", "build-error", fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.pkg.name == "build-error"
 
@@ -269,7 +275,7 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
 
     monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
 
-    # Use the earliest commit in the respository
+    # Use the earliest commit in the repository
     spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-1]}")
     PackageInstaller([spec.package], explicit=True).install()
 
@@ -281,7 +287,9 @@ def test_install_commit(mock_git_version_info, install_mockery, mock_packages, m
     assert content == "[0]"  # contents are weird for another test
 
 
-def test_install_overwrite_multiple(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_overwrite_multiple(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     # Try to install a spec and then to reinstall it.
     libdwarf = spack.concretize.concretize_one("libdwarf")
     cmake = spack.concretize.concretize_one("cmake")
@@ -355,7 +363,7 @@ def test_install_invalid_spec():
     "exc_typename,msg",
     [("RuntimeError", "something weird happened"), ("ValueError", "spec is not concrete")],
 )
-def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg):
+def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, installer_variant):
     with fs.working_dir(str(tmp_path)):
         install(
             "--verbose",
@@ -367,9 +375,11 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg):
             fail_on_error=False,
         )
 
-    assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.name == exc_typename
-    assert install.error.pkg.name == "raiser"
+    # New installer considers Python exceptions ordinary build failures.
+    if installer_variant == "old":
+        assert isinstance(install.error, spack.build_environment.ChildError)
+        assert install.error.name == exc_typename
+        assert install.error.pkg.name == "raiser"
 
     files = list(tmp_path.iterdir())
     filename = tmp_path / "test.xml"
@@ -504,50 +514,47 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch, insta
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_report_concretization_error(
-    tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd, conflict_spec
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, conflict_spec
 ):
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        with fs.working_dir(str(tmp_path)):
-            with pytest.raises(SpackError):
-                install("--log-format=cdash", "--log-file=cdash_reports", conflict_spec)
-            report_dir = tmp_path / "cdash_reports"
-            assert report_dir in list(tmp_path.iterdir())
-            report_file = report_dir / "Update.xml"
-            assert report_file in list(report_dir.iterdir())
-            content = report_file.read_text()
-            assert "<UpdateReturnStatus>" in content
-            # The message is different based on using the
-            # new or the old concretizer
-            expected_messages = ("Conflicts in concretized spec", "conflicts with")
-            assert any(x in content for x in expected_messages)
+    with fs.working_dir(str(tmp_path)):
+        with pytest.raises(SpackError):
+            install("--log-format=cdash", "--log-file=cdash_reports", conflict_spec)
+        report_dir = tmp_path / "cdash_reports"
+        assert report_dir in list(tmp_path.iterdir())
+        report_file = report_dir / "Update.xml"
+        assert report_file in list(report_dir.iterdir())
+        content = report_file.read_text()
+        assert "<UpdateReturnStatus>" in content
+        # The message is different based on using the
+        # new or the old concretizer
+        expected_messages = ("Conflicts in concretized spec", "conflicts with")
+        assert any(x in content for x in expected_messages)
 
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_build_error(tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
-    with capfd.disabled():
-        with fs.working_dir(str(tmp_path)):
-            with pytest.raises(SpackError):
-                install(
-                    "--log-format=cdash",
-                    "--log-file=cdash_reports",
-                    "--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack",
-                    "build-error",
-                )
-            report_dir = tmp_path / "cdash_reports"
-            assert report_dir in list(tmp_path.iterdir())
-            report_file = report_dir / "Build.xml"
-            assert report_file in list(report_dir.iterdir())
-            content = report_file.read_text()
-            assert "<Text>configure: error: in /path/to/some/file:</Text>" in content
+def test_cdash_upload_build_error(capfd, tmp_path: pathlib.Path, mock_fetch, install_mockery):
+    with fs.working_dir(str(tmp_path)):
+        with pytest.raises(SpackError):
+            install(
+                "--log-format=cdash",
+                "--log-file=cdash_reports",
+                "--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack",
+                "build-error",
+            )
+        report_dir = tmp_path / "cdash_reports"
+        assert report_dir in list(tmp_path.iterdir())
+        report_file = report_dir / "Build.xml"
+        assert report_file in list(report_dir.iterdir())
+        content = report_file.read_text()
+        assert "<Text>configure: error: in /path/to/some/file:</Text>" in content
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing of e.g., Build.xml output
-    with capfd.disabled(), fs.working_dir(str(tmp_path)):
+def test_cdash_upload_clean_build(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
+    with fs.working_dir(str(tmp_path)):
         install("--log-file=cdash_reports", "--log-format=cdash", "pkg-c")
         report_dir = tmp_path / "cdash_reports"
         assert report_dir in list(tmp_path.iterdir())
@@ -559,9 +566,10 @@ def test_cdash_upload_clean_build(tmp_path: pathlib.Path, mock_fetch, install_mo
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_extra_params(tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capture of e.g., Build.xml output
-    with capfd.disabled(), fs.working_dir(str(tmp_path)):
+def test_cdash_upload_extra_params(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
+    with fs.working_dir(str(tmp_path)):
         install(
             "--log-file=cdash_reports",
             "--log-format=cdash",
@@ -581,9 +589,10 @@ def test_cdash_upload_extra_params(tmp_path: pathlib.Path, mock_fetch, install_m
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_buildstamp_param(tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capture of e.g., Build.xml output
-    with capfd.disabled(), fs.working_dir(str(tmp_path)):
+def test_cdash_buildstamp_param(
+    tmp_path: pathlib.Path, mock_fetch, install_mockery, installer_variant
+):
+    with fs.working_dir(str(tmp_path)):
         cdash_track = "some_mocked_track"
         buildstamp_format = f"%Y%m%d-%H%M-{cdash_track}"
         buildstamp = time.strftime(buildstamp_format, time.localtime(int(time.time())))
@@ -603,10 +612,14 @@ def test_cdash_buildstamp_param(tmp_path: pathlib.Path, mock_fetch, install_mock
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_json(
-    tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd, mock_packages, mock_archive
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    installer_variant,
 ):
-    # capfd interferes with Spack's capturing
-    with capfd.disabled(), fs.working_dir(str(tmp_path)):
+    with fs.working_dir(str(tmp_path)):
         spec_json_path = str(tmp_path / "spec.json")
 
         pkg_spec = spack.concretize.concretize_one("pkg-c")
@@ -637,38 +650,29 @@ def test_cdash_install_from_spec_json(
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_error_output(mock_fetch, install_mockery, capfd):
-    with capfd.disabled():
-        msg = ""
-        try:
-            install("build-error")
-            assert False, "no exception was raised!"
-        except spack.build_environment.ChildError as e:
-            msg = e.long_message
-
-        assert "configure: error: in /path/to/some/file:" in msg
-        assert "configure: error: cannot run C compiled programs." in msg
+def test_build_error_output(capfd, mock_fetch, install_mockery):
+    with pytest.raises(spack.build_environment.ChildError) as e:
+        install("build-error")
+    assert "configure: error: in /path/to/some/file:" in install.output
+    assert "configure: error: in /path/to/some/file:" in e.value.long_message
+    assert "configure: error: cannot run C compiled programs." in install.output
+    assert "configure: error: cannot run C compiled programs." in e.value.long_message
 
 
 @pytest.mark.disable_clean_stage_check
-def test_build_warning_output(mock_fetch, install_mockery, capfd):
-    with capfd.disabled():
-        msg = ""
-        try:
-            install("build-warnings")
-            assert False, "no exception was raised!"
-        except spack.build_environment.ChildError as e:
-            msg = e.long_message
-
-        assert "WARNING: ALL CAPITAL WARNING!" in msg
-        assert "foo.c:89: warning: some weird warning!" in msg
+def test_build_warning_output(mock_fetch, install_mockery):
+    with pytest.raises(spack.build_environment.ChildError) as e:
+        install("build-warnings")
+    assert "WARNING: ALL CAPITAL WARNING!" in install.output
+    assert "WARNING: ALL CAPITAL WARNING!" in e.value.long_message
+    assert "foo.c:89: warning: some weird warning!" in install.output
+    assert "foo.c:89: warning: some weird warning!" in e.value.long_message
 
 
-def test_cache_only_fails(mock_fetch, install_mockery, capfd):
+def test_cache_only_fails(mock_fetch, install_mockery):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
-    with capfd.disabled():
-        out = install("--cache-only", "libdwarf", fail_on_error=False)
+    out = install("--cache-only", "libdwarf", fail_on_error=False)
 
     assert "Failed to install gcc-runtime" in out
     assert "Skipping build of libdwarf" in out
@@ -692,13 +696,12 @@ def test_install_only_dependencies(mock_fetch, install_mockery):
     assert not os.path.exists(root.prefix)
 
 
-def test_install_only_package(mock_fetch, install_mockery, capfd):
+def test_install_only_package(mock_fetch, install_mockery):
     msg = ""
-    with capfd.disabled():
-        try:
-            install("--only", "package", "dependent-install")
-        except spack.error.InstallError as e:
-            msg = str(e)
+    try:
+        install("--only", "package", "dependent-install")
+    except spack.error.InstallError as e:
+        msg = str(e)
 
     assert "Cannot proceed with dependent-install" in msg
     assert "1 uninstalled dependency" in msg
@@ -807,12 +810,12 @@ def test_install_no_add_in_env(
     # Activate the environment
     with e:
         # Assert using --no-add with a spec not in the env fails
-        inst_out = install("--fake", "--no-add", "boost", fail_on_error=False, output=str)
+        inst_out = install("--fake", "--no-add", "boost", fail_on_error=False)
 
         assert "Specs can be added to the environment with 'spack add " in inst_out
 
         # Without --add, ensure that two packages "a" get installed
-        inst_out = install("--fake", "pkg-a", output=str)
+        inst_out = install("--fake", "pkg-a")
         assert len([x for x in e.all_specs() if x.installed and x.name == "pkg-a"]) == 2
 
         # Install an unambiguous dependency spec (that already exists as a dep
@@ -820,7 +823,7 @@ def test_install_no_add_in_env(
         # but is not added to the environment.
         install("dyninst")
 
-        find_output = find("-l", output=str)
+        find_output = find("-l")
         assert "dyninst" in find_output
         assert "libdwarf" in find_output
         assert "libelf" in find_output
@@ -838,7 +841,7 @@ def test_install_no_add_in_env(
         install(str(mpi_spec_json_path))
         assert mpi_spec not in e.roots()
 
-        find_output = find("-l", output=str)
+        find_output = find("-l")
         assert mpi_spec.name in find_output
 
         # Install an unambiguous depependency spec (that already exists as a
@@ -859,14 +862,11 @@ def test_install_no_add_in_env(
         assert not any([s.name == "bowtie" for s in e.uninstalled_specs()])
 
 
-def test_install_help_does_not_show_cdash_options(capsys):
+def test_install_help_does_not_show_cdash_options():
     """
     Make sure `spack install --help` does not describe CDash arguments
     """
-    with pytest.raises(SystemExit):
-        install("--help")
-        captured = capsys.readouterr()
-        assert "CDash URL" not in captured.out
+    assert "CDash URL" not in install("--help")
 
 
 def test_install_help_cdash():
@@ -877,9 +877,8 @@ def test_install_help_cdash():
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmp_path: pathlib.Path, mock_fetch, install_mockery, monkeypatch, capfd):
-    # capfd interferes with Spack's capturing
-    with fs.working_dir(str(tmp_path)), capfd.disabled():
+def test_cdash_auth_token(tmp_path: pathlib.Path, mock_fetch, install_mockery, monkeypatch):
+    with fs.working_dir(str(tmp_path)):
         monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "asdf")
         out = install("--fake", "-v", "--log-file=cdash_reports", "--log-format=cdash", "pkg-a")
         assert "Using CDash auth token from environment" in out
@@ -887,9 +886,8 @@ def test_cdash_auth_token(tmp_path: pathlib.Path, mock_fetch, install_mockery, m
 
 @pytest.mark.not_on_windows("Windows log_output logs phase header out of order")
 @pytest.mark.disable_clean_stage_check
-def test_cdash_configure_warning(tmp_path: pathlib.Path, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing of e.g., Build.xml output
-    with capfd.disabled(), fs.working_dir(str(tmp_path)):
+def test_cdash_configure_warning(tmp_path: pathlib.Path, mock_fetch, install_mockery):
+    with fs.working_dir(str(tmp_path)):
         # Test would fail if install raised an error.
 
         # Ensure that even on non-x86_64 architectures, there are no
@@ -999,7 +997,6 @@ def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
 # Unit tests should not be affected by the user's managed environments
 @pytest.mark.not_on_windows("Buildcache not supported on windows")
 def test_install_use_buildcache(
-    capsys,
     mutable_mock_env_path,
     mock_packages,
     mock_fetch,
@@ -1059,21 +1056,20 @@ def test_install_use_buildcache(
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
 
-    with capsys.disabled():
-        # Install using the matrix of possible combinations with --use-buildcache
-        for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
-            tty.debug(
-                "Testing `spack install --use-buildcache package:{0},dependencies:{1}`".format(
-                    pkg, deps
-                )
+    # Install using the matrix of possible combinations with --use-buildcache
+    for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
+        tty.debug(
+            "Testing `spack install --use-buildcache package:{0},dependencies:{1}`".format(
+                pkg, deps
             )
-            install_use_buildcache("package:{0},dependencies:{1}".format(pkg, deps))
-            install_use_buildcache("dependencies:{0},package:{1}".format(deps, pkg))
+        )
+        install_use_buildcache("package:{0},dependencies:{1}".format(pkg, deps))
+        install_use_buildcache("dependencies:{0},package:{1}".format(deps, pkg))
 
-        # Install using a default override option
-        # Alternative to --cache-only (always) or --no-cache (never)
-        for opt in ["auto", "only", "never"]:
-            install_use_buildcache(opt)
+    # Install using a default override option
+    # Alternative to --cache-only (always) or --no-cache (never)
+    for opt in ["auto", "only", "never"]:
+        install_use_buildcache(opt)
 
 
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
@@ -1111,7 +1107,7 @@ def test_invalid_concurrent_packages_flag(mutable_config):
     """Test that an invalid value for --concurrent-packages CLI flag raises a ValueError"""
     install = SpackCommand("install")
     with pytest.raises(ValueError, match="expected a positive integer"):
-        install("--concurrent-packages", "-2", fail_on_error=False)
+        install("--concurrent-packages", "-2")
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")

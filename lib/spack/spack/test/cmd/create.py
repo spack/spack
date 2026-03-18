@@ -189,7 +189,7 @@ def test_get_name_urls(url, expected):
     assert name == expected
 
 
-def test_get_name_error(monkeypatch, capsys):
+def test_get_name_error(monkeypatch, capfd):
     """Test get_name UndetectableNameError exception path."""
 
     def _parse_name_offset(path, v):
@@ -201,7 +201,7 @@ def test_get_name_error(monkeypatch, capsys):
 
     with pytest.raises(SystemExit):
         spack.cmd.create.get_name(None, url)
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "Couldn't guess a name" in str(captured)
 
 

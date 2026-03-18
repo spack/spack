@@ -185,6 +185,10 @@ class Store:
             self.root, default_timeout=lock_cfg.package_timeout
         )
 
+    def has_padding(self) -> bool:
+        """Returns True if the store layout includes path padding."""
+        return self.root != self.unpadded_root
+
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()
@@ -207,13 +211,13 @@ def create(configuration: spack.config.Configuration) -> Store:
         configuration: configuration to create a store.
     """
     configuration = configuration or spack.config.CONFIG
-    config_dict = configuration.get("config")
+    config_dict = configuration.get_config("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = configuration.get("config:install_hash_length")
+    hash_length = config_dict.get("install_hash_length")
 
     install_roots = [
         install_properties["install_tree"]
-        for install_properties in configuration.get("upstreams", {}).values()
+        for install_properties in configuration.get_config("upstreams").values()
     ]
     upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
 

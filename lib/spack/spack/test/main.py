@@ -83,13 +83,13 @@ def test_get_version_no_git(working_env, monkeypatch):
     assert spack.spack_version == spack.get_version()
 
 
-def test_main_calls_get_version(capsys, working_env, monkeypatch):
+def test_main_calls_get_version(capfd, working_env, monkeypatch):
     # act like git is not found in the PATH
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     # make sure we get a bare version (without commit) when this happens
     spack.main.main(["-V"])
-    out, err = capsys.readouterr()
+    out, err = capfd.readouterr()
     assert spack.spack_version == out.strip()
 
 

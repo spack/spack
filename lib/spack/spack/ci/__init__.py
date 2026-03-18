@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
-import codecs
 import json
 import os
 import pathlib
@@ -495,13 +494,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     # Build a pipeline from the specs in the concrete environment
-    pipeline = PipelineDag(
-        [
-            concrete
-            for abstract, concrete in env.concretized_specs()
-            if abstract in env.spec_lists["specs"]
-        ]
-    )
+    pipeline = PipelineDag([env.specs_by_hash[x.hash] for x in env.concretized_roots])
 
     # Optionally add various pruning filters
     pruning_filters = []
@@ -576,7 +569,7 @@ def import_signing_key(base64_signing_key: str) -> None:
 
     # This command has the side-effect of creating the directory referred
     # to as GNUPGHOME in setup_environment()
-    list_output = spack_gpg("list", output=str)
+    list_output = spack_gpg("list")
 
     tty.debug("spack gpg list:")
     tty.debug(list_output)
@@ -588,13 +581,13 @@ def import_signing_key(base64_signing_key: str) -> None:
         with open(sign_key_path, "w", encoding="utf-8") as fd:
             fd.write(decoded_key)
 
-        key_import_output = spack_gpg("trust", sign_key_path, output=str)
+        key_import_output = spack_gpg("trust", sign_key_path)
         tty.debug(f"spack gpg trust {sign_key_path}")
         tty.debug(key_import_output)
 
     # Now print the keys we have for verifying and signing
-    trusted_keys_output = spack_gpg("list", "--trusted", output=str)
-    signing_keys_output = spack_gpg("list", "--signing", output=str)
+    trusted_keys_output = spack_gpg("list", "--trusted")
+    signing_keys_output = spack_gpg("list", "--signing")
 
     tty.debug("spack gpg list --trusted")
     tty.debug(trusted_keys_output)
@@ -721,9 +714,9 @@ def download_and_extract_artifacts(url: str, work_dir: str) -> str:
     os.makedirs(work_dir, exist_ok=True)
 
     try:
-        response = urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-        with open(artifacts_zip_path, "wb") as out_file:
-            shutil.copyfileobj(response, out_file)
+        with urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+            with open(artifacts_zip_path, "wb") as out_file:
+                shutil.copyfileobj(response, out_file)
 
         with zipfile.ZipFile(artifacts_zip_path) as zip_file:
             zip_file.extractall(work_dir)
@@ -995,7 +988,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
 
     # Regular expressions for parsing that HEAD commit.  If the pipeline
     # was on the gitlab spack mirror, it will have been a merge commit made by
-    # gitub and pushed by the sync script.  If the pipeline was run on some
+    # github and pushed by the sync script.  If the pipeline was run on some
     # environment repo, then the tested spack commit will likely have been
     # a regular commit.
     commit_1 = None
@@ -1305,12 +1298,11 @@ def read_broken_spec(broken_spec_url):
     object.
     """
     try:
-        _, _, fs = web_util.read_from_url(broken_spec_url)
+        broken_spec_contents = web_util.read_text(broken_spec_url)
     except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
 
-    broken_spec_contents = codecs.getreader("utf-8")(fs).read()
     return syaml.load(broken_spec_contents)
 
 

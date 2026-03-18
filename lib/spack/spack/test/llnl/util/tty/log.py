@@ -12,7 +12,7 @@ import pytest
 
 import spack.llnl.util.tty.log as log
 from spack.llnl.util.filesystem import working_dir
-from spack.util.executable import which
+from spack.util.executable import Executable
 
 termios: Optional[ModuleType] = None
 try:
@@ -150,35 +150,19 @@ def test_log_output_with_filter_and_append(capfd, tmp_path: pathlib.Path):
             assert f.read() == "foo blah\nblah foo\nfoo foo\nmore foo more blah\n"
 
 
-@pytest.mark.skipif(not which("echo"), reason="needs echo command")
-def test_log_subproc_and_echo_output_no_capfd(capfd, tmp_path: pathlib.Path):
-    echo = which("echo", required=True)
+def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
+    python = Executable(sys.executable)
 
-    # this is split into two tests because capfd interferes with the
-    # output logged to file when using a subprocess.  We test the file
-    # here, and echoing in test_log_subproc_and_echo_output_capfd below.
-    with capfd.disabled():
-        with working_dir(str(tmp_path)):
-            with log.log_output("foo.txt") as logger:
-                with logger.force_echo():
-                    echo("echo")
-                print("logged")
-
-            with open("foo.txt", encoding="utf-8") as f:
-                assert f.read() == "echo\nlogged\n"
-
-
-@pytest.mark.skipif(not which("echo"), reason="needs echo command")
-def test_log_subproc_and_echo_output_capfd(capfd, tmp_path: pathlib.Path):
-    echo = which("echo", required=True)
-
-    # This tests *only* what is echoed when using a subprocess, as capfd
-    # interferes with the logged data. See
-    # test_log_subproc_and_echo_output_no_capfd for tests on the logfile.
     with working_dir(str(tmp_path)):
         with log.log_output("foo.txt") as logger:
             with logger.force_echo():
-                echo("echo")
+                python("-c", "print('echo')")
             print("logged")
 
+        # Check log file content
+        with open("foo.txt", encoding="utf-8") as f:
+            assert f.read() == "echo\nlogged\n"
+
+        # Check captured output (echoed content)
+        # Note: 'logged' is not echoed because force_echo() scope ended
         assert capfd.readouterr()[0] == "echo\n"

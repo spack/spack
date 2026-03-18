@@ -65,7 +65,7 @@ def entry_points_factory(tmp_path: pathlib.Path):
 
 
 @pytest.fixture()
-def mock_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
+def mock_get_entry_points(tmp_path: pathlib.Path, reset_extension_paths, monkeypatch):
     entry_points = entry_points_factory(tmp_path)
     monkeypatch.setattr(spack.llnl.util.lang, "get_entry_points", entry_points)
 

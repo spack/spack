@@ -1229,14 +1229,14 @@ def windows_sfn(path: os.PathLike):
 
 
 @contextmanager
-def temp_cwd():
+def temp_cwd(ignore_cleanup_errors=False):
     tmp_dir = tempfile.mkdtemp()
     try:
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
         kwargs = {}
-        if sys.platform == "win32":
+        if sys.platform == "win32" or ignore_cleanup_errors:
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
@@ -2890,7 +2890,7 @@ def _windows_symlink(
     src: str, dst: str, target_is_directory: bool = False, *, dir_fd: Union[int, None] = None
 ):
     """On Windows with System Administrator privileges this will be a normal symbolic link via
-    os.symlink. On Windows without privledges the link will be a junction for a directory and a
+    os.symlink. On Windows without privileges the link will be a junction for a directory and a
     hardlink for a file. On Windows the various link types are:
 
     Symbolic Link: A link to a file or directory on the same or different volume (drive letter) or

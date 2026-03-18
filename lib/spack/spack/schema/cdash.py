@@ -13,13 +13,16 @@ properties: Dict[str, Any] = {
     "cdash": {
         "type": "object",
         "additionalProperties": False,
-        # "required": ["build-group", "url", "project", "site"],
         "required": ["build-group"],
+        "description": "Configuration for uploading build results to CDash",
         "properties": {
-            r"build-group": {"type": "string"},
-            r"url": {"type": "string"},
-            r"project": {"type": "string"},
-            r"site": {"type": "string"},
+            "build-group": {
+                "type": "string",
+                "description": "Unique build group name for this stack",
+            },
+            "url": {"type": "string", "description": "CDash server URL"},
+            "project": {"type": "string", "description": "CDash project name"},
+            "site": {"type": "string", "description": "Site identifier for CDash reporting"},
         },
     }
 }

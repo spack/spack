@@ -67,7 +67,7 @@ def test_config_scopes(path, types, mutable_mock_env_path):
         assert "command_line" in output
         assert "_builtin" in output
     if types:
-        if not any(i in ("all", "path") for i in types):
+        if not any(i in ("all", "path", "include") for i in types):
             assert "site" not in output
         if not any(i in ("all", "env", "include", "path") for i in types):
             assert not output or all(":" not in x for x in output)
@@ -99,6 +99,56 @@ def test_config_scopes_section(mutable_config):
     assert "absent" in lines_by_scope_name["command_line"]
     assert "absent" in lines_by_scope_name["_builtin"]
     assert "active" in lines_by_scope_name["site"]
+
+
+def test_include_overrides(mutable_config):
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" in lines
+    assert "system" in lines
+    assert "site" in lines
+    assert "_builtin" in lines
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # overridden scopes are not shown without `-v`
+    output = config("scopes").strip()
+    lines = output.split("\n")
+    assert "user" not in lines
+    assert "system" not in lines
+    assert "site" not in lines
+
+    # scopes with ConfigScopePriority.DEFAULTS remain
+    assert "_builtin" in lines
+
+    # overridden scopes are shown with `-v` and marked 'override'
+    output = config("scopes", "-v").strip()
+    lines = output.split("\n")
+    assert "override" in next(line for line in lines if line.startswith("user"))
+    assert "override" in next(line for line in lines if line.startswith("system"))
+    assert "override" in next(line for line in lines if line.startswith("site"))
+
+
+def test_blame_override(mutable_config):
+    # includes are present when section is specified
+    output = config("blame", "include").strip()
+    include_path = re.escape(os.path.join(mutable_config.scopes["site"].path, "include.yaml"))
+    assert re.search(rf"{include_path}:\d+\s+\- path: base", output)
+
+    # includes are also present when section is NOT specified
+    output = config("blame").strip()
+    assert re.search(rf"{include_path}:\d+\s+\- path: base", output)
+
+    mutable_config.push_scope(spack.config.InternalConfigScope("override", {"include:": []}))
+
+    # site includes are not present when overridden
+    output = config("blame", "include").strip()
+    assert not re.search(rf"{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
+
+    output = config("blame").strip()
+    assert not re.search(rf"{include_path}:\d+\s+\- path: base", output)
+    assert "include: []" in output
 
 
 def test_config_scopes_path(mutable_config):
@@ -309,7 +359,7 @@ def test_config_with_c_argument(mutable_empty_config):
     assert config_file in args.config_vars
 
     # Add the path to the config
-    config("add", args.config_vars[0], scope="command_line")
+    config("add", args.config_vars[0])
     output = config("get", "config")
     assert "config:\n  install_tree:\n    root: /path/to/config.yaml" in output
 
@@ -668,3 +718,52 @@ spack:
 
     with ev.Environment(str(tmp_path)) as e:
         assert not e.manifest.yaml_content["spack"]["config"]["ccache"]
+
+
+_GROUP_OVERRIDE_SPACK_YAML = """\
+spack:
+  specs:
+  - group: mygroup
+    specs:
+    - zlib
+    override:
+      packages:
+        zlib:
+          version: ['1.2.13']
+"""
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_group_shows_override_packages(cmd_str, tmp_path, mutable_config):
+    """Tests that packages should show that group's override packages config,
+    when the option is given.
+    """
+    (tmp_path / "spack.yaml").write_text(_GROUP_OVERRIDE_SPACK_YAML)
+
+    with ev.Environment(str(tmp_path)):
+        output = config(cmd_str, "packages")
+        assert "1.2.13" not in output
+        if cmd_str == "blame":
+            assert "env:groups:mygroup" not in output
+        output = config(cmd_str, "--group=mygroup", "packages")
+        assert "1.2.13" in output
+        if cmd_str == "blame":
+            assert "env:groups:mygroup" in output
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_group_requires_active_environment(cmd_str, mutable_config):
+    """Tests that using groups outside an environment should give a clear error."""
+    output = config(cmd_str, "--group=mygroup", "packages", fail_on_error=False)
+    assert config.returncode != 0
+    assert "--group requires an active environment" in output
+
+
+@pytest.mark.parametrize("cmd_str", ["get", "blame"])
+def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_config):
+    """Tests that using a non-existing group gives a clear error."""
+    (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - zlib\n")
+    with ev.Environment(str(tmp_path)):
+        output = config(cmd_str, "--group=nonexistent", "packages", fail_on_error=False)
+    assert config.returncode != 0
+    assert "'nonexistent' not found in" in output

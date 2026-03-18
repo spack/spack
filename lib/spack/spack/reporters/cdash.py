@@ -1,9 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import codecs
 import collections
 import hashlib
+import io
 import os
 import platform
 import posixpath
@@ -174,7 +174,7 @@ class CDash(Reporter):
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
 
         # something went wrong pre-cdash "configure" phase b/c we have an exception and only
-        # "update" was encounterd.
+        # "update" was encountered.
         # dump the report in the configure line so teams can see what the issue is
         if len(phases_encountered) == 1 and package.get("exception"):
             # TODO this mapping is not ideal since these are pre-configure errors
@@ -184,7 +184,7 @@ class CDash(Reporter):
             phases_encountered.append(cdash_phase)
 
             log_message = (
-                "Pre-configure errors occured in Spack's process that terminated the "
+                "Pre-configure errors occurred in Spack's process that terminated the "
                 "build process prematurely.\nSpack output::\n{0}".format(
                     xml.sax.saxutils.escape(package["exception"])
                 )
@@ -452,13 +452,13 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:
-                response = web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-                if self.current_package_name not in self.buildIds:
-                    resp_value = codecs.getreader("utf-8")(response).read()
-                    match = self.buildid_regexp.search(resp_value)
-                    if match:
-                        buildid = match.group(1)
-                        self.buildIds[self.current_package_name] = buildid
+                with web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                    if self.current_package_name not in self.buildIds:
+                        resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
+                        match = self.buildid_regexp.search(resp_value)
+                        if match:
+                            buildid = match.group(1)
+                            self.buildIds[self.current_package_name] = buildid
             except Exception as e:
                 print(f"Upload to CDash failed: {e}")
 

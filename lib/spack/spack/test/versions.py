@@ -17,6 +17,7 @@ import spack.spec
 import spack.version
 from spack.llnl.util.filesystem import working_dir
 from spack.version import (
+    ClosedOpenRange,
     EmptyRangeError,
     GitVersion,
     StandardVersion,
@@ -613,6 +614,22 @@ def test_repr_and_str():
     check_repr_and_str("R2016a.2-3_4")
 
 
+def test_str_and_hash_version_range():
+    """Test that precomputed string and hash values are consistent with computed ones."""
+    x = ver("1.2:3.4")
+    assert isinstance(x, ClosedOpenRange)
+    # Test that precomputed str() and hash() are assigned
+    assert x._string is not None and x._hash is not None
+    _str = str(x)
+    _hash = hash(x)
+    assert x._string == _str and x._hash == _hash
+    # Ensure computed values match precomputed ones
+    x._string = None
+    x._hash = None
+    assert _str == str(x)
+    assert _hash == hash(x)
+
+
 @pytest.mark.parametrize(
     "version_str", ["1.2string3", "1.2-3xyz_4-alpha.5", "1.2beta", "1_x_rc-4"]
 )
@@ -932,7 +949,7 @@ def test_git_versions_without_explicit_reference(
 
 def test_total_order_versions_and_ranges():
     # The set of version ranges and individual versions are comparable, which is used in
-    # VersionList. The comparsion across types is based on default version comparsion
+    # VersionList. The comparison across types is based on default version comparison
     # of StandardVersion, GitVersion.ref_version, and ClosedOpenRange.lo.
 
     # StandardVersion / GitVersion (at equal ref version)

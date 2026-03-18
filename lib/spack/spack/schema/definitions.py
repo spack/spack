@@ -16,9 +16,20 @@ properties: Dict[str, Any] = {
     "definitions": {
         "type": "array",
         "default": [],
+        "description": "Named spec lists to be referred to with $name in the specs section of "
+        "environments",
         "items": {
             "type": "object",
-            "properties": {"when": {"type": "string"}},
+            "description": "Named definition entry containing a named spec list and optional "
+            "conditional 'when' clause",
+            "properties": {
+                "when": {
+                    "type": "string",
+                    "description": "Python code condition evaluated as boolean. Specs are "
+                    "appended to the named list only if the condition is True. Available "
+                    "variables: platform, os, target, arch, arch_str, re, env, hostname",
+                }
+            },
             "additionalProperties": spec_list_schema,
         },
     }

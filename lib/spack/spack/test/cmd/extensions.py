@@ -23,14 +23,13 @@ def python_database(mock_packages, mutable_database):
 
 @pytest.mark.not_on_windows("All Fetchers Failed")
 @pytest.mark.db
-def test_extensions(mock_packages, python_database, capsys):
+def test_extensions(mock_packages, python_database):
     ext2 = spack.concretize.concretize_one("py-extension2")
 
     def check_output(ni):
-        with capsys.disabled():
-            output = extensions("python")
-            packages = extensions("-s", "packages", "python")
-            installed = extensions("-s", "installed", "python")
+        output = extensions("python")
+        packages = extensions("-s", "packages", "python")
+        installed = extensions("-s", "installed", "python")
         assert "==> python@2.7.11" in output
         assert "==> 4 extensions" in output
         assert "py-extension1" in output

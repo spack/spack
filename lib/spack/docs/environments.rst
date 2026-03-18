@@ -278,16 +278,16 @@ Adding Abstract Specs
 
 An abstract spec is the user-specified spec before Spack applies defaults or dependency information.
 
-Users can add abstract specs to an environment using the ``spack add`` command.
+You can add abstract specs to an environment using the ``spack add`` command.
+This adds the abstract spec as a root of the environment in the ``spack.yaml`` file.
 The most important component of an environment is a list of abstract specs.
 
-Adding a spec adds it as a root spec of the environment in the user input file (``spack.yaml``).
-It does not affect the concrete specs in the lock file (``spack.lock``) and it does not install the spec.
+Adding abstract specs does not immediately install anything, nor does it affect the ``spack.lock`` file.
+To update the lockfile, the environment must be :ref:`re-concretized <cmd-spack-concretize>`, and to update any installations, the environment must be :ref:`(re)installed <installing-environment>`.
 
 The ``spack add`` command is environment-aware.
 It adds the spec to the currently active environment.
 An error is generated if there isn't an active environment.
-All environment-aware commands can also be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: spec
 
@@ -299,6 +299,10 @@ or
 .. code-block:: spec
 
    $ spack -e myenv add python
+
+.. note::
+
+   All environment-aware commands can also be called using the ``spack -e`` flag to specify the environment.
 
 .. _cmd-spack-concretize:
 
@@ -438,6 +442,47 @@ The supplied location will become the build-directory for that package in all fu
    For example, most ``autotool`` and ``makefile`` packages do not support out-of-source builds while all ``CMake`` packages do.
    Understanding these nuances is up to the software developers and we strongly encourage developers to only redirect the build directory if they understand their package's build-system.
 
+Modifying Specs in an Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack change`` command allows the user to change individual specs in a Spack environment.
+
+By default, ``spack change`` operates on the abstract specs of an environment.
+The command a list of spec arguments.
+For each argument, the root spec with the same name as the provided spec is modified to satisfy the provided spec.
+For example, in an environment with the root spec ``hdf5+mpi+fortran``, then
+
+.. code-block:: console
+
+   spack change hdf5~mpi+cxx
+
+will change the root spec to ``hdf5~mpi+cxx+fortran``.
+
+When more complex matching semantics are necessary, the ``--match-spec`` argument replaces the spec name as the selection criterion.
+When using the ``--match-spec`` argument, the spec name is not required.
+In the same environment,
+
+.. code-block:: console
+
+   spack change --match-spec "+fortran" +hl
+
+will constrain the ``hdf5`` spec to ``+hl``.
+
+By default, the ``spack change`` command will result in an error and no change to the environment if it will modify more than one abstract spec.
+Use the ``--all`` option to allow ``spack change`` to modify multiple abstract specs.
+
+The ``--concrete`` option allows ``spack change`` to modify the concrete specs of an environment as well as the abstract specs.
+Multiple concrete specs may be modified, even for a change that modifies only a single abstract spec.
+The ``--all`` option does not affect how many concrete specs may be modified.
+
+.. warning::
+
+   Concrete specs are modified without any constraints from the packages.
+   The ``spack change --concrete`` command  may create invalid specs that will not build properly if applied without caution.
+
+The ``--concrete-only`` option allows for modifying concrete specs without modifying abstract specs.
+It allows changes to be applied to non-root nodes in the environment, and other changes that do not modify any root specs.
+
 Loading
 ^^^^^^^
 
@@ -454,58 +499,59 @@ The ``loads`` file may also be copied out of the environment, renamed, etc.
 
 .. _environment_include_concrete:
 
-Included Concrete Environments
-------------------------------
+Including Concrete Environments
+-------------------------------
 
-Spack environments can create an environment based off of information in already established environments.
-You can think of it as a combination of existing environments.
-It will gather information from the existing environment's ``spack.lock`` and use that during the creation of this included concrete environment.
-When an included concrete environment is created it will generate a ``spack.lock`` file for the newly created environment.
+Spack can create an environment that includes information from already concretized environments.
+You can think of the new environment as a combination of existing environments.
+It uses information from the existing environments' ``spack.lock`` files in the creation of the new environment.
+When such an environment is concretized it will generate its own ``spack.lock`` file that contains relevant information from the included environments.
 
 
-Creating included environments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating combined concrete environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To create a combined concrete environment, you must have at least one existing concrete environment.
 You will use the command ``spack env create`` with the argument ``--include-concrete`` followed by the name or path of the environment you'd like to include.
-Here is an example of how to create a combined environment from the command line.
-
-.. code-block:: spec
+Here is an example of how to create a combined environment from the command line::
 
    $ spack env create myenv
    $ spack -e myenv add python
    $ spack -e myenv concretize
-   $ spack env create --include-concrete myenv included_env
+   $ spack env create --include-concrete myenv combined_env
 
+You can also include concrete environments directly in the ``spack.yaml`` file.
+It involves adding the absolute paths to the concrete environments ``spack.lock`` under the new environment's ``include`` heading.
+Spack-specific configuration variables, such as ``$spack``, and environment variables can be used in the include paths as long as the expression expands to an absolute path.
+(See :ref:`config-file-variables` for more information.)
 
-You can also include an environment directly in the ``spack.yaml`` file.
-It involves adding the ``include_concrete`` heading in the yaml followed by the absolute path to the independent environments.
-Note that you may use Spack config variables such as ``$spack`` or environment variables as long as the expression expands to an absolute path.
+For example,
 
 .. code-block:: yaml
 
    spack:
+     include:
+     - /absolute/path/to/environment1/spack.lock
+     - $spack/../path/to/environment2/spack.lock
      specs: []
      concretizer:
        unify: true
-     include_concrete:
-     - /absolute/path/to/environment1
-     - $spack/../path/to/environment2
 
+will include the specs from ``environment1`` and ``environment2`` where the second environment's path is the absolute path of the directory that is relative to the spack root.
 
-Once the ``spack.yaml`` has been updated you must concretize the environment to get the concrete specs from the included environments.
+.. note::
 
-Updating an included environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If changes were made to the base environment and you want that reflected in the included environment you will need to re-concretize both the base environment and the included environment for the change to be implemented.
-For example:
+   Once the ``spack.yaml`` file is updated you must concretize the new environment to get the concrete specs from the included environments.
+   This will produce the combined ``spack.lock`` file.
 
-.. code-block:: spec
+Updating a combined environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you want changes made to one of the included environments reflected in the combined environment, then you will need to re-concretize the included environment **then** the combined environment for the change to be incorporated.
+For example::
 
    $ spack env create myenv
    $ spack -e myenv add python
    $ spack -e myenv concretize
-   $ spack env create --include-concrete myenv included_env
-
+   $ spack env create --include-concrete myenv combined_env
 
    $ spack -e myenv find
    ==> In environment myenv
@@ -514,17 +560,16 @@ For example:
 
    ==> 0 installed packages
 
-
-   $ spack -e included_env find
-   ==> In environment included_env
+   $ spack -e combined_env find
+   ==> In environment combined_env
    ==> No root specs
    ==> Included specs
    python
 
    ==> 0 installed packages
 
-Here we see that ``included_env`` has access to the python package through the ``myenv`` environment.
-But if we were to add another spec to ``myenv``, ``included_env`` will not be able to access the new information.
+Here we see that ``combined_env`` contains the python package from ``myenv`` environment.
+But if we were to add another spec to ``myenv``, ``combined_env`` will not know about the other spec.
 
 .. code-block:: spec
 
@@ -537,22 +582,21 @@ But if we were to add another spec to ``myenv``, ``included_env`` will not be ab
 
    ==> 0 installed packages
 
-
-   $ spack -e included_env find
-   ==> In environment included_env
+   $ spack -e combined_env find
+   ==> In environment combined_env
    ==> No root specs
    ==> Included specs
    python
 
    ==> 0 installed packages
 
-It isn't until you run the ``spack concretize`` command that the combined environment will get the updated information from the re-concretized base environment.
+It isn't until you run the ``spack concretize`` command that the combined environment will get the updated information from the re-concretized ``myenv``.
 
 .. code-block:: console
 
-   $ spack -e included_env concretize
-   $ spack -e included_env find
-   ==> In environment included_env
+   $ spack -e combined_env concretize
+   $ spack -e combined_env find
+   ==> In environment combined_env
    ==> No root specs
    ==> Included specs
    perl  python
@@ -595,7 +639,7 @@ For example, a ``spack.yaml`` manifest file containing some package preference c
            mpi: [openmpi]
      # ...
 
-This configuration sets the default mpi provider to be openmpi.
+This configuration sets the default ``mpi`` provider to be ``openmpi``.
 
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -835,7 +879,7 @@ The valid variables for a ``when`` clause are:
    The platform string of the default Spack architecture on the system.
 
 #. ``os``.
-   The os string of the default Spack architecture on the system.
+   The OS string of the default Spack architecture on the system.
 
 #. ``target``.
    The target string of the default Spack architecture on the system.
@@ -883,6 +927,83 @@ For example, the following environment has three root packages: ``gcc@8.1.0``, `
        - [$%compilers]
 
 This allows for a much-needed reduction in redundancy between packages and constraints.
+
+.. _environment-spec-groups:
+
+Spec Groups
+^^^^^^^^^^^
+
+.. versionadded:: 1.2
+
+Environments can be organized with named spec groups, enabling you to apply localized configuration overrides and establish concretization dependencies.
+This is extremely useful in a couple of common scenarios, as detailed below.
+
+.. _environment-spec-groups-bootstrapping-compiler:
+
+Building and using a compiler in a single environment
+"""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+A common use case is to build a recent compiler on top of an existing system and then compile a stack of software with it.
+For instance, assume we are interested in building ``hdf5`` and ``libtree`` with ``gcc@15.2``.
+The following manifest file would do exactly that:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - group: compiler
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5 %gcc@15.2
+       - libtree %gcc@15.2
+
+The ``group:`` attribute allows to name a group of specs, which are then listed under the ``specs:`` attribute in the same object.
+The simplest example is the ``compiler`` group composed of just the ``gcc@15.2`` spec.
+
+To express dependencies among groups of specs the ``needs:`` attribute is used, which is a list of names corresponding to the groups we depend on.
+The way this works is that group dependencies are always concretized *before* the current group, and their specs are *always* available for reuse when the current group is concretized.
+
+.. _environment-spec-groups-configuring-groups:
+
+Configuring a group of specs
+""""""""""""""""""""""""""""
+
+Another common scenario is the deployment of different configurations (e.g. CUDA enabled vs.
+ROCm enabled) of the same set of software.
+As an example, assume we want to install ``gromacs`` and ``quantum-espresso`` for both ``target=x86_64_v3`` and ``target=x86_64_v4``.
+That can be done with the following manifest file:
+
+.. code-block:: yaml
+
+   spack:
+   - group: apps-x86_64_v3
+     specs:
+     - gromacs
+     - quantum-espresso
+     override:
+       packages:
+         all:
+           prefer:
+           - target=x86_64_v3
+
+   - group: apps-x86_64_v4
+     specs:
+     - gromacs
+     - quantum-espresso
+     override:
+       packages:
+         all:
+           prefer:
+           - target=x86_64_v4
+
+The ``override:`` attribute allows us to override the configuration for a single group of specs.
+The overridden part is always added as the *topmost* scope when the current group is concretized.
+This ensures the override always takes precedence over other sources of configuration.
+
 
 Modifying Environment Variables
 -------------------------------
@@ -1045,6 +1166,42 @@ Given the example above, the spec ``zlib@1.2.8`` will be linked into ``/my/view/
 If the keyword ``all`` does not appear in the projections configuration file, any spec that does not satisfy any entry in the file will be linked into the root of the view as in a single-prefix view.
 Any entries that appear below the keyword ``all`` in the projections configuration file will not be used, as all specs will use the projection under ``all`` before reaching those entries.
 
+Group of Specs
+""""""""""""""
+
+Views can also be applied to a selected list of :ref:`spec groups <environment-spec-matrices>`.
+This can be done by specifying the ``group:`` attribute in the view configuration.
+For instance, with the following manifest:
+
+.. code-block:: yaml
+
+   spack:
+     concretizer:
+       unify: true
+
+     packages:
+       all:
+         require:
+         - target=x86_64_v4
+
+     specs:
+     - group: compiler
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5~mpi %gcc@15.2
+       - libtree %gcc@15.2
+
+     view:
+       apps:
+         root: ./views/apps
+         group: apps
+
+The view will only contain entries from the ``apps`` group, and will not include specs from the ``compiler`` group.
+
 Activating environment views
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1082,6 +1239,13 @@ Generating Depfiles from Environments
 ------------------------------------------
 
 Spack can generate ``Makefile``\s to make it easier to build multiple packages in an environment in parallel.
+
+.. note::
+
+   Since Spack v1.1, there is a new experimental installer that supports package-level parallelism out of the box with POSIX jobserver support.
+   You can enable it with ``spack config add config:installer:new``.
+   This new installer may provide a simpler alternative to the ``spack env depfile`` workflow described in this section for users primarily interested in speeding up environment installations.
+
 Generated ``Makefile``\s expose targets that can be included in existing ``Makefile``\s, to allow other targets to depend on the environment installation.
 
 A typical workflow is as follows:
@@ -1174,7 +1338,7 @@ Adding post-install hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another advanced use-case of generated ``Makefile``\s is running a post-install command for each package.
-These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a buildcache.
+These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a build cache.
 
 This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS`` variable.
 Assuming we have an active and concrete environment, we generate the associated ``Makefile`` with a prefix ``example``:
@@ -1187,7 +1351,7 @@ And we now include it in a different ``Makefile``, in which we create a target `
 This target depends on the particular package installation.
 In this target we automatically have the target-specific ``HASH`` and ``SPEC`` variables at our disposal.
 They are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
-Finally, we have an entry point target ``push`` that will update the buildcache index once every package is pushed.
+Finally, we have an entry point target ``push`` that will update the build cache index once every package is pushed.
 Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
 
 .. code-block:: Makefile

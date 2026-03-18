@@ -9,11 +9,12 @@ import pytest
 
 import spack.concretize
 import spack.environment as ev
+import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
 from spack.llnl.util.filesystem import mkdirp
-from spack.main import SpackCommand, SpackCommandError
+from spack.main import SpackCommand
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]
@@ -75,8 +76,9 @@ def test_location_source_dir_missing():
 )
 def test_location_cmd_error(options):
     """Ensure the proper error is raised with problematic location options."""
-    with pytest.raises(SpackCommandError, match="Command exited with code 1"):
+    with pytest.raises(spack.main.SpackCommandError) as e:
         location(*options)
+    assert e.value.code == 1
 
 
 def test_location_env_exists(mutable_mock_env_path):
@@ -92,27 +94,6 @@ def test_location_with_active_env(mutable_mock_env_path):
     e.write()
     with e:
         assert location("--env").strip() == e.path
-
-
-def test_location_env_flag_interference(mutable_mock_env_path):
-    """
-    Tests that specifying an active environment using `spack -e x location ...`
-    does not interfere with the location command flags.
-    """
-
-    # create two environments
-    env("create", "first_env")
-    env("create", "second_env")
-
-    global_args = ["-e", "first_env"]
-
-    # `spack -e first_env location -e second_env` should print the env
-    # path of second_env
-    assert "first_env" not in location("-e", "second_env", global_args=global_args)
-
-    # `spack -e first_env location --packages` should not print
-    # the environment path of first_env.
-    assert "first_env" not in location("--packages", global_args=global_args)
 
 
 def test_location_env_missing():

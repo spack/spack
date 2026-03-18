@@ -103,6 +103,8 @@ packages:
     buildable: false
   musl:
     buildable: false
+  opengl:
+    buildable: false
   spectrum-mpi:
     buildable: false
   xl:

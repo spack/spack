@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import email.message
 import errno
+import io
 import json
 import os
 import re
 import shutil
+import socket
 import ssl
 import stat
 import sys
@@ -34,6 +35,21 @@ from spack.llnl.util.filesystem import mkdirp, rename, working_dir
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+
+
+def is_transient_error(e: Exception) -> bool:
+    """Return True for HTTP/network errors that are worth retrying."""
+
+    if isinstance(e, HTTPError) and (500 <= e.code < 600 or e.code == 429):
+        return True
+    if isinstance(e, URLError) and isinstance(e.reason, socket.timeout):
+        return True
+    if isinstance(e, socket.timeout):
+        return True
+    # botocore.exceptions.ResponseStreamingError (IncompleteRead mid-stream)
+    if type(e).__name__ == "ResponseStreamingError":
+        return True
+    return False
 
 
 class DetailedHTTPError(HTTPError):
@@ -252,6 +268,26 @@ def read_from_url(url, accept_content_type=None):
     return response.url, response.headers, response
 
 
+def read_text(url: str) -> str:
+    """Fetch url and return the response body decoded as UTF-8 text."""
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    try:
+        with urlopen(request) as response:
+            return io.TextIOWrapper(response, encoding="utf-8").read()
+    except OSError as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
+def read_json(url: str):
+    """Fetch url and return the response body parsed as JSON."""
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    try:
+        with urlopen(request) as response:
+            return json.load(response)
+    except OSError as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
@@ -411,7 +447,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method.startswith("curl"):
+    if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
         curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -425,9 +461,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     else:
         try:
-            _, _, response = read_from_url(url)
-
-            output = codecs.getreader("utf-8")(response).read()
+            output = read_text(url)
             if output:
                 with working_dir(dest_dir, create=True):
                     with open(filename, "w", encoding="utf-8") as f:
@@ -474,11 +508,11 @@ def url_exists(url, curl=None):
 
     # Otherwise use urllib.
     try:
-        urlopen(
+        with urlopen(
             Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
             timeout=spack.config.get("config:connect_timeout", 10),
-        )
-        return True
+        ) as _:
+            return True
     except OSError as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
@@ -745,7 +779,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
-        page = codecs.getreader("utf-8")(response).read()
+        with response:
+            page = io.TextIOWrapper(response, encoding="utf-8").read()
         pages[response_url] = page
 
         # Parse out the include-fragments in the page
@@ -772,7 +807,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             if not fragment_response_url or not fragment_response:
                 continue
 
-            fragment = codecs.getreader("utf-8")(fragment_response).read()
+            with fragment_response:
+                fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
             fragments.add(fragment)
 
             pages[fragment_response_url] = fragment

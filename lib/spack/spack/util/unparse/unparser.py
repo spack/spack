@@ -652,25 +652,11 @@ class Unparser(NodeVisitor):
         def visit_Ellipsis(self, node):
             self.write("...")
 
-    def visit_JoinedStr(self, node):
-        self.write("f")
-        # Python 3.12 added support for backslashes inside format parts.
-        # We need to keep adding backslashes for python < 3.11 compat.
-        if self._avoid_backslashes:
-            with self.buffered() as buffer:
-                self._write_fstring_inner(node)
-            return self._write_str_avoiding_backslashes("".join(buffer))
-
-        fstring_parts = []
-        for value in node.values:
-            with self.buffered() as buffer:
-                self._write_fstring_inner(value)
-            fstring_parts.append(("".join(buffer), _is_str_literal(value)))
-
-        new_fstring_parts = []
+    def _ftstring_helper(self, parts):
+        new_parts = []
         quote_types = list(_ALL_QUOTES)
         fallback_to_repr = False
-        for value, is_constant in fstring_parts:
+        for value, is_constant in parts:
             # Python 3.12 allows `f'{''}'`.
             # But we unparse to `f'{""}'` for < 3.12 compat.
             if True:
@@ -684,14 +670,14 @@ class Unparser(NodeVisitor):
             elif "\n" in value:
                 quote_types = [q for q in quote_types if q in _MULTI_QUOTES]
                 assert quote_types
-            new_fstring_parts.append(value)
+            new_parts.append(value)
 
         if fallback_to_repr:
             # If we weren't able to find a quote type that works for all parts
             # of the JoinedStr, fallback to using repr and triple single quotes.
             quote_types = ["'''"]
-            new_fstring_parts.clear()
-            for value, is_constant in fstring_parts:
+            new_parts.clear()
+            for value, is_constant in parts:
                 # Python 3.12 allows `f'{''}'`.
                 # We need to unparse to `f'{""}'` for < 3.12 compat.
                 if True:
@@ -699,19 +685,42 @@ class Unparser(NodeVisitor):
                     expected_prefix = "'\""
                     assert value.startswith(expected_prefix), repr(value)
                     value = value[len(expected_prefix) : -1]
-                new_fstring_parts.append(value)
+                new_parts.append(value)
 
-        value = "".join(new_fstring_parts)
+        value = "".join(new_parts)
         quote_type = quote_types[0]
         self.write(f"{quote_type}{value}{quote_type}")
 
-    def _write_fstring_inner(self, node, is_format_spec=False):
+    def _write_ftstring(self, node, prefix):
+        self.write(prefix)
+        # Python 3.12 added support for backslashes inside format parts.
+        # We need to keep adding backslashes for python < 3.11 compat.
+        if self._avoid_backslashes:
+            with self.buffered() as buffer:
+                self._write_ftstring_inner(node)
+            return self._write_str_avoiding_backslashes("".join(buffer))
+        fstring_parts = []
+        for value in node.values:
+            with self.buffered() as buffer:
+                self._write_ftstring_inner(value)
+            fstring_parts.append(("".join(buffer), _is_str_literal(value)))
+        self._ftstring_helper(fstring_parts)
+
+    def visit_JoinedStr(self, node):
+        self._write_ftstring(node, "f")
+
+    def visit_TemplateStr(self, node):
+        self._write_ftstring(node, "t")
+
+    def _write_ftstring_inner(self, node, is_format_spec=False):
         if isinstance(node, JoinedStr):
             # for both the f-string itself, and format_spec
             for value in node.values:
-                self._write_fstring_inner(value, is_format_spec=is_format_spec)
+                self._write_ftstring_inner(value, is_format_spec=is_format_spec)
         elif isinstance(node, FormattedValue):
             self.visit_FormattedValue(node)
+        elif _is_interpolation(node):
+            self.visit_Interpolation(node)
         else:  # str literal
             maybe_string = _get_str_literal_value(node)
             if maybe_string is None:
@@ -726,15 +735,18 @@ class Unparser(NodeVisitor):
                 value = value.replace("\n", "\\n")
             self.write(value)
 
-    def visit_FormattedValue(self, node):
-        def unparse_inner(inner):
-            # Python <= 3.11 does not support backslashes inside format parts
-            unparser = type(self)(_avoid_backslashes=True)
-            unparser.set_precedence(_Precedence.TEST.next(), inner)
-            return unparser.visit(inner)
+    def _unparse_interpolation_value(self, inner):
+        # Python <= 3.11 does not support backslashes inside format parts
+        unparser = type(self)(_avoid_backslashes=True)
+        unparser.set_precedence(_Precedence.TEST.next(), inner)
+        return unparser.visit(inner)
 
+    def _write_interpolation(self, node, use_str_attr=False):
         with self.delimit("{", "}"):
-            expr = unparse_inner(node.value)
+            if use_str_attr:
+                expr = node.str
+            else:
+                expr = self._unparse_interpolation_value(node.value)
             # Python <= 3.11 does not support backslash in formats part
             if "\\" in expr:
                 raise ValueError(
@@ -748,7 +760,14 @@ class Unparser(NodeVisitor):
                 self.write(f"!{chr(node.conversion)}")
             if node.format_spec:
                 self.write(":")
-                self._write_fstring_inner(node.format_spec, is_format_spec=True)
+                self._write_ftstring_inner(node.format_spec, is_format_spec=True)
+
+    def visit_FormattedValue(self, node):
+        self._write_interpolation(node)
+
+    def visit_Interpolation(self, node):
+        # If `str` is set to `None`, use the `value` to generate the source code.
+        self._write_interpolation(node, use_str_attr=node.str is not None)
 
     def visit_Name(self, node):
         self.write(node.id)
@@ -1282,3 +1301,16 @@ else:
     def _get_str_literal_value(node: ast.AST) -> Optional[str]:
         """Get the string value of a literal str node."""
         return node.s if isinstance(node, ast.Str) else None
+
+
+if sys.version_info >= (3, 14):
+
+    def _is_interpolation(node: ast.AST) -> bool:
+        """Check if a node represents a template string literal."""
+        return isinstance(node, ast.Interpolation)
+
+else:
+
+    def _is_interpolation(node: ast.AST) -> bool:
+        """Check if a node represents a template string literal."""
+        return False

@@ -5,6 +5,7 @@
 import argparse
 import os
 import shlex
+import sys
 import tempfile
 from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
@@ -16,6 +17,7 @@ import spack.repo
 import spack.util.executable
 import spack.util.git
 import spack.util.path
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
@@ -48,12 +50,18 @@ def setup_parser(subparser: argparse.ArgumentParser):
     # List
     list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
-        "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read from",
     )
     output_group = list_parser.add_mutually_exclusive_group()
     output_group.add_argument("--names", action="store_true", help="show configuration names only")
     output_group.add_argument(
         "--namespaces", action="store_true", help="show repository namespaces only"
+    )
+    output_group.add_argument(
+        "--json", action="store_true", help="output repositories as machine-readable json records"
     )
 
     # Add
@@ -113,10 +121,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "namespace_or_path", help="namespace or path of a Spack package repository"
     )
     remove_parser.add_argument(
-        "--scope",
-        action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
-        help="configuration scope to modify",
+        "--scope", action=arguments.ConfigScope, default=None, help="configuration scope to modify"
+    )
+    remove_parser.add_argument(
+        "--all-scopes",
+        action="store_true",
+        default=False,
+        help="remove from all config scopes (default: highest scope with matching repo)",
     )
 
     # Migrate
@@ -252,8 +263,18 @@ def repo_add(args):
 
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
-    namespace_or_path = args.namespace_or_path
-    repos: Dict[str, str] = spack.config.get("repos", scope=args.scope)
+    scopes = [args.scope] if args.scope else reversed(list(spack.config.CONFIG.scopes.keys()))
+    found_and_removed = False
+    for scope in scopes:
+        found_and_removed |= _remove_repo(args.namespace_or_path, scope)
+        if found_and_removed and not args.all_scopes:
+            return
+    if not found_and_removed:
+        tty.die(f"No repository with path or namespace: {args.namespace_or_path}")
+
+
+def _remove_repo(namespace_or_path, scope):
+    repos: Dict[str, str] = spack.config.get("repos", scope=scope)
 
     if namespace_or_path in repos:
         # delete by name (from config)
@@ -262,12 +283,12 @@ def repo_remove(args):
         # delete by namespace or path (requires constructing the repo)
         canon_path = spack.util.path.canonicalize_path(namespace_or_path)
         descriptors = spack.repo.RepoDescriptors.from_config(
-            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=args.scope
+            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
         )
         for name, descriptor in descriptors.items():
             descriptor.initialize(fetch=False)
 
-            # For now you cannot delete monorepos with multipe package repositories from config,
+            # For now you cannot delete monorepos with multiple package repositories from config,
             # hence "all" and not "any". We can improve this later if needed.
             if all(
                 r.namespace == namespace_or_path or r.root == canon_path
@@ -277,15 +298,28 @@ def repo_remove(args):
                 key = name
                 break
         else:
-            tty.die(f"No repository with path or namespace: {namespace_or_path}")
+            return False
 
     del repos[key]
-    spack.config.set("repos", repos, args.scope)
-    tty.msg(f"Removed repository '{namespace_or_path}'.")
+    spack.config.set("repos", repos, scope)
+    tty.msg(f"Removed repository '{namespace_or_path}' from scope '{scope}'.")
+    return True
 
 
 def repo_list(args):
-    """show registered repositories and their namespaces"""
+    """show registered repositories and their namespaces
+
+    List all package repositories known to Spack. Repositories
+    can be local directories or remote git repositories.
+
+    The output can be filtered by:
+      --scope=<name>    to list repositories from a specific scope
+
+    The output format can be controlled using one of:
+      --names           to show only configuration names
+      --namespaces      to show only repository namespaces
+      --json            to output repositories as machine-readable json records
+    """
     descriptors = spack.repo.RepoDescriptors.from_config(
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
@@ -303,25 +337,61 @@ def repo_list(args):
                 print(maybe_repo.namespace)
         return
 
-    # Default table format: collect all repository information for aligned output
+    # Collect all repository information
     repo_info = []
 
     for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
         if isinstance(maybe_repo, spack.repo.Repo):
-            repo_info.append(
-                ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
-            )
+            status = "installed"
+            namespace = maybe_repo.namespace
+            api = maybe_repo.package_api_str
+            repo_path = maybe_repo.root
         elif maybe_repo is None:  # Uninitialized Git-based repo case
-            repo_info.append(("@K{ - }", name, "", path))
+            status = "uninitialized"
+            namespace = name
+            api = ""
+            repo_path = path
         else:  # Exception/error case
-            repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
+            status = "error"
+            namespace = name
+            api = ""
+            repo_path = path
 
-    if repo_info:
-        max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
-        max_api_width = max(len(api) for _, _, api, _ in repo_info) + 3
+        # Add the repo info to our list
+        repo_info.append(
+            {
+                "name": name,
+                "namespace": namespace,
+                "path": repo_path,
+                "api_version": api,
+                "status": status,
+                "error": str(maybe_repo) if isinstance(maybe_repo, Exception) else None,
+            }
+        )
+
+    # Output in JSON format if requested
+    if args.json:
+        sjson.dump(repo_info, sys.stdout)
+        return
+
+    # Default table format with aligned output
+    formatted_repo_info = []
+    for repo in repo_info:
+        if repo["status"] == "installed":
+            status = "@g{[+]}"
+        elif repo["status"] == "uninitialized":
+            status = "@K{ - }"
+        else:  # error
+            status = "@r{[-]}"
+
+        formatted_repo_info.append((status, repo["namespace"], repo["api_version"], repo["path"]))
+
+    if formatted_repo_info:
+        max_namespace_width = max(len(namespace) for _, namespace, _, _ in formatted_repo_info) + 3
+        max_api_width = max(len(api) for _, _, api, _ in formatted_repo_info) + 3
 
         # Print aligned output
-        for status, namespace, api, path in repo_info:
+        for status, namespace, api, path in formatted_repo_info:
             cpath = color.cescape(path)
             color.cprint(
                 f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {cpath}"
@@ -543,7 +613,7 @@ def repo_update(args: Any) -> int:
                 )
 
             else:
-                tty.msg(f"{name}: Updated sucessfully.")
+                tty.msg(f"{name}: Updated successfully.")
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)

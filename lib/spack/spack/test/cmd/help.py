@@ -6,14 +6,14 @@ from spack.main import SpackCommand
 
 def test_reuse_after_help():
     """Test `spack help` can be called twice with the same SpackCommand."""
-    help_cmd = SpackCommand("help", subprocess=True)
+    help_cmd = SpackCommand("help")
     help_cmd()
     help_cmd()
 
 
 def test_help():
     """Sanity check the help command to make sure it works."""
-    help_cmd = SpackCommand("help", subprocess=True)
+    help_cmd = SpackCommand("help")
     out = help_cmd()
     assert "Common spack commands:" in out
     assert "Options:" in out
@@ -21,7 +21,7 @@ def test_help():
 
 def test_help_all():
     """Test the spack help --all flag"""
-    help_cmd = SpackCommand("help", subprocess=True)
+    help_cmd = SpackCommand("help")
     out = help_cmd("--all")
     assert "Commands:" in out
     assert "Options:" in out

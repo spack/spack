@@ -9,6 +9,7 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.spec_parser
 import spack.traverse
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
@@ -104,6 +105,13 @@ class RequirementParser:
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
+        self.toolchains = configuration.get_config("toolchains")
+
+    def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
+        result = parse_spec_from_yaml_string(string, named=named)
+        if self.toolchains:
+            spack.spec_parser.expand_toolchains(result, self.toolchains)
+        return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
@@ -209,7 +217,7 @@ class RequirementParser:
         return spec, condition, message
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
-        config = self.config.get("packages")
+        config = self.config.get_config("packages")
         data = config.get(pkg_name, {}).get(section, [])
         kind = RequirementKind.PACKAGE
 
@@ -248,7 +256,7 @@ class RequirementParser:
 
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    parse_spec_from_yaml_string(constraint, named=kind == RequirementKind.VIRTUAL)
+                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
                     for constraint in constraints
                 ]
                 when_str = requirement.get("when")
@@ -301,8 +309,7 @@ class RequirementParser:
         except spack.error.SpackError as e:
             tty.debug(
                 f"[{__name__}] Rejecting the default '{constraint}' requirement "
-                f"on '{pkg_name}': {str(e)}",
-                level=2,
+                f"on '{pkg_name}': {str(e)}"
             )
             return True
         return False

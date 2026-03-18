@@ -9,10 +9,13 @@ import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
 from spack.spec import Spec
+from spack.spec_parser import expand_toolchains
 
 
 class SpecList:
-    def __init__(self, *, name: str = "specs", yaml_list=None, expanded_list=None):
+    def __init__(
+        self, *, name: str = "specs", yaml_list=None, expanded_list=None, toolchains=None
+    ):
         self.name = name
         self.yaml_list = yaml_list[:] if yaml_list is not None else []
         # Expansions can be expensive to compute and difficult to keep updated
@@ -20,6 +23,7 @@ class SpecList:
         self.specs_as_yaml_list = expanded_list or []
         self._constraints = None
         self._specs: Optional[List[Spec]] = None
+        self._toolchains = toolchains
 
     @property
     def is_matrix(self):
@@ -51,6 +55,8 @@ class SpecList:
                 spec = constraint_list[0].copy()
                 for const in constraint_list[1:]:
                     spec.constrain(const)
+                if self._toolchains:
+                    expand_toolchains(spec, self._toolchains)
                 specs.append(spec)
             self._specs = specs
 
@@ -178,8 +184,9 @@ class Definition(NamedTuple):
 class SpecListParser:
     """Parse definitions and user specs from data in environments"""
 
-    def __init__(self):
+    def __init__(self, *, toolchains=None):
         self.definitions: Dict[str, SpecList] = {}
+        self._toolchains = toolchains
 
     def parse_definitions(self, *, data: List[Dict[str, Any]]) -> Dict[str, SpecList]:
         definitions_from_yaml: Dict[str, List[Definition]] = {}
@@ -225,7 +232,12 @@ class SpecListParser:
                 continue
             combined_yaml_list.extend(def_part.yaml_list)
         expanded_list = self._expand_yaml_list(combined_yaml_list)
-        return SpecList(name=name, yaml_list=combined_yaml_list, expanded_list=expanded_list)
+        return SpecList(
+            name=name,
+            yaml_list=combined_yaml_list,
+            expanded_list=expanded_list,
+            toolchains=self._toolchains,
+        )
 
     def _expand_yaml_list(self, raw_yaml_list):
         result = []

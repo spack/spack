@@ -9,7 +9,6 @@ from typing import List
 
 import pytest
 
-import spack
 import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.util.executable as ex

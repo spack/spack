@@ -7,7 +7,6 @@ import sys
 
 import pytest
 
-import spack
 import spack.cmd.external
 import spack.config
 import spack.cray_manifest

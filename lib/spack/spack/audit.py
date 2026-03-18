@@ -385,15 +385,6 @@ package_attributes = AuditClass(
     kwargs=("pkgs",),
 )
 
-
-package_deprecated_attributes = AuditClass(
-    group="packages",
-    tag="PKG-DEPRECATED-ATTRIBUTES",
-    description="Sanity checks to preclude use of deprecated package attributes",
-    kwargs=("pkgs",),
-)
-
-
 package_properties = AuditClass(
     group="packages",
     tag="PKG-PROPERTIES",
@@ -431,6 +422,22 @@ def _check_build_test_callbacks(pkgs, error_cls):
             instr = f"Remove the following from 'build_time_test_callbacks': {callbacks}"
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
+    return errors
+
+
+@package_directives
+def _directives_can_be_evaluated(pkgs, error_cls):
+    """Ensure that all directives in a package can be evaluated."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        for attr in pkg_cls._dict_to_directives:
+            try:
+                getattr(pkg_cls, attr)
+            except Exception as e:
+                error_msg = f"Package '{pkg_name}' has invalid directive '{attr}'"
+                details = [str(e)]
+                errors.append(error_cls(error_msg, details))
     return errors
 
 
@@ -526,46 +533,6 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
     return errors
 
 
-@package_deprecated_attributes
-def _search_for_deprecated_package_methods(pkgs, error_cls):
-    """Ensure the package doesn't define or use deprecated methods"""
-    DEPRECATED_METHOD = (("test", "a name starting with 'test_'"),)
-    DEPRECATED_USE = (
-        ("self.cache_extra_test_sources(", "cache_extra_test_sources(self, ..)"),
-        ("self.install_test_root(", "install_test_root(self, ..)"),
-        ("self.run_test(", "test_part(self, ..)"),
-    )
-    errors = []
-    for pkg_name in pkgs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
-        method_errors = collections.defaultdict(list)
-        for name, function in methods:
-            for deprecated_name, alternate in DEPRECATED_METHOD:
-                if name == deprecated_name:
-                    msg = f"Rename '{deprecated_name}' method to {alternate} instead."
-                    method_errors[name].append(msg)
-
-            source = inspect.getsource(function)
-            for deprecated_name, alternate in DEPRECATED_USE:
-                if deprecated_name in source:
-                    msg = f"Change '{deprecated_name}' to '{alternate}' in '{name}' method."
-                    method_errors[name].append(msg)
-
-        num_methods = len(method_errors)
-        if num_methods > 0:
-            methods = plural(num_methods, "method", show_n=False)
-            error_msg = (
-                f"Package '{pkg_name}' implements or uses unsupported deprecated {methods}."
-            )
-            instr = [f"Make changes to '{pkg_cls.__module__}':"]
-            for name in sorted(method_errors):
-                instr.extend([f"    {msg}" for msg in method_errors[name]])
-            errors.append(error_cls(error_msg, instr))
-
-    return errors
-
-
 @package_properties
 def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
     """Ensure package names are lowercase and consistent"""
@@ -606,7 +573,7 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         try:
-            source = ph.canonical_source(pkg_name, filter_multimethods=False)
+            source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
         except Exception as e:
             error_msg = "Package '{}' failed to unparse".format(pkg_name)
             details = ["{}".format(str(e))]
@@ -914,19 +881,21 @@ def _linting_package_file(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
+        homepage = pkg_cls.homepage
+        if not homepage:
+            continue
+
         # Does the homepage have http, and if so, does https work?
-        if pkg_cls.homepage.startswith("http://"):
-            https = re.sub("http", "https", pkg_cls.homepage, 1)
+        if homepage.startswith("http://"):
             try:
-                response = urlopen(https)
+                with urlopen(f"https://{homepage[7:]}") as response:
+                    if response.getcode() == 200:
+                        msg = 'Package "{0}" uses http but has a valid https endpoint.'
+                        errors.append(msg.format(pkg_cls.name))
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
-
-            if response.getcode() == 200:
-                msg = 'Package "{0}" uses http but has a valid https endpoint.'
-                errors.append(msg.format(pkg_cls.name))
 
     return spack.llnl.util.lang.dedupe(errors)
 

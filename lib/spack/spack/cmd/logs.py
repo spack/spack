@@ -14,7 +14,7 @@ import spack.cmd
 import spack.spec
 import spack.util.compression as compression
 from spack.cmd.common import arguments
-from spack.main import SpackCommandError
+from spack.error import SpackError
 
 description = "print out logs for packages"
 section = "query"
@@ -39,19 +39,19 @@ def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
         # combined log file is only written after the build is finished.
         log_path = concrete_spec.package.log_path
     else:
-        raise SpackCommandError(f"{cmdline_spec} is not installed or staged")
+        raise SpackError(f"{cmdline_spec} is not installed or staged")
 
     try:
         stream = open(log_path, "rb")
     except OSError as e:
         if e.errno == errno.ENOENT:
-            raise SpackCommandError(f"No logs are available for {cmdline_spec}") from e
-        raise SpackCommandError(f"Error reading logs for {cmdline_spec}: {e}") from e
+            raise SpackError(f"No logs are available for {cmdline_spec}") from e
+        raise SpackError(f"Error reading logs for {cmdline_spec}: {e}") from e
 
     with stream as f:
         ext = compression.extension_from_magic_numbers_by_stream(f, decompress=False)
         if ext and ext != "gz":
-            raise SpackCommandError(f"Unsupported storage format for {log_path}: {ext}")
+            raise SpackError(f"Unsupported storage format for {log_path}: {ext}")
 
         # If the log file is gzip compressed, wrap it with a decompressor
         _dump_byte_stream_to_stdout(gzip.GzipFile(fileobj=f) if ext == "gz" else f)
@@ -61,10 +61,10 @@ def logs(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        raise SpackCommandError("You must supply a spec.")
+        raise SpackError("You must supply a spec.")
 
     if len(specs) != 1:
-        raise SpackCommandError("Too many specs. Supply only one.")
+        raise SpackError("Too many specs. Supply only one.")
 
     concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
 

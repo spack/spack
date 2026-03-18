@@ -59,9 +59,8 @@ from spack.llnl.util.filesystem import (
     islink,
     symlink,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, memoized
+from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
-from spack.solver.versions import concretization_version_order
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -339,6 +338,8 @@ class PackageViewMixin:
     overriding these functions.
     """
 
+    spec: spack.spec.Spec
+
     def view_source(self):
         """The source root directory that will be added to the view: files are
         added such that their path relative to the view destination matches
@@ -411,7 +412,7 @@ def _by_subkey(
     """Convert a dict of dicts keyed by when/subkey into a dict of lists keyed by subkey.
 
     Optional Arguments:
-        when: if ``True``, don't discared the ``when`` specs; return a 2-level dictionary
+        when: if ``True``, don't discard the ``when`` specs; return a 2-level dictionary
             keyed by subkey and when spec.
     """
     # very hard to define this type to be conditional on `when`
@@ -548,7 +549,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     compiler = DeprecatedCompiler()
 
     #: Class level dictionary populated by :func:`~spack.directives.version` directives
-    versions: dict
+    versions: Dict[StandardVersion, Dict[str, Any]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
@@ -1465,7 +1466,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def intersects(self, spec: spack.spec.Spec) -> bool:
         """Context-ful intersection that takes into account package information.
 
-        By design, ``Spec.intersects()`` does not know anything about package metdata.
+        By design, ``Spec.intersects()`` does not know anything about package metadata.
         This avoids unnecessary package lookups and keeps things efficient where extra
         information is not needed, and it decouples ``Spec`` from ``PackageBase``.
 
@@ -1668,7 +1669,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self.stage.create()
 
         # Fetch/expand any associated code.
-        if self.has_code and not self.spec.external:
+        user_dev_path = spack.config.get(f"develop:{self.name}:path", None)
+        skip = user_dev_path and os.path.exists(user_dev_path)
+        if skip:
+            tty.debug("Skipping staging because develop path exists")
+        if self.has_code and not self.spec.external and not skip:
             self.do_fetch(mirror_only)
             self.stage.expand_archive()
         else:
@@ -2036,8 +2041,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
-    def unit_test_check(self) -> bool:
-        """Hook for unit tests to assert things about package internals.
+    def _unit_test_check(self) -> bool:
+        """Hook for Spack's own unit tests to assert things about package internals.
 
         Unit tests can override this function to perform checks after
         ``Package.install`` and all post-install hooks run, but before
@@ -2329,7 +2334,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Do not include Windows system libraries in the rpath interface
         # these libraries are handled automatically by VS/VCVARS and adding
         # Spack derived system libs into the link path or address space of a program
-        # can result in conflicting versions, which makes Spack packages less useable
+        # can result in conflicting versions, which makes Spack packages less usable
         if sys.platform == "win32":
             rpaths = [self.prefix.bin]
             rpaths.extend(
@@ -2574,16 +2579,77 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return details is not None and details.get("deprecated", False)
 
 
-def preferred_version(pkg: PackageBase):
-    """
-    Returns a sorted list of the preferred versions of the package.
+def preferred_version(
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> Union[StandardVersion, GitVersion]:
+    """Returns the preferred versions of the package according to package.py.
+
+    Accounts for version deprecation in the package recipe. Doesn't account for
+    any user configuration in packages.yaml.
 
     Arguments:
         pkg: The package whose versions are to be assessed.
     """
 
-    version, _ = max(pkg.versions.items(), key=concretization_version_order)
+    def _version_order(version_info):
+        version, info = version_info
+        deprecated_key = not info.get("deprecated", False)
+        return (deprecated_key, *concretization_version_order(version_info))
+
+    version, _ = max(pkg.versions.items(), key=_version_order)
     return version
+
+
+def non_preferred_version(node: spack.spec.Spec) -> bool:
+    """Returns True if the spec version is not the preferred one, according to the package.py"""
+    if not node.versions.concrete:
+        return False
+
+    try:
+        return node.version != preferred_version(node.package)
+    except ValueError:
+        return False
+
+
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
+    """Returns True if the variant in the spec has a non-default value."""
+    try:
+        default_variant = node.package.get_variant(variant_name).make_default()
+        return not node.satisfies(str(default_variant))
+    except ValueError:
+        # This is the case for special variants like "patches" etc.
+        return False
+
+
+def sort_by_pkg_preference(
+    versions: Iterable[Union[GitVersion, StandardVersion]],
+    *,
+    pkg: Union[PackageBase, Type[PackageBase]],
+) -> List[Union[GitVersion, StandardVersion]]:
+    """Sorts the list of versions passed in input according to the preferences in the package. The
+    return value does not contain duplicate versions. Most preferred versions first.
+    """
+    s = [(v, pkg.versions.get(v, {})) for v in dedupe(versions)]
+    return [v for v, _ in sorted(s, reverse=True, key=concretization_version_order)]
+
+
+def concretization_version_order(
+    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
+) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+    """Version order key for concretization, where preferred > not preferred,
+    finite > any infinite component; only if all are the same, do we use default version
+    ordering.
+
+    Version deprecation needs to be accounted for separately.
+    """
+    version, info = version_info
+    return (
+        info.get("preferred", False),
+        not isinstance(version, GitVersion),
+        not version.isdevelop(),
+        not version.is_prerelease(),
+        version,
+    )
 
 
 class PackageStillNeededError(InstallError):

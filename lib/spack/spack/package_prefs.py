@@ -93,8 +93,10 @@ class PackagePrefs:
         if all:
             pkglist.append("all")
 
+        packages = spack.config.CONFIG.get_config("packages")
+
         for pkg in pkglist:
-            pkg_entry = spack.config.get("packages").get(pkg)
+            pkg_entry = packages.get(pkg)
             if not pkg_entry:
                 continue
 
@@ -137,8 +139,9 @@ class PackagePrefs:
     @classmethod
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
+        packages = spack.config.CONFIG.get_config("packages")
         for pkg_cls in (pkg_name, "all"):
-            variants = spack.config.get("packages").get(pkg_cls, {}).get("variants", "")
+            variants = packages.get(pkg_cls, {}).get("variants", "")
             if variants:
                 break
 

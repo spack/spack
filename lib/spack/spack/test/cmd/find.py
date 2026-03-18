@@ -6,12 +6,10 @@ import argparse
 import json
 import os
 import pathlib
-import sys
-from textwrap import dedent
 
 import pytest
 
-import spack.cmd as cmd
+import spack.cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
@@ -137,28 +135,12 @@ def test_namespaces_shown_correctly(args, with_namespace, database):
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
-    # Currently logging on Windows detaches stdout
-    # from the terminal so we miss some output during tests
-    # TODO: (johnwparent): Once logging is amended on Windows,
-    # restore this test
-    out = find("zmpi")
-    if not sys.platform == "win32":
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      ==> 1 installed package
-      """
-            )
-        )
-    else:
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      """
-            )
-        )
+    assert find("zmpi").endswith(
+        """\
+zmpi@1.0
+==> 1 installed package
+"""
+    )
 
 
 def _check_json_output(spec_list):
@@ -202,34 +184,34 @@ def test_find_json_deps(database):
 
 
 @pytest.mark.db
-def test_display_json(database, capsys):
+def test_display_json(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs + specs + specs)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
 
 @pytest.mark.db
-def test_display_json_deps(database, capsys):
+def test_display_json_deps(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs, deps=True)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs + specs + specs, deps=True)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
 
@@ -322,9 +304,8 @@ def test_find_very_long(database, config):
 
 
 @pytest.mark.db
-def test_find_not_found(database, config, capsys):
-    with capsys.disabled():
-        output = find("foobarbaz", fail_on_error=False)
+def test_find_not_found(database, config):
+    output = find("foobarbaz", fail_on_error=False)
     assert "No package matches the query: foobarbaz" in output
     assert find.returncode == 1
 
@@ -399,7 +380,7 @@ spack:
     with ev.read("combined_env"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -436,7 +417,7 @@ spack:
     with ev.read("test3"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -555,3 +536,52 @@ def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     install("--fake", f"git-test-commit commit={commits[0]}")
     output = find(f"commit={commits[0]}")
     assert "git-test-commit" in output
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "spack_yaml,expected,not_expected",
+    [
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  - group: extras
+    specs:
+    - libelf
+""",
+            [
+                "2 root specs",
+                # Group names
+                "extras",
+                "default",
+                # root specs
+                "mpileaks",
+                "libelf",
+            ],
+            [],
+        ),
+        (
+            """
+spack:
+  specs:
+  - group: tools
+    specs:
+    - libelf
+""",
+            ["1 root spec", "tools", "libelf"],
+            ["1 root specs", "default"],
+        ),
+    ],
+)
+def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: pathlib.Path):
+    """Tests that the output of spack find contains expected matches when using an
+    environment with groups.
+    """
+    (tmp_path / "spack.yaml").write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        output = find()
+
+    assert all(x in output for x in expected)
+    assert all(x not in output for x in not_expected)

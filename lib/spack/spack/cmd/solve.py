@@ -14,6 +14,7 @@ import spack.environment
 import spack.hash_types as ht
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
+import spack.package_base
 import spack.solver.asp as asp
 import spack.spec
 
@@ -118,6 +119,12 @@ def solve(parser, args):
         "show_types": args.types,
         "status_fn": install_status_fn if args.install_status else None,
         "hashes": args.long or args.very_long,
+        "highlight_version_fn": (
+            spack.package_base.non_preferred_version if args.non_defaults else None
+        ),
+        "highlight_variant_fn": (
+            spack.package_base.non_default_variant if args.non_defaults else None
+        ),
     }
 
     # process output options

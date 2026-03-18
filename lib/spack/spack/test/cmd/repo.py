@@ -17,18 +17,16 @@ import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
 from spack.llnl.util.filesystem import working_dir
-from spack.main import SpackCommand
 from spack.util.executable import Executable
 
 repo = spack.main.SpackCommand("repo")
-env = SpackCommand("env")
+env = spack.main.SpackCommand("env")
 
 
 def test_help_option():
     # Test 'spack repo --help' to check basic import works
     # and the command exits successfully
-    with pytest.raises(SystemExit):
-        repo("--help")
+    repo("--help")
     assert repo.returncode in (None, 0)
 
 
@@ -40,19 +38,53 @@ def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
 
     # Add the new repository and check it appears in the list output
     repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
-    output = repo("list", "--scope=site", output=str)
+    output = repo("list", "--scope=site")
     assert "mockrepo" in output
 
     # Then remove it and check it's not there
     repo("remove", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
-    output = repo("list", "--scope=site", output=str)
+    output = repo("list", "--scope=site")
+    assert "mockrepo" not in output
+
+
+def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
+    # Create and add a new repo
+    repo("create", str(tmp_path), "mockrepo")
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("add", "--scope=system", str(tmp_path / "spack_repo" / "mockrepo"))
+
+    # Confirm that it is not removed when the scope is incorrect
+    with pytest.raises(spack.main.SpackCommandError):
+        repo("remove", "--scope=user", "mockrepo")
+    output = repo("list")
+    assert "mockrepo" in output
+
+    # Confirm that when the scope is specified, it is only removed from that scope
+    repo("remove", "--scope=site", "mockrepo")
+    site_output = repo("list", "--scope=site")
+    system_output = repo("list", "--scope=system")
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Confirm that when the scope is not specified, it is removed from top scope with it present
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "mockrepo")
+    site_output = repo("list", "--scope=site")
+    system_output = repo("list", "--scope=system")
+    assert "mockrepo" not in site_output
+    assert "mockrepo" in system_output
+
+    # Check that the `--all-scopes` option removes from all scopes
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
+    repo("remove", "--all-scopes", "mockrepo")
+    output = repo("list")
     assert "mockrepo" not in output
 
 
 def test_env_repo_path_vars_substitution(
     tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
 ):
-    """Test Spack correctly substitues repo paths with environment variables when creating an
+    """Test Spack correctly substitutes repo paths with environment variables when creating an
     environment from a manifest file."""
 
     monkeypatch.setenv("CUSTOM_REPO_PATH", ".")
@@ -605,7 +637,7 @@ def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path: pathlib.Path):
     assert repos_config["auto_name_repo"] == str(tmp_path)
 
 
-def test_add_repo_partial_repo_construction_warning(monkeypatch, capsys):
+def test_add_repo_partial_repo_construction_warning(monkeypatch, capfd):
     """Test that _add_repo issues warnings for repos that can't be constructed but
     succeeds if at least one can be."""
 
@@ -631,7 +663,7 @@ def test_add_repo_partial_repo_construction_warning(monkeypatch, capsys):
     assert key == "test_mixed_repo"
 
     # Check that a warning was issued for the failed repo
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "Skipping package repository" in captured.err
 
 
@@ -765,20 +797,96 @@ def test_repo_list_format_flags(
     )
 
     # Test default table format, which shows one line per package repository
-    table_output = repo("list", output=str)
+    table_output = repo("list")
     assert "[+] repo_one" in table_output
     assert "[+] repo_two" in table_output
     assert " -  uninitialized" in table_output
     assert "[-] misconfigured" in table_output
 
     # Test --namespaces flag
-    namespaces_output = repo("list", "--namespaces", output=str)
+    namespaces_output = repo("list", "--namespaces")
     assert namespaces_output.strip().split("\n") == ["repo_one", "repo_two"]
 
     # Test --names flag
-    config_names_output = repo("list", "--names", output=str)
+    config_names_output = repo("list", "--names")
     config_names_lines = config_names_output.strip().split("\n")
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
+
+
+def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_path: pathlib.Path):
+    """Test the --json flag for repo list command.
+
+    This test verifies that:
+    1. The --json flag produces valid JSON output
+    2. The output contains the expected repository information
+    3. Different repository types (installed, uninitialized, error)
+       are correctly represented
+    """
+    import json
+
+    # Fake a git monorepo with two package repositories
+    monorepo_path = tmp_path / "monorepo"
+    (monorepo_path / ".git").mkdir(parents=True)
+    repo("create", str(monorepo_path), "repo_one")
+    repo("create", str(monorepo_path), "repo_two")
+
+    # Configure repositories in Spack
+    test_repos = {
+        # git repo that provides two package repositories
+        "monorepo": {
+            "git": "https://example.com/monorepo.git",
+            "destination": str(monorepo_path),
+            "paths": ["spack_repo/repo_one", "spack_repo/repo_two"],
+        },
+        # git repo that is not yet cloned
+        "uninitialized": {
+            "git": "https://example.com/uninitialized.git",
+            "destination": str(tmp_path / "uninitialized"),
+        },
+        # invalid local repository
+        "misconfigured": str(tmp_path / "misconfigured"),
+    }
+    mutable_config.set("repos", test_repos, scope="site")
+
+    # Get and parse JSON output
+    json_output = repo("list", "--json")
+    repo_data = json.loads(json_output)
+
+    # Verify we got a list of repositories
+    assert isinstance(repo_data, list), "Expected JSON output to be a list"
+
+    # Index repositories by namespace for easier validation
+    repos_by_namespace = {}
+    for item in repo_data:
+        # Check all required fields are present
+        required_fields = ["name", "namespace", "path", "api_version", "status", "error"]
+        for field in required_fields:
+            assert field in item, f"Repository missing required field: {field}"
+
+        # Store by namespace for later validation
+        repos_by_namespace[item["namespace"]] = item
+
+    # Verify installed repositories (repo_one and repo_two)
+    for namespace in ["repo_one", "repo_two"]:
+        assert namespace in repos_by_namespace, f"Missing repository: {namespace}"
+        repo_info = repos_by_namespace[namespace]
+        assert repo_info["name"] == "monorepo", f"Incorrect name for {namespace}"
+        assert repo_info["status"] == "installed", f"Incorrect status for {namespace}"
+        assert repo_info["error"] is None, f"Unexpected error for {namespace}"
+        assert repo_info["api_version"], f"Missing API version for {namespace}"
+
+    # Verify uninitialized repository
+    assert "uninitialized" in repos_by_namespace, "Missing uninitialized repository"
+    uninit_repo = repos_by_namespace["uninitialized"]
+    assert uninit_repo["name"] == "uninitialized", "Incorrect name for uninitialized repo"
+    assert uninit_repo["status"] == "uninitialized", "Incorrect status for uninitialized repo"
+
+    # Verify misconfigured repository
+    assert "misconfigured" in repos_by_namespace, "Missing misconfigured repository"
+    misc_repo = repos_by_namespace["misconfigured"]
+    assert misc_repo["name"] == "misconfigured", "Incorrect name for misconfigured repo"
+    assert misc_repo["status"] == "error", "Incorrect status for misconfigured repo"
+    assert misc_repo["error"] is not None, "Missing error message for misconfigured repo"
 
 
 @pytest.mark.parametrize(

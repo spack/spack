@@ -10,14 +10,17 @@ import os
 import re
 import sys
 from html import escape
-from typing import Type
+from typing import Optional, Type
 
 import spack.deptypes as dt
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.repo
+import spack.util.git
 from spack.cmd.common import arguments
+from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty.colify import colify
+from spack.util.url import path_to_file_url
 from spack.version import VersionList
 
 description = "list and search available packages"
@@ -140,10 +143,60 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
-def github_url(pkg: Type[spack.package_base.PackageBase]) -> str:
-    """Link to a package file on github."""
-    mod_path = pkg.__module__.replace(".", "/")
-    return f"https://github.com/spack/spack/blob/develop/var/spack/{mod_path}.py"
+def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
+    """Link to a package file in spack package's github or the path to the file.
+
+    Args:
+        pkg: package instance
+
+    Returns: URL to the package file on github or the local file path; otherwise, ``None``.
+    """
+    git = None
+    module_path = f"{pkg.__module__.replace('.', '/')}.py"
+    for repo in spack.repo.PATH.repos:
+        if not repo.python_path:
+            continue
+
+        path = os.path.join(repo.python_path, module_path)
+        if not os.path.exists(path):
+            continue
+
+        git = git or spack.util.git.git()
+        if not git:
+            tty.debug("Cannot determine package URL for {pkg} without 'git', using path URL")
+            return path_to_file_url(path)
+
+        tty.debug(f"Checking git for repository path '{path}'")
+        with working_dir(os.path.dirname(path)):
+            origin_url = git(
+                "config",
+                "--get",
+                "remote.origin.url",
+                output=str,
+                error=os.devnull,
+                fail_on_error=False,
+            )
+
+            if not origin_url:
+                tty.debug("Cannot determine remote origin url, using path URL")
+                return path_to_file_url(path)
+
+            # Handle spack repositories cloned with any scheme (e.g., ssh) by
+            # ignoring the scheme designation.
+            if any([name in origin_url for name in ["spack.git", "spack-packages.git"]]):
+                git_repo = (origin_url.split("/")[-1]).replace(".git", "").strip()
+                prefix = git(
+                    "rev-parse", "--show-prefix", output=str, error=os.devnull, fail_on_error=False
+                )
+                return (
+                    f"https://github.com/spack/{git_repo}/blob/develop/{prefix.strip()}package.py"
+                )
+
+            tty.debug(f"Unrecognized repository for {pkg}, using path URL")
+            return path_to_file_url(path)
+
+    tty.debug(f"Unable to determine the package repository URL for {pkg}")
+    return None
 
 
 def rows_for_ncols(elts, ncols):

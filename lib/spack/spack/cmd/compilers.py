@@ -14,7 +14,10 @@ level = "short"
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
+        "--scope",
+        action=arguments.ConfigScope,
+        type=arguments.config_scope_readable_validator,
+        help="configuration scope to read/modify",
     )
     subparser.add_argument(
         "--remote", action="store_true", help="list also compilers from registered buildcaches"

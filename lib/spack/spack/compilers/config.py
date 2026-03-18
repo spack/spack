@@ -261,7 +261,7 @@ class CompilerFactory:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
         externals_dicts = []
         compiler_package_names = supported_compilers()
-        packages_yaml = configuration.get("packages", scope=scope)
+        packages_yaml = configuration.get_config("packages", scope=scope)
         for name, entry in packages_yaml.items():
             if name not in compiler_package_names:
                 continue

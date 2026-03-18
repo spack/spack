@@ -20,6 +20,8 @@ def test_url_local_file_path(tmp_path: pathlib.Path):
     with open(path, "wb") as f:
         f.write(b"hello world")
 
+    assert url_util.path_to_file_url(path).startswith("file://")
+
     # Go from path -> url -> path.
     roundtrip = url_util.local_file_path(url_util.path_to_file_url(path))
 

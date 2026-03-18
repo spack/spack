@@ -1,13 +1,13 @@
 version: 2
 
 build:
-  os: "ubuntu-22.04"
+  os: "ubuntu-24.04"
   apt_packages:
     - graphviz
     - inkscape
     - xindy
   tools:
-    python: "3.11"
+    python: "3.14"
   jobs:
     post_checkout:
       - git fetch --unshallow || true  # get accurate "Last updated on" info
