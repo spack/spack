@@ -4983,8 +4983,8 @@ def test_virtual_gets_multiple_dupes(mock_packages, config):
 
 
 def test_compiler_selection_when_external_has_variant_penalty(mutable_config, mock_packages):
-    """Tests that a provider that should be preferred is not swapped with a less preferred
-    provider because of penalties on variants.
+    """Tests that a compiler that should be preferred is not swapped with a less preferred
+    compiler because of penalties on variants.
     """
     packages_yaml = syaml.load_config(
         """
@@ -5016,3 +5016,26 @@ packages:
     assert concrete.satisfies("%gcc@15.2.0 ~binutils"), concrete.tree()
     # LLVM is the second provider choice, with no penalty on variants
     assert not concrete.satisfies("%llvm@20 +clang")
+
+
+def test_mpi_selection_when_external_has_variant_penalty(mutable_config, mock_packages):
+    """Tests that conflicting with a default provider doesn't cause a variant values to be
+    flipped to avoid the variant dependency.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  all:
+    variants: +mpi
+  mpich:
+    buildable: false
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    concrete = spack.concretize.concretize_one("transitive-conditional-virtual-dependency")
+
+    # GCC is the preferred provider, but has a penalty on its variants
+    assert concrete.satisfies("%conditional-virtual-dependency+mpi"), concrete.tree()
+    # LLVM is the second provider choice, with no penalty on variants
+    assert concrete.satisfies("^mpi=zmpi")

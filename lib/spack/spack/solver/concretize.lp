@@ -2181,15 +2181,15 @@ opt_criterion(48, "number of compilers used on the same node").
     : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
 }.
 
-% Minimize the weights of the providers, i.e. use as much as
-% possible the most preferred providers
-opt_criterion(46, "preferred providers (excluded language runtimes)").
+% Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
+% on e.g. gcc causes clingo to pick another compiler e.g. llvm
+opt_criterion(46, "preferred compilers").
 #minimize{ 0@246: #true }.
 #minimize{ 0@46: #true }.
 #minimize{
     Weight@46+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      not language_runtime(Virtual),
+      language(Virtual),
       build_priority(ProviderNode, Priority)
 }.
 
@@ -2207,6 +2207,17 @@ opt_criterion(40, "variant penalty (non-roots)").
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),
       build_priority(PackageNode, Priority)
+}.
+
+% Minimize the weights of all the other providers (mpi, lapack, etc.)
+opt_criterion(38, "preferred providers (excluded compilers and language runtimes)").
+#minimize{ 0@238: #true }.
+#minimize{ 0@38: #true }.
+#minimize{
+    Weight@38+Priority,ProviderNode,X,Virtual
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      not language(Virtual), not language_runtime(Virtual),
+      build_priority(ProviderNode, Priority)
 }.
 
 opt_criterion(30, "non-preferred OS's").
