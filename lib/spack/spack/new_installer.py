@@ -1251,7 +1251,7 @@ class BuildStatus:
                 del self.builds[build_id]
                 self.dirty = True
 
-        if not self.dirty:
+        if not self.dirty and not finalize:
             return
 
         # Build the overview output in a buffer and print all at once to avoid flickering.
