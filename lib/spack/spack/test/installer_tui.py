@@ -1413,3 +1413,49 @@ class TestTargetJobs:
         status.update()
         output = fake_stdout.getvalue()
         assert "4=>2" in output
+
+
+class TestHeadlessMode:
+    """Test that headless mode suppresses terminal output."""
+
+    def test_update_suppressed_when_headless(self):
+        """update() should not write anything when headless is True."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+
+    def test_print_logs_suppressed_when_headless(self):
+        """print_logs() should discard data when headless is True."""
+        status, _, stdout = create_build_status(is_tty=True, total=1)
+        specs = add_mock_builds(status, 1)
+        status.tracked_build_id = specs[0].dag_hash()
+        status.headless = True
+        status.print_logs(specs[0].dag_hash(), b"hello world\n")
+        assert stdout.getvalue() == ""
+
+    def test_update_state_non_tty_suppressed_when_headless(self):
+        """update_state() non-TTY output should be suppressed when headless."""
+        status, _, stdout = create_build_status(is_tty=False, total=1)
+        spec = MockSpec("pkg", "1.0")
+        status.add_build(spec, explicit=True)
+        status.headless = True
+        stdout.clear()
+        status.update_state(spec.dag_hash(), "finished")
+        assert stdout.getvalue() == ""
+
+    def test_update_works_after_headless_cleared(self):
+        """update() should work normally once headless is cleared."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1, color=False)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+        # Clear headless and verify output resumes
+        status.headless = False
+        status.dirty = True
+        status.update()
+        assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
