@@ -447,15 +447,21 @@ def worker_function(
     os.setsid()
 
     def handle_sigterm(signum, frame):
-        # This SIGTERM handler forwards the signal to child processes, and
-        # then resets the handler to default. It does not raise an exception,
-        # because the assumption is we're stuck in waitpid, and we want to
-        # let child processes finish with SIGTERM before we run the cleanup
-        # code in finally blocks and __exit__ functions and exit. If we exit
-        # too early, the child process may still write to the prefix or stage.
+        # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
+        # for all child processes to exit before raising KeyboardInterrupt. This ensures all
+        # __exit__ and finally blocks run after the child processes have stopped, meaning that we
+        # get to clean up the prefix without risking that the child process writes to it
+        # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         os.killpg(0, signal.SIGTERM)
-        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+        try:
+            while True:
+                os.waitpid(-1, 0)
+        except ChildProcessError:
+            pass
+
+        raise KeyboardInterrupt("Installation interrupted")
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
@@ -497,7 +503,7 @@ def worker_function(
                 spack.store.STORE,
                 run_tests,
             )
-    except Exception:
+    except BaseException:
         traceback.print_exc()  # log the traceback to the log file
         exit_code = 1
     finally:
