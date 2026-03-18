@@ -657,7 +657,7 @@ def test_compiler_target_env(
 spack:
   specs:
   - pkg-a
-  - libdwarf %gcc@12.100.100
+  - libdwarf
   packages:
     all:
       require:
@@ -673,11 +673,19 @@ spack:
           flags:
             cflags: {cflags}
       require: "gcc"
+    libelf:
+      externals:
+      - spec: libelf@0.8.12 %gcc@12.100.100
+        prefix: /fake2
+      buildable: false
+      require: "libelf"
 """)
         env("create", "test", "spack.yaml")
 
     with ev.read("test") as e:
         e.concretize()
+        x = list(e.concretized_specs())
+        y = x[1][1]
         import pdb; pdb.set_trace()
         print('hi')
 
