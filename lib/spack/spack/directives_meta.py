@@ -172,6 +172,29 @@ class DirectiveMeta(type):
                         dicts_involved.add(other_dict)
                         stack.append(other_dict)
 
+        # This is a hack; drop_version is usually run after version but the
+        # sorting messes that up.  This still isn't technically correct since
+        # the user could have drop_version and drop_versions in the same
+        # package and the ordering could potentially be lost by the sorting.
+        if any(
+            [
+                val in directives_involved
+                for val in [
+                    # "drop_all_conflicts",
+                    # "drop_all_depends_on",
+                    "drop_all_requires",
+                    "drop_all_versions",
+                    # "drop_conflict",
+                    # "drop_depends_on",
+                    "drop_patch",
+                    "drop_require",
+                    "drop_version",
+                ]
+            ]
+        ):
+            print("dicts_involved: ", dicts_involved)
+            print("directives_involved: ", directives_involved)
+            return sorted(dicts_involved)[::-1], sorted(directives_involved)[::-1]
         return sorted(dicts_involved), sorted(directives_involved)
 
 
@@ -258,6 +281,7 @@ class directive:
 
     def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
         directive_names.append(decorated_function.__name__)
+        print("decorated_function.__name__: ", decorated_function.__name__)
         DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
 
         @functools.wraps(decorated_function)
