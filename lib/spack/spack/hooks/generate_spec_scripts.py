@@ -49,7 +49,7 @@ def write_spec_scripts(shell_script_path, mods):
             )
             f.write(mods)
     except OSError as e:
-        tty.error(f"Error writing to {shell_script_path}: {e}")
+        raise OSError(f"Error writing to {shell_script_path}\n{e}")
 
 
 def post_install(spec, explicit=None):

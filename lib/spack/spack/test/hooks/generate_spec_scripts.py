@@ -11,7 +11,6 @@ import pytest
 import spack.concretize
 import spack.hooks.generate_spec_scripts as spec_script
 import spack.user_environment as uenv
-from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.spec import Spec
 
@@ -222,33 +221,12 @@ def test_install_multiple_specs_shell_scripts(
     "shell",
     (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
-def test_no_scripts_for_external_spec(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test that no shell scripts are written for external specs"""
-
-    spec = Spec("externalprereq")
-    spec = spack.concretize.concretize_one(spec.name)
-
-    install("--fake", spec.name)
-
-    for pkg in spec.traverse():
-        path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
-        path_to_unload_script = spec_script.path_to_unload_shell_script(pkg, shell)
-
-        assert not os.path.isfile(path_to_load_script)
-        assert not os.path.isfile(path_to_unload_script)
-
-
-@pytest.mark.parametrize(
-    "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
-)
 def test_no_scripts_for_external_spec_with_deps(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that no shell scripts are written for external specs even if they have dependencies"""
 
-    spec = Spec("externaltool")
-    spec = spack.concretize.concretize_one(spec.name)
+    spec = spack.concretize.concretize_one("externaltool")
 
-    install("--fake", spec.name)
+    install("externaltool")
 
     for pkg in spec.traverse():
         path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
@@ -258,20 +236,16 @@ def test_no_scripts_for_external_spec_with_deps(shell, install_mockery, mock_fet
         assert not os.path.isfile(path_to_unload_script)
 
 
-def test_write_spec_scripts_fails_on_bad_path(
-    install_mockery, mock_fetch, mock_archive, mock_packages
-):
-    """Test that write_spec_scripts prints an error message when it fails to write a script"""
+def test_write_spec_scripts_fails_on_nonexistent_directory(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Test that write_spec_scripts prints an error message when it fails to write a script because the directory doesn't exist"""
 
     spec = Spec("mpileaks")
     spec = spack.concretize.concretize_one(spec.name)
 
     install("--fake", spec.name)
 
-    path_to_load_script = spec_script.path_to_load_shell_script(spec, "sh")
-
-    # Simulate failure to write to file by making the directory read-only
-    os.chmod(os.path.dirname(path_to_load_script), 0o400)
+    # Provide a path to a non-existent directory
+    bad_path = os.path.join(spec.prefix, "nonexistent_dir", "load")
 
     with pytest.raises(OSError):
-        spec_script.write_spec_scripts(path_to_load_script, "some modifications")
+        spec_script.write_spec_scripts(bad_path, "some modifications")

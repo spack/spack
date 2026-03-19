@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import re
 import sys
 
 import pytest
@@ -17,8 +18,17 @@ install = SpackCommand("install")
 location = SpackCommand("location")
 
 
+def _get_load_cmds(shell, spec):
+    load_script_file = shell_script.path_to_load_shell_script(
+        spec, shell[2:]
+    )
+
+    with open(load_script_file, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
-    def test_load_shell(shell, set_command):
+    def test_load_shell(shell):
         """Test that `spack load` applies prefix inspections of its required runtime deps in
         topo-order"""
         install("--fake", "mpileaks")
@@ -32,7 +42,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         load_script_file = shell_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
 
         with open(load_script_file, "r", encoding="utf-8") as f:
-            shell_cmds = f.read()
+            load_cmds = f.read()
 
         def extract_value(output, variable):
             value = []
@@ -50,7 +60,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
             s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
         )
 
-        paths_shell = extract_value(shell_cmds, "CMAKE_PREFIX_PATH")
+        paths_shell = extract_value(load_cmds, "CMAKE_PREFIX_PATH")
 
         # All but the last two paths are added by spack load; lookup what packages they're from.
         pkgs = [prefix_to_pkg(p) for p in paths_shell]
@@ -68,19 +78,21 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         # Lastly, do we keep track that mpileaks was loaded?
         assert (
-            extract_value(shell_cmds, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
+            extract_value(load_cmds, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
         )
         return paths_shell
 
     if sys.platform == "win32":
-        shell, set_command = ("--bat", r'set "%s=(.*)"')
-        test_load_shell(shell, set_command)
+        params = ["--bat", "--pwsh"]
+        test_load_shell(params[0])
+        test_load_shell(params[1])
     else:
-        params = [("--sh", r"_spack_env_prepend %s([^:]*)"), ("--csh", r"setenv %s ([^;]*)")]
-        shell, set_command = params[0]
-        paths_sh = test_load_shell(shell, set_command)
-        shell, set_command = params[1]
-        paths_csh = test_load_shell(shell, set_command)
+        params = [
+            "--sh",
+            "--csh",
+        ]
+        paths_sh = test_load_shell(params[0])
+        paths_csh = test_load_shell(params[1])
         assert paths_sh == paths_csh
 
 
