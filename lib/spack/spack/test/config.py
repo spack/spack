@@ -2249,7 +2249,8 @@ def test_config_optional_include_failures(tmp_path: pathlib.Path):
         include.scopes(config_scope)
 
 
-@pytest.mark.not_on_windows("chmod behaves differently")
+@pytest.mark.not_on_windows("chmod behaves differently on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_included_path_unwritable_dest(tmp_path: pathlib.Path, mock_fetch_url_text):
     dest = tmp_path / "unwritable"
     dest.mkdir()
