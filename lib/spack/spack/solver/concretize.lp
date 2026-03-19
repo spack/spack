@@ -2168,26 +2168,13 @@ opt_criterion(55, "default values of variants not being used (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-% Minimize the number of compilers used on nodes
-compiler_penalty(PackageNode, C-1) :-
-   C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
-   node_compiler(PackageNode, _), C > 0.
-
-opt_criterion(48, "number of compilers used on the same node").
+% Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
+% on e.g. gcc causes clingo to pick another compiler e.g. llvm
+opt_criterion(48, "preferred compilers").
 #minimize{ 0@248: #true }.
 #minimize{ 0@48: #true }.
 #minimize{
-    Penalty@48+Priority,PackageNode
-    : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
-}.
-
-% Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
-% on e.g. gcc causes clingo to pick another compiler e.g. llvm
-opt_criterion(46, "preferred compilers").
-#minimize{ 0@246: #true }.
-#minimize{ 0@46: #true }.
-#minimize{
-    Weight@46+Priority,ProviderNode,X,Virtual
+    Weight@48+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
       build_priority(ProviderNode, Priority)
@@ -2219,6 +2206,20 @@ opt_criterion(38, "preferred providers (excluded compilers and language runtimes
       not language(Virtual), not language_runtime(Virtual),
       build_priority(ProviderNode, Priority)
 }.
+
+% Minimize the number of compilers used on nodes
+compiler_penalty(PackageNode, C-1) :-
+   C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
+   node_compiler(PackageNode, _), C > 0.
+
+opt_criterion(36, "number of compilers used on the same node").
+#minimize{ 0@236: #true }.
+#minimize{ 0@36: #true }.
+#minimize{
+    Penalty@36+Priority,PackageNode
+    : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
+}.
+
 
 opt_criterion(30, "non-preferred OS's").
 #minimize{ 0@230: #true }.
