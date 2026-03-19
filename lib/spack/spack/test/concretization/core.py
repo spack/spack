@@ -5039,3 +5039,38 @@ packages:
     assert concrete.satisfies("%conditional-virtual-dependency+mpi"), concrete.tree()
     # LLVM is the second provider choice, with no penalty on variants
     assert concrete.satisfies("^mpi=zmpi")
+
+
+def test_preferring_different_compilers_for_different_languages(mutable_config, mock_packages):
+    """Tests that in a case where we prefer different compilers for different languages, steering
+    towards using a unique toolchain is lower priority with respect to flipping variants to turn
+    off a language, or selecting a non-default provider.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  all:
+    providers:
+      c:: [llvm, gcc]
+      cxx:: [llvm, gcc]
+      fortran:: [gcc]
+  c:
+    prefer:
+    - llvm
+  cxx:
+    prefer:
+    - llvm
+  fortran:
+    prefer:
+    - gcc
+  mpileaks:
+    variants: +fortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+
+    assert mpileaks.satisfies("%c,cxx=llvm %fortran=gcc"), mpileaks.tree()
+    assert mpileaks.satisfies("%mpi=mpich")
+    assert mpileaks["mpich"].satisfies("%c,cxx=llvm %fortran=gcc")
