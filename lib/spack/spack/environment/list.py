@@ -57,6 +57,9 @@ class SpecList:
                     spec.constrain(const)
                 if self._toolchains:
                     expand_toolchains(spec, self._toolchains)
+                spack.variant.expand_deprecated_variants(
+                    spec, origin="in the environment spec list"
+                )
                 specs.append(spec)
             self._specs = specs
 

@@ -59,6 +59,7 @@ import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
+from spack.package_base import PackageBase
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -650,7 +651,7 @@ def conditional(*values: Union[str, bool], when: Optional[WhenType] = None):
     )
 
 
-@directive("variants")
+@directive(("variants", "deprecated_variants"))
 def variant(
     name: str,
     default: Optional[Union[bool, str, Tuple[str, ...]]] = None,
@@ -660,6 +661,7 @@ def variant(
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
     when: Optional[Union[str, bool]] = None,
     sticky: bool = False,
+    deprecated: Union[bool, dict] = False,
 ):
     """Declare a variant for a package.
 
@@ -678,6 +680,9 @@ def variant(
             if the group doesn't meet the additional constraints
         when: Optional condition on which the variant applies
         sticky: The variant should not be changed by the concretizer to find a valid concrete spec
+        deprecated: If ``False`` the variant is normal. If ``True``, the variant is accepted but
+            silently dropped before concretization. If a ``dict``, each key is a condition and each
+            value is the replacement constraint to apply when the condition matches.
 
     Raises:
         spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
@@ -692,6 +697,7 @@ def variant(
         validator=validator,
         when=when,
         sticky=sticky,
+        deprecated=deprecated,
     )
 
 
@@ -710,7 +716,12 @@ def _execute_variant(
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]],
     when: Optional[Union[str, bool]],
     sticky: bool,
+    deprecated: Union[bool, dict] = False,
 ):
+    # Handle deprecated variants early — they bypass all normal variant logic
+    if deprecated is not False:
+        _handle_deprecated_variant(pkg, name=name, when=when, deprecated=deprecated)
+        return
 
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
     # For now it's a warning to let people migrate faster.
@@ -802,6 +813,28 @@ def _execute_variant(
         sticky=sticky,
         precedence=pkg.num_variant_definitions(),
     )
+
+
+def _handle_deprecated_variant(
+    pkg: "Type[PackageBase]", *, name: str, when: Any, deprecated: Union[bool, dict]
+) -> None:
+    if when is not None:
+        raise DirectiveError(
+            f"variant '{name}' in {pkg.name}: 'deprecated' and 'when' cannot be combined"
+        )
+    if deprecated is True:
+        pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name)
+    elif isinstance(deprecated, dict):
+        if not all(isinstance(k, str) and isinstance(v, str) for k, v in deprecated.items()):
+            raise DirectiveError(
+                f"variant '{name}' in {pkg.name}: deprecated mapping keys and values "
+                f"must be strings"
+            )
+        pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name, mapping=deprecated)
+    else:
+        raise DirectiveError(
+            f"variant '{name}' in {pkg.name}: 'deprecated' must be True or a dict"
+        )
 
 
 @directive("resources")

@@ -226,9 +226,10 @@ def test_directives_meta_combine_when():
 
 def test_directive_descriptor_init():
     # when `pkg.variants` is initialized, only the `variant` directive should run
+    # `deprecated_variants` is also initialized since `variant` manages both dicts
     variants = DirectiveDictDescriptor("variants")
     assert variants.directives_to_run == ["variant"]
-    assert variants.dicts_to_init == ["variants"]
+    assert variants.dicts_to_init == ["deprecated_variants", "variants"]
 
     # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
     # `pkg.extendees` should be initialized
@@ -294,3 +295,22 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+def test_deprecated_with_when_raises(mock_packages):
+    """Tests that using 'deprecated=' and 'when=' together raises an error."""
+    with pytest.raises(
+        spack.directives.DirectiveError, match="'deprecated' and 'when' cannot be combined"
+    ):
+        spack.directives._execute_variant(
+            type("FakePkg", (), {"name": "fake", "deprecated_variants": {}})(),
+            name="bad",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when="+foo",
+            sticky=False,
+            deprecated=True,
+        )

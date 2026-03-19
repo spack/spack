@@ -9,7 +9,9 @@ import spack.concretize
 import spack.error
 import spack.repo
 import spack.spec
+import spack.util.spack_yaml as syaml
 import spack.variant
+from spack.concretize import concretize_one
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
@@ -339,6 +341,89 @@ class TestBoolValuedVariant:
         a = BoolValuedVariant("foo", False)
         expected = ("foo", False)
         assert a.yaml_entry() == expected
+
+
+@pytest.mark.usefixtures("mock_packages")
+class TestDeprecatedVariant:
+    def test_deprecated_variants_stored_separately(self, mock_packages):
+        """Tests that deprecated variants are stored in a separate dictionary and return false
+        true a "has_variant" check.
+        """
+        pkg_cls = mock_packages.get_pkg_class("deprecated-variant-pkg")
+
+        assert "old_flag" in pkg_cls.deprecated_variants
+        assert "shared" in pkg_cls.deprecated_variants
+        assert "old_backends" in pkg_cls.deprecated_variants
+
+        assert not pkg_cls.has_variant("old_flag")
+        assert not pkg_cls.has_variant("shared")
+        assert not pkg_cls.has_variant("old_backends")
+        assert pkg_cls.has_variant("libs")
+        assert pkg_cls.has_variant("backends")
+
+    def test_deprecated_true_removal(self):
+        """Tests that variants using 'deprecated=True' are removed on deprecated variants
+        expansion.
+        """
+        spec = spack.spec.Spec("deprecated-variant-pkg+old_flag")
+        assert "old_flag" in spec.variants
+
+        spack.variant.expand_deprecated_variants(spec)
+        assert "old_flag" not in spec.variants
+
+    @pytest.mark.parametrize(
+        "deprecated,substitute",
+        [
+            # Bool variants
+            ("+shared", "libs=shared"),
+            ("~shared", "libs=static"),
+            # Multi-value variants
+            ("old_backends=a,b", "backends=alpha,beta"),
+        ],
+    )
+    def test_deprecated_mapping(self, deprecated, substitute):
+        """Tests mapping of deprecated variants to new variants."""
+        spec = spack.spec.Spec(f"deprecated-variant-pkg {deprecated}")
+        assert spec.satisfies(deprecated)
+        assert not spec.satisfies(substitute)
+
+        spack.variant.expand_deprecated_variants(spec)
+        assert not spec.satisfies(deprecated)
+        assert spec.satisfies(substitute)
+
+    def test_deprecated_propagation(self):
+        """Tests that propagation carries over from deprecated variant to replacement."""
+        spec = spack.spec.Spec("deprecated-variant-pkg ++shared")
+        assert spec.variants["shared"].propagate is True
+        assert "libs" not in spec.variants
+
+        spack.variant.expand_deprecated_variants(spec)
+        assert spec.variants["libs"].propagate is True
+        assert "shared" not in spec.variants
+
+    def test_deprecated_noop_when_no_deprecated_variants_set(self):
+        """Tests that expansion is a no when no deprecated variants are present on the spec"""
+        spec = spack.spec.Spec("deprecated-variant-pkg libs=static")
+        expanded_spec = spec.copy()
+        spack.variant.expand_deprecated_variants(expanded_spec)
+        assert spec == expanded_spec
+
+    @pytest.mark.parametrize("attr_name", ["prefer", "require"])
+    def test_config_parse_specs_expands_deprecated(self, mutable_config, attr_name):
+        """Tests that we can expand deprecated variants from config"""
+        packages_yaml = syaml.load_config(
+            f"""
+    packages:
+      deprecated-variant-pkg:
+        {attr_name}:
+        - +shared
+    """
+        )
+        mutable_config.set("packages", packages_yaml["packages"])
+
+        s = concretize_one("deprecated-variant-pkg")
+        assert s.satisfies("libs:=shared")
+        assert "shared" not in s.variants
 
 
 def test_from_node_dict():

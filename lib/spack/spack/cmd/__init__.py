@@ -29,6 +29,7 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant
 from spack.llnl.util.filesystem import join_path
 from spack.llnl.util.lang import attr_setdefault, index_by
 from spack.llnl.util.tty.colify import colify
@@ -184,6 +185,8 @@ def parse_specs(
 
     toolchains = spack.config.CONFIG.get("toolchains", {})
     specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
+    for spec in specs:
+        spack.variant.expand_deprecated_variants(spec, origin="on the command line")
     if not concretize:
         return specs
 
