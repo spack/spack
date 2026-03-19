@@ -1200,7 +1200,10 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_using_toolchain_as_requirement(unify, tmp_path: pathlib.Path, mutable_config):
+@pytest.mark.parametrize("requirement_type", ["require", "prefer"])
+def test_using_toolchain_as_requirement(
+    unify, requirement_type, tmp_path: pathlib.Path, mutable_config
+):
     """Tests using a toolchain as a default requirement in an environment"""
     spack_yaml = f"""
 spack:
@@ -1212,7 +1215,7 @@ spack:
     {MIXED_TOOLCHAIN}
   packages:
     all:
-      require:
+      {requirement_type}:
       - "%mixed-toolchain"
   concretizer:
     unify: {unify}
