@@ -479,7 +479,7 @@ def url_exists(url, curl=None):
             timeout=spack.config.get("config:connect_timeout", 10),
         )
         return True
-    except OSError as e:
+    except Exception as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
 
