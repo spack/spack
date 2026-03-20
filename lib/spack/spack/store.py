@@ -181,9 +181,7 @@ class Store:
         self.prefix_locker = spack.database.SpecLocker(
             spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
         )
-        self.failure_tracker = spack.database.FailureTracker(
-            self.root, default_timeout=lock_cfg.package_timeout
-        )
+        self.failure_tracker = spack.database.FailureTracker(self.root)
 
     def has_padding(self) -> bool:
         """Returns True if the store layout includes path padding."""

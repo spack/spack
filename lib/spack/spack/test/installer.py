@@ -485,41 +485,36 @@ def test_dump_packages_deps_errs(install_mockery, tmp_path: pathlib.Path, monkey
 
 def test_clear_failures_success(tmp_path: pathlib.Path):
     """Test the clear_failures happy path."""
-    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path))
 
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
 
-    # Set up a test prefix failure lock
+    # Set up a test prefix failure mark
     failures.mark(spec)
     assert failures.has_failed(spec)
 
     # Now clear failure tracking
     failures.clear_all()
 
-    # Ensure there are no cached failure locks or failure marks
-    assert len(failures.locker.locks) == 0
+    # Ensure there are no failure marks
     assert len(os.listdir(failures.dir)) == 0
 
-    # Ensure the core directory and failure lock file still exist
+    # Ensure the core directory still exists
     assert os.path.isdir(failures.dir)
-
-    # Locks on windows are a no-op
-    if sys.platform != "win32":
-        assert os.path.isfile(failures.locker.lock_path)
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
 @pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     """Test the clear_failures exception paths."""
-    failures = spack.database.FailureTracker(str(tmp_path), default_timeout=0.1)
+    failures = spack.database.FailureTracker(str(tmp_path))
     spec = spack.spec.Spec("pkg-a")
     spec._mark_concrete()
     failures.mark(spec)
 
     # Make the file marker not writeable, so that clearing_failures fails
-    failures.dir.chmod(0o000)
+    os.chmod(failures.dir, 0o000)
 
     # Clear failure tracking
     failures.clear_all()
@@ -527,7 +522,7 @@ def test_clear_failures_errs(tmp_path: pathlib.Path, capfd):
     # Ensure expected warning generated
     out = str(capfd.readouterr()[1])
     assert "Unable to remove failure" in out
-    failures.dir.chmod(0o750)
+    os.chmod(failures.dir, 0o750)
 
 
 def test_combine_phase_logs(tmp_path: pathlib.Path):
@@ -818,7 +813,7 @@ def test_push_task_skip_processed(install_mockery, installed):
     if installed:
         installer.installed.add(task.pkg_id)
     else:
-        installer.failed[task.pkg_id] = None
+        installer.failed.add(task.pkg_id)
 
     installer._push_task(task)
 
@@ -907,27 +902,6 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     assert expected_msg in out
 
 
-def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch, capfd):
-    """Test _cleanup_failed exception path."""
-    msg = "Fake release_write exception"
-
-    def _raise_except(lock):
-        raise RuntimeError(msg)
-
-    installer = create_installer(["trivial-install-test-package"], {})
-
-    monkeypatch.setattr(lk.Lock, "release_write", _raise_except)
-    pkg_id = "test"
-    with fs.working_dir(str(tmp_path)):
-        lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
-        installer.failed[pkg_id] = lock
-
-        installer._cleanup_failed(pkg_id)
-        out = str(capfd.readouterr()[1])
-        assert "exception when removing failure tracking" in out
-        assert msg in out
-
-
 def test_update_failed_no_dependent_task(install_mockery):
     """Test _update_failed with missing dependent build tasks."""
     installer = create_installer(["dependent-install"], {})
@@ -936,7 +910,7 @@ def test_update_failed_no_dependent_task(install_mockery):
     for dep in spec.traverse(root=False):
         task = create_build_task(dep.package)
         installer._update_failed(task, mark=False)
-        assert installer.failed[task.pkg_id] is None
+        assert task.pkg_id in installer.failed
 
 
 def test_install_uninstalled_deps(install_mockery, monkeypatch, capfd):

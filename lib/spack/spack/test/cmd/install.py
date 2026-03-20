@@ -681,7 +681,7 @@ def test_build_warning_output(mock_fetch, install_mockery):
     assert "foo.c:89: warning: some weird warning!" in e.value.long_message
 
 
-def test_cache_only_fails(mock_fetch, install_mockery):
+def test_cache_only_fails(mock_fetch, install_mockery, temporary_store: spack.store.Store):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
@@ -691,9 +691,7 @@ def test_cache_only_fails(mock_fetch, install_mockery):
     assert "was not installed" in out
 
     # Check that failure prefix locks are still cached
-    failed_packages = [
-        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
-    ]
+    failed_packages = [x.split("-")[0] for x in os.listdir(temporary_store.failure_tracker.dir)]
     assert "libelf" in failed_packages
     assert "libdwarf" in failed_packages
 

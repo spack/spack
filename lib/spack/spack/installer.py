@@ -1567,8 +1567,8 @@ class PackageInstaller:
         # Mapping of unique package ids to task
         self.build_tasks: Dict[str, Task] = {}
 
-        # Cache of package locks for failed packages, keyed on package's ids
-        self.failed: Dict[str, Optional[lk.Lock]] = {}
+        # Set of failed packages' ids
+        self.failed: Set[str] = set()
 
         # Cache the PID for distributed build messaging
         self.pid: int = os.getpid()
@@ -1768,14 +1768,8 @@ class PackageInstaller:
         Args:
             pkg_id (str): identifier for the failed package
         """
-        lock = self.failed.get(pkg_id, None)
-        if lock is not None:
-            err = "{0} exception when removing failure tracking for {1}: {2}"
-            try:
-                tty.verbose(f"Removing failure mark on {pkg_id}")
-                lock.release_write()
-            except Exception as exc:
-                tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
+        if pkg_id in self.failed:
+            tty.verbose(f"Removing failure mark on {pkg_id}")
 
     def _cleanup_task(self, pkg: "spack.package_base.PackageBase") -> None:
         """
@@ -1917,7 +1911,7 @@ class PackageInstaller:
             # Clear any persistent failure markings _unless_ they are
             # associated with another process in this parallel build
             # of the spec.
-            spack.store.STORE.failure_tracker.clear(dep, force=False)
+            spack.store.STORE.failure_tracker.clear(dep)
 
         # Queue the build spec.
         build_pkg_id = package_id(spec.build_spec)
@@ -1964,12 +1958,12 @@ class PackageInstaller:
                 # Clear any persistent failure markings _unless_ they are
                 # associated with another process in this parallel build
                 # of the spec.
-                spack.store.STORE.failure_tracker.clear(dep, force=False)
+                spack.store.STORE.failure_tracker.clear(dep)
 
         install_package = request.install_args.get("install_package")
         if install_package and request.pkg_id not in self.build_tasks:
             # Be sure to clear any previous failure
-            spack.store.STORE.failure_tracker.clear(request.spec, force=True)
+            spack.store.STORE.failure_tracker.clear(request.spec)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
@@ -2169,9 +2163,8 @@ class PackageInstaller:
         err = "" if exc is None else f": {str(exc)}"
         tty.debug(f"Flagging {pkg_id} as failed{err}")
         if mark:
-            self.failed[pkg_id] = spack.store.STORE.failure_tracker.mark(task.pkg.spec)
-        else:
-            self.failed[pkg_id] = None
+            spack.store.STORE.failure_tracker.mark(task.pkg.spec)
+        self.failed.add(pkg_id)
         task.status = BuildStatus.FAILED
 
         for dep_id in task.dependents:
