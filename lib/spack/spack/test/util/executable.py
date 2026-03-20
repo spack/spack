@@ -163,3 +163,17 @@ def test_construct_from_pathlib(mock_executable):
     path = mock_executable("hello", output=f"echo {expected}\n")
     hello = ex.Executable(path)
     assert expected in hello(output=str)
+
+
+def test_exe_disallows_str_split_as_input(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(input=str.split)
+
+
+def test_exe_disallows_callable_as_output(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(output=lambda line: line)
