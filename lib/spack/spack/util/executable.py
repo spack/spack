@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
-from typing import Callable, Dict, List, Optional, Sequence, TextIO, Type, Union, overload
+from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Type, Union, overload
 
 from spack.vendor.typing_extensions import Literal
 
@@ -108,9 +108,9 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -124,9 +124,9 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
+        input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable],
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        error: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -140,8 +140,8 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
         error: Union[Type[str], Callable],
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
@@ -155,9 +155,9 @@ class Executable:
         timeout: Optional[int] = None,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
-        input: Optional[TextIO] = None,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = None,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = None,
+        input: Optional[BinaryIO] = None,
+        output: Union[Optional[BinaryIO], str, Type[str], Callable] = None,
+        error: Union[Optional[BinaryIO], str, Type[str], Callable] = None,
         _dump_env: Optional[Dict[str, str]] = None,
     ) -> Optional[str]:
         """Runs this executable in a subprocess.
