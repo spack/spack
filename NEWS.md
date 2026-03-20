@@ -1,3 +1,6 @@
+## Package API v2.5
+- `spack.package.variant` directive: added `deprecated=` parameter.
+
 ## Package API v2.4
 - Added the `%%` sigil to spec syntax, to propagate compiler preferences.
 
