@@ -34,6 +34,33 @@ Compatibility between Spack and :doc:`package repositories <repositories>` is ma
 
 Spack version |spack_version| supports package repositories with a Package API version between |min_package_api_version| and |package_api_version|, inclusive.
 
+Changelog
+---------
+
+**v2.4** *(Spack v1.0.3)*
+
+* The ``%%`` operator can be used on input specs to set propagated preferences, which is particularly useful for ``unify: false`` environments.
+
+**v2.3** *(Spack v1.0.3)*
+
+* The :func:`~spack.package.version` directive now supports the ``git_sparse_paths`` parameter, allowing sparse checkouts when fetching from git repositories.
+
+**v2.2** *(Spack v1.0.0)*
+
+* Renamed implicit builder attributes with backward compatibility:
+
+  * ``legacy_buildsystem`` to ``default_buildsystem``,
+  * ``legacy_methods`` to ``package_methods``,
+  * ``legacy_attributes`` to ``package_attributes``,
+  * ``legacy_long_methods`` to ``package_long_methods``.
+
+* Exported :class:`~spack.package.GenericBuilder`, :class:`~spack.package.Package`, and :class:`~spack.package.BuilderWithDefaults` from :mod:`spack.package`.
+* Exported numerous utility functions and classes for file operations, library/header search, macOS/Windows support, compiler detection, and build system helpers.
+
+**v2.1** *(Spack v1.0.0)*
+
+* Exported :class:`~spack.package.CompilerError` and :class:`~spack.package.SpackError` from :mod:`spack.package`.
+
 Spack Package API Reference
 ---------------------------
 
