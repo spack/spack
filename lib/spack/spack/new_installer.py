@@ -1568,6 +1568,8 @@ class ScheduleResult(NamedTuple):
     #: ``(dag_hash, spec, lock)`` triples found already installed by another process; the read lock
     #: is held and the caller must add it to retained_read_locks.
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
+    #: Specs marked as failed by another process.
+    newly_failed: List[spack.spec.Spec]
 
 
 def schedule_builds(
@@ -1580,6 +1582,7 @@ def schedule_builds(
     capacity: int,
     needs_jobserver_token: bool,
     jobserver: JobServer,
+    failure_tracker: spack.database.FailureTracker,
 ) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
 
@@ -1612,6 +1615,7 @@ def schedule_builds(
     """
     to_start: List[Tuple[str, spack.util.lock.Lock]] = []
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
+    newly_failed: List[spack.spec.Spec] = []
     blocked = True
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
@@ -1619,7 +1623,7 @@ def schedule_builds(
     try:
         db.lock.acquire_read(timeout=1e-9)
     except spack.util.lock.LockTimeoutError:
-        return ScheduleResult(blocked, to_start, newly_installed)
+        return ScheduleResult(blocked, to_start, newly_installed, newly_failed)
 
     try:
         db._read()  # refresh in-memory snapshot under the read lock
@@ -1676,6 +1680,13 @@ def schedule_builds(
                 upstream and record and not record.installed
             ), f"Cannot install {spec}: it is uninstalled in an upstream database."
 
+            # Check if another process marked this spec as failed.
+            if failure_tracker.has_failed(spec):
+                lock.release_write()
+                del pending[idx]
+                newly_failed.append(spec)
+                continue
+
             # Acquire a jobserver token if needed. The first (implicit) job needs no token.
             if needs_jobserver_token and not jobserver.acquire(1):
                 lock.release_write()
@@ -1689,7 +1700,7 @@ def schedule_builds(
     finally:
         db.lock.release_read()
 
-    return ScheduleResult(blocked, to_start, newly_installed)
+    return ScheduleResult(blocked, to_start, newly_installed, newly_failed)
 
 
 def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:
@@ -1940,9 +1951,17 @@ class PackageInstaller:
 
         failures: List[spack.spec.Spec] = []
 
+        # Avoid hitting the same build failures that concurrent spack install processes have
+        # already encountered. At the start we clear failures for all specs we may install, so that
+        # any new failure marker is likely from a concurrent process.
+        failure_tracker = spack.store.STORE.failure_tracker
+        for dag_hash in self.build_graph.nodes:
+            spec = self.build_graph.nodes[dag_hash]
+            failure_tracker.clear(spec, force=dag_hash in self.explicit)
+
         try:
             # Try to schedule builds immediately. The first job does not require a token.
-            blocked = self._schedule_builds(selector, jobserver, retained_read_locks)
+            blocked = self._schedule_builds(selector, jobserver, retained_read_locks, failures)
 
             while self.pending_builds or self.running_builds or finished_builds:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
@@ -1996,13 +2015,23 @@ class PackageInstaller:
                         )
                         next_database_write = current_time + DATABASE_WRITE_INTERVAL
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    elif not self.fail_fast or not failures:
-                        # In fail-fast mode, only record the first failure. Subsequent failures may
-                        # be a consequence of us terminating other builds, and should not be
-                        # reported as failures in the UI.
-                        failures.append(build.spec)
-                        self.build_status.update_state(build.spec.dag_hash(), "failed")
-                        self.build_status.parse_log_summary(build.spec.dag_hash())
+                    else:
+                        # First leave a failure marker on the filesystem.
+                        # TODO: we could differentiate better between build failures and
+                        # build intteruptions (SIGTERM after --fail-fast or KeyboardInterrupt).
+                        failure_tracker.mark(build.spec)
+                        # Then release the prefix write lock so other concurrent spack install
+                        # processes can detect this install failure and avoid another attempt to
+                        # build it.
+                        if build.prefix_lock is not None:
+                            build.prefix_lock.release_write()
+                            build.prefix_lock = None
+                        # Then update the state of our UI. In fail-fast mode, we wanna report only
+                        # the first failure.
+                        if not self.fail_fast or not failures:
+                            failures.append(build.spec)
+                            self.build_status.update_state(build.spec.dag_hash(), "failed")
+                            self.build_status.parse_log_summary(build.spec.dag_hash())
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -2044,7 +2073,9 @@ class PackageInstaller:
 
                 # Try to schedule more builds, acquiring per-spec locks and jobserver tokens.
                 if self.capacity and self.pending_builds:
-                    blocked = self._schedule_builds(selector, jobserver, retained_read_locks)
+                    blocked = self._schedule_builds(
+                        selector, jobserver, retained_read_locks, failures
+                    )
 
                 # Finally update the UI
                 self.build_status.update()
@@ -2137,7 +2168,13 @@ class PackageInstaller:
                 build_info = self.build_status.builds[s.dag_hash()]
                 if build_info and build_info.log_summary:
                     sys.stderr.write(build_info.log_summary)
-            lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
+            lines = []
+            for s in failures:
+                log_path = self.log_paths.get(s.dag_hash())
+                if log_path:
+                    lines.append(f"{s}: {log_path}")
+                else:
+                    lines.append(f"{s}: failed in another install process")
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
@@ -2177,6 +2214,7 @@ class PackageInstaller:
         selector: selectors.BaseSelector,
         jobserver: JobServer,
         retained_read_locks: List[spack.util.lock.Lock],
+        failures: List[spack.spec.Spec],
     ) -> bool:
         """Try to schedule as many pending builds as possible.
 
@@ -2190,7 +2228,7 @@ class PackageInstaller:
         processes. In that case we should not monitor the jobserver for new tokens, since we'd end
         up in a busy wait loop until the locks are released.
         """
-        blocked, to_start, newly_installed = schedule_builds(
+        blocked, to_start, newly_installed, newly_failed = schedule_builds(
             pending=self.pending_builds,
             build_graph=self.build_graph,
             db=self.db,
@@ -2200,12 +2238,20 @@ class PackageInstaller:
             capacity=self.capacity,
             needs_jobserver_token=bool(self.running_builds),
             jobserver=jobserver,
+            failure_tracker=spack.store.STORE.failure_tracker,
         )
         # Specs installed by another process.
         for dag_hash, spec, lock in newly_installed:
             retained_read_locks.append(lock)
             self.build_status.add_build(spec, explicit=dag_hash in self.explicit)
             self.build_status.update_state(dag_hash, "finished")
+        # Specs marked as failed by another process.
+        for spec in newly_failed:
+            failures.append(spec)
+            self.build_status.add_build(spec, explicit=spec.dag_hash() in self.explicit)
+            self.build_status.update_state(spec.dag_hash(), "failed")
+            self.report_data.start_record(spec)
+            self.report_data.finish_record(spec, exitcode=1)
         # Specs we can start building ourselves.
         for dag_hash, lock in to_start:
             self._start(selector, jobserver, dag_hash, lock)
