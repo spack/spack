@@ -336,9 +336,6 @@ class Executable:
     def __eq__(self, other):
         return hasattr(other, "exe") and self.exe == other.exe
 
-    def __neq__(self, other):
-        return not (self == other)
-
     def __hash__(self):
         return hash((type(self),) + tuple(self.exe))
 
