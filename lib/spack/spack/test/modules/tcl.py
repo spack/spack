@@ -42,11 +42,12 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 3
-        assert len([x for x in content if "module load " in x]) == 3
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -56,11 +57,12 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
         # The configuration file sets the verbose keyword to False
         messages = [x for x in content if 'puts stderr "Autoloading' in x]
@@ -73,11 +75,12 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 6
-        assert len([x for x in content if "module load " in x]) == 6
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used 6 times
+        assert len([x for x in content if "depends-on " in x]) == 7
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -87,11 +90,12 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
     def test_prerequisites_direct(
         self, modulefile_content, module_configuration, host_architecture_str
@@ -132,7 +136,6 @@ class TestTcl:
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
-        assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
@@ -141,14 +144,14 @@ class TestTcl:
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        assert len([x for x in content if "append-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "prepend-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "remove-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "append-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "prepend-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "remove-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "append-path --delim { } SPACE {qux}" in x]) == 1
-        assert len([x for x in content if "remove-path --delim { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "append-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "remove-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "append-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "remove-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "append-path -d { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "remove-path -d { } SPACE {qux}" in x]) == 1
 
     @pytest.mark.regression("11355")
     def test_manpath_setup(self, modulefile_content, module_configuration):
@@ -162,13 +165,16 @@ class TestTcl:
 
         # manpath set by module with prepend-path
         content = modulefile_content("module-manpath-prepend")
-        assert len([x for x in content if "prepend-path MANPATH {/path/to/man}" in x]) == 1
-        assert len([x for x in content if "prepend-path MANPATH {/path/to/share/man}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {:} MANPATH {/path/to/man}" in x]) == 1
+        assert (
+            len([x for x in content if "prepend-path -d {:} MANPATH {/path/to/share/man}" in x])
+            == 1
+        )
         assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with append-path
         content = modulefile_content("module-manpath-append")
-        assert len([x for x in content if "append-path MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "append-path -d {:} MANPATH {/path/to/man}" in x]) == 1
         assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with setenv
@@ -237,14 +243,16 @@ class TestTcl:
         module_configuration("exclude")
         content = modulefile_content("mpileaks ^zmpi")
 
-        assert len([x for x in content if "module load " in x]) == 2
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
         with pytest.raises(FileNotFoundError):
             modulefile_content(f"callpath target={host_architecture_str}")
 
         content = modulefile_content(f"zmpi target={host_architecture_str}")
 
-        assert len([x for x in content if "module load " in x]) == 2
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
     def test_naming_scheme_compat(self, factory, module_configuration):
         """Tests backwards compatibility for naming_scheme key"""
@@ -484,17 +492,17 @@ class TestTcl:
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
-        assert len([x for x in content if "depends-on " in x]) == 3
-        assert len([x for x in content if "module load " in x]) == 3
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 0
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
         )
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 0
+        assert len([x for x in content if "        module load {*}$args" in x]) == 0
         assert len([x for x in content if "depends-on " in x]) == 0
-        assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
         module_configuration("no_arch")

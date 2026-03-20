@@ -7,9 +7,12 @@ import pathlib
 
 import pytest
 
+import spack.cmd.list
 import spack.paths
 import spack.repo
+import spack.util.git
 from spack.main import SpackCommand
+from spack.test.conftest import RepoBuilder
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -63,6 +66,8 @@ def test_list_format_version_json():
     output = list("--format", "version_json")
     assert '{"name": "zmpi",' in output
     assert '{"name": "dyninst",' in output
+    assert "packages/zmpi/package.py" in output
+
     import json
 
     json.loads(output)
@@ -75,6 +80,83 @@ def test_list_format_html():
 
     assert '<div class="section" id="hdf5">' in output
     assert "<h1>hdf5" in output
+    assert "packages/hdf5/package.py" in output
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "git@github.com:username/spack-packages.git",
+        "https://github.com/username/spack-packages.git",
+        "git@github.com:username/spack.git",
+        "https://github.com/username/spack.git",
+    ],
+)
+def test_list_url_schemes(mock_util_executable, url):
+    """Confirm the command handles supported repository URLs."""
+    pkg_name = "hdf5"
+
+    _, _, registered_responses = mock_util_executable
+    registered_responses["config"] = url
+    registered_responses["rev-parse"] = f"path/to/builtin/packages/{pkg_name}/"
+
+    output = list("--format", "version_json", pkg_name)
+    assert f"{registered_responses['rev-parse']}package.py" in output
+    assert os.path.basename(url).replace(".git", "") in output
+
+
+def test_list_format_local_repo(tmp_path: pathlib.Path):
+    """Confirm a file path is returned for local repository."""
+    pkg_name = "mypkg"
+    repo_root = tmp_path / "repos" / "spack_repo" / "builtin"
+    repo_root.mkdir(parents=True)
+    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    package_root = repo_root / "packages" / pkg_name
+    package_root.mkdir(parents=True)
+    (package_root / "package.py").write_text(
+        """\
+from spack.package import *
+
+class Mypkg(Package):
+    pass
+"""
+    )
+
+    test_repo = spack.repo.from_path(str(repo_root))
+    with spack.repo.use_repositories(test_repo):
+        # Confirm a path is returned when fail to retrieve the remote origin URL
+        output = list("--format", "version_json", pkg_name)
+        assert "github.com" not in output
+        assert f"packages/{pkg_name}/package.py" in output
+
+
+def test_list_format_non_github_repo(tmp_path: pathlib.Path, mock_util_executable):
+    """Confirm a file path is returned for a non-github repository."""
+    pkg_name = "mypkg"
+    repo_root = tmp_path / "my" / "project" / "spack_repo" / "builtin"
+    repo_root.mkdir(parents=True)
+    (repo_root / "repo.yaml").write_text("repo:\n  namespace: builtin\n  api: v2.2\n")
+    package_root = repo_root / "packages" / pkg_name
+    package_root.mkdir(parents=True)
+    package_path = package_root / "package.py"
+    package_path.write_text(
+        """\
+from spack.package import *
+
+class Mypkg(Package):
+    pass
+"""
+    )
+
+    test_repo = spack.repo.from_path(str(repo_root))
+    with spack.repo.use_repositories(test_repo):
+        # Confirm a path is returned for a non-standard spack repository
+        _, _, registered_responses = mock_util_executable
+        registered_responses["config"] = "https://gitlab.com/username/my-packages.git"
+        registered_responses["rev-parse"] = str(package_root) + os.sep
+
+        output = list("--format", "version_json", pkg_name)
+        assert package_path.as_uri() in output
 
 
 def test_list_update(tmp_path: pathlib.Path):
@@ -140,3 +222,34 @@ def test_list_repos():
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs
+
+
+@pytest.mark.usefixtures("config")
+def test_list_github_url_fails(repo_builder: RepoBuilder, monkeypatch):
+    with spack.repo.use_repositories(repo_builder.root):
+        repo_builder.add_package("pkg-a")
+        repo = spack.repo.PATH.repos[0]
+        pkg = repo.get_pkg_class("pkg-a")
+
+        old_path = repo.python_path
+        try:
+            # Check that a repository with no python path has no URL
+            monkeypatch.setattr(repo, "python_path", None)
+            assert (
+                spack.cmd.list.github_url(pkg) is None
+            ), "Expected no python path means unable to determine the repo URL"
+
+            # Check that a repository path that doesn't exist has no URL
+            monkeypatch.setattr(repo, "python_path", "/repo/root/does/not/exists")
+            assert (
+                spack.cmd.list.github_url(pkg) is None
+            ), "Expected bad repo path means unable to determine the repo URL"
+        finally:
+            monkeypatch.setattr(repo, "python_path", old_path)
+
+        # Check that missing git results in the file path
+        monkeypatch.setattr(spack.util.git, "git", lambda: None)
+        filepath = spack.cmd.list.github_url(pkg)
+        assert filepath and filepath.startswith(
+            "file://"
+        ), "Expected missing 'git' results in a file URI"

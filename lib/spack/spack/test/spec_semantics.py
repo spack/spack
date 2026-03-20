@@ -444,7 +444,7 @@ class TestSpecSemantics:
         assert set(propagated_rhs) <= _propagated_flags(c2)
 
     def test_constrain_specs_by_hash(self, default_mock_concretization, database):
-        """Test that Specs specified only by their hashes can constrain eachother."""
+        """Test that Specs specified only by their hashes can constrain each other."""
         mpich_dag_hash = "/" + database.query_one("mpich").dag_hash()
         spec = Spec(mpich_dag_hash[:7])
         assert spec.constrain(Spec(mpich_dag_hash)) is False
@@ -1169,7 +1169,7 @@ class TestSpecSemantics:
         assert spliced["pkg-e"]._build_spec is None
         # Because a copy of e is used, it does not have dependnets in the original specs
         assert set(spliced["pkg-e"].dependents()) == {spliced["pkg-b"], spliced["pkg-f"]}
-        # Build dependent edge to f because f originally dependended on the e this was copied from
+        # Build dependent edge to f because f originally depended on the e this was copied from
         assert set(spliced["pkg-e"].dependents(deptype=dt.BUILD)) == {spliced["pkg-b"]}
 
         assert spliced["pkg-f"].satisfies("pkg-f color=blue ^pkg-e color=red ^pkg-g@2 color=red")
@@ -1976,6 +1976,21 @@ def test_constrain(factory, lhs_str, rhs_str, result, constrained_str):
     rhs = factory(rhs_str)
     rhs.constrain(lhs)
     assert rhs == factory(constrained_str)
+
+
+def test_constrain_dependencies_copies(mock_packages):
+    """Tests that constraining a spec with new deps makes proper copies, and does not accidentally
+    share dependency instances, leading to corruption of unrelated Spec instances."""
+    x = Spec("root")
+    y = Spec("^foo")
+    z = Spec("%foo +bar")
+    assert x.constrain(y)
+    assert x == Spec("root ^foo")
+    assert x.constrain(z)
+    assert x == Spec("root %foo +bar")
+    assert not x.constrain(Spec("root %foo +bar"))  # no new constraints
+    # now, double check that we did not mutate `y` after constraining `x` with `z`.
+    assert y == Spec("^foo")
 
 
 def test_abstract_hash_intersects_and_satisfies(default_mock_concretization):

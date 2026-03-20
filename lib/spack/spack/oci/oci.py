@@ -7,7 +7,6 @@ import json
 import os
 import urllib.error
 import urllib.parse
-from http.client import HTTPResponse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
@@ -59,12 +58,12 @@ def list_tags(ref: ImageReference, _urlopen: spack.oci.opener.MaybeOpen = None) 
     while True:
         # Fetch tags
         request = Request(url=fetch_url)
-        response = _urlopen(request)
-        spack.oci.opener.ensure_status(request, response, 200)
-        tags.update(json.load(response)["tags"])
+        with _urlopen(request) as response:
+            spack.oci.opener.ensure_status(request, response, 200)
+            tags.update(json.load(response)["tags"])
 
-        # Check for pagination
-        link_header = response.headers["Link"]
+            # Check for pagination
+            link_header = response.headers["Link"]
 
         if link_header is None:
             break
@@ -141,20 +140,20 @@ def upload_blob(
                 url=ref.uploads_url(), method="POST", headers={"Content-Length": "0"}
             )
 
-        response = _urlopen(request)
+        with _urlopen(request) as response:
+            # Created the blob in one go.
+            if response.status == 201:
+                return True
 
-        # Created the blob in one go.
-        if response.status == 201:
-            return True
+            # Otherwise, do another PUT request.
+            spack.oci.opener.ensure_status(request, response, 202)
+            assert "Location" in response.headers
 
-        # Otherwise, do another PUT request.
-        spack.oci.opener.ensure_status(request, response, 202)
-        assert "Location" in response.headers
+            # Can be absolute or relative, joining handles both
+            upload_url = with_query_param(
+                ref.endpoint(response.headers["Location"]), "digest", str(digest)
+            )
 
-        # Can be absolute or relative, joining handles both
-        upload_url = with_query_param(
-            ref.endpoint(response.headers["Location"]), "digest", str(digest)
-        )
         f.seek(0)
 
         request = Request(
@@ -164,9 +163,8 @@ def upload_blob(
             headers={"Content-Type": "application/octet-stream", "Content-Length": str(file_size)},
         )
 
-        response = _urlopen(request)
-
-        spack.oci.opener.ensure_status(request, response, 201)
+        with _urlopen(request) as response:
+            spack.oci.opener.ensure_status(request, response, 201)
 
     return True
 
@@ -205,9 +203,8 @@ def upload_manifest(
         headers={"Content-Type": manifest["mediaType"]},
     )
 
-    response = _urlopen(request)
-
-    spack.oci.opener.ensure_status(request, response, 201)
+    with _urlopen(request) as response:
+        spack.oci.opener.ensure_status(request, response, 201)
     return digest, size
 
 
@@ -222,8 +219,8 @@ def blob_exists(
     """Checks if a blob exists in an OCI registry"""
     try:
         _urlopen = _urlopen or spack.oci.opener.urlopen
-        response = _urlopen(Request(url=ref.blob_url(digest), method="HEAD"))
-        return response.status == 200
+        with _urlopen(Request(url=ref.blob_url(digest), method="HEAD")) as response:
+            return response.status == 200
     except urllib.error.HTTPError as e:
         if e.getcode() == 404:
             return False
@@ -314,34 +311,33 @@ def get_manifest_and_config(
     _urlopen = _urlopen or spack.oci.opener.urlopen
 
     # Get manifest
-    response: HTTPResponse = _urlopen(
+    with _urlopen(
         Request(url=ref.manifest_url(), headers={"Accept": ", ".join(all_content_type)})
-    )
+    ) as response:
+        # Recurse when we find an index
+        if response.headers["Content-Type"] in index_content_type:
+            if recurse == 0:
+                raise Exception("Maximum recursion depth reached while fetching OCI manifest")
 
-    # Recurse when we find an index
-    if response.headers["Content-Type"] in index_content_type:
-        if recurse == 0:
-            raise Exception("Maximum recursion depth reached while fetching OCI manifest")
+            index = json.load(response)
+            manifest_meta = next(
+                manifest
+                for manifest in index["manifests"]
+                if manifest["platform"]["architecture"] == architecture
+            )
 
-        index = json.load(response)
-        manifest_meta = next(
-            manifest
-            for manifest in index["manifests"]
-            if manifest["platform"]["architecture"] == architecture
-        )
+            return get_manifest_and_config(
+                ref.with_digest(manifest_meta["digest"]),
+                architecture=architecture,
+                recurse=recurse - 1,
+                _urlopen=_urlopen,
+            )
 
-        return get_manifest_and_config(
-            ref.with_digest(manifest_meta["digest"]),
-            architecture=architecture,
-            recurse=recurse - 1,
-            _urlopen=_urlopen,
-        )
+        # Otherwise, require a manifest
+        if response.headers["Content-Type"] not in manifest_content_type:
+            raise Exception(f"Unknown content type {response.headers['Content-Type']}")
 
-    # Otherwise, require a manifest
-    if response.headers["Content-Type"] not in manifest_content_type:
-        raise Exception(f"Unknown content type {response.headers['Content-Type']}")
-
-    manifest = json.load(response)
+        manifest = json.load(response)
 
     # Download, verify and cache config file
     config_digest = Digest.from_string(manifest["config"]["digest"])

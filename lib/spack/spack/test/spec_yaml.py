@@ -440,9 +440,10 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     assert s2.format("{compiler.name}") == "gcc"
     assert s2.format("{compiler.version}") != "none"
 
-    # Ensure satisfies still works with compilers
+    # Ensure satisfies works with compilers and direct dependencies
     assert s2.satisfies("%gcc")
     assert s2.satisfies("%gcc@9.4.0")
+    assert s2.satisfies("%zlib")
 
 
 def test_anchorify_1():

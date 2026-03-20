@@ -273,8 +273,11 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
+    index_cache_root = str(tmp_path / "index_cache")
     monkeypatch.setattr(
-        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+        spack.binary_distribution,
+        "BINARY_INDEX",
+        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -289,7 +292,9 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+        index_cache_root
+    )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
 
@@ -301,8 +306,11 @@ def test_use_bin_index_active_env_with_view(
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
+    index_cache_root = str(tmp_path / "index_cache")
     monkeypatch.setattr(
-        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+        spack.binary_distribution,
+        "BINARY_INDEX",
+        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -321,7 +329,9 @@ def test_use_bin_index_active_env_with_view(
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+        index_cache_root
+    )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
 
@@ -333,8 +343,11 @@ def test_use_bin_index_with_view(
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
     """
+    index_cache_root = str(tmp_path / "index_cache")
     monkeypatch.setattr(
-        spack.binary_distribution, "BINARY_INDEX", spack.binary_distribution.BinaryCacheIndex()
+        spack.binary_distribution,
+        "BINARY_INDEX",
+        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -354,7 +367,9 @@ def test_use_bin_index_with_view(
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex()
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+        index_cache_root
+    )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
 

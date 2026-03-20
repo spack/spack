@@ -11,7 +11,14 @@ from datetime import datetime, timedelta
 import pytest
 
 import spack.llnl.util.lang
-from spack.llnl.util.lang import dedupe, match_predicate, memoized, pretty_date
+from spack.llnl.util.lang import (
+    Singleton,
+    SingletonInstantiationError,
+    dedupe,
+    match_predicate,
+    memoized,
+    pretty_date,
+)
 
 
 @pytest.fixture()
@@ -330,6 +337,29 @@ def test_fnmatch_multiple():
     assert not regex.match("libbar.so.1")
     assert not regex.match("libfoo.solibbar.so")
     assert not regex.match("libbaz.so")
+
+
+def _attr_error_factory():
+    raise AttributeError("Could not make something")
+
+
+def test_singleton_instantiation_attr_failure():
+    """
+    If an AttributeError occurs during the instantiation of a Singleton
+    object, we want to see that error.
+    """
+    x = Singleton(_attr_error_factory)
+    with pytest.raises(SingletonInstantiationError) as last_exception:
+        x.something
+
+    def follow_exceptions(e):
+        while e:
+            yield e
+            e = e.__cause__ or e.__context__
+
+    assert any(
+        "Could not make something" in str(e) for e in follow_exceptions(last_exception.value)
+    )
 
 
 class TestPriorityOrderedMapping:

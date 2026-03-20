@@ -308,7 +308,7 @@ def test_buildcache_sync(
         # Trigger the warning
         output = buildcache("sync", "--manifest-glob", manifest_file, "dest", "ignored")
 
-        assert "Ignoring unused arguemnt: ignored" in output
+        assert "Ignoring unused argument: ignored" in output
 
         verify_mirror_contents()
         shutil.rmtree(str(dest_mirror_dir))
@@ -556,7 +556,9 @@ def test_check_mirror_for_layout(v2_buildcache_layout, mutable_config, capfd):
     assert all([word in err for word in ["Warning", "missing", "layout"]])
 
 
-def test_url_buildcache_entry_v2_exists(v2_buildcache_layout, mock_packages, mutable_config):
+def test_url_buildcache_entry_v2_exists(
+    v2_buildcache_layout, mock_packages, mutable_config, do_not_check_runtimes_on_reuse
+):
     """Test existence check for v2 buildcache entries"""
     test_mirror_path = v2_buildcache_layout("unsigned")
     mirror_url = pathlib.Path(test_mirror_path).as_uri()
@@ -603,6 +605,7 @@ def test_install_v2_layout(
     mutable_mock_env_path,
     install_mockery,
     mock_gnupghome,
+    do_not_check_runtimes_on_reuse,
 ):
     """Ensure we can still install from signed and unsigned v2 buildcache"""
     test_mirror_path = v2_buildcache_layout(signing)
@@ -987,7 +990,7 @@ def create_env_from_concrete_spec(spec: spack.spec.Spec):
     e = ev.environment_from_name_or_dir(env_name)
     with e:
         add(f"{spec.name}/{spec.dag_hash()}")
-        # This should handle updating the environment to mark all packges as installed
+        # This should handle updating the environment to mark all packages as installed
         install()
     return e
 
@@ -1055,7 +1058,7 @@ def test_buildcache_create_view_empty(
     with pytest.raises(spack.binary_distribution.FetchIndexError):
         hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
 
-    # Write a minimal lockfile (this is not validated/read by an enviornment)
+    # Write a minimal lockfile (this is not validated/read by an environment)
     empty_manifest = tmp_path / "emptylock" / "spack.yaml"
     empty_manifest.parent.mkdir(exist_ok=False)
     empty_manifest.write_text("spack: {}", encoding="utf-8")

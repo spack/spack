@@ -4,10 +4,10 @@
 """String manipulation functions that do not have other dependencies than Python
 standard library
 """
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 
-def comma_list(sequence: List[str], article: str = "") -> str:
+def comma_list(sequence: Sequence[str], article: str = "") -> str:
     if type(sequence) is not list:
         sequence = list(sequence)
 
@@ -26,7 +26,7 @@ def comma_list(sequence: List[str], article: str = "") -> str:
     return out
 
 
-def comma_or(sequence: List[str]) -> str:
+def comma_or(sequence: Sequence[str]) -> str:
     """Return a string with all the elements of the input joined by comma, but the last
     one (which is joined by ``"or"``).
     """

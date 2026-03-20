@@ -205,12 +205,6 @@ def test_test_function_names(mock_packages, install_mockery, virtuals, expected)
     assert sorted(tests) == sorted(expected)
 
 
-def test_test_functions_fails():
-    """Confirm test_functions raises error if no package."""
-    with pytest.raises(ValueError, match="Expected a package"):
-        spack.install_test.test_functions(str)
-
-
 def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, capfd):
     """Confirm works for package providing a package-less virtual."""
     spec = spack.concretize.concretize_one("simple-standalone-test")

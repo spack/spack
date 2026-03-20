@@ -176,7 +176,7 @@ We'll talk more about how you can use them to customize an installation in :ref:
 Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, when you run ``spack install``, Spack tries hard to reuse existing installations as dependencies, either from a local store or from remote buildcaches, if configured.
+By default, when you run ``spack install``, Spack tries hard to reuse existing installations as dependencies, either from a local store or from remote build caches, if configured.
 This minimizes unwanted rebuilds of common dependencies, in particular if you update Spack frequently.
 
 In case you want the latest versions and configurations to be installed instead, you can add the ``--fresh`` option:
@@ -539,7 +539,7 @@ If you want to find only libelf versions greater than version 0.8.12, you could 
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
        libelf@0.8.12  libelf@0.8.13
 
-Finding just the versions of libdwarf built with a particular version of libelf would look like this:
+Finding just the versions of ``libdwarf`` built with a particular version of libelf would look like this:
 
 .. code-block:: spec
 
@@ -549,7 +549,7 @@ Finding just the versions of libdwarf built with a particular version of libelf 
    libdwarf@20130729-d9b90962
 
 We can also search for packages that have a certain attribute.
-For example, ``spack find libdwarf +debug`` will show only installations of libdwarf with the 'debug' compile-time option enabled.
+For example, ``spack find libdwarf +debug`` will show only installations of ``libdwarf`` with the 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
@@ -656,7 +656,7 @@ You can use this with tools like `jq <https://jqlang.org/>`_ to quickly create J
 ^^^^^^^^^^^^^^
 
 It's often the case that you have two versions of a spec that you need to disambiguate.
-Let's say that we've installed two variants of zlib, one with and one without the optimize variant:
+Let's say that we've installed two variants of ``zlib``, one with and one without the optimize variant:
 
 .. code-block:: spec
 
@@ -690,7 +690,7 @@ We run the command and quickly encounter a problem because two versions are inst
         c) use `spack uninstall --all` to uninstall ALL matching specs.
 
 Oh no!
-We can see from the above that we have two different versions of zlib installed, and the only difference between the two is the hash.
+We can see from the above that we have two different versions of ``zlib`` installed, and the only difference between the two is the hash.
 This is a good use case for ``spack diff``, which can easily show us the "diff" or set difference between properties for two packages.
 Let's try it out.
 Because the only difference we see in the ``spack find`` view is the hash, let's use ``spack diff`` to look for more detail.
@@ -721,7 +721,7 @@ Here is an example:
 
 Awesome!
 Now let's read the diff.
-It tells us that our first zlib was built with ``~optimize`` (``False``) and the second was built with ``+optimize`` (``True``).
+It tells us that our first ``zlib`` was built with ``~optimize`` (``False``) and the second was built with ``+optimize`` (``True``).
 You can't see it in the docs here, but the output above is also colored based on the content being an addition (+) or subtraction (-).
 
 This is a small example, but you will be able to see differences for any attributes on the installation spec.
@@ -808,7 +808,7 @@ For example, this will add the ``mpich`` package built with ``gcc`` to your path
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
 These commands will add appropriate directories to your ``PATH`` and ``MANPATH`` according to the :ref:`prefix inspections <customize-env-modifications>` defined in your modules configuration.
-When you no longer want to use a package, you can type unload or unuse similarly:
+When you no longer want to use a package, you can type ``spack unload``:
 
 .. code-block:: spec
 

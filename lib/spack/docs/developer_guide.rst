@@ -456,7 +456,7 @@ As the action runs, you should observe output similar to:
    ssh 5RjFs7LPdtwGG8cwSPkGrdMNg@sfo2.tmate.io
    https://tmate.io/t/5RjFs7LPdtwGG8cwSPkGrdMNg
 
-The first line is the ssh command neccesary to connect to the server, the second line is a tmate web-ui that also provides access to the ssh server on the runner.
+The first line is the ssh command necessary to connect to the server, the second line is a tmate web UI that also provides access to the ssh server on the runner.
 
 .. note:: The web UI has occasionally been unresponsive, if it does not respond within ~10s, you'll need to use your local ssh utility.
 
@@ -864,6 +864,9 @@ The majority of the work is to cherry-pick the bug fixes, which ideally should b
 
 The backports pull request is always titled ``Backports vX.Y.Z`` and is labelled ``backports``.
 It is opened from a branch named ``backports/vX.Y.Z`` and targets the ``releases/vX.Y`` branch.
+
+The first commit on the ``backports/vX.Y.Z`` branch should update the Spack version to ``X.Y.Z.dev0``, and should have the commit message ``set version to X.Y.Z.dev0``.
+This ensures that if users check out an intermediate commit between two patch releases, Spack reports the version correctly.
 
 Whenever a pull request labelled ``vX.Y.Z`` is merged, cherry-pick the associated squashed commit on ``develop`` to the ``backports/vX.Y.Z`` branch.
 For pull requests that were rebased (or not squashed), cherry-pick each associated commit individually.

@@ -27,15 +27,15 @@ proc ModulesHelp { } {
 
 {% block autoloads %}
 {% if autoload|length > 0 %}
-if {![info exists ::env(LMOD_VERSION_MAJOR)]} {
-{% for module in autoload %}
-    module load {{ module }}
-{% endfor %}
-} else {
-{% for module in autoload %}
-    depends-on {{ module }}
-{% endfor %}
+# define missing command if using Environment Modules <5.1
+if {![llength [info commands depends-on]]} {
+    proc depends-on {args} {
+        module load {*}$args
+    }
 }
+{% for module in autoload %}
+depends-on {{ module }}
+{% endfor %}
 {% endif %}
 {% endblock %}
 {#  #}
@@ -54,23 +54,11 @@ conflict {{ name }}
 {% block environment %}
 {% for command_name, cmd in environment_modifications %}
 {% if command_name == 'PrependPath' %}
-{% if cmd.separator == ':' %}
-prepend-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-prepend-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+prepend-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name in ('AppendPath', 'AppendFlagsEnv') %}
-{% if cmd.separator == ':' %}
-append-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-append-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+append-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name in ('RemovePath', 'RemoveFlagsEnv') %}
-{% if cmd.separator == ':' %}
-remove-path {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% else %}
-remove-path --delim {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
-{% endif %}
+remove-path -d {{ '{' }}{{ cmd.separator }}{{ '}' }} {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'SetEnv' %}
 setenv {{ cmd.name }} {{ '{' }}{{ cmd.value }}{{ '}' }}
 {% elif command_name == 'UnsetEnv' %}

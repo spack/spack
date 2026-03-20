@@ -87,7 +87,7 @@ Here's the ``.gitlab-ci.yml`` file from that example that builds and runs the pi
        job: generate-pipeline
 
 
-The key thing to note above is that there are two jobs: The first job to run, ``generate-pipeline``, runs the ``spack ci generate`` command to generate a dynamic child pipeline and write it to a yaml file, which is then picked up by the second job, ``build-jobs``, and used to trigger the downstream pipeline.
+The key thing to note above is that there are two jobs: The first job to run, ``generate-pipeline``, runs the ``spack ci generate`` command to generate a dynamic child pipeline and write it to a YAML file, which is then picked up by the second job, ``build-jobs``, and used to trigger the downstream pipeline.
 
 And here's the Spack environment built by the pipeline represented as a ``spack.yaml`` file:
 
@@ -161,7 +161,7 @@ This file, ``mirrors.yaml`` looks like this:
 
 
 Note the name of the mirror is ``buildcache-destination``, which is required as of Spack 0.23 (see below for more information).
-The mirror url simply points to the container registry associated with the project, while ``id_variable`` and ``secret_variable`` refer to environment variables containing the access credentials for the mirror.
+The mirror URL simply points to the container registry associated with the project, while ``id_variable`` and ``secret_variable`` refer to environment variables containing the access credentials for the mirror.
 
 When Spack builds packages for this example project, they will be pushed to the project container registry, where they will be available for subsequent jobs to install as dependencies or for other pipelines to use to build runnable container images.
 
@@ -184,9 +184,8 @@ Super-command for functionality related to generating pipelines and executing pi
 ^^^^^^^^^^^^^^^^^^^^^
 
 Throughout this documentation, references to the "mirror" mean the target mirror which is checked for the presence of up-to-date specs, and where any scheduled jobs should push built binary packages.
-In the past, this defaulted to the mirror at index 0 in the mirror configs, and could be overridden using the ``--buildcache-destination`` argument.
-Starting with Spack 0.23, ``spack ci generate`` will require you to identify this mirror by the name "buildcache-destination".
-While you can configure any number of mirrors as sources for your pipelines, you will need to identify the destination mirror by name.
+When running ``spack ci generate`` it is required to configure a mirror named ``buildcache-destination`` to be used as the target mirror.
+It is permitted to configure any number of other mirrors as sources for your pipelines, but only the ``buildcache-destination`` mirror will be used as the destination mirror.
 
 Concretizes the specs in the active environment, stages them (as described in :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 During concretization of the environment, ``spack ci generate`` also writes a ``spack.lock`` file which is then provided to generated child jobs and made available in all generated job artifacts to aid in reproducing failed builds in a local environment.
@@ -197,9 +196,9 @@ In the :ref:`functional_example` section, we only mentioned one path in the ``ar
 Using ``--prune-dag`` or ``--no-prune-dag`` configures whether or not jobs are generated for specs that are already up to date on the mirror.
 If enabling DAG pruning using ``--prune-dag``, more information may be required in your ``spack.yaml`` file, see the :ref:`noop_jobs` section below regarding ``noop-job``.
 
-The optional ``--check-index-only`` argument can be used to speed up pipeline generation by telling Spack to consider only remote buildcache indices when checking the remote mirror to determine if each spec in the DAG is up to date or not.
+The optional ``--check-index-only`` argument can be used to speed up pipeline generation by telling Spack to consider only remote build cache indices when checking the remote mirror to determine if each spec in the DAG is up to date or not.
 The default behavior is for Spack to fetch the index and check it, but if the spec is not found in the index, it also performs a direct check for the spec on the mirror.
-If the remote buildcache index is out of date, which can easily happen if it is not updated frequently, this behavior ensures that Spack has a way to know for certain about the status of any concrete spec on the remote mirror, but can slow down pipeline generation significantly.
+If the remote build cache index is out of date, which can easily happen if it is not updated frequently, this behavior ensures that Spack has a way to know for certain about the status of any concrete spec on the remote mirror, but can slow down pipeline generation significantly.
 
 The optional ``--output-file`` argument should be an absolute path (including file name) to the generated pipeline, and if not given, the default is ``./.gitlab-ci.yml``.
 
@@ -264,7 +263,7 @@ You can find them under Spack's `stacks <https://github.com/spack/spack/tree/dev
 ``spack ci rebuild-index``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a convenience command to rebuild the buildcache index associated with the mirror in the active, GitLab-enabled environment (specifying the mirror URL or name is not required).
+This is a convenience command to rebuild the build cache index associated with the mirror in the active, GitLab-enabled environment (specifying the mirror URL or name is not required).
 
 .. _cmd-spack-ci-reproduce-build:
 
@@ -298,12 +297,12 @@ The default script does three main steps: change directories to the pipelines co
 Update Index (reindex)
 ^^^^^^^^^^^^^^^^^^^^^^
 
-By default, while a pipeline job may rebuild a package, create a buildcache entry, and push it to the mirror, it does not automatically re-generate the mirror's buildcache index afterward.
+By default, while a pipeline job may rebuild a package, create a build cache entry, and push it to the mirror, it does not automatically re-generate the mirror's build cache index afterward.
 Because the index is not needed by the default rebuild jobs in the pipeline, not updating the index at the end of each job avoids possible race conditions between simultaneous jobs, and it avoids the computational expense of regenerating the index.
 This potentially saves minutes per job, depending on the number of binary packages in the mirror.
-As a result, the default is that the mirror's buildcache index may not correctly reflect the mirror's contents at the end of a pipeline.
+As a result, the default is that the mirror's build cache index may not correctly reflect the mirror's contents at the end of a pipeline.
 
-To make sure the buildcache index is up to date at the end of your pipeline, Spack generates a job to update the buildcache index of the target mirror at the end of each pipeline by default.
+To make sure the build cache index is up to date at the end of your pipeline, Spack generates a job to update the build cache index of the target mirror at the end of each pipeline by default.
 You can disable this behavior by adding ``rebuild-index: False`` inside the ``ci`` section of your Spack environment.
 
 Reindex jobs do not allow modifying the ``script`` attribute since it is automatically generated using the target mirror listed in the ``mirrors::mirror`` configuration.
@@ -516,7 +515,7 @@ All the jobs generated from this environment will belong to a "build group" with
 As the release progresses, this build group may have jobs added or removed.
 The URL, project, and site are used to specify the CDash instance to which build results should be reported.
 
-Take a look at the `schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/ci.py>`_ for the ci section of the Spack environment file, to see precisely what syntax is allowed there.
+Take a look at the `schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/ci.py>`_ for the ``ci`` section of the Spack environment file, to see precisely what syntax is allowed there.
 
 .. _reserved_tags:
 
@@ -702,6 +701,6 @@ Only needed to report build groups to CDash.
 ^^^^^^^^^^^^^^^^^^^^^
 
 Optional.
-Only needed if you want ``spack ci rebuild`` to trust the key you store in this variable, in which case, it will subsequently be used to sign and verify binary packages (when installing or creating buildcaches).
-You could also have already trusted a key Spack knows about, or if no key is present anywhere, Spack will install specs using ``--no-check-signature`` and create buildcaches using ``-u`` (for unsigned binaries).
+Only needed if you want ``spack ci rebuild`` to trust the key you store in this variable, in which case, it will subsequently be used to sign and verify binary packages (when installing or creating build caches).
+You could also have already trusted a key Spack knows about, or if no key is present anywhere, Spack will install specs using ``--no-check-signature`` and create build caches using ``-u`` (for unsigned binaries).
 

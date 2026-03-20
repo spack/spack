@@ -917,7 +917,7 @@ class TestSpecDag:
         edges_with_mpi = mpich.edges_from_dependents(virtuals=["mpi"])
         assert edges_with_mpi == edges_of_link_type
 
-        # Check a node dependend upon by 2 parents
+        # Check a node depended upon by 2 parents
         assert len(mpileaks["libelf"].edges_from_dependents(depflag=dt.LINK)) == 2
 
 

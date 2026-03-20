@@ -148,7 +148,7 @@ def flag_to_chars(depflag: DepFlag) -> str:
 
     For a single dependency, this just indicates that the dependency has
     the indicated deptypes. For a list of dependnecies, this shows
-    whether ANY dpeendency in the list has the deptypes (so the deptypes
+    whether ANY dependency in the list has the deptypes (so the deptypes
     are merged)."""
     return "".join(
         t_str[0] if t_flag & depflag else " " for t_str, t_flag in zip(ALL_TYPES, ALL_FLAGS)

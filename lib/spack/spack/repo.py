@@ -103,6 +103,25 @@ def namespace_from_fullname(fullname: str) -> str:
     return fullname
 
 
+def name_from_fullname(fullname: str) -> str:
+    """Return the package name for the full module name.
+
+    For instance::
+
+        name_from_fullname("spack.pkg.builtin.hdf5") == "hdf5"
+        name_from_fullname("spack_repo.x.y.z.packages.pkg_name.package") == "pkg_name"
+
+    Args:
+        fullname: full name for the Python module
+    """
+    if fullname.startswith(PKG_MODULE_PREFIX_V1):
+        _, _, pkg_module = fullname.rpartition(".")
+        return pkg_module
+    elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
+        return fullname.rsplit(".", 2)[-2]
+    return fullname
+
+
 class _PrependFileLoader(importlib.machinery.SourceFileLoader):
     def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
         self.repo = repo
@@ -485,7 +504,7 @@ class Indexer(metaclass=abc.ABCMeta):
         """Read this index from a provided file object."""
 
     @abc.abstractmethod
-    def update(self, pkg_fullname):
+    def update(self, pkgs_fullname: Set[str]):
         """Update the index in memory with information about a package."""
 
     @abc.abstractmethod
@@ -502,8 +521,8 @@ class TagIndexer(Indexer):
     def read(self, stream):
         self.index = spack.tag.TagIndex.from_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname.split(".")[-1], self.repository)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages({p.split(".")[-1] for p in pkgs_fullname}, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -518,15 +537,15 @@ class ProviderIndexer(Indexer):
     def read(self, stream):
         self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
-    def update(self, pkg_fullname):
-        name = pkg_fullname.split(".")[-1]
+    def update(self, pkgs_fullname: Set[str]):
         is_virtual = (
-            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
+            lambda name: not self.repository.exists(name)
+            or self.repository.get_pkg_class(name).virtual
         )
-        if is_virtual:
-            return
-        self.index.remove_provider(pkg_fullname)
-        self.index.update(pkg_fullname)
+        non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
+        non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}
+        self.index.remove_providers(non_virtual_pkgs_names)
+        self.index.update_packages(non_virtual_pkgs_fullname)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -551,8 +570,8 @@ class PatchIndexer(Indexer):
     def write(self, stream):
         self.index.to_json(stream)
 
-    def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+    def update(self, pkgs_fullname: Set[str]):
+        self.index.update_packages(pkgs_fullname)
 
 
 class RepoIndex:
@@ -644,9 +663,7 @@ class RepoIndex:
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 
-                for pkg_name in needs_update:
-                    indexer.update(f"{self.namespace}.{pkg_name}")
-
+                indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
                 indexer.write(new)
 
         return indexer.index
@@ -1156,7 +1173,7 @@ class Repo:
         package directory. From Package API v2.0 there is a one-to-one mapping between Spack
         package names and Python module names, so there is no guessing.
 
-        For Packge API v1.x we support the following one-to-many mappings:
+        For Package API v1.x we support the following one-to-many mappings:
 
         * ``num3proxy`` -> ``3proxy``
         * ``foo_bar`` -> ``foo_bar``, ``foo-bar``
@@ -1423,6 +1440,14 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
+
+        # Early exit if no overrides to apply or undo
+        if (
+            not self.overrides.get(pkg_name)
+            and not hasattr(cls, "overridden_attrs")
+            and not hasattr(cls, "attrs_exclusively_from_config")
+        ):
+            return cls
 
         def defining_class(myclass, name):
             return next((c for c in myclass.__mro__ if name in c.__dict__), None)
@@ -1854,7 +1879,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
 class BrokenRepoDescriptor(RepoDescriptor):
     """A descriptor for a broken repository, used to indicate errors in the configuration that
-    aren't fatal untill the repository is used."""
+    aren't fatal until the repository is used."""
 
     def __init__(self, name: Optional[str], error: str) -> None:
         super().__init__(name)
@@ -2130,9 +2155,9 @@ class UnknownPackageError(UnknownEntityError):
                     repo = PATH.ensure_unwrapped()
 
                 # We need to compare the base package name
-                pkg_name = name.rsplit(".", 1)[-1]
+                pkg_name = name_from_fullname(name)
                 similar = []
-                if isinstance(repo, RepoPath):
+                if isinstance(repo, (Repo, RepoPath)):
                     try:
                         similar = get_close_matches(pkg_name, repo.all_package_names())
                     except Exception:

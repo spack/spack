@@ -9,6 +9,7 @@ import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.spec_parser
 import spack.traverse
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
@@ -104,6 +105,13 @@ class RequirementParser:
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
+        self.toolchains = configuration.get_config("toolchains")
+
+    def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
+        result = parse_spec_from_yaml_string(string, named=named)
+        if self.toolchains:
+            spack.spec_parser.expand_toolchains(result, self.toolchains)
+        return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
         result = []
@@ -199,11 +207,11 @@ class RequirementParser:
     def _parse_prefer_conflict_item(self, item):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = parse_spec_from_yaml_string(item)
+            spec = self._parse_and_expand(item)
             condition = spack.spec.Spec()
             message = None
         else:
-            spec = parse_spec_from_yaml_string(item["spec"])
+            spec = self._parse_and_expand(item["spec"])
             condition = spack.spec.Spec(item.get("when"))
             message = item.get("message")
         return spec, condition, message
@@ -248,11 +256,11 @@ class RequirementParser:
 
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
-                    parse_spec_from_yaml_string(constraint, named=kind == RequirementKind.VIRTUAL)
+                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
                     for constraint in constraints
                 ]
                 when_str = requirement.get("when")
-                when = parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+                when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
 
                 constraints = [
                     x

@@ -8,6 +8,7 @@ import textwrap
 import pytest
 
 import spack.llnl.util.tty.color as color
+from spack.llnl.util.tty.color import cescape, colorize, csub
 
 test_text = [
     "@r{The quick brown fox jumps over the lazy yellow dog.",
@@ -49,3 +50,23 @@ def test_color_wrap(cols, text, indent):
     # make sure we wrap the same as textwrap
     assert color.csub(color_wrapped) == wrapped
     assert plain_cwrapped == wrapped
+
+
+def test_cescape_at_sign_roundtrip():
+    """cescape followed by colorize should not double-escape '@' inside color blocks."""
+    raw = 'if spec.satisfies("@:25.1"):'
+    colorized = colorize("@R{%s}" % cescape(raw), color=True)
+    assert csub(colorized) == raw
+
+
+def test_cescape_multiple_at_signs_roundtrip():
+    """Multiple consecutive '@' characters should survive a cescape/colorize roundtrip."""
+    raw = "foo @@@@@bar"
+    colorized = colorize("@R{%s}" % cescape(raw), color=True)
+    assert csub(colorized) == raw
+
+
+def test_colorize_top_level_consecutive_escaped_ats():
+    """Consecutive @@ at the top level (outside braces) must each unescape independently."""
+    assert colorize("@@@@", color=False) == "@@"
+    assert colorize("@@@@@@", color=False) == "@@@"

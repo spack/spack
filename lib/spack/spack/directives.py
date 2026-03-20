@@ -57,15 +57,10 @@ import spack.spec
 import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
-from spack.directives_meta import DirectiveError, DirectiveMeta
+from spack.directives_meta import DirectiveError, directive, get_spec
 from spack.resource import Resource
-from spack.version import (
-    GitVersion,
-    Version,
-    VersionChecksumError,
-    VersionError,
-    VersionLookupError,
-)
+from spack.spec import EMPTY_SPEC
+from spack.version import StandardVersion, VersionChecksumError, VersionError
 
 __all__ = [
     "DirectiveError",
@@ -97,7 +92,7 @@ Patcher = Callable[[Union[PackageType, Dependency]], None]
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
 
 
-def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
+def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.spec.Spec]:
     """Create a ``Spec`` that indicates when a directive should be applied.
 
     Directives with ``when`` specs, e.g.:
@@ -121,11 +116,24 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
 
     Arguments:
         value: a conditional Spec, constant ``bool``, or None if not supplied
-           value indicating when a directive should be applied.
+           value indicating when a directive should be applied. It can also be a tuple of when
+           conditions (as strings) to be combined together.
 
     """
+    # This branch is never taken, but our WhenType type annotation allows it, so handle it too.
     if isinstance(value, spack.spec.Spec):
         return value
+
+    if isinstance(value, tuple):
+        assert value, "when stack cannot be empty"
+        # avoid a copy when there's only one condition
+        if len(value) == 1:
+            return get_spec(value[0])
+        # reduce the when-stack to a single spec by combining all constraints.
+        combined_spec = spack.spec.Spec(value[0])
+        for cond in value[1:]:
+            combined_spec._constrain_symbolically(get_spec(cond))
+        return combined_spec
 
     # Unsatisfiable conditions are discarded by the caller, and never
     # added to the package class
@@ -136,17 +144,16 @@ def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
     # represent this by returning the unconstrained `Spec()`, which is
     # always satisfied.
     if value is None or value is True:
-        return spack.spec.Spec()
+        return EMPTY_SPEC
 
     # This is conditional on the spec
-    return spack.spec.Spec(value)
+    return get_spec(value)
 
 
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
-directive = DirectiveMeta.directive
 
 
-@directive("versions")
+@directive("versions", supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -248,15 +255,7 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
             f"{pkg.name}: declared version '{ver!r}' in package should be a string or int."
         )
 
-    # Declared versions are concrete
-    version = Version(ver)
-
-    if isinstance(version, GitVersion) and not hasattr(pkg, "git") and "git" not in kwargs:
-        args = ", ".join(f"{argname}='{value}'" for argname, value in kwargs.items())
-        raise VersionLookupError(
-            f"{pkg.name}: spack version directives cannot include git hashes fetched from URLs.\n"
-            f"    version('{ver}', {args})"
-        )
+    version = StandardVersion.from_string(str(ver))
 
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs
@@ -292,14 +291,15 @@ def _execute_conflicts(pkg: PackageType, conflict_spec, when, msg):
     # Save in a list the conflicts and the associated custom messages
     conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
     msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-    conflict_spec_list.append((spack.spec.Spec(conflict_spec), msg_with_name))
+    conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
 
 
-@directive("dependencies")
+@directive("dependencies", can_patch_dependencies=True)
 def depends_on(
     spec: SpecType,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
+    *,
     patches: Optional[PatchesType] = None,
 ):
     """Declare a dependency on another package.
@@ -316,18 +316,18 @@ def depends_on(
         patches: single result of :py:func:`patch` directive, a
             ``str`` to be passed to ``patch``, or a list of these
     """
-    dep_spec = spack.spec.Spec(spec)
-    return partial(_execute_depends_on, spec=dep_spec, when=when, type=type, patches=patches)
+    return partial(_execute_depends_on, spec=spec, when=when, type=type, patches=patches)
 
 
 def _execute_depends_on(
     pkg: PackageType,
-    spec: spack.spec.Spec,
+    spec: Union[str, spack.spec.Spec],
     *,
     when: WhenType = None,
     type: DepType = dt.DEFAULT_TYPES,
     patches: Optional[PatchesType] = None,
 ):
+    spec = get_spec(spec) if isinstance(spec, str) else spec
     when_spec = _make_when_spec(when)
     if not when_spec:
         return
@@ -362,10 +362,6 @@ def _execute_depends_on(
     elif not isinstance(patches, (list, tuple)):
         patches = [patches]
 
-    # auto-call patch() directive on any strings in patch list
-    patches = [patch(p) if isinstance(p, str) else p for p in patches]
-    assert all(callable(p) for p in patches)
-
     # this is where we actually add the dependency to this package
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
     dependency = deps_by_name.get(spec.name)
@@ -388,8 +384,12 @@ def _execute_depends_on(
         dependency.depflag |= depflag
 
     # apply patches to the dependency
-    for execute_patch in patches:
-        execute_patch(dependency)
+    for patch in patches:
+        if isinstance(patch, str):
+            _execute_patch(dependency, url_or_filename=patch)
+        else:
+            assert callable(patch), f"Invalid patch argument: {patch!r}"
+            patch(dependency)
 
 
 @directive("disable_redistribute")
@@ -424,7 +424,7 @@ def _execute_redistribute(
     if not when_spec:
         return
     if source is False:
-        max_constraint = spack.spec.Spec(f"{pkg.name}@{when_spec.versions}")
+        max_constraint = get_spec(f"{pkg.name}@{when_spec.versions}")
         if not max_constraint.satisfies(when_spec):
             raise DirectiveError("Source distribution can only be disabled for versions")
 
@@ -440,11 +440,12 @@ def _execute_redistribute(
         )
 
 
-@directive(("extendees", "dependencies"))
+@directive(("extendees", "dependencies"), can_patch_dependencies=True)
 def extends(
     spec: str,
     when: WhenType = None,
     type: DepType = ("build", "run"),
+    *,
     patches: Optional[PatchesType] = None,
 ):
     """Same as :func:`depends_on`, but also adds this package to the extendee list.
@@ -465,14 +466,14 @@ def _execute_extends(
     if not when_spec:
         return
 
-    dep_spec = spack.spec.Spec(spec)
+    dep_spec = get_spec(spec)
 
     _execute_depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
 
     # When extending python, also add a dependency on python-venv. This is done so that
     # Spack environment views are Python virtual environments.
     if dep_spec.name == "python" and not pkg.name == "python-venv":
-        _execute_depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
+        _execute_depends_on(pkg, "python-venv", when=when, type=("build", "run"))
 
     pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
@@ -497,21 +498,16 @@ def _execute_provides(pkg: PackageType, specs: Tuple[SpecType, ...], when: WhenT
     if not when_spec:
         return
 
-    # ``when`` specs for ``provides()`` need a name, as they are used
-    # to build the ProviderIndex.
-    when_spec.name = pkg.name
-
-    spec_objs = [spack.spec.Spec(x) for x in specs]
+    spec_objs = [get_spec(x) for x in specs]
     spec_names = [x.name for x in spec_objs]
     if len(spec_names) > 1:
         pkg.provided_together.setdefault(when_spec, []).append(set(spec_names))
 
     for provided_spec in spec_objs:
         if pkg.name == provided_spec.name:
-            raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
+            raise CircularReferenceError(f"Package '{pkg.name}' cannot provide itself.")
 
-        provided_set = pkg.provided.setdefault(when_spec, set())
-        provided_set.add(provided_spec)
+        pkg.provided.setdefault(when_spec, set()).add(provided_spec)
 
 
 @directive("splice_specs")
@@ -549,7 +545,7 @@ def _execute_can_splice(
         )
     if when_spec is None:
         return
-    pkg.splice_specs[when_spec] = (spack.spec.Spec(target), match_variants)
+    pkg.splice_specs[when_spec] = (get_spec(target), match_variants)
 
 
 @directive("patches")
@@ -596,12 +592,12 @@ def patch(
 def _execute_patch(
     pkg_or_dep: Union[PackageType, Dependency],
     url_or_filename: str,
-    level: int,
-    when: WhenType,
-    working_dir: str,
-    reverse: bool,
-    sha256: Optional[str],
-    archive_sha256: Optional[str],
+    level: int = 1,
+    when: WhenType = None,
+    working_dir: str = ".",
+    reverse: bool = False,
+    sha256: Optional[str] = None,
+    archive_sha256: Optional[str] = None,
 ) -> None:
     pkg = pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
 
@@ -906,7 +902,7 @@ def maintainers(*names: str):
 
 
 def _execute_maintainer(pkg: PackageType, names: Tuple[str, ...]):
-    maintainers = set(getattr(pkg, "maintainers", []))
+    maintainers = set(pkg.maintainers)
     maintainers.update(names)
     pkg.maintainers = sorted(maintainers)
 
@@ -939,10 +935,10 @@ def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[U
     for other_when_spec in pkg.licenses:
         if when_spec.intersects(other_when_spec):
             when_message = ""
-            if when_spec != _make_when_spec(None):
+            if when_spec != EMPTY_SPEC:
                 when_message = f"when {when_spec}"
             other_when_message = ""
-            if other_when_spec != _make_when_spec(None):
+            if other_when_spec != EMPTY_SPEC:
                 other_when_message = f"when {other_when_spec}"
             err_msg = (
                 f"{pkg.name} is specified as being licensed as {license_identifier} "
@@ -1007,7 +1003,7 @@ def _execute_requires(
     # Save in a list the requirements and the associated custom messages
     requirement_list = pkg.requirements.setdefault(when_spec, [])
     msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
-    requirements = tuple(spack.spec.Spec(s) for s in requirement_specs)
+    requirements = tuple(get_spec(s) for s in requirement_specs)
     requirement_list.append((requirements, policy, msg_with_name))
 
 
