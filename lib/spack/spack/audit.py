@@ -51,6 +51,7 @@ from urllib.request import urlopen
 
 import spack.builder
 import spack.config
+import spack.enums
 import spack.fetch_strategy
 import spack.llnl.util.lang
 import spack.patch
@@ -901,61 +902,91 @@ def _linting_package_file(pkgs, error_cls):
 
 
 @package_directives
-def _unknown_variants_in_directives(pkgs, error_cls):
-    """Report unknown or wrong variants in directives for this package"""
+def _variant_issues_in_directives(pkgs, error_cls):
+    """Report unknown, wrong, or propagating variants in directives for this package"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
 
-        # Check "conflicts" directive
+        # Check the "conflicts" directive
         for trigger, conflicts in pkg_cls.conflicts.items():
+            errors.extend(
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    spack.spec.Spec(trigger),
+                    directive="conflicts",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
+                )
+            )
             for conflict, _ in conflicts:
-                vrn = spack.spec.Spec(conflict)
-                try:
-                    vrn.constrain(trigger)
-                except Exception:
-                    # If one of the conflict/trigger includes a platform and the other
-                    # includes an os or target, the constraint will fail if the current
-                    # platform is not the plataform in the conflict/trigger. Audit the
-                    # conflict and trigger separately in that case.
-                    # When os and target constraints can be created independently of
-                    # the platform, TODO change this back to add an error.
-                    errors.extend(
-                        _analyze_variants_in_directive(
-                            pkg_cls,
-                            spack.spec.Spec(trigger),
-                            directive="conflicts",
-                            error_cls=error_cls,
-                        )
-                    )
                 errors.extend(
-                    _analyze_variants_in_directive(
-                        pkg_cls, vrn, directive="conflicts", error_cls=error_cls
+                    _issues_in_directive_constraint(
+                        pkg_cls,
+                        spack.spec.Spec(conflict),
+                        directive="conflicts",
+                        error_cls=error_cls,
+                        filename=filename,
+                        requestor=pkg_name,
                     )
                 )
 
         # Check "depends_on" directive
-        for trigger in pkg_cls.dependencies:
+        for trigger, deps_by_name in pkg_cls.dependencies.items():
             vrn = spack.spec.Spec(trigger)
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, vrn, directive="depends_on", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    vrn,
+                    directive="depends_on",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
+            for dep_name, dep in deps_by_name.items():
+                if spack.repo.PATH.is_virtual(dep_name):
+                    continue
+                try:
+                    dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_name)
+                except spack.repo.UnknownPackageError:
+                    continue
+                errors.extend(
+                    _issues_in_directive_constraint(
+                        dep_pkg_cls,
+                        dep.spec,
+                        directive="depends_on",
+                        error_cls=error_cls,
+                        filename=filename,
+                        requestor=pkg_name,
+                    )
+                )
 
         # Check "provides" directive
         for when_spec in pkg_cls.provided:
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, when_spec, directive="provides", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    when_spec,
+                    directive="provides",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
 
         # Check "resource" directive
         for vrn in pkg_cls.resources:
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, vrn, directive="resource", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    vrn,
+                    directive="resource",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
 
@@ -1156,17 +1187,49 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     return errors
 
 
-def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
+def _issues_in_directive_constraint(pkg, constraint, *, directive, error_cls, filename, requestor):
+    errors = []
+    errors.extend(
+        _analyze_variants_in_directive(
+            pkg,
+            constraint,
+            directive=directive,
+            error_cls=error_cls,
+            filename=filename,
+            requestor=requestor,
+        )
+    )
+    errors.extend(
+        _analize_propagated_deps_in_directive(
+            pkg,
+            constraint,
+            directive=directive,
+            error_cls=error_cls,
+            filename=filename,
+            requestor=requestor,
+        )
+    )
+    return errors
+
+
+def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, filename, requestor):
     errors = []
     variant_names = pkg.variant_names()
-    summary = f"{pkg.name}: wrong variant in '{directive}' directive"
-    filename = spack.repo.PATH.filename_for_package_name(pkg.name)
-
+    summary = f"{requestor}: wrong variant in '{directive}' directive"
     for name, v in constraint.variants.items():
+        if name == "commit":
+            # Automatic variant
+            continue
+
         if name not in variant_names:
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
             continue
+
+        if v.propagate:
+            propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+            msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
+            errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
 
         try:
             spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)
@@ -1178,6 +1241,18 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             msg = str(e).strip()
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
 
+    return errors
+
+
+def _analize_propagated_deps_in_directive(
+    pkg, constraint, *, directive, error_cls, filename, requestor
+):
+    errors = []
+    summary = f"{requestor}: dependency propagation ('%%') in '{directive}' directive"
+    for edge in constraint.traverse_edges():
+        if edge.propagation != spack.enums.PropagationPolicy.NONE:
+            msg = f"'{edge.spec}' contains a propagated dependency"
+            errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
     return errors
 
 
