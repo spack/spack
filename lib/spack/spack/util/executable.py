@@ -248,8 +248,8 @@ class Executable:
         if isinstance(ignore_errors, int):
             ignore_errors = (ignore_errors,)
 
-        if input is str:
-            raise ValueError("Cannot use `str` as input stream.")
+        if input is str or input is str.split:
+            raise ValueError("Cannot use `str` or `str.split` as input stream.")
 
         def streamify(arg, mode):
             if isinstance(arg, str):
