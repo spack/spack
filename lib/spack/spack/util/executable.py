@@ -4,6 +4,7 @@
 
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
@@ -275,8 +276,7 @@ class Executable:
 
         cmd = self.exe + list(args)
 
-        escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
-        cmd_line_string = " ".join(escaped_cmd)
+        cmd_line_string = " ".join(shlex.quote(arg) for arg in cmd)
         tty.debug(cmd_line_string)
 
         result = None
