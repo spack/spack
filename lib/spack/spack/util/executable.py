@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import os
 import re
 import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
-from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Type, Union, overload
+from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
 
 from spack.vendor.typing_extensions import Literal
 
@@ -18,12 +19,14 @@ from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "which_string", "ProcessError"]
 
+OutType = Union[Optional[BinaryIO], str, Type[str], Callable]
+
 
 def _process_cmd_output(
     out: bytes,
     err: bytes,
-    output,
-    error,
+    output: OutType,
+    error: OutType,
     encoding: str = "ISO-8859-1" if sys.platform == "win32" else "utf-8",
 ) -> Optional[str]:
     if output is str or output is str.split or error is str or error is str.split:
@@ -41,6 +44,17 @@ def _process_cmd_output(
         return result
     else:
         return None
+
+
+def _streamify_output(arg: OutType, name: str) -> Tuple[Union[int, BinaryIO, None], bool]:
+    if isinstance(arg, str):
+        return open(arg, "wb"), True
+    elif arg is str or arg is str.split:
+        return subprocess.PIPE, False
+    elif callable(arg):
+        raise ValueError(f"`{name}` must be a stream, a filename, or `str`/`str.split`")
+    else:
+        return arg, False
 
 
 class Executable:
@@ -149,8 +163,8 @@ class Executable:
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         input: Optional[BinaryIO] = ...,
-        output: Union[Type[str], Callable],
-        error: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
+        output: Union[Type[str], Callable],  # str or str.split
+        error: OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -165,8 +179,8 @@ class Executable:
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         input: Optional[BinaryIO] = ...,
-        output: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
-        error: Union[Type[str], Callable],
+        output: OutType = ...,
+        error: Union[Type[str], Callable],  # str or str.split
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -180,8 +194,8 @@ class Executable:
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
         input: Optional[BinaryIO] = None,
-        output: Union[Optional[BinaryIO], str, Type[str], Callable] = None,
-        error: Union[Optional[BinaryIO], str, Type[str], Callable] = None,
+        output: OutType = None,
+        error: OutType = None,
         _dump_env: Optional[Dict[str, str]] = None,
     ) -> Optional[str]:
         """Runs this executable in a subprocess.
@@ -250,18 +264,13 @@ class Executable:
 
         if input is str or input is str.split:
             raise ValueError("Cannot use `str` or `str.split` as input stream.")
+        elif isinstance(input, str):
+            istream, close_istream = open(input, "rb"), True
+        else:
+            istream, close_istream = input, False
 
-        def streamify(arg, mode):
-            if isinstance(arg, str):
-                return open(arg, mode), True  # pylint: disable=unspecified-encoding
-            elif arg in (str, str.split):
-                return subprocess.PIPE, False
-            else:
-                return arg, False
-
-        ostream, close_ostream = streamify(output, "wb")
-        estream, close_estream = streamify(error, "wb")
-        istream, close_istream = streamify(input, "rb")
+        ostream, close_ostream = _streamify_output(output, "output")
+        estream, close_estream = _streamify_output(error, "error")
 
         if not ignore_quotes:
             quoted_args = [arg for arg in args if re.search(r'^".*"$|^\'.*\'$', arg)]
@@ -326,11 +335,12 @@ class Executable:
                 ) from te
 
         finally:
-            if close_ostream:
+            # The isinstance checks are only needed for type checking.
+            if close_ostream and isinstance(ostream, io.IOBase):
                 ostream.close()
-            if close_estream:
+            if close_estream and isinstance(estream, io.IOBase):
                 estream.close()
-            if close_istream:
+            if close_istream and isinstance(istream, io.IOBase):
                 istream.close()
 
         return result
