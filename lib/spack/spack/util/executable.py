@@ -276,12 +276,12 @@ class Executable:
             quoted_args = [arg for arg in args if re.search(r'^".*"$|^\'.*\'$', arg)]
             if quoted_args:
                 tty.warn(
-                    "Quotes in command arguments can confuse scripts like" " configure.",
+                    "Quotes in command arguments can confuse scripts like configure.",
                     "The following arguments may cause problems when executed:",
                     str("\n".join(["    " + arg for arg in quoted_args])),
                     "Quotes aren't needed because spack doesn't use a shell. "
                     "Consider removing them.",
-                    "If multiple levels of quotation are required, use " "`ignore_quotes=True`.",
+                    "If multiple levels of quotation are required, use `ignore_quotes=True`.",
                 )
 
         cmd = self.exe + list(args)
