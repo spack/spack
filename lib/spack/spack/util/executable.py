@@ -19,6 +19,30 @@ from spack.util.environment import EnvironmentModifications
 __all__ = ["Executable", "which", "which_string", "ProcessError"]
 
 
+def _process_cmd_output(
+    out: bytes,
+    err: bytes,
+    output,
+    error,
+    encoding: str = "ISO-8859-1" if sys.platform == "win32" else "utf-8",
+) -> Optional[str]:
+    if output is str or output is str.split or error is str or error is str.split:
+        result = ""
+        if output is str or output is str.split:
+            outstr = out.decode(encoding)
+            result += outstr
+            if output is str.split:
+                sys.stdout.write(outstr)
+        if error is str or error is str.split:
+            errstr = err.decode(encoding)
+            result += errstr
+            if error is str.split:
+                sys.stderr.write(errstr)
+        return result
+    else:
+        return None
+
+
 class Executable:
     """
     Represent an executable file that can be run as a subprocess.
@@ -196,29 +220,6 @@ class Executable:
 
         By default, the subprocess inherits the parent's file descriptors.
         """
-
-        def process_cmd_output(out, err):
-            result = None
-            if output in (str, str.split) or error in (str, str.split):
-                result = ""
-                if output in (str, str.split):
-                    if sys.platform == "win32":
-                        outstr = str(out.decode("ISO-8859-1"))
-                    else:
-                        outstr = str(out.decode("utf-8"))
-                    result += outstr
-                    if output is str.split:
-                        sys.stdout.write(outstr)
-                if error in (str, str.split):
-                    if sys.platform == "win32":
-                        errstr = str(err.decode("ISO-8859-1"))
-                    else:
-                        errstr = str(err.decode("utf-8"))
-                    result += errstr
-                    if error is str.split:
-                        sys.stderr.write(errstr)
-            return result
-
         # Setup default environment
         current_environment = os.environ.copy() if env is None else {}
         self._default_envmod.apply_modifications(current_environment)
@@ -298,7 +299,7 @@ class Executable:
 
         try:
             out, err = proc.communicate(timeout=timeout)
-            result = process_cmd_output(out, err)
+            result = _process_cmd_output(out, err, output, error)
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string
@@ -314,7 +315,7 @@ class Executable:
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()
-            result = process_cmd_output(out, err)
+            result = _process_cmd_output(out, err, output, error)
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_error:
                 raise ProcessTimeoutError(
