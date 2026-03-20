@@ -289,8 +289,15 @@ class Executable:
                 env=current_environment,
                 close_fds=False,
             )
-            out, err = proc.communicate(timeout=timeout)
+        except OSError as e:
+            message = "Command: " + cmd_line_string
+            if " " in self.exe[0]:
+                message += "\nDid you mean to add a space to the command?"
 
+            raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
+
+        try:
+            out, err = proc.communicate(timeout=timeout)
             result = process_cmd_output(out, err)
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
@@ -303,12 +310,6 @@ class Executable:
                     long_msg += "\n" + result
 
                 raise ProcessError("Command exited with status %d:" % proc.returncode, long_msg)
-        except OSError as e:
-            message = "Command: " + cmd_line_string
-            if " " in self.exe[0]:
-                message += "\nDid you mean to add a space to the command?"
-
-            raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
         except subprocess.TimeoutExpired as te:
             proc.kill()
