@@ -304,7 +304,7 @@ class Executable:
             if " " in self.exe[0]:
                 message += "\nDid you mean to add a space to the command?"
 
-            raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
+            raise ProcessError(f"{self.exe[0]}: {e.strerror}", message)
 
         try:
             out, err = proc.communicate(timeout=timeout)
@@ -319,7 +319,7 @@ class Executable:
                     # stdout/stderr (e.g. if 'output' is not specified)
                     long_msg += "\n" + result
 
-                raise ProcessError("Command exited with status %d:" % proc.returncode, long_msg)
+                raise ProcessError(f"Command exited with status {proc.returncode}:", long_msg)
 
         except subprocess.TimeoutExpired as te:
             proc.kill()
@@ -352,7 +352,7 @@ class Executable:
         return hash((type(self),) + tuple(self.exe))
 
     def __repr__(self):
-        return "<exe: %s>" % self.exe
+        return f"<exe: {self.exe}>"
 
     def __str__(self):
         return " ".join(self.exe)
