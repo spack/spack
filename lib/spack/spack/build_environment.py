@@ -220,7 +220,7 @@ class MakeExecutable(Executable):
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable] = ...,
-        error: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
+        error: spack.util.executable.OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -238,7 +238,7 @@ class MakeExecutable(Executable):
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         input: Optional[BinaryIO] = ...,
-        output: Union[Optional[BinaryIO], str, Type[str], Callable] = ...,
+        output: spack.util.executable.OutType = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
