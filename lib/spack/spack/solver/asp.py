@@ -15,6 +15,7 @@ import pprint
 import random
 import re
 import sys
+import tempfile
 import time
 import warnings
 from typing import (
@@ -59,7 +60,6 @@ import spack.store
 import spack.traverse
 import spack.util.crypto
 import spack.util.hash
-import spack.util.lock as lk
 import spack.util.module_cmd as md
 import spack.util.path
 import spack.util.timer
@@ -539,9 +539,7 @@ class ConcretizationCache:
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self.root /= f"v{ConcretizationCache.VERSION}"
 
-        # create root and lockfile
         self.root.mkdir(parents=True, exist_ok=True)
-        self._lockfile = self.root / ".cc_lock"
 
     def cleanup(self):
         """Prunes the concretization cache according to configured entry
@@ -570,25 +568,12 @@ class ConcretizationCache:
 
         # Try to remove the oldest half of the cache.
         for _, entry_to_rm in removal_queue[: entry_limit // 2]:
-            # cache bucket was removed by another process -- that's fine; move on
-            if not entry_to_rm.exists():
-                continue
-
-            try:
-                with self.write_transaction(entry_to_rm, timeout=1e-6):
-                    self._safe_remove(entry_to_rm)
-            except lk.LockTimeoutError:
-                # if we can't get a lock, it's either
-                # 1) being read, so it's been used recently, i.e. not a good candidate for LRU,
-                # 2) it's already being removed by another process, so we don't care, or
-                # 3) system is busy, but we don't really need to wait just for cache cleanup.
-                pass  # so skip it
+            self._remove_entry(entry_to_rm)
 
     def cache_entries(self):
         """Generator producing cache entries within a bucket"""
         for cache_entry in self.root.iterdir():
-            # Lockfile starts with "."
-            # old style concretization cache entries are in directories
+            # skip dotfiles and old-style directory entries
             if not cache_entry.name.startswith(".") and cache_entry.is_file():
                 yield cache_entry
 
@@ -596,67 +581,19 @@ class ConcretizationCache:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
         return spack.util.hash.b32_hash(problem)
 
+    @staticmethod
+    def _remove_entry(cache_path: pathlib.Path) -> None:
+        """Remove a corrupt or outdated cache entry, ignoring errors if it's already gone."""
+        try:
+            cache_path.unlink()
+        except OSError:
+            pass
+
     def _cache_path_from_problem(self, problem: str) -> pathlib.Path:
         """Returns a Path object representing the path to the cache
         entry for the given problem where the problem is the sha256 of the given asp problem"""
         prefix = self._prefix_digest(problem)
         return self.root / prefix
-
-    def _safe_remove(self, cache_dir: pathlib.Path) -> bool:
-        """Removes cache entries with handling for the case where the entry has been
-        removed already or there are multiple cache entries in a directory"""
-        try:
-            cache_dir.unlink()
-            return True
-        except FileNotFoundError:
-            # That's fine, removal is idempotent
-            pass
-        except OSError as e:
-            # Catch other timing/access related issues
-            tty.debug(
-                f"Exception occurred while attempting to remove Concretization Cache entry, {e}"
-            )
-            pass
-        return False
-
-    def _lock(self, path: pathlib.Path) -> lk.Lock:
-        """Returns a lock over the byte range corresponding to the hash of the asp problem.
-
-        ``path`` is a path to a file in the cache, and its basename is the hash of the problem.
-
-        Args:
-            path: absolute or relative path to concretization cache entry to be locked
-        """
-        return lk.Lock(
-            str(self._lockfile),
-            start=spack.util.hash.base32_prefix_bits(
-                path.name, spack.util.crypto.bit_length(sys.maxsize)
-            ),
-            length=1,
-            desc=f"Concretization cache lock for {path}",
-        )
-
-    def read_transaction(
-        self, path: pathlib.Path, timeout: Optional[float] = None
-    ) -> lk.ReadTransaction:
-        """Read transactions for concretization cache entries.
-
-        Args:
-            path: absolute or relative path to the concretization cache entry to be locked
-            timeout: give up after this many seconds
-        """
-        return lk.ReadTransaction(self._lock(path), timeout=timeout)
-
-    def write_transaction(
-        self, path: pathlib.Path, timeout: Optional[float] = None
-    ) -> lk.WriteTransaction:
-        """Write transactions for concretization cache entries
-
-        Args:
-            path: absolute or relative path to the concretization cache entry to be locked
-            timeout: give up after this many seconds
-        """
-        return lk.WriteTransaction(self._lock(path), timeout=timeout)
 
     def store(self, problem: str, result: Result, statistics: List) -> None:
         """Creates entry in concretization cache for problem if none exists,
@@ -667,21 +604,31 @@ class ConcretizationCache:
         problem.
         """
         cache_path = self._cache_path_from_problem(problem)
+
+        # Content-keyed: if the file exists, it already has the right content.
+        if cache_path.exists():
+            return
+
         cache_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with self.write_transaction(cache_path, timeout=30):
-            if cache_path.exists():
-                # if cache path file exists, we already have a cache entry, likely created
-                # by another process.  Exit early.
-                return
+        cache_dict = {
+            "_meta": {"version": ConcretizationCache.VERSION},
+            "results": result.to_dict(),
+            "statistics": statistics,
+        }
 
-            with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
-                cache_dict = {
-                    "_meta": {"version": ConcretizationCache.VERSION},
-                    "results": result.to_dict(),
-                    "statistics": statistics,
-                }
-                cache_entry.write(json.dumps(cache_dict).encode())
+        # Write to a temp file in the same directory, then atomically rename.
+        # mkstemp appends random characters after the prefix, so names are unique.
+        fd, tmp_path = tempfile.mkstemp(dir=self.root, prefix=".tmp_")
+        try:
+            with os.fdopen(fd, "wb") as raw_f:
+                with gzip.open(raw_f, "wb", compresslevel=6) as f:
+                    f.write(json.dumps(cache_dict).encode())
+            os.rename(tmp_path, cache_path)
+        except BaseException:
+            # Clean up temp file on any failure (including if another process won the race)
+            self._remove_entry(pathlib.Path(tmp_path))
+            raise
 
     def fetch(self, problem: str) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
@@ -692,42 +639,34 @@ class ConcretizationCache:
         """
         cache_path = self._cache_path_from_problem(problem)
         if not cache_path.exists():
-            return None, None  # if exists is false, then there's no chance of a hit
-
-        cache_content = None
-        try:
-            with self.read_transaction(cache_path, timeout=2):
-                try:
-                    with gzip.open(cache_path, "rb", compresslevel=6) as f:
-                        f.peek(1)  # Try to read at least one byte
-                        f.seek(0)
-                        cache_data = f.read().decode("utf-8")
-                        cache_content = json.loads(cache_data)
-
-                except (OSError, FileNotFoundError, json.JSONDecodeError):
-                    # If any of this happens, it's a cache miss.
-                    # We'll just overwrite the corrupt file with a new one.
-                    pass
-
-        except lk.LockTimeoutError:
-            pass  # if the lock times, out skip the cache
-
-        if not cache_content:
             return None, None
 
-        # miss if the metadata we find is not the same version as we're using here.
+        # Each failure below removes the cache entry so that corrupt or outdated files
+        # don't persist and cause repeated failed lookups.
+        try:
+            with gzip.open(cache_path, "rb") as f:
+                cache_content = json.loads(f.read().decode("utf-8"))
+        except (OSError, json.JSONDecodeError):
+            # file is corrupt, truncated, or disappeared since the exists() check
+            self._remove_entry(cache_path)
+            return None, None
+
         cache_version = cache_content.get("_meta", {}).get("version")
-        if not cache_version or cache_version != ConcretizationCache.VERSION:
+        if cache_version != ConcretizationCache.VERSION:
+            # outdated format that we can't read; remove so it's regenerated
+            self._remove_entry(cache_path)
+            return None, None
+
+        try:
+            result = Result.from_dict(cache_content["results"])
+        except (KeyError, ValueError, spack.error.SpecSyntaxError):
+            # valid JSON but spec data is malformed or incompatible
+            self._remove_entry(cache_path)
             return None, None
 
         # update mod/access time for use w/ LRU cleanup
         os.utime(cache_path)
-        try:
-            result = Result.from_dict(cache_content["results"])
-            return result, cache_content["statistics"]
-
-        except (KeyError, spack.error.SpecSyntaxError):
-            return None, None
+        return result, cache_content["statistics"]
 
 
 def _is_checksummed_git_version(v):
