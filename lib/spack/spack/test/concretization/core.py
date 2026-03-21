@@ -4506,6 +4506,54 @@ def test_concretization_cache_roundtrip_result(use_concretization_cache):
     assert result1 == result2
 
 
+def test_concretization_cache_reapplies_patches_on_hit(
+    mock_packages, use_concretization_cache, monkeypatch
+):
+    """Tests that adding a patch to a recipe is taken into account when we hit the cache.
+
+    Patches are not part of the ASP facts, so adding a patch to a recipe does not change the cache
+    key. This ensure we do post-processing of solve output correctly after a cache hit.
+    """
+    EXTRA_SHA256 = "a" * 64  # synthetic sha256 simulating a newly added patch
+
+    # First solve: populate the cache. patch@1.0 has foo.patch and baz.patch.
+    spec1 = spack.concretize.concretize_one("patch@1.0")
+    assert "patches" in spec1.variants
+    initial_sha256s = frozenset(spec1.variants["patches"].value)
+
+    # Simulate a recipe change: wrap _inject_patches_variant to inject an extra sha256,
+    # as if a new patch directive had been added to the package.
+    original_inject = spack.spec._inject_patches_variant
+
+    def inject_with_new_patch(root):
+        original_inject(root)
+        for s in root.traverse():
+            if s.name == "patch" and not s.concrete and "patches" in s.variants:
+                existing = list(s.variants["patches"].value)
+                s.variants["patches"].set(*existing, EXTRA_SHA256)
+                break
+
+    monkeypatch.setattr(spack.spec, "_inject_patches_variant", inject_with_new_patch)
+
+    # The cache key has not changed (patches are not in ASP facts), so the second
+    # solve must hit the cache without running clingo again.
+    def _assert_no_store(self, problem, result, statistics, test=False):
+        raise AssertionError("Cache should be hit, not re-solved and stored")
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+
+    # Second solve: cache hit + post_process_concretization_result re-runs.
+    spec2 = spack.concretize.concretize_one("patch@1.0")
+
+    assert "patches" in spec2.variants
+    new_sha256s = frozenset(spec2.variants["patches"].value)
+
+    # The new patch must appear (post_process_concretization_result re-ran on hit).
+    assert EXTRA_SHA256 in new_sha256s, "Expected the new patch to be injected on a cache hit"
+    # The original patches are still present.
+    assert initial_sha256s <= new_sha256s
+
+
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
