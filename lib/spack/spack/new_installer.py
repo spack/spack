@@ -402,6 +402,7 @@ def worker_function(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
     run_tests: bool,
     state: Connection,
     parent: Connection,
@@ -493,6 +494,7 @@ def worker_function(
                 restage,
                 skip_patch,
                 fake,
+                install_source,
                 state_stream,
                 log_path,
                 spack.store.STORE,
@@ -609,6 +611,7 @@ def _install(
     restage: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
@@ -681,6 +684,10 @@ def _install(
             pkg.do_stage()
 
         os.chdir(stage.source_path)
+
+        if install_source and os.path.isdir(stage.source_path):
+            src_target = os.path.join(spec.prefix, "share", spec.name, "src")
+            fs.install_tree(stage.source_path, src_target)
 
         spack.hooks.pre_install(spec)
 
@@ -811,6 +818,7 @@ def start_build(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
     run_tests: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
@@ -851,6 +859,7 @@ def start_build(
             keep_prefix,
             skip_patch,
             fake,
+            install_source,
             run_tests,
             state_w_conn,
             output_w_conn,
@@ -1814,9 +1823,9 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if install_source:
-            raise NotImplementedError("Installing sources is not implemented")
-        elif stop_at is not None:
+        self.install_source = install_source
+
+        if stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
             raise NotImplementedError("Stopping before an install phase is not implemented")
@@ -2241,6 +2250,7 @@ class PackageInstaller:
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
             fake=self.fake,
+            install_source=self.install_source,
             run_tests=run_tests,
             jobserver=jobserver,
         )

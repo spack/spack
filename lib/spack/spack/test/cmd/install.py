@@ -194,7 +194,9 @@ def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_install_with_source(mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_install_with_source(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
     """Verify that source has been copied into place."""
     install("--source", "--keep-stage", "trivial-install-test-package")
     spec = spack.concretize.concretize_one("trivial-install-test-package")
