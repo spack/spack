@@ -1616,9 +1616,7 @@ def schedule_builds(
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
-    try:
-        db.lock.acquire_read(timeout=1e-9)
-    except spack.util.lock.LockTimeoutError:
+    if not db.lock.try_acquire_read():
         return ScheduleResult(blocked, to_start, newly_installed)
 
     try:
@@ -1630,19 +1628,14 @@ def schedule_builds(
             spec = build_graph.nodes[dag_hash]
             lock = prefix_locker.lock(spec)
 
-            try:
-                lock.acquire_write(timeout=1e-9)
+            if lock.try_acquire_write():
                 blocked = False
                 have_write = True
-            except spack.util.lock.LockTimeoutError:
-                # Write lock failed: either another process is actively building, or it
-                # finished and downgraded to a read lock. Try a read lock to find out.
-                try:
-                    lock.acquire_read(timeout=1e-9)
-                except spack.util.lock.LockTimeoutError:
-                    idx += 1
-                    continue  # active build in progress; try the next spec
+            elif lock.try_acquire_read():
                 have_write = False
+            else:
+                idx += 1
+                continue
 
             # Check installed status under the DB read lock and prefix lock.
             upstream, record = db.query_by_spec_hash(dag_hash)
@@ -2145,13 +2138,10 @@ class PackageInstaller:
     def _save_to_db(
         self, finished_builds: List[ChildInfo], retained_read_locks: List[spack.util.lock.Lock]
     ) -> bool:
-        try:
-            # Only try to get the lock once (non-blocking). If it fails, try it next time.
-            if self.db.lock.acquire_write(timeout=1e-9):
-                self.db._read()
-        except spack.util.lock.LockTimeoutError:
+        if not self.db.lock.try_acquire_write():
             return False
         try:
+            self.db._read()
             for build in finished_builds:
                 self.db._add(build.spec, explicit=build.explicit)
         finally:
