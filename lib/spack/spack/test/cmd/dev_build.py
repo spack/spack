@@ -44,7 +44,7 @@ def test_dev_build_basics(tmp_path: pathlib.Path, install_mockery):
     assert os.path.exists(str(tmp_path))
 
 
-def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -62,7 +62,7 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
-def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -81,7 +81,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
     assert not spack.store.STORE.db.query(spec, installed=True)
 
 
-def test_dev_build_until_last_phase(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_until_last_phase(tmp_path: pathlib.Path, install_mockery, installer_variant):
     # Test that we ignore the last_phase argument if it is already last
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
@@ -102,7 +102,7 @@ def test_dev_build_until_last_phase(tmp_path: pathlib.Path, install_mockery):
     assert os.path.exists(str(tmp_path))
 
 
-def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )

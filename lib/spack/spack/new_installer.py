@@ -107,6 +107,9 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 #: Suffix for temporary cleanup during failed install
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
+#: Exit code used by the child process to signal that the build was stopped at a phase boundary
+EXIT_STOPPED_AT_PHASE = 2
+
 
 class DatabaseAction:
     """Base class for objects that need to be persisted to the database."""
@@ -437,6 +440,8 @@ def worker_function(
     js2: Optional[Connection],
     log_path: str,
     global_state: GlobalState,
+    stop_before: Optional[str] = None,
+    stop_at: Optional[str] = None,
 ):
     """
     Function run in the build child process. Installs the specified spec, sending state updates
@@ -530,7 +535,11 @@ def worker_function(
                 log_path,
                 spack.store.STORE,
                 run_tests,
+                stop_before,
+                stop_at,
             )
+    except spack.error.StopPhase:
+        exit_code = EXIT_STOPPED_AT_PHASE
     except BaseException:
         traceback.print_exc()  # log the traceback to the log file
         exit_code = 1
@@ -647,6 +656,8 @@ def _install(
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
     run_tests: bool = False,
+    stop_before: Optional[str] = None,
+    stop_at: Optional[str] = None,
 ) -> None:
     """Install a spec from build cache or source."""
 
@@ -722,7 +733,16 @@ def _install(
 
         spack.hooks.pre_install(spec)
 
-        for phase in spack.builder.create(pkg):
+        builder = spack.builder.create(pkg)
+        if stop_before is not None and stop_before not in builder.phases:
+            raise spack.error.InstallError(f"'{stop_before}' is not a valid phase for {pkg.name}")
+        if stop_at is not None and stop_at not in builder.phases:
+            raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
+
+        for phase in builder:
+            if stop_before is not None and phase.name == stop_before:
+                send_state(f"stopped before {stop_before}", state_stream)
+                raise spack.error.StopPhase(f"Stopping before '{stop_before}'")
             send_state(phase.name, state_stream)
             spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
             # Run the install phase with debug output enabled.
@@ -732,6 +752,9 @@ def _install(
                 phase.execute()
             finally:
                 spack.llnl.util.tty.set_debug(old_debug)
+            if stop_at is not None and phase.name == stop_at:
+                send_state(f"stopped after {stop_at}", state_stream)
+                raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
@@ -892,6 +915,8 @@ def start_build(
     install_source: bool,
     run_tests: bool,
     jobserver: JobServer,
+    stop_before: Optional[str] = None,
+    stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
     # Create pipes for the child's output, state reporting, and control.
@@ -940,6 +965,8 @@ def start_build(
             None if fifo else jobserver.w_conn,
             log_path,
             GlobalState(),
+            stop_before,
+            stop_at,
         ),
     )
     proc.start()
@@ -1921,11 +1948,8 @@ class PackageInstaller:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
         self.install_source = install_source
-
-        if stop_at is not None:
-            raise NotImplementedError("Stopping at an install phase is not implemented")
-        elif stop_before is not None:
-            raise NotImplementedError("Stopping before an install phase is not implemented")
+        self.stop_at = stop_at
+        self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
 
         self.db = spack.store.STORE.db
@@ -2102,9 +2126,9 @@ class PackageInstaller:
                     build = self.running_builds.pop(pid)
                     self.capacity += 1
                     jobserver.release()
-                    self._drain_child_output(build)
-                    self.state_buffers.pop(build.state_r_conn.fileno(), None)
                     self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                    self._drain_child_output(build, selector)
+                    self._drain_child_state(build, selector)
                     build.cleanup(selector)
                     exitcode = build.proc.exitcode
                     assert exitcode is not None, "Finished build should have exit code set"
@@ -2117,6 +2141,13 @@ class PackageInstaller:
                         )
                         next_database_write = current_time + DATABASE_WRITE_INTERVAL
                         self.build_status.update_state(build.spec.dag_hash(), "finished")
+                    elif exitcode == EXIT_STOPPED_AT_PHASE:
+                        # Partial build: neither failure nor success. Should not be persisted in
+                        # the database, but also not treated as a failure in the UI. Just release
+                        # locks and move on.
+                        if build.prefix_lock is not None:
+                            build.prefix_lock.release_write()
+                            build.prefix_lock = None
                     elif not self.fail_fast or not failures:
                         # In fail-fast mode, only record the first failure. Subsequent failures may
                         # be a consequence of us terminating other builds, and should not be
@@ -2357,16 +2388,13 @@ class PackageInstaller:
         is_develop = spec.is_develop
         tests = self.tests
         run_tests = tests is True or bool(tests and spec.name in tests)
+        is_root = dag_hash in self.build_graph.roots
         child_info = start_build(
             spec,
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
-            install_policy=(
-                self.root_policy
-                if dag_hash in self.build_graph.roots
-                else self.dependencies_policy
-            ),
+            install_policy=self.root_policy if is_root else self.dependencies_policy,
             dirty=self.dirty,
             # keep_stage/restage logic taken from installer.py
             keep_stage=self.keep_stage or is_develop,
@@ -2377,6 +2405,8 @@ class PackageInstaller:
             install_source=self.install_source,
             run_tests=run_tests,
             jobserver=jobserver,
+            stop_before=self.stop_before if is_root else None,
+            stop_at=self.stop_at if is_root else None,
         )
         self.log_paths[dag_hash] = child_info.log_path
         child_info.prefix_lock = prefix_lock
@@ -2420,18 +2450,17 @@ class PackageInstaller:
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
-    def _drain_child_output(self, child_info: ChildInfo) -> None:
+    def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        dag_hash = child_info.spec.dag_hash()
         r_fd = child_info.output_r_conn.fileno()
-        try:
-            while True:
-                data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
-                if not data:
-                    break
-                self.build_status.print_logs(dag_hash, data)
-        except OSError:
-            pass
+        while r_fd in selector.get_map():
+            self._handle_child_logs(r_fd, child_info, selector)
+
+    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
+        """Read and process any remaining state messages from a finished child's pipe."""
+        r_fd = child_info.state_r_conn.fileno()
+        while r_fd in selector.get_map():
+            self._handle_child_state(r_fd, child_info, selector)
 
     def _handle_child_state(
         self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
