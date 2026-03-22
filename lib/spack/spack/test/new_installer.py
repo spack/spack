@@ -295,7 +295,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -305,6 +305,7 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked
             assert len(to_start) == 1
@@ -324,7 +325,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -334,6 +335,7 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked
             assert not to_start
@@ -353,7 +355,7 @@ class TestScheduleBuilds:
         # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
         jobserver = JobServer(num_jobs=1)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -363,6 +365,7 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=True,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked
             assert not to_start
@@ -385,7 +388,7 @@ class TestScheduleBuilds:
 
         monkeypatch.setattr(lock, "acquire_write", always_timeout)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -395,6 +398,7 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert blocked
             assert not to_start
@@ -411,7 +415,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -421,6 +425,7 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked
             assert len(to_start) == 1
@@ -446,7 +451,7 @@ class TestScheduleBuilds:
 
         monkeypatch.setattr(lock_a, "acquire_write", always_timeout)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -456,6 +461,7 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked  # spec_b was schedulable
             started_hashes = {h for h, _ in to_start}
@@ -488,7 +494,7 @@ class TestScheduleBuilds:
 
         monkeypatch.setattr(lock, "acquire_write", write_timeout)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -498,6 +504,7 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert blocked  # no write lock was obtained; jobserver should not fire
             assert not to_start
@@ -530,7 +537,7 @@ class TestScheduleBuilds:
 
         monkeypatch.setattr(lock, "acquire_write", write_timeout)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -540,12 +547,40 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert blocked
             assert not to_start
             assert not newly_installed
             assert pending == [spec.dag_hash()]  # spec stays in pending for retry
         finally:
+            jobserver.close()
+
+    def test_failed_spec_skipped(self, temporary_store, mock_packages):
+        """A spec marked as failed by another process is not scheduled and appears in
+        newly_failed."""
+        spec = self._make_spec("trivial-install-test-package")
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        temporary_store.failure_tracker.mark(spec)
+        try:
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                overwrite_time=0.0,
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
+            )
+            assert newly_failed == [spec]
+            assert not blocked and not to_start and not newly_installed and not pending
+        finally:
+            temporary_store.failure_tracker.clear(spec, force=True)
             jobserver.close()
 
     def test_overwrite_handled_by_concurrent_process(self, temporary_store, mock_packages):
@@ -556,7 +591,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            blocked, to_start, newly_installed, newly_failed = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -566,6 +601,7 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                failure_tracker=temporary_store.failure_tracker,
             )
             assert not blocked
             assert not to_start
