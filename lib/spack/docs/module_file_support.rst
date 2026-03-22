@@ -284,6 +284,7 @@ The behavior is controlled by the ``variants`` configuration option under the ``
      default:
        tcl:
          variants: all
+         hash_length: 0
 
 The ``variants`` key accepts the values:
 
@@ -298,21 +299,71 @@ The variant specification also appears in the output of ``spack module tcl find`
 .. code-block:: console
 
    $ spack module tcl find git
-   git/2.53.0-gcc-15.2.1-3oqyekb build_system=autotools +man +nls +perl +subtree ~tcltk
+   git/2.53.0-gcc-15.2.1 build_system=autotools +man +nls +perl +subtree ~tcltk
+
+When several package installations are :ref:`projected<modules-projections>` in the same module file, Spack folds the description of these installations in this single module file.
+The module file defines the available variant combinations, and at load time the module tool selects the installation matching the variant specification requested by the user.
+To take full advantage of this folding mechanism and keep module file names simple, we recommend disabling the hash in module names (i.e., setting ``hash_length`` to ``0``).
 
 When a user tries to load a module with a variant combination that does not match any installed package, the module file raises an error listing the available variant combinations.
 
 .. code-block:: console
 
    $ module load git ~man +perl
-   Loading git/2.53.0-gcc-15.2.1-mxrobrp{-man:+perl}
+   Loading git/2.53.0-gcc-15.2.1{-man:+perl}
      ERROR: Specified package is not installed, available packages for this version are:
+       * "build_system=autotools +man +nls +perl +subtree ~tcltk"
        * "build_system=autotools ~man +nls ~perl +subtree ~tcltk"
      ERROR: Module evaluation aborted
 
 .. note::
 
    Multi-valued variants in Spack are represented as single-valued variants in the module file by joining enabled values with underscores (``_``).
+
+When module variants are enabled and several package installations are folded in same module file, Spack maintains this module file automatically:
+
+* if a new installation matches an existing module file, the module file is regenerated to include the new installation
+* on :ref:`refresh<cmd-spack-module-refresh>`, a module file is rewritten only once with content relative to the multiple installations folded into it
+* on uninstall, a folded module file is regenerated instead of being removed if other installations remain
+
+.. note::
+
+   The command ``spack module tcl rm`` will still delete the module file corresponding to the given spec, even if it contains other folded installations.
+
+In case some installations do not define a conditional variant that is defined in other installations, Spack assigns a neutral value to such variant for those installations.
+The neutral value is ``False`` for boolean variants and ``none`` for valued variants.
+These neutral values are treated as defaults, and are omitted from the variant specification when selecting an installation, like the ``tix`` variant in the following example:
+
+.. code-block:: console
+
+   $ spack install python@3.14.3 +tkinter +tix
+   ...
+   $ spack install python@3.14.3 ~tkinter
+   ...
+   $ spack module tcl loads python@3.14
+   # python@=3.14.3+...~tests+tix+tkinter+uuid+zlib+zstd ...
+   module load python/3.14.3-gcc-15.2.1 ... ~tests +tix +tkinter +uuid +zlib +zstd
+   # python@=3.14.3+...~tests~tkinter+uuid+zlib+zstd ...
+   module load python/3.14.3-gcc-15.2.1 ... ~tests ~tkinter +uuid +zlib +zstd
+
+
+If two installations folded in the same module file cannot be distinguished by their variant set, Spack adds a ``hash`` variant to the specification to ensure that each installation can still be selected unambiguously.
+
+.. code-block:: console
+
+   $ spack install hdf5@1.14 ^openmpi
+   ...
+   $ spack install hdf5@1.14 ^mpich
+   ...
+   $ spack module tcl loads hdf5@1.14
+   # hdf5@=1.14.6~...~hl~ipo~java~map+mpi+shared~subfiling~szip~threadsafe+tools ...
+   module load hdf5/1.14.6-gcc-15.2.1 ... hash=6dj7iyw ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
+   # hdf5@=1.14.6~...~hl~ipo~java~map+mpi+shared~subfiling~szip~threadsafe+tools ...
+   module load hdf5/1.14.6-gcc-15.2.1 ... hash=hyob6r5 ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
+
+.. warning::
+
+   If installing a package causes a folded module file to require the ``hash`` variant, it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>` for packages depending on it so their dependency load designations are updated accordingly.
 
 Filtering defined variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -330,6 +381,7 @@ When ``exclude_variants`` is set, the specified variants are omitted from the mo
      default:
        tcl:
          variants: all
+         hash_length: 0
          all:
            filter:
              exclude_variants:
@@ -346,7 +398,8 @@ In the above configuration file, ``build_system``, ``debug`` and ``lto`` are fil
 .. code-block:: console
 
    $ spack module tcl find git
-   git/2.53.0-gcc-15.2.1-mxrobrp ~man ~perl +subtree ~tcltk
+   git/2.53.0-gcc-15.2.1 ~man ~perl +subtree ~tcltk
+
 
 Default module versions
 """""""""""""""""""""""

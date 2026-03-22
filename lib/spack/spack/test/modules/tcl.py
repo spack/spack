@@ -11,6 +11,7 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
+import spack.main
 import spack.modules.common
 import spack.modules.error
 import spack.modules.tcl
@@ -21,6 +22,10 @@ from spack.config import Configuration
 mpich_spec_string = "mpich@3.0.4"
 mpileaks_spec_string = "mpileaks"
 libdwarf_spec_string = "libdwarf target=x86_64"
+
+install = spack.main.SpackCommand("install")
+mark = spack.main.SpackCommand("mark")
+uninstall = spack.main.SpackCommand("uninstall")
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
@@ -154,7 +159,7 @@ class TestTcl:
         module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
-        assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
+        assert len([x for x in content if x.startswith("    prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 1
         assert len([x for x in content if "setenv OMPI_MCA_mpi_leave_pinned {1}" in x]) == 1
         assert len([x for x in content if "setenv OMPI_MCA_MPI_LEAVE_PINNED {1}" in x]) == 0
@@ -163,7 +168,7 @@ class TestTcl:
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
-        assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
+        assert len([x for x in content if x.startswith("    prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
@@ -355,9 +360,9 @@ class TestTcl:
         module_configuration("conflicts")
         content = modulefile_content("mpileaks")
 
-        assert len([x for x in content if x.startswith("conflict")]) == 2
-        assert len([x for x in content if x == "conflict mpileaks"]) == 1
-        assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
+        assert len([x for x in content if x.startswith("    conflict")]) == 2
+        assert len([x for x in content if x == "    conflict mpileaks"]) == 1
+        assert len([x for x in content if x == "    conflict intel/14.0.1"]) == 1
 
     def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
         """Tests inconsistent conflict definition in `modules.yaml`."""
@@ -972,7 +977,7 @@ class TestTcl:
                     x
                     for x in content
                     if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
+                        "    depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
                     )
                 ]
             )
@@ -984,7 +989,8 @@ class TestTcl:
                     x
                     for x in content
                     if re.match(
-                        "depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug", x
+                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug",
+                        x,
                     )
                 ]
             )
@@ -996,7 +1002,8 @@ class TestTcl:
                     x
                     for x in content
                     if re.match(
-                        "depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic", x
+                        "    depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic",
+                        x,
                     )
                 ]
             )
@@ -1072,7 +1079,9 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if re.match("depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x)
+                    if re.match(
+                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
                 ]
             )
             == 1
@@ -1103,8 +1112,346 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if re.match("depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x)
+                    if re.match(
+                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
                 ]
             )
             == 1
         )
+
+    def test_fold_variants(self, install_mockery, module_configuration, modulefile_filenames):
+        """Test generating and removing installations folded in same module file."""
+        module_configuration("fold_variants_all")
+        spec_o = "mpileaks@2.3 ~debug %clang@=15.0.0"
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+
+        install("--fake", "--add", spec_o)
+        module_file_o = modulefile_filenames("tcl", spec_o)[0]
+        with open(module_file_o, encoding="utf-8") as f:
+            content_o = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        # single installation for dependency, no hash variant defined
+        assert (
+            len(
+                [
+                    x
+                    for x in content_o
+                    if "depends-on callpath/1.0-gcc-10.2.1 build_system=generic" in x
+                ]
+            )
+            == 1
+        )
+
+        # install 2 packages folded in same module file
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        install("--fake", "--add", spec_b)
+        module_file_b = modulefile_filenames("tcl", spec_b)[0]
+        with open(module_file_b, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert module_file_a == module_file_b and content_a != content_b
+
+        # check module file content is coherent with folded installations
+        assert len([x for x in content_a if "if {$selected_installation eq {" in x]) == 1
+        assert len([x for x in content_a if "depends-on " in x]) == 4
+        assert len([x for x in content_a if "prepend-path -d {:} PATH " in x]) == 1
+        assert len([x for x in content_a if "setenv FOOBAR " in x]) == 1
+        assert len([x for x in content_b if "if {$selected_installation eq {" in x]) == 2
+        assert len([x for x in content_b if "depends-on " in x]) == 7
+        # check alternative installation for dependency express its hash variant to disambiguate
+        assert (
+            len(
+                [
+                    x
+                    for x in content_a
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}", x
+                    )
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content_b
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}", x
+                    )
+                ]
+            )
+            == 2
+        )
+        assert len([x for x in content_b if "prepend-path -d {:} PATH " in x]) == 2
+        assert len([x for x in content_b if "setenv FOOBAR " in x]) == 2
+
+        # check update of other installed package: still no hash variant defined for dependency
+        with open(module_file_o, encoding="utf-8") as f:
+            content_o = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content_o
+                    if "depends-on callpath/1.0-gcc-10.2.1 build_system=generic" in x
+                ]
+            )
+            == 1
+        )
+
+        # uninstall one package, module file should persist with remaining installation
+        uninstall("-y", spec_b)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert content_a == content_c
+
+        # uninstall second package, module file should be removed
+        # but the other module file should stay
+        uninstall("-y", spec_a)
+        assert not os.path.exists(module_file_a) and os.path.exists(module_file_o)
+
+        # test default value is set only for variants with a single value
+        spec_a = "manyvariants@1.0.1"
+        spec_b = "manyvariants@1.0.1 ~a c=v2"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_a if "{+a ~b build_system=generic c=v1 d=v1} " in x]) == 1
+        assert len([x for x in content_a if "{~a ~b build_system=generic c=v2 d=v1} " in x]) == 1
+        assert len([x for x in content_a if "variant --boolean a" in x]) == 1
+        assert len([x for x in content_a if "variant --boolean --default False b" in x]) == 1
+        assert len([x for x in content_a if "variant c v2 v1" in x or "variant c v1 v2" in x]) == 1
+        assert len([x for x in content_a if "variant --default v1 d v1" in x]) == 1
+
+        # test valued conditional variant
+        spec_a = "forward-multi-value@1.0"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_a if "variant --boolean --default False cuda" in x]) == 1
+        assert len([x for x in content_a if "cuda_arch" in x]) == 0
+        spec_b = "forward-multi-value@1.0 +cuda"
+        install("--fake", "--add", spec_b)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_b if "variant --boolean cuda" in x]) == 1
+        assert len([x for x in content_b if "variant --default none cuda_arch none" in x]) == 1
+        spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
+        install("--fake", "--add", spec_c)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_c if "variant --boolean cuda" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content_c
+                    if "variant --default none cuda_arch none 11" in x
+                    or "variant --default none cuda_arch 11 none" in x
+                ]
+            )
+            == 1
+        )
+
+        # test boolean conditional variant
+        spec_a = "conditional-variant-pkg@2.0"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content_a if "variant --boolean --default True version_based" in x])
+            == 1
+        )
+        assert (
+            len([x for x in content_a if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert len([x for x in content_a if "two_whens" in x]) == 0
+        spec_b = "conditional-variant-pkg@2.0 ~version_based"
+        install("--fake", "--add", spec_b)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_b if "variant --boolean version_based" in x]) == 1
+        assert (
+            len([x for x in content_b if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert len([x for x in content_b if "two_whens" in x]) == 0
+        spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based"
+        install("--fake", "--add", spec_c)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_c if "variant --boolean version_based" in x]) == 1
+        assert (
+            len([x for x in content_c if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert (
+            len([x for x in content_c if "variant --boolean --default False two_whens" in x]) == 1
+        )
+
+        # test conditional variant on dependency
+        spec_a = "conditional-variant-pkg-dependent@1.0 a=v1"
+        spec_b = "conditional-variant-pkg-dependent@1.0 a=v2"
+        spec_c = "conditional-variant-pkg-dependent@1.0 a=v3"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        install("--fake", "--add", spec_c)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if (
+                        "depends-on conditional-variant-pkg/2.0-none-none "
+                        "build_system=generic ~version_based"
+                    )
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if (
+                        "depends-on conditional-variant-pkg/2.0-none-none "
+                        "build_system=generic +variant_based +version_based"
+                    )
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if (
+                        "depends-on conditional-variant-pkg/2.0-none-none "
+                        "build_system=generic +two_whens +variant_based +version_based"
+                    )
+                    in x
+                ]
+            )
+            == 1
+        )
+
+        # check module is considered explicit as soon as one install is explicit
+        module_configuration("fold_variants_hide_implicits")
+        spec_a = "manyvariants@1.0.0 +a ~b"
+        install("--fake", "--add", spec_a)
+        mark("--implicit", spec_a)
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_a), "default", False)
+        writer.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines()]
+        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        spec_b = "manyvariants@1.0.0 +a +b"
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_b), "default", False)
+        writer.write()
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines()]
+        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        spec_c = "manyvariants@1.0.0 ~a ~b"
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_c), "default", True)
+        writer.write()
+        assert not os.path.exists(writer.layout.modulerc)
+
+        install("--fake", "--add", spec_c)
+        uninstall("-y", spec_c)
+        assert os.path.exists(writer.layout.modulerc)
+        with open(writer.layout.modulerc, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines()]
+        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        # check hash variant is added for 2 similar folded installations among 3
+        spec_a = "mpileaks@2.3 +debug +opt ^mpich"
+        spec_b = "mpileaks@2.3 +opt +debug ^zmpi"
+        spec_c = "mpileaks@2.3 ~opt +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        install("--fake", "--add", spec_c)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "\\{build_system=generic \\+debug ~fortran hash=\\w{7} "
+                        "\\+opt \\+shared \\+static\\}",
+                        x,
+                    )
+                ]
+            )
+            == 2
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "{build_system=generic +debug ~fortran ~opt +shared +static}" in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "variant --default none hash (\\w{7}|none) (\\w{7}|none) (\\w{7}|none)", x
+                    )
+                ]
+            )
+            == 1
+        )
+
+        # check hash variant is added for 2 similar folded installations due to excluded variants
+        module_configuration("fold_variants_exclude_variants")
+        spec_a = "mpileaks@2.2 ~debug"
+        spec_b = "mpileaks@2.2 +debug"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "\\{build_system=generic hash=\\w{7} ~opt \\+shared \\+static\\}", x
+                    )
+                ]
+            )
+            == 2
+        )
+        assert len([x for x in content if re.match("variant hash \\w{7} \\w{7}", x)]) == 1
