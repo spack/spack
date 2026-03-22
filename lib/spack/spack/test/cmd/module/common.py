@@ -6,10 +6,8 @@ import os
 
 import pytest
 
-import spack.concretize
 import spack.config
 import spack.main
-import spack.modules
 import spack.repo
 import spack.store
 
@@ -27,12 +25,6 @@ def ensure_module_files_are_there(mock_packages_repo, mock_store, mock_configura
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.repo.use_repositories(mock_packages_repo):
                 module("tcl", "refresh", "-y")
-
-
-def _module_files(module_type, *specs):
-    specs = [spack.concretize.concretize_one(x) for x in specs]
-    writer_cls = spack.modules.module_types[module_type]
-    return [writer_cls.from_spec(spec, "default").layout.filename for spec in specs]
 
 
 @pytest.fixture(
@@ -65,7 +57,7 @@ def test_exit_with_failure(database, module_type, failure_args):
 
 
 @pytest.mark.db
-def test_remove_and_add(database, module_type):
+def test_remove_and_add(database, module_type, modulefile_filenames):
     """Tests adding and removing a tcl module file."""
 
     if module_type == "lmod":
@@ -74,7 +66,7 @@ def test_remove_and_add(database, module_type):
         return
 
     rm_cli_args = ["rm", "-y", "mpileaks"]
-    module_files = _module_files(module_type, "mpileaks")
+    module_files = modulefile_filenames(module_type, "mpileaks")
     for item in module_files:
         assert os.path.exists(item)
 
