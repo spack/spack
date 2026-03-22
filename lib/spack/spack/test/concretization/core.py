@@ -5197,3 +5197,72 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
         spack.solver.reuse._specs_from_mirror()
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {},
+        {"_meta": {}},
+        {"_meta": {"spec_version": "not_an_int"}, "specs": []},
+        {"specs": []},
+        {"_meta": {"bad_label": 6}},
+    ],
+)
+def test_spec_dict_from_json_invalid_data(data):
+    """spec_dict_from_json raises ValueError on missing or malformed input."""
+    with pytest.raises(ValueError, match="Invalid spec dict data"):
+        spack.solver.asp.spec_dict_from_json(data)
+
+
+def test_concretization_cache_remove_entry_oserror(tmp_path):
+    """_remove_entry silently ignores OSError (e.g. file already gone)."""
+    gone = tmp_path / "nonexistent"
+    # Should not raise even though the file doesn't exist
+    spack.solver.asp.ConcretizationCache._remove_entry(gone)
+
+
+def test_concretization_cache_store_skips_existing(use_concretization_cache):
+    """store() is a no-op when the cache path already exists."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "duplicate store test"
+    cache_path = cache._cache_path_from_problem(problem)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Pre-create the file with sentinel content
+    cache_path.write_bytes(b"sentinel")
+
+    # Build a minimal Result so store() has something to serialize
+    result = Result(specs=[])
+
+    cache.store(problem, result, statistics=[])
+
+    # The file should still contain the sentinel, proving store() returned early
+    assert cache_path.read_bytes() == b"sentinel"
+
+
+def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cache, monkeypatch):
+    """store() removes the temp file and re-raises when the rename fails.
+
+    This simulates a race where two processes both pass the exists() check and write temp files,
+    but one fails on rename.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "write failure test"
+
+    # Simulate a rename failure (e.g. race condition between concurrent solves)
+    def failing_rename(src, dst):
+        raise OSError("rename failed")
+
+    monkeypatch.setattr(os, "rename", failing_rename)
+
+    with pytest.raises(OSError, match="rename failed"):
+        cache.store(problem, Result(specs=[]), statistics=[])
+
+    # The final cache path should not exist
+    cache_path = cache._cache_path_from_problem(problem)
+    assert not cache_path.exists()
+
+    # No leftover temp files
+    temps = list(cache.root.glob(".tmp_*"))
+    assert temps == []
