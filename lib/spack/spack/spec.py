@@ -46,7 +46,7 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.
 """
-
+import abc
 import collections
 import collections.abc
 import enum
@@ -5378,7 +5378,7 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
 DepSpecComponents = Tuple[str, str, List, str, Tuple[str, ...], bool]
 
 
-class SpecfileReaderMeta(type):
+class SpecfileReaderMeta(abc.ABCMeta):
     """Metaclass to automatically register all specfile versions.
 
     This allows us to track available versions of SpecfileReaderBase subclasses.
@@ -5399,24 +5399,24 @@ class SpecfileReaderBase(metaclass=SpecfileReaderMeta):
     versions: Dict[int, Type["SpecfileReaderBase"]] = {}
 
     @classmethod
-    def load(cls, data) -> Spec:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def load(cls, data) -> Spec: ...
 
     @classmethod
-    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]:
-        raise NotImplementedError
+    @abc.abstractmethod
+    def dependencies_from_node_dict(cls, node) -> List[DepSpecComponents]: ...
 
     @classmethod
+    @abc.abstractmethod
     def read_specfile_dep_specs(
         cls, deps: Dict, hash_type: str = ht.dag_hash.name
-    ) -> List[DepSpecComponents]:
-        raise NotImplementedError
+    ) -> List[DepSpecComponents]: ...
 
     @classmethod
+    @abc.abstractmethod
     def extract_build_spec_info_from_node_dict(
         cls, node, hash_type=ht.dag_hash.name
-    ) -> Tuple[str, str, str]:
-        raise NotImplementedError
+    ) -> Tuple[str, str, str]: ...
 
     @classmethod
     def from_node_dict(cls, node):
