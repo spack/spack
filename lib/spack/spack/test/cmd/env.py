@@ -3741,9 +3741,6 @@ def test_virtual_spec_concretize_together(mutable_config):
         assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
-<<<<<<< HEAD
-def test_query_develop_specs(tmp_path: pathlib.Path):
-=======
 @pytest.mark.parametrize(
     "unify,method_to_fail",
     [
@@ -3789,8 +3786,7 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
     assert e.specs_by_hash == first_hash_dict
 
 
-def test_query_develop_specs():
->>>>>>> 265d80cee3 (test for transactional concretization)
+def test_query_develop_specs(tmp_path: pathlib.Path):
     """Test whether a spec is develop'ed or not"""
     srcdir = tmp_path / "here"
     srcdir.mkdir()
