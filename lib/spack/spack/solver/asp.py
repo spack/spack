@@ -874,7 +874,7 @@ class PyclingoDriver:
         problem_str: str,
         control_file_paths: List[str],
         timer: spack.util.timer.Timer,
-    ) -> Tuple[Result, Union[SpliceDict, None]]:
+    ) -> Result:
         """Actually run clingo and generate a result.
 
         This is the core solve logic once the setup is done and once we know we can't
@@ -931,9 +931,8 @@ class PyclingoDriver:
         # once done, construct the solve result
         result = Result(specs)
         result.satisfiable = solve_result.satisfiable
-
         if not result.satisfiable:
-            return result, None
+            return result
 
         timer.start("construct_specs")
         # get the best model
@@ -946,7 +945,7 @@ class PyclingoDriver:
 
         # build specs from spec attributes in the model
         spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
-        spec_dict, splices = builder.build_specs(spec_attrs)
+        spec_dict = builder.build_specs(spec_attrs)
 
         # add best spec to the results
         result.answers.append((list(min_cost), 0, spec_dict))
@@ -963,7 +962,7 @@ class PyclingoDriver:
         timer.stop("construct_specs")
         timer.stop()
 
-        return result, splices
+        return result
 
     def solve(
         self,
@@ -1061,9 +1060,7 @@ class PyclingoDriver:
         # run the solver
         if not result:
             tty.debug("Starting concretizer")
-            result, splices = self._run_clingo(
-                specs, setup, "\n".join(problem), control_file_paths, timer
-            )
+            result = self._run_clingo(specs, setup, "\n".join(problem), control_file_paths, timer)
             result.raise_if_unsat()
             concretization_stats = self.control.statistics
 
@@ -3536,7 +3533,8 @@ class SpecBuilder:
         )
         self._splices.setdefault(parent_spec, []).append(splice)
 
-    def build_specs(self, function_tuples: List[FunctionTupleT]) -> Tuple[SpecDict, SpliceDict]:
+    def build_specs(self, function_tuples: List[FunctionTupleT]) -> SpecDict:
+        """Reassemble Spec objects from the solve results."""
 
         attr_key = {
             # hash attributes are handled first, since they imply entire concrete specs
@@ -3592,7 +3590,8 @@ class SpecBuilder:
 
         # apply post-solve concretization steps to specs in the result
         post_process_fresh_solve(self._specs, self._splices)
-        return self._specs, self._splices
+
+        return self._specs
 
 
 def reorder_flags(specs: SpecDict) -> None:
