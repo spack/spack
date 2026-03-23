@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import re
 import sys
 
 import pytest
@@ -18,9 +17,9 @@ install = SpackCommand("install")
 location = SpackCommand("location")
 
 
-def _get_load_cmds(shell, spec):
+def _get_load_cmds(spec, shell):
     load_script_file = shell_script.path_to_load_shell_script(
-        spec, shell[2:]
+        spec, shell
     )
 
     with open(load_script_file, "r", encoding="utf-8") as f:
@@ -83,20 +82,25 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         params = ["--bat", "--pwsh"]
         test_load_shell(params[0])
         test_load_shell(params[1])
-    else:
-        params = [
-            "--sh",
-            "--csh",
-        ]
-        paths_sh = test_load_shell(params[0])
-        paths_csh = test_load_shell(params[1])
-        assert paths_sh == paths_csh
+    params = [
+        "--sh",
+        "--csh",
+    ]
+    paths_sh = test_load_shell(params[0])
+    paths_csh = test_load_shell(params[1])
+    assert paths_sh == paths_csh
 
 
 @pytest.mark.parametrize(
     "shell,set_command",
     (
-        [("--bat", 'set "%s=%s"')]
+        [
+            ("--sh", "spack_env_set %s %s"),
+            ("--csh", "spack_env_set %s %s"),
+            ("--fish", "spack_env_set %s %s"),
+            ("--pwsh", "$Env:%s = %s"),
+            ("--bat", 'set "%s=%s"'),
+        ]
         if sys.platform == "win32"
         else [
             ("--sh", "spack_env_set %s %s"),
@@ -120,9 +124,16 @@ def test_load_includes_run_env(
     assert set_command % ("FOOBAR", "mpileaks") in load_cmds
 
 
-def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+@pytest.mark.parametrize(
+    "shell",
+    (
+        ["--sh", "--csh", "--fish", "--bat", "--pwsh"]
+        if sys.platform == "win32"
+        else ["--sh", "--csh", "--fish"]
+    ),
+)
+def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
-    shell = "--bat" if sys.platform == "win32" else "--sh"
     install("--fake", "libelf@0.8.12")
     install("--fake", "libelf@0.8.13")
 
@@ -143,11 +154,16 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
     assert "To set up shell support" in out
 
 
-# TODO: Reinstate --csh when it's shell script is written
 @pytest.mark.parametrize(
     "shell,unset_command",
     (
-        [("--bat", 'set "%s="')]
+        [
+            ("--sh", "_spack_env_unset %s"),
+            ("--csh", "_spack_env_unset %s"),
+            ("--fish", "_spack_env_unset %s")
+            ("--bat", 'set "%s="'),
+            ("--pwsh", "Remove-Item Env:%s"),
+        ]
         if sys.platform == "win32"
         else [
             ("--sh", "_spack_env_unset %s"),

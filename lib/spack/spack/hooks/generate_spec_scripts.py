@@ -6,7 +6,6 @@ import os
 import sys
 from datetime import datetime
 
-import spack.llnl.util.tty as tty
 import spack.user_environment as uenv
 
 

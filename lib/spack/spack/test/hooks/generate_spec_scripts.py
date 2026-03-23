@@ -49,7 +49,9 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
     "shell",
     (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
-def test_load_unload_scripts_exist(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_load_unload_scripts_exist(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     """Test that load & unload shell scripts are written when a spec is installed"""
 
     spec = Spec("mpileaks")
@@ -88,7 +90,8 @@ def test_load_unload_scripts_exist(shell, install_mockery, mock_fetch, mock_arch
 def test_contents_of_shell_scripts(
     shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
-    """Test that the load & unload shell scripts contain the correct environment modifications for the spec"""
+    """Test that the load & unload shell scripts contain the correct environment
+    modifications for the spec"""
 
     spec = Spec("mpileaks")
     spec = spack.concretize.concretize_one(spec.name)
@@ -221,7 +224,9 @@ def test_install_multiple_specs_shell_scripts(
     "shell",
     (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
-def test_no_scripts_for_external_spec_with_deps(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_no_scripts_for_external_spec_with_deps(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     """Test that no shell scripts are written for external specs even if they have dependencies"""
 
     spec = spack.concretize.concretize_one("externaltool")
@@ -236,8 +241,11 @@ def test_no_scripts_for_external_spec_with_deps(shell, install_mockery, mock_fet
         assert not os.path.isfile(path_to_unload_script)
 
 
-def test_write_spec_scripts_fails_on_nonexistent_directory(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test that write_spec_scripts prints an error message when it fails to write a script because the directory doesn't exist"""
+def test_write_spec_scripts_fails_on_nonexistent_directory(
+        install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that write_spec_scripts prints an error message when it fails to write a script
+    because the directory doesn't exist"""
 
     spec = Spec("mpileaks")
     spec = spack.concretize.concretize_one(spec.name)
