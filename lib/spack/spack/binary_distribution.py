@@ -247,7 +247,7 @@ class BinaryCacheIndex:
             spec_list = [
                 s
                 for s in db.query_local(installed=InstallRecordStatus.ANY)
-                # todo, make it easer to get install records associated with specs
+                # todo, make it easier to get install records associated with specs
                 if s.external or db._data[s.dag_hash()].in_buildcache
             ]
 
@@ -670,6 +670,8 @@ def _read_specs_and_push_index(
     cache_prefix: str,
     db: BuildCacheDatabase,
     temp_dir: str,
+    *,
+    timer=timer.NULL_TIMER,
 ):
     """Read listed specs, generate the index, and push it to the mirror.
 
@@ -681,32 +683,34 @@ def _read_specs_and_push_index(
         db: A spack database used for adding specs and then writing the index.
         temp_dir: Location to write index.json and hash for pushing
     """
-    for file in file_list:
-        # All supported versions of build caches put the hash as the last
-        # parameter before the extension
-        try:
-            x = file.split("/")[-1].split("-")[-1].split(".")[0]
-        except IndexError:
-            raise GenerateIndexError(f"Malformed metadata file name detected {file}")
+    with timer.measure("read"):
+        for file in file_list:
+            # All supported versions of build caches put the hash as the last
+            # parameter before the extension
+            try:
+                x = file.split("/")[-1].split("-")[-1].split(".")[0]
+            except IndexError:
+                raise GenerateIndexError(f"Malformed metadata file name detected {file}")
 
-        if not filter_fn(x):
-            continue
+            if not filter_fn(x):
+                continue
 
-        cache_entry: Optional[URLBuildcacheEntry] = None
-        try:
-            cache_entry = read_method(file)
-            spec_dict = cache_entry.fetch_metadata()
-            fetched_spec = spack.spec.Spec.from_dict(spec_dict)
-        except Exception as e:
-            tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
-            continue
-        finally:
-            if cache_entry:
-                cache_entry.destroy()
-        db.add(fetched_spec)
-        db.mark(fetched_spec, "in_buildcache", True)
+            cache_entry: Optional[URLBuildcacheEntry] = None
+            try:
+                cache_entry = read_method(file)
+                spec_dict = cache_entry.fetch_metadata()
+                fetched_spec = spack.spec.Spec.from_dict(spec_dict)
+            except Exception as e:
+                tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+                continue
+            finally:
+                if cache_entry:
+                    cache_entry.destroy()
+            db.add(fetched_spec)
+            db.mark(fetched_spec, "in_buildcache", True)
 
-    _push_index(db, temp_dir, cache_prefix, name)
+    with timer.measure("push"):
+        _push_index(db, temp_dir, cache_prefix, name)
 
 
 def _url_generate_package_index(
@@ -715,6 +719,8 @@ def _url_generate_package_index(
     db: Optional[BuildCacheDatabase] = None,
     name: str = "",
     filter_fn: Callable[[str], bool] = lambda x: True,
+    *,
+    timer=timer.NULL_TIMER,
 ):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
@@ -728,9 +734,10 @@ def _url_generate_package_index(
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
         try:
-            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-            )
+            with timer.measure("list"):
+                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
+                )
             file_list = list(filename_to_mtime_mapping.keys())
         except ListMirrorSpecsError as e:
             raise GenerateIndexError(f"Unable to generate package index: {e}") from e
@@ -743,7 +750,14 @@ def _url_generate_package_index(
 
         try:
             _read_specs_and_push_index(
-                file_list, read_fn, name, filter_fn, url, db, str(db.database_directory)
+                file_list,
+                read_fn,
+                name,
+                filter_fn,
+                url,
+                db,
+                str(db.database_directory),
+                timer=timer,
             )
         except Exception as e:
             raise GenerateIndexError(
@@ -1700,7 +1714,7 @@ def download_tarball(
         spack.mirrors.mirror.MirrorCollection(binary=True).values()
     )
     if not configured_mirrors:
-        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
+        raise NoConfiguredBinaryMirrors()
 
     # Note on try_first and try_next:
     # mirrors_for_spec mostly likely came from spack caching remote
@@ -1745,18 +1759,18 @@ def download_tarball(
 
             # Fetch the manifest
             try:
-                response = spack.oci.opener.urlopen(
+                with spack.oci.opener.urlopen(
                     urllib.request.Request(
                         url=ref.manifest_url(),
                         headers={"Accept": ", ".join(spack.oci.oci.manifest_content_type)},
                     )
-                )
+                ) as response:
+                    manifest = json.load(response)
             except Exception:
                 continue
 
             # Download the config = spec.json and the relevant tarball
             try:
-                manifest = json.load(response)
                 spec_digest = spack.oci.image.Digest.from_string(manifest["config"]["digest"])
                 tarball_digest = spack.oci.image.Digest.from_string(
                     manifest["layers"][-1]["digest"]
@@ -2321,8 +2335,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
 
     try:
-        _, _, json_file = web_util.read_from_url(keys_index)
-        json_index = sjson.load(json_file)
+        json_index = web_util.read_json(keys_index)
     except (web_util.SpackWebError, OSError, ValueError) as url_err:
         # TODO: avoid repeated request
         if web_util.url_exists(keys_index):
@@ -2607,8 +2620,10 @@ class DefaultIndexFetcherV2(IndexFetcher):
         # Failure to fetch index.json.hash is not fatal
         url_index_hash = url_util.join(self.url, "build_cache", "index.json.hash")
         try:
-            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
-            remote_hash = response.read(64)
+            with self.urlopen(
+                urllib.request.Request(url_index_hash, headers=self.headers)
+            ) as response:
+                remote_hash = response.read(64)
         except OSError:
             return None
 
@@ -2633,10 +2648,20 @@ class DefaultIndexFetcherV2(IndexFetcher):
         except OSError as e:
             raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
 
-        try:
-            result = io.TextIOWrapper(response, encoding="utf-8").read()
-        except (ValueError, OSError) as e:
-            raise FetchIndexError(f"Remote index {url_index} is invalid") from e
+        with response:
+            try:
+                result = io.TextIOWrapper(response, encoding="utf-8").read()
+            except (ValueError, OSError) as e:
+                raise FetchIndexError(f"Remote index {url_index} is invalid") from e
+
+            # For now we only handle etags on http(s), since 304 error handling
+            # in s3:// is not there yet.
+            if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+                etag = None
+            else:
+                etag = web_util.parse_etag(
+                    response.headers.get("Etag", None) or response.headers.get("etag", None)
+                )
 
         computed_hash = compute_hash(result)
 
@@ -2647,15 +2672,6 @@ class DefaultIndexFetcherV2(IndexFetcher):
         # while we fetched index.json.hash. Warning about an issue thus feels
         # wrong, as it's more of an issue with race conditions in the cache
         # invalidation strategy.
-
-        # For now we only handle etags on http(s), since 304 error handling
-        # in s3:// is not there yet.
-        if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
-            etag = None
-        else:
-            etag = web_util.parse_etag(
-                response.headers.get("Etag", None) or response.headers.get("etag", None)
-            )
 
         warn_v2_layout(self.url, "Fetching an index")
 
@@ -2685,15 +2701,18 @@ class EtagIndexFetcherV2(IndexFetcher):
         except OSError as e:  # URLError, socket.timeout, etc.
             raise FetchIndexError(f"Could not fetch index {url}", e) from e
 
-        try:
-            result = io.TextIOWrapper(response, encoding="utf-8").read()
-        except (ValueError, OSError) as e:
-            raise FetchIndexError(f"Remote index {url} is invalid", e) from e
+        with response:
+            try:
+                result = io.TextIOWrapper(response, encoding="utf-8").read()
+            except (ValueError, OSError) as e:
+                raise FetchIndexError(f"Remote index {url} is invalid", e) from e
 
-        warn_v2_layout(self.url, "Fetching an index")
+            warn_v2_layout(self.url, "Fetching an index")
 
-        headers = response.headers
-        etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
+            etag_header_value = response.headers.get("Etag", None) or response.headers.get(
+                "etag", None
+            )
+
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
             hash=compute_hash(result),
@@ -2721,10 +2740,11 @@ class OCIIndexFetcher(IndexFetcher):
         except OSError as e:
             raise FetchIndexError(f"Could not fetch manifest from {url_manifest}", e) from e
 
-        try:
-            manifest = json.load(response)
-        except Exception as e:
-            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
+        with response:
+            try:
+                manifest = json.load(response)
+            except Exception as e:
+                raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 
         # Get first blob hash, which should be the index.json
         try:
@@ -2738,13 +2758,13 @@ class OCIIndexFetcher(IndexFetcher):
 
         # Otherwise fetch the blob / index.json
         try:
-            response = self.urlopen(
+            with self.urlopen(
                 urllib.request.Request(
                     url=self.ref.blob_url(index_digest),
                     headers={"Accept": "application/vnd.oci.image.layer.v1.tar+gzip"},
                 )
-            )
-            result = io.TextIOWrapper(response, encoding="utf-8").read()
+            ) as response:
+                result = io.TextIOWrapper(response, encoding="utf-8").read()
         except (OSError, ValueError) as e:
             raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 
@@ -2779,7 +2799,8 @@ class DefaultIndexFetcher(IndexFetcher):
                 f"Could not read index manifest from {url_index_manifest}"
             ) from e
 
-        index_blob_record = self.get_index_manifest(response)
+        with response:
+            index_blob_record = self.get_index_manifest(response)
 
         # Early exit if our cache is up to date.
         if self.local_hash and self.local_hash == index_blob_record.checksum:
@@ -2842,14 +2863,15 @@ class EtagIndexFetcher(IndexFetcher):
             raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
 
         # We need to read the index manifest and fetch the associated blob
-        cache_entry = cache_class(self.url, allow_unsigned=True)
-        computed_hash, result = self.fetch_index_blob(
-            cache_entry, self.get_index_manifest(response)
-        )
-        cache_entry.destroy()
+        with response:
+            index_blob_record = self.get_index_manifest(response)
+            etag_header_value = response.headers.get("Etag", None) or response.headers.get(
+                "etag", None
+            )
 
-        headers = response.headers
-        etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
+        cache_entry = cache_class(self.url, allow_unsigned=True)
+        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+        cache_entry.destroy()
 
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
@@ -2944,3 +2966,10 @@ class CannotListKeys(GenerateIndexError):
 
 class PushToBuildCacheError(spack.error.SpackError):
     """Raised when unable to push objects to binary mirror"""
+
+
+class NoConfiguredBinaryMirrors(spack.error.SpackError):
+    """Raised when no binary mirrors are configured but an operation requires them"""
+
+    def __init__(self):
+        super().__init__("Please add a spack mirror to allow download of pre-compiled packages.")

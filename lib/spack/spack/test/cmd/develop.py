@@ -330,14 +330,14 @@ def test_recursive(mutable_mock_env_path, install_mockery, mock_fetch):
 
 
 def test_develop_fails_with_multiple_concrete_versions(
-    mutable_mock_env_path, install_mockery, mock_fetch
+    mutable_mock_env_path, install_mockery, mock_fetch, mutable_config
 ):
     env("create", "test")
 
     with ev.read("test") as e:
         add("indirect-mpich@1.0")
         add("indirect-mpich@0.9")
-        e.unify = False
+        mutable_config.set("concretizer:unify", False)
         e.concretize()
 
         with pytest.raises(SpackError) as develop_error:

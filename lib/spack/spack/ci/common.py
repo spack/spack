@@ -268,7 +268,8 @@ class CDashHandler:
         group_id = None
 
         try:
-            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
+            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                response_text = response.read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
 
@@ -543,7 +544,7 @@ class SpackCIConfig:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -593,7 +594,7 @@ class SpackCIConfig:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
+                    "script:": ["spack -v buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
@@ -713,8 +714,8 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _urlopen(request)
-                        config = json.load(response)
+                        with _urlopen(request) as response:
+                            config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI

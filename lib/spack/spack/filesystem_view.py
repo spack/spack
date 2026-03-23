@@ -104,9 +104,11 @@ def view_copy(
 
 #: Type alias for link types
 LinkType = Literal["hardlink", "hard", "copy", "relocate", "add", "symlink", "soft"]
+CanonicalLinkType = Literal["hardlink", "copy", "symlink"]
+
 
 #: supported string values for `link_type` in an env, mapped to canonical values
-_LINK_TYPES = {
+_LINK_TYPES: Dict[LinkType, CanonicalLinkType] = {
     "hardlink": "hardlink",
     "hard": "hardlink",
     "copy": "copy",
@@ -119,7 +121,7 @@ _LINK_TYPES = {
 _VALID_LINK_TYPES = sorted(set(_LINK_TYPES.values()))
 
 
-def canonicalize_link_type(link_type: LinkType) -> str:
+def canonicalize_link_type(link_type: LinkType) -> CanonicalLinkType:
     """Return canonical"""
     canonical = _LINK_TYPES.get(link_type)
     if not canonical:
@@ -189,7 +191,7 @@ class FilesystemView:
         Add given specs to view.
 
         Should accept ``with_dependencies`` as keyword argument (default
-        True) to indicate wether or not dependencies should be activated as
+        True) to indicate whether or not dependencies should be activated as
         well.
 
         Should except an ``exclude`` keyword argument containing a list of
@@ -216,11 +218,11 @@ class FilesystemView:
         Removes given specs from view.
 
         Should accept ``with_dependencies`` as keyword argument (default
-        True) to indicate wether or not dependencies should be deactivated
+        True) to indicate whether or not dependencies should be deactivated
         as well.
 
         Should accept ``with_dependents`` as keyword argument (default True)
-        to indicate wether or not dependents on the deactivated specs
+        to indicate whether or not dependents on the deactivated specs
         should be removed as well.
 
         Should except an ``exclude`` keyword argument containing a list of
@@ -268,7 +270,7 @@ class FilesystemView:
 
         * ..they are active in the view.
         * ..they are active but the activated version differs.
-        * ..they are not activte in the view.
+        * ..they are not active in the view.
 
         Takes ``with_dependencies`` keyword argument so that the status of
         dependencies is printed as well.

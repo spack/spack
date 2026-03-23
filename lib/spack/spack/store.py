@@ -185,6 +185,10 @@ class Store:
             self.root, default_timeout=lock_cfg.package_timeout
         )
 
+    def has_padding(self) -> bool:
+        """Returns True if the store layout includes path padding."""
+        return self.root != self.unpadded_root
+
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()

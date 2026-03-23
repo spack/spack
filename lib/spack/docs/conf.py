@@ -366,6 +366,7 @@ nitpick_ignore = [
     ("py:class", "spack.traverse.EdgeAndDepth"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
+    ("py:class", "SpecFiltersFactory"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
     ("py:class", "spack.llnl.util.lang.K"),
@@ -378,6 +379,8 @@ nitpick_ignore = [
     ("py:obj", "spack.llnl.util.lang.KT"),
     ("py:obj", "spack.llnl.util.lang.V"),
     ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:class", "_P"),
+    ("py:class", "spack.util.web._R"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

@@ -10,7 +10,8 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.directives_meta import _combine_when
+from spack.directives import _make_when_spec, depends_on, extends, patch
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
 from spack.spec import Spec
 
 
@@ -217,16 +218,79 @@ def test_direct_dependencies_from_when_context_are_retained(mock_packages):
 
 
 def test_directives_meta_combine_when():
-    x, y = Spec("+x ^dep +a"), Spec("+y ^dep +b")
+    x, y, z = "+x ^dep +a", "+y ^dep +b", "+z"
+    assert _make_when_spec((x, y, z)) == Spec("+x +y +z ^dep +a +b")
+    assert _make_when_spec((x, y)) == Spec("+x +y ^dep +a +b")
+    assert _make_when_spec((x,)) == Spec("+x ^dep +a")
 
-    # Check that specs are combined, and do not mutate inputs
-    assert _combine_when("+z", [x, y]) == Spec("+x +y +z ^dep +a +b")
-    assert x == Spec("+x ^dep +a")
-    assert y == Spec("+y ^dep +b")
 
-    assert _combine_when(None, [x, y]) == Spec("+x +y ^dep +a +b")
-    assert x == Spec("+x ^dep +a")
-    assert y == Spec("+y ^dep +b")
+def test_directive_descriptor_init():
+    # when `pkg.variants` is initialized, only the `variant` directive should run
+    variants = DirectiveDictDescriptor("variants")
+    assert variants.directives_to_run == ["variant"]
+    assert variants.dicts_to_init == ["variants"]
 
-    # Check the optimization for single stack with no when
-    assert _combine_when(None, [x]) is x
+    # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
+    # `pkg.extendees` should be initialized
+    dependencies = DirectiveDictDescriptor("dependencies")
+    assert dependencies.directives_to_run == ["depends_on", "extends"]
+    assert dependencies.dicts_to_init == ["dependencies", "extendees"]
+
+    # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
+    # provides directive should run
+    provided = DirectiveDictDescriptor("provided")
+    assert provided.directives_to_run == ["provides"]
+    assert provided.dicts_to_init == ["provided", "provided_together"]
+
+    # idem for `pkg.provided_together`
+    provided_together = DirectiveDictDescriptor("provided_together")
+    assert provided_together.directives_to_run == ["provides"]
+    assert provided_together.dicts_to_init == ["provided", "provided_together"]
+
+    # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
+    # dict is not affects -- they are stored on a Dependency object.
+    patches = DirectiveDictDescriptor("patches")
+    assert patches.directives_to_run == ["patch"]
+    assert patches.dicts_to_init == ["patches"]
+
+
+def test_directive_laziness():
+    class ExamplePackage(metaclass=DirectiveMeta):
+        name = "example-package"
+        depends_on("foo")
+        extends("bar", when="+bar")
+
+    # Initially, no directive dicts are initialized
+    assert ExamplePackage._dependencies is None  # type: ignore
+    assert ExamplePackage._extendees is None  # type: ignore
+    assert ExamplePackage._variants is None  # type: ignore
+
+    # Only when we access the dependencies descriptor, the relevant dicts (dependencies, extendees)
+    # are initialized, while others remain None
+    dependencies = ExamplePackage.dependencies  # type: ignore
+    assert type(ExamplePackage._dependencies) is dict  # type: ignore
+    assert type(ExamplePackage._extendees) is dict  # type: ignore
+    assert ExamplePackage._variants is None  # type: ignore
+
+    # The dependencies dict is populated with the expected entries
+    assert "foo" in dependencies[spack.spec.Spec()]
+    assert "bar" in dependencies[spack.spec.Spec("+bar")]
+
+
+def test_patched_dependencies_sets_class_attribute():
+    sha256 = "a" * 64
+
+    class PatchesDependencies(metaclass=DirectiveMeta):
+        name = "patches-dependencies"
+        depends_on("dependency", patches=patch("https://example.com/diff.patch", sha256=sha256))
+
+    assert PatchesDependencies._patches_dependencies is True
+    assert not PatchesDependencies.patches  # type: ignore
+
+    class DoesNotPatchDependencies(metaclass=DirectiveMeta):
+        name = "does-not-patch-dependencies"
+        fullname = "does-not-patch-dependencies"
+        patch("https://example.com/diff.patch", sha256=sha256)
+
+    assert DoesNotPatchDependencies._patches_dependencies is False
+    assert DoesNotPatchDependencies.patches  # type: ignore

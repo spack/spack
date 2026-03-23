@@ -51,6 +51,7 @@ from urllib.request import urlopen
 
 import spack.builder
 import spack.config
+import spack.enums
 import spack.fetch_strategy
 import spack.llnl.util.lang
 import spack.patch
@@ -385,15 +386,6 @@ package_attributes = AuditClass(
     kwargs=("pkgs",),
 )
 
-
-package_deprecated_attributes = AuditClass(
-    group="packages",
-    tag="PKG-DEPRECATED-ATTRIBUTES",
-    description="Sanity checks to preclude use of deprecated package attributes",
-    kwargs=("pkgs",),
-)
-
-
 package_properties = AuditClass(
     group="packages",
     tag="PKG-PROPERTIES",
@@ -431,6 +423,22 @@ def _check_build_test_callbacks(pkgs, error_cls):
             instr = f"Remove the following from 'build_time_test_callbacks': {callbacks}"
             errors.append(error_cls(msg.format(pkg_name), [instr]))
 
+    return errors
+
+
+@package_directives
+def _directives_can_be_evaluated(pkgs, error_cls):
+    """Ensure that all directives in a package can be evaluated."""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        for attr in pkg_cls._dict_to_directives:
+            try:
+                getattr(pkg_cls, attr)
+            except Exception as e:
+                error_msg = f"Package '{pkg_name}' has invalid directive '{attr}'"
+                details = [str(e)]
+                errors.append(error_cls(error_msg, details))
     return errors
 
 
@@ -522,46 +530,6 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
                 "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
             ]
             errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
-
-    return errors
-
-
-@package_deprecated_attributes
-def _search_for_deprecated_package_methods(pkgs, error_cls):
-    """Ensure the package doesn't define or use deprecated methods"""
-    DEPRECATED_METHOD = (("test", "a name starting with 'test_'"),)
-    DEPRECATED_USE = (
-        ("self.cache_extra_test_sources(", "cache_extra_test_sources(self, ..)"),
-        ("self.install_test_root(", "install_test_root(self, ..)"),
-        ("self.run_test(", "test_part(self, ..)"),
-    )
-    errors = []
-    for pkg_name in pkgs:
-        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        methods = inspect.getmembers(pkg_cls, predicate=lambda x: inspect.isfunction(x))
-        method_errors = collections.defaultdict(list)
-        for name, function in methods:
-            for deprecated_name, alternate in DEPRECATED_METHOD:
-                if name == deprecated_name:
-                    msg = f"Rename '{deprecated_name}' method to {alternate} instead."
-                    method_errors[name].append(msg)
-
-            source = inspect.getsource(function)
-            for deprecated_name, alternate in DEPRECATED_USE:
-                if deprecated_name in source:
-                    msg = f"Change '{deprecated_name}' to '{alternate}' in '{name}' method."
-                    method_errors[name].append(msg)
-
-        num_methods = len(method_errors)
-        if num_methods > 0:
-            methods = plural(num_methods, "method", show_n=False)
-            error_msg = (
-                f"Package '{pkg_name}' implements or uses unsupported deprecated {methods}."
-            )
-            instr = [f"Make changes to '{pkg_cls.__module__}':"]
-            for name in sorted(method_errors):
-                instr.extend([f"    {msg}" for msg in method_errors[name]])
-            errors.append(error_cls(error_msg, instr))
 
     return errors
 
@@ -921,75 +889,104 @@ def _linting_package_file(pkgs, error_cls):
         # Does the homepage have http, and if so, does https work?
         if homepage.startswith("http://"):
             try:
-                response = urlopen(f"https://{homepage[7:]}")
+                with urlopen(f"https://{homepage[7:]}") as response:
+                    if response.getcode() == 200:
+                        msg = 'Package "{0}" uses http but has a valid https endpoint.'
+                        errors.append(msg.format(pkg_cls.name))
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
 
-            if response.getcode() == 200:
-                msg = 'Package "{0}" uses http but has a valid https endpoint.'
-                errors.append(msg.format(pkg_cls.name))
-
     return spack.llnl.util.lang.dedupe(errors)
 
 
 @package_directives
-def _unknown_variants_in_directives(pkgs, error_cls):
-    """Report unknown or wrong variants in directives for this package"""
+def _variant_issues_in_directives(pkgs, error_cls):
+    """Report unknown, wrong, or propagating variants in directives for this package"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
 
-        # Check "conflicts" directive
+        # Check the "conflicts" directive
         for trigger, conflicts in pkg_cls.conflicts.items():
+            errors.extend(
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    spack.spec.Spec(trigger),
+                    directive="conflicts",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
+                )
+            )
             for conflict, _ in conflicts:
-                vrn = spack.spec.Spec(conflict)
-                try:
-                    vrn.constrain(trigger)
-                except Exception:
-                    # If one of the conflict/trigger includes a platform and the other
-                    # includes an os or target, the constraint will fail if the current
-                    # platform is not the plataform in the conflict/trigger. Audit the
-                    # conflict and trigger separately in that case.
-                    # When os and target constraints can be created independently of
-                    # the platform, TODO change this back to add an error.
-                    errors.extend(
-                        _analyze_variants_in_directive(
-                            pkg_cls,
-                            spack.spec.Spec(trigger),
-                            directive="conflicts",
-                            error_cls=error_cls,
-                        )
-                    )
                 errors.extend(
-                    _analyze_variants_in_directive(
-                        pkg_cls, vrn, directive="conflicts", error_cls=error_cls
+                    _issues_in_directive_constraint(
+                        pkg_cls,
+                        spack.spec.Spec(conflict),
+                        directive="conflicts",
+                        error_cls=error_cls,
+                        filename=filename,
+                        requestor=pkg_name,
                     )
                 )
 
         # Check "depends_on" directive
-        for trigger in pkg_cls.dependencies:
+        for trigger, deps_by_name in pkg_cls.dependencies.items():
             vrn = spack.spec.Spec(trigger)
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, vrn, directive="depends_on", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    vrn,
+                    directive="depends_on",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
+            for dep_name, dep in deps_by_name.items():
+                if spack.repo.PATH.is_virtual(dep_name):
+                    continue
+                try:
+                    dep_pkg_cls = spack.repo.PATH.get_pkg_class(dep_name)
+                except spack.repo.UnknownPackageError:
+                    continue
+                errors.extend(
+                    _issues_in_directive_constraint(
+                        dep_pkg_cls,
+                        dep.spec,
+                        directive="depends_on",
+                        error_cls=error_cls,
+                        filename=filename,
+                        requestor=pkg_name,
+                    )
+                )
 
         # Check "provides" directive
         for when_spec in pkg_cls.provided:
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, when_spec, directive="provides", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    when_spec,
+                    directive="provides",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
 
         # Check "resource" directive
         for vrn in pkg_cls.resources:
             errors.extend(
-                _analyze_variants_in_directive(
-                    pkg_cls, vrn, directive="resource", error_cls=error_cls
+                _issues_in_directive_constraint(
+                    pkg_cls,
+                    vrn,
+                    directive="resource",
+                    error_cls=error_cls,
+                    filename=filename,
+                    requestor=pkg_name,
                 )
             )
 
@@ -1190,17 +1187,49 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     return errors
 
 
-def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
+def _issues_in_directive_constraint(pkg, constraint, *, directive, error_cls, filename, requestor):
+    errors = []
+    errors.extend(
+        _analyze_variants_in_directive(
+            pkg,
+            constraint,
+            directive=directive,
+            error_cls=error_cls,
+            filename=filename,
+            requestor=requestor,
+        )
+    )
+    errors.extend(
+        _analize_propagated_deps_in_directive(
+            pkg,
+            constraint,
+            directive=directive,
+            error_cls=error_cls,
+            filename=filename,
+            requestor=requestor,
+        )
+    )
+    return errors
+
+
+def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, filename, requestor):
     errors = []
     variant_names = pkg.variant_names()
-    summary = f"{pkg.name}: wrong variant in '{directive}' directive"
-    filename = spack.repo.PATH.filename_for_package_name(pkg.name)
-
+    summary = f"{requestor}: wrong variant in '{directive}' directive"
     for name, v in constraint.variants.items():
+        if name == "commit":
+            # Automatic variant
+            continue
+
         if name not in variant_names:
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
             continue
+
+        if v.propagate:
+            propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+            msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
+            errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
 
         try:
             spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)
@@ -1212,6 +1241,18 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
             msg = str(e).strip()
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
 
+    return errors
+
+
+def _analize_propagated_deps_in_directive(
+    pkg, constraint, *, directive, error_cls, filename, requestor
+):
+    errors = []
+    summary = f"{requestor}: dependency propagation ('%%') in '{directive}' directive"
+    for edge in constraint.traverse_edges():
+        if edge.propagation != spack.enums.PropagationPolicy.NONE:
+            msg = f"'{edge.spec}' contains a propagated dependency"
+            errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
     return errors
 
 

@@ -10,6 +10,7 @@ after the system path is set up.
 import argparse
 import gc
 import inspect
+import multiprocessing
 import operator
 import os
 import pstats
@@ -1120,6 +1121,9 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
+    # When using the forkserver start method, preload the following modules to improve startup
+    # time of child processes.
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.new_installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)

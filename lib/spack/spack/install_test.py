@@ -12,14 +12,13 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import spack.config
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.log
-import spack.package_base
 import spack.paths
 import spack.repo
 import spack.report
@@ -33,6 +32,9 @@ from spack.llnl.util.lang import nullcontext
 from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
 from spack.util.prefix import Prefix
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 #: Stand-alone test failure info type
 TestFailureType = Tuple[BaseException, str]
@@ -570,7 +572,7 @@ def copy_test_files(pkg: "spack.package_base.PackageBase", test_spec: spack.spec
         shutil.copytree(data_source, data_dir)
 
 
-def test_function_names(pkg: PackageObjectOrClass, add_virtuals: bool = False) -> List[str]:
+def test_function_names(pkg: "PackageObjectOrClass", add_virtuals: bool = False) -> List[str]:
     """Grab the names of all non-empty test functions.
 
     Args:
@@ -589,7 +591,7 @@ def test_function_names(pkg: PackageObjectOrClass, add_virtuals: bool = False) -
 
 
 def test_functions(
-    pkg: PackageObjectOrClass, add_virtuals: bool = False
+    pkg: "PackageObjectOrClass", add_virtuals: bool = False
 ) -> List[Tuple[str, Callable]]:
     """Grab all non-empty test functions.
 
@@ -604,12 +606,7 @@ def test_functions(
     Raises:
         ValueError: occurs if pkg is not a package class
     """
-    instance = isinstance(pkg, spack.package_base.PackageBase)
-    if not (instance or issubclass(pkg, spack.package_base.PackageBase)):  # type: ignore[arg-type]
-        raise ValueError(f"Expected a package (class), not {pkg} ({type(pkg)})")
-
-    pkg_cls = pkg.__class__ if instance else pkg
-    classes = [pkg_cls]
+    classes = [pkg if isinstance(pkg, type) else pkg.__class__]
     if add_virtuals:
         vpkgs = virtuals(pkg)
         for vname in vpkgs:

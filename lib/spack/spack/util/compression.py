@@ -128,7 +128,7 @@ def _gunzip(archive_file: str) -> str:
 
 
 def _py_gunzip(archive_file: str) -> str:
-    """Returns path to gunzip'd file. Decompresses `.gz` compressed archvies via python gzip
+    """Returns path to gunzip'd file. Decompresses `.gz` compressed archives via python gzip
     module"""
     decompressed_file = os.path.basename(
         spack.llnl.url.strip_compression_extension(archive_file, "gz")
@@ -522,7 +522,7 @@ def extension_from_magic_numbers_by_stream(
     """Returns the typical extension for the opened file, without leading ``.``, based on its magic
     numbers.
 
-    If the stream does not represent file type recongized by Spack (see
+    If the stream does not represent file type recognized by Spack (see
     :py:data:`SUPPORTED_FILETYPES`), the method will return None
 
     Args:

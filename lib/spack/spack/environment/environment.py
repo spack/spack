@@ -12,10 +12,22 @@ import re
 import shutil
 import stat
 import warnings
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from collections.abc import KeysView
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import spack
-import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -39,17 +51,20 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
+from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
+from spack.spec_filter import SpecFilter
 from spack.util.path import substitute_path_variables
 
-from ..enums import ConfigScopePriority
 from .list import SpecList, SpecListError, SpecListParser
 
-SpecPair = spack.concretize.SpecPair
+SpecPair = Tuple[Spec, Spec]
+
+DEFAULT_USER_SPEC_GROUP = "default"
 
 #: environment variable used to indicate the active environment
 spack_env_var = "SPACK_ENV"
@@ -145,7 +160,7 @@ sep_re = re.escape(os.sep)
 valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 6
+CURRENT_LOCKFILE_VERSION = 7
 
 
 READER_CLS = {
@@ -155,18 +170,24 @@ READER_CLS = {
     4: spack.spec.SpecfileV3,
     5: spack.spec.SpecfileV4,
     6: spack.spec.SpecfileV5,
+    7: spack.spec.SpecfileV5,
 }
 
 
 # Magic names
 # The name of the standalone spec list in the manifest yaml
-user_speclist_name = "specs"
+USER_SPECS_KEY = "specs"
 # The name of the default view (the view loaded on env.activate)
 default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
-# The name for any included concrete specs
-included_concrete_name = "include_concrete"
+
+# (DEPRECATED) Use as the heading/name in the manifest is deprecated.
+# The key for any concrete specs included in a lockfile.
+lockfile_include_key = "include_concrete"
+
+# The name/heading for include paths in the manifest file.
+manifest_include_name = "include"
 
 
 def installed_specs():
@@ -303,7 +324,7 @@ def as_env_dir(name_or_dir):
         validate_env_name(name_or_dir)
         if not exists(name_or_dir):
             raise SpackEnvironmentError("no such environment '%s'" % name_or_dir)
-        return root(name_or_dir)
+        return _root(name_or_dir)
 
 
 def environment_from_name_or_dir(name_or_dir):
@@ -341,7 +362,7 @@ def create(
             string, it specifies the path to the view
         keep_relative: if True, develop paths are copied verbatim into the new environment file,
             otherwise they are made absolute
-        include_concrete: list of concrete environment names/paths to be included
+        include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
     return create_in_dir(
@@ -675,35 +696,40 @@ def _error_on_nonempty_view_dir(new_root):
 class ViewDescriptor:
     def __init__(
         self,
-        base_path,
-        root,
-        projections={},
-        select=[],
-        exclude=[],
-        link=default_view_link,
-        link_type="symlink",
-    ):
+        base_path: str,
+        root: str,
+        *,
+        projections: Optional[Dict[str, str]] = None,
+        select: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        link: str = default_view_link,
+        link_type: fsv.LinkType = "symlink",
+        groups: Optional[Union[str, List[str]]] = None,
+    ) -> None:
         self.base = base_path
         self.raw_root = root
         self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
-        self.projections = projections
-        self.select = select
-        self.exclude = exclude
-        self.link_type = fsv.canonicalize_link_type(link_type)
+        self.projections = projections or {}
+        self.select = select or []
+        self.exclude = exclude or []
+        self.link_type: fsv.LinkType = fsv.canonicalize_link_type(link_type)
         self.link = link
+        if isinstance(groups, str):
+            groups = [groups]
+        self.groups: Optional[List[str]] = groups
 
-    def select_fn(self, spec):
+    def select_fn(self, spec: Spec) -> bool:
         return any(spec.satisfies(s) for s in self.select)
 
-    def exclude_fn(self, spec):
+    def exclude_fn(self, spec: Spec) -> bool:
         return not any(spec.satisfies(e) for e in self.exclude)
 
-    def update_root(self, new_path):
+    def update_root(self, new_path: str) -> None:
         self.raw_root = new_path
         self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
 
-    def __eq__(self, other):
-        return all(
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ViewDescriptor) and all(
             [
                 self.root == other.root,
                 self.projections == other.projections,
@@ -729,19 +755,20 @@ class ViewDescriptor:
         return ret
 
     @staticmethod
-    def from_dict(base_path, d):
+    def from_dict(base_path: str, d) -> "ViewDescriptor":
         return ViewDescriptor(
             base_path,
             d["root"],
-            d.get("projections", {}),
-            d.get("select", []),
-            d.get("exclude", []),
-            d.get("link", default_view_link),
-            d.get("link_type", "symlink"),
+            projections=d.get("projections", {}),
+            select=d.get("select", []),
+            exclude=d.get("exclude", []),
+            link=d.get("link", default_view_link),
+            link_type=d.get("link_type", "symlink"),
+            groups=d.get("group", None),
         )
 
     @property
-    def _current_root(self):
+    def _current_root(self) -> Optional[str]:
         if not islink(self.root):
             return None
 
@@ -840,7 +867,12 @@ class ViewDescriptor:
 
         return self._exclude_duplicate_runtimes(result)
 
-    def regenerate(self, concrete_roots: List[Spec]) -> None:
+    def regenerate(self, env: "Environment") -> None:
+        if self.groups is None:
+            concrete_roots = env.concrete_roots()
+        else:
+            concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
+
         specs = self.specs_for_view(concrete_roots)
 
         # To ensure there are no conflicts with packages being installed
@@ -967,15 +999,30 @@ def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
 class ConcretizedRootInfo:
     """Data on root specs that have been concretized"""
 
-    __slots__ = ("root", "hash", "new")
+    __slots__ = ("root", "hash", "new", "group")
 
-    def __init__(self, *, root_spec: spack.spec.Spec, root_hash: str, new: bool = False):
+    def __init__(
+        self, *, root_spec: spack.spec.Spec, root_hash: str, new: bool = False, group: str
+    ):
         self.root = root_spec
         self.hash = root_hash
         self.new = new
+        self.group = group
 
     def __str__(self):
         return f"{self.root} -> {self.hash} [new={self.new}]"
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, ConcretizedRootInfo)
+            and self.root == other.root
+            and self.hash == other.hash
+            and self.new == other.new
+            and self.group == other.group
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.root, self.hash, self.new, self.group))
 
 
 class Environment:
@@ -1008,8 +1055,8 @@ class Environment:
         #: Repository for this environment (memoized)
         self._repo = None
 
-        #: Environment paths for concrete (lockfile) included environments
-        self.included_concrete_envs: List[str] = []
+        #: Environment root dirs for concrete (lockfile) included environments
+        self.included_concrete_env_root_dirs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
         self.included_concrete_spec_data: Dict[str, Dict[str, List[str]]] = {}
         #: User specs from included environments from the last concretization
@@ -1033,15 +1080,30 @@ class Environment:
             with self.manifest.use_config():
                 self._read()
 
-    @property
-    def unify(self):
-        if self._unify is None:
-            self._unify = spack.config.get("concretizer:unify", False)
-        return self._unify
+    @contextlib.contextmanager
+    def config_override_for_group(self, *, group: str):
+        key = self.manifest._ensure_group_exists(group=group)
+        internal_scope = self.manifest.config_override(group=key)
+        if internal_scope is None:
+            # No internal scope
+            tty.debug(
+                f"[{__name__}] No configuration override necessary for the '{group}' group "
+                f"in the environment at {self.manifest_path}"
+            )
+            yield
+            return
 
-    @unify.setter
-    def unify(self, value):
-        self._unify = value
+        try:
+            tty.debug(
+                f"[{__name__}] Overriding the configuration for the '{group}' group defined "
+                f"in {self.manifest_path} before concretization"
+            )
+            spack.config.CONFIG.push_scope(
+                internal_scope, priority=ConfigScopePriority.ENVIRONMENT_SPEC_GROUPS
+            )
+            yield
+        finally:
+            spack.config.CONFIG.remove_scope(internal_scope.name)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -1121,72 +1183,99 @@ class Environment:
         if self.views == dict():
             self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
 
-    def _process_concrete_includes(self):
-        """Extract and load into memory included concrete spec data."""
-        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
-        # Expand config and environment variables
-        self.included_concrete_envs = [
-            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
-        ]
-
-        if self.included_concrete_envs:
+    def _load_concrete_include_data(self):
+        """Load concrete include specs data from included concrete directories."""
+        if self.included_concrete_env_root_dirs:
             if os.path.exists(self.lock_path):
                 with open(self.lock_path, encoding="utf-8") as f:
                     data = self._read_lockfile(f)
 
-                if included_concrete_name in data:
-                    self.included_concrete_spec_data = data[included_concrete_name]
+                if lockfile_include_key in data:
+                    self.included_concrete_spec_data = data[lockfile_include_key]
             else:
                 self.include_concrete_envs()
+
+    def _process_included_lockfiles(self):
+        """Extract and load into memory included lock file data."""
+        includes = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
+        if includes:
+            tty.warn(
+                f"Use of '{lockfile_include_key}' in manifest files "
+                f"is deprecated. The key should be '{manifest_include_name}' "
+                f"and the path should end with '{lockfile_name}'. Run "
+                f"'spack env update {self.name}' to update the manifest."
+            )
+            includes = [os.path.join(inc, lockfile_name) for inc in includes]
+        includes += self.manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
+        if not includes:
+            return
+
+        # Expand config and environment variables for concrete environments,
+        # indicated by the inclusion of lock files.
+        self.included_concrete_env_root_dirs = []
+
+        for entry in includes:
+            include = spack.config.included_path(entry)
+            if isinstance(include, spack.config.GitIncludePaths):
+                # Git includes must be cloned first; paths are relative to the
+                # clone destination, not to the manifest directory.
+                destination = include._clone()
+                if destination is None:
+                    continue
+                resolved = [os.path.join(destination, p) for p in include.paths]
+            else:
+                resolved = [
+                    spack.util.path.canonicalize_path(p, default_wd=self.path)
+                    for p in include.paths
+                ]
+
+            for path in resolved:
+                if os.path.basename(path) != lockfile_name:
+                    continue
+
+                tty.debug(f"Adding {path} to the concrete environment root directories")
+                self.included_concrete_env_root_dirs.append(os.path.dirname(path))
+
+        # Cache concrete environments for required lock files.
+        self._load_concrete_include_data()
 
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.views = {}
         self._sync_speclists()
         self._process_view(spack.config.get("view", True))
-        self._process_concrete_includes()
+        self._process_included_lockfiles()
 
     def _sync_speclists(self):
+        self._spec_lists_parser = SpecListParser(
+            toolchains=spack.config.CONFIG.get("toolchains", {})
+        )
         self.spec_lists = {}
         self.spec_lists.update(
             self._spec_lists_parser.parse_definitions(
                 data=spack.config.CONFIG.get("definitions", [])
             )
         )
+        for group in self.manifest.groups():
+            tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
+            key = self._user_specs_key(group=group)
+            self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
+                name=key, yaml_list=self.manifest.user_specs(group=group)
+            )
 
-        env_configuration = self.manifest[TOP_LEVEL_KEY]
-        spec_list = env_configuration.get(user_speclist_name, [])
-        self.spec_lists[user_speclist_name] = self._spec_lists_parser.parse_user_specs(
-            name=user_speclist_name, yaml_list=spec_list
-        )
-
-    def all_concretized_user_specs(self) -> List[Spec]:
-        """Returns all of the concretized user specs of the environment and
-        its included environment(s)."""
-        concretized_user_specs = self.concretized_user_specs
-        for included_specs in self.included_concretized_user_specs.values():
-            for included in included_specs:
-                # Don't duplicate included spec(s)
-                if included not in concretized_user_specs:
-                    concretized_user_specs.append(included)
-
-        return concretized_user_specs
-
-    def all_concretized_orders(self) -> List[str]:
-        """Returns all of the concretized order of the environment and
-        its included environment(s)."""
-        concretized_order = [x.hash for x in self.concretized_roots]
-        for included_concretized_order in self.included_concretized_order.values():
-            for included in included_concretized_order:
-                # Don't duplicate included spec(s)
-                if included not in concretized_order:
-                    concretized_order.append(included)
-
-        return concretized_order
+    def _user_specs_key(self, *, group: Optional[str] = None) -> str:
+        if group is None or group == DEFAULT_USER_SPEC_GROUP:
+            return USER_SPECS_KEY
+        return f"{USER_SPECS_KEY}:{group}"
 
     @property
-    def user_specs(self):
-        return self.spec_lists[user_speclist_name]
+    def user_specs(self) -> SpecList:
+        return self.user_specs_by(group=DEFAULT_USER_SPEC_GROUP)
+
+    def user_specs_by(self, *, group: Optional[str]) -> SpecList:
+        """Returns a dictionary of user specs keyed by their group."""
+        key = self._user_specs_key(group=group)
+        return self.spec_lists[key]
 
     @property
     def dev_specs(self):
@@ -1207,7 +1296,7 @@ class Environment:
         """Included concrete user (or root) specs from last concretization."""
         spec_list = SpecList()
 
-        if not self.included_concrete_envs:
+        if not self.included_concrete_env_root_dirs:
             return spec_list
 
         def add_root_specs(included_concrete_specs):
@@ -1216,8 +1305,8 @@ class Environment:
                 for root_list in info["roots"]:
                     spec_list.add(root_list["spec"])
 
-                if "include_concrete" in info:
-                    add_root_specs(info["include_concrete"])
+                if lockfile_include_key in info:
+                    add_root_specs(info[lockfile_include_key])
 
         add_root_specs(self.included_concrete_spec_data)
         return spec_list
@@ -1271,7 +1360,7 @@ class Environment:
         return os.path.join(self.env_subdir_path, "repos")
 
     @property
-    def view_path_default(self):
+    def view_path_default(self) -> str:
         # default path for environment views
         return os.path.join(self.env_subdir_path, "view")
 
@@ -1287,14 +1376,14 @@ class Environment:
         return self.manifest.scope_name
 
     def include_concrete_envs(self):
-        """Copy and save the included envs' specs internally"""
+        """Copy and save the included environments' specs internally."""
 
         root_hash_seen = set()
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
 
-        for env_path in self.included_concrete_envs:
-            # Check that environment exists
+        for env_path in self.included_concrete_env_root_dirs:
+            # Check that the environment (lockfile) exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
@@ -1318,16 +1407,16 @@ class Environment:
             # Copy transitive include data
             transitive = env.included_concrete_spec_data
             if transitive:
-                self.included_concrete_spec_data[env_path]["include_concrete"] = transitive
+                self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive
 
-        self._unify_specs()
+        self.unify_specs()
         self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def add(self, user_spec, list_name=user_speclist_name) -> bool:
+    def add(self, user_spec, list_name=USER_SPECS_KEY) -> bool:
         """Add a single user_spec (non-concretized) to the Environment
 
         Returns:
@@ -1340,7 +1429,7 @@ class Environment:
         if list_name not in self.spec_lists:
             raise SpackEnvironmentError(f"No list {list_name} exists in environment {self.name}")
 
-        if list_name == user_speclist_name:
+        if list_name == USER_SPECS_KEY:
             if spec.anonymous:
                 raise SpackEnvironmentError("cannot add anonymous specs to an environment")
             elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
@@ -1352,7 +1441,7 @@ class Environment:
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
             list_to_change.add(spec)
-            if list_name == user_speclist_name:
+            if list_name == USER_SPECS_KEY:
                 self.manifest.add_user_spec(str(user_spec))
             else:
                 self.manifest.add_definition(str(user_spec), list_name=list_name)
@@ -1363,7 +1452,7 @@ class Environment:
     def change_existing_spec(
         self,
         change_spec: Spec,
-        list_name: str = user_speclist_name,
+        list_name: str = USER_SPECS_KEY,
         match_spec: Optional[Spec] = None,
         allow_changing_multiple_specs=False,
     ):
@@ -1404,7 +1493,7 @@ class Environment:
 
         for idx, spec in matches:
             override_spec = Spec.override(spec, change_spec)
-            if list_name == user_speclist_name:
+            if list_name == USER_SPECS_KEY:
                 self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
                 self.manifest.override_definition(
@@ -1412,7 +1501,7 @@ class Environment:
                 )
         self._sync_speclists()
 
-    def remove(self, query_spec, list_name=user_speclist_name, force=False):
+    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False):
         """Remove specs from an environment that match a query_spec"""
         err_msg_header = (
             f"Cannot remove '{query_spec}' from '{list_name}' definition "
@@ -1449,7 +1538,7 @@ class Environment:
                     msg += " It will be removed from the concrete specs."
                 tty.warn(msg)
             else:
-                if list_name == user_speclist_name:
+                if list_name == USER_SPECS_KEY:
                     self.manifest.remove_user_spec(str(spec))
                 else:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
@@ -1571,51 +1660,25 @@ class Environment:
             List of specs that have been concretized. Each entry is a tuple of
             the user spec and the corresponding concretized spec.
         """
-        if force is None:
-            force = spack.config.get("concretizer:force")
-
-        self._prepare_for_concretization(force=force)
-
-        # Exit early if the set of concretized specs is the set of user specs
-        new_user_specs, kept_user_specs, specs_to_concretize = self._get_specs_to_concretize()
-        if not new_user_specs:
-            return []
-
-        # Pick the right concretization strategy
-        if self.unify == "when_possible":
-            return self._concretize_together_where_possible(
-                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
-            )
-
-        if self.unify is True:
-            return self._concretize_together(
-                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
-            )
-
-        if self.unify is False:
-            return self._concretize_separately(
-                new_user_specs, kept_user_specs, specs_to_concretize, tests=tests
-            )
-
-        msg = "concretization strategy not implemented [{0}]"
-        raise SpackEnvironmentError(msg.format(self.unify))
-
-    def _prepare_for_concretization(self, *, force: bool):
-        """Reset the environment concrete state and ensure consistency with user specs."""
-        if force:
-            self.clear_concretized_specs()
-        else:
-            self.sync_concretized_specs()
-
-        # If a combined env, check updated spec is in the linked envs
-        if self.included_concrete_envs:
-            self.include_concrete_envs()
+        return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
 
     def sync_concretized_specs(self) -> None:
         """Removes concrete specs that no longer correlate to a user spec"""
-        to_deconcretize = [x.root for x in self.concretized_roots if x.root not in self.user_specs]
-        for spec in to_deconcretize:
-            self.deconcretize_by_user_spec(spec)
+        if not self.concretized_roots:
+            return
+
+        to_deconcretize, user_specs = [], self._all_user_specs_with_group()
+        for x in self.concretized_roots:
+            if (x.group, x.root) not in user_specs:
+                to_deconcretize.append(x)
+        for x in to_deconcretize:
+            self.deconcretize_by_user_spec(x.root, group=x.group)
+
+    def _all_user_specs_with_group(self) -> Set[Tuple[str, Spec]]:
+        result = set()
+        for group in self.manifest.groups():
+            result.update([(group, x) for x in self.user_specs_by(group=group)])
+        return result
 
     def clear_concretized_specs(self) -> None:
         """Clears the currently concretized specs"""
@@ -1627,15 +1690,20 @@ class Environment:
         self.concretized_roots = [x for x in self.concretized_roots if x.hash != dag_hash]
         self._maybe_remove_dag_hash(dag_hash)
 
-    def deconcretize_by_user_spec(self, spec: spack.spec.Spec) -> None:
-        """Remove a user spec from the environment concretization
+    def deconcretize_by_user_spec(
+        self, spec: spack.spec.Spec, *, group: Optional[str] = None
+    ) -> None:
+        """Removes a user spec from the environment concretization
 
         Arguments:
             spec: user spec to deconcretize
+            group: group of the spec to remove. If not specified, the spec is removed from
+                the default group
         """
+        group = group or DEFAULT_USER_SPEC_GROUP
         # spec has to be a root of the environment
-        self.concretized_roots, discarded = stable_partition(
-            self.concretized_roots, lambda x: x.root != spec
+        discarded, self.concretized_roots = stable_partition(
+            self.concretized_roots, lambda x: x.group == group and x.root == spec
         )
         assert (
             len({x.hash for x in discarded}) == 1
@@ -1653,111 +1721,7 @@ class Environment:
         """Returns True if any user spec is associated with a concrete spec with the given hash"""
         return any(x.hash == dag_hash for x in self.concretized_roots)
 
-    def _get_specs_to_concretize(
-        self,
-    ) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec], List[SpecPair]]:
-        """Compute specs to concretize for unify:true and unify:when_possible.
-
-        This includes new user specs and any already concretized specs.
-
-        Returns:
-            Tuple of new user specs, user specs to keep, and the specs to concretize.
-
-        """
-        # Exit early if the set of concretized specs is the set of user specs
-        concretized_user_specs = {x.root for x in self.concretized_roots}
-        kept_user_specs, new_user_specs = stable_partition(
-            self.user_specs, lambda x: x in concretized_user_specs
-        )
-        kept_user_specs += self.included_user_specs
-        if not new_user_specs:
-            return new_user_specs, kept_user_specs, []
-
-        specs_to_concretize = [(s, None) for s in new_user_specs] + [
-            (abstract, concrete)
-            for abstract, concrete in self.concretized_specs()
-            if abstract in kept_user_specs
-        ]
-        return new_user_specs, kept_user_specs, specs_to_concretize
-
-    def _concretize_together_where_possible(
-        self,
-        new_user_specs: List[Spec],
-        kept_user_specs: List[Spec],
-        specs_to_concretize: List[SpecPair],
-        *,
-        tests: Union[bool, Sequence[str]] = False,
-    ) -> Sequence[SpecPair]:
-        # Exit early if the set of concretized specs is the set of user specs
-        result = spack.concretize.concretize_together_when_possible(
-            specs_to_concretize, tests=tests
-        )
-        result = [x for x in result if x[0] in new_user_specs]
-        for abstract, concrete in result:
-            self._add_concrete_spec(abstract, concrete, new=True)
-
-        return result
-
-    def _concretize_together(
-        self,
-        new_user_specs: List[Spec],
-        kept_user_specs: List[Spec],
-        specs_to_concretize: List[SpecPair],
-        *,
-        tests: Union[bool, Sequence[str]] = False,
-    ) -> Sequence[SpecPair]:
-        """Concretization strategy that concretizes all the specs
-        in the same DAG.
-        """
-        try:
-            concretized_specs = spack.concretize.concretize_together(
-                specs_to_concretize, tests=tests
-            )
-        except spack.error.UnsatisfiableSpecError as e:
-            # "Enhance" the error message for multiple root specs, suggest a less strict
-            # form of concretization.
-            if len(self.user_specs) > 1:
-                e.message += ". "
-                if kept_user_specs:
-                    e.message += (
-                        "Couldn't concretize without changing the existing environment. "
-                        "If you are ok with changing it, try `spack concretize --force`. "
-                    )
-                e.message += (
-                    "You could consider setting `concretizer:unify` to `when_possible` "
-                    "or `false` to allow multiple versions of some packages."
-                )
-            raise
-
-        # Return the portion of the return value that is new
-        result = concretized_specs[: len(new_user_specs)]
-        for abstract, concrete in result:
-            self._add_concrete_spec(abstract, concrete, new=True)
-        return result
-
-    def _concretize_separately(
-        self,
-        new_user_specs: List[Spec],
-        kept_user_specs: List[Spec],
-        specs_to_concretize: List[SpecPair],
-        *,
-        tests: Union[bool, Sequence[str]] = False,
-    ):
-        """Concretization strategy that concretizes separately one
-        user spec after the other.
-        """
-        to_concretize = [(root, None) for root in new_user_specs]
-
-        concretized_specs = spack.concretize.concretize_separately(to_concretize, tests=tests)
-
-        for abstract, concrete in concretized_specs:
-            self._add_concrete_spec(abstract, concrete, new=True)
-
-        # Unify the specs objects, so we get correct references to all parents
-        self._unify_specs()
-        return concretized_specs
-
-    def _unify_specs(self) -> None:
+    def unify_specs(self) -> None:
         # Keep the information on new specs by copying the concretized roots
         old_concretized_roots = self.concretized_roots
         self._read_lockfile_dict(self._to_lockfile_dict())
@@ -1815,6 +1779,7 @@ class Environment:
         if default_view_name in self.views:
             self.default_view.update_root(view_path)
         else:
+            assert isinstance(view_path, str), f"expected str for 'view_path', but got {view_path}"
             self.views[default_view_name] = ViewDescriptor(self.path, view_path)
 
         self.manifest.set_default_view(self._default_view_as_yaml())
@@ -1838,7 +1803,7 @@ class Environment:
             return
 
         for view in self.views.values():
-            view.regenerate(self.concrete_roots())
+            view.regenerate(self)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -1914,8 +1879,13 @@ class Environment:
 
         return env_mod
 
-    def _add_concrete_spec(
-        self, spec: spack.spec.Spec, concrete: spack.spec.Spec, *, new: bool = True
+    def add_concrete_spec(
+        self,
+        spec: spack.spec.Spec,
+        concrete: spack.spec.Spec,
+        *,
+        new: bool = True,
+        group: Optional[str] = None,
     ):
         """Called when a new concretized spec is added to the environment.
 
@@ -1928,16 +1898,11 @@ class Environment:
         """
         assert concrete.concrete
         h = concrete.dag_hash()
-        self.concretized_roots.append(ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new))
+        group = group or DEFAULT_USER_SPEC_GROUP
+        self.concretized_roots.append(
+            ConcretizedRootInfo(root_spec=spec, root_hash=h, new=new, group=group)
+        )
         self.specs_by_hash[h] = concrete
-
-    @property
-    def concretized_order(self) -> List[str]:
-        return [x.hash for x in self.concretized_roots]
-
-    @property
-    def concretized_user_specs(self) -> List[Spec]:
-        return [x.root for x in self.concretized_roots]
 
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""
@@ -1970,22 +1935,8 @@ class Environment:
         installer, and those that should be, taking into account development
         specs. This is done in a single read transaction per environment instead
         of per spec."""
-        installed, uninstalled = [], []
         with spack.store.STORE.db.read_transaction():
-            for concretized_hash in self.all_concretized_orders():
-                if concretized_hash in self.specs_by_hash:
-                    spec = self.specs_by_hash[concretized_hash]
-                else:
-                    for env_path in self.included_specs_by_hash.keys():
-                        if concretized_hash in self.included_specs_by_hash[env_path]:
-                            spec = self.included_specs_by_hash[env_path][concretized_hash]
-                            break
-                if not spec.installed or (
-                    spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
-                ):
-                    uninstalled.append(spec)
-                else:
-                    installed.append(spec)
+            uninstalled, installed = stable_partition(self.concrete_roots(), _is_uninstalled)
         return installed, uninstalled
 
     def uninstalled_specs(self):
@@ -2084,19 +2035,40 @@ class Environment:
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
-        for s, h in zip(self.all_concretized_user_specs(), self.all_concretized_orders()):
-            if h in self.specs_by_hash:
-                yield (s, self.specs_by_hash[h])
-            else:
-                for env_path in self.included_specs_by_hash.keys():
-                    if h in self.included_specs_by_hash[env_path]:
-                        yield (s, self.included_specs_by_hash[env_path][h])
-                        break
+        for x in self.concretized_roots:
+            yield x.root, self.specs_by_hash[x.hash]
+
+        yield from self.concretized_specs_from_all_included_environments()
+
+    def concretized_specs_from_all_included_environments(self):
+        seen = {(x.root, x.hash) for x in self.concretized_roots}
+        for included_env in self.included_concretized_user_specs:
+            yield from self.concretized_specs_from_included_environment(included_env, _seen=seen)
+
+    def concretized_specs_from_included_environment(
+        self, included_env: str, *, _seen: Optional[Set[Tuple[spack.spec.Spec, str]]] = None
+    ):
+        _seen = set() if _seen is None else _seen
+        for s, h in zip(
+            self.included_concretized_user_specs[included_env],
+            self.included_concretized_order[included_env],
+        ):
+            if (s, h) in _seen:
+                continue
+            _seen.add((s, h))
+            yield s, self.included_specs_by_hash[included_env][h]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
+        """Generates all the (abstract, concrete) spec pairs for a given group"""
+        for x in self.concretized_roots:
+            if x.group != group:
+                continue
+            yield x.root, self.specs_by_hash[x.hash]
 
     def get_by_hash(self, dag_hash: str) -> List[Spec]:
         # If it's not a partial hash prefix we can early exit
@@ -2214,22 +2186,6 @@ class Environment:
                 if d not in needed:
                     yield d
 
-    def _get_environment_specs(self, recurse_dependencies=True):
-        """Returns the specs of all the packages in an environment.
-
-        If these specs appear under different user_specs, only one copy
-        is added to the list returned.
-        """
-        specs = [self.specs_by_hash[h] for h in self.all_concretized_orders()]
-        if recurse_dependencies:
-            specs.extend(
-                traverse.traverse_nodes(
-                    specs, root=False, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-            )
-
-        return specs
-
     def _concrete_specs_dict(self):
         concrete_specs = {}
         for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
@@ -2247,10 +2203,21 @@ class Environment:
         return concrete_specs
 
     def _concrete_roots_dict(self):
-        return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
+        if not self.has_groups():
+            return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
+
+        return [
+            {"hash": x.hash, "spec": str(x.root), "group": x.group} for x in self.concretized_roots
+        ]
+
+    def has_groups(self) -> bool:
+        groups = self.manifest.groups()
+        # True if groups != {DEFAULT_USER_SPEC_GROUP}
+        return len(groups) != 1 or DEFAULT_USER_SPEC_GROUP not in groups
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
+        lockfile_version = CURRENT_LOCKFILE_VERSION if self.has_groups() else 6
         concrete_specs = self._concrete_specs_dict()
         root_specs = self._concrete_roots_dict()
 
@@ -2267,7 +2234,7 @@ class Environment:
             # metadata about the format
             "_meta": {
                 "file-type": "spack-lockfile",
-                "lockfile-version": lockfile_format_version,
+                "lockfile-version": lockfile_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # spack version information
@@ -2278,8 +2245,8 @@ class Environment:
             "concrete_specs": concrete_specs,
         }
 
-        if self.included_concrete_envs:
-            data[included_concrete_name] = self.included_concrete_spec_data
+        if self.included_concrete_env_root_dirs:
+            data[lockfile_include_key] = self.included_concrete_spec_data
 
         return data
 
@@ -2317,8 +2284,8 @@ class Environment:
             if "concrete_specs" in info:
                 specs_by_hash.update(info["concrete_specs"])
 
-            if included_concrete_name in info:
-                for included_name, included_info in info[included_concrete_name].items():
+            if lockfile_include_key in info:
+                for included_name, included_info in info[lockfile_include_key].items():
                     if included_name not in self.included_concretized_order:
                         self.included_concretized_order[included_name] = []
                         self.included_concretized_user_specs[included_name] = []
@@ -2335,17 +2302,24 @@ class Environment:
         self.included_concretized_order = {}
 
         roots = d["roots"]
+        default_user_specs_group = DEFAULT_USER_SPEC_GROUP
 
         self.concretized_roots = [
-            ConcretizedRootInfo(root_spec=Spec(r["spec"]), root_hash=r["hash"], new=False)
+            # Lockfile versions < 7 don't have the "group" attribute
+            ConcretizedRootInfo(
+                root_spec=Spec(r["spec"]),
+                root_hash=r["hash"],
+                new=False,
+                group=r.get("group", default_user_specs_group),
+            )
             for r in roots
         ]
 
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
 
-        if included_concrete_name in d:
-            for env_name, env_info in d[included_concrete_name].items():
+        if lockfile_include_key in d:
+            for env_name, env_info in d[lockfile_include_key].items():
                 included_json_specs_by_hash.update(
                     self.set_included_concretized_user_specs(
                         env_name, env_info, included_json_specs_by_hash
@@ -2360,7 +2334,7 @@ class Environment:
                 f"Spack {spack.__version__} cannot read the lockfile '{self.lock_path}', using "
                 f"the v{current_lockfile_format} format."
             )
-            if lockfile_format_version < current_lockfile_format:
+            if CURRENT_LOCKFILE_VERSION < current_lockfile_format:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
 
@@ -2454,7 +2428,7 @@ class Environment:
             regenerate: regenerate views and run post-write hooks as well as writing if True.
         """
         self.manifest_uptodate_or_warn()
-        if self.specs_by_hash or self.included_concrete_envs:
+        if self.specs_by_hash or self.included_concrete_env_root_dirs:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()
@@ -2550,6 +2524,308 @@ class Environment:
         deactivate()
         if self._previous_active:
             activate(self._previous_active)
+
+
+def _is_uninstalled(spec):
+    return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
+
+
+class ReusableSpecsFactory:
+    """Creates a list of SpecFilters to generate the reusable specs for the environment"""
+
+    def __init__(self, *, env: Environment, group: str):
+        self.env = env
+        self.group = group
+
+    @staticmethod
+    def _const(specs: List[Spec]) -> Callable[[], List[Spec]]:
+        """Returns a zero-argument callable that always returns the given list."""
+        return lambda: specs
+
+    def __call__(
+        self, is_usable: Callable[[Spec], bool], configuration: spack.config.Configuration
+    ) -> List[SpecFilter]:
+        result = []
+        # Specs from group dependencies _must_ be reused, regardless of configuration
+        dependencies = self.env.manifest.needs(group=self.group)
+        necessary_specs = []
+        for d in dependencies:
+            necessary_specs.extend([x for _, x in self.env.concretized_specs_by(group=d)])
+
+        # Specs from groups listed as dependencies
+        if necessary_specs:
+            necessary_specs = list(
+                traverse.traverse_nodes(necessary_specs, deptype=("link", "run"))
+            )
+            result.append(
+                SpecFilter(
+                    self._const(necessary_specs), include=[], exclude=[], is_usable=is_usable
+                )
+            )
+
+        # Included environments and _this_ group, instead, are subject to configuration
+        concretizer_yaml = configuration.get_config("concretizer")
+        reuse_yaml = concretizer_yaml.get("reuse", False)
+
+        # With no reuse don't account for previously concretized specs in _this_ group
+        if reuse_yaml is False:
+            return result
+
+        this_group_specs = [x for _, x in self.env.concretized_specs_by(group=self.group)]
+        included_specs = [
+            x for _, x in self.env.concretized_specs_from_all_included_environments()
+        ]
+        additional_specs = list(traverse.traverse_nodes(this_group_specs + included_specs))
+        if not isinstance(reuse_yaml, Mapping):
+            result.append(
+                SpecFilter(
+                    self._const(additional_specs), include=[], exclude=[], is_usable=is_usable
+                )
+            )
+            return result
+
+        # Here we know we have a complex reuse configuration
+        default_include = reuse_yaml.get("include", [])
+        default_exclude = reuse_yaml.get("exclude", [])
+        for source in reuse_yaml.get("from", []):
+            # We just need to take care of the environment-related parts
+            if source["type"] != "environment":
+                continue
+
+            include = source.get("include", default_include)
+            exclude = source.get("exclude", default_exclude)
+            if "path" not in source:
+                result.append(
+                    SpecFilter(
+                        self._const(additional_specs),
+                        include=include,
+                        exclude=exclude,
+                        is_usable=is_usable,
+                    )
+                )
+                continue
+
+            env_dir = as_env_dir(source["path"])
+            if env_dir in self.env.included_concrete_env_root_dirs:
+                spec_pairs_from_included_envs = [
+                    x for _, x in self.env.concretized_specs_from_included_environment(env_dir)
+                ]
+                included_specs = list(traverse.traverse_nodes(spec_pairs_from_included_envs))
+                result.append(
+                    SpecFilter(
+                        self._const(included_specs),
+                        include=include,
+                        exclude=exclude,
+                        is_usable=is_usable,
+                    )
+                )
+
+        return result
+
+
+class EnvironmentConcretizer:
+    def __init__(self, env: Environment):
+        self.env = env
+
+    def concretize(
+        self, *, force: Optional[bool] = None, tests: Union[bool, Sequence[str]] = False
+    ) -> List[SpecPair]:
+        if force is None:
+            force = spack.config.get("concretizer:force")
+        self._prepare_environment_for_concretization(force=force)
+
+        result = []
+        # Sort so that the ordering is deterministic, and "default" specs are first
+        for current_group in self._order_groups():
+            with self.env.config_override_for_group(group=current_group):
+                partial_result = self._concretize_single_group(group=current_group, tests=tests)
+                result.extend(partial_result)
+
+        # Unify the specs objects, so we get correct references to all parents
+        if result:
+            self.env.unify_specs()
+        return result
+
+    def _concretize_single_group(
+        self, *, group: str, tests: Union[bool, Sequence[str]]
+    ) -> List[SpecPair]:
+        # Exit early if the set of concretized specs is the set of user specs
+        new_user_specs, kept_user_specs = self._partition_user_specs(group=group)
+        if not new_user_specs:
+            return []
+
+        # Pick the right concretization strategy
+        if group != DEFAULT_USER_SPEC_GROUP:
+            tty.msg(f"Concretizing the '{group}' group of specs")
+        unify = spack.config.CONFIG.get_config("concretizer").get("unify", False)
+        factory = ReusableSpecsFactory(env=self.env, group=group)
+        if unify == "when_possible":
+            partial_result = self._concretize_together_where_possible(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+
+        elif unify is True:
+            partial_result = self._concretize_together(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+
+        elif unify is False:
+            partial_result = self._concretize_separately(
+                new_user_specs, kept_user_specs, tests=tests, group=group, factory=factory
+            )
+        else:
+            raise SpackEnvironmentError(f"concretization strategy not implemented [{unify}]")
+
+        return partial_result
+
+    def _prepare_environment_for_concretization(self, *, force: bool):
+        """Reset the environment concrete state and ensure consistency with user specs."""
+        if force:
+            self.env.clear_concretized_specs()
+        else:
+            self.env.sync_concretized_specs()
+
+        # If a combined env, check updated spec is in the linked envs
+        if self.env.included_concrete_env_root_dirs:
+            self.env.include_concrete_envs()
+
+    def _partition_user_specs(
+        self, *, group: str
+    ) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
+        """Splits the users specs in the list of the ones to be computed, and the list of
+        the ones to retain.
+        """
+        concretized_user_specs = {x.root for x in self.env.concretized_roots if x.group == group}
+        kept_user_specs, new_user_specs = stable_partition(
+            self.env.user_specs_by(group=group), lambda x: x in concretized_user_specs
+        )
+        kept_user_specs += self.env.included_user_specs
+        return new_user_specs, kept_user_specs
+
+    def _order_groups(self) -> List[str]:
+        done, result = {DEFAULT_USER_SPEC_GROUP}, [DEFAULT_USER_SPEC_GROUP]
+        all_groups = self.env.manifest.groups()
+        remaining = all_groups - {DEFAULT_USER_SPEC_GROUP}
+
+        # Validate upfront that all 'needs' references point to defined groups
+        for group in remaining:
+            for dep in self.env.manifest.needs(group=group):
+                if dep not in all_groups:
+                    raise SpackEnvironmentConfigError(
+                        f"group '{group}' needs '{dep}', but '{dep}' is not a defined group",
+                        self.env.manifest.manifest_file,
+                    )
+
+        while remaining:
+            # Check we have groups that are "ready"
+            ready = []
+            for current in remaining:
+                deps = self.env.manifest.needs(group=current)
+                if all(d in done for d in deps):
+                    ready.append(current)
+
+            # Check we can progress — if nothing is ready, there is a cycle
+            if not ready:
+                raise SpackEnvironmentConfigError(
+                    f"cyclic dependency detected among groups: {', '.join(sorted(remaining))}",
+                    self.env.manifest.manifest_file,
+                )
+
+            result.extend(ready)
+            done.update(ready)
+            remaining.difference_update(ready)
+        return result
+
+    def _user_spec_pairs(
+        self, user_specs_to_compute: List[Spec], user_specs_to_keep: List[Spec]
+    ) -> List[SpecPair]:
+        specs_to_concretize = [(s, None) for s in user_specs_to_compute] + [
+            (abstract, concrete)
+            for abstract, concrete in self.env.concretized_specs()
+            if abstract in user_specs_to_keep
+        ]
+        return specs_to_concretize
+
+    def _concretize_together_where_possible(
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
+    ) -> List[SpecPair]:
+        import spack.concretize
+
+        specs_to_concretize = self._user_spec_pairs(to_compute, to_keep)
+        result = spack.concretize.concretize_together_when_possible(
+            specs_to_concretize, tests=tests, factory=factory
+        )
+        result = [x for x in result if x[0] in to_compute]
+        for abstract, concrete in result:
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+
+        return result
+
+    def _concretize_together(
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
+    ) -> List[SpecPair]:
+        import spack.concretize
+
+        to_concretize = self._user_spec_pairs(to_compute, to_keep)
+        try:
+            concrete_pairs = spack.concretize.concretize_together(
+                to_concretize, tests=tests, factory=factory
+            )
+        except spack.error.UnsatisfiableSpecError as e:
+            # "Enhance" the error message for multiple root specs, suggest a less strict
+            # form of concretization.
+            if len(self.env.user_specs_by(group=group)) > 1:
+                e.message += ". "
+                if to_keep:
+                    e.message += (
+                        "Couldn't concretize without changing the existing environment. "
+                        "If you are ok with changing it, try `spack concretize --force`. "
+                    )
+                e.message += (
+                    "You could consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to allow multiple versions of some packages."
+                )
+            raise
+
+        # Return the portion of the return value that is new
+        result = concrete_pairs[: len(to_compute)]
+        for abstract, concrete in result:
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+        return result
+
+    def _concretize_separately(
+        self,
+        to_compute: List[Spec],
+        to_keep: List[Spec],
+        *,
+        group: Optional[str] = None,
+        tests: Union[bool, Sequence] = False,
+        factory: ReusableSpecsFactory,
+    ) -> List[SpecPair]:
+        """Concretization strategy that concretizes separately one user spec after the other"""
+        import spack.concretize
+
+        to_concretize = [(x, None) for x in to_compute]
+        concrete_pairs = spack.concretize.concretize_separately(
+            to_concretize, tests=tests, factory=factory
+        )
+
+        for abstract, concrete in concrete_pairs:
+            self.env.add_concrete_spec(abstract, concrete, new=True, group=group)
+
+        return concrete_pairs
 
 
 def yaml_equivalent(first, second) -> bool:
@@ -2801,7 +3077,7 @@ def initialize_environment_dir(
         return
 
     # TODO: make this recursive
-    includes = manifest[TOP_LEVEL_KEY].get("include", [])
+    includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
     paths = spack.config.paths_from_includes(includes)
     for path in paths:
         if os.path.isabs(path):
@@ -2851,13 +3127,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         lockfile = manifest_dir / lockfile_name
         with lockfile.open("r", encoding="utf-8") as f:
             data = sjson.load(f)
-        user_specs = data["roots"]
+        roots = data["roots"]
+
+        user_specs_by_group: Dict[str, List[str]] = {}
+        for item in roots:
+            # "group" is not there for Lockfile v6 and lower
+            group = item.get("group", DEFAULT_USER_SPEC_GROUP)
+            user_specs_by_group.setdefault(group, []).append(item["spec"])
 
         default_content = manifest_dir / manifest_name
         default_content.write_text(default_manifest_yaml())
         manifest = EnvironmentManifestFile(manifest_dir)
-        for item in user_specs:
-            manifest.add_user_spec(item["spec"])
+
+        for group, specs in user_specs_by_group.items():
+            for spec in specs:
+                manifest.add_user_spec(spec, group=group)
+
         manifest.flush()
         return manifest
 
@@ -2879,7 +3164,46 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         with self.manifest_file.open(encoding="utf-8") as f:
             self.yaml_content = _read_yaml(f)
 
+        # Maps groups to their dependencies
+        self._groups: Dict[str, Tuple[str, ...]] = {DEFAULT_USER_SPEC_GROUP: tuple()}
+        # Raw YAML definitions of the user specs for each group
+        self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
+        # Configuration overrides for each group
+        self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
+        self._init_user_specs()
+
         self.changed = False
+
+    def _init_user_specs(self):
+        specs_yaml = self.configuration.get(USER_SPECS_KEY, [])
+        for item in specs_yaml:
+            if isinstance(item, str):
+                self._user_specs[DEFAULT_USER_SPEC_GROUP].append(item)
+            elif isinstance(item, dict):
+                group = item.get("group", DEFAULT_USER_SPEC_GROUP)
+
+                # Error if a group is defined more than once
+                if group != DEFAULT_USER_SPEC_GROUP and group in self._groups:
+                    raise SpackEnvironmentConfigError(
+                        f"group '{group}' defined more than once", self.manifest_file
+                    )
+
+                # Add an entry for the user specs and store group dependencies
+                if group not in self._user_specs:
+                    self._user_specs[group] = []
+                    self._groups[group] = tuple(item.get("needs", ()))
+                    self._config_override[group] = item.get("override", None)
+
+                if "matrix" in item:
+                    # Short form if the group is composed of only one matrix
+                    self._user_specs[group].append({"matrix": item["matrix"]})
+                elif "specs" in item:
+                    self._user_specs[group].extend(item["specs"])
+
+    def _clear_user_specs(self) -> None:
+        self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
+        self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
+        self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
@@ -2901,17 +3225,75 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         return result
 
-    def add_user_spec(self, user_spec: str) -> None:
-        """Appends the user spec passed as input to the list of root specs.
+    def user_specs(self, *, group: Optional[str] = None) -> List:
+        group = self._ensure_group_exists(group)
+        return self._user_specs[group]
+
+    def config_override(
+        self, *, group: Optional[str] = None
+    ) -> Optional[spack.config.InternalConfigScope]:
+        group = self._ensure_group_exists(group)
+        data = self._config_override[group]
+        if data is None:
+            return None
+        return spack.config.InternalConfigScope(f"env:groups:{group}", data)
+
+    def groups(self) -> KeysView:
+        """Returns the list of groups defined in the manifest"""
+        return self._groups.keys()
+
+    def needs(self, *, group: Optional[str] = None) -> Tuple[str, ...]:
+        """Returns the dependencies of a group of user specs."""
+        group = self._ensure_group_exists(group)
+        return self._groups[group]
+
+    def _ensure_group_exists(self, group: Optional[str]) -> str:
+        group = DEFAULT_USER_SPEC_GROUP if group is None else group
+        if group not in self._groups:
+            raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
+        return group
+
+    def add_user_spec(self, user_spec: str, *, group: Optional[str] = None) -> None:
+        """Appends the user spec passed as input to the list of root specs for the given group.
 
         Args:
             user_spec: user spec to be appended
+            group: group where the spec should be added. If None, the default group is used.
         """
-        self.configuration.setdefault("specs", []).append(user_spec)
+        group = group or DEFAULT_USER_SPEC_GROUP
+
+        if group == DEFAULT_USER_SPEC_GROUP:
+            # Append to top-most specs: attribute
+            specs_yaml = self.configuration.setdefault("specs", [])
+            specs_yaml.append(user_spec)
+        else:
+            # Append to specs: attribute within a group
+            group_in_yaml = self._get_group(group)
+            group_in_yaml.setdefault("specs", []).append(user_spec)
+
+        self._user_specs[group].append(user_spec)
         self.changed = True
 
+    def _get_group(self, group: str) -> Dict:
+        """Find or create the group entry in the manifest"""
+        specs_yaml = self.configuration.setdefault("specs", [])
+        group_entry = None
+        for item in specs_yaml:
+            if isinstance(item, dict) and item.get("group") == group:
+                group_entry = item
+                break
+
+        if group_entry is None:
+            group_entry = {"group": group, "specs": []}
+            specs_yaml.append(group_entry)
+            self._groups[group] = tuple()
+            self._config_override[group] = None
+            self._user_specs[group] = []
+
+        return group_entry
+
     def remove_user_spec(self, user_spec: str) -> None:
-        """Removes the user spec passed as input from the list of root specs
+        """Removes the user spec passed as input from the default list of root specs
 
         Args:
             user_spec: user spec to be removed
@@ -2922,6 +3304,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         try:
             for key in self._all_matches(user_spec):
                 self.configuration["specs"].remove(key)
+                self._user_specs[DEFAULT_USER_SPEC_GROUP].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
@@ -2930,6 +3313,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def clear(self) -> None:
         """Clear all user specs from the list of root specs"""
         self.configuration["specs"] = []
+        self._clear_user_specs()
         self.changed = True
 
     def override_user_spec(self, user_spec: str, idx: int) -> None:
@@ -2944,6 +3328,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         try:
             self.configuration["specs"][idx] = user_spec
+            self._clear_user_specs()
+            self._init_user_specs()
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
@@ -2955,10 +3341,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.configuration[included_concrete_name] = []
+        self.configuration[lockfile_include_key] = []
 
         for env_path in include_concrete:
-            self.configuration[included_concrete_name].append(env_path)
+            self.configuration[lockfile_include_key].append(env_path)
 
         self.changed = True
 
@@ -3175,8 +3561,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
     """Class for Spack environment-specific configuration errors."""
 
     def __init__(self, msg, filename):
-        self.filename = filename
-        super().__init__(msg)
+        super().__init__(f"{msg} in {filename}")
 
 
 class SpackEnvironmentDevelopError(SpackEnvironmentError):

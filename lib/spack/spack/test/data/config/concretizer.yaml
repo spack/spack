@@ -3,7 +3,30 @@ concretizer:
   targets:
     granularity: microarchitectures
     host_compatible: false
+
   duplicates:
     strategy: minimal
+    max_dupes:
+      default: 1
+      # Virtuals
+      c: 2
+      cxx: 2
+      fortran: 1
+      # Regular packages
+      cmake: 2
+      gmake: 2
+      python: 2
+      python-venv: 2
+      py-cython: 2
+      py-flit-core: 2
+      py-pip: 2
+      py-setuptools: 2
+      py-versioneer: 2
+      py-wheel: 2
+      xcb-proto: 2
+      # Compilers
+      gcc: 2
+      llvm: 2
+
   concretization_cache:
     enable: false

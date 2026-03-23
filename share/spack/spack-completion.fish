@@ -193,7 +193,7 @@ function __fish_spack_gpg_keys
 end
 
 function __fish_spack_installed_compilers
-    spack compilers | grep -v '^[=-]\|^$'
+    spack compilers
 end
 
 function __fish_spack_installed_packages
@@ -881,7 +881,7 @@ complete -c spack -n '__fish_spack_using_command buildcache update-index' -s h -
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -f -a name
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l name -s n -r -d 'Name of the view index to update'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -f -a append
-complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache update-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarantee atomic write and should be run with care.'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache update-index' -s k -l keys -f -a keys
@@ -897,7 +897,7 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -f -a name
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l name -s n -r -d 'Name of the view index to update'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -f -a append
-complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarentee atomic write and should be run with care.'
+complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l append -s a -d 'Append the listed specs to the current view index if it already exists. This operation does not guarantee atomic write and should be run with care.'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -l force -s f -d 'If a view index already exists, overwrite it and suppress warnings (this is the default for non-view indices)'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
@@ -1264,18 +1264,22 @@ complete -c spack -n '__fish_spack_using_command config' -l scope -r -f -a '_bui
 complete -c spack -n '__fish_spack_using_command config' -l scope -r -d 'configuration scope to read/modify'
 
 # spack config get
-set -g __fish_spack_optspecs_spack_config_get h/help json
+set -g __fish_spack_optspecs_spack_config_get h/help json group=
 complete -c spack -n '__fish_spack_using_command_pos 0 config get' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config get' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command config get' -l json -d 'output configuration as JSON'
+complete -c spack -n '__fish_spack_using_command config get' -l group -r -f -a group
+complete -c spack -n '__fish_spack_using_command config get' -l group -r -d 'show configuration as seen by this environment spec group (requires active env)'
 
 # spack config blame
-set -g __fish_spack_optspecs_spack_config_blame h/help
+set -g __fish_spack_optspecs_spack_config_blame h/help group=
 complete -c spack -n '__fish_spack_using_command_pos 0 config blame' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config blame' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config blame' -l group -r -f -a group
+complete -c spack -n '__fish_spack_using_command config blame' -l group -r -d 'show configuration as seen by this environment spec group (requires active env)'
 
 # spack config edit
 set -g __fish_spack_optspecs_spack_config_edit h/help print-file
@@ -2850,7 +2854,7 @@ complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirecto
 complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirectory -r -d 'subdirectory to store packages in the repository'
 
 # spack repo list
-set -g __fish_spack_optspecs_spack_repo_list h/help scope= names namespaces
+set -g __fish_spack_optspecs_spack_repo_list h/help scope= names namespaces json
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
@@ -2859,9 +2863,11 @@ complete -c spack -n '__fish_spack_using_command repo list' -l names -f -a names
 complete -c spack -n '__fish_spack_using_command repo list' -l names -d 'show configuration names only'
 complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -f -a namespaces
 complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -d 'show repository namespaces only'
+complete -c spack -n '__fish_spack_using_command repo list' -l json -f -a json
+complete -c spack -n '__fish_spack_using_command repo list' -l json -d 'output repositories as machine-readable json records'
 
 # spack repo ls
-set -g __fish_spack_optspecs_spack_repo_ls h/help scope= names namespaces
+set -g __fish_spack_optspecs_spack_repo_ls h/help scope= names namespaces json
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
@@ -2870,6 +2876,8 @@ complete -c spack -n '__fish_spack_using_command repo ls' -l names -f -a names
 complete -c spack -n '__fish_spack_using_command repo ls' -l names -d 'show configuration names only'
 complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -f -a namespaces
 complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -d 'show repository namespaces only'
+complete -c spack -n '__fish_spack_using_command repo ls' -l json -f -a json
+complete -c spack -n '__fish_spack_using_command repo ls' -l json -d 'output repositories as machine-readable json records'
 
 # spack repo add
 set -g __fish_spack_optspecs_spack_repo_add h/help name= path= scope=
@@ -3354,7 +3362,7 @@ complete -c spack -n '__fish_spack_using_command verify manifest' -s h -l help -
 complete -c spack -n '__fish_spack_using_command verify manifest' -s l -l local -f -a local
 complete -c spack -n '__fish_spack_using_command verify manifest' -s l -l local -d 'verify only locally installed packages'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -f -a json
-complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -d 'ouptut json-formatted errors'
+complete -c spack -n '__fish_spack_using_command verify manifest' -s j -l json -d 'output json-formatted errors'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command verify manifest' -s a -l all -d 'verify all packages'
 complete -c spack -n '__fish_spack_using_command verify manifest' -s s -l specs -f -a type

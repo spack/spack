@@ -268,6 +268,7 @@ class Finder:
             return []
 
         result = []
+        resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> prefix of first detection
         for candidate_path, items_in_prefix in _group_by_prefix(
             spack.llnl.util.lang.dedupe(paths)
         ).items():
@@ -297,21 +298,19 @@ class Finder:
                     f"part of the package {pkg.name}: {files}"
                 )
 
-            resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> exe found for the spec
             for spec in specs:
                 prefix = self.prefix_from_path(path=candidate_path)
                 if not prefix:
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
-                    spack.llnl.util.tty.debug(
-                        f"Files in {candidate_path} and {prior_prefix} are both associated"
-                        f" with the same spec {str(spec)}"
+                    prior_prefix = resolved_specs[spec]
+                    warnings.warn(
+                        f'"{spec}" detected in "{prefix}" was already detected in "{prior_prefix}"'
                     )
                     continue
 
-                resolved_specs[spec] = candidate_path
+                resolved_specs[spec] = prefix
                 try:
                     # Validate the spec calling a package specific method
                     pkg_cls = repo_path.get_pkg_class(spec.name)

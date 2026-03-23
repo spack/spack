@@ -103,6 +103,25 @@ def namespace_from_fullname(fullname: str) -> str:
     return fullname
 
 
+def name_from_fullname(fullname: str) -> str:
+    """Return the package name for the full module name.
+
+    For instance::
+
+        name_from_fullname("spack.pkg.builtin.hdf5") == "hdf5"
+        name_from_fullname("spack_repo.x.y.z.packages.pkg_name.package") == "pkg_name"
+
+    Args:
+        fullname: full name for the Python module
+    """
+    if fullname.startswith(PKG_MODULE_PREFIX_V1):
+        _, _, pkg_module = fullname.rpartition(".")
+        return pkg_module
+    elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
+        return fullname.rsplit(".", 2)[-2]
+    return fullname
+
+
 class _PrependFileLoader(importlib.machinery.SourceFileLoader):
     def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
         self.repo = repo
@@ -1154,7 +1173,7 @@ class Repo:
         package directory. From Package API v2.0 there is a one-to-one mapping between Spack
         package names and Python module names, so there is no guessing.
 
-        For Packge API v1.x we support the following one-to-many mappings:
+        For Package API v1.x we support the following one-to-many mappings:
 
         * ``num3proxy`` -> ``3proxy``
         * ``foo_bar`` -> ``foo_bar``, ``foo-bar``
@@ -1860,7 +1879,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
 class BrokenRepoDescriptor(RepoDescriptor):
     """A descriptor for a broken repository, used to indicate errors in the configuration that
-    aren't fatal untill the repository is used."""
+    aren't fatal until the repository is used."""
 
     def __init__(self, name: Optional[str], error: str) -> None:
         super().__init__(name)
@@ -2136,9 +2155,9 @@ class UnknownPackageError(UnknownEntityError):
                     repo = PATH.ensure_unwrapped()
 
                 # We need to compare the base package name
-                pkg_name = name.rsplit(".", 1)[-1]
+                pkg_name = name_from_fullname(name)
                 similar = []
-                if isinstance(repo, RepoPath):
+                if isinstance(repo, (Repo, RepoPath)):
                     try:
                         similar = get_close_matches(pkg_name, repo.all_package_names())
                     except Exception:

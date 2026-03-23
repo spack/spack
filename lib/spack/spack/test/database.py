@@ -592,6 +592,22 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
+def test_016_roundtrip_spliced_spec(mutable_database):
+    build_spec = spack.concretize.concretize_one("splice-t")
+    replacement = spack.concretize.concretize_one("splice-h+foo")
+    spec = build_spec.splice(replacement)
+
+    spack.store.STORE.db.add(spec)
+    spack.store.STORE.db._state_is_inconsistent = True  # force re-read
+
+    _, spec_record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+    _, buildspec_record = spack.store.STORE.db.query_by_spec_hash(spec.build_spec.dag_hash())
+
+    assert spec_record.spec == spec
+    assert spec_record.spec.build_spec == spec.build_spec
+    assert buildspec_record  # buildspec needs to be recorded in db
+
+
 def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
     monkeypatch.setattr(spack.database, "_use_uuid", False)
     # write and read DB
@@ -993,7 +1009,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capf
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
-        raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
+        raise lk.LockTimeoutError(lk.LockType.WRITE, "/mock-lock", 1.234, 10)
 
     with fs.working_dir(str(tmp_path)):
         s = spack.concretize.concretize_one("pkg-a")

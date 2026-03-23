@@ -463,7 +463,7 @@ def get_buildcache_normalized_time(mirror: Mirror) -> float:
 
     This is necessary because different buildcache implementations may use different
     time formats/time zones. This function creates a temporary file, calls `stat_url`
-    on it, and then deletes it. This guarentees that the time used for the beginning
+    on it, and then deletes it. This guarantees that the time used for the beginning
     of the pruning is consistent across all buildcache implementations.
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as f:

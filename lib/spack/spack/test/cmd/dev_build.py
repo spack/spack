@@ -196,7 +196,9 @@ def test_dev_build_can_parse_path_with_at_symbol(tmp_path: pathlib.Path, install
     assert spec.package.filename in os.listdir(spec.prefix)
 
 
-def test_dev_build_env(tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path):
+def test_dev_build_env(
+    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, installer_variant
+):
     """Test Spack does dev builds for packages in develop section of env."""
     # setup dev-build-test-install package for dev build
     build_dir = tmp_path / "build"
@@ -236,7 +238,7 @@ spack:
 
 
 def test_dev_build_env_with_vars(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
+    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch, installer_variant
 ):
     """Test Spack does dev builds for packages in develop section of env (path with variables)."""
     # setup dev-build-test-install package for dev build
@@ -279,7 +281,7 @@ spack:
 
 
 def test_dev_build_env_version_mismatch(
-    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path
+    tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, installer_variant
 ):
     """Test Spack constraints concretization by develop specs."""
     # setup dev-build-test-install package for dev build

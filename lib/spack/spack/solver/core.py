@@ -213,7 +213,7 @@ def parse_term(*args, **kwargs):
         return clingo().parse_term(*args, **kwargs)
 
 
-class NodeArgument(NamedTuple):
+class NodeId(NamedTuple):
     """Represents a node in the DAG"""
 
     id: str
@@ -230,10 +230,10 @@ class NodeFlag(NamedTuple):
 def intermediate_repr(sym):
     """Returns an intermediate representation of clingo models for Spack's spec builder.
 
-    Currently, transforms symbols from clingo models either to strings or to NodeArgument objects.
+    Currently, transforms symbols from clingo models either to strings or to NodeId objects.
 
     Returns:
-        This will turn a ``clingo.Symbol`` into a string or NodeArgument, or a sequence of
+        This will turn a ``clingo.Symbol`` into a string or NodeId, or a sequence of
         ``clingo.Symbol`` objects into a tuple of those objects.
     """
     # TODO: simplify this when we no longer have to support older clingo versions.
@@ -242,7 +242,7 @@ def intermediate_repr(sym):
 
     try:
         if sym.name == "node":
-            return NodeArgument(
+            return NodeId(
                 id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
             )
         elif sym.name == "node_flag":

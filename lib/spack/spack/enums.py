@@ -22,6 +22,8 @@ class ConfigScopePriority(enum.IntEnum):
     ENVIRONMENT = 2
     CUSTOM = 3
     COMMAND_LINE = 4
+    # Topmost scope reserved for internal use
+    ENVIRONMENT_SPEC_GROUPS = 5
 
 
 class PropagationPolicy(enum.Enum):

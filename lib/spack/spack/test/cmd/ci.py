@@ -200,7 +200,8 @@ spack:
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
     assert (
-        rebuild_job["script"][0] == f"spack buildcache update-index --keys {mirror_url.as_uri()}"
+        rebuild_job["script"][0]
+        == f"spack -v buildcache update-index --keys {mirror_url.as_uri()}"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 
@@ -1026,7 +1027,7 @@ spack:
             assert the_elt["after_script"][0] == "post step one"
         if "dependent-install" in ci_key:
             # The dependent-install match specifies that we keep the two
-            # top level variables, but add a third specifc one.  It
+            # top level variables, but add a third specific one.  It
             # also adds a custom tag which should be combined with
             # the top-level tag.
             the_elt = yaml_contents[ci_key]
@@ -1047,7 +1048,12 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
+    tmp_path: pathlib.Path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    mock_binary_index,
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"

@@ -173,10 +173,11 @@ class AutoreconfPackageTemplate(PackageTemplate):
     )
 
     dependencies = """\
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    with default_args(type="build"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("m4")
 
     # FIXME: Add additional dependencies if required.
     # depends_on("foo")"""
@@ -316,7 +317,8 @@ class BazelPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on("bazel", type="build")"""
+    with default_args(type="build"):
+        depends_on("bazel")"""
 
     body_def = """\
     def install(self, spec, prefix):
@@ -325,7 +327,7 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class RacketPackageTemplate(PackageTemplate):
-    """Provides approriate overrides for Racket extensions"""
+    """Provides appropriate overrides for Racket extensions"""
 
     base_class_name = "RacketPackage"
     package_class_import = "from spack_repo.builtin.build_systems.racket import RacketPackage"
@@ -338,8 +340,9 @@ class RacketPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
-    # added implicity by the RacketPackage class.
-    # depends_on("racket@8.3:", type=("build", "run"))"""
+    # added implicitly by the RacketPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("racket@8.3:")"""
 
     body_def = """\
     # FIXME: specify the name of the package,
@@ -371,20 +374,22 @@ class PythonPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
     # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
+    # added implicitly by the PythonPackage base class.
     # depends_on("python@2.X:2.Y,3.Z:", type=("build", "run"))
     # depends_on("py-pip@X.Y:", type="build")
     # depends_on("py-wheel@X.Y:", type="build")
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
-    # depends_on("py-setuptools", type="build")
-    # depends_on("py-hatchling", type="build")
-    # depends_on("py-flit-core", type="build")
-    # depends_on("py-poetry-core", type="build")
+    # with default_args(type="build"):
+    #     depends_on("py-setuptools")
+    #     depends_on("py-hatchling")
+    #     depends_on("py-flit-core")
+    #     depends_on("py-poetry-core")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("py-foo")"""
 
     body_def = """\
     def config_settings(self, spec, prefix):
@@ -458,7 +463,8 @@ class RPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("r-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -499,7 +505,8 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -526,7 +533,8 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -539,7 +547,8 @@ class OctavePackageTemplate(PackageTemplate):
     extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("octave-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("octave-foo")"""
 
     def __init__(self, name, url, versions, languages: List[str]):
         # If the user provided `--name octave-splines`, don't rename it
@@ -561,9 +570,10 @@ class RubyPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
-    # added implicity by the RubyPackage class.
-    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
-    # depends_on("ruby-foo", type=("build", "run"))"""
+    # added implicitly by the RubyPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("ruby@X.Y.Z:")
+    #     depends_on("ruby-foo")"""
 
     body_def = """\
     def build(self, spec, prefix):
