@@ -570,7 +570,7 @@ def test_env_install_include_concrete_env(
         assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
-def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_variant):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
 
