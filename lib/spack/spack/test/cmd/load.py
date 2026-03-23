@@ -39,10 +39,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         load(shell, "mpileaks")
 
-        load_script_file = shell_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
-
-        with open(load_script_file, "r", encoding="utf-8") as f:
-            load_cmds = f.read()
+        load_cmds = _get_load_cmds(mpileaks_spec, shell[2:])
 
         def extract_value(output, variable):
             value = []
@@ -96,13 +93,16 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         assert paths_sh == paths_csh
 
 
-# TODO: Reinstate --csh when it's shell script is written
 @pytest.mark.parametrize(
     "shell,set_command",
     (
         [("--bat", 'set "%s=%s"')]
         if sys.platform == "win32"
-        else [("--sh", "spack_env_set %s %s")]  # , ("--csh", "setenv %s %s")]
+        else [
+            ("--sh", "spack_env_set %s %s"),
+            ("--csh", "spack_env_set %s %s"),
+            ("--fish", "spack_env_set %s %s"),
+        ]
     ),
 )
 def test_load_includes_run_env(
@@ -115,12 +115,9 @@ def test_load_includes_run_env(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
-    load_script_file = shell_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
+    load_cmds = _get_load_cmds(mpileaks_spec, shell[2:])
 
-    with open(load_script_file, "r", encoding="utf-8") as f:
-        shell_cmds = f.read()
-
-    assert set_command % ("FOOBAR", "mpileaks") in shell_cmds
+    assert set_command % ("FOOBAR", "mpileaks") in load_cmds
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
@@ -148,16 +145,19 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
 
 # TODO: Reinstate --csh when it's shell script is written
 @pytest.mark.parametrize(
-    "shell,set_command,unset_command",
+    "shell,unset_command",
     (
-        [("--bat", 'set "%s=%s"', 'set "%s="')]
+        [("--bat", 'set "%s="')]
         if sys.platform == "win32"
-        else [("--sh", "export %s=%s", "unset %s")]  # ("--csh", "setenv %s %s", "unsetenv %s")]
+        else [
+            ("--sh", "_spack_env_unset %s"),
+            ("--csh", "_spack_env_unset %s"),
+            ("--fish", "_spack_env_unset %s"),
+        ]
     ),
 )
 def test_unload(
     shell,
-    set_command,
     unset_command,
     install_mockery,
     mock_fetch,
@@ -182,9 +182,10 @@ def test_unload(
     unload_script_file = shell_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
 
     with open(unload_script_file, "r", encoding="utf-8") as f:
-        shell_cmds = f.read()
+        unload_cmds = f.read()
 
-    assert (unset_command % "FOOBAR") in shell_cmds
+    print(unload_cmds)
+    assert (unset_command % "FOOBAR") in unload_cmds
 
 
 def test_unload_fails_no_shell(
