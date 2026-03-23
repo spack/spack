@@ -1723,8 +1723,8 @@ class Environment:
         try:
             return EnvironmentConcretizer(self).concretize(force=force, tests=tests)
         except BaseException:
-            self.concretized_user_specs = old_concretized_user_specs[:]
-            self.specs_by_hash = old_specs_by_hash
+            self.concretized_roots = old_concretized_roots[:]
+            self.specs_by_hash = old_specs_by_hash.copy()
             raise
 
     def sync_concretized_specs(self) -> None:
