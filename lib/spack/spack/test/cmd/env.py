@@ -656,7 +656,6 @@ def test_compiler_target_env(
                f"""\
 spack:
   specs:
-  - pkg-a
   - libdwarf
   packages:
     all:
@@ -674,19 +673,13 @@ spack:
           flags:
             cflags: {cflags}
       require: "gcc"
-    libelf:
-      externals:
-      - spec: libelf@0.8.12 %gcc@12.100.100
-        prefix: /fake2
-      buildable: false
-      require: "libelf"
 """)
         env("create", "test", "spack.yaml")
 
     with ev.read("test") as e:
         e.concretize()
         x = list(e.concretized_specs())
-        y = x[1][1]
+        y = x[0][1]
         assert y.satisfies("cflags=-Wall")
 
 
