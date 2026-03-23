@@ -3772,8 +3772,7 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
     location, method = method_to_fail
     monkeypatch.setattr(location, method, fail)
 
-    first_user_specs = e.concretized_user_specs[:]
-    first_order = e.concretized_order[:]
+    first_roots = e.concretized_roots[:]
     first_hash_dict = e.specs_by_hash.copy()
 
     try:
@@ -3781,8 +3780,7 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
     except Exception:
         pass
 
-    assert e.concretized_user_specs == first_user_specs
-    assert e.concretized_order == first_order
+    assert e.concretized_roots == first_roots
     assert e.specs_by_hash == first_hash_dict
 
 
