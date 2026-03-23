@@ -661,7 +661,7 @@ spack:
   packages:
     all:
       require:
-      - spec: target=x86_64_v3
+      - "target=x86_64_v3"
     gcc:
       externals:
       - spec: gcc@12.100.100 languages:=c,c++
