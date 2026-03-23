@@ -46,6 +46,7 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.
 """
+
 import abc
 import collections
 import collections.abc
@@ -5620,24 +5621,30 @@ class SpecfileV1(SpecfileReaderBase):
         return cls.read_specfile_dep_specs(node["dependencies"])
 
     @classmethod
-    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name):
+    def read_specfile_dep_specs(cls, deps, hash_type=ht.dag_hash.name) -> List[DepSpecComponents]:
         """Read the DependencySpec portion of a YAML-formatted Spec.
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
+        dspec_list: List[DepSpecComponents] = []
         for dep_name, elt in deps.items():
             if isinstance(elt, dict):
                 for h in ht.HASHES:
                     if h.name in elt:
                         dep_hash, deptypes = elt[h.name], elt["type"]
                         hash_type = h.name
-                        virtuals = []
+                        virtuals: Tuple[str, ...] = ()
                         break
                 else:  # We never determined a hash type...
                     raise spack.error.SpecError("Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
-            yield dep_name, dep_hash, list(deptypes), hash_type, list(virtuals), True
+
+            dspec_list.append(
+                (dep_name, dep_hash, list(deptypes), hash_type, tuple(virtuals), True)
+            )
+
+        return dspec_list
 
 
 class SpecfileV2(SpecfileReaderBase):

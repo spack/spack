@@ -4514,7 +4514,7 @@ def test_concretization_cache_reapplies_patches_on_hit(
     """Tests that adding a patch to a recipe is taken into account when we hit the cache.
 
     Patches are not part of the ASP facts, so adding a patch to a recipe does not change the cache
-    key. This ensure we do post-processing of solve output correctly after a cache hit.
+    key. This ensures we do post-processing of solve output correctly after a cache hit.
     """
     EXTRA_SHA256 = "a" * 64  # synthetic sha256 simulating a newly added patch
 
