@@ -660,6 +660,7 @@ spack:
   - libdwarf
   packages:
     all:
+      # Comment this out and the test passes
       require:
       - "target=x86_64_v3"
     gcc:
@@ -686,8 +687,7 @@ spack:
         e.concretize()
         x = list(e.concretized_specs())
         y = x[1][1]
-        import pdb; pdb.set_trace()
-        print('hi')
+        assert y.satisfies("cflags=-Wall")
 
 
 def test_env_install_two_specs_same_dep(
