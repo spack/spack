@@ -92,6 +92,9 @@ InstallPolicy = Literal["auto", "cache_only", "source_only"]
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
 
+#: How often to wake up in headless mode to check for background->foreground transition (seconds)
+HEADLESS_WAKE_INTERVAL = 1.0
+
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
 
@@ -2183,7 +2186,7 @@ class PackageInstaller:
 
                 if self.build_status.headless:
                     # no UI to update, but check background to foreground transition periodically
-                    timeout = 1.0
+                    timeout = HEADLESS_WAKE_INTERVAL
                 elif self.build_status.is_tty:
                     timeout = SPINNER_INTERVAL
                 else:
