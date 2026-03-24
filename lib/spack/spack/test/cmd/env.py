@@ -3750,7 +3750,7 @@ def test_virtual_spec_concretize_together(mutable_config):
         # has been changed, but the pointer to the internal variables has not change.
         # This effectively tests that we are properly copying by value not by
         # reference for the transactional concretization
-        (True, (spack.environment.Environment, "_get_specs_to_concretize")),
+        (True, (ev.Environment, "_get_specs_to_concretize")),
     ],
 )
 def test_concretize_transactional(unify, method_to_fail, monkeypatch):
