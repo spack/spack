@@ -2729,13 +2729,6 @@ class SpackSolverSetup:
             except spack.repo.UnknownPackageError:
                 continue
 
-        # Aggregate constraints into per-virtual sets
-        constraint_map = collections.defaultdict(lambda: set())
-        for pkg_name, version_set in self.version_constraints.items():
-            if pkg_name not in self.possible_virtuals:
-                continue
-            constraint_map[pkg_name].update(version_set)
-
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
             if isinstance(v, vn.StandardVersion):
@@ -2747,13 +2740,18 @@ class SpackSolverSetup:
             else:
                 raise TypeError(f"expected version type, found: {type(v)}")
 
-        # define a set of synthetic possible versions for virtuals, so
-        # that `version_satisfies(Package, Constraint, Version)` has the
-        # same semantics for virtuals as for regular packages.
-        for pkg_name, versions in sorted(constraint_map.items()):
-            # Already defined in package.py
+        # Define a set of synthetic possible versions for virtuals that don't define them in a
+        # package.py file. This ensures that `version_satisfies(Package, Constraint, Version)` has
+        # the same semantics for virtuals as for regular packages.
+        for pkg_name, versions in self.version_constraints.items():
+            # Not a virtual package
+            if pkg_name not in self.possible_virtuals:
+                continue
+
+            # Virtual versions already defined in package.py
             if pkg_name in self.possible_versions:
                 continue
+
             possible_versions = set(sum([versions_for(v) for v in versions], []))
             for version in sorted(possible_versions):
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
