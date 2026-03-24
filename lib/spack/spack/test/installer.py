@@ -1401,17 +1401,3 @@ def test_fallback_to_old_installer_for_splicing(monkeypatch, mock_packages, muta
     assert isinstance(
         spack.installer_dispatch.create_installer([out.package]), inst.PackageInstaller
     )
-
-
-def test_fallback_to_old_installer_for_until(monkeypatch, mock_packages, mutable_config):
-    """Test that the old installer is used if --until is used (unsupported in the new installer)"""
-    mutable_config.set("config:installer", "new")
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    assert isinstance(
-        spack.installer_dispatch.create_installer([spec.package], stop_at="build"),
-        inst.PackageInstaller,
-    )
-    assert isinstance(
-        spack.installer_dispatch.create_installer([spec.package], stop_before="build"),
-        inst.PackageInstaller,
-    )

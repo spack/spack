@@ -43,10 +43,7 @@ def create_installer(
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = (
-        sys.platform == "win32"
-        or spack.config.get("config:installer", "new") == "old"
-        or stop_at is not None
-        or stop_before is not None
+        sys.platform == "win32" or spack.config.get("config:installer", "new") == "old"
     )
 
     # Use the old installer if splicing is used.
