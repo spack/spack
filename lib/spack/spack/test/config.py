@@ -1636,11 +1636,6 @@ def test_included_path_forbidden_var(tmp_path: pathlib.Path, mock_low_high_confi
         parent_scope = mock_low_high_config.scopes["low"]
         include.scopes(parent_scope)
 
-    # Note: defining a name actually bypasses any form of config
-    # variable resolution
-    # entry = {"name": "foo", "path": "$data_home/test"}
-    # include = spack.config.included_path(entry)
-
 
 def test_included_path_string(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, capfd
