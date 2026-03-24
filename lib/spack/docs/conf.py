@@ -135,7 +135,7 @@ PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
 from spack.util.lang import classproperty
-from spack.spec_parser import SpecTokens
+from spack.spec_parser import GIT_VERSION_PATTERN, NAME, VERSION, VERSION_LIST, SpecTokens
 
 # replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
 # it evaluates the callback, and it documents the result, which is not what we want.
@@ -180,31 +180,27 @@ class SpecLexer(RegexLexer):
             # New line terminates the spec string
             (r"\s*?$", Text, "#pop"),
             # Dependency, with optional virtual assignment specifier
-            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
-            (SpecTokens.DEPENDENCY.regex, Name.Variable),
+            (r"(?:(?:\^|\%\%|\%)\[)", Name.Variable, "edge_properties"),
+            (SpecTokens.DEPENDENCY, Name.Variable),
             # versions
-            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
-            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
-            (SpecTokens.VERSION.regex, Keyword.Pseudo),
+            (SpecTokens.VERSION, Keyword.Pseudo),
             # variants
-            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
-            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
-            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SpecTokens.BOOL_VARIANT, Name.Function),
+            (SpecTokens.KEY_VALUE_PAIR, Name.Function),
             # filename
-            (SpecTokens.FILENAME.regex, Text),
+            (SpecTokens.FILENAME, Text),
             # Package name
-            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
-            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, Name.Class),
+            (SpecTokens.UNQUALIFIED_PACKAGE_NAME, Name.Class),
             # DAG hash
-            (SpecTokens.DAG_HASH.regex, Text),
-            (SpecTokens.WS.regex, Text),
+            (SpecTokens.DAG_HASH, Text),
+            (r"\s+", Text),
             # Also stop at unrecognized tokens (without consuming them)
             default("#pop"),
         ],
         "edge_properties": [
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
-            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
+            (SpecTokens.KEY_VALUE_PAIR, Name.Function),
+            (SpecTokens.END_EDGE_PROPERTIES, Name.Variable, "#pop"),
         ],
     }
 

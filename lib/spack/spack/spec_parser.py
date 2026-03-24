@@ -58,21 +58,23 @@ expansion when it is the first character in an id typed on the command line.
 """
 
 import json
-import pathlib
+import os
 import re
 import sys
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 import spack.deptypes
 import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
-from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.tty import color
 
 if TYPE_CHECKING:
     import spack.spec
+
+# Lazily-initialized cache for the Spec class (avoids repeated local import overhead)
+_Spec: Optional[type] = None
 
 #: Valid name for specs and variants. Here we are not using
 #: the previous ``w[\w.-]*`` since that would match most
@@ -124,113 +126,109 @@ STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
 NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
 
 
-class SpecTokens(TokenBase):
-    """Enumeration of the different token kinds of tokens in the spec grammar.
-
-    Order of declaration is extremely important, since text containing specs is parsed with a
-    single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
-    """
-
-    # Dependency (covers START_EDGE_PROPERTIES too via optional edge_bracket group)
-    END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
-    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:(?P<edge_bracket>\[)|(?:\s*{VIRTUAL_ASSIGNMENT})?))"
-
-    # Version (covers VERSION_HASH_PAIR, GIT_VERSION, and VERSION in one token)
+class SpecTokens:
+    END_EDGE_PROPERTIES = rf"\](?:\s*{VIRTUAL_ASSIGNMENT})?"
+    DEPENDENCY = rf"(?:\^|\%\%|\%)(?:(?P<edge_bracket>\[)|(?:\s*{VIRTUAL_ASSIGNMENT})?)"
     VERSION = (
         rf"@(?:(?P<git_version>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
         rf"|\s*(?P<version_list>{VERSION_LIST}))"
     )
-
-    # Variants (BOOL_VARIANT covers propagated too; KEY_VALUE_PAIR covers propagated too)
     BOOL_VARIANT = rf"(?P<bv_prefix>\+\+|~~|--|[~+-])\s*(?P<bv_name>{NAME})"
     KEY_VALUE_PAIR = rf"(?P<kv_name>{NAME})(?P<kv_sep>:?==?)(?P<kv_value>{VALUE}|{QUOTED_VALUE})"
-
-    # FILENAME
-    FILENAME = rf"(?:{FILENAME})"
-
-    # Package name
-    FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
+    FILENAME = FILENAME
+    FULLY_QUALIFIED_PACKAGE_NAME = DOTTED_IDENTIFIER
     UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
-
-    # DAG hash
-    DAG_HASH = rf"(?:/(?:{HASH}))"
-
-    # White spaces
-    WS = r"(?:\s+)"
-
-    # Unexpected character(s)
-    UNEXPECTED = r"(?:.[\s]*)"
+    DAG_HASH = rf"/(?P<dag_hash>{HASH})"
+    UNEXPECTED = r"."
 
 
-#: Tokenizer that includes all the regexes in the SpecTokens enum
-SPEC_TOKENIZER = Tokenizer(SpecTokens)
+RAW_PATTERNS = [
+    ("END_EDGE_PROPERTIES", SpecTokens.END_EDGE_PROPERTIES),
+    ("DEPENDENCY", SpecTokens.DEPENDENCY),
+    ("VERSION", SpecTokens.VERSION),
+    ("BOOL_VARIANT", SpecTokens.BOOL_VARIANT),
+    ("KEY_VALUE_PAIR", SpecTokens.KEY_VALUE_PAIR),
+    ("FILENAME", SpecTokens.FILENAME),
+    ("FULLY_QUALIFIED_PACKAGE_NAME", SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME),
+    ("UNQUALIFIED_PACKAGE_NAME", SpecTokens.UNQUALIFIED_PACKAGE_NAME),
+    ("DAG_HASH", SpecTokens.DAG_HASH),
+    ("UNEXPECTED", SpecTokens.UNEXPECTED),
+]
 
+_regex_parts = []
+for _name, _pattern in RAW_PATTERNS:
+    # Rename groups: (?P<groupname> -> (?P<TOKENNAME_groupname>
+    _renamed_pattern = re.sub(r"\(\?P<([a-zA-Z_0-9]+)>", f"(?P<{_name}_\\1>", _pattern)
+    _regex_parts.append(f"(?P<{_name}>{_renamed_pattern})")
 
-def tokenize(text: str) -> Iterator[Token]:
-    """Return a token generator from the text passed as input, skipping whitespace tokens.
-
-    Raises:
-        SpecTokenizationError: when unexpected characters are found in the text
-    """
-    for token in SPEC_TOKENIZER.tokenize(text):
-        if token.kind == SpecTokens.UNEXPECTED:
-            raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(text)), text)
-        if token.kind != SpecTokens.WS:
-            yield token
-
-
-class TokenContext:
-    """Token context passed around by parsers"""
-
-    __slots__ = "_scanner", "_text", "current_token", "next_token"
-
-    def __init__(self, text: str):
-        self._scanner = SPEC_TOKENIZER.regex.scanner(text)
-        self._text = text
-        self.current_token = None
-        self.next_token = None
-        self.advance()
-
-    def advance(self):
-        """Advance one token"""
-        self.current_token = self.next_token
-        m = self._scanner.match()
-        while m and m.lastgroup == "WS":
-            m = self._scanner.match()
-        if m and m.lastgroup == "UNEXPECTED":
-            raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(self._text)), self._text)
-        self.next_token = m
+# Global regex that skips whitespace before matching any token
+FAST_SPEC_REGEX = re.compile(r"\s*(?:" + "|".join(_regex_parts) + r")")
 
 
 class SpecTokenizationError(spack.error.SpecSyntaxError):
     """Syntax error in a spec string"""
 
-    def __init__(self, tokens: List[Token], text: str):
+    def __init__(self, text: str) -> None:
         message = f"unexpected characters in the spec string\n{text}\n"
 
+        # collect all tokens, and underline those that are unexpected
+        scanner = FAST_SPEC_REGEX.scanner(text)  # type: ignore[attr-defined]
+
+        # offset of unexpected token. unexpect tokens always have length 1.
+        unexpected_indices: List[int] = []
+        while True:
+            match = scanner.match()
+            if not match:
+                break
+            elif match.lastgroup == "UNEXPECTED":
+                unexpected_indices.append(match.start(match.lastgroup))
+
         underline = ""
-        for token in tokens:
-            is_error = token.kind == SpecTokens.UNEXPECTED
-            underline += ("^" if is_error else " ") * (token.end - token.start)
+        last_index = 0
+        for index in unexpected_indices:
+            underline += " " * (index - last_index) + "^"
+            last_index = index + 1
 
         message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
 
 class SpecParser:
-    """Parse text into specs"""
+    """Fast spec parser using a single compiled regex"""
 
-    __slots__ = "literal_str", "ctx"
+    __slots__ = "literal_str", "scanner", "curr", "next"
 
     def __init__(self, literal_str: str):
-        self.literal_str = literal_str
-        self.ctx = TokenContext(literal_str)
+        self.literal_str = literal_str.rstrip()
+        self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
+        self.curr = self.scanner.match()
+        self.next = self.scanner.match()
 
-    def tokens(self) -> List[Token]:
-        """Return the entire list of token from the initial text. White spaces are
-        filtered out.
-        """
-        return list(tokenize(self.literal_str))
+    def tokens(self, with_subgroups: bool = False) -> List[Tuple[str, str, Dict[str, str]]]:
+        """Tokenize the spec string into a list of (kind, match, subgroups) tuples."""
+        tokens: List[Tuple[str, str, Dict[str, str]]] = []
+        scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
+        match = scanner.match()
+        while match:
+            kind = match.lastgroup
+            if kind == "UNEXPECTED":
+                self._raise_tokenization_error()
+            full_match = match.group(match.lastgroup)
+            if with_subgroups:
+                subgroups = {
+                    k: v for k, v in match.groupdict().items() if v is not None and k != kind
+                }
+            else:
+                subgroups = {}
+            tokens.append((kind, full_match, subgroups))
+            match = scanner.match()
+        return tokens
+
+    def _raise_tokenization_error(self) -> None:
+        raise SpecTokenizationError(self.literal_str)
+
+    def _raise_parsing_error(self, message: str) -> None:
+        raise SpecParsingError(message, self.curr, self.literal_str)
 
     def next_spec(
         self, initial_spec: Optional["spack.spec.Spec"] = None
@@ -244,273 +242,248 @@ class SpecParser:
         Return:
             The spec that was parsed
         """
-        ctx = self.ctx
-        if not ctx.next_token:
+        if not self.curr:
             return initial_spec
+
+        if self.curr.lastgroup == "UNEXPECTED":
+            self._raise_tokenization_error()
+
+        root_spec = self._parse_node(initial_spec)
+        current_spec = root_spec
 
         # A ^ dependency is attached to the root only once its trailing % edges are parsed:
         # merging it earlier would compare an incomplete sub-dag against the existing edges.
-        pending: Optional[Tuple["spack.spec.Spec", dict, Token]] = None
+        pending: Optional[tuple] = None
 
-        if not initial_spec:
-            from spack.spec import Spec
+        while self.curr:
+            if self.curr.lastgroup == "DEPENDENCY":
+                token = self.curr.group()
+                # Strip leading whitespace for checking startswith
+                token = token.lstrip()
+                is_direct = token.startswith("%")
+                propagation = PropagationPolicy.NONE
+                if is_direct and token.startswith("%%"):
+                    propagation = PropagationPolicy.PREFERENCE
 
-            initial_spec = Spec()
-        root_spec = self._parse_node(initial_spec)
-        current_spec = root_spec
-        while True:
-            next_tok = ctx.next_token
-            if next_tok is None or next_tok.lastgroup != "DEPENDENCY":
+                if self.curr.group("DEPENDENCY_edge_bracket"):
+                    # Advance
+                    self.curr, self.next = self.next, self.scanner.match()
+
+                    attributes = {}
+                    substitute = None
+                    while self.curr:
+                        if self.curr.lastgroup == "KEY_VALUE_PAIR":
+                            name = self.curr.group("KEY_VALUE_PAIR_kv_name")
+                            if name not in ("deptypes", "virtuals", "when"):
+                                msg = (
+                                    "the only edge attributes that are currently accepted "
+                                    'are "deptypes", "virtuals", and "when"'
+                                )
+                                self._raise_parsing_error(msg)
+                            value = self.curr.group("KEY_VALUE_PAIR_kv_value")
+                            value = strip_quotes_and_unescape(value)
+                            # A when value is one spec string, where a comma is part of the
+                            # syntax, e.g. when='@1,2'; deptypes and virtuals values are
+                            # comma-separated lists.
+                            if name == "when":
+                                attributes[name] = value
+                            else:
+                                attributes[name] = [v.strip() for v in value.split(",")]
+
+                            self.curr, self.next = self.next, self.scanner.match()
+
+                        elif self.curr.lastgroup == "END_EDGE_PROPERTIES":
+                            virtuals_str = self.curr.group("END_EDGE_PROPERTIES_virtuals")
+                            substitute = self.curr.group("END_EDGE_PROPERTIES_substitute")
+
+                            if virtuals_str:
+                                virtuals = attributes.get("virtuals", [])
+                                virtuals.extend(virtuals_str.split(","))
+                                attributes["virtuals"] = virtuals
+
+                            # Advance
+                            self.curr, self.next = self.next, self.scanner.match()
+
+                            break
+                        else:
+                            self._raise_parsing_error("Unexpected token in edge attributes")
+
+                    depflag = 0
+                    if "deptypes" in attributes:
+                        depflag = spack.deptypes.canonicalize(attributes["deptypes"])
+
+                    virtuals_tuple = tuple(attributes.get("virtuals", ()))
+
+                    conditions = None
+                    if "when" in attributes:
+                        when_string = attributes["when"]
+                        conditions = SpecParser(when_string).next_spec()
+
+                    dep_spec = self._parse_node(initial_name=substitute)
+
+                    edge_kwargs = {
+                        "direct": is_direct,
+                        "depflag": depflag,
+                        "virtuals": virtuals_tuple,
+                        "propagation": propagation,
+                        "when": conditions,
+                    }
+                    if is_direct:
+                        if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:
+                            dep_spec.name = LEGACY_COMPILER_TO_BUILTIN[dep_spec.name]
+                        self._attach_dependency(current_spec, dep_spec, self.curr, edge_kwargs)
+                    else:
+                        self._attach_pending(root_spec, pending)
+                        current_spec = dep_spec
+                        pending = (dep_spec, self.curr, edge_kwargs)
+
+                else:
+                    virtuals_str = self.curr.group("DEPENDENCY_virtuals")
+                    substitute = self.curr.group("DEPENDENCY_substitute")
+
+                    virtuals_tuple = tuple(virtuals_str.split(",")) if virtuals_str else ()
+
+                    # Advance
+                    self.curr, self.next = self.next, self.scanner.match()
+
+                    dep_spec = self._parse_node(initial_name=substitute)
+
+                    edge_kwargs = {
+                        "direct": is_direct,
+                        "depflag": 0,
+                        "virtuals": virtuals_tuple,
+                        "propagation": propagation,
+                    }
+                    if is_direct:
+                        if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:
+                            dep_spec.name = LEGACY_COMPILER_TO_BUILTIN[dep_spec.name]
+                        self._attach_dependency(current_spec, dep_spec, self.curr, edge_kwargs)
+                    else:
+                        self._attach_pending(root_spec, pending)
+                        current_spec = dep_spec
+                        pending = (dep_spec, self.curr, edge_kwargs)
+
+            elif self.curr.lastgroup == "UNEXPECTED":
+                self._raise_tokenization_error()
+
+            else:
                 break
-            ctx.advance()
-            dep_tok = ctx.current_token
-
-            has_edge_attrs = dep_tok.group("DEPENDENCY_edge_bracket") is not None
-
-            dep_val = dep_tok.group()
-            is_direct = dep_val[0] == "%"
-            propagation = PropagationPolicy.NONE
-            if is_direct and dep_val.startswith("%%"):
-                propagation = PropagationPolicy.PREFERENCE
-
-            if has_edge_attrs:
-                edge_properties, substitute = self._parse_edge_attrs()
-                edge_properties.setdefault("virtuals", ())
-                edge_properties.setdefault("depflag", 0)
-            else:
-                virtuals_str = dep_tok.group("DEPENDENCY_virtuals")
-                substitute = dep_tok.group("DEPENDENCY_substitute")
-                virtuals = tuple(virtuals_str.split(",")) if virtuals_str else ()
-                edge_properties = {"virtuals": virtuals, "depflag": 0}
-
-            edge_properties["direct"] = is_direct
-            edge_properties["propagation"] = propagation
-
-            dependency = self._parse_node(initial_name=substitute, root=False)
-            if root_spec.concrete:
-                raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
-
-            if is_direct:
-                if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
-                    dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
-                self._attach_dependency(
-                    current_spec, dependency, self.ctx.current_token, **edge_properties
-                )
-            else:
-                self._attach_pending(root_spec, pending)
-                current_spec = dependency
-                pending = (dependency, edge_properties, self.ctx.current_token)
 
         self._attach_pending(root_spec, pending)
 
         return root_spec
 
-    def _attach_pending(
-        self,
-        root_spec: "spack.spec.Spec",
-        pending: Optional[Tuple["spack.spec.Spec", dict, Token]],
-    ) -> None:
+    def _attach_pending(self, root_spec: "spack.spec.Spec", pending: Optional[tuple]) -> None:
         """Attach the pending ^ dependency, whose sub-dag is complete now."""
         if pending is not None:
-            dependency, edge_properties, token = pending
-            self._attach_dependency(root_spec, dependency, token, **edge_properties)
+            dep_spec, match, edge_kwargs = pending
+            self._attach_dependency(root_spec, dep_spec, match, edge_kwargs)
 
     def _attach_dependency(
-        self,
-        target_spec: "spack.spec.Spec",
-        dependency: "spack.spec.Spec",
-        token: Token,
-        **edge_properties,
+        self, target_spec: "spack.spec.Spec", dep_spec: "spack.spec.Spec", match, edge_kwargs: dict
     ) -> None:
         try:
-            target_spec._add_dependency(dependency, **edge_properties)
+            target_spec._add_dependency(dep_spec, **edge_kwargs)
         except spack.error.SpecError as e:
-            raise SpecParsingError(str(e), token, self.literal_str) from e
+            raise SpecParsingError(str(e), match, self.literal_str) from e
 
     def _parse_node(
-        self,
-        initial_spec: Optional["spack.spec.Spec"] = None,
-        initial_name: Optional[str] = None,
-        root: bool = True,
+        self, initial_spec: Optional["spack.spec.Spec"] = None, initial_name: Optional[str] = None
     ) -> "spack.spec.Spec":
-        """Parse a single spec node from a stream of tokens"""
-        ctx = self.ctx
-        literal_str = self.literal_str
+        """Parse a single spec node"""
+        spec = initial_spec
+        if spec is None:
+            global _Spec
+            if _Spec is None:
+                from spack.spec import Spec as _Spec
+            spec = _Spec()
 
-        if initial_spec is None:
-            from spack.spec import Spec
+        curr, next, scanner = self.curr, self.next, self.scanner
 
-            initial_spec = Spec()
-
-        if initial_name is not None:
+        # 1. Package Name
+        if initial_name:
             if "." in initial_name:
-                parts = initial_name.split(".")
-                initial_spec.name = parts[-1]
-                initial_spec.namespace = ".".join(parts[:-1])
+                spec.namespace, spec.name = initial_name.rsplit(".", 1)
             else:
-                initial_spec.name = initial_name
-
-        next_tok = ctx.next_token
-        if next_tok is None or next_tok.lastgroup == "DEPENDENCY":
-            if not root and initial_name is None:
-                msg = (
-                    "the dependency sigil and any optional edge attributes must be followed by a "
-                    "package name or a node attribute (version, variant, etc.)"
-                )
-                raise SpecParsingError(msg, ctx.current_token, literal_str)
-            return initial_spec
-
-        kind = next_tok.lastgroup
-
-        # If we start with a package name we have a named spec, we cannot
-        # accept another package name afterwards in a node
+                spec.name = initial_name
+        if not curr:
+            return spec
+        kind = curr.lastgroup
+        value = curr.group(kind)
         if kind == "UNQUALIFIED_PACKAGE_NAME":
-            ctx.advance()
-            tok = ctx.current_token
-            # if name is '*', this is an anonymous spec
-            if tok.group() != "*":
-                initial_spec.name = tok.group()
-
+            if value != "*":
+                spec.name = value
+            curr = next
+            next = scanner.match() if curr is not None else None
         elif kind == "FULLY_QUALIFIED_PACKAGE_NAME":
-            ctx.advance()
-            tok = ctx.current_token
-            parts = tok.group().split(".")
-            initial_spec.name = parts[-1]
-            initial_spec.namespace = ".".join(parts[:-1])
-
+            spec.namespace, spec.name = value.rsplit(".", 1)
+            curr = next
+            next = scanner.match() if curr is not None else None
         elif kind == "FILENAME":
-            ctx.advance()
-            tok = ctx.current_token
-            return self._parse_file(initial_spec, tok.group())
+            if not os.path.exists(value):
+                raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
+            spec._dup(spack.spec.Spec.from_specfile(value))
+            self.curr, self.next = next, scanner.match()
+            return spec
+        elif kind == "UNEXPECTED":
+            self._raise_tokenization_error()
 
+        # 2. Attributes
         has_version = False
-        while True:
-            next_tok = ctx.next_token
-            if next_tok is None:
-                break
-            kind = next_tok.lastgroup
+        while curr:
+            kind = curr.lastgroup
 
             if kind == "VERSION":
-                ctx.advance()
-                tok = ctx.current_token
                 if has_version:
-                    raise SpecParsingError("Spec cannot have multiple versions", tok, literal_str)
-                if tok.group("VERSION_git_version"):
-                    initial_spec.versions = spack.version.VersionList(
-                        [spack.version.GitVersion(tok.group("VERSION_git_version"))]
+                    self.curr = curr
+                    self._raise_parsing_error("Spec cannot have multiple versions")
+
+                if curr.group("VERSION_git_version"):
+                    spec.versions = spack.version.VersionList(
+                        [spack.version.GitVersion(curr.group("VERSION_git_version"))]
                     )
-                    initial_spec.attach_git_version_lookup()
+                    spec.attach_git_version_lookup()
                 else:
-                    initial_spec.versions = spack.version.VersionList(
-                        tok.group("VERSION_version_list")
-                    )
+                    spec.versions = spack.version.VersionList(curr.group("VERSION_version_list"))
                 has_version = True
 
             elif kind == "BOOL_VARIANT":
-                ctx.advance()
-                tok = ctx.current_token
-                prefix = tok.group("BOOL_VARIANT_bv_prefix")
-                name = tok.group("BOOL_VARIANT_bv_name")
+                prefix = curr.group("BOOL_VARIANT_bv_prefix")
+                name = curr.group("BOOL_VARIANT_bv_name")
                 propagate = len(prefix) == 2
-                variant_value = prefix[0] == "+"
+                value = prefix.startswith("+")
                 try:
-                    initial_spec._add_flag(name, variant_value, propagate, True)
+                    spec._add_flag(name, value, propagate, concrete=True)
                 except Exception as e:
-                    raise SpecParsingError(str(e), tok, literal_str) from e
+                    self.curr = curr
+                    self._raise_parsing_error(str(e))
 
             elif kind == "KEY_VALUE_PAIR":
-                ctx.advance()
-                tok = ctx.current_token
-                name = tok.group("KEY_VALUE_PAIR_kv_name")
-                sep = tok.group("KEY_VALUE_PAIR_kv_sep")
-                value = tok.group("KEY_VALUE_PAIR_kv_value")
+                name = curr.group("KEY_VALUE_PAIR_kv_name")
+                sep = curr.group("KEY_VALUE_PAIR_kv_sep")
+                value = curr.group("KEY_VALUE_PAIR_kv_value")
                 propagate = "==" in sep
                 concrete = sep.startswith(":")
                 try:
-                    initial_spec._add_flag(
-                        name, strip_quotes_and_unescape(value), propagate, concrete
-                    )
+                    spec._add_flag(name, strip_quotes_and_unescape(value), propagate, concrete)
                 except Exception as e:
-                    raise SpecParsingError(str(e), tok, literal_str) from e
+                    self.curr = curr
+                    self._raise_parsing_error(str(e))
 
             elif kind == "DAG_HASH":
-                if initial_spec.abstract_hash:
+                if spec.abstract_hash:
                     break
-                ctx.advance()
-                initial_spec.abstract_hash = ctx.current_token.group()[1:]
+                spec.abstract_hash = curr.group().strip()[1:]
 
             else:
+                # Stop if we hit something else (like DEPENDENCY or another package name)
                 break
 
-        return initial_spec
+            curr = next
+            next = scanner.match() if curr is not None else None
 
-    def _parse_file(self, initial_spec: "spack.spec.Spec", filename: str) -> "spack.spec.Spec":
-        """Parse a spec tree from a specfile."""
-        file = pathlib.Path(filename)
-
-        if not file.exists():
-            raise spack.error.NoSuchSpecFileError(f"No such spec file: '{file}'")
-
-        from spack.spec import Spec
-
-        with file.open("r", encoding="utf-8") as stream:
-            if str(file).endswith(".json"):
-                spec_from_file = Spec.from_json(stream)
-            else:
-                spec_from_file = Spec.from_yaml(stream)
-        initial_spec._dup(spec_from_file)
-        return initial_spec
-
-    def _parse_edge_attrs(self) -> Tuple[dict, Optional[str]]:
-        """Parse edge attributes from inside [...] brackets."""
-        ctx = self.ctx
-        literal_str = self.literal_str
-        attributes: dict = {}
-        substitute: Optional[str] = None
-        while True:
-            next_tok = ctx.next_token
-            if next_tok is None:
-                msg = "unexpected token in edge attributes"
-                raise SpecParsingError(msg, next_tok, literal_str)
-            kind = next_tok.lastgroup
-            if kind == "KEY_VALUE_PAIR":
-                ctx.advance()
-                tok = ctx.current_token
-                name = tok.group("KEY_VALUE_PAIR_kv_name")
-                value = strip_quotes_and_unescape(tok.group("KEY_VALUE_PAIR_kv_value"))
-                # A when value is one spec string, where a comma is part of the syntax, e.g.
-                # when='@1,2'; deptypes and virtuals values are comma-separated lists.
-                attributes[name] = value if name == "when" else value.split(",")
-                if name not in ("deptypes", "virtuals", "when"):
-                    msg = (
-                        "the only edge attributes that are currently accepted "
-                        'are "deptypes", "virtuals", and "when"'
-                    )
-                    raise SpecParsingError(msg, tok, literal_str)
-            # TODO: Add code to accept bool variants here as soon as use variants are implemented
-            elif kind == "END_EDGE_PROPERTIES":
-                ctx.advance()
-                end_tok = ctx.current_token
-                virtuals_str = end_tok.group("END_EDGE_PROPERTIES_virtuals")
-                substitute = end_tok.group("END_EDGE_PROPERTIES_substitute")
-                inline_virtuals = tuple(virtuals_str.split(",")) if virtuals_str else ()
-                existing = attributes.get("virtuals", ())
-                attributes["virtuals"] = tuple(existing) + inline_virtuals
-                break
-            else:
-                msg = "unexpected token in edge attributes"
-                raise SpecParsingError(msg, next_tok, literal_str)
-
-        # Turn deptypes=... to depflag representation
-        if "deptypes" in attributes:
-            deptype_string = attributes.pop("deptypes")
-            attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
-
-        # Turn "when" into a spec
-        if "when" in attributes:
-            attributes["when"] = parse_one_or_raise(attributes["when"])
-
-        return attributes, substitute
+        self.curr, self.next = curr, next
+        return spec
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
@@ -550,11 +523,16 @@ def parse_one_or_raise(
     """
     parser = SpecParser(text)
     result = parser.next_spec(initial_spec)
-    next_token = parser.ctx.next_token
 
-    if next_token:
+    if parser.curr:
         message = f"expected a single spec, but got more:\n{text}"
-        underline = f"\n{' ' * next_token.start()}{'^' * (next_token.end() - next_token.start())}"
+        start = parser.curr.start()
+        end = parser.curr.end()
+        # Adjust start to skip leading whitespace in the match
+        matched_text = parser.curr.group()
+        stripped_text = matched_text.lstrip()
+        start += len(matched_text) - len(stripped_text)
+        underline = f"\n{' ' * start}{'^' * (end - start)}"
         message += color.colorize(f"@*r{{{underline}}}")
         raise ValueError(message)
 
@@ -648,11 +626,11 @@ def expand_toolchains(
 class SpecParsingError(spack.error.SpecSyntaxError):
     """Error when parsing tokens"""
 
-    def __init__(self, message, token, text):
+    def __init__(self, message: str, token, text: str):
         message += f"\n{text}"
         if token:
-            start = token.start()
-            underline = f"\n{' ' * start}{'^' * (token.end() - start)}"
+            start, end = token.span(token.lastgroup or 0)
+            underline = f"\n{' ' * start}{'^' * (end - start)}"
             message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
