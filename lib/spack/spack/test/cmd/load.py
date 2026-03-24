@@ -18,9 +18,7 @@ location = SpackCommand("location")
 
 
 def _get_load_cmds(spec, shell):
-    load_script_file = shell_script.path_to_load_shell_script(
-        spec, shell
-    )
+    load_script_file = shell_script.path_to_load_shell_script(spec, shell)
 
     with open(load_script_file, "r", encoding="utf-8") as f:
         return f.read()
@@ -82,10 +80,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         params = ["--bat", "--pwsh"]
         test_load_shell(params[0])
         test_load_shell(params[1])
-    params = [
-        "--sh",
-        "--csh",
-    ]
+    params = ["--sh", "--csh"]
     paths_sh = test_load_shell(params[0])
     paths_csh = test_load_shell(params[1])
     assert paths_sh == paths_csh
@@ -160,8 +155,7 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
         [
             ("--sh", "_spack_env_unset %s"),
             ("--csh", "_spack_env_unset %s"),
-            ("--fish", "_spack_env_unset %s")
-            ("--bat", 'set "%s="'),
+            ("--fish", "_spack_env_unset %s")("--bat", 'set "%s="'),
             ("--pwsh", "Remove-Item Env:%s"),
         ]
         if sys.platform == "win32"
@@ -173,13 +167,7 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
     ),
 )
 def test_unload(
-    shell,
-    unset_command,
-    install_mockery,
-    mock_fetch,
-    mock_archive,
-    mock_packages,
-    working_env,
+    shell, unset_command, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Tests that any variables set in the user environment are undone by the
     unload command"""

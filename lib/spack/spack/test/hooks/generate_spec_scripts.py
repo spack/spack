@@ -110,9 +110,7 @@ def test_contents_of_shell_scripts(
         with open(path_to_unload_shell, "r", encoding="utf-8") as f:
             unload_script = f.read()
 
-        assert re.search(
-            set_command % (uenv.spack_loaded_hashes_var, pkg.dag_hash()), load_script
-        )
+        assert re.search(set_command % (uenv.spack_loaded_hashes_var, pkg.dag_hash()), load_script)
         assert re.search(
             set_command % (uenv.spack_loaded_hashes_var, pkg.dag_hash()), unload_script
         )
@@ -242,7 +240,7 @@ def test_no_scripts_for_external_spec_with_deps(
 
 
 def test_write_spec_scripts_fails_on_nonexistent_directory(
-        install_mockery, mock_fetch, mock_archive, mock_packages
+    install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Test that write_spec_scripts prints an error message when it fails to write a script
     because the directory doesn't exist"""
