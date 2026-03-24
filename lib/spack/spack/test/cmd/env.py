@@ -3744,18 +3744,18 @@ def test_virtual_spec_concretize_together(mutable_config):
 @pytest.mark.parametrize(
     "unify,method_to_fail",
     [
-        (True, (spack.concretize, "concretize_specs_together")),
+        (True, (spack.concretize, "concretize_together")),
         ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
         # An earlier failure so that we test the case where the internal state
         # has been changed, but the pointer to the internal variables has not change.
         # This effectively tests that we are properly copying by value not by
         # reference for the transactional concretization
-        (True, (ev.Environment, "_get_specs_to_concretize")),
+        (True, (ev.EnvironmentConcretizer, "concretize")),
     ],
 )
-def test_concretize_transactional(unify, method_to_fail, monkeypatch):
+def test_concretize_transactional(unify, method_to_fail, monkeypatch, mutable_config):
+    spack.config.set("concretizer:unify", unify)
     e = ev.create("test")
-    e.unify = unify
 
     e.add("mpi")
     e.add("zlib")
@@ -3779,6 +3779,8 @@ def test_concretize_transactional(unify, method_to_fail, monkeypatch):
         e.concretize()
     except Exception:
         pass
+    else:
+        assert False, "concretization failure required for testing"
 
     assert e.concretized_roots == first_roots
     assert e.specs_by_hash == first_hash_dict
