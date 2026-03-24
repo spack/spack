@@ -108,7 +108,7 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 #: Exit code used by the child process to signal that the build was stopped at a phase boundary
-EXIT_STOPPED_AT_PHASE = 2
+EXIT_STOPPED_AT_PHASE = 3
 
 
 class DatabaseAction:
