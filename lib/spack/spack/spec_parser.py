@@ -167,7 +167,7 @@ SPEC_TOKENIZER = Tokenizer(SpecTokens)
 
 
 def tokenize(text: str) -> Iterator[Token]:
-    """Return a token generator from the text passed as input.
+    """Return a token generator from the text passed as input, skipping whitespace tokens.
 
     Raises:
         SpecTokenizationError: when unexpected characters are found in the text
@@ -175,16 +175,8 @@ def tokenize(text: str) -> Iterator[Token]:
     for token in SPEC_TOKENIZER.tokenize(text):
         if token.kind == SpecTokens.UNEXPECTED:
             raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(text)), text)
-        yield token
-
-
-def parseable_tokens(text: str) -> Iterator[Token]:
-    """Return non-whitespace tokens from the text passed as input
-
-    Raises:
-        SpecTokenizationError: when unexpected characters are found in the text
-    """
-    return filter(lambda x: x.kind != SpecTokens.WS, tokenize(text))
+        if token.kind != SpecTokens.WS:
+            yield token
 
 
 class TokenContext:
@@ -292,13 +284,13 @@ class SpecParser:
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
-        self.ctx = TokenContext(parseable_tokens(literal_str))
+        self.ctx = TokenContext(tokenize(literal_str))
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
         filtered out.
         """
-        return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
+        return list(tokenize(self.literal_str))
 
     def next_spec(
         self, initial_spec: Optional["spack.spec.Spec"] = None
