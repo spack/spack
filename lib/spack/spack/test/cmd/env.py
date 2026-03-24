@@ -660,6 +660,10 @@ spack:
   packages:
     all:
       require:
+      # Right now, if this is expressed as
+      # - spec: "target=x86_64_v3"
+      # then the target is not actually applied to externals (including the
+      # compiler), and the test passes (but for the wrong reason).
       - "target=x86_64_v3"
     gcc:
       externals:
@@ -681,9 +685,8 @@ spack:
         x = list(e.concretized_specs())
         y = x[0][1]
         assert y.satisfies("cflags=-Wall")
-        # This is a sanity check: some formulations of all:require: on target
-        # do not propagate the target to externals (in which case this test
-        # would pass, but for the wrong reason)
+        # The next assert is a sanity check addressing the note above in the
+        # environment packages: section
         assert y["c"].satisfies("target=x86_64_v3")
 
 
