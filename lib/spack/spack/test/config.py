@@ -1694,7 +1694,7 @@ def test_included_path_substitution():
     # check a straight path substitution
     entry = {"path": "$user_cache_path/path/to/config.yaml"}
     include = spack.config.included_path(entry)
-    assert spack.paths.user_cache_path in include.path
+    assert spack_paths.user_cache_path in include.path
 
     # check path through an environment variable
     path = "/path/to/project/packages.yaml"
