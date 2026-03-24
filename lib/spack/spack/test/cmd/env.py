@@ -8,6 +8,7 @@ import io
 import os
 import pathlib
 import shutil
+import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
 
@@ -644,6 +645,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
     assert os.path.islink(filepath_mid)
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
 def test_compiler_target_env(install_mockery, tmp_path: pathlib.Path):
     path = tmp_path / "spack.yaml"
 
@@ -657,7 +659,6 @@ spack:
   - libdwarf
   packages:
     all:
-      # Comment this out and the test passes
       require:
       - "target=x86_64_v3"
     gcc:
@@ -680,6 +681,10 @@ spack:
         x = list(e.concretized_specs())
         y = x[0][1]
         assert y.satisfies("cflags=-Wall")
+        # This is a sanity check: some formulations of all:require: on target
+        # do not propagate the target to externals (in which case this test
+        # would pass, but for the wrong reason)
+        assert y["c"].satisfies("target=x86_64_v3")
 
 
 def test_env_install_two_specs_same_dep(
