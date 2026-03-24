@@ -323,8 +323,7 @@ def check_packages_exist(specs):
 class Result:
     """Result of an ASP solve."""
 
-    def __init__(self, specs, asp=None):
-        self.asp = asp
+    def __init__(self, specs):
         self.satisfiable = None
         self.optimal = None
         self.warnings = None
@@ -443,7 +442,6 @@ class Result:
             lambda node_dict: f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
         )
         ret = dict()
-        ret["asp"] = self.asp
         ret["criteria"] = self.criteria
         ret["optimal"] = self.optimal
         ret["warnings"] = self.warnings
@@ -483,13 +481,12 @@ class Result:
             spack.spec.Spec.ensure_no_deprecated(loaded_spec)
             return loaded_spec
 
-        asp = obj.get("asp")
         spec_list = obj.get("abstract_specs")
         if not spec_list:
             raise RuntimeError("Invalid json for concretization Result object")
         if spec_list:
             spec_list = [_str_to_spec(x) for x in spec_list]
-        result = Result(spec_list, asp)
+        result = Result(spec_list)
 
         criteria = obj.get("criteria")
         result.criteria = (
@@ -518,7 +515,6 @@ class Result:
 
     def __eq__(self, other):
         eq = (
-            self.asp == other.asp,
             self.satisfiable == other.satisfiable,
             self.optimal == other.optimal,
             self.warnings == other.warnings,
