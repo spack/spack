@@ -137,15 +137,17 @@ class SpecTokens(TokenBase):
     DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:\s*{VIRTUAL_ASSIGNMENT})?)"
 
     # Version
-    VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
-    GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
-    VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
+    VERSION_HASH_PAIR = rf"(?:@(?P<git_version>{GIT_VERSION_PATTERN})=(?P<version_pair>{VERSION}))"
+    GIT_VERSION = rf"@(?P<git_version>{GIT_VERSION_PATTERN})"
+    VERSION = rf"(?:@\s*(?P<version_list>{VERSION_LIST}))"
 
     # Variants
-    PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
-    BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_BOOL_VARIANT = rf"(?:(?P<bv_prefix>\+\+|~~|--)\s*(?P<bv_name>{NAME}))"
+    BOOL_VARIANT = rf"(?:(?P<bv_prefix>[~+-])\s*(?P<bv_name>{NAME}))"
+    PROPAGATED_KEY_VALUE_PAIR = (
+        rf"(?:(?P<kv_name>{NAME})(?P<kv_sep>:?==)(?P<kv_value>{VALUE}|{QUOTED_VALUE}))"
+    )
+    KEY_VALUE_PAIR = rf"(?:(?P<kv_name>{NAME})(?P<kv_sep>:?=)(?P<kv_value>{VALUE}|{QUOTED_VALUE}))"
 
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
@@ -466,45 +468,61 @@ class SpecNodeParser:
                 raise_parsing_error(str(e), e)
 
         while True:
-            if (
-                self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
-                or self.ctx.accept(SpecTokens.GIT_VERSION)
-                or self.ctx.accept(SpecTokens.VERSION)
-            ):
+            if self.ctx.accept(SpecTokens.VERSION_HASH_PAIR):
                 if self.has_version:
                     raise_parsing_error("Spec cannot have multiple versions")
 
+                git_version = self.ctx.current_token.subvalues["git_version"]
+                version_pair = self.ctx.current_token.subvalues["version_pair"]
                 initial_spec.versions = spack.version.VersionList(
-                    [spack.version.from_string(self.ctx.current_token.value[1:])]
+                    [spack.version.GitVersion(f"{git_version}={version_pair}")]
                 )
                 initial_spec.attach_git_version_lookup()
                 self.has_version = True
 
+            elif self.ctx.accept(SpecTokens.GIT_VERSION):
+                if self.has_version:
+                    raise_parsing_error("Spec cannot have multiple versions")
+
+                initial_spec.versions = spack.version.VersionList(
+                    [spack.version.GitVersion(self.ctx.current_token.subvalues["git_version"])]
+                )
+                initial_spec.attach_git_version_lookup()
+                self.has_version = True
+
+            elif self.ctx.accept(SpecTokens.VERSION):
+                if self.has_version:
+                    raise_parsing_error("Spec cannot have multiple versions")
+
+                initial_spec.versions = spack.version.VersionList(
+                    self.ctx.current_token.subvalues["version_list"]
+                )
+                self.has_version = True
+
             elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
-                name = self.ctx.current_token.value[1:].strip()
-                variant_value = self.ctx.current_token.value[0] == "+"
+                name = self.ctx.current_token.subvalues["bv_name"]
+                variant_value = self.ctx.current_token.subvalues["bv_prefix"] == "+"
                 add_flag(name, variant_value, propagate=False, concrete=True)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
-                name = self.ctx.current_token.value[2:].strip()
-                variant_value = self.ctx.current_token.value[0:2] == "++"
+                name = self.ctx.current_token.subvalues["bv_name"]
+                variant_value = self.ctx.current_token.subvalues["bv_prefix"] == "++"
                 add_flag(name, variant_value, propagate=True, concrete=True)
 
             elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                concrete = name.endswith(":")
-                if concrete:
-                    name = name[:-1]
-
+                name = self.ctx.current_token.subvalues["kv_name"]
+                sep = self.ctx.current_token.subvalues["kv_sep"]
+                value = self.ctx.current_token.subvalues["kv_value"]
+                concrete = sep.startswith(":")
                 add_flag(
                     name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
                 )
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
-                concrete = name.endswith(":")
-                if concrete:
-                    name = name[:-1]
+                name = self.ctx.current_token.subvalues["kv_name"]
+                sep = self.ctx.current_token.subvalues["kv_sep"]
+                value = self.ctx.current_token.subvalues["kv_value"]
+                concrete = sep.startswith(":")
                 add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
 
             elif self.ctx.expect(SpecTokens.DAG_HASH):
@@ -563,10 +581,8 @@ class EdgeAttributeParser:
         attributes = {}
         while True:
             if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                if name.endswith(":"):
-                    name = name[:-1]
-                value = value.strip("'\" ")
+                name = self.ctx.current_token.subvalues["kv_name"]
+                value = strip_quotes_and_unescape(self.ctx.current_token.subvalues["kv_value"])
                 # A when value is one spec string, where a comma is part of the syntax, e.g.
                 # when='@1,2'; deptypes and virtuals values are comma-separated lists.
                 attributes[name] = value if name == "when" else value.split(",")

@@ -51,7 +51,11 @@ class Token:
         return (
             self.kind == other.kind
             and self.value == other.value
-            and self.subvalues == other.subvalues
+            and (
+                self.subvalues == other.subvalues
+                or self.subvalues is None
+                or other.subvalues is None
+            )
         )
 
 
