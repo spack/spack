@@ -214,10 +214,6 @@ def create_mirror_from_package_object(
     try:
         pkg_obj.fetcher
     except InstallError:
-        tty.warn(
-            "Skipping %s: package has no fetchable source"
-            % pkg_obj.spec.format("{name}{@version}")
-        )
         return False
     max_retries = 3
     for num_retries in range(max_retries):
