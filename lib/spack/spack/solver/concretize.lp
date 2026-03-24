@@ -344,6 +344,11 @@ version_weight(node(ID, Package), Weight)
      attr("node", node(ID, Package)),
      pkg_fact(Package, version_declared(Version, Weight)).
 
+version_weight(node(ID, Virtual), Weight)
+  :- attr("version", node(ID, Virtual), Version),
+     attr("virtual_node", node(ID, Virtual)),
+     pkg_fact(Virtual, version_declared(Version, Weight)).
+
 version_deprecation_penalty(node(ID, Package), Penalty)
   :- pkg_fact(Package, deprecated_version(Version)),
      pkg_fact(Package, version_deprecation_penalty(Penalty)),
@@ -2314,7 +2319,7 @@ opt_criterion(3, "non-preferred targets (runtimes)").
 }.
 
 % Try to use the most optimal providers as much as possible
-opt_criterion(2, "providers on edges").
+opt_criterion(2, "providers on edges and providers version").
 #minimize{ 0@202: #true }.
 #minimize{ 0@2: #true }.
 #minimize{
@@ -2324,6 +2329,9 @@ opt_criterion(2, "providers on edges").
       not attr("root", ProviderNode),
       language(Virtual),
       depends_on(ParentNode, ProviderNode)
+}.
+#minimize{
+    Weight@2,node(X, Virtual) : version_weight(node(X, Virtual), Weight), virtual(Virtual)
 }.
 
 % Try to use latest versions of nodes as much as possible
@@ -2339,13 +2347,12 @@ opt_criterion(1, "version badness on edges").
 }.
 
 % Reduce symmetry on duplicates
-opt_criterion(0, "penalty on symmetric duplicates").
+opt_criterion(0, "penalty on symmetric duplicates and virtual versions").
 #minimize{ 0@200: #true }.
 #minimize{ 0@0: #true }.
 #minimize{
-    Weight@1,PackageNode,Reason : duplicate_penalty(PackageNode, Weight, Reason)
+    Weight@0,PackageNode,Reason : duplicate_penalty(PackageNode, Weight, Reason)
 }.
-
 
 %-----------
 % Notes

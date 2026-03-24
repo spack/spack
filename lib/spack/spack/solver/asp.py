@@ -1410,7 +1410,10 @@ class SpackSolverSetup:
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
         # first version last if deprecated.
-        self.gen.fact(fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions))))
+        if ordered_versions:
+            self.gen.fact(
+                fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
+            )
 
         for weight, declared_version in enumerate(ordered_versions):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
@@ -2454,23 +2457,9 @@ class SpackSolverSetup:
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.CONFIG.get_config("packages")
         for pkg_name in sorted(possible_pkgs):
-            pkg_cls = self.pkg_class(pkg_name)
-
-            # All the versions from the corresponding package.py file. Since concepts
-            # like being a "develop" version or being preferred exist only at a
-            # package.py level, sort them in this partial list here
-            from_package_py = list(pkg_cls.versions.items())
-
-            if require_checksum and pkg_cls.has_code:
-                from_package_py = [x for x in from_package_py if _is_checksummed_version(x)]
-
-            for v, version_info in from_package_py:
-                if version_info.get("deprecated", False):
-                    self.deprecated_versions[pkg_name].add(v)
-                    if not allow_deprecated:
-                        continue
-
-                self.possible_versions[pkg_name][v].append(Provenance.PACKAGE_PY)
+            self._define_versions_from_package_py(
+                pkg_name, require_checksum=require_checksum, allow_deprecated=allow_deprecated
+            )
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
@@ -2502,6 +2491,27 @@ class SpackSolverSetup:
                     provenance = Provenance.PACKAGES_YAML_GIT_VERSION
                 self.possible_versions[pkg_name][v].append(provenance)
             self.versions_from_yaml[pkg_name] = from_packages_yaml
+
+    def _define_versions_from_package_py(
+        self, pkg_name: str, *, require_checksum: bool, allow_deprecated: bool
+    ):
+        pkg_cls = self.pkg_class(pkg_name)
+
+        # All the versions from the corresponding package.py file. Since concepts
+        # like being a "develop" version or being preferred exist only at a
+        # package.py level, sort them in this partial list here
+        from_package_py = list(pkg_cls.versions.items())
+
+        if require_checksum and pkg_cls.has_code:
+            from_package_py = [x for x in from_package_py if _is_checksummed_version(x)]
+
+        for v, version_info in from_package_py:
+            if version_info.get("deprecated", False):
+                self.deprecated_versions[pkg_name].add(v)
+                if not allow_deprecated:
+                    continue
+
+            self.possible_versions[pkg_name][v].append(Provenance.PACKAGE_PY)
 
     def define_ad_hoc_versions_from_specs(
         self, specs, origin, *, allow_deprecated: bool, require_checksum: bool
@@ -2682,7 +2692,7 @@ class SpackSolverSetup:
             self.gen.newline()
         self.gen.newline()
 
-        for pkg_name, versions in self.version_constraints:
+        for pkg_name, versions in sorted(self.version_constraints):
             possible_versions = sorted_versions.get(pkg_name)
             if possible_versions is None:
                 continue
@@ -2707,10 +2717,19 @@ class SpackSolverSetup:
 
         Must be called before define_version_constraints().
         """
-        # aggregate constraints into per-virtual sets
+        # If versions are declared in a package.py file, take the definition from there
+        for virtual_name in self.possible_virtuals:
+            try:
+                self._define_versions_from_package_py(
+                    virtual_name, require_checksum=False, allow_deprecated=False
+                )
+            except spack.repo.UnknownPackageError:
+                continue
+
+        # Aggregate constraints into per-virtual sets
         constraint_map = collections.defaultdict(lambda: set())
         for pkg_name, versions in self.version_constraints:
-            if not spack.repo.PATH.is_virtual(pkg_name):
+            if pkg_name not in self.possible_virtuals:
                 continue
             constraint_map[pkg_name].add(versions)
 
@@ -2729,6 +2748,9 @@ class SpackSolverSetup:
         # that `version_satisfies(Package, Constraint, Version)` has the
         # same semantics for virtuals as for regular packages.
         for pkg_name, versions in sorted(constraint_map.items()):
+            # Already defined in package.py
+            if pkg_name in self.possible_versions:
+                continue
             possible_versions = set(sum([versions_for(v) for v in versions], []))
             for version in sorted(possible_versions):
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
@@ -3052,8 +3074,16 @@ class SpackSolverSetup:
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
-        self.gen.h1("Version Constraints")
         self.collect_virtual_constraints()
+        self.gen.h1("Virtual Versions")
+        for virtual_name in self.possible_virtuals:
+            try:
+                virtual_pkg_cls = self.pkg_class(virtual_name)
+            except spack.repo.UnknownPackageError:
+                continue
+            self.pkg_version_rules(virtual_pkg_cls)
+
+        self.gen.h1("Version Constraints")
         self.define_version_constraints()
 
         self.gen.h1("Target Constraints")
