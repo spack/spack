@@ -2732,11 +2732,13 @@ class SpackSolverSetup:
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
             if isinstance(v, vn.StandardVersion):
-                return [v]
+                yield v
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn._prev_version(v.hi)]
+                yield v.lo
+                yield vn._prev_version(v.hi)
             elif isinstance(v, vn.VersionList):
-                return sum((versions_for(e) for e in v), [])
+                for e in v:
+                    yield from versions_for(e)
             else:
                 raise TypeError(f"expected version type, found: {type(v)}")
 
@@ -2752,8 +2754,8 @@ class SpackSolverSetup:
             if pkg_name in self.possible_versions:
                 continue
 
-            possible_versions = set(sum([versions_for(v) for v in versions], []))
-            for version in sorted(possible_versions):
+            possible_versions = {pv for v in versions for pv in versions_for(v)}
+            for version in possible_versions:
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
 
     def define_target_constraints(self):
