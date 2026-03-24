@@ -593,9 +593,9 @@ class TestScheduleBuilds:
                 jobserver=jobserver,
                 explicit={spec.dag_hash()},
             )
-            assert len(result.db_actions) == 1
-            assert result.db_actions[0].spec is spec
-            assert result.db_actions[0].explicit is True
+            assert len(result.to_mark_explicit) == 1
+            assert result.to_mark_explicit[0].spec is spec
+            assert result.to_mark_explicit[0].explicit is True
             assert len(result.newly_installed) == 1
         finally:
             for _, _, lock in result.newly_installed:

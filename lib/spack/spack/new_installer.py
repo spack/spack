@@ -107,31 +107,35 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 
-class MarkExplicitAction:
+class DatabaseAction:
+    """Base class for objects that need to be persisted to the database."""
+
+    __slots__ = ("spec", "prefix_lock")
+
+    spec: "spack.spec.Spec"
+    prefix_lock: Optional[spack.util.lock.Lock]
+
+    def save_to_db(self, db: spack.database.Database) -> None: ...
+
+
+class MarkExplicitAction(DatabaseAction):
     """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
     used when no build process was needed."""
 
-    __slots__ = ("spec", "explicit", "prefix_lock")
+    __slots__ = ()
 
-    def __init__(self, spec: "spack.spec.Spec", explicit: bool) -> None:
+    def __init__(self, spec: "spack.spec.Spec") -> None:
         self.spec = spec
-        self.explicit = explicit
         self.prefix_lock = None
 
+    def save_to_db(self, db: spack.database.Database) -> None:
+        db._mark(self.spec, "explicit", True)
 
-class ChildInfo:
+
+class ChildInfo(DatabaseAction):
     """Information about a child process."""
 
-    __slots__ = (
-        "proc",
-        "spec",
-        "output_r_conn",
-        "state_r_conn",
-        "control_w_conn",
-        "explicit",
-        "prefix_lock",
-        "log_path",
-    )
+    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
 
     def __init__(
         self,
@@ -151,6 +155,9 @@ class ChildInfo:
         self.log_path = log_path
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        return db._add(self.spec, explicit=self.explicit)
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
         """Unregister and close file descriptors, and join the child process."""
@@ -1653,7 +1660,7 @@ class ScheduleResult(NamedTuple):
     #: is held and the caller must add it to retained_read_locks.
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
     #: Actions to mark already installed specs explicit in the DB.
-    db_actions: List[MarkExplicitAction]
+    to_mark_explicit: List[MarkExplicitAction]
 
 
 def schedule_builds(
@@ -1700,13 +1707,13 @@ def schedule_builds(
     """
     to_start: List[Tuple[str, spack.util.lock.Lock]] = []
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
-    db_actions: List[MarkExplicitAction] = []
+    to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
     if not db.lock.try_acquire_read():
-        return ScheduleResult(blocked, to_start, newly_installed, db_actions)
+        return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
     try:
         db._read()  # refresh in-memory snapshot under the read lock
@@ -1744,7 +1751,7 @@ def schedule_builds(
                 newly_installed.append((dag_hash, spec, lock))
                 # It's already installed, but needs to be marked as explicitly installed in the DB.
                 if dag_hash in explicit and not record.explicit:
-                    db_actions.append(MarkExplicitAction(spec, explicit=True))
+                    to_mark_explicit.append(MarkExplicitAction(spec))
                 build_graph.enqueue_parents(dag_hash, pending)
                 continue
 
@@ -1774,7 +1781,7 @@ def schedule_builds(
     finally:
         db.lock.release_read()
 
-    return ScheduleResult(blocked, to_start, newly_installed, db_actions)
+    return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
 
 def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:
@@ -2023,7 +2030,7 @@ class PackageInstaller:
             selector.register(sigwinch_r, selectors.EVENT_READ, "sigwinch")
 
         # Finished builds that have not yet been written to the database.
-        finished_builds: List[Union[ChildInfo, MarkExplicitAction]] = []
+        database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
         retained_read_locks: List[spack.util.lock.Lock] = []
         next_database_write = 0.0
@@ -2033,10 +2040,10 @@ class PackageInstaller:
         try:
             # Try to schedule builds immediately. The first job does not require a token.
             blocked = self._schedule_builds(
-                selector, jobserver, retained_read_locks, finished_builds
+                selector, jobserver, retained_read_locks, database_actions
             )
 
-            while self.pending_builds or self.running_builds or finished_builds:
+            while self.pending_builds or self.running_builds or database_actions:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
                 # spec is not locked by another process. Also listen if the target parallelism is
                 # reduced.
@@ -2092,7 +2099,7 @@ class PackageInstaller:
                     self.report_data.finish_record(build.spec, exitcode)
                     if exitcode == 0:
                         # Add successful builds for database insertion (after a short delay)
-                        finished_builds.append(build)
+                        database_actions.append(build)
                         self.build_graph.enqueue_parents(
                             build.spec.dag_hash(), self.pending_builds
                         )
@@ -2141,19 +2148,19 @@ class PackageInstaller:
                 # guaranteed; it fails if another process holds the lock. We'll try again next
                 # iteration of the event loop in that case.
                 if (
-                    finished_builds
+                    database_actions
                     and (
                         current_time >= next_database_write
                         or not (self.pending_builds or self.running_builds)
                     )
-                    and self._save_to_db(finished_builds, retained_read_locks)
+                    and self._save_to_db(database_actions, retained_read_locks)
                 ):
-                    finished_builds.clear()
+                    database_actions.clear()
 
                 # Try to schedule more builds, acquiring per-spec locks and jobserver tokens.
                 if self.capacity and self.pending_builds:
                     blocked = self._schedule_builds(
-                        selector, jobserver, retained_read_locks, finished_builds
+                        selector, jobserver, retained_read_locks, database_actions
                     )
 
                 # Finally update the UI
@@ -2164,8 +2171,8 @@ class PackageInstaller:
             db_exc = None
             try:
                 with self.db.write_transaction():
-                    for b in finished_builds:
-                        self.db._add(b.spec, explicit=b.explicit)
+                    for action in database_actions:
+                        action.save_to_db(self.db)
             except Exception as e:
                 db_exc = e
 
@@ -2201,11 +2208,11 @@ class PackageInstaller:
                     lock.release_read()
                 except Exception:
                     pass
-            for b in finished_builds:
+            for action in database_actions:
                 try:
-                    if b.prefix_lock is not None:
-                        b.prefix_lock.release_write()
-                        b.prefix_lock = None
+                    if action.prefix_lock is not None:
+                        action.prefix_lock.release_write()
+                        action.prefix_lock = None
                 except Exception:
                     pass
 
@@ -2254,30 +2261,30 @@ class PackageInstaller:
 
     def _save_to_db(
         self,
-        finished_builds: List[Union[ChildInfo, MarkExplicitAction]],
+        database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
     ) -> bool:
         if not self.db.lock.try_acquire_write():
             return False
         try:
             self.db._read()
-            for build in finished_builds:
-                self.db._add(build.spec, explicit=build.explicit)
+            for action in database_actions:
+                action.save_to_db(self.db)
         finally:
             self.db.lock.release_write(self.db._write)
 
         # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
         # other processes can see the specs are installed, while preventing concurrent uninstalls.
-        for build in finished_builds:
-            if build.prefix_lock is not None:
+        for action in database_actions:
+            if action.prefix_lock is not None:
                 try:
-                    build.prefix_lock.downgrade_write_to_read()
-                    retained_read_locks.append(build.prefix_lock)
+                    action.prefix_lock.downgrade_write_to_read()
+                    retained_read_locks.append(action.prefix_lock)
                 except Exception:
-                    build.prefix_lock.release_write()
+                    action.prefix_lock.release_write()
                     raise
                 finally:
-                    build.prefix_lock = None
+                    action.prefix_lock = None
 
         return True
 
@@ -2286,7 +2293,7 @@ class PackageInstaller:
         selector: selectors.BaseSelector,
         jobserver: JobServer,
         retained_read_locks: List[spack.util.lock.Lock],
-        finished_builds: List[Union[ChildInfo, MarkExplicitAction]],
+        database_actions: List[DatabaseAction],
     ) -> bool:
         """Try to schedule as many pending builds as possible.
 
@@ -2313,7 +2320,7 @@ class PackageInstaller:
             explicit=self.explicit,
         )
         blocked = result.blocked
-        finished_builds.extend(result.db_actions)
+        database_actions.extend(result.to_mark_explicit)
         # Specs installed by another process.
         for dag_hash, spec, lock in result.newly_installed:
             retained_read_locks.append(lock)
