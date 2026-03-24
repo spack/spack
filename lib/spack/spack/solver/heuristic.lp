@@ -8,14 +8,16 @@
 
 % Decide about DAG atoms, before trying to guess facts used only in
 % the internal representation
-#heuristic attr("virtual_node", node(X, Virtual)). [80, level]
-#heuristic attr("node", PackageNode). [80, level]
-#heuristic attr("version", node(PackageID, Package), Version). [80, level]
-#heuristic attr("variant_value", PackageNode, Variant, Value). [80, level]
-#heuristic attr("node_target", node(PackageID, Package), Target). [80, level]
-#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [80, level]
+#heuristic attr("virtual_node", node(X, Virtual)). [120, level]
+#heuristic attr("node", PackageNode). [120, level]
+#heuristic attr("version", node(PackageID, Package), Version). [120, level]
+#heuristic attr("variant_value", PackageNode, Variant, Value). [120, level]
+#heuristic attr("node_target", node(PackageID, Package), Target). [120, level]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [120, level]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [4, factor]
 
-#heuristic attr("virtual_node", node(X, Virtual)). [600, init]
+#heuristic attr("virtual_node", node(X, Virtual)). [800, init]
+#heuristic attr("virtual_node", node(X, Virtual)). [4, factor]
 #heuristic attr("virtual_node", node(X, Virtual)). [-1, sign]
 #heuristic attr("virtual_node", node(0, Virtual)) : node_depends_on_virtual(PackageNode, Virtual). [1@2, sign]
 #heuristic attr("virtual_node", node(0, "c")).     [1@3, sign]
@@ -30,6 +32,12 @@
 #heuristic attr("version", node(PackageID, Package), Version). [30, init]
 #heuristic attr("version", node(PackageID, Package), Version). [-1, sign]
 #heuristic attr("version", node(PackageID, Package), Version) : pkg_fact(Package, version_declared(Version, 0)), attr("node", node(PackageID, Package)). [ 1@2, sign]
+
+% Prefer negative sign for node_platform and node_os (default value is typically correct)
+#heuristic attr("node_platform", node(PackageID, Package), Platform). [120, level]
+#heuristic attr("node_platform", node(PackageID, Package), Platform). [-1, sign]
+#heuristic attr("node_os", node(PackageID, Package), OS). [120, level]
+#heuristic attr("node_os", node(PackageID, Package), OS). [-1, sign]
 
 % Use default targets
 #heuristic attr("node_target", node(PackageID, Package), Target). [-1, sign]

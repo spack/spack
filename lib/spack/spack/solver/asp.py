@@ -113,7 +113,16 @@ def default_clingo_control():
     control = clingo().Control()
     control.configuration.configuration = "tweety"
     control.configuration.solver.heuristic = "Domain"
-    control.configuration.solver.opt_strategy = "usc"
+    control.configuration.solver.opt_strategy = "usc,2"
+    control.configuration.solver.opt_heuristic = "model"
+    control.configuration.solver.del_max = "650000"
+    control.configuration.solver.nant = "yes"
+    control.configuration.solver.score_res = "multiset"
+    control.configuration.solver.sign_def = "neg"
+    control.configuration.solver.del_glue = "5,0"
+    control.configuration.solver.otfs = "2"
+    control.configuration.asp.trans_ext = "no"
+    control.configuration.asp.backprop = "yes"
     return control
 
 
