@@ -20,8 +20,7 @@ import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
-from spack.externals import (ExternalSpecsParser, external_spec,
-                             extract_dicts_from_configuration)
+from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 
@@ -264,7 +263,11 @@ class CompilerFactory:
         packages_yaml = configuration.get_config("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        init_external_dicts = list(x for x in init_external_dicts if spack.spec.Spec(x["spec"]).name in compiler_package_names)
+        init_external_dicts = list(
+            x
+            for x in init_external_dicts
+            if spack.spec.Spec(x["spec"]).name in compiler_package_names
+        )
 
         externals_dicts = []
         for current in init_external_dicts:
