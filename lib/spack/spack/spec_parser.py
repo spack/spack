@@ -131,23 +131,19 @@ class SpecTokens(TokenBase):
     single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
     """
 
-    # Dependency, with optional virtual assignment specifier
-    START_EDGE_PROPERTIES = r"(?:(?:\^|\%\%|\%)\[)"
+    # Dependency (covers START_EDGE_PROPERTIES too via optional edge_bracket group)
     END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
-    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    DEPENDENCY = rf"(?:(?:\^|\%\%|\%)(?:(?P<edge_bracket>\[)|(?:\s*{VIRTUAL_ASSIGNMENT})?))"
 
-    # Version
-    VERSION_HASH_PAIR = rf"(?:@(?P<git_version>{GIT_VERSION_PATTERN})=(?P<version_pair>{VERSION}))"
-    GIT_VERSION = rf"@(?P<git_version>{GIT_VERSION_PATTERN})"
-    VERSION = rf"(?:@\s*(?P<version_list>{VERSION_LIST}))"
-
-    # Variants
-    PROPAGATED_BOOL_VARIANT = rf"(?:(?P<bv_prefix>\+\+|~~|--)\s*(?P<bv_name>{NAME}))"
-    BOOL_VARIANT = rf"(?:(?P<bv_prefix>[~+-])\s*(?P<bv_name>{NAME}))"
-    PROPAGATED_KEY_VALUE_PAIR = (
-        rf"(?:(?P<kv_name>{NAME})(?P<kv_sep>:?==)(?P<kv_value>{VALUE}|{QUOTED_VALUE}))"
+    # Version (covers VERSION_HASH_PAIR, GIT_VERSION, and VERSION in one token)
+    VERSION = (
+        rf"@(?:(?P<git_version>{GIT_VERSION_PATTERN}(?:={VERSION})?)"
+        rf"|\s*(?P<version_list>{VERSION_LIST}))"
     )
-    KEY_VALUE_PAIR = rf"(?:(?P<kv_name>{NAME})(?P<kv_sep>:?=)(?P<kv_value>{VALUE}|{QUOTED_VALUE}))"
+
+    # Variants (BOOL_VARIANT covers propagated too; KEY_VALUE_PAIR covers propagated too)
+    BOOL_VARIANT = rf"(?P<bv_prefix>\+\+|~~|--|[~+-])\s*(?P<bv_name>{NAME})"
+    KEY_VALUE_PAIR = rf"(?P<kv_name>{NAME})(?P<kv_sep>:?==?)(?P<kv_value>{VALUE}|{QUOTED_VALUE})"
 
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
@@ -330,12 +326,12 @@ class SpecParser:
         root_spec = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         current_spec = root_spec
         while True:
-            if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
-                has_edge_attrs = True
-            elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                has_edge_attrs = False
-            else:
+            if not self.ctx.accept(SpecTokens.DEPENDENCY):
                 break
+            has_edge_attrs = bool(
+                self.ctx.current_token.subvalues
+                and self.ctx.current_token.subvalues.get("edge_bracket")
+            )
 
             is_direct = self.ctx.current_token.value[0] == "%"
             propagation = PropagationPolicy.NONE
@@ -468,62 +464,36 @@ class SpecNodeParser:
                 raise_parsing_error(str(e), e)
 
         while True:
-            if self.ctx.accept(SpecTokens.VERSION_HASH_PAIR):
+            if self.ctx.accept(SpecTokens.VERSION):
                 if self.has_version:
                     raise_parsing_error("Spec cannot have multiple versions")
 
-                git_version = self.ctx.current_token.subvalues["git_version"]
-                version_pair = self.ctx.current_token.subvalues["version_pair"]
-                initial_spec.versions = spack.version.VersionList(
-                    [spack.version.GitVersion(f"{git_version}={version_pair}")]
-                )
-                initial_spec.attach_git_version_lookup()
-                self.has_version = True
-
-            elif self.ctx.accept(SpecTokens.GIT_VERSION):
-                if self.has_version:
-                    raise_parsing_error("Spec cannot have multiple versions")
-
-                initial_spec.versions = spack.version.VersionList(
-                    [spack.version.GitVersion(self.ctx.current_token.subvalues["git_version"])]
-                )
-                initial_spec.attach_git_version_lookup()
-                self.has_version = True
-
-            elif self.ctx.accept(SpecTokens.VERSION):
-                if self.has_version:
-                    raise_parsing_error("Spec cannot have multiple versions")
-
-                initial_spec.versions = spack.version.VersionList(
-                    self.ctx.current_token.subvalues["version_list"]
-                )
+                subvalues = self.ctx.current_token.subvalues
+                if subvalues and subvalues.get("git_version"):
+                    initial_spec.versions = spack.version.VersionList(
+                        [spack.version.GitVersion(subvalues["git_version"])]
+                    )
+                    initial_spec.attach_git_version_lookup()
+                else:
+                    initial_spec.versions = spack.version.VersionList(subvalues["version_list"])
                 self.has_version = True
 
             elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                prefix = self.ctx.current_token.subvalues["bv_prefix"]
                 name = self.ctx.current_token.subvalues["bv_name"]
-                variant_value = self.ctx.current_token.subvalues["bv_prefix"] == "+"
-                add_flag(name, variant_value, propagate=False, concrete=True)
-
-            elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
-                name = self.ctx.current_token.subvalues["bv_name"]
-                variant_value = self.ctx.current_token.subvalues["bv_prefix"] == "++"
-                add_flag(name, variant_value, propagate=True, concrete=True)
+                propagate = len(prefix) == 2
+                variant_value = prefix[0] == "+"
+                add_flag(name, variant_value, propagate=propagate, concrete=True)
 
             elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
                 name = self.ctx.current_token.subvalues["kv_name"]
                 sep = self.ctx.current_token.subvalues["kv_sep"]
                 value = self.ctx.current_token.subvalues["kv_value"]
+                propagate = "==" in sep
                 concrete = sep.startswith(":")
                 add_flag(
-                    name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
+                    name, strip_quotes_and_unescape(value), propagate=propagate, concrete=concrete
                 )
-
-            elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                name = self.ctx.current_token.subvalues["kv_name"]
-                sep = self.ctx.current_token.subvalues["kv_sep"]
-                value = self.ctx.current_token.subvalues["kv_value"]
-                concrete = sep.startswith(":")
-                add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
 
             elif self.ctx.expect(SpecTokens.DAG_HASH):
                 if initial_spec.abstract_hash:

@@ -119,12 +119,15 @@ class Tokenizer:
 
             token = Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
 
-            # add any subvalues to the token
+            # add any subvalues to the token (only non-None matches)
             subvalues = self.token_subvalues.get(m.lastgroup)
             if subvalues:
-                if any(m.group(rewritten) for subval, rewritten in subvalues):
-                    token.subvalues = {
-                        subval: m.group(rewritten) for subval, rewritten in subvalues
-                    }
+                matched = {
+                    subval: m.group(rewritten)
+                    for subval, rewritten in subvalues
+                    if m.group(rewritten) is not None
+                }
+                if matched:
+                    token.subvalues = matched
 
             yield token
