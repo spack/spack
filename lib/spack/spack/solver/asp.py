@@ -2740,7 +2740,7 @@ class SpackSolverSetup:
             else:
                 raise TypeError(f"expected version type, found: {type(v)}")
 
-        # Define a set of synthetic possible versions for virtuals that don't define them in a
+        # Define a set of synthetic possible versions for virtuals that don't define versions in a
         # package.py file. This ensures that `version_satisfies(Package, Constraint, Version)` has
         # the same semantics for virtuals as for regular packages.
         for pkg_name, versions in self.version_constraints.items():
