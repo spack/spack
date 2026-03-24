@@ -51,11 +51,7 @@ class Token:
         return (
             self.kind == other.kind
             and self.value == other.value
-            and (
-                self.subvalues == other.subvalues
-                or self.subvalues is None
-                or other.subvalues is None
-            )
+            and self.subvalues == other.subvalues
         )
 
 
@@ -119,15 +115,12 @@ class Tokenizer:
 
             token = Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
 
-            # add any subvalues to the token (only non-None matches)
+            # add any subvalues to the token
             subvalues = self.token_subvalues.get(m.lastgroup)
             if subvalues:
-                matched = {
-                    subval: m.group(rewritten)
-                    for subval, rewritten in subvalues
-                    if m.group(rewritten) is not None
-                }
-                if matched:
-                    token.subvalues = matched
+                if any(m.group(rewritten) for subval, rewritten in subvalues):
+                    token.subvalues = {
+                        subval: m.group(rewritten) for subval, rewritten in subvalues
+                    }
 
             yield token

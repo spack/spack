@@ -135,7 +135,7 @@ PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
 from spack.util.lang import classproperty
-from spack.spec_parser import GIT_VERSION_PATTERN, NAME, VERSION, VERSION_LIST, SpecTokens
+from spack.spec_parser import SpecTokens
 
 # replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
 # it evaluates the callback, and it documents the result, which is not what we want.

@@ -126,6 +126,210 @@ STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
 NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
 
 
+class SpecTokenizationError(spack.error.SpecSyntaxError):
+    """Syntax error in a spec string"""
+
+    def __init__(self, text: str) -> None:
+        message = f"unexpected characters in the spec string\n{text}\n"
+
+        # collect all tokens, and underline those that are unexpected
+        scanner = FAST_SPEC_REGEX.scanner(text)  # type: ignore[attr-defined]
+
+        # offset of unexpected token. unexpect tokens always have length 1.
+        unexpected_indices: List[int] = []
+        while True:
+            match = scanner.match()
+            if not match:
+                break
+            elif match.lastgroup == "UNEXPECTED":
+                unexpected_indices.append(match.start(match.lastgroup))
+
+        underline = ""
+        last_index = 0
+        for index in unexpected_indices:
+            underline += " " * (index - last_index) + "^"
+            last_index = index + 1
+
+        message += color.colorize(f"@*r{{{underline}}}")
+        super().__init__(message)
+
+
+def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:
+    """Parse text into a list of strings
+
+    Args:
+        text: text to be parsed
+        toolchains: optional toolchain definitions to expand after parsing
+
+    Return:
+        List of specs
+    """
+    specs = SpecParser(text).all_specs()
+    if toolchains:
+        cache: Dict[str, "spack.spec.Spec"] = {}
+        for spec in specs:
+            expand_toolchains(spec, toolchains, _cache=cache)
+    return specs
+
+
+def parse_one_or_raise(
+    text: str,
+    initial_spec: Optional["spack.spec.Spec"] = None,
+    *,
+    toolchains: Optional[Dict] = None,
+) -> "spack.spec.Spec":
+    """Parse exactly one spec from text and return it, or raise
+
+    Args:
+        text: text to be parsed
+        initial_spec: buffer where to parse the spec. If None a new one will be created.
+        toolchains: optional toolchain definitions to expand after parsing
+    """
+    parser = SpecParser(text)
+    result = parser.next_spec(initial_spec)
+
+    if parser.curr:
+        message = f"expected a single spec, but got more:\n{text}"
+        start = parser.curr.start()
+        end = parser.curr.end()
+        # Adjust start to skip leading whitespace in the match
+        matched_text = parser.curr.group()
+        stripped_text = matched_text.lstrip()
+        start += len(matched_text) - len(stripped_text)
+        underline = f"\n{' ' * start}{'^' * (end - start)}"
+        message += color.colorize(f"@*r{{{underline}}}")
+        raise ValueError(message)
+
+    if result is None:
+        raise ValueError("expected a single spec, but got none")
+
+    if toolchains:
+        expand_toolchains(result, toolchains)
+
+    return result
+
+
+def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.spec.Spec":
+    """Parse a toolchain config entry (string or list) into a Spec."""
+    if isinstance(toolchain_config, str):
+        toolchain = parse_one_or_raise(toolchain_config)
+        _ensure_all_direct_edges(toolchain)
+    else:
+        from spack.spec import EMPTY_SPEC, Spec
+
+        toolchain = Spec()
+        for entry in toolchain_config:
+            toolchain_part = parse_one_or_raise(entry["spec"])
+            when = entry.get("when", "")
+            _ensure_all_direct_edges(toolchain_part)
+
+            if when:
+                when_spec = Spec(when)
+                for edge in toolchain_part.traverse_edges():
+                    if edge.when is EMPTY_SPEC:
+                        edge.when = when_spec.copy()
+                    else:
+                        edge.when.constrain(when_spec)
+            toolchain.constrain(toolchain_part)
+    return toolchain
+
+
+def _ensure_all_direct_edges(constraint: "spack.spec.Spec") -> None:
+    """Validate that a toolchain spec only has direct (%) edges."""
+    for edge in constraint.traverse_edges(root=False):
+        if not edge.direct:
+            raise spack.error.SpecError(
+                f"cannot use '^' in toolchain definitions, and the current "
+                f"toolchain contains '{edge.format()}'"
+            )
+
+
+def expand_toolchains(
+    spec: "spack.spec.Spec",
+    toolchains: Dict,
+    *,
+    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
+) -> None:
+    """Replace toolchain placeholder deps with expanded toolchain constraints.
+
+    Walks every node in the spec DAG. For each node, finds direct dependency
+    edges whose child name is a key in ``toolchains``. Removes the placeholder
+    edge, parses the toolchain config, copies with the edge's propagation
+    policy, and constrains the node.
+    """
+    if _cache is None:
+        _cache = {}
+
+    for node in list(spec.traverse()):
+        for edge in list(node.edges_to_dependencies()):
+            if not edge.direct:
+                continue
+            name = edge.spec.name
+            if name not in toolchains:
+                continue
+
+            # Remove the placeholder edge (both directions)
+            node._dependencies[name].remove(edge)
+            if not node._dependencies[name]:
+                del node._dependencies[name]
+            edge.spec._dependents[node.name].remove(edge)
+            if not edge.spec._dependents[node.name]:
+                del edge.spec._dependents[node.name]
+
+            # Parse and cache toolchain
+            if name not in _cache:
+                _cache[name] = _parse_toolchain_config(toolchains[name])
+
+            propagation = edge.propagation
+            propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
+            # Copy so each usage gets a distinct object (solver depends on this)
+            toolchain = _cache[name].copy(propagation=propagation_arg)
+            node.constrain(toolchain)
+
+
+class SpecParsingError(spack.error.SpecSyntaxError):
+    """Error when parsing tokens"""
+
+    def __init__(self, message: str, token, text: str):
+        message += f"\n{text}"
+        if token:
+            start, end = token.span(token.lastgroup or 0)
+            underline = f"\n{' ' * start}{'^' * (end - start)}"
+            message += color.colorize(f"@*r{{{underline}}}")
+        super().__init__(message)
+
+
+def strip_quotes_and_unescape(string: str) -> str:
+    """Remove surrounding single or double quotes from string, if present."""
+    match = STRIP_QUOTES.match(string)
+    if not match:
+        return string
+
+    # replace any escaped quotes with bare quotes
+    quote, result = match.groups()
+    return result.replace(rf"\{quote}", quote)
+
+
+def quote_if_needed(value: str) -> str:
+    """Add quotes around the value if it requires quotes.
+
+    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
+
+    This adds:
+
+    * single quotes by default
+    * double quotes around any value that contains single quotes
+
+    If double quotes are used, we json-escape the string. That is, we escape ``\\``,
+    ``"``, and control codes.
+
+    """
+    if NO_QUOTES_NEEDED.match(value):
+        return value
+
+    return json.dumps(value) if "'" in value else f"'{value}'"
+
+
 class SpecTokens:
     END_EDGE_PROPERTIES = rf"\](?:\s*{VIRTUAL_ASSIGNMENT})?"
     DEPENDENCY = rf"(?:\^|\%\%|\%)(?:(?P<edge_bracket>\[)|(?:\s*{VIRTUAL_ASSIGNMENT})?)"
@@ -163,34 +367,6 @@ for _name, _pattern in RAW_PATTERNS:
 
 # Global regex that skips whitespace before matching any token
 FAST_SPEC_REGEX = re.compile(r"\s*(?:" + "|".join(_regex_parts) + r")")
-
-
-class SpecTokenizationError(spack.error.SpecSyntaxError):
-    """Syntax error in a spec string"""
-
-    def __init__(self, text: str) -> None:
-        message = f"unexpected characters in the spec string\n{text}\n"
-
-        # collect all tokens, and underline those that are unexpected
-        scanner = FAST_SPEC_REGEX.scanner(text)  # type: ignore[attr-defined]
-
-        # offset of unexpected token. unexpect tokens always have length 1.
-        unexpected_indices: List[int] = []
-        while True:
-            match = scanner.match()
-            if not match:
-                break
-            elif match.lastgroup == "UNEXPECTED":
-                unexpected_indices.append(match.start(match.lastgroup))
-
-        underline = ""
-        last_index = 0
-        for index in unexpected_indices:
-            underline += " " * (index - last_index) + "^"
-            last_index = index + 1
-
-        message += color.colorize(f"@*r{{{underline}}}")
-        super().__init__(message)
 
 
 class SpecParser:
@@ -488,179 +664,3 @@ class SpecParser:
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
         return list(iter(self.next_spec, None))
-
-
-def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:
-    """Parse text into a list of specs
-
-    Args:
-        text: text to be parsed
-        toolchains: optional toolchain definitions to expand after parsing
-
-    Return:
-        List of specs
-    """
-    specs = SpecParser(text).all_specs()
-    if toolchains:
-        cache: Dict[str, "spack.spec.Spec"] = {}
-        for spec in specs:
-            expand_toolchains(spec, toolchains, _cache=cache)
-    return specs
-
-
-def parse_one_or_raise(
-    text: str,
-    initial_spec: Optional["spack.spec.Spec"] = None,
-    *,
-    toolchains: Optional[Dict] = None,
-) -> "spack.spec.Spec":
-    """Parse exactly one spec from text and return it, or raise
-
-    Args:
-        text: text to be parsed
-        initial_spec: buffer where to parse the spec. If None a new one will be created.
-        toolchains: optional toolchain definitions to expand after parsing
-    """
-    parser = SpecParser(text)
-    result = parser.next_spec(initial_spec)
-
-    if parser.curr:
-        message = f"expected a single spec, but got more:\n{text}"
-        start = parser.curr.start()
-        end = parser.curr.end()
-        # Adjust start to skip leading whitespace in the match
-        matched_text = parser.curr.group()
-        stripped_text = matched_text.lstrip()
-        start += len(matched_text) - len(stripped_text)
-        underline = f"\n{' ' * start}{'^' * (end - start)}"
-        message += color.colorize(f"@*r{{{underline}}}")
-        raise ValueError(message)
-
-    if result is None:
-        raise ValueError("expected a single spec, but got none")
-
-    if toolchains:
-        expand_toolchains(result, toolchains)
-
-    return result
-
-
-def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.spec.Spec":
-    """Parse a toolchain config entry (string or list) into a Spec."""
-    if isinstance(toolchain_config, str):
-        toolchain = parse_one_or_raise(toolchain_config)
-        _ensure_all_direct_edges(toolchain)
-    else:
-        from spack.spec import EMPTY_SPEC, Spec
-
-        toolchain = Spec()
-        for entry in toolchain_config:
-            toolchain_part = parse_one_or_raise(entry["spec"])
-            when = entry.get("when", "")
-            _ensure_all_direct_edges(toolchain_part)
-
-            if when:
-                when_spec = Spec(when)
-                for edge in toolchain_part.traverse_edges():
-                    if edge.when is EMPTY_SPEC:
-                        edge.when = when_spec.copy()
-                    else:
-                        edge.when.constrain(when_spec)
-            toolchain.constrain(toolchain_part)
-    return toolchain
-
-
-def _ensure_all_direct_edges(constraint: "spack.spec.Spec") -> None:
-    """Validate that a toolchain spec only has direct (%) edges."""
-    for edge in constraint.traverse_edges(root=False):
-        if not edge.direct:
-            raise spack.error.SpecError(
-                f"cannot use '^' in toolchain definitions, and the current "
-                f"toolchain contains '{edge.format()}'"
-            )
-
-
-def expand_toolchains(
-    spec: "spack.spec.Spec",
-    toolchains: Dict,
-    *,
-    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
-) -> None:
-    """Replace toolchain placeholder deps with expanded toolchain constraints.
-
-    Walks every node in the spec DAG. For each node, finds direct dependency
-    edges whose child name is a key in ``toolchains``. Removes the placeholder
-    edge, parses the toolchain config, copies with the edge's propagation
-    policy, and constrains the node.
-    """
-    if _cache is None:
-        _cache = {}
-
-    for node in list(spec.traverse()):
-        for edge in list(node.edges_to_dependencies()):
-            if not edge.direct:
-                continue
-            name = edge.spec.name
-            if name not in toolchains:
-                continue
-
-            # Remove the placeholder edge (both directions)
-            node._dependencies[name].remove(edge)
-            if not node._dependencies[name]:
-                del node._dependencies[name]
-            edge.spec._dependents[node.name].remove(edge)
-            if not edge.spec._dependents[node.name]:
-                del edge.spec._dependents[node.name]
-
-            # Parse and cache toolchain
-            if name not in _cache:
-                _cache[name] = _parse_toolchain_config(toolchains[name])
-
-            propagation = edge.propagation
-            propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
-            # Copy so each usage gets a distinct object (solver depends on this)
-            toolchain = _cache[name].copy(propagation=propagation_arg)
-            node.constrain(toolchain)
-
-
-class SpecParsingError(spack.error.SpecSyntaxError):
-    """Error when parsing tokens"""
-
-    def __init__(self, message: str, token, text: str):
-        message += f"\n{text}"
-        if token:
-            start, end = token.span(token.lastgroup or 0)
-            underline = f"\n{' ' * start}{'^' * (end - start)}"
-            message += color.colorize(f"@*r{{{underline}}}")
-        super().__init__(message)
-
-
-def strip_quotes_and_unescape(string: str) -> str:
-    """Remove surrounding single or double quotes from string, if present."""
-    match = STRIP_QUOTES.match(string)
-    if not match:
-        return string
-
-    # replace any escaped quotes with bare quotes
-    quote, result = match.groups()
-    return result.replace(rf"\{quote}", quote)
-
-
-def quote_if_needed(value: str) -> str:
-    """Add quotes around the value if it requires quotes.
-
-    This will add quotes around the value unless it matches :data:`NO_QUOTES_NEEDED`.
-
-    This adds:
-
-    * single quotes by default
-    * double quotes around any value that contains single quotes
-
-    If double quotes are used, we json-escape the string. That is, we escape ``\\``,
-    ``"``, and control codes.
-
-    """
-    if NO_QUOTES_NEEDED.match(value):
-        return value
-
-    return json.dumps(value) if "'" in value else f"'{value}'"
