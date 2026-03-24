@@ -12,6 +12,7 @@ from argparse import Namespace
 from typing import Any, Dict, Optional
 
 import pytest
+
 import spack.cmd.env
 import spack.concretize
 import spack.config
