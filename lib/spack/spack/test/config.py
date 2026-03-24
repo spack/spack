@@ -1925,7 +1925,7 @@ def test_included_path_local_no_dest(path):
     """Confirm that local paths have no cache destination."""
     entry = {"path": path}
     include = spack.config.included_path(entry)
-    destination = include.local_root_directory(entry["path"])
+    destination = include.base_directory(entry["path"])
     assert not destination, f"Expected local include ({include}) to NOT have a cache destination"
 
 
@@ -1944,7 +1944,7 @@ def test_included_path_url_temp_dest(mock_low_high_config):
 
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
-        destination = include.local_root_directory(entry["path"], parent_scope=scope)
+        destination = include.base_directory(entry["path"], parent_scope=scope)
         dest_dir = str(pathlib.Path(destination).parent)
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
@@ -1965,7 +1965,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
 
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
-        destination = include.local_root_directory(entry["git"], parent_scope=scope)
+        destination = include.base_directory(entry["git"], parent_scope=scope)
         dest_dir = str(pathlib.Path(destination).parent)
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
