@@ -2016,6 +2016,59 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
         include.scopes(parent_scope)
 
 
+def test_included_path_git_optional_quiet_errs(
+    tmp_path: pathlib.Path, mock_low_high_config, monkeypatch
+):
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    paths = ["concretizer.yaml"]
+    entry = {
+        "git": "https://example.com/linux/configs.git",
+        "branch": "develop",
+        "paths": paths,
+        "when": 'platform == "test"',
+        "optional": True,
+    }
+    include = spack.config.included_path(entry)
+    parent_scope = mock_low_high_config.scopes["low"]
+
+    # fail to initialize the repository
+    def _failing_init(*args, **kwargs):
+        raise spack.util.executable.ProcessError("mock init repo failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _failing_init)
+
+    # No error
+    scopes = include.scopes(parent_scope)
+    assert len(scopes) == len(paths)
+    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+
+    # fail in git config (so use default remote) *and* git checkout
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(include.destination, ".git"))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("mock git failure")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    scopes = include.scopes(parent_scope)
+    assert len(scopes) == len(paths)
+    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+
+    # set up invalid option failure
+    include.branch = ""  # type: ignore[union-attr]
+
+    scopes = include.scopes(parent_scope)
+    assert len(scopes) == len(paths)
+    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+
+
 def test_missing_include_scope_list(mock_missing_dir_include_scopes):
     """Tests that an included scope with a non existent file/directory
     is still listed as a scope under spack.config.CONFIG.scopes"""

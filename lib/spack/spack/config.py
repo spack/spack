@@ -34,6 +34,7 @@ import os
 import os.path
 import pathlib
 import re
+import shutil
 import sys
 import tempfile
 from collections import defaultdict
@@ -1288,8 +1289,16 @@ class IncludePath(OptionalInclude):
         # path for a local (or remote) file.
         tty.debug(f"Local base directory for {self.path} is {base}")
 
-        config_path = rfc_util.local_path(self.path, self.sha256, base)
-        assert config_path
+        try:
+            config_path = rfc_util.local_path(self.path, self.sha256, base)
+        except spack.error.FetchError as e:
+            tty.debug(f"Failed to fetch include at {self.path}: {e}")
+            if self.optional:
+                return []
+
+            # If this is not an optional include, fail early for this error
+            raise spack.error.ConfigFileError("Failed to include non-optional config") from e
+
         self.destination = config_path
 
         scope = self._scope(self.path, self.destination, parent_scope)
@@ -1373,9 +1382,11 @@ class GitIncludePaths(OptionalInclude):
                     tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
-                    raise spack.error.ConfigError(
-                        f"Unable to initialize repository ({self.git}) under {destination}: {e}"
-                    )
+                    msg = f"Unable to initialize repository ({self.git}) under {destination}: {e}"
+                    if self.optional:
+                        tty.warn(msg)
+                    else:
+                        raise spack.error.ConfigError(msg)
 
             try:
                 if self.commit:
@@ -1399,9 +1410,13 @@ class GitIncludePaths(OptionalInclude):
                     raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
 
             except spack.util.executable.ProcessError as e:
-                raise spack.error.ConfigError(
-                    f"Unable to check out repository ({self}) in {destination}: {e}"
-                )
+                msg = f"Unable to check out repository ({self}) in {destination}: {e}"
+                if self.optional:
+                    tty.warn(msg)
+                else:
+                    raise spack.error.ConfigError(msg)
+                # Cleanup the destination if it exists
+                shutil.rmtree(destination)
 
             # only set the destination on successful clone/checkout
             self.destination = destination
