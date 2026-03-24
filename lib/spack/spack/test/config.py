@@ -1631,9 +1631,9 @@ def test_included_optional_include_scopes():
 
 
 def test_included_path_forbidden_var(tmp_path: pathlib.Path, mock_low_high_config, ensure_debug):
-    include = spack.config.included_path("$data_home/test")
-    parent_scope = mock_low_high_config.scopes["low"]
     with pytest.raises(ValueError, match="defined in terms of.*data_home"):
+        include = spack.config.included_path("$data_home/test")
+        parent_scope = mock_low_high_config.scopes["low"]
         include.scopes(parent_scope)
 
     # Note: defining a name actually bypasses any form of config
@@ -1691,11 +1691,6 @@ def test_included_path_string_no_parent_path(
 
 
 def test_included_path_substitution():
-    # check a straight path substitution
-    entry = {"path": "$user_cache_path/path/to/config.yaml"}
-    include = spack.config.included_path(entry)
-    assert spack_paths.user_cache_path in include.path
-
     # check path through an environment variable
     path = "/path/to/project/packages.yaml"
     os.environ["SPACK_TEST_PATH_SUB"] = path

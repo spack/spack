@@ -1036,6 +1036,22 @@ def override(
         assert scope is overrides
 
 
+def substitute_include_path(path, context):
+    # circular dependencies
+    import spack.util.path
+
+    banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+    if banned_var:
+        msg = (
+            "Included scope is defined in terms of prohibited config variable."
+            f" ({banned_var.group(0)}): {path}"
+            f"\n    Context: {context}"
+            "\n\n    Include config paths may not refer to configurable config variables."
+        )
+        raise ValueError(msg)
+    return spack.util.path.substitute_path_variables(path)
+
+
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
@@ -1070,9 +1086,6 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        # circular dependencies
-        import spack.util.path
-
         # Ignore included concrete environment files (i.e., ``spack.lock``)
         # since they are not normal configuration (scope) files and their
         # processing is handled when the environment is processed.
@@ -1091,18 +1104,8 @@ class OptionalInclude:
 
         # But ensure that name is unique if there are multiple paths.
         if not self.name or len(getattr(self, "paths", [])) > 1:
-            banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
-            if banned_var:
-                context = self.name or (parent_scope.name if parent_scope else "(no context)")
-                msg = (
-                    "Included scope is defined in terms of prohibited config variable."
-                    f" ({banned_var.group(0)}): {path}"
-                    f"\n    Context: {context}"
-                    "\n\n    Include config paths may not refer to configurable config variables."
-                )
-                raise ValueError(msg)
-
-            real_path = pathlib.Path(spack.util.path.substitute_path_variables(path))
+            context = self.name or (parent_scope.name if parent_scope else "(no context)")
+            real_path = pathlib.Path(substitute_include_path(path, context))
             parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
 
             try:
@@ -1192,16 +1195,16 @@ class IncludePath(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
-        # circular dependencies
-        import spack.util.path
-
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
         if path_override_env_var and path_override_env_var in os.environ:
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = spack.util.path.substitute_path_variables(path)
+
+        context_prefix = f"({self.name}) " if self.name else ""
+        context = f"{context_prefix}{path}"
+        self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
         self.destination = None
@@ -1271,17 +1274,16 @@ class GitIncludePaths(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
-        # circular dependencies
-        import spack.util.path
-
         super().__init__(entry)
-        self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
+        context = self.name or entry.get("git", "") or "(Git include)"
+        self.git = substitute_include_path(entry.get("git", ""), context)
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self._paths = [
-            spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
-        ]
+        self._paths = []
+        for path in entry.get("paths", []):
+            sub_context = f"{context} - {path}"
+            self._paths.append(substitute_include_path(path, sub_context))
         self.destination = None
 
         if not self.branch and not self.commit and not self.tag:
