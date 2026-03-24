@@ -46,6 +46,7 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Dict,
+    FrozenSet,
     Generator,
     List,
     NamedTuple,
@@ -67,7 +68,9 @@ import spack.error
 import spack.hooks
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
+import spack.llnl.util.tty.color
 import spack.paths_base
+import spack.repo
 import spack.report
 import spack.spec
 import spack.stage
@@ -78,6 +81,7 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
+from spack.util.path import padding_filter, padding_filter_bytes
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -169,6 +173,12 @@ def send_progress(current: int, total: int, state_pipe: io.TextIOWrapper) -> Non
     state_pipe.write("\n")
 
 
+def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
+    """Send a notification that the package was installed from binary cache."""
+    json.dump({"installed_from_binary_cache": True}, state_pipe, separators=(",", ":"))
+    state_pipe.write("\n")
+
+
 def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
@@ -207,8 +217,10 @@ class Tee:
     def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
         self.control = control
         self.parent = parent
-        self.saved_stdout = os.dup(sys.stdout.fileno())
-        self.saved_stderr = os.dup(sys.stderr.fileno())
+        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+        # redirect their file descriptors in addition to the original fds 1 and 2.
+        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+        self.saved_fds = {fd: os.dup(fd) for fd in fds}
         #: The file descriptor of the log file
         self.log_fd = log_fd
         r, w = os.pipe()
@@ -218,8 +230,8 @@ class Tee:
             daemon=True,
         )
         self.tee_thread.start()
-        os.dup2(w, sys.stdout.fileno())
-        os.dup2(w, sys.stderr.fileno())
+        for fd in fds:
+            os.dup2(w, fd)
         os.close(w)
 
     def close(self) -> None:
@@ -229,10 +241,9 @@ class Tee:
         # can cause exit code 120 (witnessed under pytest+coverage on macOS).
         sys.stdout.flush()
         sys.stderr.flush()
-        os.dup2(self.saved_stdout, sys.stdout.fileno())
-        os.dup2(self.saved_stderr, sys.stderr.fileno())
-        os.close(self.saved_stdout)
-        os.close(self.saved_stderr)
+        for fd, saved_fd in self.saved_fds.items():
+            os.dup2(saved_fd, fd)
+            os.close(saved_fd)
         self.tee_thread.join()
         # Only then close the other fds.
         self.control.close()
@@ -247,7 +258,12 @@ def install_from_buildcache(
     state_stream: io.TextIOWrapper,
 ) -> bool:
     send_state("fetching from build cache", state_stream)
-    tarball_stage = spack.binary_distribution.download_tarball(spec.build_spec, unsigned, mirrors)
+    try:
+        tarball_stage = spack.binary_distribution.download_tarball(
+            spec.build_spec, unsigned, mirrors
+        )
+    except spack.binary_distribution.NoConfiguredBinaryMirrors:
+        return False
 
     if tarball_stage is None:
         return False
@@ -264,6 +280,9 @@ def install_from_buildcache(
         pkg._post_buildcache_install_hook()
     pkg.installed_from_binary_cache = True
 
+    # inform also the parent that this package was installed from binary cache.
+    send_installed_from_binary_cache(state_stream)
+
     return True
 
 
@@ -272,7 +291,7 @@ class GlobalState:
     but excludes the Spack environment, which is slow to serialize and should not be needed
     during the build."""
 
-    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir")
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache")
 
     def __init__(self):
         if multiprocessing.get_start_method() == "fork":
@@ -281,14 +300,27 @@ class GlobalState:
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
         self.spack_working_dir = spack.paths_base.spack_working_dir
+        # Avoid 8k stat calls in build process. The downside of this is the additional startup
+        # cost that blocks the parent process in `proc.start()`, but we avoid filesystem pressure.
+        # TODO: we don't need to send this if Spec.satisfies(...) etc does not depend on the repo.
+        self.repo_cache = spack.repo.FastPackageChecker._paths_cache
 
     def restore(self):
         if multiprocessing.get_start_method() == "fork":
+            # In the forking case we must erase SSL contexts.
+            from spack.oci import opener
+            from spack.util import web
+            from spack.util.s3 import s3_client_cache
+
+            web.urlopen._instance = None
+            opener.urlopen._instance = None
+            s3_client_cache.clear()
             return
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
         spack.paths_base.spack_working_dir = self.spack_working_dir
+        spack.repo.FastPackageChecker._paths_cache = self.repo_cache
 
 
 class PrefixPivoter:
@@ -376,6 +408,8 @@ def worker_function(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
+    run_tests: bool,
     state: Connection,
     parent: Connection,
     echo_control: Connection,
@@ -400,6 +434,7 @@ def worker_function(
         restage: Whether to restage the source before building
         keep_prefix: Whether to keep a failed installation prefix
         skip_patch: Whether to skip the patch phase
+        run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
         echo_control: Connection to receive echo control messages from
@@ -420,19 +455,35 @@ def worker_function(
     os.setsid()
 
     def handle_sigterm(signum, frame):
-        # This SIGTERM handler forwards the signal to child processes, and
-        # then resets the handler to default. It does not raise an exception,
-        # because the assumption is we're stuck in waitpid, and we want to
-        # let child processes finish with SIGTERM before we run the cleanup
-        # code in finally blocks and __exit__ functions and exit. If we exit
-        # too early, the child process may still write to the prefix or stage.
+        # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
+        # for all child processes to exit before raising KeyboardInterrupt. This ensures all
+        # __exit__ and finally blocks run after the child processes have stopped, meaning that we
+        # get to clean up the prefix without risking that the child process writes to it
+        # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         os.killpg(0, signal.SIGTERM)
-        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+        try:
+            while True:
+                os.waitpid(-1, 0)
+        except ChildProcessError:
+            pass
+
+        raise KeyboardInterrupt("Installation interrupted")
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
+
+    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
+    # much ourselves, but what we print should appear before output from `make` and other build
+    # tools.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
+    )
 
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
@@ -455,28 +506,39 @@ def worker_function(
                 restage,
                 skip_patch,
                 fake,
+                install_source,
                 state_stream,
                 log_path,
                 spack.store.STORE,
+                run_tests,
             )
-    except Exception:
+    except BaseException:
         traceback.print_exc()  # log the traceback to the log file
         exit_code = 1
     finally:
         tee.close()
         state_stream.close()
 
-    if exit_code == 0 and not os.path.lexists(spec.package.install_log_path):
+    if exit_code == 0:
         # Try to install the compressed log file
-        try:
-            with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
-                # Use GzipFile directly so we can omit filename / mtime in header
-                gzip_file = GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g)
-                shutil.copyfileobj(f, gzip_file)
-                gzip_file.close()
-            os.unlink(log_path)
-        except Exception:
-            pass  # don't fail the build just because log compression failed
+        if not os.path.lexists(spec.package.install_log_path):
+            try:
+                with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
+                    # Use GzipFile directly so we can omit filename / mtime in header
+                    gzip_file = GzipFile(
+                        filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g
+                    )
+                    shutil.copyfileobj(f, gzip_file)
+                    gzip_file.close()
+            except Exception:
+                pass  # don't fail the build just because log compression failed
+
+        # Remove the uncompressed log file from the stage dir on successful install.
+        if not keep_stage:
+            try:
+                os.unlink(log_path)
+            except OSError:
+                pass
 
     sys.exit(exit_code)
 
@@ -561,14 +623,17 @@ def _install(
     restage: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
     state_stream: io.TextIOWrapper,
     log_path: str,
     store: spack.store.Store = spack.store.STORE,
+    run_tests: bool = False,
 ) -> None:
     """Install a spec from build cache or source."""
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+    pkg.run_tests = run_tests
 
     if fake:
         store.layout.create_install_directory(spec)
@@ -578,7 +643,7 @@ def _install(
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if mirrors and install_from_buildcache(mirrors, spec, unsigned, state_stream):
+        if install_from_buildcache(mirrors, spec, unsigned, state_stream):
             spack.hooks.post_install(spec, explicit)
             return
         elif install_policy == "cache_only":
@@ -632,11 +697,22 @@ def _install(
 
         os.chdir(stage.source_path)
 
+        if install_source and os.path.isdir(stage.source_path):
+            src_target = os.path.join(spec.prefix, "share", spec.name, "src")
+            fs.install_tree(stage.source_path, src_target)
+
         spack.hooks.pre_install(spec)
 
         for phase in spack.builder.create(pkg):
             send_state(phase.name, state_stream)
-            phase.execute()
+            spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
+            # Run the install phase with debug output enabled.
+            old_debug = spack.llnl.util.tty.debug_level()
+            spack.llnl.util.tty.set_debug(1)
+            try:
+                phase.execute()
+            finally:
+                spack.llnl.util.tty.set_debug(old_debug)
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)
@@ -648,7 +724,14 @@ class JobServer:
     def __init__(self, num_jobs: int) -> None:
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
+        #: The number of jobs to run concurrently. This translates to `num_jobs - 1` tokens in the
+        #: jobserver.
         self.num_jobs = num_jobs
+        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
+        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
+        #: reflect that yet. This value is used in the UI. The invariant is that self.target_jobs
+        #: can only be modified if self.created is True.
+        self.target_jobs = num_jobs
         self.fifo_path: Optional[str] = None
         self.created = False
         self._setup()
@@ -691,6 +774,35 @@ class JobServer:
         else:
             return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
 
+    def has_target_parallelism(self) -> bool:
+        return self.num_jobs == self.target_jobs
+
+    def increase_parallelism(self) -> None:
+        """Add one token to the jobserver to increase parallelism; this should always work."""
+        if not self.created:
+            return
+        os.write(self.w, b"+")
+        self.target_jobs += 1
+        self.num_jobs += 1
+
+    def decrease_parallelism(self) -> None:
+        """Request an eventual concurrency decrease by 1."""
+        if not self.created or self.target_jobs <= 1:
+            return
+        self.target_jobs -= 1
+        self.maybe_discard_tokens()
+
+    def maybe_discard_tokens(self) -> None:
+        """Try to get reduce parallelism by discarding tokens."""
+        to_discard = self.num_jobs - self.target_jobs
+        if to_discard <= 0:
+            return
+        try:
+            # The read may return zero or just fewer bytes than requested; we'll try again later.
+            self.num_jobs -= len(os.read(self.r, to_discard))
+        except BlockingIOError:
+            pass
+
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
         tokens actually acquired (may be less than requested, or zero)."""
@@ -706,8 +818,12 @@ class JobServer:
         # The last job to quit has an implicit token, so don't release if we have none.
         if self.tokens_acquired == 0:
             return
-        os.write(self.w, b"+")
         self.tokens_acquired -= 1
+        if self.target_jobs < self.num_jobs:
+            # If a decrease in parallelism is requested, discard a token instead of releasing it.
+            self.num_jobs -= 1
+        else:
+            os.write(self.w, b"+")
 
     def close(self) -> None:
         if self.created and self.num_jobs > 1:
@@ -754,6 +870,8 @@ def start_build(
     keep_prefix: bool,
     skip_patch: bool,
     fake: bool,
+    install_source: bool,
+    run_tests: bool,
     jobserver: JobServer,
 ) -> ChildInfo:
     """Start a new build."""
@@ -793,6 +911,8 @@ def start_build(
             keep_prefix,
             skip_patch,
             fake,
+            install_source,
+            run_tests,
             state_w_conn,
             output_w_conn,
             control_r_conn,
@@ -906,10 +1026,16 @@ class BuildInfo:
         "finished_time",
         "progress_percent",
         "control_w_conn",
+        "log_path",
+        "log_summary",
     )
 
     def __init__(
-        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection]
+        self,
+        spec: spack.spec.Spec,
+        explicit: bool,
+        control_w_conn: Optional[Connection],
+        log_path: Optional[str] = None,
     ) -> None:
         self.state: str = "starting"
         self.explicit: bool = explicit
@@ -921,6 +1047,8 @@ class BuildInfo:
         self.finished_time: Optional[float] = None
         self.progress_percent: Optional[int] = None
         self.control_w_conn = control_w_conn
+        self.log_path: Optional[str] = log_path
+        self.log_summary: Optional[str] = None
 
 
 class BuildStatus:
@@ -933,6 +1061,9 @@ class BuildStatus:
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
+        color: Optional[bool] = None,
+        verbose: bool = False,
+        filter_padding: bool = False,
     ) -> None:
         #: Ordered dict of build ID -> info
         self.total = total
@@ -950,13 +1081,23 @@ class BuildStatus:
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
         self.search_term = ""
         self.search_mode = False
+        self.log_ends_with_newline = True
+        self.actual_jobs: int = 0
+        self.target_jobs: int = 0
 
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
         self.terminal_size = os.terminal_size((0, 0))
         self.terminal_size_changed: bool = True
         self.get_time = get_time
-        self.is_tty = is_tty if is_tty is not None else self.stdout.isatty()
+        self.is_tty = is_tty if is_tty is not None else stdout.isatty()
+        if color is not None:
+            self.color = color
+        else:
+            self.color = spack.llnl.util.tty.color.get_color_when(stdout)
+        #: Verbose mode only applies to non-TTY where we want to track a single build log.
+        self.verbose = verbose and not self.is_tty
+        self.filter_padding = filter_padding
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -964,17 +1105,32 @@ class BuildStatus:
         self.dirty = True
 
     def add_build(
-        self, spec: spack.spec.Spec, explicit: bool, control_w_conn: Optional[Connection] = None
+        self,
+        spec: spack.spec.Spec,
+        explicit: bool,
+        control_w_conn: Optional[Connection] = None,
+        log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
-        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn)
+        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn, log_path)
         self.dirty = True
+        # Track the new build's logs when we're not already following another build. This applies
+        # only in non-TTY verbose mode.
+        if self.verbose and not self.tracked_build_id and control_w_conn is not None:
+            self.tracked_build_id = spec.dag_hash()
+            try:
+                os.write(control_w_conn.fileno(), b"1")
+            except OSError:
+                pass
 
     def toggle(self) -> None:
         """Toggle between overview mode and following a specific build."""
         if self.overview_mode:
             self.next()
         else:
+            if not self.log_ends_with_newline:
+                self.stdout.buffer.write(b"\n")
+                self.log_ends_with_newline = True
             self.active_area_rows = 0
             self.search_term = ""
             self.search_mode = False
@@ -991,6 +1147,7 @@ class BuildStatus:
     def search_input(self, input: str) -> None:
         """Handle keyboard input when in search mode"""
         if input in ("\r", "\n"):
+            self.log_ends_with_newline = False
             self.next(1)
         elif input == "\x1b":  # Escape
             self.search_mode = False
@@ -1018,7 +1175,8 @@ class BuildStatus:
         matching = [
             build_id
             for build_id, build in self.builds.items()
-            if build.finished_time is None and self._is_displayed(build)
+            if (build.finished_time is None or build.state == "failed")
+            and self._is_displayed(build)
         ]
         if not matching:
             return None
@@ -1052,17 +1210,43 @@ class BuildStatus:
 
         self.tracked_build_id = new_build_id
 
-        # Tell the user we're following new logs, and instruct the child to start sending them.
-        self.stdout.write(
-            f"\n==> Following logs of {new_build.name}" f"\033[0;36m@{new_build.version}\033[0m\n"
+        version_str = (
+            f"\033[0;36m@{new_build.version}\033[0m" if self.color else f"@{new_build.version}"
         )
-        self.stdout.flush()
-        try:
-            conn = new_build.control_w_conn
-            if conn is not None:
-                os.write(conn.fileno(), b"1")
-        except (KeyError, OSError):
-            pass
+        prefix = "" if self.log_ends_with_newline else "\n"
+
+        if new_build.state == "failed":
+            # For failed builds, show the stored log summary instead of following live logs.
+            self.stdout.write(f"{prefix}==> Log summary of {new_build.name}{version_str}\n")
+            self.log_ends_with_newline = True
+            if new_build.log_summary:
+                self.stdout.write(new_build.log_summary)
+            if new_build.log_path:
+                if not new_build.log_summary:
+                    self.stdout.write("No errors parsed from log, see full log: ")
+                else:
+                    self.stdout.write("Full log: ")
+                self.stdout.write(f"{new_build.log_path}\n")
+            self.stdout.flush()
+        else:
+            # Tell the user we're following new logs, and instruct the child to start sending.
+            self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
+            self.log_ends_with_newline = True
+            self.stdout.flush()
+            try:
+                conn = new_build.control_w_conn
+                if conn is not None:
+                    os.write(conn.fileno(), b"1")
+            except (KeyError, OSError):
+                pass
+
+    def set_jobs(self, actual: int, target: int) -> None:
+        """Set the actual and target number of jobs to run concurrently."""
+        if actual == self.actual_jobs and target == self.target_jobs:
+            return
+        self.actual_jobs = actual
+        self.target_jobs = target
+        self.dirty = True
 
     def update_state(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
@@ -1074,26 +1258,33 @@ class BuildStatus:
             self.completed += 1
             build_info.finished_time = self.get_time() + CLEANUP_TIMEOUT
 
-            if build_id == self.tracked_build_id and not self.overview_mode:
-                self.toggle()
+            # Stop tracking the finished build's logs.
+            if build_id == self.tracked_build_id:
+                if not self.overview_mode:
+                    self.toggle()
+                if self.verbose:
+                    self.tracked_build_id = ""
 
         self.dirty = True
 
-        # For non-TTY output, print state changes immediately without colors
+        # For non-TTY output, print state changes immediately
         if not self.is_tty:
-            if build_info.external:
-                indicator = "[e]"
-            elif state == "finished":
-                indicator = "[+]"
-            elif state == "failed":
-                indicator = "[x]"
-            else:
-                indicator = "[ ]"
-            suffix = build_info.prefix if state == "finished" else state
-            self.stdout.write(
-                f"{indicator} {build_info.hash} {build_info.name}@{build_info.version} {suffix}\n"
-            )
+            line = "".join(self._generate_line_components(build_info, static=True))
+            self.stdout.write(line + "\n")
             self.stdout.flush()
+
+    def parse_log_summary(self, build_id: str) -> None:
+        """Parse the build log for errors/warnings and store the summary."""
+        build_info = self.builds[build_id]
+        if not build_info.log_path or not os.path.exists(build_info.log_path):
+            return
+        buf = io.StringIO()
+        spack.build_environment.write_log_summary(
+            buf, f"{build_info.name}@{build_info.version} build", build_info.log_path
+        )
+        summary = buf.getvalue()
+        if summary:
+            build_info.log_summary = summary
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -1132,7 +1323,7 @@ class BuildStatus:
                 del self.builds[build_id]
                 self.dirty = True
 
-        if not self.dirty:
+        if not self.dirty and not finalize:
             return
 
         # Build the overview output in a buffer and print all at once to avoid flickering.
@@ -1156,18 +1347,34 @@ class BuildStatus:
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
-        long_header_len = len(
-            f"Progress: {self.completed}/{self.total}  /: filter  v: logs  n/p: next/prev"
-        )
-        if long_header_len < max_width:
-            self._println(
-                buffer,
-                f"\033[1mProgress:\033[0m {self.completed}/{self.total}"
-                "  \033[36m/\033[0m: filter  \033[36mv\033[0m: logs"
-                "  \033[36mn\033[0m/\033[36mp\033[0m: next/prev",
+
+        if not finalize:
+            if self.color:
+                bold = "\033[1m"
+                reset = "\033[0m"
+                cyan = "\033[36m"
+            else:
+                bold = reset = cyan = ""
+
+            if self.actual_jobs != self.target_jobs:
+                jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
+            else:
+                jobs_str = str(self.target_jobs)
+            long_header_len = len(
+                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
+                "  /: filter  v: logs  n/p: next/prev"
             )
-        else:
-            self._println(buffer, f"\033[1mProgress:\033[0m {self.completed}/{self.total}")
+            if long_header_len < max_width:
+                self._println(
+                    buffer,
+                    f"{bold}Progress:{reset} {self.completed}/{self.total}"
+                    f"  {cyan}+{reset}/{cyan}-{reset}: "
+                    f"{jobs_str} jobs"
+                    f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                    f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
+                )
+            else:
+                self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
         displayed_builds = (
             [b for b in self.builds.values() if self._is_displayed(b)]
@@ -1217,11 +1424,13 @@ class BuildStatus:
         # Discard logs we are not following. Generally this should not happen as we tell the child
         # to only send logs when we are following it. It could maybe happen while transitioning
         # between builds.
-        if self.overview_mode or build_id != self.tracked_build_id:
+        if build_id != self.tracked_build_id:
             return
-        # TODO: drop initial bytes from data until first newline (?)
+        if self.filter_padding:
+            data = padding_filter_bytes(data)
         self.stdout.buffer.write(data)
         self.stdout.flush()
+        self.log_ends_with_newline = data.endswith(b"\n")
 
     def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
         line_width = 0
@@ -1234,7 +1443,9 @@ class BuildStatus:
             buffer.write(component)
         self._println(buffer)
 
-    def _generate_line_components(self, build_info: BuildInfo) -> Generator[str, None, None]:
+    def _generate_line_components(
+        self, build_info: BuildInfo, static: bool = False
+    ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
         if build_info.external:
@@ -1243,40 +1454,55 @@ class BuildStatus:
             indicator = "[+]"
         elif build_info.state == "failed":
             indicator = "[x]"
+        elif static:
+            indicator = "[ ]"
         else:
             indicator = f"[{self.spinner_chars[self.spinner_index]}]"
 
-        if build_info.state == "failed":
-            yield "\033[31m"  # red
-        elif build_info.state == "finished":
-            yield "\033[32m"  # green
+        if self.color:
+            if build_info.state == "failed":
+                yield "\033[31m"  # red
+            elif build_info.state == "finished":
+                yield "\033[32m"  # green
 
         yield indicator
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
         yield " "
-        yield "\033[0;90m"  # dark gray
+        if self.color:
+            yield "\033[0;90m"  # dark gray
         yield build_info.hash
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
         yield " "
 
         # Package name in bold white if explicit, default otherwise
         if build_info.explicit:
-            yield "\033[1;37m"  # bold white
+            if self.color:
+                yield "\033[1;37m"  # bold white
             yield build_info.name
-            yield "\033[0m"  # reset
+            if self.color:
+                yield "\033[0m"  # reset
         else:
             yield build_info.name
 
-        yield "\033[0;36m"  # cyan
+        if self.color:
+            yield "\033[0;36m"  # cyan
         yield f"@{build_info.version}"
-        yield "\033[0m"  # reset
+        if self.color:
+            yield "\033[0m"  # reset
 
         # progress or state
         if build_info.progress_percent is not None:
             yield " fetching"
             yield f": {build_info.progress_percent}%"
         elif build_info.state == "finished":
-            yield f" {build_info.prefix}"
+            prefix = build_info.prefix
+            yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
+        elif build_info.state == "failed":
+            yield " failed"
+            if build_info.log_path:
+                yield f": {build_info.log_path}"
         else:
             yield f" {build_info.state}"
 
@@ -1298,6 +1524,7 @@ class BuildGraph:
         install_deps: bool,
         database: spack.database.Database,
         overwrite_set: Optional[Set[str]] = None,
+        tests: Union[bool, List[str], Set[str]] = False,
     ):
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
@@ -1307,7 +1534,7 @@ class BuildGraph:
         self.parent_to_child: Dict[str, Set[str]] = {}
         self.child_to_parent: Dict[str, Set[str]] = {}
         overwrite_set = overwrite_set or set()
-        specs_to_prune: Set[str] = set()
+        self.pruned: Set[str] = set()
         stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
             (s, root_policy) for s in self.nodes.values()
         ]
@@ -1329,12 +1556,15 @@ class BuildGraph:
 
                 # Conditionally include build dependencies
                 if record and record.installed and key not in overwrite_set:
-                    specs_to_prune.add(key)
+                    self.pruned.add(key)
                     dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
                 elif install_policy == "cache_only" and not include_build_deps:
                     dependencies = spec.dependencies(deptype=dt.LINK | dt.RUN)
                 else:
-                    dependencies = spec.dependencies(deptype=dt.BUILD | dt.LINK | dt.RUN)
+                    deptype = dt.BUILD | dt.LINK | dt.RUN
+                    if tests is True or (tests and spec.name in tests):
+                        deptype |= dt.TEST
+                    dependencies = spec.dependencies(deptype=deptype)
 
                 self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
@@ -1355,11 +1585,11 @@ class BuildGraph:
 
         # If we're not installing the package itself, mark root specs for pruning too
         if not install_package:
-            specs_to_prune.update(s.dag_hash() for s in specs)
+            self.pruned.update(s.dag_hash() for s in specs)
 
         # Prune specs from the build graph. Their parents become parents of their children and
         # their children become children of their parents.
-        for key in specs_to_prune:
+        for key in self.pruned:
             for parent in self.child_to_parent.get(key, ()):
                 self.parent_to_child[parent].remove(key)
                 self.parent_to_child[parent].update(self.parent_to_child.get(key, ()))
@@ -1464,9 +1694,7 @@ def schedule_builds(
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
-    try:
-        db.lock.acquire_read(timeout=1e-9)
-    except spack.util.lock.LockTimeoutError:
+    if not db.lock.try_acquire_read():
         return ScheduleResult(blocked, to_start, newly_installed)
 
     try:
@@ -1478,19 +1706,14 @@ def schedule_builds(
             spec = build_graph.nodes[dag_hash]
             lock = prefix_locker.lock(spec)
 
-            try:
-                lock.acquire_write(timeout=1e-9)
+            if lock.try_acquire_write():
                 blocked = False
                 have_write = True
-            except spack.util.lock.LockTimeoutError:
-                # Write lock failed: either another process is actively building, or it
-                # finished and downgraded to a read lock. Try a read lock to find out.
-                try:
-                    lock.acquire_read(timeout=1e-9)
-                except spack.util.lock.LockTimeoutError:
-                    idx += 1
-                    continue  # active build in progress; try the next spec
+            elif lock.try_acquire_read():
                 have_write = False
+            else:
+                idx += 1
+                continue
 
             # Check installed status under the DB read lock and prefix lock.
             upstream, record = db.query_by_spec_hash(dag_hash)
@@ -1540,6 +1763,98 @@ def schedule_builds(
     return ScheduleResult(blocked, to_start, newly_installed)
 
 
+def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:
+    """Map each node in a graph to the set of root node DAG hashes that can reach it.
+
+    Args:
+        roots: List of root specs.
+
+    Returns:
+        A dictionary mapping each node's dag_hash to a frozenset of root dag_hashes.
+    """
+    node_to_roots: Dict[str, FrozenSet[str]] = {
+        s.dag_hash(): frozenset([s.dag_hash()]) for s in roots
+    }
+
+    for edge in spack.traverse.traverse_edges(
+        roots, order="topo", cover="edges", root=False, key=spack.traverse.by_dag_hash
+    ):
+        parent_roots = node_to_roots[edge.parent.dag_hash()]
+        child_hash = edge.spec.dag_hash()
+        existing = node_to_roots.get(child_hash)
+
+        if existing is None:
+            node_to_roots[child_hash] = parent_roots  # keep a reference if no mutation is needed
+        elif not parent_roots.issubset(existing):
+            node_to_roots[child_hash] = existing | parent_roots
+
+    return node_to_roots
+
+
+class ReportData:
+    """Data collected for reports during installation."""
+
+    def __init__(self, roots: List[spack.spec.Spec]):
+        self.roots = roots
+        self.build_records: Dict[str, spack.report.InstallRecord] = {}
+
+    def start_record(self, spec: spack.spec.Spec) -> None:
+        """Begin an InstallRecord for a spec that is about to be built."""
+        if spec.external:
+            return
+        record = spack.report.InstallRecord(spec)
+        record.start()
+        self.build_records[spec.dag_hash()] = record
+
+    def finish_record(self, spec: spack.spec.Spec, exitcode: int) -> None:
+        """Mark the InstallRecord for a spec as succeeded or failed."""
+        record = self.build_records.get(spec.dag_hash())
+        if record is None or spec.external:
+            return
+        if exitcode == 0:
+            record.succeed()
+        else:
+            record.fail(
+                spack.error.InstallError(
+                    f"Installation of {spec.name} failed; see log for details"
+                )
+            )
+
+    def finalize(
+        self, reports: Dict[str, spack.report.RequestRecord], build_graph: BuildGraph
+    ) -> None:
+        """Finalize InstallRecords and append them to RequestRecords after all builds finish.
+
+        Args:
+            reports: Map of root dag_hash to RequestRecord to append to.
+            build_graph: The build graph containing all nodes and their states.
+        """
+        node_to_roots = _node_to_roots(self.roots)
+
+        for spec in spack.traverse.traverse_nodes(self.roots):
+            h = spec.dag_hash()
+            if h in self.build_records:
+                record = self.build_records[h]
+            else:
+                record = spack.report.InstallRecord(spec)
+                if spec.external:
+                    msg = "Spec is external"
+                elif h in build_graph.pruned:
+                    msg = "Spec was not scheduled for installation"
+                elif h in build_graph.nodes:
+                    msg = "Dependencies failed to install"
+                else:
+                    # If not installed or failed (build_records), not statically pruned ahead of
+                    # time (build_graph.pruned), and also not scheduled (build_graph.nodes), it
+                    # means it was in pending_builds or running_builds but never started/finished.
+                    # This branch is followed on KeyboardInterrupt and --fail-fast.
+                    msg = "Installation was interrupted"
+                record.skip(msg=msg)
+
+            for root_hash in node_to_roots[h]:
+                reports[root_hash].append_record(record)
+
+
 class PackageInstaller:
 
     def __init__(
@@ -1570,14 +1885,13 @@ class PackageInstaller:
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
-        if install_source:
-            raise NotImplementedError("Installing sources is not implemented")
-        elif stop_at is not None:
+        self.install_source = install_source
+
+        if stop_at is not None:
             raise NotImplementedError("Stopping at an install phase is not implemented")
         elif stop_before is not None:
             raise NotImplementedError("Stopping before an install phase is not implemented")
-        elif tests is not False:
-            raise NotImplementedError("Tests during install are not implemented")
+        self.tests: Union[bool, List[str], Set[str]] = tests
 
         self.db = spack.store.STORE.db
 
@@ -1606,6 +1920,7 @@ class PackageInstaller:
             install_deps,
             self.db,
             self.overwrite,
+            tests,
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
@@ -1633,10 +1948,17 @@ class PackageInstaller:
         else:
             self.explicit = explicit
 
+        self.verbose = verbose
         self.running_builds: Dict[int, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
-        self.build_status = BuildStatus(len(self.build_graph.nodes))
+        self.build_status = BuildStatus(
+            len(self.build_graph.nodes),
+            verbose=verbose,
+            filter_padding=spack.store.STORE.has_padding(),
+        )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        self.build_status.actual_jobs = self.jobs
+        self.build_status.target_jobs = self.jobs
         if concurrent_packages is None:
             concurrent_packages_config = spack.config.get("config:concurrent_packages", 0)
             # The value 0 in config means no limit (other than self.jobs)
@@ -1646,7 +1968,11 @@ class PackageInstaller:
                 self.capacity = concurrent_packages_config
         else:
             self.capacity = concurrent_packages
-        self.reports: Dict[str, spack.report.RequestRecord] = {}
+
+        #: The reports property is what the old installer has and used as public interface.
+        self.reports = {spec.dag_hash(): spack.report.RequestRecord(spec) for spec in specs}
+        #: Internal data collected for reports during installation.
+        self.report_data = ReportData(specs)
 
     def install(self) -> None:
         self._installer()
@@ -1667,6 +1993,8 @@ class PackageInstaller:
         if sys.stdout.isatty():
             # Listen to terminal resizing events with self-pipe trick.
             sigwinch_r, sigwinch_w = os.pipe()
+            os.set_blocking(sigwinch_r, False)
+            os.set_blocking(sigwinch_w, False)
 
             def _handle_sigwinch(signum: int, frame: object) -> None:
                 try:
@@ -1691,16 +2019,23 @@ class PackageInstaller:
 
             while self.pending_builds or self.running_builds or finished_builds:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
-                # spec is not locked by another process.
-                can_schedule_more = self.pending_builds and self.capacity and not blocked
-                if can_schedule_more and jobserver.r not in selector.get_map():
+                # spec is not locked by another process. Also listen if the target parallelism is
+                # reduced.
+                wake_on_jobserver = (
+                    self.pending_builds
+                    and self.capacity
+                    and not blocked
+                    or not jobserver.has_target_parallelism()
+                )
+                if wake_on_jobserver and jobserver.r not in selector.get_map():
                     selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not can_schedule_more and jobserver.r in selector.get_map():
+                elif not wake_on_jobserver and jobserver.r in selector.get_map():
                     selector.unregister(jobserver.r)
 
                 stdin_ready = False
 
-                events = selector.select(timeout=SPINNER_INTERVAL)
+                timeout = SPINNER_INTERVAL if self.build_status.is_tty else DATABASE_WRITE_INTERVAL
+                events = selector.select(timeout=timeout)
 
                 finished_pids = []
 
@@ -1720,14 +2055,23 @@ class PackageInstaller:
                     elif data == "sigwinch":
                         os.read(sigwinch_r, 64)  # drain the pipe
                         self.build_status.on_resize()
+                    elif data == "jobserver" and not jobserver.has_target_parallelism():
+                        jobserver.maybe_discard_tokens()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
                 for pid in finished_pids:
                     build = self.running_builds.pop(pid)
                     self.capacity += 1
                     jobserver.release()
+                    self._drain_child_output(build)
+                    self.state_buffers.pop(build.state_r_conn.fileno(), None)
+                    self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
                     build.cleanup(selector)
-                    if build.proc.exitcode == 0:
+                    exitcode = build.proc.exitcode
+                    assert exitcode is not None, "Finished build should have exit code set"
+                    self.report_data.finish_record(build.spec, exitcode)
+                    if exitcode == 0:
                         # Add successful builds for database insertion (after a short delay)
                         finished_builds.append(build)
                         self.build_graph.enqueue_parents(
@@ -1741,6 +2085,7 @@ class PackageInstaller:
                         # reported as failures in the UI.
                         failures.append(build.spec)
                         self.build_status.update_state(build.spec.dag_hash(), "failed")
+                        self.build_status.parse_log_summary(build.spec.dag_hash())
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -1765,6 +2110,12 @@ class PackageInstaller:
                         self.build_status.next(1)
                     elif char == "p" or char == "N":
                         self.build_status.next(-1)
+                    elif char == "+":
+                        jobserver.increase_parallelism()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                    elif char == "-":
+                        jobserver.decrease_parallelism()
+                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 # Insert into the database if we have any finished builds, and either the delay
                 # interval has passed, or we're done with all builds. The database save is not
@@ -1808,7 +2159,10 @@ class PackageInstaller:
             for child in self.running_builds.values():
                 try:
                     jobserver.release()
-                    child.proc.join()
+                    child.proc.join(timeout=30)
+                    if child.proc.is_alive():
+                        child.proc.kill()
+                        child.proc.join()
                 except Exception:
                     pass
 
@@ -1862,15 +2216,16 @@ class PackageInstaller:
             if db_exc is not None:
                 raise db_exc
 
+        try:
+            self.report_data.finalize(self.reports, build_graph=self.build_graph)
+        except Exception as e:
+            spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+
         if failures:
             for s in failures:
-                log_path = self.log_paths.get(s.dag_hash())
-                if log_path and os.path.exists(log_path):
-                    out = io.StringIO()
-                    spack.build_environment.write_log_summary(out, f"{s} build", log_path)
-                    summary = out.getvalue()
-                    if summary:
-                        sys.stderr.write(summary)
+                build_info = self.build_status.builds[s.dag_hash()]
+                if build_info and build_info.log_summary:
+                    sys.stderr.write(build_info.log_summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
@@ -1879,13 +2234,10 @@ class PackageInstaller:
     def _save_to_db(
         self, finished_builds: List[ChildInfo], retained_read_locks: List[spack.util.lock.Lock]
     ) -> bool:
-        try:
-            # Only try to get the lock once (non-blocking). If it fails, try it next time.
-            if self.db.lock.acquire_write(timeout=1e-9):
-                self.db._read()
-        except spack.util.lock.LockTimeoutError:
+        if not self.db.lock.try_acquire_write():
             return False
         try:
+            self.db._read()
             for build in finished_builds:
                 self.db._add(build.spec, explicit=build.explicit)
         finally:
@@ -1956,6 +2308,8 @@ class PackageInstaller:
         explicit = dag_hash in self.explicit
         spec = self.build_graph.nodes[dag_hash]
         is_develop = spec.is_develop
+        tests = self.tests
+        run_tests = tests is True or bool(tests and spec.name in tests)
         child_info = start_build(
             spec,
             explicit=explicit,
@@ -1973,6 +2327,8 @@ class PackageInstaller:
             keep_prefix=self.keep_prefix,
             skip_patch=self.skip_patch,
             fake=self.fake,
+            install_source=self.install_source,
+            run_tests=run_tests,
             jobserver=jobserver,
         )
         self.log_paths[dag_hash] = child_info.log_path
@@ -1988,8 +2344,12 @@ class PackageInstaller:
         )
         selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         self.build_status.add_build(
-            child_info.spec, explicit=explicit, control_w_conn=child_info.control_w_conn
+            child_info.spec,
+            explicit=explicit,
+            control_w_conn=child_info.control_w_conn,
+            log_path=child_info.log_path,
         )
+        self.report_data.start_record(spec)
 
     def _handle_child_logs(
         self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
@@ -1999,6 +2359,8 @@ class PackageInstaller:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
             data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+        except BlockingIOError:
+            return
         except OSError:
             data = None
 
@@ -2011,6 +2373,19 @@ class PackageInstaller:
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
+    def _drain_child_output(self, child_info: ChildInfo) -> None:
+        """Read and print any remaining output from a finished child's pipe."""
+        dag_hash = child_info.spec.dag_hash()
+        r_fd = child_info.output_r_conn.fileno()
+        try:
+            while True:
+                data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+                if not data:
+                    break
+                self.build_status.print_logs(dag_hash, data)
+        except OSError:
+            pass
+
     def _handle_child_state(
         self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
@@ -2019,6 +2394,8 @@ class PackageInstaller:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
             data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+        except BlockingIOError:
+            return
         except OSError:
             data = None
 
@@ -2041,10 +2418,15 @@ class PackageInstaller:
         for line in lines:
             if not line:
                 continue
-            message = json.loads(line)
+            try:
+                message = json.loads(line)
+            except json.JSONDecodeError:
+                continue
             if "state" in message:
                 self.build_status.update_state(child_info.spec.dag_hash(), message["state"])
             elif "progress" in message and "total" in message:
                 self.build_status.update_progress(
                     child_info.spec.dag_hash(), message["progress"], message["total"]
                 )
+            elif "installed_from_binary_cache" in message:
+                child_info.spec.package.installed_from_binary_cache = True

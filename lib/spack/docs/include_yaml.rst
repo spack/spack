@@ -25,12 +25,14 @@ You can include a single configuration file or an entire configuration *scope* l
 
    include:
    - /path/to/a/required/config.yaml
+   - $MY_SPECIAL_CONFIG_FILE
+   - path: $HOME/path/to/my/project/packages.yaml
    - path: /path/to/$os/$target/config
      optional: true
    - path: /path/to/os-specific/config-dir
      when: os == "ventura"
 
-Included paths may be absolute, relative (to the configuration file), or they can be specified as URLs.
+Included paths may be absolute, relative (to the configuration file), specified as URLs, or provided in an environment variable (e.g., ``$MY_SPECIAL_CONFIG_FILE``).
 
 * ``optional``: Spack will raise an error when an included configuration file does not exist, *unless* it is explicitly made ``optional: true``, like the second path above.
 * ``when``: Configuration scopes can also be included *conditionally* with ``when``.
@@ -82,6 +84,10 @@ We would then configure the ``include.yaml`` file as follows::
      - USC/config/config.yaml
      - USC/config/packages.yaml
 
+.. note::
+
+   The git URL can be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
+
 If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
 Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
 In this example, the new scopes can be seen by running::
@@ -107,7 +113,7 @@ If only the ``USC/config`` directory was listed under ``paths``, then there woul
    ``git:``, ``branch:``, ``commit:``, and ``tag:`` attributes.
 
 .. versionadded:: 1.2
-   ``name:`` attribute.
+   ``name:`` attribute and git environment variable support.
 
 Precedence
 ~~~~~~~~~~

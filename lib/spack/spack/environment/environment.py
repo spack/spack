@@ -191,8 +191,12 @@ default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
 
+# (DEPRECATED) Use as the heading/name in the manifest is deprecated.
 # The key for any concrete specs included in a lockfile.
 lockfile_include_key = "include_concrete"
+
+# The name/heading for include paths in the manifest file.
+manifest_include_name = "include"
 
 
 def installed_specs():
@@ -329,7 +333,7 @@ def as_env_dir(name_or_dir):
         validate_env_name(name_or_dir)
         if not exists(name_or_dir):
             raise SpackEnvironmentError("no such environment '%s'" % name_or_dir)
-        return root(name_or_dir)
+        return _root(name_or_dir)
 
 
 def environment_from_name_or_dir(name_or_dir):
@@ -1188,14 +1192,8 @@ class Environment:
         if self.views == dict():
             self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
 
-    def _process_concrete_includes(self):
-        """Extract and load into memory included concrete spec data."""
-        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
-        # Expand config and environment variables
-        self.included_concrete_env_root_dirs = [
-            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
-        ]
-
+    def _load_concrete_include_data(self):
+        """Load concrete include specs data from included concrete directories."""
         if self.included_concrete_env_root_dirs:
             if os.path.exists(self.lock_path):
                 with open(self.lock_path, encoding="utf-8") as f:
@@ -1206,14 +1204,61 @@ class Environment:
             else:
                 self.include_concrete_envs()
 
+    def _process_included_lockfiles(self):
+        """Extract and load into memory included lock file data."""
+        includes = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
+        if includes:
+            tty.warn(
+                f"Use of '{lockfile_include_key}' in manifest files "
+                f"is deprecated. The key should be '{manifest_include_name}' "
+                f"and the path should end with '{lockfile_name}'. Run "
+                f"'spack env update {self.name}' to update the manifest."
+            )
+            includes = [os.path.join(inc, lockfile_name) for inc in includes]
+        includes += self.manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
+        if not includes:
+            return
+
+        # Expand config and environment variables for concrete environments,
+        # indicated by the inclusion of lock files.
+        self.included_concrete_env_root_dirs = []
+
+        for entry in includes:
+            include = spack.config.included_path(entry)
+            if isinstance(include, spack.config.GitIncludePaths):
+                # Git includes must be cloned first; paths are relative to the
+                # clone destination, not to the manifest directory.
+                destination = include._clone()
+                if destination is None:
+                    continue
+                resolved = [os.path.join(destination, p) for p in include.paths]
+            else:
+                resolved = [
+                    spack.util.path.canonicalize_path(p, default_wd=self.path)
+                    for p in include.paths
+                ]
+
+            for path in resolved:
+                if os.path.basename(path) != lockfile_name:
+                    continue
+
+                tty.debug(f"Adding {path} to the concrete environment root directories")
+                self.included_concrete_env_root_dirs.append(os.path.dirname(path))
+
+        # Cache concrete environments for required lock files.
+        self._load_concrete_include_data()
+
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
         self.views = {}
         self._sync_speclists()
         self._process_view(spack.config.get("view", True))
-        self._process_concrete_includes()
+        self._process_included_lockfiles()
 
     def _sync_speclists(self):
+        self._spec_lists_parser = SpecListParser(
+            toolchains=spack.config.CONFIG.get("toolchains", {})
+        )
         self.spec_lists = {}
         self.spec_lists.update(
             self._spec_lists_parser.parse_definitions(
@@ -1340,14 +1385,14 @@ class Environment:
         return self.manifest.scope_name
 
     def include_concrete_envs(self):
-        """Copy and save the included envs' specs internally"""
+        """Copy and save the included environments' specs internally."""
 
         root_hash_seen = set()
         concrete_hash_seen = set()
         self.included_concrete_spec_data = {}
 
         for env_path in self.included_concrete_env_root_dirs:
-            # Check that environment exists
+            # Check that the environment (lockfile) exists
             if not is_env_dir(env_path):
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
@@ -3041,7 +3086,7 @@ def initialize_environment_dir(
         return
 
     # TODO: make this recursive
-    includes = manifest[TOP_LEVEL_KEY].get("include", [])
+    includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
     paths = spack.config.paths_from_includes(includes)
     for path in paths:
         if os.path.isabs(path):
@@ -3091,13 +3136,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         lockfile = manifest_dir / lockfile_name
         with lockfile.open("r", encoding="utf-8") as f:
             data = sjson.load(f)
-        user_specs = data["roots"]
+        roots = data["roots"]
+
+        user_specs_by_group: Dict[str, List[str]] = {}
+        for item in roots:
+            # "group" is not there for Lockfile v6 and lower
+            group = item.get("group", DEFAULT_USER_SPEC_GROUP)
+            user_specs_by_group.setdefault(group, []).append(item["spec"])
 
         default_content = manifest_dir / manifest_name
         default_content.write_text(default_manifest_yaml())
         manifest = EnvironmentManifestFile(manifest_dir)
-        for item in user_specs:
-            manifest.add_user_spec(item["spec"])
+
+        for group, specs in user_specs_by_group.items():
+            for spec in specs:
+                manifest.add_user_spec(spec, group=group)
+
         manifest.flush()
         return manifest
 
@@ -3208,15 +3262,44 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
         return group
 
-    def add_user_spec(self, user_spec: str) -> None:
-        """Appends the user spec passed as input to the default list of root specs.
+    def add_user_spec(self, user_spec: str, *, group: Optional[str] = None) -> None:
+        """Appends the user spec passed as input to the list of root specs for the given group.
 
         Args:
             user_spec: user spec to be appended
+            group: group where the spec should be added. If None, the default group is used.
         """
-        self.configuration.setdefault("specs", []).append(user_spec)
-        self._user_specs[DEFAULT_USER_SPEC_GROUP].append(user_spec)
+        group = group or DEFAULT_USER_SPEC_GROUP
+
+        if group == DEFAULT_USER_SPEC_GROUP:
+            # Append to top-most specs: attribute
+            specs_yaml = self.configuration.setdefault("specs", [])
+            specs_yaml.append(user_spec)
+        else:
+            # Append to specs: attribute within a group
+            group_in_yaml = self._get_group(group)
+            group_in_yaml.setdefault("specs", []).append(user_spec)
+
+        self._user_specs[group].append(user_spec)
         self.changed = True
+
+    def _get_group(self, group: str) -> Dict:
+        """Find or create the group entry in the manifest"""
+        specs_yaml = self.configuration.setdefault("specs", [])
+        group_entry = None
+        for item in specs_yaml:
+            if isinstance(item, dict) and item.get("group") == group:
+                group_entry = item
+                break
+
+        if group_entry is None:
+            group_entry = {"group": group, "specs": []}
+            specs_yaml.append(group_entry)
+            self._groups[group] = tuple()
+            self._config_override[group] = None
+            self._user_specs[group] = []
+
+        return group_entry
 
     def remove_user_spec(self, user_spec: str) -> None:
         """Removes the user spec passed as input from the default list of root specs

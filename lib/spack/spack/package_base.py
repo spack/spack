@@ -2041,8 +2041,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
-    def unit_test_check(self) -> bool:
-        """Hook for unit tests to assert things about package internals.
+    def _unit_test_check(self) -> bool:
+        """Hook for Spack's own unit tests to assert things about package internals.
 
         Unit tests can override this function to perform checks after
         ``Package.install`` and all post-install hooks run, but before

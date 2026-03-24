@@ -13,14 +13,15 @@ if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
 import spack.spec
-import spack.util.lock
 from spack.new_installer import (
     OVERWRITE_GARBAGE_SUFFIX,
     JobServer,
     PackageInstaller,
     PrefixPivoter,
+    _node_to_roots,
     schedule_builds,
 )
+from spack.test.traverse import create_dag
 
 
 @pytest.fixture
@@ -375,13 +376,10 @@ class TestScheduleBuilds:
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
-        # Pre-register the lock in the prefix_locker cache, then patch acquire_write to fail.
+        # Pre-register the lock in the prefix_locker cache, then patch try_acquire to fail.
         lock = temporary_store.prefix_locker.lock(spec)
-
-        def always_timeout(timeout=None):
-            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
-
-        monkeypatch.setattr(lock, "acquire_write", always_timeout)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
+        monkeypatch.setattr(lock, "try_acquire_read", lambda: False)
         try:
             blocked, to_start, newly_installed = schedule_builds(
                 pending,
@@ -436,13 +434,10 @@ class TestScheduleBuilds:
         pending = [spec_a.dag_hash(), spec_b.dag_hash()]
         bg = _FakeBuildGraph([spec_a, spec_b])
         jobserver = JobServer(num_jobs=4)
-        # Patch spec_a's lock to always time out, simulating an external write lock.
+        # Patch spec_a's lock to always fail, simulating an external write lock.
         lock_a = temporary_store.prefix_locker.lock(spec_a)
-
-        def always_timeout(timeout=None):
-            raise spack.util.lock.LockTimeoutError("write", lock_a.path, 0, 1)
-
-        monkeypatch.setattr(lock_a, "acquire_write", always_timeout)
+        monkeypatch.setattr(lock_a, "try_acquire_write", lambda: False)
+        monkeypatch.setattr(lock_a, "try_acquire_read", lambda: False)
         try:
             blocked, to_start, newly_installed = schedule_builds(
                 pending,
@@ -480,11 +475,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
-
-        def write_timeout(timeout=None):
-            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
-
-        monkeypatch.setattr(lock, "acquire_write", write_timeout)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
             blocked, to_start, newly_installed = schedule_builds(
                 pending,
@@ -522,11 +513,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
-
-        def write_timeout(timeout=None):
-            raise spack.util.lock.LockTimeoutError("write", lock.path, 0, 1)
-
-        monkeypatch.setattr(lock, "acquire_write", write_timeout)
+        monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
             blocked, to_start, newly_installed = schedule_builds(
                 pending,
@@ -573,3 +560,25 @@ class TestScheduleBuilds:
             for _, _, lock in newly_installed:
                 lock.release_read()
             jobserver.close()
+
+
+def test_nodes_to_roots():
+    """Independent roots don't reach each other's exclusive nodes."""
+    # A - B and C - D are disconnected graphs, A, B and C are "roots".
+    specs = create_dag(nodes=["A", "B", "C", "D"], edges=[("A", "B", "all"), ("C", "D", "all")])
+    a, b, c, d = specs["A"], specs["B"], specs["C"], specs["D"]
+    node_to_roots = _node_to_roots([a, b, c])
+    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
+    assert node_to_roots[b.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
+    assert node_to_roots[c.dag_hash()] == frozenset([c.dag_hash()])
+    assert node_to_roots[d.dag_hash()] == frozenset([c.dag_hash()])
+
+
+def test_nodes_to_roots_shared_dependency():
+    """A dependency shared by two roots is attributed to both."""
+    specs = create_dag(nodes=["A", "B", "C"], edges=[("A", "C", "all"), ("B", "C", "all")])
+    a, b, c = specs["A"], specs["B"], specs["C"]
+    node_to_roots = _node_to_roots([a, b])
+    assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
+    assert node_to_roots[b.dag_hash()] == frozenset([b.dag_hash()])
+    assert node_to_roots[c.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])

@@ -452,13 +452,13 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:
-                response = web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-                if self.current_package_name not in self.buildIds:
-                    resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
-                    match = self.buildid_regexp.search(resp_value)
-                    if match:
-                        buildid = match.group(1)
-                        self.buildIds[self.current_package_name] = buildid
+                with web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                    if self.current_package_name not in self.buildIds:
+                        resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
+                        match = self.buildid_regexp.search(resp_value)
+                        if match:
+                            buildid = match.group(1)
+                            self.buildIds[self.current_package_name] = buildid
             except Exception as e:
                 print(f"Upload to CDash failed: {e}")
 

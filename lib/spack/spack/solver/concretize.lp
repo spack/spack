@@ -588,11 +588,11 @@ imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1, _, _, _).
 imposed_packages(ID, A1) :- imposed_constraint(ID, "depends_on", _, A1, _).
 
-imposed_nodes(node(NodeID, Package), node(X, A1))
-  :- condition_set(node(NodeID, Package), node(X, A1)),
+imposed_nodes(node(ID, Package), node(X, A1))
+  :- condition_set(node(ID, Package), node(X, A1)),
      % We don't want to add build requirements to imposed nodes, to avoid
      % unsat problems when we deal with self-dependencies: gcc@14 %gcc@10
-     not self_build_requirement(node(NodeID, Package), node(X, A1)).
+     not self_build_requirement(node(ID, Package), node(X, A1)).
 
 self_build_requirement(node(X, Package), node(Y, Package)) :- build_requirement(node(X, Package), node(Y, Package)).
 
@@ -1336,14 +1336,14 @@ error(50000, Message) :-
 
 % Variant definitions come from package facts in two ways:
 % 1. unconditional variants are always defined on all nodes for a given package
-variant_definition(node(NodeID, Package), Name, VariantID) :-
+variant_definition(node(ID, Package), Name, VariantID) :-
   pkg_fact(Package, variant_definition(Name, VariantID)),
-  attr("node", node(NodeID, Package)).
+  attr("node", node(ID, Package)).
 
 % 2. conditional variants are only defined if the conditions hold for the node
-variant_definition(node(NodeID, Package), Name, VariantID) :-
+variant_definition(node(ID, Package), Name, VariantID) :-
   pkg_fact(Package, variant_condition(Name, VariantID, ConditionID)),
-  condition_holds(ConditionID, node(NodeID, Package)).
+  condition_holds(ConditionID, node(ID, Package)).
 
 % If there are any definitions for a variant on a node, the variant is "defined".
 variant_defined(PackageNode, Name) :- variant_definition(PackageNode, Name, _).
@@ -1366,19 +1366,19 @@ node_has_variant(PackageNode, Name, SelectedVariantID) :-
 % packages.yaml and CLI are associated with just the variant name.
 % Also, settings specified on the CLI apply to all duplicates, but always have
 % `min_dupe_id` as their node id.
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
   not variant_default_value_from_packages_yaml(Package, VariantName, _),
   not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
 
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, _),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, _),
   variant_default_value_from_packages_yaml(Package, VariantName, Value),
   not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
 
-variant_default_value(node(NodeID, Package), VariantName, Value) :-
-    node_has_variant(node(NodeID, Package), VariantName, _),
+variant_default_value(node(ID, Package), VariantName, Value) :-
+    node_has_variant(node(ID, Package), VariantName, _),
     attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, Value).
 
 % Penalty from the variant definition
@@ -1401,21 +1401,21 @@ variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
 
 % -- Associate the definition's possible values with the node
-variant_possible_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_possible_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_possible_value(VariantID, Value)).
 
-variant_possible_value(node(NodeID, Package), VariantName, Value) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_possible_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_penalty(VariantID, Value, _)).
 
-variant_value_from_disjoint_sets(node(NodeID, Package), VariantName, Value1, Set1) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_value_from_disjoint_sets(node(ID, Package), VariantName, Value1, Set1) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_value_from_disjoint_sets(VariantID, Value1, Set1)).
 
 % -- Associate definition's arity with the node
-variant_single_value(node(NodeID, Package), VariantName) :-
-  node_has_variant(node(NodeID, Package), VariantName, VariantID),
+variant_single_value(node(ID, Package), VariantName) :-
+  node_has_variant(node(ID, Package), VariantName, VariantID),
   variant_type(VariantID, VariantType),
   VariantType != "multi".
 
@@ -1979,6 +1979,31 @@ avoid_link_dependency(Hash, DepName) :-
   compiler_package(PackageName),
   not compiler_used_as_a_library(node(_, PackageName), Hash).
 
+% When a compiler is not used as a library, its transitive run-type dependencies are unified in the
+% build environment (they appear in PATH etc.), but their pure link-type dependencies are NOT. This
+% is different from unification sets that include all link/run deps: the goal is to avoid imposing
+% transitive link constraints from the toolchain, which would add to max_dupes and require us to
+% increase the max_dupes threshold for many packages.
+
+% Base case: direct run dep of a non-library compiler
+compiler_non_lib_run_dep(DepHash, DepName) :-
+  compiler_package(CompilerName),
+  not compiler_used_as_a_library(node(_, CompilerName), CompilerHash),
+  hash_attr(CompilerHash, "depends_on", CompilerName, DepName, "run"),
+  hash_attr(CompilerHash, "hash", DepName, DepHash).
+
+% Recursive case: run deps of run deps (full transitive closure)
+compiler_non_lib_run_dep(TransDepHash, TransDepName) :-
+  compiler_non_lib_run_dep(DepHash, DepName),
+  hash_attr(DepHash, "depends_on", DepName, TransDepName, "run"),
+  hash_attr(DepHash, "hash", TransDepName, TransDepHash).
+
+% Pure link deps (link but not run) of any node in that closure are avoided
+avoid_link_dependency(DepHash, LinkDepName) :-
+  compiler_non_lib_run_dep(DepHash, DepName),
+  hash_attr(DepHash, "depends_on", DepName, LinkDepName, "link"),
+  not hash_attr(DepHash, "depends_on", DepName, LinkDepName, "run").
+
 % Without splicing, we simply recover the exact semantics
 imposed_constraint(ParentHash, "hash", ChildName, ChildHash) :-
   hash_attr(ParentHash, "hash", ChildName, ChildHash),
@@ -2133,16 +2158,6 @@ opt_criterion(65, "variant penalty (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-opt_criterion(60, "preferred providers for roots").
-#minimize{ 0@260: #true }.
-#minimize{ 0@60: #true }.
-#minimize{
-    Weight@60+Priority,ProviderNode,X,Virtual
-    : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
-}.
-
 opt_criterion(55, "default values of variants not being used (roots)").
 #minimize{ 0@255: #true }.
 #minimize{ 0@55: #true }.
@@ -2153,49 +2168,13 @@ opt_criterion(55, "default values of variants not being used (roots)").
       build_priority(PackageNode, Priority)
 }.
 
-% Try to use default variants or variants that have been set
-opt_criterion(50, "variant penalty (non-roots)").
-#minimize{ 0@250: #true }.
-#minimize{ 0@50: #true }.
-#minimize {
-    Penalty@50+Priority,PackageNode,Variant,Value
-    : variant_penalty(PackageNode, Variant, Value, Penalty),
-      not attr("root", PackageNode),
-      build_priority(PackageNode, Priority)
-}.
-
-% Minimize the weights of the providers, i.e. use as much as
-% possible the most preferred providers
-opt_criterion(48, "preferred providers (non-roots)").
+% Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
+% on e.g. gcc causes clingo to pick another compiler e.g. llvm
+opt_criterion(48, "preferred compilers").
 #minimize{ 0@248: #true }.
 #minimize{ 0@48: #true }.
 #minimize{
     Weight@48+Priority,ProviderNode,X,Virtual
-    : provider_weight(ProviderNode, node(X, Virtual), Weight),
-      not attr("root", ProviderNode), not language(Virtual), not language_runtime(Virtual),
-      build_priority(ProviderNode, Priority)
-}.
-
-% Minimize the number of compilers used on nodes
-
-compiler_penalty(PackageNode, C-1) :-
-   C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
-   node_compiler(PackageNode, _), C > 0.
-
-opt_criterion(46, "number of compilers used on the same node").
-#minimize{ 0@246: #true }.
-#minimize{ 0@46: #true }.
-#minimize{
-    Penalty@46+Priority,PackageNode
-    : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
-}.
-
-
-opt_criterion(40, "preferred compilers").
-#minimize{ 0@240: #true }.
-#minimize{ 0@40: #true }.
-#minimize{
-    Weight@40+Priority,ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
       build_priority(ProviderNode, Priority)
@@ -2205,6 +2184,42 @@ opt_criterion(41, "compiler penalty from reuse").
 #minimize{ 0@241: #true }.
 #minimize{ 0@41: #true }.
 #minimize{1@41,Hash : compiler_penalty_from_reuse(Hash)}.
+
+% Try to use default variants or variants that have been set
+opt_criterion(40, "variant penalty (non-roots)").
+#minimize{ 0@240: #true }.
+#minimize{ 0@40: #true }.
+#minimize {
+    Penalty@40+Priority,PackageNode,Variant,Value
+    : variant_penalty(PackageNode, Variant, Value, Penalty),
+      not attr("root", PackageNode),
+      build_priority(PackageNode, Priority)
+}.
+
+% Minimize the weights of all the other providers (mpi, lapack, etc.)
+opt_criterion(38, "preferred providers (excluded compilers and language runtimes)").
+#minimize{ 0@238: #true }.
+#minimize{ 0@38: #true }.
+#minimize{
+    Weight@38+Priority,ProviderNode,X,Virtual
+    : provider_weight(ProviderNode, node(X, Virtual), Weight),
+      not language(Virtual), not language_runtime(Virtual),
+      build_priority(ProviderNode, Priority)
+}.
+
+% Minimize the number of compilers used on nodes
+compiler_penalty(PackageNode, C-1) :-
+   C = #count { CompilerNode : node_compiler(PackageNode, CompilerNode) },
+   node_compiler(PackageNode, _), C > 0.
+
+opt_criterion(36, "number of compilers used on the same node").
+#minimize{ 0@236: #true }.
+#minimize{ 0@36: #true }.
+#minimize{
+    Penalty@36+Priority,PackageNode
+    : compiler_penalty(PackageNode, Penalty), build_priority(PackageNode, Priority)
+}.
+
 
 opt_criterion(30, "non-preferred OS's").
 #minimize{ 0@230: #true }.

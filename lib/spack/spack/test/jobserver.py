@@ -127,6 +127,10 @@ class TestOpenExistingJobserverFifo:
         assert result is None
 
 
+#: Constant that's larger than the number of jobs used in tests.
+ALL_TOKENS = 100
+
+
 class TestJobServer:
     """Test JobServer class functionality."""
 
@@ -294,3 +298,143 @@ class TestJobServer:
         os.read(js2.r, 2)  # A subprocess acquires two tokens without releasing them
         with pytest.warns(UserWarning, match="2 jobserver tokens were not released"):
             js2.close()
+
+    def test_has_target_parallelism(self):
+        """has_target_parallelism() should be True initially."""
+        js = JobServer(4)
+        try:
+            assert js.has_target_parallelism() is True
+            js.target_jobs = js.num_jobs - 1
+            assert js.has_target_parallelism() is False
+        finally:
+            js.close()
+
+    def test_increase_parallelism_not_created(self):
+        """increase_parallelism() should be a no-op when not self.created."""
+        # Simulate an externally attached jobserver by patching created after construction.
+        js = JobServer(3)
+        try:
+            original_num = js.num_jobs
+            original_target = js.target_jobs
+            js.created = False
+            js.increase_parallelism()
+            assert js.num_jobs == original_num
+            assert js.target_jobs == original_target
+            js.decrease_parallelism()
+            assert js.num_jobs == original_num
+            assert js.target_jobs == original_target
+        finally:
+            js.created = True  # restore so close() works
+            js.close()
+
+    def test_increase_parallelism(self):
+        """increase_parallelism() should increment num_jobs and target_jobs and add a token."""
+        js = JobServer(3)
+        try:
+            original_num = js.num_jobs
+            original_target = js.target_jobs
+            js.increase_parallelism()
+            assert js.num_jobs == original_num + 1
+            assert js.target_jobs == original_target + 1
+            # Verify the "js.num_jobs - 1 tokens in the pipe" invariant.
+            assert js.acquire(ALL_TOKENS) + 1 == js.num_jobs
+        finally:
+            js.close()
+
+    def test_decrease_parallelism_at_floor(self):
+        """decrease_parallelism() should not go below target_jobs == 1."""
+        js = JobServer(1)
+        try:
+            # target_jobs starts at 1
+            assert js.target_jobs == 1
+            js.decrease_parallelism()
+            assert js.target_jobs == 1
+        finally:
+            js.close()
+
+    def test_decrease_parallelism_token_available(self):
+        """When pipe has tokens, decrease_parallelism discards one immediately."""
+        js = JobServer(3)
+        try:
+            # 3-job server starts with 2 tokens in the pipe.
+            original_num = js.num_jobs
+            js.decrease_parallelism()
+            assert js.target_jobs == original_num - 1
+            assert js.num_jobs == original_num - 1
+            assert js.acquire(ALL_TOKENS) + 1 == js.num_jobs
+        finally:
+            js.close()
+
+    def test_decrease_parallelism_no_token_available(self):
+        """When all tokens are held, decrease_parallelism defers the discard."""
+        js = JobServer(3)
+        try:
+            # Drain the pipe so no tokens are available for immediate discard.
+            assert js.acquire(ALL_TOKENS) == js.num_jobs - 1
+            original_num = js.num_jobs
+            js.decrease_parallelism()
+            # target_jobs decremented but num_jobs unchanged (no token to discard yet).
+            assert js.target_jobs == original_num - 1
+            assert js.num_jobs == original_num
+        finally:
+            js.close()
+
+    def test_maybe_discard_tokens_noop_at_target(self):
+        """maybe_discard_tokens() should be a no-op when num_jobs == target_jobs."""
+        js = JobServer(3)
+        try:
+            original_num = js.num_jobs
+            js.maybe_discard_tokens()  # to_discard == 0
+            assert js.num_jobs == original_num
+        finally:
+            js.close()
+
+    def test_maybe_discard_tokens_discards_when_available(self):
+        """maybe_discard_tokens() should consume tokens from the pipe."""
+        js = JobServer(4)
+        try:
+            # Manually set target lower to create a discard requirement.
+            js.target_jobs = js.num_jobs - 2
+            original_num = js.num_jobs
+            js.maybe_discard_tokens()
+            assert js.num_jobs < original_num
+        finally:
+            js.close()
+
+    def test_maybe_discard_tokens_noop_on_blocking(self):
+        """maybe_discard_tokens() should not raise when pipe is empty."""
+        js = JobServer(3)
+        try:
+            # Drain all tokens from the pipe (simulates subprocesses holding them).
+            assert js.acquire(ALL_TOKENS) == js.num_jobs - 1
+            original_num = js.num_jobs
+            # Artificially lower target so a discard is requested, but pipe is empty.
+            js.target_jobs = js.num_jobs - 1
+            js.maybe_discard_tokens()  # Should not raise; num_jobs unchanged.
+            assert js.num_jobs == original_num
+        finally:
+            js.close()
+
+    def test_release_discards_token_when_target_below_num(self):
+        """release() should discard a token (not return it) when target_jobs < num_jobs."""
+        js = JobServer(4)
+        try:
+            # Acquire a token.
+            assert js.acquire(1) == 1
+            assert js.tokens_acquired == 1
+            # Manually lower target to simulate a pending decrease.
+            js.target_jobs = js.num_jobs - 1
+            original_num = js.num_jobs
+            # Drain the free tokens from the pipe so we can count them after.
+            drained = os.read(js.r, ALL_TOKENS)
+            # Release should discard the token (decrement num_jobs) instead of writing to pipe.
+            js.release()
+            assert js.tokens_acquired == 0
+            assert js.num_jobs == original_num - 1
+            # Pipe should remain empty (nothing written back).
+            with pytest.raises(BlockingIOError):
+                os.read(js.r, 1)
+        finally:
+            # Restore drained tokens so close() can clean up cleanly.
+            os.write(js.w, drained)
+            js.close()

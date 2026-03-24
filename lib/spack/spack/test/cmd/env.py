@@ -27,6 +27,7 @@ import spack.modules
 import spack.modules.tcl
 import spack.package_base
 import spack.repo
+import spack.schema.env
 import spack.solver.asp
 import spack.stage
 import spack.store
@@ -4739,3 +4740,167 @@ spack:
             # Assertions are based on the behavior of the "--fake" install
             bin_file = pathlib.Path(test.default_view.view()._root) / "bin" / item.root.name
             assert not bin_file.exists() if item.group == "apps2" else bin_file.exists()
+
+
+def test_env_include_concrete_only(tmp_path, mock_packages, mutable_config):
+    """Confirm that an environment that only includes a concrete environment actually loads it."""
+    specs = ["libdwarf", "libelf"]
+
+    include_dir = tmp_path / "includes"
+    include_dir.mkdir()
+    include_manifest = include_dir / ev.manifest_name
+    include_manifest.write_text(
+        f"""\
+spack:
+  specs:
+  - {specs[0]}
+  - {specs[1]}
+"""
+    )
+    include_env = ev.create("test_include", include_manifest)
+    include_env.concretize()
+    include_env.write()
+
+    include_lockfile = include_env.lock_path
+    assert os.path.exists(include_lockfile)
+
+    manifest_file = tmp_path / ev.manifest_name
+    manifest_file.write_text(
+        f"""\
+spack:
+  include:
+  - {str(include_lockfile)}
+"""
+    )
+    e = ev.create("test", manifest_file)
+
+    # Confirm the only specs the environment has are those loaded from the
+    # lockfile.
+    assert len(e.user_specs) == 0
+    all_concrete = [s for s, _ in e.concretized_specs()]
+    for spec in specs:
+        assert Spec(spec) in all_concrete
+
+
+@pytest.mark.parametrize(
+    "concrete,includes",
+    [
+        (["$HOME/path/to/other/environment"], []),
+        (["$HOME/path/to/another/environment"], ["a/b", "$HOME/includes"]),
+    ],
+)
+def test_env_update_include_concrete(tmp_path: pathlib.Path, concrete, includes):
+    """Confirm update of include_concrete converts it to include."""
+
+    config = {"include_concrete": concrete}
+    if includes:
+        config["include"] = includes
+    new_concrete = [os.path.join(p, ev.lockfile_name) for p in concrete]
+    assert spack.schema.env.update(config)
+    assert "include_concrete" not in config
+    assert config["include"] == new_concrete + includes
+
+
+def test_include_concrete_deprecation_warning(
+    tmp_path: pathlib.Path, environment_from_manifest, capfd
+):
+    try:
+        environment_from_manifest(
+            """\
+spack:
+  include_concrete:
+  - /path/to/some/environment
+"""
+        )
+    except ev.SpackEnvironmentError:
+        pass
+
+    _, err = capfd.readouterr()
+    assert "should be 'include'" in err
+
+
+def test_env_include_concrete_relative_path(tmp_path, mock_packages, mutable_config):
+    """Tests that a relative path in 'include' for a spack.lock is resolved relative to the
+    manifest file, not the current working directory.
+    """
+    # Create and concretize the included environment.
+    include_dir = tmp_path / "include_env"
+    include_dir.mkdir()
+    (include_dir / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - libdwarf
+"""
+    )
+    with ev.Environment(str(include_dir)) as e:
+        e.concretize()
+        e.write()
+        assert os.path.exists(e.lock_path)
+
+    # Create the main environment in a sibling directory, using a *relative* path
+    main_dir = tmp_path / "main_env"
+    main_dir.mkdir()
+    relative_lockfile = f"../include_env/{ev.lockfile_name}"
+    (main_dir / ev.manifest_name).write_text(
+        f"""\
+spack:
+  include:
+  - {relative_lockfile}
+"""
+    )
+    with ev.Environment(str(main_dir)) as e:
+        e.concretize()
+        e.write()
+        assert len(e.user_specs) == 0
+        assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]
+
+
+def test_env_include_concrete_git_lockfile(tmp_path, mock_packages, mutable_config, monkeypatch):
+    """Tests that a spack.lock listed inside a git-based include is resolved using the
+    clone destination as the base, not the manifest directory.
+    """
+    # Create and concretize the included environment.
+    include_dir = tmp_path / "include_env"
+    include_dir.mkdir()
+    (include_dir / ev.manifest_name).write_text(
+        """\
+spack:
+  specs:
+  - libdwarf
+"""
+    )
+    with ev.Environment(str(include_dir)) as e:
+        e.concretize()
+        e.write()
+        assert os.path.exists(e.lock_path)
+
+        # Simulate a cloned git repo: the spack.lock lives at a subpath within the clone.
+        clone_dest = tmp_path / "git_clone"
+        lock_subpath = "envs/staging/spack.lock"
+        lock_in_clone = clone_dest / "envs" / "staging" / ev.lockfile_name
+        lock_in_clone.parent.mkdir(parents=True)
+        shutil.copy(e.lock_path, lock_in_clone)
+        # is_env_dir() requires spack.yaml alongside spack.lock
+        shutil.copy(os.path.join(e.path, ev.manifest_name), lock_in_clone.parent)
+
+    # Prevent actual git operations; return the pre-built clone destination.
+    monkeypatch.setattr(spack.config.GitIncludePaths, "_clone", lambda self: str(clone_dest))
+
+    main_dir = tmp_path / "main_env"
+    main_dir.mkdir()
+    (main_dir / ev.manifest_name).write_text(
+        f"""\
+spack:
+  include:
+  - git: https://example.com/configs.git
+    branch: main
+    paths:
+    - {lock_subpath}
+"""
+    )
+    with ev.Environment(str(main_dir)) as e:
+        e.concretize()
+        e.write()
+        assert len(e.user_specs) == 0
+        assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]

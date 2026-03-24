@@ -4,10 +4,13 @@
 import collections
 import pathlib
 
+import pytest
+
 import spack.config
 import spack.detection
 import spack.detection.common
 import spack.detection.path
+import spack.repo
 import spack.spec
 
 
@@ -52,3 +55,38 @@ def test_dedupe_paths(tmp_path: pathlib.Path):
     assert spack.detection.path.dedupe_paths([str(x), str(y), str(z)]) == [str(x), str(y)]
     assert spack.detection.path.dedupe_paths([str(z), str(y), str(x)]) == [str(x), str(y)]
     assert spack.detection.path.dedupe_paths([str(y), str(z), str(x)]) == [str(y), str(x)]
+
+
+@pytest.mark.usefixtures("mock_packages")
+def test_detect_specs_deduplicates_across_prefixes(tmp_path, monkeypatch):
+    """Tests that the same spec detected at two different prefixes should yield only one result.
+
+    Returning both causes duplicate externals in packages.yaml and non-deterministic hashes
+    during concretization.
+    """
+    # Create two independent bin/ directories, each containing the same executable name.
+    prefix_a = tmp_path / "prefix_a"
+    prefix_b = tmp_path / "prefix_b"
+    (prefix_a / "bin").mkdir(parents=True)
+    (prefix_b / "bin").mkdir(parents=True)
+    exe_a = prefix_a / "bin" / "cmake"
+    exe_b = prefix_b / "bin" / "cmake"
+    exe_a.touch()
+    exe_b.touch()
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+
+    # Patch determine_spec_details to always return the same spec, regardless of prefix.
+    @classmethod
+    def _same_spec(cls, prefix, exes_in_prefix):
+        return spack.spec.Spec("cmake@3.17.1")
+
+    monkeypatch.setattr(cmake_cls, "determine_spec_details", _same_spec)
+
+    finder = spack.detection.path.ExecutablesFinder()
+    detected = finder.detect_specs(
+        pkg=cmake_cls, paths=[str(exe_a), str(exe_b)], repo_path=spack.repo.PATH
+    )
+
+    # Both prefixes produce cmake@3.17.1; only the first should be kept.
+    assert len(detected) == 1

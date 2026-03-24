@@ -1357,8 +1357,8 @@ class BuildTask(Task):
             self.fail(self.error_result)
 
         # hook that allows tests to inspect the Package before installation
-        # see unit_test_check() docs.
-        if not pkg.unit_test_check():
+        # see _unit_test_check() docs.
+        if not pkg._unit_test_check():
             self.succeed()
             return ExecuteResult.FAILED
 
@@ -2739,7 +2739,7 @@ class BuildProcessInstaller:
                     # DEBUGGING TIP - to debug this section, insert an IPython
                     # embed here, and run the sections below without log capture
                     log_contextmanager = log_output(
-                        log_file, self.echo, True, filter_fn=self.filter_fn
+                        log_file, self.echo, debug=True, filter_fn=self.filter_fn
                     )
 
                     with log_contextmanager as logger:

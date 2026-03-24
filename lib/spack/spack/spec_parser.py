@@ -62,7 +62,6 @@ import re
 import sys
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Union
 
-import spack.config
 import spack.deptypes
 import spack.error
 import spack.version
@@ -290,18 +289,11 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
 class SpecParser:
     """Parse text into specs"""
 
-    __slots__ = "literal_str", "ctx", "toolchains", "parsed_toolchains"
+    __slots__ = "literal_str", "ctx"
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
         self.ctx = TokenContext(parseable_tokens(literal_str))
-
-        # TODO: Move toolchains out of the parser, and expand them as a separate step
-        self.toolchains = {}
-        configuration = getattr(spack.config, "CONFIG", None)
-        if configuration is not None:
-            self.toolchains = configuration.get_config("toolchains")
-        self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
@@ -339,71 +331,39 @@ class SpecParser:
         current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
-                is_direct = self.ctx.current_token.value[0] == "%"
-
-                propagation = PropagationPolicy.NONE
-                if is_direct and self.ctx.current_token.value.startswith("%%"):
-                    propagation = PropagationPolicy.PREFERENCE
-
-                edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
-                edge_properties.setdefault("virtuals", ())
-                edge_properties["direct"] = is_direct
-                edge_properties.setdefault("depflag", 0)
-                edge_properties["propagation"] = propagation
-
-                dependency = self._parse_node(root_spec)
-
-                if is_direct:
-                    target_spec = current_spec
-                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
-                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
-                else:
-                    current_spec = dependency
-                    target_spec = root_spec
-
-                add_dependency(dependency, **edge_properties)
-
+                has_edge_attrs = True
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                is_direct = self.ctx.current_token.value[0] == "%"
-                propagation = PropagationPolicy.NONE
-
-                if is_direct and self.ctx.current_token.value.startswith("%%"):
-                    propagation = PropagationPolicy.PREFERENCE
-
-                virtuals = parse_virtual_assignment(self.ctx)
-
-                # if no virtual assignment, check for a toolchain - look ahead to find the
-                # toolchain and substitute it
-                if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
-                    assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
-                    try:
-                        self._apply_toolchain(
-                            current_spec, self.ctx.current_token.value, propagation=propagation
-                        )
-                    except spack.error.SpecError as e:
-                        raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
-                    continue
-
-                edge_properties = {
-                    "direct": is_direct,
-                    "virtuals": virtuals,
-                    "depflag": 0,
-                    "propagation": propagation,
-                }
-                dependency = self._parse_node(root_spec)
-
-                if is_direct:
-                    target_spec = current_spec
-                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
-                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
-                else:
-                    current_spec = dependency
-                    target_spec = root_spec
-
-                add_dependency(dependency, **edge_properties)
-
+                has_edge_attrs = False
             else:
                 break
+
+            is_direct = self.ctx.current_token.value[0] == "%"
+            propagation = PropagationPolicy.NONE
+            if is_direct and self.ctx.current_token.value.startswith("%%"):
+                propagation = PropagationPolicy.PREFERENCE
+
+            if has_edge_attrs:
+                edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
+                edge_properties.setdefault("virtuals", ())
+                edge_properties.setdefault("depflag", 0)
+            else:
+                virtuals = parse_virtual_assignment(self.ctx)
+                edge_properties = {"virtuals": virtuals, "depflag": 0}
+
+            edge_properties["direct"] = is_direct
+            edge_properties["propagation"] = propagation
+
+            dependency = self._parse_node(root_spec)
+
+            if is_direct:
+                target_spec = current_spec
+                if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                    dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+            else:
+                current_spec = dependency
+                target_spec = root_spec
+
+            add_dependency(dependency, **edge_properties)
 
         return root_spec
 
@@ -418,54 +378,6 @@ class SpecParser:
         if root_spec.concrete:
             raise spack.error.SpecError(str(root_spec), "^" + str(dependency))
         return dependency
-
-    def _apply_toolchain(
-        self, spec: "spack.spec.Spec", name: str, *, propagation: PropagationPolicy
-    ) -> None:
-        if name not in self.parsed_toolchains:
-            toolchain = self._parse_toolchain(name)
-            self.parsed_toolchains[name] = toolchain
-
-        propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
-        # Here we need to copy because we want "foo %toolc ^bar %toolc" to generate different
-        # objects for the toolc attached to foo and bar, since the solver depends on that to
-        # generate facts
-        toolchain = self.parsed_toolchains[name].copy(propagation=propagation_arg)
-        spec.constrain(toolchain)
-
-    def _parse_toolchain(self, name: str) -> "spack.spec.Spec":
-        toolchain_config = self.toolchains[name]
-        if isinstance(toolchain_config, str):
-            toolchain = parse_one_or_raise(toolchain_config)
-            self._ensure_all_direct_edges(toolchain)
-        else:
-            from spack.spec import EMPTY_SPEC, Spec
-
-            toolchain = Spec()
-            for entry in toolchain_config:
-                toolchain_part = parse_one_or_raise(entry["spec"])
-                when = entry.get("when", "")
-                self._ensure_all_direct_edges(toolchain_part)
-
-                # Apply global "when" to all edges in toolchain part
-                if when:
-                    when_spec = Spec(when)
-                    for edge in toolchain_part.traverse_edges():
-                        # EMPTY_SPEC is immutable by convention, so create a mutable instance.
-                        if edge.when is EMPTY_SPEC:
-                            edge.when = when_spec.copy()
-                        else:
-                            edge.when.constrain(when_spec)
-                toolchain.constrain(toolchain_part)
-        return toolchain
-
-    def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
-        for edge in constraint.traverse_edges(root=False):
-            if not edge.direct:
-                raise spack.error.SpecError(
-                    f"cannot use '^' in toolchain definitions, and the current "
-                    f"toolchain contains '{edge.format()}'"
-                )
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
@@ -661,26 +573,36 @@ class EdgeAttributeParser:
         return attributes
 
 
-def parse(text: str) -> List["spack.spec.Spec"]:
-    """Parse text into a list of strings
+def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:
+    """Parse text into a list of specs
 
     Args:
-        text (str): text to be parsed
+        text: text to be parsed
+        toolchains: optional toolchain definitions to expand after parsing
 
     Return:
         List of specs
     """
-    return SpecParser(text).all_specs()
+    specs = SpecParser(text).all_specs()
+    if toolchains:
+        cache: Dict[str, "spack.spec.Spec"] = {}
+        for spec in specs:
+            expand_toolchains(spec, toolchains, _cache=cache)
+    return specs
 
 
 def parse_one_or_raise(
-    text: str, initial_spec: Optional["spack.spec.Spec"] = None
+    text: str,
+    initial_spec: Optional["spack.spec.Spec"] = None,
+    *,
+    toolchains: Optional[Dict] = None,
 ) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:
-        text (str): text to be parsed
+        text: text to be parsed
         initial_spec: buffer where to parse the spec. If None a new one will be created.
+        toolchains: optional toolchain definitions to expand after parsing
     """
     parser = SpecParser(text)
     result = parser.next_spec(initial_spec)
@@ -695,7 +617,88 @@ def parse_one_or_raise(
     if result is None:
         raise ValueError("expected a single spec, but got none")
 
+    if toolchains:
+        expand_toolchains(result, toolchains)
+
     return result
+
+
+def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.spec.Spec":
+    """Parse a toolchain config entry (string or list) into a Spec."""
+    if isinstance(toolchain_config, str):
+        toolchain = parse_one_or_raise(toolchain_config)
+        _ensure_all_direct_edges(toolchain)
+    else:
+        from spack.spec import EMPTY_SPEC, Spec
+
+        toolchain = Spec()
+        for entry in toolchain_config:
+            toolchain_part = parse_one_or_raise(entry["spec"])
+            when = entry.get("when", "")
+            _ensure_all_direct_edges(toolchain_part)
+
+            if when:
+                when_spec = Spec(when)
+                for edge in toolchain_part.traverse_edges():
+                    if edge.when is EMPTY_SPEC:
+                        edge.when = when_spec.copy()
+                    else:
+                        edge.when.constrain(when_spec)
+            toolchain.constrain(toolchain_part)
+    return toolchain
+
+
+def _ensure_all_direct_edges(constraint: "spack.spec.Spec") -> None:
+    """Validate that a toolchain spec only has direct (%) edges."""
+    for edge in constraint.traverse_edges(root=False):
+        if not edge.direct:
+            raise spack.error.SpecError(
+                f"cannot use '^' in toolchain definitions, and the current "
+                f"toolchain contains '{edge.format()}'"
+            )
+
+
+def expand_toolchains(
+    spec: "spack.spec.Spec",
+    toolchains: Dict,
+    *,
+    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
+) -> None:
+    """Replace toolchain placeholder deps with expanded toolchain constraints.
+
+    Walks every node in the spec DAG. For each node, finds direct dependency
+    edges whose child name is a key in ``toolchains``. Removes the placeholder
+    edge, parses the toolchain config, copies with the edge's propagation
+    policy, and constrains the node.
+    """
+    if _cache is None:
+        _cache = {}
+
+    for node in list(spec.traverse()):
+        for edge in list(node.edges_to_dependencies()):
+            if not edge.direct:
+                continue
+            name = edge.spec.name
+            if name not in toolchains:
+                continue
+
+            # Remove the placeholder edge (both directions)
+            node._dependencies[name].remove(edge)
+            if not node._dependencies[name]:
+                del node._dependencies[name]
+            edge.spec._dependents[node.name].remove(edge)
+            if not edge.spec._dependents[node.name]:
+                del edge.spec._dependents[node.name]
+
+            # Parse and cache toolchain
+            if name not in _cache:
+                _cache[name] = _parse_toolchain_config(toolchains[name])
+
+            propagation = edge.propagation
+            propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
+            # Copy so each usage gets a distinct object (solver depends on this)
+            toolchain = _cache[name].copy(propagation=propagation_arg)
+            node.constrain(toolchain)
 
 
 class SpecParsingError(spack.error.SpecSyntaxError):
