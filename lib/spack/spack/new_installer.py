@@ -1882,8 +1882,6 @@ class TerminalState:
         self.old_stdin_settings = termios.tcgetattr(sys.stdin)
         self.sigwinch_r = -1
         self.sigwinch_w = -1
-        self.old_sigtstp = signal.getsignal(signal.SIGTSTP)
-        self.old_sigwinch = signal.getsignal(signal.SIGWINCH)
 
     def setup(self) -> None:
         """Set cbreak mode, register stdin and signal pipes in the selector."""
@@ -1895,6 +1893,8 @@ class TerminalState:
             os.set_blocking(self.sigwinch_w, False)
             self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
             self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
+        else:
+            self.old_sigwinch = None
 
         self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
 
@@ -1911,10 +1911,11 @@ class TerminalState:
             pass
 
         for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
-            try:
-                signal.signal(sig, old)
-            except Exception:
-                pass
+            if old is not None:
+                try:
+                    signal.signal(sig, old)
+                except Exception:
+                    pass
 
         if sys.stdin.fileno() in self.selector.get_map():
             try:
