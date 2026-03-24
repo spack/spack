@@ -705,6 +705,7 @@ class ViewDescriptor:
         exclude: Optional[List[str]] = None,
         link: str = default_view_link,
         link_type: fsv.LinkType = "symlink",
+        link_dirs: bool = True,
         groups: Optional[Union[str, List[str]]] = None,
     ) -> None:
         self.base = base_path
@@ -714,6 +715,7 @@ class ViewDescriptor:
         self.select = select or []
         self.exclude = exclude or []
         self.link_type: fsv.LinkType = fsv.canonicalize_link_type(link_type)
+        self.link_dirs: bool = link_type == "symlink" and link_dirs
         self.link = link
         if isinstance(groups, str):
             groups = [groups]
@@ -730,15 +732,15 @@ class ViewDescriptor:
         self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, ViewDescriptor) and all(
-            [
-                self.root == other.root,
-                self.projections == other.projections,
-                self.select == other.select,
-                self.exclude == other.exclude,
-                self.link == other.link,
-                self.link_type == other.link_type,
-            ]
+        return (
+            isinstance(other, ViewDescriptor)
+            and self.root == other.root
+            and self.projections == other.projections
+            and self.select == other.select
+            and self.exclude == other.exclude
+            and self.link == other.link
+            and self.link_type == other.link_type
+            and self.link_dirs == other.link_dirs
         )
 
     def to_dict(self):
@@ -751,6 +753,8 @@ class ViewDescriptor:
             ret["exclude"] = self.exclude
         if self.link_type:
             ret["link_type"] = self.link_type
+        if self.link_dirs:
+            ret["link_dirs"] = self.link_dirs
         if self.link != default_view_link:
             ret["link"] = self.link
         return ret
@@ -765,6 +769,7 @@ class ViewDescriptor:
             exclude=d.get("exclude", []),
             link=d.get("link", default_view_link),
             link_type=d.get("link_type", "symlink"),
+            link_dirs=d.get("link_dirs", True),
             groups=d.get("group", None),
         )
 
@@ -829,6 +834,7 @@ class ViewDescriptor:
             ignore_conflicts=True,
             projections=self.projections,
             link_type=self.link_type,
+            link_dirs=self.link_dirs,
         )
 
     def __contains__(self, spec):
