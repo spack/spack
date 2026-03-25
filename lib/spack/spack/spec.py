@@ -100,6 +100,7 @@ import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
 
@@ -121,7 +122,6 @@ __all__ = [
     "InvalidHashError",
     "SpecDeprecatedError",
 ]
-
 
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
@@ -3334,6 +3334,42 @@ class Spec:
         """
         return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
 
+    def _provides_virtual(self, virtual_spec: "Spec") -> bool:
+        """Return True if this spec provides the given virtual spec.
+
+        Args:
+            virtual_spec: abstract virtual spec (e.g. ``"mpi"`` or ``"mpi@3:"``)
+        """
+        if not virtual_spec.name:
+            return False
+
+        # Get the package instance
+        if self.concrete:
+            try:
+                pkg = self.package
+            except spack.repo.UnknownPackageError:
+                return False
+        else:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
+                pkg = pkg_cls(self)
+            except spack.repo.UnknownEntityError:
+                # If we can't get package info on this spec, don't treat
+                # it as a provider of this vdep.
+                return False
+
+        for when_spec, provided in pkg.provided.items():
+            # Don't use satisfies for virtuals, because an abstract vs. abstract spec may use the
+            # repo index
+            if self.satisfies(when_spec, deps=False) and any(
+                provided_virtual.name == virtual_spec.name
+                and provided_virtual.versions.intersects(virtual_spec.versions)
+                for provided_virtual in provided
+            ):
+                return True
+
+        return False
+
     def _satisfies(
         self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
@@ -3363,25 +3399,9 @@ class Spec:
                 return False
 
         # If the names are different, we need to consider virtuals
-        if self.name != other.name and self.name and other.name and resolve_virtuals:
-            # A concrete provider can satisfy a virtual dependency.
-            if not spack.repo.PATH.is_virtual(self.name) and spack.repo.PATH.is_virtual(
-                other.name
-            ):
-                try:
-                    # Here we might get an abstract spec
-                    pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
-                    pkg = pkg_cls(self)
-                except spack.repo.UnknownEntityError:
-                    # If we can't get package info on this spec, don't treat
-                    # it as a provider of this vdep.
-                    return False
-
-                if pkg.provides(other.name):
-                    for when_spec, provided in pkg.provided.items():
-                        if self.satisfies(when_spec, deps=False):
-                            if any(vpkg.intersects(other) for vpkg in provided):
-                                return True
+        if self.name != other.name and self.name and other.name:
+            if self.concrete or resolve_virtuals:
+                return self._provides_virtual(other)
             return False
 
         # namespaces either match, or other doesn't require one.
@@ -3436,12 +3456,6 @@ class Spec:
             ):
                 continue
 
-            # If we are checking for ^mpi we need to verify if there is any edge
-            if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
-                # Don't mutate objects in memory that may be referred elsewhere
-                rhs_edge = rhs_edge.copy()
-                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
-
             if rhs_edge.direct:
                 # Note: this relies on abstract specs from string not being deeper than 2 levels
                 # e.g. in foo %fee ^bar %baz we cannot go deeper than "baz" and e.g. specify its
@@ -3458,22 +3472,58 @@ class Spec:
                     except KeyError:
                         return False
 
-                # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
-                # branch in the lhs
-                candidate_edges = []
-                if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
-                    candidate_edges = current_node.edges_to_dependencies(name=rhs_edge.spec.name)
-
-                name = (
-                    None
-                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
-                    else rhs_edge.spec.name
-                )
-                candidate_edges.extend(
-                    current_node.edges_to_dependencies(
-                        name=name, virtuals=rhs_edge.virtuals or None
+                if self.concrete:
+                    # For a concrete spec, virtual info is encoded in edge.virtuals.
+                    #
+                    # The rhs edge may name either a concrete package or a virtual. If virtuals are
+                    # already annotated on the rhs edge, the name AND virtual must match. Otherwise
+                    # try both a name-based lookup and a virtual-based lookup and union the results
+                    if rhs_edge.virtuals:
+                        candidate_edges = current_node.edges_to_dependencies(
+                            name=rhs_edge.spec.name, virtuals=rhs_edge.virtuals
+                        )
+                    else:
+                        dep_name = rhs_edge.spec.name
+                        candidate_edges = current_node.edges_to_dependencies(name=dep_name)
+                        # It _may_ be a virtual
+                        if not candidate_edges:
+                            candidate_edges = current_node.edges_to_dependencies(
+                                virtuals=(dep_name,)
+                            )
+                            # If this virtual doesn't impose further version constraints, avoid
+                            # Further checks that may require package.py
+                            if (
+                                candidate_edges
+                                and rhs_edge.spec.versions == spack.version.any_version
+                            ):
+                                # Don't mutate objects in memory that may be referred elsewhere
+                                rhs_edge = rhs_edge.copy()
+                                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
+                                rhs_edge.spec = EMPTY_SPEC
+                        candidate_edges = lang.dedupe(candidate_edges)
+                else:
+                    # For an abstract spec, consult the repo to determine whether the rhs dep
+                    # name is a virtual, annotate the edge, then build candidate_edges.
+                    rhs_is_virtual = resolve_virtuals and spack.repo.PATH.is_virtual(
+                        rhs_edge.spec.name
                     )
-                )
+                    if rhs_is_virtual:
+                        # Don't mutate objects in memory that may be referred elsewhere
+                        rhs_edge = rhs_edge.copy()
+                        dep_name = None
+                        rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
+                        candidate_edges = current_node.edges_to_dependencies(
+                            name=rhs_edge.spec.name
+                        )
+                    else:
+                        dep_name = rhs_edge.spec.name
+                        candidate_edges = []
+
+                    candidate_edges.extend(
+                        current_node.edges_to_dependencies(
+                            name=dep_name, virtuals=rhs_edge.virtuals or None
+                        )
+                    )
 
                 # Select at least the deptypes on the rhs_edge, and conditional edges that
                 # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
