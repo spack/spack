@@ -13,6 +13,7 @@ import spack.cray_manifest
 import spack.detection
 import spack.detection.path
 import spack.repo
+from spack.compilers.config import CompilerFactory
 from spack.llnl.util.filesystem import getuid, touch
 from spack.main import SpackCommand
 from spack.spec import Spec
@@ -107,6 +108,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.intel-oneapi-compilers",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.mpileaks",
             ],
         ),
         # find --all --exclude find-externals1
@@ -120,6 +122,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.intel-oneapi-compilers",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.mpileaks",
             ],
         ),
         (
@@ -132,6 +135,7 @@ def test_find_external_cmd_not_buildable(
                 "builtin_mock.intel-oneapi-compilers",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.mpileaks",
             ],
         ),
         # find hwloc (and mock hwloc is not detectable)
@@ -141,7 +145,7 @@ def test_find_external_cmd_not_buildable(
 def test_package_selection(names, tags, exclude, expected):
     """Tests various cases of selecting packages"""
     # In the mock repo we only have 'find-externals1' that is detectable
-    result = spack.cmd.external.packages_to_search_for(names=names, tags=tags, exclude=exclude)
+    result = spack.detection.packages_to_search_for(names=names, tags=tags, exclude=exclude)
     assert set(result) == set(expected)
 
 
@@ -352,6 +356,146 @@ def test_failures_in_scanning_do_not_result_in_an_error(
         assert vers in output
 
 
+@pytest.fixture()
+def mock_detection(monkeypatch):
+
+    def _detect(pkg_cls, *, version, dependencies=None):
+        @classmethod
+        def _version(cls, exe):
+            return version
+
+        monkeypatch.setattr(pkg_cls, "determine_version", _version, raising=False)
+
+        if dependencies is not None:
+
+            @classmethod
+            def _deps(cls, spec):
+                return dependencies
+
+            monkeypatch.setattr(pkg_cls, "determine_dependencies", _deps, raising=False)
+
+    return _detect
+
+
+@pytest.mark.not_on_windows("the test uses bash scripts")
+def test_find_external_wires_dependencies(mock_executable, mutable_config, mock_detection):
+    """Tests that deps are written to packages.yaml when ``spack external find`` is called"""
+    mpileaks_version, mpich_version = "2.3", "4.0.2"
+
+    mpileaks_cls = spack.repo.PATH.get_pkg_class("mpileaks")
+    mock_detection(mpileaks_cls, version=mpileaks_version, dependencies=[f"mpich@{mpich_version}"])
+    mpileaks_exe = mock_executable("mpileaks", output=f"echo mpileaks version {mpileaks_version}")
+
+    mpich_cls = spack.repo.PATH.get_pkg_class("mpich")
+    mpich_exe = mock_executable("mpichversion", output=f"echo MPICH Version: {mpich_version}")
+    mock_detection(mpich_cls, version=mpich_version)
+
+    external(
+        "find",
+        "--path",
+        str(mpileaks_exe.parent),
+        "--path",
+        str(mpich_exe.parent),
+        "mpileaks",
+        "mpich",
+    )
+
+    packages_yaml = mutable_config.get_config("packages")
+    mpileaks_entry = packages_yaml["mpileaks"]["externals"][0]
+    mpich_entry = packages_yaml["mpich"]["externals"][0]
+
+    # Both entries must have an ID
+    assert "id" in mpileaks_entry and "id" in mpich_entry
+
+    # mpileaks must list mpich as a dependency.
+    assert "dependencies" in mpileaks_entry and len(mpileaks_entry["dependencies"]) == 1
+    assert mpileaks_entry["dependencies"][0]["id"] == mpich_entry["id"]
+
+    # mpich is a leaf: no dependencies field.
+    assert "dependencies" not in mpich_entry
+
+
+@pytest.mark.not_on_windows("the test uses bash scripts")
+def test_find_external_augments_preexisting_entry(mock_executable, mutable_config, mock_detection):
+    """Tests that preexisting packages.yaml entries get an id added when they appear as a
+    dependency.
+    """
+    mpileaks_version, mpich_version = "2.3", "4.0.2"
+    mpich_prefix = "/opt/mpich"
+
+    # Seed packages.yaml with mpich already present (no id).
+    mutable_config.set(
+        "packages",
+        {"mpich": {"externals": [{"spec": f"mpich@{mpich_version}", "prefix": mpich_prefix}]}},
+    )
+
+    mpileaks_cls = spack.repo.PATH.get_pkg_class("mpileaks")
+    mock_detection(mpileaks_cls, version=mpileaks_version, dependencies=["mpich@4.0.2"])
+    mpileaks_exe = mock_executable("mpileaks", output=f"echo mpileaks version {mpileaks_version}")
+
+    external("find", "--path", str(mpileaks_exe.parent), "mpileaks")
+
+    packages_yaml = mutable_config.get_config("packages")
+    mpileaks_entry = packages_yaml["mpileaks"]["externals"][0]
+    mpich_entry = packages_yaml["mpich"]["externals"][0]
+
+    # mpileaks must be wired up with id and dependency.
+    assert "id" in mpileaks_entry and "dependencies" in mpileaks_entry
+    assert mpileaks_entry["dependencies"][0]["id"] == mpich_entry["id"]
+
+    # The preexisting mpich entry must have received an id.
+    assert "id" in mpich_entry
+
+
+@pytest.mark.not_on_windows("the test uses bash scripts")
+def test_find_external_no_dependencies_no_id(mock_executable, mutable_config, mock_detection):
+    """Tests that packages that are not dependencies get no id or dependencies in YAML"""
+    cmake_version = "3.27.5"
+
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    mock_detection(cmake_cls, version=cmake_version)
+    cmake_exe = mock_executable("cmake", output=f"echo cmake version {cmake_version}")
+
+    external("find", "--path", str(cmake_exe.parent), "cmake")
+
+    packages_yaml = mutable_config.get_config("packages")
+    cmake_entry = packages_yaml["cmake"]["externals"][0]
+    assert "id" not in cmake_entry
+    assert "dependencies" not in cmake_entry
+
+
+@pytest.mark.not_on_windows("the test uses bash scripts")
+def test_find_external_idempotent(mock_executable, mutable_config, mock_detection):
+    """Running external find twice with determine_dependencies produces stable config."""
+    mpileaks_version, mpich_version = "2.3", "4.0.2"
+
+    mpileaks_cls = spack.repo.PATH.get_pkg_class("mpileaks")
+    mock_detection(mpileaks_cls, version=mpileaks_version, dependencies=[f"mpich@{mpich_version}"])
+    mpileaks_exe = mock_executable("mpileaks", output=f"echo mpileaks version {mpileaks_version}")
+
+    mpich_cls = spack.repo.PATH.get_pkg_class("mpich")
+    mpich_exe = mock_executable("mpichversion", output=f"echo MPICH Version: {mpich_version}")
+    mock_detection(mpich_cls, version=mpich_version)
+
+    find_args = [
+        "find",
+        "--path",
+        str(mpileaks_exe.parent),
+        "--path",
+        str(mpich_exe.parent),
+        "cmake",
+        "mpich",
+    ]
+
+    external(*find_args)
+    packages_yaml_first = mutable_config.deepcopy_as_builtin("packages")
+
+    external(*find_args)
+    packages_yaml_second = mutable_config.get_config("packages")
+
+    assert packages_yaml_first == packages_yaml_second
+
+
 def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
     """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
     config sets them to buildable)"""
@@ -385,3 +529,57 @@ def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
 
     # Check that the mpi:buildable entry was not overwritten
     assert mutable_config.get("packages:mpi:buildable") is True
+
+
+def test_from_packages_yaml_compiler_with_non_compiler_dependency(mutable_config):
+    """Tests that we can read compiler dependencies (e.g. binutils) when retrieving compilers."""
+    binutils_id = "binutils-test-uuid"
+    gcc_id = "gcc-test-uuid"
+    mutable_config.set(
+        "packages",
+        {
+            "gcc": {
+                "externals": [
+                    {
+                        "spec": "gcc@14.1.0",
+                        "prefix": "/usr/local/gcc-14",
+                        "id": gcc_id,
+                        "extra_attributes": {"compilers": {"c": "/usr/local/gcc-14/bin/gcc"}},
+                        "dependencies": [{"id": binutils_id}],
+                    }
+                ]
+            },
+            "binutils": {
+                "externals": [{"spec": "binutils@2.42", "prefix": "/usr", "id": binutils_id}]
+            },
+        },
+    )
+    # Must not raise ExternalDependencyError
+    compilers = CompilerFactory.from_packages_yaml(mutable_config)
+    assert any(c.satisfies("gcc@14.1.0") for c in compilers)
+
+
+def test_from_packages_yaml_malformed_non_compiler_entry_is_skipped(mutable_config):
+    """Tests that a non-compiler entry with a malformed spec (no concrete version) must not prevent
+    reading compilers.
+    """
+    mutable_config.set(
+        "packages",
+        {
+            "gcc": {
+                "externals": [
+                    {
+                        "spec": "gcc@14.1.0",
+                        "prefix": "/usr/local/gcc-14",
+                        "extra_attributes": {"compilers": {"c": "/usr/local/gcc-14/bin/gcc"}},
+                    }
+                ]
+            },
+            # No version — ExternalSpecError("doesn't have a concrete version") inside the parser.
+            "binutils": {"externals": [{"spec": "binutils", "prefix": "/usr"}]},
+        },
+    )
+    # Must not raise; the malformed binutils entry must be silently skipped with a warning.
+    with pytest.warns(UserWarning, match="concrete version"):
+        compilers = CompilerFactory.from_packages_yaml(spack.config.CONFIG)
+    assert any(c.satisfies("gcc@14.1.0") for c in compilers)

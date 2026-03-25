@@ -365,6 +365,79 @@ or like this:
            )
            raise InvalidSpecDetected(msg)
 
+
+.. _determine_dependencies:
+
+Declare dependencies of detected packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When ``spack external find`` detects a package, it can also detect how that package depends on other external packages.
+This is useful when two or more external packages are naturally installed together and their relationship should be recorded in ``packages.yaml`` automatically.
+
+To detect the dependencies of an external package, implement a ``determine_dependencies`` classmethod:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_dependencies(cls, spec: Spec):
+       """Return dependencies detected alongside ``spec``.
+
+       Args:
+           spec: the detected spec whose dependencies should be found.
+
+       Returns:
+           A list of dependencies, or an empty list if none are detected.
+           Each element may be:
+
+           * a plain string such as ``"hwloc@2.9"``
+           * a dict with the following keys:
+
+             - ``"spec"`` (required): a string describing the dependency
+             - ``"prefix"`` (optional): path to the dependency's installation prefix;
+               stored as ``external_path`` on the spec and used by the detection loop
+               to search that location for the dependency if it has not been found yet
+             - ``"deptypes"`` (optional): dependency types (e.g. ``("link", "run")``)
+             - ``"virtuals"`` (optional): tuple of virtual names satisfied by this dependency
+       """
+
+The simplest form returns a list of version strings:
+
+.. code-block:: python
+
+   class Openmpi(AutotoolsPackage):
+       executables = ["^mpicc$"]
+
+       @classmethod
+       def determine_dependencies(cls, spec):
+           # Return the hwloc installation that this openmpi was built against.
+           hwloc_prefix = get_hwloc_prefix(spec.prefix)
+           if hwloc_prefix is None:
+               return []
+           hwloc_version = get_hwloc_version(hwloc_prefix)
+           return [f"hwloc@{hwloc_version}"]
+
+When a richer description is needed, a dict can carry additional information:
+
+.. code-block:: python
+
+   @classmethod
+   def determine_dependencies(cls, spec):
+       return [
+           {
+               "spec": "hwloc@2.9",
+               "prefix": "/usr",
+               "deptypes": ("link", "run"),
+               "virtuals": ("hwloc-api",),
+           }
+       ]
+
+Spack will look for ``hwloc`` among the packages it has already detected in this run and, if found, wire the two entries in ``packages.yaml`` automatically.
+
+.. note::
+
+   If an external entry for a package already exists in ``packages.yaml``, Spack will never overwrite its ``dependencies`` key.
+   Instead it emits a warning so you can update the entry manually if needed.
+
 .. _determine_spec_details:
 
 Custom detection workflow

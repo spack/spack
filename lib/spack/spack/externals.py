@@ -414,6 +414,23 @@ def external_spec(config: ExternalDict) -> spack.spec.Spec:
     return ExternalSpecsParser([config]).all_specs()[0]
 
 
+def root_nodes_from_config(packages_yaml) -> List[spack.spec.Spec]:
+    """Returns the root nodes of external specs from a packages.yaml configuration dict.
+
+    Invalid or unparseable entries are silently skipped.
+
+    Args:
+        packages_yaml: the parsed ``packages`` section of Spack configuration
+    """
+    result = []
+    for entry_dict in extract_dicts_from_configuration(packages_yaml):
+        try:
+            result.append(node_from_dict(entry_dict))
+        except Exception:
+            tty.debug(f"[{__name__}] Invalid external spec in packages.yaml: {entry_dict}")
+    return result
+
+
 class DuplicateExternalError(SpackError):
     """Raised when a duplicate external is detected."""
 
