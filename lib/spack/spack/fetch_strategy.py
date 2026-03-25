@@ -50,7 +50,6 @@ import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.git
-import spack.util.ssh as ssh_util
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
@@ -1450,7 +1449,9 @@ class SCPFetchStrategy(URLFetchStrategy):
             if isinstance(url, str):
                 url = urllib.parse.urlparse(url)
 
-            ssh = ssh_util.SSHConnection.from_url(url)
+            from spack.util.ssh import SSHConnection
+
+            ssh = SSHConnection.from_url(url)
             ssh.fetch(url.path, save_file)
         except Exception as e:
             # clean up archive on failure.

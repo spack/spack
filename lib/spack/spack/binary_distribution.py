@@ -58,7 +58,6 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.ssh as ssh_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -2898,8 +2897,12 @@ class SCPIndexFetcher(IndexFetcher):
         url_index_manifest = urllib.parse.urlparse(cache_class.get_index_url(self.url))
 
         try:
-            ssh = ssh_util.SSHConnection.from_url(url_index_manifest)
-            response = ssh.read(url_index_manifest.path)
+            with tempfile.NamedTemporaryFile("rb", dir=spack.stage.get_stage_root()) as tmp:
+                from spack.util.ssh import SSHConnection
+
+                ssh = SSHConnection.from_url(url_index_manifest)
+                ssh.fetch(url_index_manifest.path, tmp.name)
+                response = io.BytesIO(tmp.read())
         except Exception as e:
             raise FetchIndexError(
                 f"Could not read index manifest from {url_index_manifest.geturl()}"

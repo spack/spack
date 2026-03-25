@@ -2,16 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import io
 import os
 import shlex
-import tempfile
 import urllib.parse
 import warnings
 from pathlib import Path
 from typing import Dict
 
-import spack.error
 from spack.llnl.util import tty
 from spack.util.executable import which
 
@@ -80,19 +77,6 @@ class SSHConnection(object):
     def fetch(self, remote_path, dest):
         self.scp(shlex.quote(f"{self.netloc}:{remote_path}"), dest, fail_on_error=True)
 
-    def read(self, remote_path):
-        import spack.stage
-
-        with tempfile.NamedTemporaryFile("rb", dir=spack.stage.get_stage_root()) as tmp:
-            try:
-                self.fetch(remote_path, tmp.name)
-                return io.BytesIO(tmp.read())
-            except Exception as e:
-                raise SpackSSHError(
-                    f"Download of ssh://{self.netloc}:{remote_path} failed: "
-                    f"{e.__class__.__name__}: {e}"
-                )
-
     def push(self, local_path, remote_path, keep_original=True):
         self.ssh(
             self.netloc,
@@ -102,7 +86,3 @@ class SSHConnection(object):
         self.scp(local_path, shlex.quote(f"{self.netloc}:{remote_path}"), fail_on_error=True)
         if not keep_original:
             os.remove(local_path)
-
-
-class SpackSSHError(spack.error.SpackError):
-    """Superclass for Spack SSH errors."""
