@@ -2890,11 +2890,12 @@ class SCPIndexFetcher(IndexFetcher):
     def __init__(self, mirror_metadata: MirrorMetadata, local_hash):
         self.url = mirror_metadata.url
         self.layout_version = mirror_metadata.version
+        self.view = mirror_metadata.view
         self.local_hash = local_hash
 
     def conditional_fetch(self) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        url_index_manifest = urllib.parse.urlparse(cache_class.get_index_url(self.url))
+        url_index_manifest = urllib.parse.urlparse(cache_class.get_index_url(self.url, self.view))
 
         try:
             with tempfile.NamedTemporaryFile("rb", dir=spack.stage.get_stage_root()) as tmp:
