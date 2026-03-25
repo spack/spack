@@ -1980,10 +1980,7 @@ class TerminalState:
         # If we started in the background, bash may have had the terminal in its own
         # readline (raw) mode when __init__ ran. Waiting until we are foregrounded
         # ensures we capture the shell's exported 'sane' configuration for this job.
-        try:
-            self.old_stdin_settings = termios.tcgetattr(sys.stdin)
-        except Exception:
-            pass
+        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
 
         with ignore_signal(signal.SIGTTOU):
             tty.setcbreak(sys.stdin.fileno())
