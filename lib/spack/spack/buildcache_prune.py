@@ -307,6 +307,10 @@ def prune_direct(
         manifests_to_delete=manifests_to_delete, blobs_to_delete=set(), dry_run=dry_run
     )
 
+    # Remove pruned specs from manifest_to_mtime_mapping.
+    for manifest in manifests_to_delete:
+        manifest_to_mtime_mapping.pop(manifest, None)
+
     if dry_run:
         tty.info(f"Would have pruned {total_pruned} objects from mirror: {mirror.fetch_url}")
     else:
