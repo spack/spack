@@ -2358,7 +2358,6 @@ class PackageInstaller:
                     pass
 
             try:
-                self.build_status.headless = False
                 self.build_status.overview_mode = True
                 self.build_status.update(finalize=True)
                 selector.close()
