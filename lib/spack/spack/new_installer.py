@@ -1908,10 +1908,8 @@ class TerminalState:
 
     def teardown(self) -> None:
         """Restore terminal settings and signal handlers, close pipes."""
-        try:
+        with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
-        except Exception:
-            pass
 
         for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
             if old is not None:
