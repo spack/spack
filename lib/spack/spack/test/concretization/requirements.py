@@ -1647,3 +1647,11 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
     assert s.satisfies("%c=gcc@10")
     assert all(s[name].satisfies("%c=clang") for name in dependency_names)
     assert s["mpi"].satisfies("%c,cxx=clang %fortran=gcc@10")
+
+
+@pytest.mark.parametrize("section", ["prefer", "require"])
+def test_warns_on_compiler_constraint_in_all(concretize_scope, test_repo, section):
+    """Compiler constraints under packages:all: are a footgun and should warn."""
+    update_packages_config("packages:\n  all:\n    prefer:\n    - '%c=gcc'\n")
+    with pytest.warns(UserWarning, match="packages: all:"):
+        spack.concretize.concretize_one("gmake")

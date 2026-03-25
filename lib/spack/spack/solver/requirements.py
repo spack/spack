@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+import warnings
+from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.config
 import spack.error
@@ -11,6 +12,7 @@ import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.traverse
+import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
@@ -106,6 +108,7 @@ class RequirementParser:
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
         self.toolchains = configuration.get_config("toolchains")
+        self._warned_compiler_all: set = set()
 
     def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
         result = parse_spec_from_yaml_string(string, named=named)
@@ -183,6 +186,9 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in preferences:
+            if kind == RequirementKind.DEFAULT:
+                # Warn about %gcc type of preferences under `all`.
+                self._maybe_warn_compiler_in_all(item, "prefer")
             spec, condition, msg = self._parse_prefer_conflict_item(item)
             result.append(
                 preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
@@ -254,6 +260,10 @@ class RequirementParser:
                     constraints = [constraints]
                     policy = "one_of"
 
+                if kind == RequirementKind.DEFAULT:
+                    # Warn about %gcc type of requirements under `all`.
+                    self._maybe_warn_compiler_in_all(constraints, "require")
+
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 constraints = [
                     self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
@@ -313,6 +323,61 @@ class RequirementParser:
             )
             return True
         return False
+
+    def _maybe_warn_compiler_in_all(self, items: Union[str, list, dict], section: str) -> None:
+        """Warn once if a packages:all: prefer/require entry has compiler dependencies."""
+        # Stick to single items, not complex one_of / any_of groups to keep things simple.
+        if isinstance(items, str):
+            spec_str = items
+        elif isinstance(items, dict) and "spec" in items and isinstance(items["spec"], str):
+            spec_str = items["spec"]
+        elif isinstance(items, list) and len(items) == 1 and isinstance(items[0], str):
+            spec_str = items[0]
+        else:
+            return
+        if spec_str in self._warned_compiler_all:
+            return
+        self._warned_compiler_all.add(spec_str)
+        suggestions = []
+        for edge in self._parse_and_expand(spec_str).edges_to_dependencies():
+            if edge.when != spack.spec.EMPTY_SPEC:
+                # Conditional dependencies are fine (includes toolchains after expansion).
+                continue
+            elif edge.virtuals:
+                # The case `%c,cxx=gcc` or similar.
+                data = {"packages": {v: {section: [str(edge.spec)]} for v in edge.virtuals}}
+                suggestions.append(spack.util.spack_yaml.dump(data).rstrip())
+            elif edge.spec.name in self.compiler_pkgs:
+                # Just a package `%gcc`.
+                data = {"packages": {"c": {section: [str(edge.spec)]}}}
+                suggestions.append(
+                    "# For each language virtual (c, cxx, fortran, ...):\n"
+                    + spack.util.spack_yaml.dump(data).rstrip()
+                )
+            else:
+                # Maybe %mpich or so? Just give a generic suggestion.
+                data = {"packages": {"<virtual>": {section: [str(edge.spec)]}}}
+                suggestions.append(
+                    "# For each virtual:\n" + spack.util.spack_yaml.dump(data).rstrip()
+                )
+        if suggestions:
+            mark = get_mark_from_yaml_data(spec_str)
+            location = f"{mark.name}:{mark.line + 1}: " if mark else ""
+            prefix = (
+                f"{location}'packages: all: {section}: [\"{spec_str}\"]' applies a dependency "
+                f"constraint to all packages"
+            )
+            suffix = "Consider instead:\n" + "\n".join(suggestions)
+            if section == "prefer":
+                warnings.warn(
+                    f"{prefix}. This can lead to unexpected concretizations. This was likely "
+                    f"intended as a preference for a provider of a (language) virtual. {suffix}"
+                )
+            else:
+                warnings.warn(
+                    f"{prefix}. This often leads to concretization errors. This was likely "
+                    f"intended as a requirement for a provider of a (language) virtual. {suffix}"
+                )
 
 
 def _split_edge_on_virtuals(edge: spack.spec.DependencySpec) -> List[spack.spec.Spec]:
