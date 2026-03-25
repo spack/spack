@@ -32,7 +32,7 @@ You can include a single configuration file or an entire configuration *scope* l
    - path: /path/to/os-specific/config-dir
      when: os == "ventura"
 
-Included paths may be absolute, relative (to the configuration file), specified as URLs, or provided in an environment variable (e.g., ``$MY_SPECIAL_CONFIG_FILE``).
+Included paths may be absolute, relative (to the configuration file), specified as URLs, or provided in environment variables (e.g., ``$MY_SPECIAL_CONFIG_FILE``).
 
 * ``optional``: Spack will raise an error when an included configuration file does not exist, *unless* it is explicitly made ``optional: true``, like the second path above.
 * ``when``: Configuration scopes can also be included *conditionally* with ``when``.
