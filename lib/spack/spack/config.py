@@ -1426,7 +1426,7 @@ class GitIncludePaths(OptionalInclude):
 
         scopes: List[ConfigScope] = []
         for path in self.paths:
-            config_path = str(pathlib.Path(destination) / pathlib.Path(path))
+            config_path = str(pathlib.Path(destination) / path)
             scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)
