@@ -1625,6 +1625,14 @@ class BuildGraph:
             self.child_to_parent.pop(key, None)
             self.nodes.pop(key, None)
 
+        # Check that all prefixes to be created are unique.
+        prefixes = [s.prefix for s in self.nodes.values() if not s.external]
+        if len(prefixes) != len(set(prefixes)):
+            raise spack.error.InstallError(
+                "Install prefix collision: "
+                + ", ".join(p for p in prefixes if prefixes.count(p) > 1)
+            )
+
         # If we're not installing dependencies, verify that all remaining nodes in the build graph
         # after pruning are roots. If there are any non-root nodes, it means there are uninstalled
         # dependencies that we're not supposed to install.
@@ -1776,9 +1784,32 @@ def schedule_builds(
 
             # Write lock acquired: proceed with scheduling.
             # Don't schedule builds for specs from upstream databases.
-            assert not (
-                upstream and record and not record.installed
-            ), f"Cannot install {spec}: it is uninstalled in an upstream database."
+            if upstream and record and not record.installed:
+                lock.release_write()
+                raise spack.error.InstallError(
+                    f"Cannot install {spec}: it is uninstalled in an upstream database."
+                )
+
+            # Defensively assert prefix invariants
+            if not spec.external:
+                if (
+                    dag_hash in overwrite
+                    and record
+                    and record.installed
+                    and record.path != spec.prefix
+                ):
+                    # Cannot do an overwrite install to a different prefix.
+                    lock.release_write()
+                    raise spack.error.InstallError(
+                        f"Prefix mismatch in overwrite of {spec}: expected {record.path}, "
+                        f"got {spec.prefix}"
+                    )
+                elif dag_hash not in overwrite and spec.prefix in db._installed_prefixes:
+                    # Prevent install prefix collision with other specs.
+                    lock.release_write()
+                    raise spack.error.InstallError(
+                        f"Cannot install {spec}: prefix {spec.prefix} already exists"
+                    )
 
             # Acquire a jobserver token if needed. The first (implicit) job needs no token.
             if needs_jobserver_token and not jobserver.acquire(1):
