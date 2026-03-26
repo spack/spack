@@ -83,7 +83,7 @@ def config_variable_cols(
 
     # trim off any columns with nothing in them
     config.widths = [w for w in config.widths if w != 0]
-    config.cols = len(config.widths)
+    config.cols = max(len(config.widths), 1)
     return config
 
 
@@ -103,7 +103,8 @@ def config_uniform_cols(
     max_len = max(clen(e) for e in elts) + padding
     if cols == 0:
         cols = max(1, console_width // max_len)
-        cols = min(len(elts), cols)
+        elts_min_1 = max(len(elts), 1)
+        cols = min(elts_min_1, cols)
 
     config = ColumnConfig(cols)
     config.widths = [max_len] * cols
