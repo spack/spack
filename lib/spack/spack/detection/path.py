@@ -4,6 +4,7 @@
 """Detection of software installed in the system, based on paths inspections
 and running executables.
 """
+
 import collections
 import concurrent.futures
 import os

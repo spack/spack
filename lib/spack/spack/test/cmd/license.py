@@ -33,18 +33,15 @@ def test_verify(tmp_path: pathlib.Path):
 
     lgpl_header = source_dir / "lgpl_header.py"
     with lgpl_header.open("w") as f:
-        f.write(
-            """\
+        f.write("""\
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
-"""
-        )
+""")
 
     not_in_first_n_lines = source_dir / "not_in_first_n_lines.py"
     with not_in_first_n_lines.open("w") as f:
-        f.write(
-            """\
+        f.write("""\
 #
 #
 #
@@ -53,18 +50,15 @@ def test_verify(tmp_path: pathlib.Path):
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""
-        )
+""")
 
     correct_header = source_dir / "correct_header.py"
     with correct_header.open("w") as f:
-        f.write(
-            """\
+        f.write("""\
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""
-        )
+""")
 
     out = license("--root", str(tmp_path), "verify", fail_on_error=False)
 

@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/merged.py
    :lines: 32-
 """
+
 from typing import Any, Dict
 
 import spack.schema.bootstrap

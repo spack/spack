@@ -20,8 +20,7 @@ class BuildWarnings(Package):
     def install(self, spec, prefix):
         if sys.platform == "win32":
             with open("configure.bat", "w", encoding="utf-8") as f:
-                f.write(
-                    """
+                f.write("""
   @ECHO off
   ECHO 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
   ECHO 'checking whether the C compiler works... yes'
@@ -30,14 +29,12 @@ class BuildWarnings(Package):
   ECHO 'checking for suffix of executables...'
   ECHO 'foo.c:89: warning: some weird warning!'
   EXIT /B 1
-                  """
-                )
+                  """)
 
             Executable("configure.bat")("--prefix=%s" % self.prefix)
         else:
             with open("configure", "w", encoding="utf-8") as f:
-                f.write(
-                    """#!/bin/sh\n
+                f.write("""#!/bin/sh\n
   echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
   echo 'checking whether the C compiler works... yes'
   echo 'checking for C compiler default output file name... a.out'
@@ -45,6 +42,5 @@ class BuildWarnings(Package):
   echo 'checking for suffix of executables...'
   echo 'foo.c:89: warning: some weird warning!'
   exit 1
-  """
-                )
+  """)
             configure()

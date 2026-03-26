@@ -444,13 +444,10 @@ class PythonPackageTemplate(PackageTemplate):
                 self.url_line = '    pypi = "{url}"'
         else:
             # Add a reminder about spack preferring PyPI URLs
-            self.url_line = (
-                """
+            self.url_line = """
     # FIXME: ensure the package is not available through PyPI. If it is,
     # re-run `spack create --force` with the PyPI URL.
-"""
-                + self.url_line
-            )
+""" + self.url_line
 
         super().__init__(name, url, versions, languages)
 

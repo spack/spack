@@ -216,8 +216,7 @@ def test_dev_build_env(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
   specs:
   - dev-build-test-install@0.0.0
@@ -226,8 +225,7 @@ spack:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: {os.path.relpath(str(build_dir), start=str(envdir))}
-"""
-            )
+""")
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             install()
@@ -259,8 +257,7 @@ def test_dev_build_env_with_vars(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - dev-build-test-install@0.0.0
@@ -269,8 +266,7 @@ spack:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: $CUSTOM_BUILD_PATH
-"""
-            )
+""")
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             install()
@@ -300,8 +296,7 @@ def test_dev_build_env_version_mismatch(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
   specs:
   - dev-build-test-install@0.0.0
@@ -310,8 +305,7 @@ spack:
     dev-build-test-install:
       spec: dev-build-test-install@1.1.1
       path: {build_dir}
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
@@ -355,8 +349,7 @@ def test_dev_build_multiple(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
   specs:
   - dev-build-test-dependent@0.0.0
@@ -368,8 +361,7 @@ spack:
     dev-build-test-dependent:
       spec: dev-build-test-dependent@0.0.0
       path: {root_dir}
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
@@ -410,8 +402,7 @@ def test_dev_build_env_dependency(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
   specs:
   - dependent-of-dev-build@0.0.0
@@ -420,8 +411,7 @@ spack:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: {os.path.relpath(str(build_dir), start=str(envdir))}
-"""
-            )
+""")
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
             # concretize in the environment to get the dev build info
@@ -469,8 +459,7 @@ def test_dev_build_rebuild_on_source_changes(
     envdir.mkdir()
     with fs.working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
   specs:
   - {test_spec}@0.0.0
@@ -479,8 +468,7 @@ spack:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: {build_dir}
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):

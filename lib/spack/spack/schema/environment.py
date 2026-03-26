@@ -4,6 +4,7 @@
 """Schema for environment modifications. Meant for inclusion in other
 schemas.
 """
+
 import collections.abc
 from typing import Any, Dict
 

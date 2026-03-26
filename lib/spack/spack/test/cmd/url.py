@@ -96,8 +96,8 @@ def test_url_list(mock_packages):
 def test_url_summary(mock_packages):
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
-    (total_urls, correct_names, correct_versions, name_count_dict, version_count_dict) = (
-        url_summary(None)
+    total_urls, correct_names, correct_versions, name_count_dict, version_count_dict = url_summary(
+        None
     )
 
     assert 0 < correct_names <= sum(name_count_dict.values()) <= total_urls

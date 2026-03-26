@@ -5,6 +5,7 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
+
 import collections.abc
 import enum
 import functools

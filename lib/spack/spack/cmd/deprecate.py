@@ -12,6 +12,7 @@ place.
 It is up to the user to ensure binary compatibility between the deprecated
 installation and its deprecator.
 """
+
 import argparse
 
 import spack.cmd

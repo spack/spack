@@ -173,18 +173,14 @@ def test_bootstrap_custom_store_in_environment(mutable_config, tmp_path: pathlib
     # during bootstrapping
     spack_yaml = tmp_path / "spack.yaml"
     install_root = tmp_path / "store"
-    spack_yaml.write_text(
-        """
+    spack_yaml.write_text("""
 spack:
   specs:
   - libelf
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
-    )
+""".format(install_root))
     with spack.environment.Environment(str(tmp_path)):
         assert spack.environment.active_environment()
         assert spack.config.get("config:install_tree:root") == str(install_root)

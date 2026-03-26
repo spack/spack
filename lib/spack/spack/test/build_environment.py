@@ -420,15 +420,13 @@ def test_external_prefixes_last(mutable_config, mock_packages, working_env, monk
     # the test to check if the associated paths are placed last.
     assert "dt-diamond-left" < "dt-diamond-right"
 
-    cfg_data = syaml.load_config(
-        """\
+    cfg_data = syaml.load_config("""\
 dt-diamond-left:
   externals:
   - spec: dt-diamond-left@1.0
     prefix: /fake/path1
   buildable: false
-"""
-    )
+""")
     spack.config.set("packages", cfg_data)
     top = spack.concretize.concretize_one("dt-diamond")
 

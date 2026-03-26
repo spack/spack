@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for bootstrap.yaml configuration file."""
+
 from typing import Any, Dict
 
 #: Schema of a single source

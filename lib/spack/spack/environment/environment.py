@@ -149,9 +149,7 @@ spack:
   view: true
   concretizer:
     unify: {}
-""".format(
-        "true" if spack.config.get("concretizer:unify") else "false"
-    )
+""".format("true" if spack.config.get("concretizer:unify") else "false")
 
 
 sep_re = re.escape(os.sep)

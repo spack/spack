@@ -6,6 +6,7 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
+
 import os
 import re
 import subprocess

@@ -176,8 +176,7 @@ def create(**kwargs):
     r, w = os.pipe()
     with contextlib.closing(os.fdopen(r, "r")) as r:
         with contextlib.closing(os.fdopen(w, "w")) as w:
-            w.write(
-                """
+            w.write("""
 Key-Type: rsa
 Key-Length: 4096
 Key-Usage: sign
@@ -187,9 +186,7 @@ Name-Comment: %(comment)s
 Expire-Date: %(expires)s
 %%no-protection
 %%commit
-"""
-                % kwargs
-            )
+""" % kwargs)
         GPG("--gen-key", "--batch", input=r)
 
 

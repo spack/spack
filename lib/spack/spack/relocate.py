@@ -337,7 +337,7 @@ def fixup_macos_rpath(root, filename):
         return False
 
     # Get Mach-O header commands
-    (rpath_list, deps, id_dylib) = _macholib_get_paths(abspath)
+    rpath_list, deps, id_dylib = _macholib_get_paths(abspath)
 
     # Convert rpaths list to (name -> number of occurrences)
     add_rpaths = set()
@@ -353,7 +353,7 @@ def fixup_macos_rpath(root, filename):
     for name in deps:
         if name.startswith(spack_root):
             tty.debug("Spack-installed dependency for {0}: {1}".format(abspath, name))
-            (dirname, basename) = os.path.split(name)
+            dirname, basename = os.path.split(name)
             if dirname != root or dirname in rpaths:
                 # Only change the rpath if it's a dependency *or* if the root
                 # rpath was already added to the library (this is to prevent

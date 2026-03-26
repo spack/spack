@@ -190,29 +190,22 @@ def test_get_config_scope_merged(mock_low_high_config):
     fs.mkdirp(high_path)
 
     with open(os.path.join(low_path, "repos.yaml"), "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 repos:
   repo3: repo3
-"""
-        )
+""")
 
     with open(os.path.join(high_path, "repos.yaml"), "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 repos:
   repo1: repo1
   repo2: repo2
-"""
-        )
+""")
 
-    assert (
-        config("get", "repos").strip()
-        == """repos:
+    assert config("get", "repos").strip() == """repos:
   repo1: repo1
   repo2: repo2
   repo3: repo3"""
-    )
 
 
 def test_config_edit(mutable_config, working_env):
@@ -266,12 +259,9 @@ def test_config_add(mutable_empty_config):
     config("add", "config:dirty:true")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   dirty: true
 """
-    )
 
 
 def test_config_add_list(mutable_empty_config):
@@ -280,15 +270,12 @@ def test_config_add_list(mutable_empty_config):
     config("add", "config:template_dirs:test3")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test3
   - test2
   - test1
 """
-    )
 
 
 def test_config_add_override(mutable_empty_config):
@@ -296,25 +283,19 @@ def test_config_add_override(mutable_empty_config):
     config("add", "config:template_dirs:[test2]")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test2
   - test1
 """
-    )
 
     config("add", "config::template_dirs:[test2]")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test2
 """
-    )
 
 
 def test_config_add_override_leaf(mutable_empty_config):
@@ -322,25 +303,19 @@ def test_config_add_override_leaf(mutable_empty_config):
     config("add", "config:template_dirs:[test2]")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test2
   - test1
 """
-    )
 
     config("add", "config:template_dirs::[test2]")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   'template_dirs:':
   - test2
 """
-    )
 
 
 def test_config_add_update_dict(mutable_empty_config):
@@ -369,13 +344,10 @@ def test_config_add_ordered_dict(mutable_empty_config):
     config("add", "mirrors:second:/path/to/second")
     output = config("get", "mirrors")
 
-    assert (
-        output
-        == """mirrors:
+    assert output == """mirrors:
   first: /path/to/first
   second: /path/to/second
 """
-    )
 
 
 def test_config_add_interpret_oneof(mutable_empty_config):
@@ -402,12 +374,9 @@ def test_config_add_from_file(mutable_empty_config, tmp_path: pathlib.Path):
     config("add", "-f", file)
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   dirty: true
 """
-    )
 
 
 def test_config_add_from_file_multiple(mutable_empty_config, tmp_path: pathlib.Path):
@@ -423,13 +392,10 @@ def test_config_add_from_file_multiple(mutable_empty_config, tmp_path: pathlib.P
     config("add", "-f", file)
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   dirty: true
   template_dirs: [test1]
 """
-    )
 
 
 def test_config_add_override_from_file(mutable_empty_config, tmp_path: pathlib.Path):
@@ -445,12 +411,9 @@ def test_config_add_override_from_file(mutable_empty_config, tmp_path: pathlib.P
     config("add", "-f", file)
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs: [test2]
 """
-    )
 
 
 def test_config_add_override_leaf_from_file(mutable_empty_config, tmp_path: pathlib.Path):
@@ -466,12 +429,9 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmp_path: path
     config("add", "-f", file)
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   'template_dirs:': [test2]
 """
-    )
 
 
 def test_config_add_update_dict_from_file(mutable_empty_config, tmp_path: pathlib.Path):
@@ -526,11 +486,8 @@ def test_config_remove_value(mutable_empty_config):
     config("remove", "config:dirty:true")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config: {}
+    assert output == """config: {}
 """
-    )
 
 
 def test_config_remove_alias_rm(mutable_empty_config):
@@ -538,11 +495,8 @@ def test_config_remove_alias_rm(mutable_empty_config):
     config("rm", "config:dirty:true")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config: {}
+    assert output == """config: {}
 """
-    )
 
 
 def test_config_remove_dict(mutable_empty_config):
@@ -550,11 +504,8 @@ def test_config_remove_dict(mutable_empty_config):
     config("rm", "config:dirty")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config: {}
+    assert output == """config: {}
 """
-    )
 
 
 def test_remove_from_list(mutable_empty_config):
@@ -564,14 +515,11 @@ def test_remove_from_list(mutable_empty_config):
     config("remove", "config:template_dirs:test2")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test3
   - test1
 """
-    )
 
 
 def test_remove_list(mutable_empty_config):
@@ -581,14 +529,11 @@ def test_remove_list(mutable_empty_config):
     config("remove", "config:template_dirs:[test2]")
     output = config("get", "config")
 
-    assert (
-        output
-        == """config:
+    assert output == """config:
   template_dirs:
   - test3
   - test1
 """
-    )
 
 
 def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
@@ -699,13 +644,11 @@ def test_config_prefer_upstream(
 
 def test_environment_config_update(tmp_path: pathlib.Path, mutable_config, monkeypatch):
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
   config:
     ccache: true
-"""
-        )
+""")
 
     def update_config(data):
         data["config"]["ccache"] = False

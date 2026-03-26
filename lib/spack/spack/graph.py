@@ -37,6 +37,7 @@ kind of like the graph git shows with ``git log --graph``, e.g.
 
 :func:`graph_dot` will output a graph of a spec (or multiple specs) in dot format.
 """
+
 import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple

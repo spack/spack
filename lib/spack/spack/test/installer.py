@@ -43,12 +43,10 @@ def _mock_repo(root, namespace):
     repodir = py.path.local(root) if isinstance(root, str) else root
     repodir.ensure(spack.repo.packages_dir_name, dir=True)
     yaml = repodir.join("repo.yaml")
-    yaml.write(
-        f"""
+    yaml.write(f"""
 repo:
    namespace: {namespace}
-"""
-    )
+""")
 
 
 def _noop(*args, **kwargs):

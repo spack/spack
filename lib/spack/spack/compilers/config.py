@@ -4,6 +4,7 @@
 """This module contains functions related to finding compilers on the system,
 and configuring Spack to use multiple compilers.
 """
+
 import os
 import re
 import sys

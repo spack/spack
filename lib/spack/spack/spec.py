@@ -46,6 +46,7 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.
 """
+
 import collections
 import collections.abc
 import enum
@@ -4257,7 +4258,7 @@ class Spec:
             return clr.colorize(f"{color_fmt}{sigil}{clr.cescape(string)}@.", color=color)
 
         def format_attribute(match_object: Match) -> str:
-            (esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace) = (
+            esc, sig, dep, hash, hash_len, attribute, close_brace, unmatched_close_brace = (
                 match_object.groups()
             )
             if esc:

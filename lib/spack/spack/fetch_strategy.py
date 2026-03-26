@@ -25,6 +25,7 @@ in order to build it.  They need to define the following methods:
 ``archive()``
     Archive a source directory, e.g. for creating a mirror.
 """
+
 import copy
 import functools
 import hashlib

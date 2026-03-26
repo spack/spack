@@ -20,8 +20,7 @@ class BuildError(Package):
     def install(self, spec, prefix):
         if sys.platform == "win32":
             with open("configure.bat", "w", encoding="utf-8") as f:
-                f.write(
-                    """
+                f.write("""
     @ECHO off
     ECHO checking build system type... x86_64-apple-darwin16.6.0
     ECHO checking host system type... x86_64-apple-darwin16.6.0
@@ -32,15 +31,13 @@ class BuildError(Package):
     ECHO configure: error: in /path/to/some/file:
     ECHO configure: error: cannot run C compiled programs.
     EXIT /B 1
-                  """
-                )
+                  """)
 
             Executable("configure.bat")("--prefix=%s" % self.prefix)
             configure()
         else:
             with open("configure", "w", encoding="utf-8") as f:
-                f.write(
-                    """#!/bin/sh\n
+                f.write("""#!/bin/sh\n
     echo 'checking build system type... x86_64-apple-darwin16.6.0'
     echo 'checking host system type... x86_64-apple-darwin16.6.0'
     echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
@@ -50,6 +47,5 @@ class BuildError(Package):
     echo 'configure: error: in /path/to/some/file:'
     echo 'configure: error: cannot run C compiled programs.'
     exit 1
-    """
-                )
+    """)
             configure()

@@ -65,8 +65,7 @@ def env_yaml(tmp_path: pathlib.Path):
     """Return a sample env.yaml for test purposes"""
     env_yaml = str(tmp_path / "env.yaml")
     with open(env_yaml, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
     config:
         verify_ssl: False
@@ -76,8 +75,7 @@ spack:
             compiler: [ 'gcc@4.5.3' ]
     repos:
         z: /x/y/z
-"""
-        )
+""")
     return env_yaml
 
 
@@ -884,13 +882,11 @@ def test_alternate_override(monkeypatch):
 def test_immutable_scope(tmp_path: pathlib.Path):
     config_yaml = str(tmp_path / "config.yaml")
     with open(config_yaml, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 config:
     install_tree:
       root: dummy_tree_value
-"""
-        )
+""")
     scope = spack.config.DirectoryConfigScope("test", str(tmp_path), writable=False)
 
     data = scope.get_section("config")
@@ -929,8 +925,7 @@ def test_single_file_scope_section_override(tmp_path: pathlib.Path, config):
     """
     env_yaml = str(tmp_path / "env.yaml")
     with open(env_yaml, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
     config:
         verify_ssl: False
@@ -939,8 +934,7 @@ spack:
             target: [ x86_64 ]
     repos:
         z: /x/y/z
-"""
-        )
+""")
 
     scope = spack.config.SingleFileScope(
         "env", env_yaml, spack.schema.env.schema, yaml_path=["spack"]
@@ -1241,9 +1235,7 @@ def mock_include_scope(tmp_path):
 
     include = tmp_path / "include.yaml"
     with include.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include::
                   - name: "test1"
                     path: "test1"
@@ -1255,9 +1247,7 @@ def mock_include_scope(tmp_path):
                   - name: "test3"
                     path: "test3"
                     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-                """
-            )
-        )
+                """))
 
     yield tmp_path
 
@@ -1294,15 +1284,11 @@ def test_modify_scope_precedence(working_env, include_config_factory, tmp_path):
     subdir2.mkdir()
 
     with include_yaml.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include::
                   - name: "subdir"
                     path: "subdir"
-                """
-            )
-        )
+                """))
 
     cfg.push_scope(
         spack.config.DirectoryConfigScope("override", str(tmp_path)),
@@ -1315,16 +1301,12 @@ def test_modify_scope_precedence(working_env, include_config_factory, tmp_path):
     cfg.remove_scope("override")
 
     with include_yaml.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include::
                   - name: "subdir"
                     path: "subdir"
                     prefer_modify: true
-                """
-            )
-        )
+                """))
 
     cfg.push_scope(
         spack.config.DirectoryConfigScope("override", str(tmp_path)),
@@ -1337,18 +1319,14 @@ def test_modify_scope_precedence(working_env, include_config_factory, tmp_path):
     cfg.remove_scope("override")
 
     with include_yaml.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include::
                   - name: "subdir"
                     path: "subdir"
                   - name: "subdir2"
                     path: "subdir2"
                     prefer_modify: true
-                """
-            )
-        )
+                """))
 
     cfg.push_scope(
         spack.config.DirectoryConfigScope("override", str(tmp_path)),
@@ -1394,26 +1372,18 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     anotherdir.mkdir()
 
     with include_yaml.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include::
                   - name: "subdir"
                     path: "subdir"
-                """
-            )
-        )
+                """))
 
     with (subdir / "include.yaml").open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """\
+        f.write(textwrap.dedent("""\
                 include:
                   - name: "anotherdir"
                     path: "../anotherdir"
-                """
-            )
-        )
+                """))
 
     # check the mock config is correct
     cfg = include_config_factory()

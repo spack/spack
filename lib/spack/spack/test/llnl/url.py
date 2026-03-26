@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for spack.llnl.url functions"""
+
 import itertools
 
 import pytest

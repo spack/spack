@@ -28,6 +28,7 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+
 import io
 import os
 import pathlib
@@ -532,7 +533,7 @@ def substitute_version(path: str, new_version) -> str:
        >>> substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
        "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
     """
-    (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
+    name, ns, nl, noffs, ver, vs, vl, voffs = substitution_offsets(path)
 
     new_path = ""
     last = 0
@@ -566,7 +567,7 @@ def color_url(path, **kwargs):
     errors = kwargs.get("errors", False)
     subs = kwargs.get("subs", False)
 
-    (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
+    name, ns, nl, noffs, ver, vs, vl, voffs = substitution_offsets(path)
 
     nends = [no + nl - 1 for no in noffs]
     vends = [vo + vl - 1 for vo in voffs]

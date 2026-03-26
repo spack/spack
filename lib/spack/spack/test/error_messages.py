@@ -317,13 +317,10 @@ all_pkgs = [
 
 
 def _add_import(pkg_def):
-    return (
-        """\
+    return """\
 from spack.package import *
 from spack.package import Package
-"""
-        + pkg_def
-    )
+""" + pkg_def
 
 
 all_pkgs = list((x, _add_import(y)) for (x, y) in all_pkgs)
@@ -342,13 +339,11 @@ def create_test_repo(tmp_path, pkg_name_content_tuples):
         pass
     repo_yaml = os.path.join(repo_path, "repo.yaml")
     with open(str(repo_yaml), "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
+        f.write(f"""\
 repo:
   namespace: {repo_name}
   api: v2.1
-"""
-        )
+""")
 
     _repo_name_id += 1
 

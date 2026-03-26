@@ -20,8 +20,7 @@ from spack.version import Version
 
 @pytest.fixture()
 def configure_permissions():
-    conf = syaml.load_config(
-        """\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: group
@@ -38,8 +37,7 @@ mpileaks:
 callpath:
   permissions:
     write: world
-"""
-    )
+""")
     spack.config.set("packages", conf, scope="concretize")
 
     yield
@@ -179,8 +177,7 @@ class TestConcretizePreferences:
 
     def test_config_set_pkg_property_new(self, mock_packages_repo):
         """Test that you can set arbitrary attributes on the Package class"""
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 mpileaks:
   package_attributes:
     v1: 1
@@ -193,8 +190,7 @@ mpileaks:
     v6:
     - 1
     - 2
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         with spack.repo.use_repositories(mock_packages_repo):
             spec = concretize("mpileaks")
@@ -261,8 +257,7 @@ mpileaks:
         assert not spec.external and spec.package.provides("mpi")
 
         # load config
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 all:
     providers:
         mpi: [mpich]
@@ -271,8 +266,7 @@ mpich:
     externals:
     - spec: mpich@3.0.4
       prefix: /dummy/path
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
@@ -295,8 +289,7 @@ mpich:
         assert not spec.external and spec.package.provides("mpi")
 
         # load config
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 all:
     providers:
         mpi: [mpich]
@@ -305,8 +298,7 @@ mpi:
     externals:
     - spec: mpich@3.0.4
       modules: [dummy]
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
@@ -314,12 +306,10 @@ mpi:
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
     def test_buildable_false(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 libelf:
   buildable: false
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
         assert not spack.package_prefs.is_spec_buildable(spec)
@@ -328,12 +318,10 @@ libelf:
         assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_virtual(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 mpi:
   buildable: false
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
         assert spack.package_prefs.is_spec_buildable(spec)
@@ -342,12 +330,10 @@ mpi:
         assert not spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_all(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 all:
   buildable: false
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
         assert not spack.package_prefs.is_spec_buildable(spec)
@@ -356,14 +342,12 @@ all:
         assert not spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_all_true_package(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 all:
   buildable: false
 libelf:
   buildable: true
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
         assert spack.package_prefs.is_spec_buildable(spec)
@@ -372,14 +356,12 @@ libelf:
         assert not spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_all_true_virtual(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 all:
   buildable: false
 mpi:
   buildable: true
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
         spec = Spec("libelf")
         assert not spack.package_prefs.is_spec_buildable(spec)
@@ -388,14 +370,12 @@ mpi:
         assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_virtual_true_pacakge(self):
-        conf = syaml.load_config(
-            """\
+        conf = syaml.load_config("""\
 mpi:
   buildable: false
 mpich:
   buildable: true
-"""
-        )
+""")
         spack.config.set("packages", conf, scope="concretize")
 
         spec = Spec("zmpi")
@@ -508,8 +488,7 @@ mpich:
         """Tests that a version preference not mentioned in package.py cannot be used in
         a built spec.
         """
-        mpileaks_external = syaml.load_config(
-            """
+        mpileaks_external = syaml.load_config("""
     mpileaks:
       # Version 0.9 is not mentioned in package.py
       version: ["0.9"]
@@ -517,8 +496,7 @@ mpich:
       externals:
       - spec: mpileaks@0.9 +debug
         prefix: /path
-    """
-        )
+    """)
 
         with spack.config.override("packages", mpileaks_external):
             # Asking for mpileaks+debug results in the external being chosen

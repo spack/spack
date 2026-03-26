@@ -76,13 +76,11 @@ def mock_git_repo(git, tmp_path: pathlib.Path):
         path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
         os.makedirs(os.path.dirname(path_to_env))
         with open(path_to_env, "w", encoding="utf-8") as f:
-            f.write(
-                """
+            f.write("""
 spack:
     specs:
     - a
-"""
-            )
+""")
 
         git("add", path_to_env)
 
@@ -94,13 +92,11 @@ spack:
         git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
 
         with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
-            f.write(
-                """
+            f.write("""
 testjob:
     script:
         - echo "success"
-            """
-            )
+            """)
 
         # second commit, adding a .gitlab-ci.yml
         git("add", ".gitlab-ci.yml")
@@ -275,8 +271,7 @@ def test_ci_generate_with_custom_settings(
     """Test use of user-provided scripts and attributes"""
     monkeypatch.setattr(spack, "get_version", lambda: "0.15.3")
     monkeypatch.setattr(spack, "get_spack_commit", lambda: "big ol commit sha")
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - archive-files
@@ -308,8 +303,7 @@ spack:
           artifacts:
             paths:
             - some/custom/artifact
-"""
-    )
+""")
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert yaml_contents["variables"]["SPACK_VERSION"] == "0.15.3"
@@ -350,8 +344,7 @@ spack:
 
 def test_ci_generate_pkg_with_deps(ci_generate_test, tmp_path: pathlib.Path, ci_base_environment):
     """Test pipeline generation for a package w/ dependencies"""
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - dependent-install
@@ -370,8 +363,7 @@ spack:
         build-job:
           tags:
             - donotcare
-"""
-    )
+""")
     yaml_contents = syaml.load(outputfile.read_text())
 
     found = []
@@ -393,8 +385,7 @@ def test_ci_generate_for_pr_pipeline(ci_generate_test, tmp_path: pathlib.Path, m
     """Test generation of a PR pipeline with disabled rebuild-index"""
     monkeypatch.setenv("SPACK_PIPELINE_TYPE", "spack_pull_request")
 
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - dependent-install
@@ -417,8 +408,7 @@ spack:
         image: donotcare
         tags: [donotcare]
     rebuild-index: False
-"""
-    )
+""")
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert "rebuild-index" not in yaml_contents
@@ -432,8 +422,7 @@ spack:
 
 def test_ci_generate_with_external_pkg(ci_generate_test, tmp_path: pathlib.Path, monkeypatch):
     """Make sure we do not generate jobs for external pkgs"""
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - archive-files
@@ -450,8 +439,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-"""
-    )
+""")
     yaml_contents = syaml.load(outputfile.read_text())
     # Check that the "externaltool" package was not erroneously staged
     assert all("externaltool" not in key for key in yaml_contents)
@@ -459,13 +447,11 @@ spack:
 
 def test_ci_rebuild_missing_config(tmp_path: pathlib.Path, working_env, mutable_mock_env_path):
     spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
-        """
+    spack_yaml.write_text("""
     spack:
       specs:
         - archive-files
-    """
-    )
+    """)
 
     env_cmd("create", "test", str(spack_yaml))
     env_cmd("activate", "--without-view", "--sh", "test")
@@ -511,8 +497,7 @@ def create_rebuild_env(
 
     env_dir.mkdir(parents=True)
     with open(env_dir / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""
+        f.write(f"""
 spack:
   definitions:
     - packages: [{pkg_name}]
@@ -536,8 +521,7 @@ spack:
     url: https://my.fake.cdash
     project: Not used
     site: Nothing
-"""
-        )
+""")
 
     with ev.Environment(env_dir) as env:
         env.concretize()
@@ -668,8 +652,7 @@ def test_ci_require_signing(
     monkeypatch,
 ):
     spack_yaml = tmp_path / "spack.yaml"
-    spack_yaml.write_text(
-        f"""
+    spack_yaml.write_text(f"""
 spack:
  specs:
    - archive-files
@@ -684,8 +667,7 @@ spack:
          tags:
            - donotcare
          image: donotcare
-"""
-    )
+""")
     env_cmd("activate", "--without-view", "--sh", "-d", str(spack_yaml.parent))
 
     # Run without the variable to make sure we don't accidentally require signing
@@ -714,8 +696,7 @@ def test_ci_nothing_to_rebuild(
     mirror_url = mirror_dir.as_uri()
 
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""
+        f.write(f"""
 spack:
  definitions:
    - packages: [archive-files]
@@ -732,8 +713,7 @@ spack:
          tags:
            - donotcare
          image: donotcare
-"""
-        )
+""")
 
     install_cmd("archive-files")
     buildcache_cmd("push", "-f", "-u", "--update-index", mirror_url, "archive-files")
@@ -782,8 +762,7 @@ def test_push_to_build_cache(
 
     with working_dir(tmp_path):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                f"""\
+            f.write(f"""\
 spack:
  definitions:
    - packages: [patchelf]
@@ -809,8 +788,7 @@ spack:
          - nonbuildtag
        image: basicimage
        custom_attribute: custom!
-"""
-            )
+""")
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as current_env:
             current_env.concretize()
@@ -914,8 +892,7 @@ def test_ci_generate_override_runner_attrs(
     monkeypatch.setattr(spack, "spack_version", "0.20.0.test0")
     monkeypatch.setattr(spack, "get_version", lambda: "0.20.0.test0 (blah)")
     monkeypatch.setattr(spack, "get_spack_commit", lambda: git_version)
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - dependent-install
@@ -974,8 +951,7 @@ spack:
     - cleanup-job:
         image: donotcare
         tags: [donotcare]
-"""
-    )
+""")
 
     yaml_contents = syaml.load(outputfile.read_text())
 
@@ -1060,8 +1036,7 @@ def test_ci_rebuild_index(
     mirror_url = mirror_dir.as_uri()
 
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""
+        f.write(f"""
 spack:
   specs:
   - callpath
@@ -1076,8 +1051,7 @@ spack:
           tags:
           - donotcare
           image: donotcare
-"""
-        )
+""")
 
     with working_dir(tmp_path):
         env_cmd("create", "test", "./spack.yaml")
@@ -1133,8 +1107,7 @@ def test_ci_generate_prune_untouched(
     monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
     with spack.repo.use_repositories(repo_builder.root, override=False):
-        spack_yaml, outputfile, _ = ci_generate_test(
-            f"""\
+        spack_yaml, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - archive-files
@@ -1149,8 +1122,7 @@ spack:
         tags:
           - donotcare
         image: donotcare
-"""
-        )
+""")
 
     # Dependency graph rooted at callpath
     # callpath -> dyninst -> libelf
@@ -1193,8 +1165,7 @@ def test_ci_subcommands_without_mirror(
 ):
     """Make sure we catch if there is not a mirror and report an error"""
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
   specs:
     - archive-files
@@ -1207,8 +1178,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-"""
-        )
+""")
 
     with working_dir(tmp_path):
         env_cmd("create", "test", "./spack.yaml")
@@ -1251,8 +1221,7 @@ def test_ci_generate_read_broken_specs_url(
 
     # Test that `spack ci generate` notices this broken spec and fails.
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
+        f.write(f"""\
 spack:
   specs:
     - dependent-install
@@ -1272,8 +1241,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-"""
-        )
+""")
 
     with working_dir(tmp_path):
         env_cmd("create", "test", "./spack.yaml")
@@ -1299,8 +1267,7 @@ def test_ci_generate_external_signing_job(
     the location where the binary hash information is written and 2) we
     properly generate a final signing job in the pipeline."""
     monkeypatch.setenv("SPACK_PIPELINE_TYPE", "spack_protected_branch")
-    _, outputfile, _ = ci_generate_test(
-        f"""\
+    _, outputfile, _ = ci_generate_test(f"""\
 spack:
   specs:
     - archive-files
@@ -1327,8 +1294,7 @@ spack:
         script::
           - echo hello
         custom_attribute: custom!
-"""
-    )
+""")
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert "sign-pkgs" in yaml_contents
@@ -1353,8 +1319,7 @@ def test_ci_reproduce(
     image_name = "org/image:tag"
 
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""
+        f.write(f"""
 spack:
  definitions:
    - packages: [archive-files]
@@ -1371,8 +1336,7 @@ spack:
          tags:
            - donotcare
          image: {image_name}
-"""
-        )
+""")
 
     with working_dir(tmp_path), ev.Environment(".") as env:
         env.concretize()
@@ -1561,8 +1525,7 @@ def test_gitlab_config_scopes(install_mockery, ci_generate_test, tmp_path: pathl
     configs_path = tmp_path / "gitlab" / "configs"
     configs_path.mkdir(parents=True, exist_ok=True)
     with open(configs_path / "ci.yaml", "w", encoding="utf-8") as fd:
-        fd.write(
-            """
+        fd.write("""
 ci:
   pipeline-gen:
   - reindex-job:
@@ -1571,12 +1534,10 @@ ci:
         KUBERNETES_CPU_REQUEST: 10
         KUBERNETES_MEMORY_REQUEST: 100
       tags: ["spack", "service"]
-"""
-        )
+""")
 
     rel_configs_path = configs_path.relative_to(tmp_path)
-    manifest, outputfile, _ = ci_generate_test(
-        f"""\
+    manifest, outputfile, _ = ci_generate_test(f"""\
 spack:
   config:
     install_tree:
@@ -1597,8 +1558,7 @@ spack:
     - build-job:
         image: "ecpe4s/ubuntu20.04-runner-x86_64:2023-01-01"
         tags: ["some_tag"]
-"""
-    )
+""")
 
     yaml_contents = syaml.load(outputfile.read_text())
 
@@ -1654,8 +1614,7 @@ def test_ci_generate_mirror_config(
     """Make sure the correct mirror gets used as the buildcache destination"""
     fst, snd = (tmp_path / "first").as_uri(), (tmp_path / "second").as_uri()
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
+        f.write(f"""\
 spack:
   specs:
     - archive-files
@@ -1671,8 +1630,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-"""
-        )
+""")
 
     with ev.Environment(tmp_path):
         ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
@@ -1686,8 +1644,7 @@ spack:
 def dynamic_mapping_setup(tmp_path: pathlib.Path):
     filename = str(tmp_path / "spack.yaml")
     with open(filename, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
   specs:
     - pkg-a
@@ -1700,8 +1657,7 @@ spack:
         require: ["variables"]
         ignore: ["ignored_field"]
         allow: ["variables", "retry"]
-"""
-        )
+""")
 
     spec_a = spack.concretize.concretize_one("pkg-a")
 

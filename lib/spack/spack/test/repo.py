@@ -27,20 +27,16 @@ def extra_repo(tmp_path_factory: pytest.TempPathFactory, request):
     cache_dir = tmp_path_factory.mktemp("cache")
     (repo_dir / request.param).mkdir(parents=True, exist_ok=True)
     if request.param == "packages":
-        (repo_dir / "repo.yaml").write_text(
-            """
+        (repo_dir / "repo.yaml").write_text("""
 repo:
   namespace: extra_test_repo
-"""
-        )
+""")
     else:
-        (repo_dir / "repo.yaml").write_text(
-            f"""
+        (repo_dir / "repo.yaml").write_text(f"""
 repo:
   namespace: extra_test_repo
   subdirectory: '{request.param}'
-"""
-        )
+""")
     repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
@@ -384,12 +380,10 @@ def test_parse_package_api_version():
 def test_repo_package_api_version(tmp_path: pathlib.Path):
     """Test that we can specify the API version of a repository."""
     (tmp_path / "example" / "packages").mkdir(parents=True)
-    (tmp_path / "example" / "repo.yaml").write_text(
-        """\
+    (tmp_path / "example" / "repo.yaml").write_text("""\
 repo:
     namespace: example
-"""
-    )
+""")
     cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)
 
@@ -431,23 +425,19 @@ def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capfd):
 
     # Create two invalid module names
     (repo_dir / "packages" / "zlib-ng").mkdir()
-    (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
-        """
+    (repo_dir / "packages" / "zlib-ng" / "package.py").write_text("""
 from spack.package import PackageBase
 
 class ZlibNg(PackageBase):
     pass
-"""
-    )
+""")
     (repo_dir / "packages" / "UPPERCASE").mkdir()
-    (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
-        """
+    (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text("""
 from spack.package import PackageBase
 
 class Uppercase(PackageBase):
     pass
-"""
-    )
+""")
 
     with spack.repo.use_repositories(str(repo_dir)) as repo:
         assert len(repo.all_package_names()) == 0
@@ -464,14 +454,12 @@ def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path):
 
     # Create an invalid module name
     (repo_dir / "packages" / "_1example_2_test").mkdir()
-    (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
-        """
+    (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text("""
 from spack.package import PackageBase
 
 class _1example2Test(PackageBase):
     pass
-"""
-    )
+""")
 
     with spack.repo.use_repositories(str(repo_dir)) as repo:
         assert repo.exists("1example-2-test")
@@ -516,12 +504,10 @@ def test_namespace_is_optional_in_v2(tmp_path: pathlib.Path):
     """Test that a repo without a namespace is valid in v2."""
     repo_yaml_dir = tmp_path / "spack_repo" / "foo" / "bar" / "baz"
     (repo_yaml_dir / "packages").mkdir(parents=True)
-    (repo_yaml_dir / "repo.yaml").write_text(
-        """\
+    (repo_yaml_dir / "repo.yaml").write_text("""\
 repo:
   api: v2.0
-"""
-    )
+""")
 
     cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo = spack.repo.Repo(str(repo_yaml_dir), cache=cache)
@@ -561,13 +547,11 @@ def test_is_package_module():
 def test_environment_activation_updates_repo_path(tmp_path: pathlib.Path):
     """Test that the environment activation updates the repo path correctly."""
     repo_root, _ = spack.repo.create_repo(str(tmp_path / "foo"), namespace="bar")
-    (tmp_path / "spack.yaml").write_text(
-        """\
+    (tmp_path / "spack.yaml").write_text("""\
 spack:
     repos:
         bar: $env/foo/spack_repo/bar
-"""
-    )
+""")
     env = spack.environment.Environment(tmp_path)
 
     with env:
@@ -734,13 +718,11 @@ a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
             elif action == "checkout":
                 # The spack-repo-index.yaml is optional; we test Spack reads from it.
                 with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
-                    f.write(
-                        """\
+                    f.write("""\
 repo_index:
   paths:
   - spack_repo/foo
-"""
-                    )
+""")
 
             return ""
 
@@ -828,13 +810,11 @@ a8eff4da7aab59bbf5996ac1720954bf82443247        refs/heads/develop
             elif action == "checkout":
                 # The spack-repo-index.yaml is optional; we test Spack reads from it.
                 with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
-                    f.write(
-                        """\
+                    f.write("""\
 repo_index:
   paths:
   - spack_repo/foo
-"""
-                    )
+""")
 
             return ""
 

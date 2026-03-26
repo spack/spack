@@ -29,13 +29,9 @@ def test_read_unicode(tmp_path: pathlib.Path, working_env):
         os.environ["LD_LIBRARY_PATH"] = spack.main.spack_ld_library_path
         # make a script that prints some unicode
         with open(script_name, "w", encoding="utf-8") as f:
-            f.write(
-                """#!{0}
+            f.write("""#!{0}
 print(u'\\xc3')
-""".format(
-                    sys.executable
-                )
-            )
+""".format(sys.executable))
 
         # make it executable
         fs.set_executable(script_name)

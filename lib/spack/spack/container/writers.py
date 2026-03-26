@@ -4,6 +4,7 @@
 """Writers for different kind of recipes and related
 convenience functions.
 """
+
 import copy
 import shlex
 from collections import namedtuple

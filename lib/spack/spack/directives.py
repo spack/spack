@@ -39,6 +39,7 @@ package class as first argument::
     def _execute_example_directive(pkg, arg1, arg2):
         # modify pkg.example based on arg1 and arg2
 """
+
 import collections
 import collections.abc
 import os

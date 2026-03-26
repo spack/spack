@@ -29,11 +29,9 @@ pytestmark = pytest.mark.not_on_windows(
 def test_version_git_nonsense_output(tmp_path: pathlib.Path, working_env, monkeypatch):
     git = tmp_path / "git"
     with open(git, "w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/sh
+        f.write("""#!/bin/sh
 echo --|not a hash|----
-"""
-        )
+""")
     fs.set_executable(str(git))
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
@@ -43,12 +41,10 @@ echo --|not a hash|----
 def test_version_git_fails(tmp_path: pathlib.Path, working_env, monkeypatch):
     git = tmp_path / "git"
     with open(git, "w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/sh
+        f.write("""#!/bin/sh
 echo 26552533be04e83e66be2c28e0eb5011cb54e8fa
 exit 1
-"""
-        )
+""")
     fs.set_executable(str(git))
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
@@ -59,13 +55,9 @@ def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
     git = tmp_path / "git"
     sha = "26552533be04e83e66be2c28e0eb5011cb54e8fa"
     with open(git, "w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/sh
+        f.write("""#!/bin/sh
 echo {0}
-""".format(
-                sha
-            )
-        )
+""".format(sha))
     fs.set_executable(str(git))
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
@@ -96,11 +88,9 @@ def test_main_calls_get_version(capfd, working_env, monkeypatch):
 def test_get_version_bad_git(tmp_path: pathlib.Path, working_env, monkeypatch):
     bad_git = str(tmp_path / "git")
     with open(bad_git, "w", encoding="utf-8") as f:
-        f.write(
-            """#!/bin/sh
+        f.write("""#!/bin/sh
 exit 1
-"""
-        )
+""")
     fs.set_executable(bad_git)
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(bad_git))
@@ -124,13 +114,11 @@ def test_bad_command_line_scopes(tmp_path: pathlib.Path, config):
 def test_add_command_line_scopes(tmp_path: pathlib.Path, mutable_config):
     config_yaml = str(tmp_path / "config.yaml")
     with open(config_yaml, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 config:
     verify_ssl: False
     dirty: False
-"""
-        )
+""")
 
     spack.main.add_command_line_scopes(mutable_config, [str(tmp_path)])
     assert mutable_config.get("config:verify_ssl") is False
@@ -142,24 +130,20 @@ def test_add_command_line_scope_env(tmp_path: pathlib.Path, mutable_mock_env_pat
     managed_env = ev.create("example").manifest_path
 
     with open(managed_env, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
   config:
     install_tree:
       root: /tmp/first
-"""
-        )
+""")
 
     with open(tmp_path / "spack.yaml", "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 spack:
   config:
     install_tree:
       root: /tmp/second
-"""
-        )
+""")
 
     config = spack.config.Configuration()
     spack.main.add_command_line_scopes(config, ["example", str(tmp_path)])
@@ -177,8 +161,7 @@ spack:
 def test_include_cfg(mock_low_high_config, write_config_file, tmp_path: pathlib.Path):
     cfg1_path = str(tmp_path / "include1.yaml")
     with open(cfg1_path, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 config:
   verify_ssl: False
   dirty: True
@@ -186,8 +169,7 @@ packages:
   python:
     require:
     - spec: "@3.11:"
-"""
-        )
+""")
 
     def python_cfg(_spec):
         return f"""\

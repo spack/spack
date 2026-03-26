@@ -21,6 +21,7 @@ done
 echo "==> Error: spack could not find a python interpreter!" >&2
 exit 1
 ":"""
+
 # Line above is a shell no-op, and ends a python multi-line comment.
 # The code above runs this file with our preferred python interpreter.
 

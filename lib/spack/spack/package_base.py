@@ -2447,10 +2447,8 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth)
             path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
             if not path_is_in_prefix:
-                raise RuntimeError(
-                    f"Attempting to generate rpath symlink out of rpath context:\
-{str(self.base_modification_prefix)}"
-                )
+                raise RuntimeError(f"Attempting to generate rpath symlink out of rpath context:\
+{str(self.base_modification_prefix)}")
             self._additional_library_dependents.add(new_pth)
 
     @property

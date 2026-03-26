@@ -9,6 +9,7 @@ we need to rely on another mechanism to get a concrete spec that fits the curren
 This module contains the logic to get a concrete spec for clingo, starting from a prototype
 JSON file for a similar platform.
 """
+
 import pathlib
 import sys
 from typing import Dict, Optional, Tuple, Type

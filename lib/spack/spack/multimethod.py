@@ -23,6 +23,7 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
+
 import functools
 from contextlib import contextmanager
 from typing import Optional, Union

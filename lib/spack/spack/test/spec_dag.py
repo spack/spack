@@ -4,6 +4,7 @@
 """
 These tests check Spec DAG operations using dummy packages.
 """
+
 import pytest
 
 import spack.concretize
@@ -929,21 +930,15 @@ def test_tree_cover_nodes_reduce_deptype():
     a.add_dependency_edge(b, depflag=dt.LINK, virtuals=())
     b.add_dependency_edge(d, depflag=dt.LINK, virtuals=())
     c.add_dependency_edge(d, depflag=dt.RUN | dt.TEST, virtuals=())
-    assert (
-        a.tree(cover="nodes", show_types=True)
-        == """\
+    assert a.tree(cover="nodes", show_types=True) == """\
 [    ]  a
 [ l  ]      ^b
 [bl  ]      ^d
 """
-    )
-    assert (
-        c.tree(cover="nodes", show_types=True)
-        == """\
+    assert c.tree(cover="nodes", show_types=True) == """\
 [    ]  c
 [  rt]      ^d
 """
-    )
 
 
 def test_synthetic_construction_of_split_dependencies_from_same_package(mock_packages, config):

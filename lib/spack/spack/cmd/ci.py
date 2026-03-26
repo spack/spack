@@ -636,8 +636,7 @@ def ci_rebuild(args):
 
         repro_job_url = f"{api_root_url}/projects/{ci_project_id}/jobs/{ci_job_id}/artifacts"
         # Control characters cause this to be printed in blue so it stands out
-        print(
-            f"""
+        print(f"""
 
 \033[34mTo reproduce this build locally, run:
 
@@ -649,8 +648,7 @@ If this project does not have public pipelines, you will need to first:
 
 ... then follow the printed instructions.\033[0;0m
 
-"""
-        )
+""")
 
     rebuild_timer.stop()
     try:

@@ -143,23 +143,19 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(
-                    ext_pname=extension.pname
-                ),
+""".format(ext_pname=extension.pname),
             )
 
             init_file = extension.main / "__init__.py"
             init_file.touch()
             implementation = extension.main / "implementation.py"
-            implementation.write_text(
-                """
+            implementation.write_text("""
 def hello_world():
     print('Hello world!')
 
 def hello_folks():
     print('Hello folks!')
-"""
-            )
+""")
             yield spack.main.SpackCommand("hello")
 
     yield _hwwmir

@@ -212,42 +212,42 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     bad_rpath = ["/nonexistent/path"]
 
     # Non-relocatable library id and duplicate rpaths
-    (root, filename) = make_dylib("abs", duplicate_rpaths)
+    root, filename = make_dylib("abs", duplicate_rpaths)
     # XCode 15 ships a new linker that takes care of deduplication
     if xcode_major_version < 15:
         assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Hardcoded but relocatable library id (but we do NOT relocate)
-    (root, filename) = make_dylib("abs_with_rpath", no_rpath)
+    root, filename = make_dylib("abs_with_rpath", no_rpath)
     assert not fixup_rpath(root, filename)
 
     # Library id uses rpath but there are extra duplicate rpaths
-    (root, filename) = make_dylib("rpath", duplicate_rpaths)
+    root, filename = make_dylib("rpath", duplicate_rpaths)
     # XCode 15 ships a new linker that takes care of deduplication
     if xcode_major_version < 15:
         assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Shared library was constructed with relocatable id from the get-go
-    (root, filename) = make_dylib("rpath", no_rpath)
+    root, filename = make_dylib("rpath", no_rpath)
     assert not fixup_rpath(root, filename)
 
     # Non-relocatable library id
-    (root, filename) = make_dylib("abs", no_rpath)
+    root, filename = make_dylib("abs", no_rpath)
     assert not fixup_rpath(root, filename)
 
     # Relocatable with executable paths and loader paths
-    (root, filename) = make_dylib("rpath", ["@executable_path/../lib", "@loader_path"])
+    root, filename = make_dylib("rpath", ["@executable_path/../lib", "@loader_path"])
     assert not fixup_rpath(root, filename)
 
     # Non-relocatable library id but nonexistent rpath
-    (root, filename) = make_dylib("abs", bad_rpath)
+    root, filename = make_dylib("abs", bad_rpath)
     assert fixup_rpath(root, filename)
     assert not fixup_rpath(root, filename)
 
     # Duplicate nonexistent rpath will need *two* passes
-    (root, filename) = make_dylib("rpath", bad_rpath * 2)
+    root, filename = make_dylib("rpath", bad_rpath * 2)
     assert fixup_rpath(root, filename)
     # XCode 15 ships a new linker that takes care of deduplication
     if xcode_major_version < 15:
@@ -257,5 +257,5 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # Test on an object file, which *also* has type 'application/x-mach-binary'
     # but should be ignored (no ID headers, no RPATH)
     # (this is a corner case for GCC installation)
-    (root, filename) = make_object_file()
+    root, filename = make_object_file()
     assert not fixup_rpath(root, filename)

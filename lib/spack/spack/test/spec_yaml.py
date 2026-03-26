@@ -7,6 +7,7 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
+
 import collections
 import collections.abc
 import gzip
@@ -458,16 +459,13 @@ def test_anchorify_1():
     # Check if anchors are used
     out = io.StringIO()
     spack.vendor.ruamel.yaml.YAML().dump(after, out)
-    assert (
-        out.getvalue()
-        == """\
+    assert out.getvalue() == """\
 a: &id001
 - 1
 - 2
 - 3
 b: *id001
 """
-    )
 
 
 def test_anchorify_2():
@@ -481,16 +479,13 @@ def test_anchorify_2():
     # Check if anchors are used
     out = io.StringIO()
     spack.vendor.ruamel.yaml.YAML().dump(after, out)
-    assert (
-        out.getvalue()
-        == """\
+    assert out.getvalue() == """\
 a: &id001
   b: &id002
     c: true
 d: *id001
 e: *id002
 """
-    )
 
 
 @pytest.mark.parametrize(

@@ -74,8 +74,7 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
             cmds += "export SPACK_ENV_VIEW=%s;\n" % view
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
-            cmds += textwrap.dedent(
-                rf"""
+            cmds += textwrap.dedent(rf"""
                 if [ -z ${{SPACK_OLD_PS1+x}} ]; then
                     if [ -z ${{PS1+x}} ]; then
                         PS1='$$$$';
@@ -93,8 +92,7 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
                 else
                     export PS1="{prompt} ${{PS1}}";
                 fi
-                """
-            ).lstrip("\n")
+                """).lstrip("\n")
     return cmds
 
 

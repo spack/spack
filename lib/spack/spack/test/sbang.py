@@ -5,6 +5,7 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
 import pathlib
@@ -273,17 +274,13 @@ def configure_group_perms():
     gid = fs.group_ids(os.getuid())[0]
     group_name = grp.getgrgid(gid).gr_name
 
-    conf = syaml.load_config(
-        """\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
-    )
+""".format(group_name))
     spack.config.set("packages", conf, scope="user")
 
     yield
@@ -291,14 +288,12 @@ all:
 
 @pytest.fixture(scope="function")
 def configure_user_perms():
-    conf = syaml.load_config(
-        """\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: world
     write: user
-"""
-    )
+""")
     spack.config.set("packages", conf, scope="user")
 
     yield

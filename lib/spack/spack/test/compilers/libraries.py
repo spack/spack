@@ -79,13 +79,11 @@ class TestCompilerPropertyDetector:
     @pytest.mark.not_on_windows("Module files are not supported on Windows")
     def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path: pathlib.Path):
         gcc = tmp_path / "gcc"
-        gcc.write_text(
-            f"""#!/bin/sh
+        gcc.write_text(f"""#!/bin/sh
         if [ "$ENV_SET" = "1" ] && [ "$MODULE_LOADED" = "1" ]; then
           printf '{without_flag_output}'
         fi
-        """
-        )
+        """)
         fs.set_executable(str(gcc))
 
         # Set module load to turn compiler on

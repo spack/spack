@@ -7,6 +7,7 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
+
 import argparse
 import gc
 import inspect
@@ -307,15 +308,13 @@ class SpackArgumentParser(argparse.ArgumentParser):
             formatter.end_section()
 
         # epilog
-        help_section = textwrap.dedent(
-            """\
+        help_section = textwrap.dedent("""\
             @*C{More help}:
               @c{spack help --all}       list all commands and options
               @c{spack help <command>}   help on a specific command
               @c{spack help --spec}      help on the package specification syntax
               @c{spack docs}             open https://spack.rtfd.io/ in a browser
-            """
-        )
+            """)
         formatter.add_text(color.colorize(help_section))
 
         # determine help from format above

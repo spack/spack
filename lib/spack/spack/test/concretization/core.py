@@ -597,8 +597,7 @@ class TestConcretize:
         self, mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
     ):
         spack_yaml = tmp_path / ev.manifest_name
-        spack_yaml.write_text(
-            """\
+        spack_yaml.write_text("""\
 spack:
   specs:
   - dt-diamond%gcc
@@ -606,8 +605,7 @@ spack:
   concretizer:
     compiler_mixing: false
     unify: when_possible
-"""
-        )
+""")
 
         with ev.Environment(tmp_path) as e:
             e.concretize()
@@ -3542,8 +3540,7 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
 @pytest.mark.parametrize("compiler_str", ["gcc@=9.4.0", "gcc@=9.4.0-foo"])
 def test_selecting_compiler_with_suffix(mutable_config, mock_packages, compiler_str):
     """Tests that we can select compilers whose versions differ only for a suffix."""
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc:
     externals:
@@ -3553,8 +3550,7 @@ packages:
         compilers:
           c: /path/bin/gcc
           cxx: /path/bin/g++
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one(f"libelf %{compiler_str}")
     assert s["c"].satisfies(compiler_str)
@@ -3562,8 +3558,7 @@ packages:
 
 def test_duplicate_compiler_in_externals(mutable_config, mock_packages):
     """Tests that having duplicate compilers in packages.yaml do not raise and error."""
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc:
     externals:
@@ -3579,8 +3574,7 @@ packages:
         compilers:
           c: /path/bin/gcc
           cxx: /path/bin/g++
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one("libelf %gcc@9.4")
     assert s["c"].satisfies("gcc@9.4.0")
@@ -3610,16 +3604,14 @@ def test_compiler_attribute_is_tolerated_in_externals(
     """Tests that we don't error out if an external specifies a compiler in the old way,
     provided that a suitable external compiler exists.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   cmake:
     externals:
     - spec: "cmake@3.27.4 %gcc@10"
       prefix: {tmp_path}
     buildable: false
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one("cmake")
     assert s.external and s.external_path == str(tmp_path)
@@ -3649,8 +3641,7 @@ def test_compiler_match_for_externals_is_taken_into_account(
     spec_str, expected, mutable_config, mock_packages, tmp_path: pathlib.Path
 ):
     """Tests that compiler annotation for externals are somehow taken into account for a match"""
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   libelf:
     externals:
@@ -3658,8 +3649,7 @@ packages:
       prefix: {tmp_path / 'gcc'}
     - spec: "libelf@0.8.13 %clang"
       prefix: {tmp_path / 'clang'}
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one(spec_str)
     libelf = s["libelf"]
@@ -3682,8 +3672,7 @@ def test_compiler_match_for_externals_with_versions(
     """Tests that version constraints are taken into account for compiler annotations
     on externals
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   libelf:
     buildable: false
@@ -3692,8 +3681,7 @@ packages:
       prefix: {tmp_path / 'libelf-gcc10'}
     - spec: "libelf@0.8.13 %gcc@9.4.0"
       prefix: {tmp_path / 'libelf-gcc9'}
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one(spec_str)
     libelf = s["libelf"]
@@ -3788,16 +3776,14 @@ def test_installing_external_with_compilers_directly(
     on externals
     """
     spec_str = f"libelf@0.8.12 %{compiler_str}"
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   libelf:
     buildable: false
     externals:
     - spec: {spec_str}
       prefix: {tmp_path / 'libelf'}
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one(spec_str)
 
@@ -3811,16 +3797,14 @@ def test_using_externals_with_compilers(mutable_config, mock_packages, tmp_path:
     """Tests that version constraints are taken into account for compiler annotations
     on externals, even imposed as transitive deps.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   libelf:
     buildable: false
     externals:
     - spec: libelf@0.8.12 %gcc@10
       prefix: {tmp_path / 'libelf'}
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     with pytest.raises(spack.error.SpackError):
@@ -3858,8 +3842,7 @@ def test_concrete_multi_valued_variants_in_externals(
     """Tests that concrete multivalued variants in externals cannot be extended with additional
     values when concretizing.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   gcc:
     buildable: false
@@ -3876,8 +3859,7 @@ packages:
       extra_attributes:
         compilers:
             fortran: {tmp_path / 'gcc-14'}/bin/gfortran
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
@@ -3899,14 +3881,12 @@ def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
 
 def test_concrete_multi_valued_variants_in_requirements(mutable_config, mock_packages):
     """Tests that concrete multivalued variants can be imposed by requirements."""
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   pkg-a:
     require:
     - libs:=static
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
@@ -3984,16 +3964,14 @@ def test_spec_parts_on_fresh_compilers(
     are associated with `package` for `%` just as they would be for `^`, when we concretize
     without reusing.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
     packages:
       llvm::
         buildable: false
         externals:
         - spec: "llvm@20 +clang {constraint_in_yaml}"
           prefix: {tmp_path / 'llvm-20'}
-    """
-    )
+    """)
     mutable_config.set("packages", packages_yaml["packages"])
 
     # Check the abstract spec is formed correctly
@@ -4043,8 +4021,7 @@ def test_spec_parts_on_reused_compilers(
     """Tests that requests of the form <package>%<compiler> <requests> are considered for reused
     specs, even though build dependency are not part of the ASP problem.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
     packages:
       c:
         require: llvm
@@ -4057,8 +4034,7 @@ def test_spec_parts_on_reused_compilers(
           prefix: {tmp_path / 'llvm-20'}
       mpileaks:
         buildable: true
-    """
-    )
+    """)
     mutable_config.set("packages", packages_yaml["packages"])
 
     # Install the spec
@@ -4219,8 +4195,7 @@ def test_selecting_externals_with_compilers_as_root(mutable_config, mock_package
     """Tests that we can select externals that have a compiler in their spec, even when
     they are root.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc::
     externals:
@@ -4246,8 +4221,7 @@ packages:
       prefix: /path/mpich/gcc
     - spec: "mpich@3.4.3 %clang"
       prefix: /path/mpich/clang
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     # Select mpich as the root spec
@@ -4280,8 +4254,7 @@ def test_selecting_externals_with_compilers_and_versions(
     """Tests different scenarios of having a compiler specified with a version constraint, either
     in the input spec or in the external spec.
     """
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   gcc:
     externals:
@@ -4298,8 +4271,7 @@ packages:
       prefix: /path/mpich/gcc
     - spec: "mpich@3.4.3 %clang"
       prefix: /path/mpich/clang
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     s = spack.concretize.concretize_one(spec_str)
     assert s.external
@@ -4321,8 +4293,7 @@ def test_errors_when_specifying_externals_with_compilers(
     external_compiler, spec_str, error_match, mutable_config, mock_packages
 ):
     """Tests different errors that can occur in an external spec with a compiler specified."""
-    packages_yaml = syaml.load_config(
-        f"""
+    packages_yaml = syaml.load_config(f"""
 packages:
   mpich:
     buildable: false
@@ -4331,8 +4302,7 @@ packages:
       prefix: /path/mpich/gcc
     - spec: "mpich@3.4.3 %clang"
       prefix: /path/mpich/clang
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     with pytest.raises(ExternalDependencyError, match=error_match):
         _ = spack.concretize.concretize_one(spec_str)
@@ -4380,8 +4350,7 @@ def test_reuse_with_mixed_compilers(mutable_config, mock_packages):
     """Tests that potentially reusing a spec with a mixed compiler set, will not interfere
     with a request on one of the languages for the same package.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc:
     externals:
@@ -4401,8 +4370,7 @@ packages:
           c: /path2/bin/clang
           cxx: /path2/bin/clang++
           fortran: /path2/bin/flang
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     s = spack.concretize.concretize_one("openblas %c=gcc %fortran=llvm")
@@ -4697,8 +4665,7 @@ def test_target_requirements(default_target, expected, mutable_config, mock_pack
     """Tests different scenarios where targets might be constrained by configuration and are not
     specified in external specs
     """
-    configuration = syaml.load_config(
-        f"""
+    configuration = syaml.load_config(f"""
 packages:
   all:
     require:
@@ -4720,8 +4687,7 @@ packages:
     - spec: "mpich@3.0.4"
       prefix: /user/path
       id: mpich_id
-"""
-    )
+""")
     mutable_config.set("packages", configuration["packages"])
     s = spack.concretize.concretize_one("callpath")
     assert s.external
@@ -4819,8 +4785,7 @@ def test_reusing_gcc_same_version_different_libcs(monkeypatch, mutable_config, m
     """Tests that Spack can solve for specs when it reuses 2 GCCs at the same version,
     but injecting different libcs.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc:
     externals:
@@ -4838,8 +4803,7 @@ packages:
           c: /path/bin/gcc
           cxx: /path/bin/g++
           fortran: /path/bin/gfortran
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
     mutable_config.set("concretizer:reuse", True)
 
@@ -4989,8 +4953,7 @@ def test_compiler_selection_when_external_has_variant_penalty(mutable_config, mo
     """Tests that a compiler that should be preferred is not swapped with a less preferred
     compiler because of penalties on variants.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   gcc::
     externals:
@@ -5009,8 +4972,7 @@ packages:
         compilers:
           c: /path/bin/gcc
           cxx: /path/bin/g++
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     concrete = spack.concretize.concretize_one("libdwarf")
@@ -5025,15 +4987,13 @@ def test_mpi_selection_when_external_has_variant_penalty(mutable_config, mock_pa
     """Tests that conflicting with a default provider doesn't cause a variant values to be
     flipped to avoid the variant dependency.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   all:
     variants: +mpi
   mpich:
     buildable: false
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     concrete = spack.concretize.concretize_one("transitive-conditional-virtual-dependency")
@@ -5049,8 +5009,7 @@ def test_preferring_different_compilers_for_different_languages(mutable_config, 
     towards using a unique toolchain is lower priority with respect to flipping variants to turn
     off a language, or selecting a non-default provider.
     """
-    packages_yaml = syaml.load_config(
-        """
+    packages_yaml = syaml.load_config("""
 packages:
   all:
     providers:
@@ -5068,8 +5027,7 @@ packages:
     - gcc
   mpileaks:
     variants: +fortran
-"""
-    )
+""")
     mutable_config.set("packages", packages_yaml["packages"])
 
     mpileaks = spack.concretize.concretize_one("mpileaks")

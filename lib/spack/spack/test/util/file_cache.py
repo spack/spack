@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's FileCache."""
+
 import os
 import pathlib
 

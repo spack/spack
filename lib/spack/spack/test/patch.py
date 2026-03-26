@@ -103,23 +103,19 @@ def test_url_patch(mock_packages, mock_patch_stage, filename, sha256, archive_sh
         with working_dir(stage.source_path):
             # write a file to be patched
             with open("foo.txt", "w", encoding="utf-8") as f:
-                f.write(
-                    """\
+                f.write("""\
 first line
 second line
-"""
-                )
+""")
             # save it for later comparison
             shutil.copyfile("foo.txt", "foo-original.txt")
             # write the expected result of patching.
             with open("foo-expected.txt", "w", encoding="utf-8") as f:
-                f.write(
-                    """\
+                f.write("""\
 zeroth line
 first line
 third line
-"""
-                )
+""")
         # apply the patch and compare files
         patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
         patch_stage = Stage(patch.fetcher())

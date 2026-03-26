@@ -942,9 +942,7 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
     include = tmp_path / "spack" / "include.yaml"
     # Need to use relative include paths here so it works for mutable_config fixture too
     with include.open("w", encoding="utf-8") as f:
-        f.write(
-            textwrap.dedent(
-                """
+        f.write(textwrap.dedent("""
                 include:
                 # user configuration scope
                 - name: "user"
@@ -965,9 +963,7 @@ def configuration_dir(tmp_path_factory: pytest.TempPathFactory, linux_os):
                   path: ../system
                   optional: true
                   when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-                """
-            )
-        )
+                """))
     yield tmp_path
 
 
@@ -1977,12 +1973,10 @@ def mock_test_repo(tmp_path_factory: pytest.TempPathFactory):
     packages_dir = repodir / spack.repo.packages_dir_name
     packages_dir.mkdir()
     yaml_path = repodir / "repo.yaml"
-    yaml_path.write_text(
-        """
+    yaml_path.write_text("""
 repo:
     namespace: mock_test_repo
-"""
-    )
+""")
 
     with spack.repo.use_repositories(str(repodir)) as repo:
         yield repo, repodir
@@ -1996,12 +1990,10 @@ def mock_clone_repo(tmp_path_factory: pytest.TempPathFactory):
     repo_namespace = "mock_clone_repo"
     repodir = tmp_path_factory.mktemp(repo_namespace)
     yaml_path = repodir / "repo.yaml"
-    yaml_path.write_text(
-        """
+    yaml_path.write_text("""
 repo:
     namespace: mock_clone_repo
-"""
-    )
+""")
 
     shutil.copytree(
         os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
@@ -2250,16 +2242,12 @@ def binary_with_rpaths(prefix_tmpdir: Path):
 
     def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
         source = prefix_tmpdir / "main.c"
-        source.write_text(
-            """
+        source.write_text("""
         #include <stdio.h>
         int main(){{
             printf("{0}");
         }}
-        """.format(
-                message
-            )
-        )
+        """.format(message))
         gcc = spack.util.executable.which("gcc", required=True)
         executable = source.parent / "main.x"
         # Encode relative RPATHs using `$ORIGIN` as the root prefix

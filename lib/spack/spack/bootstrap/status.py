@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Query the status of bootstrapping on this machine"""
+
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 

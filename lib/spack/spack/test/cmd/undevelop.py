@@ -19,8 +19,7 @@ def test_undevelop(tmp_path: pathlib.Path, mutable_config, mock_packages, mutabl
     envdir.mkdir()
     with working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - mpich
@@ -29,8 +28,7 @@ spack:
     mpich:
       spec: mpich@1.0
       path: /fake/path
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
@@ -51,8 +49,7 @@ def test_undevelop_all(
     envdir.mkdir()
     with working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - mpich
@@ -61,8 +58,7 @@ spack:
     mpich:
       spec: mpich@1.0
       path: /fake/path
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
@@ -83,8 +79,7 @@ def test_undevelop_nonexistent(
     envdir.mkdir()
     with working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - mpich
@@ -93,8 +88,7 @@ spack:
     mpich:
       spec: mpich@1.0
       path: /fake/path
-"""
-            )
+""")
 
         env("create", "test", "./spack.yaml")
         with ev.read("test") as e:

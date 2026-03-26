@@ -8,6 +8,7 @@ rather than `spec_from_entry`, since the former does additional work to
 establish dependency relationships (and in general the manifest-parsing
 logic needs to consume all related specs in a single pass).
 """
+
 import json
 import pathlib
 
@@ -372,8 +373,7 @@ def test_read_old_manifest_v1_2(tmp_path: pathlib.Path, temporary_store):
     """Test reading a file using the older format ('version' instead of 'schema-version')."""
     manifest = tmp_path / "manifest_dir" / "test.json"
     manifest.parent.mkdir(parents=True)
-    manifest.write_text(
-        """\
+    manifest.write_text("""\
 {
   "_meta": {
     "file-type": "cray-pe-json",
@@ -382,8 +382,7 @@ def test_read_old_manifest_v1_2(tmp_path: pathlib.Path, temporary_store):
   },
   "specs": []
 }
-"""
-    )
+""")
     spack.cray_manifest.read(str(manifest), True)
 
 
@@ -395,11 +394,9 @@ def test_convert_validation_error(
     # Does not parse as valid JSON
     invalid_json_path = manifest_dir / "invalid-json.json"
     with open(invalid_json_path, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 {
-"""
-        )
+""")
     with pytest.raises(spack.cray_manifest.ManifestValidationError) as e:
         spack.cray_manifest.read(invalid_json_path, True)
     str(e)
@@ -408,8 +405,7 @@ def test_convert_validation_error(
     # of length > 0)
     invalid_schema_path = manifest_dir / "invalid-schema.json"
     with open(invalid_schema_path, "w", encoding="utf-8") as f:
-        f.write(
-            """\
+        f.write("""\
 {
   "_meta": {
     "file-type": "cray-pe-json",
@@ -418,8 +414,7 @@ def test_convert_validation_error(
   },
   "specs": []
 }
-"""
-        )
+""")
     with pytest.raises(spack.cray_manifest.ManifestValidationError) as e:
         spack.cray_manifest.read(invalid_schema_path, True)
 

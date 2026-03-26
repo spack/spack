@@ -56,10 +56,6 @@ class PackageNotInstalledError(RewireError):
     """Raised when the build_spec for a splice was not installed."""
 
     def __init__(self, spliced_spec, build_spec, dep):
-        super().__init__(
-            """Rewire of {0}
+        super().__init__("""Rewire of {0}
             failed due to missing install of build spec {1}
-            for spec {2}""".format(
-                spliced_spec, build_spec, dep
-            )
-        )
+            for spec {2}""".format(spliced_spec, build_spec, dep))

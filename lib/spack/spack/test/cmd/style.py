@@ -430,15 +430,12 @@ def test_pkg_imports():
 
 
 def test_spec_strings(tmp_path: pathlib.Path):
-    (tmp_path / "example.py").write_text(
-        """\
+    (tmp_path / "example.py").write_text("""\
 def func(x):
     print("dont fix %s me" % x, 3)
     return x.satisfies("+foo %gcc +bar") and x.satisfies("%gcc +baz")
-"""
-    )
-    (tmp_path / "example.json").write_text(
-        """\
+""")
+    (tmp_path / "example.json").write_text("""\
 {
     "spec": [
         "+foo %gcc +bar~nope   ^dep %clang +yup @3.2 target=x86_64 /abcdef ^another   %gcc   ",
@@ -446,17 +443,14 @@ def func(x):
     ],
     "%gcc x=y": 2
 }
-"""
-    )
-    (tmp_path / "example.yaml").write_text(
-        """\
+""")
+    (tmp_path / "example.yaml").write_text("""\
 spec:
   - "+foo   %gcc +bar"
   - "%gcc +baz"
   - "this is fine %clang"
 "%gcc x=y": 2
-"""
-    )
+""")
 
     issues = set()
 
@@ -502,9 +496,7 @@ spec:
         handler=spack.cmd.style._spec_str_fix_handler,
     )
 
-    assert (
-        (tmp_path / "example.json").read_text()
-        == """\
+    assert (tmp_path / "example.json").read_text() == """\
 {
     "spec": [
         "+foo +bar~nope %gcc   ^dep +yup @3.2 target=x86_64 /abcdef %clang ^another   %gcc   ",
@@ -513,22 +505,15 @@ spec:
     "x=y %gcc": 2
 }
 """
-    )
-    assert (
-        (tmp_path / "example.py").read_text()
-        == """\
+    assert (tmp_path / "example.py").read_text() == """\
 def func(x):
     print("dont fix %s me" % x, 3)
     return x.satisfies("+foo +bar %gcc") and x.satisfies("+baz %gcc")
 """
-    )
-    assert (
-        (tmp_path / "example.yaml").read_text()
-        == """\
+    assert (tmp_path / "example.yaml").read_text() == """\
 spec:
   - "+foo +bar   %gcc"
   - "+baz %gcc"
   - "this is fine %clang"
 "x=y %gcc": 2
 """
-    )

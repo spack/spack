@@ -135,12 +135,10 @@ def test_namespaces_shown_correctly(args, with_namespace, database):
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
-    assert find("zmpi").endswith(
-        """\
+    assert find("zmpi").endswith("""\
 zmpi@1.0
 ==> 1 installed package
-"""
-    )
+""")
 
 
 def _check_json_output(spec_list):
@@ -249,9 +247,7 @@ def test_find_format(database, config):
 @pytest.mark.db
 def test_find_format_deps(database, config):
     output = find("-d", "--format", "{name}-{version}", "mpileaks", "^zmpi")
-    assert (
-        output
-        == """\
+    assert output == """\
 mpileaks-2.3
     callpath-1.0
         dyninst-8.2
@@ -264,16 +260,13 @@ mpileaks-2.3
         fake-1.0
 
 """
-    )
 
 
 @pytest.mark.db
 def test_find_format_deps_paths(database, config):
     output = find("-dp", "--format", "{name}-{version}", "mpileaks", "^zmpi")
     mpileaks = spack.concretize.concretize_one("mpileaks ^zmpi")
-    assert (
-        output
-        == f"""\
+    assert output == f"""\
 mpileaks-2.3                   {mpileaks.prefix}
     callpath-1.0               {mpileaks['callpath'].prefix}
         dyninst-8.2            {mpileaks['dyninst'].prefix}
@@ -286,7 +279,6 @@ mpileaks-2.3                   {mpileaks.prefix}
         fake-1.0               {mpileaks['fake'].prefix}
 
 """
-    )
 
 
 @pytest.mark.db
@@ -347,13 +339,11 @@ def test_find_specs_include_concrete_env(
 
     with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - mpileaks
-"""
-            )
+""")
         env("create", "test1", "spack.yaml")
 
     test1 = ev.read("test1")
@@ -362,13 +352,11 @@ spack:
 
     with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - libelf
-"""
-            )
+""")
         env("create", "test2", "spack.yaml")
 
     test2 = ev.read("test2")
@@ -393,13 +381,11 @@ def test_find_specs_nested_include_concrete_env(
 
     with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs:
   - mpileaks
-"""
-            )
+""")
         env("create", "test1", "spack.yaml")
 
     test1 = ev.read("test1")

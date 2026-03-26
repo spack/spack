@@ -115,15 +115,13 @@ def test_rst():
 def test_rst_with_input_files(tmp_path: pathlib.Path):
     filename = tmp_path / "file.rst"
     with filename.open("w") as f:
-        f.write(
-            """
+        f.write("""
 .. _cmd-spack-fetch:
 cmd-spack-list:
 .. _cmd-spack-stage:
 _cmd-spack-install:
 .. _cmd-spack-patch:
-"""
-        )
+""")
 
     out = commands("--format=rst", str(filename))
     for name in ["fetch", "stage", "patch"]:

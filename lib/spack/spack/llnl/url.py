@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """URL primitives that just require Python standard library."""
+
 import itertools
 import os
 import re

@@ -344,8 +344,7 @@ def test_checksum_manual_download_fails(mock_packages, monkeypatch):
 def test_upate_package_contents(tmp_path: pathlib.Path):
     """Test that the package.py file is updated with the new versions."""
     pkg_path = tmp_path / "package.py"
-    pkg_path.write_text(
-        """\
+    pkg_path.write_text("""\
 from spack.package import *
 
 class Zlib(Package):
@@ -359,8 +358,7 @@ class Zlib(Package):
 
     def install(self, spec, prefix):
         make("install")
-"""
-    )
+""")
     version_lines = """\
     version("1.2.13", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
     version("1.2.5", sha256="abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890")
@@ -368,9 +366,7 @@ class Zlib(Package):
 """
     # two new versions are added
     assert spack.cmd.checksum.add_versions_to_pkg(str(pkg_path), version_lines) == 2
-    assert (
-        pkg_path.read_text()
-        == """\
+    assert pkg_path.read_text() == """\
 from spack.package import *
 
 class Zlib(Package):
@@ -387,4 +383,3 @@ class Zlib(Package):
     def install(self, spec, prefix):
         make("install")
 """
-    )

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for Spack's wrapper module around spack.llnl.util.lock."""
+
 import os
 import pathlib
 

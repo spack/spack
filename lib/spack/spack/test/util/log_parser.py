@@ -11,8 +11,7 @@ def test_log_parser(tmp_path: pathlib.Path):
     log_file = tmp_path / "log.txt"
 
     with log_file.open("w") as f:
-        f.write(
-            """#!/bin/sh\n
+        f.write("""#!/bin/sh\n
 checking build system type... x86_64-apple-darwin16.6.0
 checking host system type... x86_64-apple-darwin16.6.0
 error: weird_error.c:145: something weird happened                          E
@@ -24,8 +23,7 @@ ld: fatal: linker thing happened                                            E
 checking for suffix of executables...
 configure: error: in /path/to/some/file:                                    E
 configure: error: cannot run C compiled programs.                           E
-"""
-        )
+""")
 
     parser = CTestLogParser()
     errors, warnings = parser.parse(str(log_file))

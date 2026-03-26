@@ -26,6 +26,7 @@ When read in, Spack validates configurations with jsonschemas.  The
 schemas are in submodules of :py:mod:`spack.schema`.
 
 """
+
 import contextlib
 import copy
 import functools

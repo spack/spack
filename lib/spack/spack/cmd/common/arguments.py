@@ -544,13 +544,11 @@ def add_cdash_args(subparser, add_help):
 def print_cdash_help():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=textwrap.dedent(
-            """\
+        epilog=textwrap.dedent("""\
 environment variables:
 SPACK_CDASH_AUTH_TOKEN
                     authentication token to present to CDash
-                    """
-        ),
+                    """),
     )
     add_cdash_args(parser, True)
     parser.print_help()

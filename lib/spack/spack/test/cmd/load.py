@@ -20,7 +20,7 @@ location = SpackCommand("location")
 def test_manpath_trailing_colon(
     install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
-    (shell, set_command, commandsep) = (
+    shell, set_command, commandsep = (
         ("--bat", 'set "%s=%s"', "\n")
         if sys.platform == "win32"
         else ("--sh", "export %s=%s", ";")

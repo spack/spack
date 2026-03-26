@@ -94,15 +94,13 @@ def test_env_repo_path_vars_substitution(
     envdir.mkdir()
     with working_dir(str(envdir)):
         with open("spack.yaml", "w", encoding="utf-8") as f:
-            f.write(
-                """\
+            f.write("""\
 spack:
   specs: []
 
   repos:
     current_dir: $CUSTOM_REPO_PATH
-"""
-            )
+""")
         # creating env from manifest file
         env("create", "test", "./spack.yaml")
         # check that repo path was correctly substituted with the environment variable

@@ -159,9 +159,7 @@ def test_requirement_adds_new_version(
 packages:
   v:
     require: "@{0}=2.2"
-""".format(
-        a_commit_hash
-    )
+""".format(a_commit_hash)
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("v")
@@ -192,9 +190,7 @@ def test_requirement_adds_version_satisfies(
 packages:
   t:
     require: "@{0}=2.2"
-""".format(
-        commits[0]
-    )
+""".format(commits[0])
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("t")
@@ -942,8 +938,7 @@ def test_default_requirements_semantic_with_mv_variants(
 
 @pytest.mark.regression("42084")
 def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages):
-    update_packages_config(
-        """
+    update_packages_config("""
     packages:
       all:
         providers:
@@ -954,8 +949,7 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
         require: intel-parallel-studio
       scalapack:
         require: intel-parallel-studio
-    """
-    )
+    """)
     s = spack.concretize.concretize_one("dla-future")
 
     assert s["blas"].name == "intel-parallel-studio"
@@ -1173,14 +1167,12 @@ def test_strong_preferences_higher_priority_than_reuse(concretize_scope, mock_pa
     assert ascent["adios2"].dag_hash() == reused_spec.dag_hash(), ascent
 
     # If we stick a preference, adios2 is not reused
-    update_packages_config(
-        """
+    update_packages_config("""
     packages:
       adios2:
         prefer:
         - "+bzip2"
-"""
-    )
+""")
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
@@ -1614,8 +1606,7 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
     assert s["mpich"].satisfies("%c,cxx,fortran=gcc@10")
 
     # If we prefer compilers in configuration, that has a higher priority
-    update_packages_config(
-        """
+    update_packages_config("""
     packages:
       c:
         prefer: [gcc]
@@ -1623,16 +1614,14 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
         prefer: [gcc]
       fortran:
         prefer: [gcc]
-"""
-    )
+""")
 
     s = spack.concretize.concretize_one("mpileaks %c=clang ^mpi=mpich2")
     assert s.satisfies("%c=clang")
     assert all(s[name].satisfies("%c=gcc@10") for name in dependency_names)
 
     # Mixed compilers in the preferences
-    update_packages_config(
-        """
+    update_packages_config("""
     packages:
       c:
         prefer: [llvm]
@@ -1640,8 +1629,7 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
         prefer: [llvm]
       fortran:
         prefer: [gcc]
-"""
-    )
+""")
 
     s = spack.concretize.concretize_one("mpileaks %c=gcc ^mpi=mpich")
     assert s.satisfies("%c=gcc@10")
