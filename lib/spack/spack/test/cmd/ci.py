@@ -16,9 +16,11 @@ import spack.ci as ci
 import spack.cmd
 import spack.cmd.ci
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
+import spack.mirrors.utils
 import spack.paths
 import spack.repo
 import spack.spec
@@ -2245,3 +2247,89 @@ def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_
 
         out = ci_cmd("verify-versions", commits[-1], commits[-2])
         assert "Skipping manual download package: diff-test" in out
+
+
+def test_ci_create_source_mirror_success(
+    monkeypatch, mock_packages, mock_git_package_changes, tmp_path: pathlib.Path, mock_fetch
+):
+    """Test that create-source-mirror successfully creates a mirror with correct specs and stats"""
+    repo, _, commits = mock_git_package_changes
+    mirror_dir = tmp_path / "test-mirror"
+
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+
+        # Mock mirror creation to verify it's called with correct specs
+        created_specs = []
+
+        def mock_create_mirror(pkg_obj, mirror_cache, spec_stats):
+            created_specs.append(pkg_obj.spec)
+            # Simulate successful addition
+            spec_stats.added_resources.add(f"{pkg_obj.spec.name}-{pkg_obj.spec.version}")
+            return True
+
+        monkeypatch.setattr(
+            spack.mirrors.utils, "create_mirror_from_package_object", mock_create_mirror
+        )
+
+        with spack.config.override("config:checksum", False):
+            # Use commits[-1] to commits[-2] to find version 2.1.5 (sha256-based)
+            # Note: version 2.1.6 uses commit, not sha256, so it's not included
+            out = ci_cmd("create-source-mirror", commits[-1], commits[-2], "-d", str(mirror_dir))
+
+        # Verify that we attempted to mirror the new version
+        assert "Creating source mirror with" in out
+        assert "package version(s)" in out
+        assert (
+            len(created_specs) == 1
+        )  # Should have 1 version (2.1.5 only, not 2.1.6 which uses commit)
+
+        # Verify version 2.1.5 was included (sha256-based)
+        spec_names_versions = [(s.name, str(s.version)) for s in created_specs]
+        assert ("diff-test", "2.1.5") in spec_names_versions
+
+        # Verify mirror directory was created
+        assert mirror_dir.exists()
+
+        # Verify statistics are displayed
+        assert "Mirror stats:" in out
+        assert "already present" in out
+        assert "added" in out
+        assert "failed to fetch" in out
+
+
+def test_ci_create_source_mirror_no_changes(
+    monkeypatch, mock_packages, mock_git_package_changes, tmp_path: pathlib.Path
+):
+    """Test that create-source-mirror handles no new versions gracefully"""
+    repo, _, commits = mock_git_package_changes
+    mirror_dir = tmp_path / "test-mirror"
+
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+
+        # Use the same commit for both refs - no changes
+        with spack.config.override("config:checksum", False):
+            out = ci_cmd("create-source-mirror", commits[-1], commits[-1], "-d", str(mirror_dir))
+
+        assert "No new package versions found to mirror" in out
+
+
+def test_ci_create_source_mirror_manual_package(
+    monkeypatch, mock_packages, mock_git_package_changes, tmp_path: pathlib.Path
+):
+    """Test that create-source-mirror skips manual download packages"""
+    repo, _, commits = mock_git_package_changes
+    mirror_dir = tmp_path / "test-mirror"
+
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        monkeypatch.setattr(pkg_class, "manual_download", True)
+
+        with spack.config.override("config:checksum", False):
+            out = ci_cmd("create-source-mirror", commits[-1], commits[-2], "-d", str(mirror_dir))
+
+        assert "Skipping manual download package: diff-test" in out
+        assert "No new package versions found to mirror" in out

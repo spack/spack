@@ -23,6 +23,7 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
+import spack.mirrors.utils
 import spack.package_base
 import spack.repo
 import spack.spec
@@ -33,7 +34,7 @@ import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.llnl.util import tty
-from spack.version import StandardVersion
+from spack.version import StandardVersion, VersionList
 
 from . import doc_dedented, doc_first_line
 
@@ -242,6 +243,26 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
     verify_versions.set_defaults(func=ci_verify_versions)
+
+    # Create a source mirror with package versions added between git refs
+    create_source_mirror = subparsers.add_parser(
+        "create-source-mirror",
+        description=doc_dedented(ci_create_source_mirror),
+        help=doc_first_line(ci_create_source_mirror),
+    )
+    create_source_mirror.add_argument(
+        "from_ref", help="git ref from which start looking at changes"
+    )
+    create_source_mirror.add_argument("to_ref", help="git ref to end looking at changes")
+    create_source_mirror.add_argument(
+        "-d", "--directory", required=True, help="directory to create or update the source mirror"
+    )
+    create_source_mirror.add_argument(
+        "--private",
+        action="store_true",
+        help="for a private mirror, include non-redistributable packages",
+    )
+    create_source_mirror.set_defaults(func=ci_create_source_mirror)
 
 
 def ci_generate(args):
@@ -727,6 +748,26 @@ def _gitlab_artifacts_url(url: str) -> str:
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
 
 
+def filter_added_versions(
+    versions: Dict[StandardVersion, str], path: str, from_ref: str, to_ref: str
+) -> List[StandardVersion]:
+    """Return versions whose checksums/commits were added between two git refs.
+
+    Args:
+        versions: dict mapping version to checksum/commit
+        path: path to the package.py file
+        from_ref: starting git ref
+        to_ref: ending git ref
+
+    Returns:
+        list of versions that were added between the refs
+    """
+    added_checksums = spack_ci.filter_added_checksums(
+        versions.values(), path, from_ref=from_ref, to_ref=to_ref
+    )
+    return [v for v, c in versions.items() if c in added_checksums]
+
+
 def validate_standard_versions(
     pkg: spack.package_base.PackageBase, versions: List[StandardVersion]
 ) -> bool:
@@ -863,15 +904,13 @@ def ci_verify_versions(args):
             # TODO: enforce every version have a commit or a sha256 defined if not
             # an infinite version (there are a lot of packages where this doesn't work yet.)
 
-        def filter_added_versions(versions: Dict[StandardVersion, str]) -> List[StandardVersion]:
-            added_checksums = spack_ci.filter_added_checksums(
-                versions.values(), path, from_ref=args.from_ref, to_ref=args.to_ref
-            )
-            return [v for v, c in versions.items() if c in added_checksums]
-
         with fs.working_dir(os.path.dirname(path)):
-            new_url_versions = filter_added_versions(url_version_to_checksum)
-            new_git_versions = filter_added_versions(git_version_to_checksum)
+            new_url_versions = filter_added_versions(
+                url_version_to_checksum, path, args.from_ref, args.to_ref
+            )
+            new_git_versions = filter_added_versions(
+                git_version_to_checksum, path, args.from_ref, args.to_ref
+            )
 
         if new_url_versions:
             success &= validate_standard_versions(pkg, new_url_versions)
@@ -880,6 +919,90 @@ def ci_verify_versions(args):
             success &= validate_git_versions(pkg, new_git_versions)
 
     if not success:
+        sys.exit(1)
+
+
+def ci_create_source_mirror(args):
+    """\
+    create a source mirror with package versions added between refs
+    """
+    # Get a list of all packages that have been changed or added
+    # between from_ref and to_ref
+    pkgs = spack.repo.get_all_package_diffs(
+        "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
+    )
+
+    specs_to_mirror = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        path = spack.repo.PATH.package_path(pkg_name)
+
+        # Skip manual download packages
+        if pkg_cls.manual_download:
+            tty.warn(f"Skipping manual download package: {pkg_name}")
+            continue
+
+        # Skip non-redistributable packages unless this is a private mirror
+        if not args.private:
+            spec = spack.spec.Spec(pkg_name)
+            if not pkg_cls.redistribute_source(spec):
+                tty.warn(f"Skipping non-redistributable package: {pkg_name}")
+                continue
+
+        version_to_checksum: Dict[StandardVersion, str] = {}
+        for version in pkg_cls.versions:
+            if "sha256" in pkg_cls.versions[version]:
+                version_to_checksum[version] = pkg_cls.versions[version]["sha256"]
+
+            # TODO: discuss with the team to see if we should add git versions
+            # to the source mirror. Is this something we're already doing?
+
+            # elif "commit" in pkg_cls.versions[version]:
+            #     version_to_checksum[version] = pkg_cls.versions[version]["commit"]
+
+        with fs.working_dir(os.path.dirname(path)):
+            new_versions = filter_added_versions(
+                version_to_checksum, path, args.from_ref, args.to_ref
+            )
+
+        # Create specs for new versions without concretizing spec
+        # similar to what we do when creating a mirror with --all
+        for version in new_versions:
+            version_spec = spack.spec.Spec(pkg_name)
+            version_spec.versions = VersionList([version])
+            specs_to_mirror.append(version_spec)
+
+    if not specs_to_mirror:
+        tty.msg("No new package versions found to mirror")
+        return
+
+    tty.msg(f"Creating source mirror with {len(specs_to_mirror)} package version(s)")
+
+    mirror_cache = spack.mirrors.utils.get_mirror_cache(
+        args.directory, skip_unstable_versions=True
+    )
+    mirror_stats = spack.mirrors.utils.MirrorStatsForAllSpecs()
+
+    for spec in specs_to_mirror:
+        pkg_obj = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+        spec_stats = spack.mirrors.utils.MirrorStatsForOneSpec(spec)
+        spack.mirrors.utils.create_mirror_from_package_object(pkg_obj, mirror_cache, spec_stats)
+        spec_stats.finalize()
+        mirror_stats.merge(spec_stats)
+
+    # Display statistics
+    present, mirrored, error = mirror_stats.stats()
+    tty.msg(
+        "Mirror stats:",
+        f"  {len(present):4d} already present",
+        f"  {len(mirrored):4d} added",
+        f"  {len(error):4d} failed to fetch.",
+    )
+
+    if error:
+        tty.error("Failed downloads:")
+        for spec in error:
+            tty.error(f"  {spec.format('{name}{@version}')}")
         sys.exit(1)
 
 
