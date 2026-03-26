@@ -989,6 +989,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild-index -
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild -d 'rebuild a spec if it is not on the remote mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a reproduce-build -d 'generate instructions for reproducing the spec rebuild job'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a verify-versions -d 'validate version checksum & commits between git refs'
+complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a create-source-mirror -d 'create a source mirror with package versions added between refs'
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
 
@@ -1072,6 +1073,16 @@ set -g __fish_spack_optspecs_spack_ci_verify_versions h/help
 
 complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci verify-versions' -s h -l help -d 'show this help message and exit'
+
+# spack ci create-source-mirror
+set -g __fish_spack_optspecs_spack_ci_create_source_mirror h/help d/directory= private
+
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -s d -l directory -r -f -a directory
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -s d -l directory -r -d 'directory to create or update the source mirror'
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -l private -f -a private
+complete -c spack -n '__fish_spack_using_command ci create-source-mirror' -l private -d 'for a private mirror, include non-redistributable packages'
 
 # spack clean
 set -g __fish_spack_optspecs_spack_clean h/help s/stage d/downloads f/failures m/misc-cache p/python-cache b/bootstrap a/all

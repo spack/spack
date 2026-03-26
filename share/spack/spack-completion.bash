@@ -706,7 +706,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions create-source-mirror"
     fi
 }
 
@@ -735,6 +735,15 @@ _spack_ci_verify_versions() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_ci_create_source_mirror() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -d --directory --private"
     else
         SPACK_COMPREPLY=""
     fi
