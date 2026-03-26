@@ -1066,13 +1066,15 @@ class OptionalInclude:
             return scope_dir
 
         def _subdir():
+            # Prefer the provided include name over the git repository name.
+            # If neither, use a hash of the url or path for uniqueness.
+            if self.name:
+                return self.name
+
             match = re.search(r"/([^/]+?)(\.git)?$", path_or_url)
             if match:
                 if not os.path.splitext(match.group(1))[1]:
                     return match.group(1)
-
-            if self.name:
-                return self.name
 
             return spack.util.hash.b32_hash(path_or_url)[-7:]
 

@@ -104,8 +104,8 @@ In this example, the new scopes and their paths can be seen by running::
    command_line
    spack                           /Users/username/spack/etc/spack/
    user                            /Users/username/.spack/
-   common:USC/config/config.yaml   /Users/username/.spack/includes/spack-configs/USC/config/config.yaml
-   common:USC/config/packages.yaml /Users/username/.spack/includes/spack-configs/USC/config/packages.yaml
+   common:USC/config/config.yaml   /Users/username/.spack/includes/common/USC/config/config.yaml
+   common:USC/config/packages.yaml /Users/username/.spack/includes/common/USC/config/packages.yaml
    site                            /Users/username/spack/etc/spack/site/
    system                          /etc/spack/
    defaults                        /Users/username/spack/etc/spack/defaults/
