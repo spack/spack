@@ -7,13 +7,13 @@ from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 
-class Flake8(Package):
+class Ruff(Package):
     """Package containing as many acceptable ``PEP8`` violations as possible.
 
     All of these violations are exceptions that we allow in ``package.py`` files, and
-    Spack is more lenient than ``flake8`` is for things like URLs and long SHA sums.
+    Spack is more lenient than ``ruff`` is for things like URLs and long SHA sums.
 
-    See ``share/spack/qa/flake8_formatter.py`` for specifics of how we handle ``flake8``
+    See ``pyproject.toml`` for specifics of how we handle ``ruff``
     exemptions.
 
     """
@@ -35,27 +35,27 @@ class Flake8(Package):
 
     # All URL strings are exempt from line-length checks.
     #
-    # flake8 normally would complain about these, but the fix it wants (a multi-line
+    # ruff normally would complain about these, but the fix it wants (a multi-line
     # string) is ugbly, and we're more lenient since there are many places where Spack
     # wants URLs in strings.
-    hg = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
-    list_url = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
-    git = "ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
+    hg = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
+    list_url = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
+    git = "ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
 
     # directives with URLs are exempt as well
     version(
         "1.0",
-        url="https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default",
+        url="https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default",
     )
 
     #
-    # Also test URL comments (though flake8 will ignore these by default anyway)
+    # Also test URL comments (though ruff will ignore these by default anyway)
     #
-    # http://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
-    # https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
-    # ftp://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
-    # ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
-    # file://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
+    # http://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
+    # https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
+    # ftp://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
+    # ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
+    # file://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
 
     # Strings and comments with really long checksums require no noqa annotation.
     sha512sum = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
