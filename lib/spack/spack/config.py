@@ -1065,12 +1065,23 @@ class OptionalInclude:
         if not self.remote:
             return scope_dir
 
+        def _subdir():
+            match = re.search(r"/([^/]+?)(\.git)?$", path_or_url)
+            if match:
+                if not os.path.splitext(match.group(1))[1]:
+                    return match.group(1)
+
+            if self.name:
+                return self.name
+
+            return spack.util.hash.b32_hash(path_or_url)[-7:]
+
         # For remote includes, prefer a writable subdirectory of the parent scope.
         if scope_dir and filesystem.can_write_to_dir(scope_dir):
             assert parent_scope is not None
-            subdir = "includes"
+            subdir = os.path.join("includes", _subdir())
             if parent_scope.name.startswith("env:"):
-                subdir = os.path.join(".spack-env", "includes")
+                subdir = os.path.join(".spack-env", subdir)
             return os.path.join(scope_dir, subdir)
 
         # Fall back to a stable, unique, temporary directory, logging the reason.

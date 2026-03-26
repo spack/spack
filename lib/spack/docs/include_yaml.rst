@@ -84,7 +84,7 @@ We could then configure the include in, for example, the user scope include file
 
    include:
    - name: common
-     git: https://github.com/spack/spack-configs
+     git: https://github.com/spack/spack-configs.git
      branch: main
      when: os == "centos7"
      paths:
@@ -104,8 +104,8 @@ In this example, the new scopes and their paths can be seen by running::
    command_line
    spack                           /Users/username/spack/etc/spack/
    user                            /Users/username/.spack/
-   common:USC/config/config.yaml   /Users/username/.spack/includes/USC/config/config.yaml
-   common:USC/config/packages.yaml /Users/username/.spack/includes/USC/config/packages.yaml
+   common:USC/config/config.yaml   /Users/username/.spack/includes/spack-configs/USC/config/config.yaml
+   common:USC/config/packages.yaml /Users/username/.spack/includes/spack-configs/USC/config/packages.yaml
    site                            /Users/username/spack/etc/spack/site/
    system                          /etc/spack/
    defaults                        /Users/username/spack/etc/spack/defaults/
