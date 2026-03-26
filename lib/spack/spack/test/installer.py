@@ -19,6 +19,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as ulk
 import spack.llnl.util.tty as tty
@@ -1389,3 +1390,28 @@ def test_print_install_test_log_failures(
     inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_fallback_to_old_installer_for_splicing(monkeypatch, mock_packages, mutable_config):
+    """Test that the old installer is used for spliced specs (unsupported in the new installer)"""
+    mutable_config.set("config:installer", "new")
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+    out = spec.splice(dep)
+    assert isinstance(
+        spack.installer_dispatch.create_installer([out.package]), inst.PackageInstaller
+    )
+
+
+def test_fallback_to_old_installer_for_until(monkeypatch, mock_packages, mutable_config):
+    """Test that the old installer is used if --until is used (unsupported in the new installer)"""
+    mutable_config.set("config:installer", "new")
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    assert isinstance(
+        spack.installer_dispatch.create_installer([spec.package], stop_at="build"),
+        inst.PackageInstaller,
+    )
+    assert isinstance(
+        spack.installer_dispatch.create_installer([spec.package], stop_before="build"),
+        inst.PackageInstaller,
+    )

@@ -33,6 +33,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
+import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
@@ -1975,12 +1976,9 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        if spack.config.get("config:installer", "old") == "new":
-            from spack.new_installer import PackageInstaller
-        else:
-            from spack.installer import PackageInstaller  # type: ignore[assignment]
-
-        builder = PackageInstaller([spec.package for spec in specs], **install_args)
+        builder = spack.installer_dispatch.create_installer(
+            [spec.package for spec in specs], **install_args
+        )
 
         try:
             builder.install()

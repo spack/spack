@@ -11,10 +11,10 @@ import spack.cmd
 import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
+import spack.installer_dispatch
 import spack.llnl.util.tty as tty
 import spack.repo
 from spack.cmd.common import arguments
-from spack.installer import PackageInstaller
 
 description = "build package from code in current working directory"
 section = "build"
@@ -132,7 +132,7 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    PackageInstaller(
+    spack.installer_dispatch.create_installer(
         [spec.package],
         tests=tests,
         keep_prefix=args.keep_prefix,
