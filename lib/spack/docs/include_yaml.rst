@@ -80,7 +80,7 @@ If you want to control the :ref:`name of the configuration scope <named-config-s
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
 And we want the configuration scope name to start ``common``.
-We could then configure the include file, ``$user_cache_path/include.yaml`` for example, as follows::
+We could then configure the include in, for example, the user scope include file (i.e., ``$HOME/.spack/include.yaml`` by default), as follows::
 
    include:
    - name: common
@@ -95,7 +95,7 @@ We could then configure the include file, ``$user_cache_path/include.yaml`` for 
 
    The git URL could be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
 
-If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$user_cache_path`` -- when configuration scopes are initially created.
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$HOME/.spack/includes`` -- when configuration scopes are initially created.
 Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
 In this example, the new scopes and their paths can be seen by running::
 
