@@ -77,9 +77,9 @@ class SpackPaths:
         if not self._state_home:
             self._state_home, self._state_home_provenance = self.resolve_a_home(
                 ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
-                "XDG_STATE_HOME",
                 "state",
                 SpackPaths.relative_state_home,
+                "XDG_STATE_HOME",
             )
         return self._state_home
 
@@ -87,7 +87,7 @@ class SpackPaths:
     def cache_home(self):
         if not self._cache_home:
             self._cache_home, self._cache_home_provenance = self.resolve_a_home(
-                "SPACK_CACHE_HOME", "XDG_CACHE_HOME", "cache", SpackPaths.relative_cache_home
+                "SPACK_CACHE_HOME", "cache", SpackPaths.relative_cache_home, "XDG_CACHE_HOME"
             )
         return self._cache_home
 
@@ -95,7 +95,7 @@ class SpackPaths:
     def data_home(self):
         if not self._data_home:
             self._data_home, self._data_home_provenance = self.resolve_a_home(
-                "SPACK_DATA_HOME", "XDG_DATA_HOME", "data", SpackPaths.relative_data_home
+                "SPACK_DATA_HOME", "data", SpackPaths.relative_data_home, "XDG_DATA_HOME"
             )
         return self._data_home
 
@@ -234,7 +234,7 @@ class SpackPaths:
             raise AttributeError(name)
         return getattr(base, name)
 
-    def resolve_a_home(self, spack_vars, xdg_var, config_var, home_rel):
+    def resolve_a_home(self, spack_vars, config_var, home_rel, xdg_var):
         """
         Data stored by spack is split into state, data, and cache components.
         This function can resolve where each of these components should be
@@ -244,12 +244,12 @@ class SpackPaths:
             spack_vars: spack-specific environment variables that indicate the
                 component location. Can be a list or a single variable. If this
                 is a list, earlier elements have precedence.
-            xdg_var: the XDG-based environment variable that indicates the
-                component location.
             config_var: the spack config variable that indicates the component
                 location.
             home_rel: for $SPACK_HOME and config:locations:home, this relative
                 path is appended to the result to get the component location.
+            xdg_var: the XDG-based environment variable that indicates the
+                component location.
         """
         disable_env = config.get("config:locations:disable_env", False)
 
