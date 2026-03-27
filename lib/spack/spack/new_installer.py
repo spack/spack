@@ -81,6 +81,7 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
+from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.util.path import padding_filter, padding_filter_bytes
 
@@ -1077,6 +1078,8 @@ class BuildInfo:
         "external",
         "prefix",
         "finished_time",
+        "start_time",
+        "duration",
         "progress_percent",
         "control_w_conn",
         "log_path",
@@ -1089,6 +1092,7 @@ class BuildInfo:
         explicit: bool,
         control_w_conn: Optional[Connection],
         log_path: Optional[str] = None,
+        start_time: float = 0.0,
     ) -> None:
         self.state: str = "starting"
         self.explicit: bool = explicit
@@ -1098,6 +1102,8 @@ class BuildInfo:
         self.external: bool = spec.external
         self.prefix: str = spec.prefix
         self.finished_time: Optional[float] = None
+        self.start_time: float = start_time
+        self.duration: Optional[float] = None
         self.progress_percent: Optional[int] = None
         self.control_w_conn = control_w_conn
         self.log_path: Optional[str] = log_path
@@ -1168,7 +1174,8 @@ class BuildStatus:
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
-        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn, log_path)
+        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, int(self.get_time()))
+        self.builds[spec.dag_hash()] = build_info
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
@@ -1312,7 +1319,9 @@ class BuildStatus:
 
         if state in ("finished", "failed"):
             self.completed += 1
-            build_info.finished_time = self.get_time() + CLEANUP_TIMEOUT
+            now = self.get_time()
+            build_info.duration = now - build_info.start_time
+            build_info.finished_time = now + CLEANUP_TIMEOUT
 
             # Stop tracking the finished build's logs.
             if build_id == self.tracked_build_id:
@@ -1325,7 +1334,9 @@ class BuildStatus:
 
         # For non-TTY output, print state changes immediately
         if not self.is_tty and not self.headless:
-            line = "".join(self._generate_line_components(build_info, static=True))
+            line = "".join(
+                self._generate_line_components(build_info, static=True, now=self.get_time())
+            )
             self.stdout.write(line + "\n")
             self.stdout.flush()
 
@@ -1399,7 +1410,7 @@ class BuildStatus:
 
         # First flush the finished builds. These are "persisted" in terminal history.
         for build in self.finished_builds:
-            self._render_build(build, buffer)
+            self._render_build(build, buffer, now=now)
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
@@ -1447,7 +1458,7 @@ class BuildStatus:
             if i > truncate_at:
                 self._println(buffer, f"{len_builds - i + 1} more...")
                 break
-            self._render_build(build, buffer, max_width)
+            self._render_build(build, buffer, max_width, now=now)
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
@@ -1491,11 +1502,11 @@ class BuildStatus:
         self.log_ends_with_newline = data.endswith(b"\n")
 
     def _render_build(
-        self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0
+        self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0
     ) -> None:
         """Print a single build line to the buffer, truncating to max_width (if > 0)."""
         line_width = 0
-        for component in self._generate_line_components(build_info):
+        for component in self._generate_line_components(build_info, now=now):
             # ANSI escape sequence(s), does not contribute to width
             if not component.startswith("\033") and max_width > 0:
                 line_width += len(component)
@@ -1505,7 +1516,7 @@ class BuildStatus:
         self._println(buffer)
 
     def _generate_line_components(
-        self, build_info: BuildInfo, static: bool = False
+        self, build_info: BuildInfo, static: bool = False, now: float = 0.0
     ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
@@ -1566,6 +1577,19 @@ class BuildStatus:
                 yield f": {build_info.log_path}"
         else:
             yield f" {build_info.state}"
+
+        # Duration
+        elapsed = (
+            build_info.duration
+            if build_info.duration is not None
+            else (now - build_info.start_time)
+        )
+        if elapsed > 0:
+            if self.color:
+                yield "\033[0;90m"  # dark gray
+            yield f" ({pretty_duration(elapsed)})"
+            if self.color:
+                yield "\033[0m"
 
 
 Nodes = Dict[str, spack.spec.Spec]

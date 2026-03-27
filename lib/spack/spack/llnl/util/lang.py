@@ -670,6 +670,19 @@ def pretty_seconds(seconds):
     return pretty_seconds_formatter(seconds)(seconds)
 
 
+def pretty_duration(seconds: float) -> str:
+    """Format a duration in seconds as a compact human-readable string (e.g. "1h02m", "3m05s",
+    "45s")."""
+    s = int(seconds)
+    if s < 60:
+        return f"{s}s"
+    m, s = divmod(s, 60)
+    if m < 60:
+        return f"{m}m{s:02d}s"
+    h, m = divmod(m, 60)
+    return f"{h}h{m:02d}m"
+
+
 class ObjectWrapper:
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
