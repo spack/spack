@@ -1094,7 +1094,8 @@ class BuildStatus:
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
         #: When True, suppress all terminal output (process is in background).
-        self.headless: bool = False
+        #: Controlling code is responsible for modifying this variable based on process state
+        self.headless = False
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
