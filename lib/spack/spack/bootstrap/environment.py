@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Bootstrap non-core Spack dependencies from an environment."""
+
+import contextlib
 import hashlib
 import os
 import pathlib
@@ -11,6 +13,10 @@ from typing import Iterable, List
 import spack.vendor.archspec.cpu
 
 import spack.environment
+import spack.binary_distribution
+import spack.util.gpg
+import spack.config
+import spack.mirrors.mirror
 import spack.spec
 import spack.tengine
 import spack.util.path
@@ -37,13 +43,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def spack_dev_requirements(cls) -> List[str]:
         """Spack development requirements"""
-        return [
-            isort_root_spec(),
-            mypy_root_spec(),
-            black_root_spec(),
-            flake8_root_spec(),
-            pytest_root_spec(),
-        ]
+        return [pytest_root_spec(), ruff_root_spec(), mypy_root_spec()]
 
     @classmethod
     def environment_root(cls) -> pathlib.Path:
@@ -78,6 +78,17 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment spack.yaml file"""
         return cls.environment_root().joinpath("spack.yaml")
 
+    @contextlib.contextmanager
+    def mirror_keys_enabled(self, mirror: spack.mirrors.mirror.Mirror):
+        bootstrap_keys = []
+        if mirror.signed:
+            bootstrap_keys = spack.binary_distribution.get_keys(install=True, trust=True, mirrors={mirror.name: mirror})
+        try:
+            yield
+        finally:
+            if bootstrap_keys:
+                spack.util.gpg.untrust(False, bootstrap_keys)
+
     def update_installations(self) -> None:
         """Update the installations of this environment."""
         log_enabled = tty.is_debug() or tty.is_verbose()
@@ -91,8 +102,14 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                self.install_all(fail_fast=True)
-                self.write(regenerate=True)
+                mirror_name = "dev-bootstrap"
+                bootstrap_mirror = spack.mirrors.mirror.Mirror(
+                    name=mirror_name,
+                    data=spack.config.get("mirrors", scope=self.scope_name)[mirror_name]
+                )
+                with self.mirror_keys_enabled(bootstrap_mirror):
+                    self.install_all(fail_fast=True, root_policy="cache_only", install_deps=False)
+                    self.write(regenerate=True)
 
     def load(self) -> None:
         """Update PATH and sys.path."""
@@ -115,6 +132,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
+            "mirror_url": "<placeholder-CHANGE-ME>",
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
@@ -130,19 +148,14 @@ def mypy_root_spec() -> str:
     return _root_spec("py-mypy@0.900: ^py-mypy-extensions@:1.0")
 
 
-def black_root_spec() -> str:
-    """Return the root spec used to bootstrap black"""
-    return _root_spec("py-black@:25.1.0")
-
-
-def flake8_root_spec() -> str:
-    """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-flake8@3.8.2:")
-
-
 def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
     return _root_spec("py-pytest@6.2.4:")
+
+
+def ruff_root_spec() -> str:
+    """Return the root spec used to bootstrap ruff"""
+    return _root_spec("ruff@0.15.7")
 
 
 def ensure_environment_dependencies() -> None:

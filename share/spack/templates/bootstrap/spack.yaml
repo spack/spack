@@ -33,5 +33,11 @@ spack:
       require: "+wheel"
 
   concretizer:
-    reuse: false
+    reuse: true
     unify: true
+
+  mirrors:
+    dev-bootstrap:
+      url: {{ mirror_url }}
+      signed: true
+
