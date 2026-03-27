@@ -1916,25 +1916,25 @@ class TerminalState:
             if old is not None:
                 try:
                     signal.signal(sig, old)
-                except Exception:
-                    pass
+                except Exception as e:
+                    spack.llnl.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
 
         if sys.stdin.fileno() in self.selector.get_map():
             try:
                 self.selector.unregister(sys.stdin.fileno())
-            except Exception:
-                pass
+            except Exception as e:
+                spack.llnl.util.tty.debug(f"Failed to unregister stdin from selector: {e}")
 
         for fd in (self.sigwinch_r, self.sigwinch_w):
             if fd >= 0:
                 try:
                     self.selector.unregister(fd)
-                except Exception:
-                    pass
+                except Exception as e:
+                    spack.llnl.util.tty.debug(f"Failed to unregister fd {fd} from selector: {e}")
                 try:
                     os.close(fd)
-                except Exception:
-                    pass
+                except Exception as e:
+                    spack.llnl.util.tty.debug(f"Failed to close fd {fd}: {e}")
 
     def _handle_sigtstp(self, signum: int, frame: object) -> None:
         """Restore terminal before suspending, then re-install handler after resume."""
