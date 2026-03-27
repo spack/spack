@@ -8,6 +8,7 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+import itertools
 import os
 import pathlib
 from contextlib import contextmanager
@@ -48,6 +49,28 @@ class Provenance(Enum):
             Provenance.CONFIG_VAR,
             Provenance.CONFIG_HOME_VAR,
         }
+
+
+class XDG_vars(Enum):
+    state_home = "XDG_STATE_HOME"
+    data_home = "XDG_DATA_HOME"
+    cache_home = "XDG_CACHE_HOME"
+
+
+class Spack_vars(Enum):
+    state_home = "SPACK_STATE_HOME"
+    data_home = "SPACK_DATA_HOME"
+    cache_home = "SPACK_CACHE_HOME"
+    user_cache_path = "SPACK_USER_CACHE_PATH"
+    home = "SPACK_HOME"
+
+
+# This is for tests that want to clean the environment of XDG_ variables that
+# affect spack behavior. Note that this will not influence install_test.py's
+# view of config:test_stage
+def _unset_path_vars(env):
+    for env_var in itertools.chain(XDG_vars, Spack_vars):
+        env.pop(env_var.value, None)
 
 
 class SpackPaths:

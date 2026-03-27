@@ -22,15 +22,7 @@ def _ensure_dir(pathlike):
 
 @pytest.fixture(autouse=True)
 def clear_env_vars(working_env):
-    spack.paths_base._unset_xdg_vars(os.environ)
-    for x in [
-        "SPACK_USER_CACHE_PATH",
-        "SPACK_HOME",
-        "SPACK_DATA_HOME",
-        "SPACK_STATE_HOME",
-        "SPACK_CACHE_HOME",
-    ]:
-        os.environ.pop(x, None)
+    spack.paths._unset_path_vars(os.environ)
 
 
 @pytest.fixture

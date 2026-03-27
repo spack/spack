@@ -2,33 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import itertools
 import os
-from enum import Enum
 from pathlib import PurePath
 
 import spack.llnl.util.filesystem
 import spack.util.hash as hash
-
-
-class XDG_vars(Enum):
-    state_home = "XDG_STATE_HOME"
-    data_home = "XDG_DATA_HOME"
-    cache_home = "XDG_CACHE_HOME"
-
-
-class XDG_overrides(Enum):
-    state_home = "SPACK_STATE_HOME"
-    data_home = "SPACK_DATA_HOME"
-    cache_home = "SPACK_CACHE_HOME"
-
-
-# This is for tests that want to clean the environment of XDG_ variables that
-# affect spack behavior. Note that this will not influence install_test.py's
-# view of config:test_stage
-def _unset_xdg_vars(env):
-    for xdg_var in itertools.chain(XDG_vars, XDG_overrides):
-        env.pop(xdg_var.value, None)
 
 
 class SpackPathsBase:
