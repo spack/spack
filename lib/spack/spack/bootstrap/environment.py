@@ -12,13 +12,13 @@ from typing import Iterable, List
 
 import spack.vendor.archspec.cpu
 
-import spack.environment
 import spack.binary_distribution
-import spack.util.gpg
 import spack.config
+import spack.environment
 import spack.mirrors.mirror
 import spack.spec
 import spack.tengine
+import spack.util.gpg
 import spack.util.path
 from spack.llnl.util import tty
 
@@ -82,7 +82,9 @@ class BootstrapEnvironment(spack.environment.Environment):
     def mirror_keys_enabled(self, mirror: spack.mirrors.mirror.Mirror):
         bootstrap_keys = []
         if mirror.signed:
-            bootstrap_keys = spack.binary_distribution.get_keys(install=True, trust=True, mirrors={mirror.name: mirror})
+            bootstrap_keys = spack.binary_distribution.get_keys(
+                install=True, trust=True, mirrors={mirror.name: mirror}
+            )
         try:
             yield
         finally:
@@ -105,7 +107,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                 mirror_name = "dev-bootstrap"
                 bootstrap_mirror = spack.mirrors.mirror.Mirror(
                     name=mirror_name,
-                    data=spack.config.get("mirrors", scope=self.scope_name)[mirror_name]
+                    data=spack.config.get("mirrors", scope=self.scope_name)[mirror_name],
                 )
                 with self.mirror_keys_enabled(bootstrap_mirror):
                     self.install_all(fail_fast=True, root_policy="cache_only", install_deps=False)

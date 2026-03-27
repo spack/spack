@@ -11,12 +11,7 @@ import spack.util.executable
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
 from .core import clingo_root_spec, gnupg_root_spec, patchelf_root_spec
-from .environment import (
-    BootstrapEnvironment,
-    ruff_root_spec,
-    mypy_root_spec,
-    pytest_root_spec,
-)
+from .environment import BootstrapEnvironment, mypy_root_spec, pytest_root_spec, ruff_root_spec
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]

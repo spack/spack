@@ -288,7 +288,7 @@ def _handle_special_linter_exemptions(
     output: str, root: Path, original_returncode: int
 ) -> Tuple[str, int]:
     """Process ruff output to exempt our specific patterns
-    
+
     Ruff does not have the capacity to exempt certain occurances
     of a linter violation the way flake8 does, so we do it as a
     post processing step instead of during lint time.
@@ -297,7 +297,7 @@ def _handle_special_linter_exemptions(
         return output, original_returncode
 
     filtered_lines = []
-    current_block = []
+    current_block: List[str] = []
     current_err_code = None
     current_is_exempt = False
     real_errors_count = 0

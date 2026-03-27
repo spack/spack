@@ -2259,9 +2259,11 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-               mirror_layout_fingerprints = _get_keys_v2(fetch_url, install, trust, force)
+                mirror_layout_fingerprints = _get_keys_v2(fetch_url, install, trust, force)
             else:
-                mirror_layout_fingerprints = _get_keys(fetch_url, layout_version, install, trust, force)
+                mirror_layout_fingerprints = _get_keys(
+                    fetch_url, layout_version, install, trust, force
+                )
             if mirror_layout_fingerprints:
                 fingerprints.extend(mirror_layout_fingerprints)
     return fingerprints
@@ -2290,7 +2292,7 @@ def _get_keys(
     except BuildcacheEntryError as e:
         tty.debug(f"Failed to fetch key index due to: {e}")
         index_entry.destroy()
-        return
+        return None
 
     with open(index_blob_path, encoding="utf-8") as fd:
         json_index = json.load(fd)
@@ -2316,8 +2318,7 @@ def _get_keys(
                 saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
-                    "Will not add this key to trusted keys."
-                    "Use -t to install all downloaded keys"
+                    "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
 
         key_entry.destroy()
@@ -2344,7 +2345,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
                 f" caught exception attempting to read from {url_util.format(keys_index)}."
             )
             tty.error(url_err)
-        return
+        return None
 
     saved_fingerprints = []
     for fingerprint, key_attributes in json_index["keys"].items():
@@ -2367,8 +2368,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
                 saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
-                    "Will not add this key to trusted keys."
-                    "Use -t to install all downloaded keys"
+                    "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
     return saved_fingerprints
 
