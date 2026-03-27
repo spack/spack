@@ -10,6 +10,7 @@ dependencies.
 """
 import os
 import pathlib
+from contextlib import contextmanager
 from enum import Enum
 from functools import partial
 
@@ -114,8 +115,6 @@ class SpackPaths:
     @property
     def user_cache_path(self):
         return self.state_home
-
-    from contextlib import contextmanager
 
     @contextmanager
     def redirect_state_home(self, x):

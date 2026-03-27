@@ -4,8 +4,8 @@
 
 from spack_repo.builtin_mock.build_systems.generic import Package
 
-from spack.paths import locations as spack_paths
 from spack.package import *
+from spack.paths import locations as spack_paths
 from spack.util.url import path_to_file_url
 
 

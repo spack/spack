@@ -13,6 +13,7 @@ from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
 import spack.llnl.util.tty as _tty
+import spack.paths
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -125,7 +126,6 @@ from spack.package_completions import (
     zsh_completion_path,
 )
 from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
-import spack.paths
 from spack.phase_callbacks import run_after, run_before
 from spack.platforms import host as host_platform
 from spack.spec import Spec
