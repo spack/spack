@@ -236,9 +236,22 @@ class SpackPaths:
 
     def resolve_a_home(self, spack_vars, config_var, home_rel, xdg_var):
         """
-        Data stored by spack is split into state, data, and cache components.
-        This function can resolve where each of these components should be
-        stored.
+        Files stored by spack are split into state, data, and cache components.
+        Each of these categories has the same fall-through/prioritization path,
+        established by this function:
+          1. ``SPACK_x_HOME``: for example if the ``SPACK_DATA_HOME`` env var is
+             set, it has the highest precedence.
+          2. If the ``SPACK_HOME`` env variable is set, it can collect all of these
+             components together
+          3. ``config:locations:x``
+          4. ``config:locations:home``
+          5. ``XDG_x_HOME``: e.g. if the ``XDG_DATA_HOME`` env var is set
+          6. In the user's home directory, in the XDG default location for that
+             component.
+
+        Note that configuration settings for specific data (e.g.
+        ``config:install_tree:root`` for where installs are placed) will take
+        precedence over any of this.
 
         Args:
             spack_vars: spack-specific environment variables that indicate the
