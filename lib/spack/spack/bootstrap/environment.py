@@ -157,7 +157,7 @@ def pytest_root_spec() -> str:
 
 def ruff_root_spec() -> str:
     """Return the root spec used to bootstrap ruff"""
-    return _root_spec("ruff@0.15.7")
+    return _root_spec("py-ruff@0.15.0")
 
 
 def ensure_environment_dependencies() -> None:
