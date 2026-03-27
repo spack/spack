@@ -251,6 +251,9 @@ class CDashHandler:
 
     def copy_test_results(self, source, dest):
         """Copy test results to artifacts directory."""
+        # TODO/TBD: Do we still get stand-alone test results files?
+        xml_files = glob.glob(fs.join_path(source, "*.xml"))
+        tty.info(f"Are there any (test) XML files in: {xml_files}")
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
@@ -336,6 +339,7 @@ class PipelineOptions:
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
         require_signing: bool = False,
+        add_test_jobs: bool = False,
         cdash_handler: Optional["CDashHandler"] = None,
     ):
         """
@@ -355,6 +359,7 @@ class PipelineOptions:
             stack_name: Name of spack stack
             pipeline_type: Type of pipeline running (optional)
             require_signing: Require buildcache to be signed (fail w/out signing key)
+            add_test_jobs: generate standalone test jobs
             cdash_handler: Object for communicating build information with CDash
         """
         self.env = env
@@ -373,6 +378,7 @@ class PipelineOptions:
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
+        self.add_test_jobs = add_test_jobs
         self.cdash_handler = cdash_handler
         self.forward_variables: List[str] = []
 
@@ -487,7 +493,7 @@ class SpackCIConfig:
         """
 
         self.ci_config = ci_config
-        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
+        self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing", "test"]
 
         self.ir = {
             "jobs": {},
@@ -500,13 +506,14 @@ class SpackCIConfig:
 
         for name in self.named_jobs:
             # Skip the special named jobs
-            if name not in ["any", "build"]:
+            if name not in ["any", "build", "test"]:
                 jobs[name] = self.__init_job("")
 
     def __init_job(self, release_spec):
         """Initialize job object"""
         job_object = {"spec": release_spec, "attributes": {}}
         if release_spec:
+            job_object["type"] = "build"
             job_vars = job_object["attributes"].setdefault("variables", {})
             job_vars["SPACK_JOB_SPEC_DAG_HASH"] = release_spec.dag_hash()
             job_vars["SPACK_JOB_SPEC_PKG_NAME"] = release_spec.name
@@ -557,37 +564,65 @@ class SpackCIConfig:
                         cfg.remove_yaml(dest, attrs["build-job-remove"])
                     if "build-job" in match_attrs:
                         spack.schema.merge_yaml(dest, attrs["build-job"])
+
+                    if "test-job-remove" in match_attrs:
+                        spack.config.remove_yaml(dest, attrs["test-job-remove"])
+
+                    if "test-job" in match_attrs:
+                        spack.schema.merge_yaml(dest, attrs["test-job"])
                     break
             if matched and only_first:
                 break
 
         return dest
 
-    # Create jobs for all the pipeline specs
+    # Create build jobs for all the pipeline specs
     def init_pipeline_jobs(self, pipeline: PipelineDag):
         for _, node in pipeline.traverse_nodes():
             dag_hash = node.spec.dag_hash()
             self.ir["jobs"][dag_hash] = self.__init_job(node.spec)
 
     # Generate IR from the configs
-    def generate_ir(self):
+    def generate_ir(self, add_test_jobs: bool = True):
         """Generate the IR from the Spack CI configurations."""
 
         jobs = self.ir["jobs"]
 
         # Implicit job defaults
-        defaults = [
-            {
-                "build-job": {
-                    "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
-                        "spack ci rebuild",
-                    ]
+        defaults = (
+            [
+                {
+                    "test-job": {
+                        "script": [
+                            "cd {env_dir}",
+                            "spack env activate --without-view .",
+                            "spack ci test",
+                        ]
+                    }
                 }
-            },
-            {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
-        ]
+            ]
+            if add_test_jobs
+            else []
+        )
+
+        defaults.extend(
+            [
+                {
+                    "build-job": {
+                        "script": [
+                            "cd {env_dir}",
+                            "spack env activate --without-view .",
+                            "spack ci rebuild",
+                        ]
+                    }
+                },
+                {
+                    "noop-job": {
+                        "script": ['echo "All specs already up to date, nothing to rebuild."']
+                    }
+                },
+            ]
+        )
 
         # Job overrides
         overrides = [
@@ -611,6 +646,7 @@ class SpackCIConfig:
 
         pipeline_gen = overrides + self.ci_config.get("pipeline-gen", []) + defaults
 
+        test_jobs = {}
         for section in reversed(pipeline_gen):
             name = self.__is_named(section)
             has_submapping = "submapping" in section
@@ -631,11 +667,21 @@ class SpackCIConfig:
 
                 if name == "build":
                     # Apply attributes to all build jobs
-                    for _, job in jobs.items():
+                    for k, job in jobs.items():
                         if job["spec"]:
+                            if add_test_jobs:
+                                new_job = copy.copy(job)
+                                new_job["type"] = "test"
+                                test_jobs[f"{k}-test"] = new_job
                             _apply_section(job["attributes"], section)
+                elif name == "test":
+                    # Apply attributes to all test jobs
+                    print(f"TLD: test section ({section}):")
+                    for k, job in test_jobs.items():
+                        _apply_section(job["attributes"], section)
+
                 elif name == "any":
-                    # Apply section attributes too all jobs
+                    # Apply section attributes to all jobs
                     for _, job in jobs.items():
                         _apply_section(job["attributes"], section)
                 else:
@@ -652,7 +698,9 @@ class SpackCIConfig:
 
             elif has_submapping:
                 # Apply section jobs with specs to match
-                for _, job in jobs.items():
+                # for _, job in jobs.items():
+                all_jobs = {**jobs, **test_jobs}
+                for _, job in all_jobs.items():
                     if job["spec"]:
                         job["attributes"] = self.__apply_submapping(
                             job["attributes"], job["spec"], section
@@ -704,7 +752,9 @@ class SpackCIConfig:
                     ).format_map(job_vars)
                     return f"spec={quote(query)}"
 
-                for job in jobs.values():
+                # for job in jobs.values():
+                all_jobs = {**jobs, **test_jobs}
+                for _, job in all_jobs.items():
                     if not job["spec"]:
                         continue
 
@@ -753,10 +803,13 @@ class SpackCIConfig:
                             job.get("attributes", {}), clean_config
                         )
 
-        for _, job in jobs.items():
+        # for _, job in jobs.items():
+        all_jobs = {**jobs, **test_jobs}
+        for _, job in all_jobs.items():
             if job["spec"]:
                 job["spec"] = job["spec"].name
 
+        self.ir = all_jobs
         return self.ir
 
 

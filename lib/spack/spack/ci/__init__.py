@@ -368,6 +368,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
+    options.add_test_jobs = args.tests
 
     ci_config = cfg.get("ci")
 
@@ -1333,7 +1334,7 @@ def run_standalone_tests(
     job_spec: Optional[spack.spec.Spec] = None,
     repro_dir: Optional[str] = None,
     timeout: Optional[int] = None,
-):
+) -> Optional[int]:
     """Run stand-alone tests on the current spec.
 
     Args:
@@ -1343,6 +1344,8 @@ def run_standalone_tests(
         job_spec: spec that was built
         repro_dir: reproduction directory
         timeout: maximum time (in seconds) that tests are allowed to run
+
+    Returns: the test exit code or 1 if an error occurs
     """
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")
@@ -1351,11 +1354,11 @@ def run_standalone_tests(
     # Error out but do NOT terminate if there are missing required arguments.
     if not job_spec:
         tty.error("Job spec is required to run stand-alone tests")
-        return
+        return 1
 
     if not repro_dir:
         tty.error("Reproduction directory is required for stand-alone tests")
-        return
+        return 1
 
     test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
@@ -1376,3 +1379,4 @@ def run_standalone_tests(
     exit_code = process_command("test", test_args, repro_dir)
 
     tty.debug(f"spack test exited {exit_code}")
+    return exit_code
