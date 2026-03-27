@@ -42,7 +42,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, U
 from spack.vendor import jsonschema
 
 import spack.error
-import spack.paths_base
+from spack.paths_base import locations as paths_base
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -104,7 +104,7 @@ _ALL_SCHEMAS: Dict[str, Any] = {
 }
 
 #: Path to the main configuration scope
-CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths_base.etc_path, "defaults"))
+CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(paths_base.etc_path, "defaults"))
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -1561,7 +1561,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
     # line scopes go above this.
-    configuration_paths = [("spack", os.path.join(spack.paths_base.etc_path))]
+    configuration_paths = [("spack", os.path.join(paths_base.etc_path))]
 
     # Python packages can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())

@@ -5,7 +5,7 @@ import inspect
 import pathlib
 import warnings
 
-import spack.paths_base as paths_base
+from spack.paths_base import locations as paths_base
 
 
 def _most_recent_internal_call():

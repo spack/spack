@@ -604,7 +604,7 @@ def setup_main_options(args):
     # override lock configuration if passed on command line
     if args.locks is not None:
         if args.locks is False:
-            spack.util.lock.check_lock_safety(spack.paths_base.prefix)
+            spack.util.lock.check_lock_safety(spack.paths_base.locations.prefix)
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
@@ -613,7 +613,7 @@ def setup_main_options(args):
         key = syaml.syaml_str("repos")
         key.override = True
         spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
-            [(key, [spack.paths_base.mock_packages_path])]
+            [(key, [spack.paths_base.locations.mock_packages_path])]
         )
 
     # If the user asked for it, don't check ssl certs.

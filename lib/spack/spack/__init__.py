@@ -43,7 +43,7 @@ def get_spack_commit() -> Optional[str]:
     Returns:
         (str or None) the commit sha if available, otherwise None
     """
-    git_path = os.path.join(spack.paths_base.prefix, ".git")
+    git_path = os.path.join(spack.paths_base.locations.prefix, ".git")
     if not os.path.exists(git_path):
         return None
 
@@ -53,7 +53,7 @@ def get_spack_commit() -> Optional[str]:
 
     rev = git(
         "-C",
-        spack.paths_base.prefix,
+        spack.paths_base.locations.prefix,
         "rev-parse",
         "HEAD",
         output=str,

@@ -20,8 +20,8 @@ import spack.error
 import spack.extensions
 import spack.llnl.string
 import spack.llnl.util.tty as tty
-import spack.paths
-import spack.paths_base
+from spack.paths import locations as paths
+from spack.paths_base import locations as paths_base
 import spack.repo
 import spack.spec
 import spack.spec_parser
@@ -88,7 +88,7 @@ def all_commands():
     global _all_commands
     if _all_commands is None:
         _all_commands = []
-        command_paths = [spack.paths_base.command_path]  # Built-in commands
+        command_paths = [paths_base.command_path]  # Built-in commands
         command_paths += spack.extensions.get_command_paths()  # Extensions
         for path in command_paths:
             for file in os.listdir(path):
@@ -580,7 +580,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    return is_git_repo(spack.paths.prefix)
+    return is_git_repo(paths.prefix)
 
 
 def is_git_repo(path):
