@@ -570,7 +570,7 @@ def test_env_install_include_concrete_env(
         assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
-def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_variant):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
 
@@ -4374,14 +4374,8 @@ def test_unify_when_possible_works_around_conflicts(mutable_config):
         assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
 
 
-# Using mock_include_cache to ensure the "remote" file is cached in a temporary
-# location and not polluting the user cache.
 def test_env_include_packages_url(
-    tmp_path: pathlib.Path,
-    mutable_empty_config,
-    mock_fetch_url_text,
-    mock_curl_configs,
-    mock_include_cache,
+    tmp_path: pathlib.Path, mutable_empty_config, mock_fetch_url_text, mock_curl_configs
 ):
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
@@ -4885,7 +4879,9 @@ spack:
         shutil.copy(os.path.join(e.path, ev.manifest_name), lock_in_clone.parent)
 
     # Prevent actual git operations; return the pre-built clone destination.
-    monkeypatch.setattr(spack.config.GitIncludePaths, "_clone", lambda self: str(clone_dest))
+    monkeypatch.setattr(
+        spack.config.GitIncludePaths, "_clone", lambda self, parent_scope: str(clone_dest)
+    )
 
     main_dir = tmp_path / "main_env"
     main_dir.mkdir()

@@ -153,13 +153,6 @@ _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 
 
-def _include_cache_location():
-    """Location to cache included configuration files."""
-    # This is always the default value of XDG_STATE_HOME: it is not
-    # influenced by XDG_STATE_HOME or any configuration values in Spack
-    return os.path.join(spack.paths_base.locations.env_based_state_home, "includes")
-
-
 class ConfigScope:
     def __init__(self, name: str, included: bool = False) -> None:
         self.name = name
@@ -168,7 +161,7 @@ class ConfigScope:
         self.prefer_modify = False
         self.included = included
 
-        #: names of any included scopes
+        #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
 
     @property
@@ -573,7 +566,7 @@ class Configuration:
         # TODO: includes AND ensure properly sorted such that the order included
         # TODO: at the highest level is reflected in the value of an option that
         # TODO: is set in multiple included files.
-        # before pushing the scope itself, push any included scopes recursively, at same priority
+        # before pushing the scope itself, push included scopes recursively, at the same priority
         for included_scope in reversed(scope.included_scopes):
             if _depth + 1 > MAX_RECURSIVE_INCLUDES:  # make sure we're not recursing endlessly
                 mark = ""
@@ -1062,6 +1055,7 @@ class OptionalInclude:
     when: str
     optional: bool
     prefer_modify: bool
+    remote: bool
     _scopes: List[ConfigScope]
 
     def __init__(self, entry: dict):
@@ -1069,7 +1063,77 @@ class OptionalInclude:
         self.when = entry.get("when", "")
         self.optional = entry.get("optional", False)
         self.prefer_modify = entry.get("prefer_modify", False)
+        self.remote = False
         self._scopes = []
+
+    @staticmethod
+    def _parent_scope_directory(parent_scope: Optional[ConfigScope]) -> Optional[str]:
+        """Return the directory of the parent scope, or ``None`` if unavailable.
+
+        Normalizes ``SingleFileScope`` to its containing directory.
+        """
+        path = getattr(parent_scope, "path", "") if parent_scope else ""
+        if not path:
+            return None
+        return os.path.dirname(path) if os.path.isfile(path) else path
+
+    def base_directory(
+        self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
+    ) -> Optional[str]:
+        """Return the local directory to use for this include.
+
+        For remote includes this is the cache destination directory.
+        For local relative includes this is the working directory from which to resolve the path.
+
+        Args:
+            path_or_url: path or URL of the include
+            parent_scope: including scope
+
+        Returns: ``None`` for a local include without an enclosing parent scope;
+            an appropriate subdirectory of the enclosing (parent) scope's writable
+            directory (when available); otherwise a stable temporary directory.
+        """
+        scope_dir = self._parent_scope_directory(parent_scope)
+        if not self.remote:
+            return scope_dir
+
+        def _subdir():
+            # Prefer the provided include name over the git repository name.
+            # If neither, use a hash of the url or path for uniqueness.
+            if self.name:
+                return self.name
+
+            match = re.search(r"/([^/]+?)(\.git)?$", path_or_url)
+            if match:
+                if not os.path.splitext(match.group(1))[1]:
+                    return match.group(1)
+
+            return spack.util.hash.b32_hash(path_or_url)[-7:]
+
+        # For remote includes, prefer a writable subdirectory of the parent scope.
+        if scope_dir and filesystem.can_write_to_dir(scope_dir):
+            assert parent_scope is not None
+            subdir = os.path.join("includes", _subdir())
+            if parent_scope.name.startswith("env:"):
+                subdir = os.path.join(".spack-env", subdir)
+            return os.path.join(scope_dir, subdir)
+
+        # Fall back to a stable, unique, temporary directory, logging the reason.
+        tmpdir = tempfile.gettempdir()
+        if path_or_url:
+            pre = self.name or getattr(parent_scope, "name", "")
+            subdir = f"{pre}:{path_or_url}" if pre else path_or_url
+            tmpdir = os.path.join(tmpdir, spack.util.hash.b32_hash(subdir)[-7:])
+
+        if not scope_dir:
+            tty.debug(f"No parent scope directory for include ({self}). Using {tmpdir}.")
+        else:
+            assert parent_scope is not None
+            tty.debug(
+                f"Parent scope {parent_scope.name}'s directory ({scope_dir}) is not writable. "
+                f"Using {tmpdir}."
+            )
+        return tmpdir
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
@@ -1127,7 +1191,7 @@ class OptionalInclude:
         exists = os.path.exists(config_path)
 
         if not exists and not self.optional:
-            dest = f" at ({config_path})" if config_path != path else ""
+            dest = f" at ({config_path})" if config_path != os.path.normpath(path) else ""
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
         if (exists and not is_dir) or ext_is_yaml:
@@ -1163,6 +1227,10 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
     def evaluate_condition(self) -> bool:
+        """Evaluate the include condition:
+
+        Returns: ``True`` if the include condition is satisfied; else ``False``.
+        """
         # circular dependencies
         import spack.spec
 
@@ -1174,8 +1242,8 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         Args:
             parent_scope: including scope
 
-        Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, an empty list.
+        Returns: configuration scopes for configuration files IF the when
+            condition is satisfied; otherwise, an empty list.
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -1207,6 +1275,7 @@ class IncludePath(OptionalInclude):
         self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
+        self.remote = "sha256" in entry
         self.destination = None
 
     def __repr__(self):
@@ -1237,18 +1306,18 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        # Make sure to use the proper (default) working directory when obtaining
-        # the local path for a local file.
-        def work_dir():
-            if not os.path.isabs(self.path) and hasattr(parent_scope, "path"):
-                if os.path.isfile(parent_scope.path):
-                    return os.path.dirname(parent_scope.path)
-                if os.path.isdir(parent_scope.path):
-                    return parent_scope.path
-            return os.getcwd()
+        # An absolute path does not need a local base directory.
+        if os.path.isabs(self.path):
+            tty.debug(f"The included path ({self}) is absolute so needs no base directory")
+            base = None
+        else:
+            base = self.base_directory(self.path, parent_scope)
 
-        with filesystem.working_dir(work_dir()):
-            config_path = rfc_util.local_path(self.path, self.sha256, _include_cache_location())
+        # Make sure to use a proper working directory when obtaining the local
+        # path for a local (or remote) file.
+        tty.debug(f"Local base directory for {self.path} is {base}")
+
+        config_path = rfc_util.local_path(self.path, self.sha256, base)
         assert config_path
         self.destination = config_path
 
@@ -1277,6 +1346,7 @@ class GitIncludePaths(OptionalInclude):
         super().__init__(entry)
         context = self.name or entry.get("git", "") or "(Git include)"
         self.git = substitute_include_path(entry.get("git", ""), context)
+
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
@@ -1285,6 +1355,7 @@ class GitIncludePaths(OptionalInclude):
             sub_context = f"{context} - {path}"
             self._paths.append(substitute_include_path(path, sub_context))
         self.destination = None
+        self.remote = True
 
         if not self.branch and not self.commit and not self.tag:
             raise spack.error.ConfigError(
@@ -1303,24 +1374,31 @@ class GitIncludePaths(OptionalInclude):
             identifier = f"commit={self.commit}, tag={self.tag}"
 
         return (
-            f"GitIncludePaths({self.git}, paths={self.paths}, "
+            f"GitIncludePaths('{self.name}', {self.git}, paths={self._paths}, "
             f"{identifier}, when='{self.when}', optional={self.optional})"
         )
 
-    def _destination(self):
-        dir_name = spack.util.hash.b32_hash(self.git)[-7:]
-        return os.path.join(_include_cache_location(), dir_name)
+    def _clone(self, parent_scope: ConfigScope) -> Optional[str]:
+        """Clone the repository.
 
-    def _clone(self) -> Optional[str]:
-        """Clone the repository."""
+        Args:
+            parent_scope: enclosing scope
+
+        Returns: destination path if cloned or ``None``
+        """
         if self.fetched():
             tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
             return self.destination
 
-        destination = self._destination()
+        # environment includes should be located under the environment
+        destination = self.base_directory(self.git, parent_scope)
+        assert destination, f"{self} requires a local cache directory"
+        tty.debug(f"Cloning {self.git} into {destination}")
+
         with filesystem.working_dir(destination, create=True):
             if not os.path.exists(".git"):
                 try:
+                    tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
@@ -1329,12 +1407,15 @@ class GitIncludePaths(OptionalInclude):
 
             try:
                 if self.commit:
+                    tty.debug(f"Pulling commit {self.commit}")
                     spack.util.git.pull_checkout_commit(self.commit)
                 elif self.tag:
+                    tty.debug(f"Pulling tag {self.tag}")
                     spack.util.git.pull_checkout_tag(self.tag)
                 elif self.branch:
                     # if the branch already exists we should use the
                     # previously configured remote
+                    tty.debug(f"Pulling branch {self.branch}")
                     try:
                         git = spack.util.git.git(required=True)
                         output = git("config", f"branch.{self.branch}.remote", output=str)
@@ -1354,8 +1435,10 @@ class GitIncludePaths(OptionalInclude):
             self.destination = destination
             return self.destination
 
-    def fetched(self):
-        return self.destination is not None and os.path.join(self.destination, ".git")
+    def fetched(self) -> bool:
+        return bool(self.destination) and os.path.exists(
+            os.path.join(self.destination, ".git")  # type: ignore[arg-type]
+        )
 
     def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
         """Instantiate configuration scopes for the included paths.
@@ -1379,13 +1462,13 @@ class GitIncludePaths(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        destination = self._clone()
-        if destination is None:
+        destination = self._clone(parent_scope)
+        if not destination:
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []
         for path in self.paths:
-            config_path = os.path.join(destination, path)
+            config_path = str(pathlib.Path(destination) / path)
             scope = self._scope(path, config_path, parent_scope)
             if scope is not None:
                 scopes.append(scope)

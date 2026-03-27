@@ -294,7 +294,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -304,14 +304,15 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked
-            assert len(to_start) == 1
-            assert to_start[0][0] == spec.dag_hash()
-            assert not newly_installed
+            assert not result.blocked
+            assert len(result.to_start) == 1
+            assert result.to_start[0][0] == spec.dag_hash()
+            assert not result.newly_installed
             assert not pending  # removed from the pending list
         finally:
-            for _, lock in to_start:
+            for _, lock in result.to_start:
                 lock.release_write()
             jobserver.close()
 
@@ -323,7 +324,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -333,14 +334,15 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked
-            assert not to_start
-            assert len(newly_installed) == 1
-            assert newly_installed[0][0] == spec.dag_hash()
+            assert not result.blocked
+            assert not result.to_start
+            assert len(result.newly_installed) == 1
+            assert result.newly_installed[0][0] == spec.dag_hash()
             assert not pending  # removed from the pending list
         finally:
-            for _, _, lock in newly_installed:
+            for _, _, lock in result.newly_installed:
                 lock.release_read()
             jobserver.close()
 
@@ -352,7 +354,7 @@ class TestScheduleBuilds:
         # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
         jobserver = JobServer(num_jobs=1)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -362,10 +364,11 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=True,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked
-            assert not to_start
-            assert not newly_installed
+            assert not result.blocked
+            assert not result.to_start
+            assert not result.newly_installed
             assert len(pending) == 1
         finally:
             jobserver.close()
@@ -381,7 +384,7 @@ class TestScheduleBuilds:
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         monkeypatch.setattr(lock, "try_acquire_read", lambda: False)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -391,10 +394,11 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert blocked
-            assert not to_start
-            assert not newly_installed
+            assert result.blocked
+            assert not result.to_start
+            assert not result.newly_installed
             assert len(pending) == 1
         finally:
             jobserver.close()
@@ -407,7 +411,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -417,13 +421,14 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked
-            assert len(to_start) == 1
-            assert to_start[0][0] == spec.dag_hash()
-            assert not newly_installed
+            assert not result.blocked
+            assert len(result.to_start) == 1
+            assert result.to_start[0][0] == spec.dag_hash()
+            assert not result.newly_installed
         finally:
-            for _, lock in to_start:
+            for _, lock in result.to_start:
                 lock.release_write()
             jobserver.close()
 
@@ -439,7 +444,7 @@ class TestScheduleBuilds:
         monkeypatch.setattr(lock_a, "try_acquire_write", lambda: False)
         monkeypatch.setattr(lock_a, "try_acquire_read", lambda: False)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -449,14 +454,15 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked  # spec_b was schedulable
-            started_hashes = {h for h, _ in to_start}
+            assert not result.blocked  # spec_b was schedulable
+            started_hashes = {h for h, _ in result.to_start}
             assert spec_b.dag_hash() in started_hashes
             assert spec_a.dag_hash() not in started_hashes
-            assert not newly_installed
+            assert not result.newly_installed
         finally:
-            for _, lock in to_start:
+            for _, lock in result.to_start:
                 lock.release_write()
             jobserver.close()
 
@@ -477,7 +483,7 @@ class TestScheduleBuilds:
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -487,16 +493,17 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert blocked  # no write lock was obtained; jobserver should not fire
-            assert not to_start
-            assert len(newly_installed) == 1
-            dag_hash, installed_spec, lock = newly_installed[0]
+            assert result.blocked  # no write lock was obtained; jobserver should not fire
+            assert not result.to_start
+            assert len(result.newly_installed) == 1
+            dag_hash, installed_spec, lock = result.newly_installed[0]
             assert dag_hash == spec.dag_hash()
             assert installed_spec == spec
             assert not pending  # spec was removed from pending
         finally:
-            for _, _, lock in newly_installed:
+            for _, _, lock in result.newly_installed:
                 lock.release_read()
             jobserver.close()
 
@@ -515,7 +522,7 @@ class TestScheduleBuilds:
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -525,10 +532,11 @@ class TestScheduleBuilds:
                 capacity=2,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert blocked
-            assert not to_start
-            assert not newly_installed
+            assert result.blocked
+            assert not result.to_start
+            assert not result.newly_installed
             assert pending == [spec.dag_hash()]  # spec stays in pending for retry
         finally:
             jobserver.close()
@@ -541,7 +549,7 @@ class TestScheduleBuilds:
         bg = _FakeBuildGraph([spec])
         jobserver = JobServer(num_jobs=2)
         try:
-            blocked, to_start, newly_installed = schedule_builds(
+            result = schedule_builds(
                 pending,
                 bg,
                 temporary_store.db,
@@ -551,13 +559,45 @@ class TestScheduleBuilds:
                 capacity=1,
                 needs_jobserver_token=False,
                 jobserver=jobserver,
+                explicit=set(),
             )
-            assert not blocked
-            assert not to_start
-            assert len(newly_installed) == 1
-            assert newly_installed[0][0] == spec.dag_hash()
+            assert not result.blocked
+            assert not result.to_start
+            assert len(result.newly_installed) == 1
+            assert result.newly_installed[0][0] == spec.dag_hash()
         finally:
-            for _, _, lock in newly_installed:
+            for _, _, lock in result.newly_installed:
+                lock.release_read()
+            jobserver.close()
+
+    def test_installed_implicit_explicit_set_produces_db_update(
+        self, temporary_store, mock_packages
+    ):
+        """An installed-implicit spec in explicit set produces a DbUpdate."""
+        spec = self._make_spec("trivial-install-test-package")
+        temporary_store.layout.create_install_directory(spec)
+        temporary_store.db.add(spec, explicit=False)
+        pending = [spec.dag_hash()]
+        bg = _FakeBuildGraph([spec])
+        jobserver = JobServer(num_jobs=2)
+        try:
+            result = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                overwrite_time=0.0,
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+                explicit={spec.dag_hash()},
+            )
+            assert len(result.to_mark_explicit) == 1
+            assert result.to_mark_explicit[0].spec is spec
+            assert len(result.newly_installed) == 1
+        finally:
+            for _, _, lock in result.newly_installed:
                 lock.release_read()
             jobserver.close()
 

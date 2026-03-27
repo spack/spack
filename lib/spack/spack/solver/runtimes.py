@@ -79,7 +79,7 @@ class RuntimePropertyRecorder:
 
         dependency_spec = spack.spec.Spec(dependency_str)
         if dependency_spec.versions != spack.version.any_version:
-            self._setup.version_constraints.add((dependency_spec.name, dependency_spec.versions))
+            self._setup.version_constraints[dependency_spec.name].add(dependency_spec.versions)
 
         self.injected_dependencies.add(dependency_spec)
         body_str, node_variable = self.rule_body_from(when_spec)
@@ -195,9 +195,7 @@ class RuntimePropertyRecorder:
         constraint_clauses = self._setup.spec_clauses(constraint_spec, body=False)
         for clause in constraint_clauses:
             if clause.args[0] == "node_version_satisfies":
-                self._setup.version_constraints.add(
-                    (constraint_spec.name, constraint_spec.versions)
-                )
+                self._setup.version_constraints[constraint_spec.name].add(constraint_spec.versions)
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
                 head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
                 rule = f"{head_str} :-\n{body_str}."
