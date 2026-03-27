@@ -1389,7 +1389,7 @@ class BuildStatus:
 
         # First flush the finished builds. These are "persisted" in terminal history.
         for build in self.finished_builds:
-            self._render_build(build, buffer, max_width)
+            self._render_build(build, buffer)
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
@@ -1478,11 +1478,14 @@ class BuildStatus:
         self.stdout.flush()
         self.log_ends_with_newline = data.endswith(b"\n")
 
-    def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
+    def _render_build(
+        self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0
+    ) -> None:
+        """Print a single build line to the buffer, truncating to max_width (if > 0)."""
         line_width = 0
         for component in self._generate_line_components(build_info):
             # ANSI escape sequence(s), does not contribute to width
-            if not component.startswith("\033"):
+            if not component.startswith("\033") and max_width > 0:
                 line_width += len(component)
                 if line_width > max_width:
                     break
