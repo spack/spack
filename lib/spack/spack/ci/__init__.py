@@ -911,6 +911,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
     # pipeline variable above, copy the spack environment files so they'll
     # be found in the same location as when the job ran in the cloud.
     concrete_env_dir = os.path.join(work_dir, relative_concrete_env_dir)
+    spack_clone_dir = os.path.join(work_dir, "spack")
     os.makedirs(concrete_env_dir, exist_ok=True)
     copy_lock_path = os.path.join(concrete_env_dir, "spack.lock")
     orig_yaml_path = os.path.join(repro_lock_dir, "spack.yaml")
@@ -1045,11 +1046,18 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         tty.msg(f"Job ran with the following tags: {job_tags}")
 
     entrypoint_script = [
-        ["git", "config", "--global", "--add", "safe.directory", mount_as_dir if job_image else work_dir],
+        [
+            "git",
+            "config",
+            "--global",
+            "--add",
+            "safe.directory",
+            mount_as_dir if job_image else spack_clone_dir,
+        ],
         [
             ".",
             os.path.join(
-                mount_as_dir if job_image else work_dir,
+                mount_as_dir if job_image else spack_clone_dir,
                 f"share/spack/setup-env.{platform_script_ext}",
             ),
         ],
