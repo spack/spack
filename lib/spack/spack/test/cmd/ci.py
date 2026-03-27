@@ -1426,7 +1426,7 @@ spack:
     monkeypatch.setattr(ci, "download_and_extract_artifacts", fake_download_and_extract_artifacts)
     rep_out = ci_cmd(
         "reproduce-build",
-        "https://example.com/api/v1/projects/1/jobs/2/artifacts",
+        "https://example.com/gitlab/api/v1/projects/1/jobs/2/artifacts",
         "--working-dir",
         str(repro_dir),
     )
