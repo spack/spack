@@ -1045,7 +1045,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         tty.msg(f"Job ran with the following tags: {job_tags}")
 
     entrypoint_script = [
-        ["git", "config", "--global", "--add", "safe.directory", mount_as_dir],
+        ["git", "config", "--global", "--add", "safe.directory", mount_as_dir if job_image else work_dir],
         [
             ".",
             os.path.join(
@@ -1063,10 +1063,10 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
             )
         ],
     ]
-    entry_script = os.path.join(mounted_workdir, f"entrypoint.{platform_script_ext}")
     inst_list = []
     # Finally, print out some instructions to reproduce the build
     if job_image:
+        entry_script = os.path.join(mounted_workdir, f"entrypoint.{platform_script_ext}")
         # Allow interactive
         install_mechanism = (
             os.path.join(mounted_repro_dir, f"install.{platform_script_ext}")
@@ -1129,7 +1129,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         process_command("reproducer", entrypoint_script, work_dir, run=autostart)
 
         inst_list.append("\nOnce on the tagged runner:\n\n")
-        inst_list.extent(
+        inst_list.extend(
             [
                 "    - Run the reproducer script",
                 f"       $ {work_dir}/reproducer.{platform_script_ext}",
