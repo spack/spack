@@ -290,9 +290,6 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     Returns: An absolute path or non-file URL with path variable substitution
     """
-    # _use_config: whether or not to use config to resolve spack config
-    # variables. This should be false if this function is called in a context that
-    # is defining one of these variables.
     import urllib.parse
     import urllib.request
 

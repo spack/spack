@@ -2503,10 +2503,6 @@ def write_config_file(tmp_path: Path):
     return _write
 
 
-def _include_cache_root():
-    return join_path(str(tempfile.mkdtemp()), "user_cache", "includes")
-
-
 @pytest.fixture()
 def wrapper_dir(install_mockery):
     """Installs the compiler wrapper and returns the prefix where the script is installed."""
