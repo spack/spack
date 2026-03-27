@@ -4,7 +4,7 @@
 
 from spack_repo.builtin_mock.build_systems.generic import Package
 
-import spack.paths
+from spack.paths import locations as spack_paths
 from spack.package import *
 from spack.util.url import path_to_file_url
 
@@ -14,9 +14,9 @@ class UrlListTest(Package):
 
     homepage = "http://www.url-list-example.com"
 
-    web_data_path = join_path(spack.paths.test_path, "data", "web")
-    url = path_to_file_url(join_path(spack.paths.test_path, "data", "web") + "/foo-0.0.0.tar.gz")
-    list_url = path_to_file_url(join_path(spack.paths.test_path, "data", "web") + "/index.html")
+    web_data_path = join_path(spack_paths.test_path, "data", "web")
+    url = path_to_file_url(join_path(spack_paths.test_path, "data", "web") + "/foo-0.0.0.tar.gz")
+    list_url = path_to_file_url(join_path(spack_paths.test_path, "data", "web") + "/index.html")
     list_depth = 3
 
     version("0.0.0", md5="00000000000000000000000000000000")

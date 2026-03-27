@@ -125,7 +125,7 @@ from spack.package_completions import (
     zsh_completion_path,
 )
 from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
-from spack.paths import spack_script
+import spack.paths
 from spack.phase_callbacks import run_after, run_before
 from spack.platforms import host as host_platform
 from spack.spec import Spec
@@ -186,6 +186,8 @@ rename = rename
 
 #: Alias for :func:`os.symlink` (with certain Windows-specific changes)
 symlink = symlink
+
+spack_script = spack.paths.locations.spack_script
 
 # Not an import alias because black and isort disagree about style
 create_builder = spack.builder.create
