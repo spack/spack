@@ -4,13 +4,13 @@
 import collections
 import collections.abc
 import contextlib
-import errno
 import glob
 import os
 import pathlib
 import re
 import shutil
 import stat
+import uuid
 import warnings
 from collections.abc import KeysView
 from itertools import zip_longest
@@ -54,7 +54,7 @@ import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
 from spack.enums import ConfigScopePriority
-from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
+from spack.llnl.util.filesystem import copy_tree, islink, readlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
@@ -96,6 +96,9 @@ lockfile_name = "spack.lock"
 
 #: Name of the directory where environments store repos, logs, views, configs
 env_subdir_name = ".spack-env"
+
+#: Name of the file inside the view to mark it as Spack-owned with content hash for currency checks
+MARKER_FILE = ".spack-view"
 
 
 def env_root_path() -> str:
@@ -674,36 +677,13 @@ def _is_dev_spec_and_has_changed(spec):
     return spec.package.detect_dev_src_change()
 
 
-def _error_on_nonempty_view_dir(new_root):
-    """Defensively error when the target view path already exists and is not an
-    empty directory. This usually happens when the view symlink was removed, but
-    not the directory it points to. In those cases, it's better to just error when
-    the new view dir is non-empty, since it indicates the user removed part but not
-    all of the view, and it likely in an inconsistent state."""
-    # Check if the target path lexists
-    try:
-        st = os.lstat(new_root)
-    except OSError:
-        return
-
-    # Empty directories are fine
-    if stat.S_ISDIR(st.st_mode) and len(os.listdir(new_root)) == 0:
-        return
-
-    # Anything else is an error
-    raise SpackEnvironmentViewError(
-        "Failed to generate environment view, because the target {} already "
-        "exists or is not empty. To update the view, remove this path, and run "
-        "`spack env view regenerate`".format(new_root)
-    )
-
-
 class ViewDescriptor:
     def __init__(
         self,
         base_path: str,
         root: str,
         *,
+        name: Optional[str] = None,
         projections: Optional[Dict[str, str]] = None,
         select: Optional[List[str]] = None,
         exclude: Optional[List[str]] = None,
@@ -715,6 +695,7 @@ class ViewDescriptor:
         self.base = base_path
         self.raw_root = root
         self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
+        self.name = name if name is not None else os.path.basename(self.root)
         self.projections = projections or {}
         self.select = select or []
         self.exclude = exclude or []
@@ -764,10 +745,11 @@ class ViewDescriptor:
         return ret
 
     @staticmethod
-    def from_dict(base_path: str, d) -> "ViewDescriptor":
+    def from_dict(base_path: str, d, *, name: Optional[str] = None) -> "ViewDescriptor":
         return ViewDescriptor(
             base_path,
             d["root"],
+            name=name,
             projections=d.get("projections", {}),
             select=d.get("select", []),
             exclude=d.get("exclude", []),
@@ -789,11 +771,42 @@ class ViewDescriptor:
         root_dir = os.path.dirname(self.root)
         return os.path.join(root_dir, root)
 
-    def _next_root(self, specs):
-        content_hash = self.content_hash(specs)
-        root_dir = os.path.dirname(self.root)
-        root_name = os.path.basename(self.root)
-        return os.path.join(root_dir, "._%s" % root_name, content_hash)
+    def _is_up_to_date(self, content_hash: str) -> bool:
+        # Old format: self.root is a symlink to ._<basename>/<hash>/
+        if os.path.islink(self.root):
+            old_root = self._current_root
+            if old_root and os.path.basename(old_root) == content_hash:
+                return True
+        # New format: check the marker file inside the view itself
+        try:
+            with open(self.marker_path, "r", encoding="utf-8") as f:
+                return f.read().strip() == content_hash
+        except OSError:
+            return False
+
+    @property
+    def marker_path(self) -> str:
+        return os.path.join(self.root, MARKER_FILE)
+
+    def _ensure_safe_to_replace(self):
+        """Prevents Spack from deleting non-Spack owned user directories like /usr/local if users
+        accidentally map a view to an existing path."""
+        try:
+            lstat = os.lstat(self.root)
+        except OSError:
+            return  # non-existent path is fine to put a view
+
+        if stat.S_ISLNK(lstat.st_mode):
+            return  # symlinks are fine to replace
+        if stat.S_ISDIR(lstat.st_mode) and (
+            os.path.exists(self.marker_path) or not os.listdir(self.root)
+        ):
+            return  # Spack-owned and empty directories are fine to replace
+
+        raise SpackEnvironmentViewError(
+            f"The environment view at {self.root} cannot be updated because it is a non-empty "
+            "directory or file not managed by Spack. Please remove it manually to update the view."
+        )
 
     def content_hash(self, specs):
         d = syaml.syaml_dict(
@@ -822,9 +835,15 @@ class ViewDescriptor:
             new: If a string, create a FilesystemView rooted at that path. Default None. This
                 should only be used to regenerate the view, and cannot be used to access specs.
         """
-        path = new if new else self._current_root
+        if new:
+            return self._view(new)
+        if os.path.islink(self.root):
+            path: Optional[str] = self._current_root  # old format: follow symlink
+        elif os.path.isdir(self.root):
+            path = self.root  # new format: use directly
+        else:
+            path = None
         if not path:
-            # This can only be hit if we write a future bug
             raise SpackEnvironmentViewError(
                 f"Attempting to get nonexistent view from environment. View root is at {self.root}"
             )
@@ -885,75 +904,46 @@ class ViewDescriptor:
             concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
 
         specs = self.specs_for_view(concrete_roots)
+        content_hash = self.content_hash(specs)
 
-        # To ensure there are no conflicts with packages being installed
-        # that cannot be resolved or have repos that have been removed
-        # we always regenerate the view from scratch.
-        # We will do this by hashing the view contents and putting the view
-        # in a directory by hash, and then having a symlink to the real
-        # view in the root. The real root for a view at /dirname/basename
-        # will be /dirname/._basename_<hash>.
-        # This allows for atomic swaps when we update the view
-
-        # cache the roots because the way we determine which is which does
-        # not work while we are updating
-        new_root = self._next_root(specs)
-        old_root = self._current_root
-
-        if new_root == old_root:
+        if self._is_up_to_date(content_hash):
             tty.debug(f"View at {self.root} does not need regeneration.")
             return
 
-        _error_on_nonempty_view_dir(new_root)
+        self._ensure_safe_to_replace()
 
-        # construct view at new_root
         if specs:
             tty.msg(f"Updating view at {self.root}")
 
-        view = self.view(new=new_root)
+        root_parent = os.path.dirname(self.root)
+        root_basename = os.path.basename(self.root)
+        suffix = uuid.uuid4().hex[:8]
+        # Working directory for the new view
+        new_root = os.path.join(root_parent, f"{root_basename}.new.{suffix}")
+        # Temporary location for the old view in case we need to roll back
+        old_root = os.path.join(root_parent, f"{root_basename}.old.{suffix}")
 
-        root_dirname = os.path.dirname(self.root)
-        tmp_symlink_name = os.path.join(root_dirname, "._view_link")
-
-        # Remove self.root if is it an empty dir, since we need a symlink there. Note that rmdir
-        # fails if self.root is a symlink.
-        try:
-            os.rmdir(self.root)
-        except (FileNotFoundError, NotADirectoryError):
-            pass
-        except OSError as e:
-            if e.errno == errno.ENOTEMPTY:
-                msg = "it is a non-empty directory"
-            elif e.errno == errno.EACCES:
-                msg = "of insufficient permissions"
-            else:
-                raise
-            raise SpackEnvironmentViewError(
-                f"The environment view in {self.root} cannot not be created because {msg}."
-            ) from e
-
-        # Create a new view
         try:
             fs.mkdirp(new_root)
-            view.add_specs(*specs)
+            self.view(new=new_root).add_specs(*specs)
 
-            # create symlink from tmp_symlink_name to new_root
-            if os.path.exists(tmp_symlink_name):
-                os.unlink(tmp_symlink_name)
-            symlink(new_root, tmp_symlink_name)
+            # Claim ownership of the view by dropping a marker file with the content hash.
+            with open(os.path.join(new_root, MARKER_FILE), "x", encoding="utf-8") as f:
+                f.write(content_hash)
 
-            # mv symlink atomically over root symlink to old_root
-            fs.rename(tmp_symlink_name, self.root)
+            # Rename self.root -> <root>.old (if it exists), then .new -> self.root
+            if os.path.lexists(self.root):
+                os.rename(self.root, old_root)
+            os.rename(new_root, self.root)
+
         except Exception as e:
-            # Clean up new view and temporary symlink on any failure.
-            try:
-                shutil.rmtree(new_root, ignore_errors=True)
-                os.unlink(tmp_symlink_name)
-            except OSError:
-                pass
+            # Restore self.root if the rename sequence left it missing
+            if not os.path.lexists(self.root) and os.path.lexists(old_root):
+                try:
+                    os.rename(old_root, self.root)
+                except OSError:
+                    pass
 
-            # Give an informative error message for the typical error case: two specs, same package
-            # project to same prefix.
             if isinstance(e, ConflictingSpecsError):
                 spec_a = e.args[0].format(color=clr.get_color_when())
                 spec_b = e.args[1].format(color=clr.get_color_when())
@@ -970,20 +960,26 @@ class ViewDescriptor:
                 ) from e
             raise
 
-        # Remove the old root when it's in the same folder as the new root. This guards
-        # against removal of an arbitrary path when the original symlink in self.root
-        # was not created by the environment, but by the user.
-        if (
-            old_root
-            and os.path.exists(old_root)
-            and os.path.samefile(os.path.dirname(new_root), os.path.dirname(old_root))
-        ):
+        finally:
+            if os.path.lexists(new_root):
+                shutil.rmtree(new_root, ignore_errors=True)
+
+        # Clean up old view
+        if os.path.islink(old_root):
+            # Old format: only remove symlink target if it lives inside ._<name>/
+            target = os.path.realpath(old_root)
+            old_view_container = os.path.join(root_parent, "._%s" % root_basename)
+            if target.startswith(old_view_container + os.sep):
+                try:
+                    shutil.rmtree(target)
+                except OSError as exc:
+                    tty.warn(f"Failed to remove old view at {target}\n{exc}")
+            os.unlink(old_root)
+        elif os.path.isdir(old_root):
             try:
                 shutil.rmtree(old_root)
-            except OSError as e:
-                msg = "Failed to remove old view at %s\n" % old_root
-                msg += str(e)
-                tty.warn(msg)
+            except OSError as exc:
+                tty.warn(f"Failed to remove old view at {old_root}\n{exc}")
 
     def _exclude_duplicate_runtimes(self, specs: List[Spec]) -> List[Spec]:
         """Stably filter out duplicates of "runtime" tagged packages, keeping only latest."""
@@ -1173,9 +1169,9 @@ class Environment:
         def add_view(name, values):
             """Add the view with the name and the string or dict values."""
             if isinstance(values, str):
-                self.views[name] = ViewDescriptor(self.path, values)
+                self.views[name] = ViewDescriptor(self.path, values, name=name)
             elif isinstance(values, dict):
-                self.views[name] = ViewDescriptor.from_dict(self.path, values)
+                self.views[name] = ViewDescriptor.from_dict(self.path, values, name=name)
             else:
                 tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
 
@@ -1202,7 +1198,9 @@ class Environment:
         # If we reach this point without an explicit view option then we
         # provide the default view.
         if self.views == dict():
-            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
+            self.views[default_view_name] = ViewDescriptor(
+                self.path, self.view_path_default, name=default_view_name
+            )
 
     def _load_concrete_include_data(self):
         """Load concrete include specs data from included concrete directories."""
@@ -1836,7 +1834,9 @@ class Environment:
             self.default_view.update_root(view_path)
         else:
             assert isinstance(view_path, str), f"expected str for 'view_path', but got {view_path}"
-            self.views[default_view_name] = ViewDescriptor(self.path, view_path)
+            self.views[default_view_name] = ViewDescriptor(
+                self.path, view_path, name=default_view_name
+            )
 
         self.manifest.set_default_view(self._default_view_as_yaml())
 
@@ -1845,13 +1845,20 @@ class Environment:
         if default_view_name not in self.views:
             return
 
+        view_path = pathlib.Path(self.default_view.root)
         try:
-            view = pathlib.Path(self.default_view.root)
-            shutil.rmtree(view.resolve())
-            view.unlink()
+            if view_path.is_symlink():
+                shutil.rmtree(view_path.resolve())  # old format: remove hash dir
+                view_path.unlink()
+            else:
+                shutil.rmtree(view_path)  # new format: remove real dir
+            # Remove all marker files for this view
+            subdir = pathlib.Path(env_subdir_path(self.path))
+            name = self.default_view.name
+            for f in subdir.glob(f"view_{name}_*"):
+                f.unlink(missing_ok=True)
         except FileNotFoundError as e:
-            msg = f"[ENVIRONMENT] error trying to delete the default view: {str(e)}"
-            tty.debug(msg)
+            tty.debug(f"[ENVIRONMENT] error trying to delete the default view: {e}")
 
     def regenerate_views(self):
         if not self.views:

@@ -20,11 +20,7 @@ import spack.spec
 import spack.spec_parser
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import (
-    EnvironmentManifestFile,
-    SpackEnvironmentViewError,
-    _error_on_nonempty_view_dir,
-)
+from spack.environment.environment import EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 
@@ -360,34 +356,6 @@ def test_environment_pickle(tmp_path: pathlib.Path):
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
-
-
-def test_error_on_nonempty_view_dir(tmp_path: pathlib.Path):
-    """Error when the target is not an empty dir"""
-    with fs.working_dir(str(tmp_path)):
-        os.mkdir("empty_dir")
-        os.mkdir("nonempty_dir")
-        with open(os.path.join("nonempty_dir", "file"), "wb"):
-            pass
-        os.symlink("empty_dir", "symlinked_empty_dir")
-        os.symlink("does_not_exist", "broken_link")
-        os.symlink("broken_link", "file")
-
-        # This is OK.
-        _error_on_nonempty_view_dir("empty_dir")
-
-        # This is not OK.
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("nonempty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("symlinked_empty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("broken_link")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("file")
 
 
 def test_can_add_specs_to_environment_without_specs_attribute(tmp_path: pathlib.Path, config):
@@ -887,14 +855,20 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     env.concretize()
     env.install_all(fake=True)
     env.regenerate_views()
-    assert view_dir.is_symlink()
+    assert list(view_dir.iterdir())  # view dir should not be empty after regeneration
 
 
-def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, temporary_store):
-    """Tests that creating a view pointing to a non-empty dir errors."""
+@pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
+def test_env_view_on_non_empty_dir_errors(
+    tmp_path: pathlib.Path, config, temporary_store, as_file: bool
+):
+    """Tests that creating a view pointing to a non-empty dir or plain file errors."""
     view_dir = tmp_path / "view"
-    view_dir.mkdir()
-    (view_dir / "file").write_text("")
+    if as_file:
+        view_dir.write_text("")
+    else:
+        view_dir.mkdir()
+        (view_dir / "file").write_text("")
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
     env.concretize()
