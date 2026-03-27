@@ -115,6 +115,16 @@ class SpackPaths:
     def user_cache_path(self):
         return self.state_home
 
+    from contextlib import contextmanager
+
+    @contextmanager
+    def redirect_state_home(self, x):
+        old = self._state_home
+        self._state_home = x
+        yield
+        if old:
+            self._state_home = old
+
     @property
     def default_install_location(self):
         return self._decide_old_or_new_location(

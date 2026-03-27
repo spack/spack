@@ -1924,10 +1924,12 @@ def test_included_path_git_temp_dest(mock_low_high_config):
         assert dest_dir == temp_dir, pre + rest
 
 
-def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    # TODO (47615): I think this will fail
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+@pytest.fixture
+def redirect_user_cache(tmp_path: pathlib.Path):
+    spack_paths.redirect_state_home(tmp_path)
 
+
+def test_included_path_git_errs(mock_low_high_config, monkeypatch, redirect_user_cache):
     paths = ["concretizer.yaml"]
     entry = {
         "git": "https://example.com/linux/configs.git",
