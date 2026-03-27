@@ -34,7 +34,7 @@ def clear_env_vars(working_env):
 
 
 @pytest.fixture
-def set_home():
+def set_home(working_env):
     def _set_home(val):
         # Clear some env vars that can interfere w/ expanduser(~) on Windows
         os.environ.pop("USERPROFILE", None)
