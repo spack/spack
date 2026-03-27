@@ -105,5 +105,5 @@ def set_working_dir():
     try:
         spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(prefix)
-        spack_working_dir = prefix
+        os.chdir(locations.prefix)
+        spack_working_dir = locations.prefix

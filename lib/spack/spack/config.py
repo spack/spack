@@ -42,7 +42,6 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, U
 from spack.vendor import jsonschema
 
 import spack.error
-from spack.paths_base import locations as paths_base
 import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
@@ -70,6 +69,7 @@ import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.llnl.util import filesystem, lang, tty
+from spack.paths_base import locations as paths_base
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 

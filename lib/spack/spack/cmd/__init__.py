@@ -20,8 +20,6 @@ import spack.error
 import spack.extensions
 import spack.llnl.string
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
-from spack.paths_base import locations as paths_base
 import spack.repo
 import spack.spec
 import spack.spec_parser
@@ -34,6 +32,8 @@ from spack.llnl.util.filesystem import join_path
 from spack.llnl.util.lang import attr_setdefault, index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
+from spack.paths import locations as paths
+from spack.paths_base import locations as paths_base
 
 from ..enums import InstallRecordStatus
 

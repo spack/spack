@@ -330,25 +330,37 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
         os.makedirs(os.path.dirname(filename))
 
         # add diff-test as a new package to the repository
-        shutil.copy2(f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-0.txt", filename)
+        shutil.copy2(
+            f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-0.txt",
+            filename,
+        )
         git("add", filename)
         commit("diff-test: new package")
         commits.append(latest_commit())
 
         # add v2.1.5 to diff-test
-        shutil.copy2(f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-1.txt", filename)
+        shutil.copy2(
+            f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-1.txt",
+            filename,
+        )
         git("add", filename)
         commit("diff-test: add v2.1.5")
         commits.append(latest_commit())
 
         # add v2.1.6 to diff-test
-        shutil.copy2(f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-2.txt", filename)
+        shutil.copy2(
+            f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-2.txt",
+            filename,
+        )
         git("add", filename)
         commit("diff-test: add v2.1.6")
         commits.append(latest_commit())
 
         # add v2.1.7 and v2.1.8 to diff-test
-        shutil.copy2(f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-3.txt", filename)
+        shutil.copy2(
+            f"{spack.paths_base.locations.test_path}/data/conftest/diff-test/package-3.txt",
+            filename,
+        )
         git("add", filename)
         commit("diff-test: add v2.1.7 and v2.1.8")
         commits.append(latest_commit())
@@ -880,7 +892,10 @@ def mock_uarch_json(tmp_path_factory: pytest.TempPathFactory):
     tmpdir = tmp_path_factory.mktemp("microarchitectures")
 
     uarch_json_source = (
-        Path(spack.paths_base.locations.test_path) / "data" / "microarchitectures" / "microarchitectures.json"
+        Path(spack.paths_base.locations.test_path)
+        / "data"
+        / "microarchitectures"
+        / "microarchitectures.json"
     )
     uarch_json_dest = tmpdir / "microarchitectures.json"
     shutil.copy2(uarch_json_source, uarch_json_dest)
@@ -1409,7 +1424,9 @@ def module_configuration(monkeypatch, request, mutable_config):
     # Key for specific settings relative to this module type
     writer_key = str(writer_mod.__name__).split(".")[-1]
     # Root folder for configuration
-    root_for_conf = os.path.join(spack.paths_base.locations.test_path, "data", "modules", writer_key)
+    root_for_conf = os.path.join(
+        spack.paths_base.locations.test_path, "data", "modules", writer_key
+    )
 
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
