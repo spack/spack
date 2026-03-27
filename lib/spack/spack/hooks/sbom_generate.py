@@ -6,6 +6,7 @@
 import hashlib
 import os
 import time
+import urllib.parse
 
 import spack.util.spack_json as sjson
 from spack.llnl.util import tty
@@ -46,19 +47,22 @@ def post_install(spec, explicit=None):
 
         git_url = getattr(pkg, "git", None)
         if git_url:
-            try:
-                # ssh url
-                if git_url.startswith("git@"):
-                    path = git_url.split(":", 1)[1]
-                    owner = path.strip("/").split("/")[0]
-                    return f"Organization: {owner}"
-                # https url
-                else:
-                    path = git_url.rstrip("/").split("/")
-                    owner = path[-2]
-                    return f"Organization: {owner}"
-            except IndexError:
-                pass
+            path = None
+
+            # Support SCP-style SSH remotes such as git@host:owner/repo.git.
+            if git_url.startswith("git@") and ":" in git_url:
+                path = git_url.split(":", 1)[1]
+            else:
+                path = urllib.parse.urlparse(git_url).path
+
+            repo_path = path.strip("/")
+            if repo_path.endswith(".git"):
+                repo_path = repo_path[:-4]
+
+            parts = [part for part in repo_path.split("/") if part]
+            if len(parts) >= 2:
+                namespace = "/".join(parts[:-1])
+                return f"Organization: {namespace}"
 
         return "NOASSERTION"
 

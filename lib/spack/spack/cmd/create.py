@@ -64,9 +64,9 @@ class {class_name}({base_class_name}):
     homepage = "https://www.example.com"
 {url_def}
 
-    # FIXME: Add the upstream supplier (organization or author).
-    # If unknown or inapplicable, you may leave this as "NOASSERTION".
-    supplier = "{supplier}"
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.

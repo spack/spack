@@ -137,6 +137,10 @@ def test_sbom_supplier_prefers_package_supplier(mock_packages, install_mockery, 
     [
         ("git@github.com:spack/spack.git", "Organization: spack"),
         ("https://github.com/spack/spack.git", "Organization: spack"),
+        ("ssh://git@github.com/spack/spack.git", "Organization: spack"),
+        ("git://github.com/spack/spack.git", "Organization: spack"),
+        ("https://gitlab.com/group/subgroup/repo.git", "Organization: group/subgroup"),
+        ("git@gitlab.com:group/subgroup/repo.git", "Organization: group/subgroup"),
         ("git@github.com", "NOASSERTION"),  # malformed/unsupported ssh URL
     ],
 )
