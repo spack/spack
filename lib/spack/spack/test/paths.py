@@ -333,10 +333,6 @@ class SetAnXdgVarAndReadDataHome:
         ), f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
 
 
-def all_dirs_empty(a_dir):
-    return False
-
-
 def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
     # Unlike the other tests in this module, this is specifically testing
     # the behavior of the spack.paths module vs. (the more targeted testing
