@@ -140,11 +140,6 @@ class BootstrapEnvironment(spack.environment.Environment):
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
 
 
-def isort_root_spec() -> str:
-    """Return the root spec used to bootstrap isort"""
-    return _root_spec("py-isort@5")
-
-
 def mypy_root_spec() -> str:
     """Return the root spec used to bootstrap mypy"""
     return _root_spec("py-mypy@0.900: ^py-mypy-extensions@:1.0")
