@@ -668,7 +668,54 @@ def execute_install_time_tests(builder: Builder):
     if not builder.pkg.run_tests or not builder.install_time_test_callbacks:
         return
 
-    builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
+    import spack.llnl.util.tty as tty
+
+    pkg = builder.pkg
+    timer = getattr(pkg, "_install_timer", None)
+    pre = getattr(pkg, "_install_pre", "")
+
+    # Start the test phase timer
+    if timer:
+        timer.start("test")
+
+    # Display test phase start message
+    tty.msg(f"{pre} Executing phase: 'test'")
+
+    try:
+        # Run the tests and get the counts
+        test_counts = pkg.tester.phase_tests(
+            builder, "install", builder.install_time_test_callbacks
+        )
+
+        # Display test summary
+        if test_counts:
+            total = test_counts.get("total", 0)
+            passed = test_counts.get("passed", 0)
+            failed = test_counts.get("failed", 0)
+            skipped = test_counts.get("skipped", 0)
+
+            if total > 0:
+                summary_parts = []
+                if passed > 0:
+                    summary_parts.append(f"{passed} passed")
+                if failed > 0:
+                    summary_parts.append(f"{failed} failed")
+                if skipped > 0:
+                    summary_parts.append(f"{skipped} skipped")
+
+                if summary_parts:
+                    summary = ", ".join(summary_parts)
+                    tty.msg(f"{pre} Tests: {summary} ({total} total)")
+                else:
+                    # Edge case: tests ran but no status recorded
+                    tty.msg(f"{pre} Tests: {total} total")
+            else:
+                # No tests were actually executed
+                tty.debug(f"{pre} No install-time tests were executed")
+    finally:
+        # Always stop the timer, even if tests fail
+        if timer:
+            timer.stop("test")
 
 
 class Package(spack.package_base.PackageBase):
