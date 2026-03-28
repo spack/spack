@@ -581,17 +581,11 @@ class StreamWrapper:
         # Get fd for new stream
         redirect_h = write_conn.fileno()
         dup_redirect_h = dup_fh(redirect_h)
-        # ensure inheritable handles
         os.set_handle_inheritable(redirect_h, True)
-        # Todo: investigate if this is neccesary if we do the above before the handle dup
         os.set_handle_inheritable(dup_redirect_h, True)
-        # get the Windows FH for our directed stream
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        # redirect at the os kernel level
         kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
-        # redirect at C level
         os.dup2(self.redirect_fd, self.saved_std_fd)
-        # get the stream for the writer connection
         setattr(
             sys,
             self.sys_attr,
