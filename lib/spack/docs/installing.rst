@@ -14,9 +14,8 @@
 Installing Packages
 ===================
 
-See :doc:`package_fundamentals` for basic usage and spec syntax. This page covers
-the install experience: the interactive terminal user interface (TUI), parallelism,
-background execution, and handling build failures.
+See :doc:`package_fundamentals` for basic usage and spec syntax.
+This page covers the install experience: the interactive terminal user interface (TUI), parallelism, background execution, and handling build failures.
 
 .. versionadded:: 1.2
    The TUI and POSIX jobserver are new in Spack 1.2 and require a Unix-like platform.
@@ -25,9 +24,8 @@ background execution, and handling build failures.
 Interactive terminal UI
 -----------------------
 
-By default, ``spack install`` shows live progress inline in the terminal. Completed
-packages scroll into terminal history, while active builds are updated in place below
-a progress header.
+By default, ``spack install`` shows live progress inline in the terminal.
+Completed packages scroll into terminal history, while active builds are updated in place below a progress header.
 
 Every package in the install plan is shown with its current status:
 
@@ -48,51 +46,43 @@ Status indicators:
 * ``[/]``, ``[-]``, ``[\]``, ``[|]`` building (rotating spinner)
 * ``[e]`` external
 
-**Log-following mode**: press ``v`` to switch from the overview to a live view of
-build output. Press ``v``, ``q``, or ``Esc`` to return to the overview.
+**Log-following mode**: press ``v`` to switch from the overview to a live view of build output.
+Press ``v``, ``q``, or ``Esc`` to return to the overview.
 
-While in log-following mode, press ``n`` / ``p`` to cycle to the next or previous
-build. Press ``/``, type a pattern, and press ``Enter`` to jump to a matching build
-(``Esc`` cancels the filter).
+While in log-following mode, press ``n`` / ``p`` to cycle to the next or previous build.
+Press ``/``, type a pattern, and press ``Enter`` to jump to a matching build (``Esc`` cancels the filter).
 
-When a build fails, press ``v`` to see a parsed error summary and the path to the
-full log.
+When a build fails, press ``v`` to see a parsed error summary and the path to the full log.
 
 
 Parallelism
 -----------
 
-Spack controls parallelism at two levels: the number of build jobs shared across all
-packages (``-j``), and the number of packages building concurrently (``-p``).
+Spack controls parallelism at two levels: the number of build jobs shared across all packages (``-j``), and the number of packages building concurrently (``-p``).
 
 Build-level parallelism (``-j``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``-j`` flag controls the **total** number of concurrent build jobs via a POSIX
-jobserver. All build processes (``make``, ``cmake``, ``ninja``, etc.) share the same
-jobserver, so ``-j16`` means at most 16 build jobs across *all* packages combined.
+The ``-j`` flag controls the **total** number of concurrent build jobs via a POSIX jobserver.
+All build processes (``make``, ``cmake``, ``ninja``, etc.) share the same jobserver, so ``-j16`` means at most 16 build jobs across *all* packages combined.
 This is the primary concurrency knob.
 
 .. code-block:: console
 
    $ spack install -j16 python
 
-Spack creates a POSIX jobserver compatible with GNU Make's jobserver protocol. Child
-build systems automatically respect it through ``MAKEFLAGS``, so total CPU usage stays
-bounded regardless of how many packages are building concurrently.
+Spack creates a POSIX jobserver compatible with GNU Make's jobserver protocol.
+Child build systems automatically respect it through ``MAKEFLAGS``, so total CPU usage stays bounded regardless of how many packages are building concurrently.
 
 .. note::
 
-   If an external jobserver is already present in ``MAKEFLAGS``, for example when
-   Spack itself is invoked from inside a larger ``make`` build, Spack attaches to
-   the existing jobserver instead of creating its own.
+   If an external jobserver is already present in ``MAKEFLAGS``, for example when Spack itself is invoked from inside a larger ``make`` build, Spack attaches to the existing jobserver instead of creating its own.
 
 Package-level parallelism (``-p``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``-p`` / ``--concurrent-packages`` flag limits how many packages can be in the
-build queue simultaneously. By default there is no limit, and packages are started as
-jobserver tokens become available.
+The ``-p`` / ``--concurrent-packages`` flag limits how many packages can be in the build queue simultaneously.
+By default there is no limit, and packages are started as jobserver tokens become available.
 
 .. code-block:: console
 
@@ -108,42 +98,34 @@ You can adjust parallelism while a build is running:
 * Press ``+`` to add a job (increases ``-j`` by 1)
 * Press ``-`` to remove a job (decreases ``-j`` by 1)
 
-The progress header shows the adjustment in progress, e.g. ``+/-: 4=>2 jobs``, until
-the actual count reaches the target.
+The progress header shows the adjustment in progress, e.g. ``+/-: 4=>2 jobs``, until the actual count reaches the target.
 
 
 Multi-process and multi-node installs
 --------------------------------------
 
-Multiple ``spack install`` processes can run concurrently against the same store, which
-is useful on clusters where different nodes install different parts of a software stack.
-Spack coordinates through per-prefix filesystem locks: before building a package, the
-process acquires an exclusive lock on its install prefix. If another process already
-holds the lock, Spack waits rather than building a second copy. When a process
-encounters a prefix that was already installed, it simply skips it and moves on to the
-next dependency.
+Multiple ``spack install`` processes can run concurrently against the same store, which is useful on clusters where different nodes install different parts of a software stack.
+Spack coordinates through per-prefix filesystem locks: before building a package, the process acquires an exclusive lock on its install prefix.
+If another process already holds the lock, Spack waits rather than building a second copy.
+When a process encounters a prefix that was already installed, it simply skips it and moves on to the next dependency.
 
 
 Non-interactive mode
 --------------------
 
-In CI pipelines, when redirecting output to a file, or when running in the background,
-Spack skips the TUI and prints simple line-based status updates instead. Use ``-v`` to
-also print build output.
+In CI pipelines, when redirecting output to a file, or when running in the background, Spack skips the TUI and prints simple line-based status updates instead.
+Use ``-v`` to also print build output.
 
 You can also background builds:
 
-* **Suspend and resume**: press ``Ctrl-Z`` to suspend the install, then ``bg`` to let
-  it continue in the background or ``fg`` to bring it back. Child builds are paused
-  while suspended and resumed when foregrounded. The TUI is suppressed while
-  backgrounded and restored on ``fg``.
-* **Start in the background**: run ``spack install ... &`` to skip the TUI entirely and
-  build in the background from the start.
+* **Suspend and resume**: press ``Ctrl-Z`` to suspend the install, then ``bg`` to let it continue in the background or ``fg`` to bring it back.
+  Child builds are paused while suspended and resumed when foregrounded.
+  The TUI is suppressed while backgrounded and restored on ``fg``.
+* **Start in the background**: run ``spack install ... &`` to skip the TUI entirely and build in the background from the start.
 
 .. tip::
 
-   You don't need a new terminal or SSH session to keep a build running — just
-   suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
+   You don't need a new terminal or SSH session to keep a build running — just suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
 
 
 Handling failures
@@ -156,8 +138,7 @@ Use ``--fail-fast`` to stop immediately on the first failure.
 
    $ spack install --fail-fast python
 
-Failed builds show ``[x]`` in the overview. Navigate to a failed build and press
-``v`` to see a parsed error summary and the path to the full log.
+Failed builds show ``[x]`` in the overview.
+Navigate to a failed build and press ``v`` to see a parsed error summary and the path to the full log.
 
-See :ref:`spack install <spack-install>` for the full set of flags related to
-debugging and controlling build behavior.
+See :ref:`spack install <spack-install>` for the full set of flags related to debugging and controlling build behavior.
