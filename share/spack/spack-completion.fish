@@ -2842,6 +2842,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 're
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a update -d 'update one or more package repositories'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a show-updates -d 'show version specs that were added between two commits'
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -d 'show this help message and exit'
 
@@ -2948,6 +2949,18 @@ complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -f 
 complete -c spack -n '__fish_spack_using_command repo update' -l tag -s t -r -d 'name of a tag to change to'
 complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -f -a commit
 complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -d 'name of a commit to change to'
+
+# spack repo show-updates
+set -g __fish_spack_optspecs_spack_repo_show_updates h/help no-manual-packages no-git-versions only-redistributable
+
+complete -c spack -n '__fish_spack_using_command repo show-updates' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command repo show-updates' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l no-manual-packages -f -a no_manual_packages
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l no-manual-packages -d 'exclude manual packages'
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l no-git-versions -f -a no_git_versions
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l no-git-versions -d 'exclude versions from git'
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l only-redistributable -f -a only_redistributable
+complete -c spack -n '__fish_spack_using_command repo show-updates' -l only-redistributable -d 'exclude non-redistributable packages'
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help

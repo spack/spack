@@ -1802,7 +1802,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list ls add set remove rm migrate update"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate update show-updates"
     fi
 }
 
@@ -1872,6 +1872,15 @@ _spack_repo_update() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_repo_show_updates() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --no-manual-packages --no-git-versions --only-redistributable"
     else
         SPACK_COMPREPLY=""
     fi
