@@ -81,6 +81,8 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
+from spack.llnl.util.lang import pretty_duration
+from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if TYPE_CHECKING:
@@ -91,6 +93,9 @@ InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
+
+#: How often to wake up in headless mode to check for background->foreground transition (seconds)
+HEADLESS_WAKE_INTERVAL = 1.0
 
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
@@ -477,6 +482,9 @@ def worker_function(
 
     # Start a new session, so our SIGTERM handler can kill all child processes.
     os.setsid()
+
+    # Reset SIGTSTP to default in case the parent had a custom handler.
+    signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -1070,6 +1078,8 @@ class BuildInfo:
         "external",
         "prefix",
         "finished_time",
+        "start_time",
+        "duration",
         "progress_percent",
         "control_w_conn",
         "log_path",
@@ -1082,6 +1092,7 @@ class BuildInfo:
         explicit: bool,
         control_w_conn: Optional[Connection],
         log_path: Optional[str] = None,
+        start_time: float = 0.0,
     ) -> None:
         self.state: str = "starting"
         self.explicit: bool = explicit
@@ -1091,6 +1102,8 @@ class BuildInfo:
         self.external: bool = spec.external
         self.prefix: str = spec.prefix
         self.finished_time: Optional[float] = None
+        self.start_time: float = start_time
+        self.duration: Optional[float] = None
         self.progress_percent: Optional[int] = None
         self.control_w_conn = control_w_conn
         self.log_path: Optional[str] = log_path
@@ -1144,6 +1157,9 @@ class BuildStatus:
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
+        #: When True, suppress all terminal output (process is in background).
+        #: Controlling code is responsible for modifying this variable based on process state
+        self.headless = False
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -1158,7 +1174,8 @@ class BuildStatus:
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
-        self.builds[spec.dag_hash()] = BuildInfo(spec, explicit, control_w_conn, log_path)
+        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, int(self.get_time()))
+        self.builds[spec.dag_hash()] = build_info
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
@@ -1302,7 +1319,9 @@ class BuildStatus:
 
         if state in ("finished", "failed"):
             self.completed += 1
-            build_info.finished_time = self.get_time() + CLEANUP_TIMEOUT
+            now = self.get_time()
+            build_info.duration = now - build_info.start_time
+            build_info.finished_time = now + CLEANUP_TIMEOUT
 
             # Stop tracking the finished build's logs.
             if build_id == self.tracked_build_id:
@@ -1314,8 +1333,10 @@ class BuildStatus:
         self.dirty = True
 
         # For non-TTY output, print state changes immediately
-        if not self.is_tty:
-            line = "".join(self._generate_line_components(build_info, static=True))
+        if not self.is_tty and not self.headless:
+            line = "".join(
+                self._generate_line_components(build_info, static=True, now=self.get_time())
+            )
             self.stdout.write(line + "\n")
             self.stdout.flush()
 
@@ -1342,7 +1363,7 @@ class BuildStatus:
 
     def update(self, finalize: bool = False) -> None:
         """Redraw the interactive display."""
-        if not self.is_tty or not self.overview_mode:
+        if self.headless or not self.is_tty or not self.overview_mode:
             return
 
         now = self.get_time()
@@ -1377,7 +1398,7 @@ class BuildStatus:
 
         # Move cursor up to the start of the display area
         if self.active_area_rows > 0:
-            buffer.write(f"\033[{self.active_area_rows}F")
+            buffer.write(f"\033[{self.active_area_rows}A\r")
 
         if self.terminal_size_changed:
             self.terminal_size = self.get_terminal_size()
@@ -1389,7 +1410,7 @@ class BuildStatus:
 
         # First flush the finished builds. These are "persisted" in terminal history.
         for build in self.finished_builds:
-            self._render_build(build, buffer, max_width)
+            self._render_build(build, buffer, now=now)
         self.finished_builds.clear()
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
@@ -1437,7 +1458,7 @@ class BuildStatus:
             if i > truncate_at:
                 self._println(buffer, f"{len_builds - i + 1} more...")
                 break
-            self._render_build(build, buffer, max_width)
+            self._render_build(build, buffer, max_width, now=now)
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
@@ -1464,9 +1485,11 @@ class BuildStatus:
         if self.total_lines > self.active_area_rows:
             buffer.write("\033[0m\033[K\n")  # reset, clear to EOL, newline
         else:
-            buffer.write("\033[0m\033[K\033[1E")  # reset, clear to EOL, move down 1 line
+            buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
     def print_logs(self, build_id: str, data: bytes) -> None:
+        if self.headless:
+            return
         # Discard logs we are not following. Generally this should not happen as we tell the child
         # to only send logs when we are following it. It could maybe happen while transitioning
         # between builds.
@@ -1478,11 +1501,14 @@ class BuildStatus:
         self.stdout.flush()
         self.log_ends_with_newline = data.endswith(b"\n")
 
-    def _render_build(self, build_info: BuildInfo, buffer: io.StringIO, max_width: int) -> None:
+    def _render_build(
+        self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0
+    ) -> None:
+        """Print a single build line to the buffer, truncating to max_width (if > 0)."""
         line_width = 0
-        for component in self._generate_line_components(build_info):
+        for component in self._generate_line_components(build_info, now=now):
             # ANSI escape sequence(s), does not contribute to width
-            if not component.startswith("\033"):
+            if not component.startswith("\033") and max_width > 0:
                 line_width += len(component)
                 if line_width > max_width:
                     break
@@ -1490,7 +1516,7 @@ class BuildStatus:
         self._println(buffer)
 
     def _generate_line_components(
-        self, build_info: BuildInfo, static: bool = False
+        self, build_info: BuildInfo, static: bool = False, now: float = 0.0
     ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
@@ -1551,6 +1577,19 @@ class BuildStatus:
                 yield f": {build_info.log_path}"
         else:
             yield f" {build_info.state}"
+
+        # Duration
+        elapsed = (
+            build_info.duration
+            if build_info.duration is not None
+            else (now - build_info.start_time)
+        )
+        if elapsed > 0:
+            if self.color:
+                yield "\033[0;90m"  # dark gray
+            yield f" ({pretty_duration(elapsed)})"
+            if self.color:
+                yield "\033[0m"
 
 
 Nodes = Dict[str, spack.spec.Spec]
@@ -1915,6 +1954,154 @@ class ReportData:
                 reports[root_hash].append_record(record)
 
 
+class TerminalState:
+    """Manages terminal settings, stdin selector registration, and suspend/resume signals.
+
+    Installs a SIGTSTP handler that restores the terminal before suspending and re-applies it
+    on resume. After waking up it checks whether the process is in the foreground or background
+    and enables or suppresses interactive output accordingly.
+
+    Optional ``on_suspend`` / ``on_resume`` hooks are called just before the process suspends
+    and just after it wakes, allowing callers to pause and resume child processes."""
+
+    def __init__(
+        self,
+        selector: selectors.BaseSelector,
+        build_status: BuildStatus,
+        on_suspend: Optional[Callable[[], None]] = None,
+        on_resume: Optional[Callable[[], None]] = None,
+    ) -> None:
+        self.selector = selector
+        self.build_status = build_status
+        self.on_suspend = on_suspend
+        self.on_resume = on_resume
+        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
+        self.sigwinch_r = -1
+        self.sigwinch_w = -1
+
+    def setup(self) -> None:
+        """Set cbreak mode, register stdin and signal pipes in the selector."""
+
+        # SIGWINCH self-pipe (stdout must be a tty too)
+        if sys.stdout.isatty():
+            self.sigwinch_r, self.sigwinch_w = os.pipe()
+            os.set_blocking(self.sigwinch_r, False)
+            os.set_blocking(self.sigwinch_w, False)
+            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
+            self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
+        else:
+            self.old_sigwinch = None
+
+        self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
+
+        # Start correctly depending on whether we're foregrounded or backgrounded
+        self.build_status.headless = True
+        if not _is_background_tty(sys.stdin):
+            self.enter_foreground()
+
+    def teardown(self) -> None:
+        """Restore terminal settings and signal handlers, close pipes."""
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+
+        for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
+            if old is not None:
+                try:
+                    signal.signal(sig, old)
+                except Exception as e:
+                    spack.llnl.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
+
+        if sys.stdin.fileno() in self.selector.get_map():
+            self.selector.unregister(sys.stdin.fileno())
+
+        for fd in (self.sigwinch_r, self.sigwinch_w):
+            if fd < 0:
+                continue
+            if fd in self.selector.get_map():
+                self.selector.unregister(fd)
+            try:
+                os.close(fd)
+            except Exception as e:
+                spack.llnl.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
+
+    def _handle_sigtstp(self, signum: int, frame: object) -> None:
+        """Restore terminal before suspending, then re-install handler after resume."""
+
+        # Reset so the first redraw after resume doesn't overwrite the shell's
+        # prompt / "$ fg" line.
+        self.build_status.active_area_rows = 0
+
+        # Restore terminal so the user's shell works normally while we're stopped.
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(sys.stdin, termios.TCSANOW, self.old_stdin_settings)
+
+        # Force headless mode before suspending so that enter_foreground() doesn't
+        # exit early when we resume, ensuring terminal settings are re-applied.
+        self.build_status.headless = True
+
+        # Actually suspend: reset to default handler then re-send SIGTSTP.
+        if self.on_suspend is not None:
+            self.on_suspend()
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        os.kill(os.getpid(), signal.SIGTSTP)
+
+        # Execution resumes here after SIGCONT. Re-install our handler.
+        signal.signal(signal.SIGTSTP, self._handle_sigtstp)
+
+        if self.on_resume is not None:
+            self.on_resume()
+        self.handle_continue()
+
+    def _handle_sigwinch(self, signum: int, frame: object) -> None:
+        try:
+            os.write(self.sigwinch_w, b"\x00")
+        except OSError:
+            pass
+
+    def enter_foreground(self) -> None:
+        """Restore interactive terminal mode."""
+        if not self.build_status.headless:
+            return
+
+        # We save old settings right before applying cbreak.
+        # If we started in the background, bash may have had the terminal in its own
+        # readline (raw) mode when __init__ ran. Waiting until we are foregrounded
+        # ensures we capture the shell's exported 'sane' configuration for this job.
+        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
+
+        with ignore_signal(signal.SIGTTOU):
+            tty.setcbreak(sys.stdin.fileno())
+
+        if sys.stdin.fileno() not in self.selector.get_map():
+            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
+        self.build_status.headless = False
+        self.build_status.dirty = True
+
+    def enter_background(self) -> None:
+        """Suppress output and stop reading stdin to avoid SIGTTIN/SIGTTOU."""
+        if sys.stdin.fileno() in self.selector.get_map():
+            self.selector.unregister(sys.stdin.fileno())
+        self.build_status.headless = True
+
+    def handle_continue(self) -> None:
+        """Detect whether the process is in the foreground or background and adjust accordingly."""
+        if _is_background_tty(sys.stdin):
+            self.enter_background()
+        else:
+            self.enter_foreground()
+
+
+def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
+    """Send a signal to the process group of each running build."""
+    for child in running_builds.values():
+        try:
+            pid = child.proc.pid
+            if pid is not None:
+                os.killpg(pid, sig)
+        except OSError:
+            pass
+
+
 class PackageInstaller:
 
     explicit: Set[str]
@@ -2040,30 +2227,17 @@ class PackageInstaller:
     def _installer(self) -> None:
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
-        sigwinch_r = sigwinch_w = -1
 
-        # Set stdin to non-blocking for key press detection
+        # Set up terminal handling (cbreak, signals, stdin registration)
+        terminal: Optional[TerminalState] = None
         if sys.stdin.isatty():
-            old_stdin_settings = termios.tcgetattr(sys.stdin)
-            tty.setcbreak(sys.stdin.fileno())
-            selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
-        else:
-            old_stdin_settings = None
-
-        if sys.stdout.isatty():
-            # Listen to terminal resizing events with self-pipe trick.
-            sigwinch_r, sigwinch_w = os.pipe()
-            os.set_blocking(sigwinch_r, False)
-            os.set_blocking(sigwinch_w, False)
-
-            def _handle_sigwinch(signum: int, frame: object) -> None:
-                try:
-                    os.write(sigwinch_w, b"\x00")
-                except OSError:
-                    pass
-
-            signal.signal(signal.SIGWINCH, _handle_sigwinch)
-            selector.register(sigwinch_r, selectors.EVENT_READ, "sigwinch")
+            terminal = TerminalState(
+                selector,
+                self.build_status,
+                on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
+                on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
+            )
+            terminal.setup()
 
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
@@ -2096,10 +2270,24 @@ class PackageInstaller:
 
                 stdin_ready = False
 
-                timeout = SPINNER_INTERVAL if self.build_status.is_tty else DATABASE_WRITE_INTERVAL
+                if self.build_status.headless:
+                    # no UI to update, but check background to foreground transition periodically
+                    timeout = HEADLESS_WAKE_INTERVAL
+                elif self.build_status.is_tty:
+                    timeout = SPINNER_INTERVAL
+                else:
+                    # when not in interactive mode, wake least often (no spinner/terminal updates)
+                    timeout = DATABASE_WRITE_INTERVAL
                 events = selector.select(timeout=timeout)
 
                 finished_pids = []
+
+                # The transition "suspended to foreground/background" is handled in the signal
+                # handler, but there's no SIGCONT event in the transition of background to
+                # foreground, so we conditionally poll for that here (headless case). In the
+                # headless case the event loop only fires once per second, so this is cheap enough.
+                if terminal and self.build_status.headless and not _is_background_tty(sys.stdin):
+                    terminal.enter_foreground()
 
                 for key, _ in events:
                     data = key.data
@@ -2115,7 +2303,8 @@ class PackageInstaller:
                     elif data == "stdin":
                         stdin_ready = True
                     elif data == "sigwinch":
-                        os.read(sigwinch_r, 64)  # drain the pipe
+                        assert terminal is not None
+                        os.read(terminal.sigwinch_r, 64)  # drain the pipe
                         self.build_status.on_resize()
                     elif data == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
@@ -2209,6 +2398,10 @@ class PackageInstaller:
                 # Finally update the UI
                 self.build_status.update()
         finally:
+            # First ensure that the user's terminal state is restored.
+            if terminal is not None:
+                terminal.teardown()
+
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
             db_exc = None
@@ -2256,22 +2449,6 @@ class PackageInstaller:
                     if action.prefix_lock is not None:
                         action.prefix_lock.release_write()
                         action.prefix_lock = None
-                except Exception:
-                    pass
-
-            # Terminal related cleanup
-            if old_stdin_settings:
-                try:
-                    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_stdin_settings)
-                except Exception:
-                    pass
-
-            if sigwinch_r >= 0:
-                try:
-                    signal.signal(signal.SIGWINCH, signal.SIG_DFL)
-                    selector.unregister(sigwinch_r)
-                    os.close(sigwinch_r)
-                    os.close(sigwinch_w)
                 except Exception:
                     pass
 

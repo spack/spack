@@ -1865,8 +1865,10 @@ compiler(Compiler) :- target_supported(Compiler, _, _).
 
 % Can't use targets on node if the compiler for the node doesn't support them
 language("c").
+language("cuda-lang").
 language("cxx").
 language("fortran").
+language("hip-lang").
 language_runtime("fortran-rt").
 
 error(10, "Only external, or concrete, compilers are allowed for the {0} language", Language)

@@ -104,6 +104,7 @@ sphinx_apidoc(
         "--implicit-namespaces",
         ".spack/spack-packages/repos/spack_repo",
         ".spack/spack-packages/repos/spack_repo/builtin/packages",
+        ".spack/spack-packages/repos/spack_repo/builtin/build_systems/generic.py",
     ]
 )
 
