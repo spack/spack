@@ -14,6 +14,7 @@ from spack.vendor.typing_extensions import Literal
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.util.executable as exe
+from spack.util.environment import EnvironmentModifications
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -117,6 +118,13 @@ def git(required: bool = False) -> Optional[GitExecutable]:
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
     if git and "pytest" in sys.modules:
         git.add_default_arg("-c", "protocol.file.allow=always")
+
+    # Blacklist environment variables that can interfere with git diff operations
+    # this can cause problems for spack ci verify-versions and spack ci create-source-mirror
+    env_blacklist = EnvironmentModifications()
+    env_blacklist.unset("GIT_EXTERNAL_DIFF")
+    env_blacklist.unset("GIT_DIFF_OPTS")
+    git.add_default_envmod(env_blacklist)
 
     return git
 
