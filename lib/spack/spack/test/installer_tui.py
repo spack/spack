@@ -335,9 +335,9 @@ class TestOutputRendering:
         status.update()
         output1 = fake_stdout.getvalue()
 
-        # Count newlines (\n) and cursor movements (\033[1E = move down 1 line)
+        # Count newlines (\n) and cursor movements (\033[1B\r = move down 1 line)
         newlines1 = output1.count("\n")
-        cursor_moves1 = output1.count("\033[1E")
+        cursor_moves1 = output1.count("\033[1B\r")
 
         # Initially all lines should be newlines (nothing in history yet)
         assert newlines1 > 0
@@ -359,7 +359,7 @@ class TestOutputRendering:
         output2 = fake_stdout.getvalue()
 
         newlines2 = output2.count("\n")
-        cursor_moves2 = output2.count("\033[1E")
+        cursor_moves2 = output2.count("\033[1B\r")
 
         # Should have newlines for the 2 finished builds persisted to history
         # and cursor movements for the active area (header + 3 active builds)

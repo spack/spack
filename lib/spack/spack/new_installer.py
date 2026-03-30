@@ -1398,7 +1398,7 @@ class BuildStatus:
 
         # Move cursor up to the start of the display area
         if self.active_area_rows > 0:
-            buffer.write(f"\033[{self.active_area_rows}F")
+            buffer.write(f"\033[{self.active_area_rows}A\r")
 
         if self.terminal_size_changed:
             self.terminal_size = self.get_terminal_size()
@@ -1485,7 +1485,7 @@ class BuildStatus:
         if self.total_lines > self.active_area_rows:
             buffer.write("\033[0m\033[K\n")  # reset, clear to EOL, newline
         else:
-            buffer.write("\033[0m\033[K\033[1E")  # reset, clear to EOL, move down 1 line
+            buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
     def print_logs(self, build_id: str, data: bytes) -> None:
         if self.headless:
