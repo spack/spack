@@ -776,7 +776,7 @@ def names(args: Namespace, out: IO) -> None:
 
 def get_all_spack_commands() -> SpackArgumentParser:
     parser = spack.main.make_argument_parser(
-        **( {"color": False} if sys.version_info >= (3, 14) else {} )
+        **({"color": False} if sys.version_info >= (3, 14) else {})
     )
     spack.main.add_all_commands(parser)
     return parser
