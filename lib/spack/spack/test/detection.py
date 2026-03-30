@@ -571,6 +571,7 @@ def test_determine_external_dependencies_idempotent_existing_deps(mutable_config
     assert pkgs_after_second["mpich"]["externals"][0]["dependencies"] == mpich_deps_first
 
 
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_normalize_dependency_dict_with_prefix():
     """Tests that a dict hint with 'prefix' sets external_path on the resulting spec."""
     dep = _normalize_dependency({"spec": "hwloc@2.7", "prefix": "/opt/hwloc"})
@@ -590,6 +591,7 @@ def test_normalize_dependency_bare_string_no_prefix():
     assert not dep.spec.external_path
 
 
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_prefix_hints_returns_hint_for_unresolved_dep():
     """Tests that external_path is returned as a hint when the dep is not yet resolved."""
     mpich = spack.spec.Spec("mpich@4.0", external_path="/usr/local/mpich")
@@ -602,6 +604,7 @@ def test_prefix_hints_returns_hint_for_unresolved_dep():
     assert "/opt/hwloc" in hints
 
 
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_prefix_hints_excludes_already_resolved_dep():
     """Tests that no hint is returned when the dep is already in detected_packages."""
     mpich = spack.spec.Spec("mpich@4.0", external_path="/usr/local/mpich")
@@ -615,6 +618,7 @@ def test_prefix_hints_excludes_already_resolved_dep():
     assert hints == []
 
 
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_prefix_hints_excludes_dep_satisfied_by_known_packages():
     """Tests that no hint is returned when the dep is satisfied by known_packages."""
     mpich = spack.spec.Spec("mpich@4.0", external_path="/usr/local/mpich")
@@ -630,6 +634,7 @@ def test_prefix_hints_excludes_dep_satisfied_by_known_packages():
     assert hints == []
 
 
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_prefix_hints_no_hint_for_abstract_dep():
     """Tests that a dep with no external_path (bare string) yields no path hint"""
     mpich = spack.spec.Spec("mpich@4.0", external_path="/usr/local/mpich")
@@ -643,6 +648,7 @@ def test_prefix_hints_no_hint_for_abstract_dep():
 
 
 @pytest.mark.usefixtures("mock_packages")
+@pytest.mark.not_on_windows("Uses POSIX paths")
 def test_by_path_with_dependencies_uses_prefix_hint(monkeypatch):
     """Tests that the detection loop passes dep prefix hints to subsequent by_path calls"""
     hwloc_prefix = "/opt/hwloc"
