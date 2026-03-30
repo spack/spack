@@ -30,7 +30,7 @@ def post_install(spec, explicit=None):
 
     # Get the license
     def get_license(pkg):
-        
+
         if not pkg:
             return "NOASSERTION"
 
@@ -42,7 +42,7 @@ def post_install(spec, explicit=None):
         licenses = [license for when, lic in license_data.items() if pkg.spec.satisfies(when)]
 
         return " OR ".join(licenses) if licenses else "NOASSERTION"
-        
+
     # Get the supplier
     def get_supplier(pkg):
         supplier = getattr(pkg, "supplier", None)
