@@ -55,11 +55,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
-    find_parser.epilog = (
-        'The search is by default on packages tagged with the "build-tools" or '
-        '"core-packages" tags. Use the --all option to search for every possible '
-        "package Spack knows how to find."
-    )
+    find_parser.epilog = 'The search is by default on packages tagged with the "compiler" tag.'
 
     sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
 
@@ -125,7 +121,7 @@ def external_find(args):
         args.tags = ["detectable"]
     elif not args.tags:
         # If the user didn't specify anything, search for build tools by default
-        args.tags = ["core-packages", "build-tools"]
+        args.tags = ["compiler"]
 
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
