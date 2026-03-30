@@ -21,6 +21,7 @@ import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.environment
 from spack.externals import ExternalSpecsParser, external_spec
 from spack.operating_systems import windows_os
 
@@ -70,7 +71,7 @@ def find_compilers(
         default_paths = fs.search_paths_for_executables(*path_hints)
 
     if sys.platform == "win32":
-        default_paths = default_paths or []
+        default_paths = default_paths or spack.util.environment.get_path("PATH")
         default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
 
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
