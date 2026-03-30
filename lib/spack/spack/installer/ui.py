@@ -15,7 +15,7 @@ import time
 from typing import Callable, Dict, Generator, List, NamedTuple, Optional, Union, cast
 
 import spack.config
-import spack.util.tty.color
+import spack.util.tty.color as tty_color
 from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
@@ -215,14 +215,10 @@ class TerminalUI(InstallerUI):
         self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else stdout.isatty()
-        if color is None:
-            color = spack.util.tty.color.get_color_when(stdout)
-        # ANSI escape codes used for rendering; empty strings when color is disabled.
-        if color:
-            self.red, self.green, self.cyan = "\033[31m", "\033[32m", "\033[0;36m"
-            self.gray, self.bold, self.reset = "\033[0;90m", "\033[1m", "\033[0m"
+        if color is not None:
+            self.color = color
         else:
-            self.red = self.green = self.cyan = self.gray = self.bold = self.reset = ""
+            self.color = tty_color.get_color_when(stdout)
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -365,7 +361,8 @@ class TerminalUI(InstallerUI):
 
         self.tracked_build_id = new_build_id
 
-        version_str = f"{self.cyan}@{new_build.version}{self.reset}"
+        # @@ to escape @, @c for cyan, @. for reset
+        version_str = tty_color.colorize(f"@c@@{new_build.version}@.", color=self.color)
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
@@ -542,20 +539,31 @@ class TerminalUI(InstallerUI):
         self.total_lines = 0
 
         if not finalize:
+            bold = "@*"
+            reset = "@."
+            cyan = "@c"
+
             if self.actual_jobs != self.target_jobs:
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-            bold, reset, cyan = self.bold, self.reset, self.cyan
-            long_header = (
-                f"{bold}Progress:{reset} {self.completed}/{self.total}"
-                f"  {cyan}+{reset}/{cyan}-{reset}: "
-                f"{jobs_str} jobs"
-                f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
-                f"  {cyan}n{reset}/{cyan}p{reset}: next/prev"
+            long_header_len = len(
+                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
+                "  /: filter  v: logs  n/p: next/prev"
             )
-            if spack.util.tty.color.clen(long_header) < max_width:
-                self._println(buffer, long_header)
+            if long_header_len < max_width:
+                # Need {{}} for Progress because {bold} otherwise consumes one additional character
+                self._println(
+                    buffer,
+                    tty_color.colorize(
+                        f"{bold}{{Progress:}}{reset} {self.completed}/{self.total}"
+                        f"  {cyan}+{reset}/{cyan}-{reset}: "
+                        f"{jobs_str} jobs"
+                        f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
+                        f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
+                        color=self.color,
+                    ),
+                )
             else:
                 self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
 
@@ -630,9 +638,8 @@ class TerminalUI(InstallerUI):
         """Print a single build line to the buffer, truncating to max_width (if > 0)."""
         line_width = 0
         for component in self._generate_line_components(build_info, now=now):
-            # ANSI escape sequence(s), does not contribute to width
-            if not component.startswith("\033") and max_width > 0:
-                line_width += len(component)
+            if max_width > 0:
+                line_width += tty_color.clen(component)
                 if line_width > max_width:
                     break
             buffer.write(component)
@@ -642,6 +649,16 @@ class TerminalUI(InstallerUI):
     ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
+        cyan = "@c"
+        green = "@g"
+        grey = "@K"
+        red = "@r"
+        white = "@W"
+        reset = "@."
+
+        def colorize(string):
+            return tty_color.colorize(string, color=self.color)
+
         if build_info.external:
             indicator = "[e]"
         elif build_info.state == "finished":
@@ -653,32 +670,20 @@ class TerminalUI(InstallerUI):
         else:
             indicator = f"[{SPINNER_CHARS[self.spinner_index]}]"
 
-        gray, reset = self.gray, self.reset
-
         if build_info.state == "failed":
-            yield self.red
+            color_code = red
         elif build_info.state == "finished":
-            yield self.green
-
-        yield indicator
-        yield reset
-        yield " "
-        yield gray
-        yield build_info.hash
-        yield reset
-        yield " "
-
-        # Package name in bold if explicit, default otherwise
-        if build_info.explicit:
-            yield self.bold
-            yield build_info.name
-            yield reset
+            color_code = green
         else:
-            yield build_info.name
+            color_code = ""
 
-        yield self.cyan
-        yield f"@{build_info.version}"
-        yield reset
+        yield colorize(f"{color_code}{indicator}{reset}")
+        yield " "
+        yield colorize(f"{grey}{build_info.hash}{reset}")
+        yield " "
+        # Package name in bold white if explicit, default otherwise
+        yield colorize(f"{white if build_info.explicit else ''}{build_info.name}{reset}")
+        yield colorize(f"{cyan}@@{build_info.version}{reset}")  # @@ escapes @
 
         # progress or state
         if build_info.progress_percent is not None:
@@ -701,6 +706,4 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            yield gray
-            yield f" ({pretty_duration(elapsed)})"
-            yield reset
+            yield colorize(f"{grey} ({pretty_duration(elapsed)}){reset}")
