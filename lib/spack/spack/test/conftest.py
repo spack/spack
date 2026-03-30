@@ -156,8 +156,7 @@ def override_path(monkeypatch):
     def _override(path_attr, new_path):
         if hasattr(spack.paths_base.locations, path_attr):
             monkeypatch.setattr(spack.paths_base.locations, path_attr, new_path)
-
-        if hasattr(spack.paths.locations, path_attr):
+        elif hasattr(spack.paths.locations, path_attr):
             monkeypatch.setattr(spack.paths.locations, path_attr, new_path)
 
     return _override
