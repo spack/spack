@@ -657,11 +657,11 @@ def repo_show_updates(args: Any) -> int:
 
     # Filter out manual packages if requested
     if args.no_manual_packages:
-        pkgs = [
+        pkgs = {
             pkg_name
             for pkg_name in pkgs
             if not spack.repo.PATH.get_pkg_class(pkg_name).manual_download
-        ]
+        }
 
     if not pkgs:
         tty.warn("No packages were added or changed between the specified refs")
