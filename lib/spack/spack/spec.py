@@ -3383,8 +3383,169 @@ class Spec:
         """
         if other is EMPTY_SPEC:
             return True
-        other = self._autospec(other)
 
+        other = self._autospec(other)
+        if not self._satisfies_node(other, resolve_virtuals=resolve_virtuals):
+            return False
+
+        # If we need to descend into dependencies, do it, otherwise we're done.
+        if not deps:
+            return True
+
+        # If there are no constraints to satisfy, we're done.
+        if not other._dependencies:
+            return True
+
+        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
+        # all the edges that have an abstract parent, and verify that they match some edge in the
+        # lhs.
+        direct_edges, transitive_edges = [], []
+        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
+            # verify the edge properties, cause everything is encoded in the hash of the nodes that
+            # will be verified later.
+            # TODO: Optimize by not iterating over these edges
+            if rhs_edge.parent.concrete:
+                continue
+
+            # None only in case rhs_edge has a parent that is not in lhs
+            lhs_parent = self._lhs_parent(rhs_edge)
+
+            # Check satisfaction of the dependency only if its "when" condition may apply
+            if lhs_parent and not lhs_parent._intersects(
+                rhs_edge.when, resolve_virtuals=resolve_virtuals
+            ):
+                continue
+
+            if lhs_parent is None:
+                # The only case where None could occur is that of a looking for a direct edge with
+                # a known parent, different from self, that the lhs doesn't have.
+                #
+                # Note: this relies on abstract specs from string not being deeper than 2 levels
+                # e.g. in foo %fee ^bar %baz we cannot go deeper than "baz" and e.g. specify its
+                # dependencies too.
+                #
+                # We also need to account for cases like gcc@<new> %gcc@<old> where the parent
+                # name is the same as the child name
+                #
+                # The same assumptions hold on Spec.constrain, and Spec.intersect
+                return False
+
+            if rhs_edge.direct:
+                direct_edges.append((lhs_parent, rhs_edge))
+            else:
+                transitive_edges.append(rhs_edge)
+
+        for lhs_parent, rhs_edge in direct_edges:
+            rhs_child = rhs_edge.spec
+            # Common case where the name identifies a real package i.e. %c=gcc or %gcc
+            candidate_edges = lhs_parent.edges_to_dependencies(
+                name=rhs_child.name, virtuals=rhs_edge.virtuals or None
+            )
+
+            if self.concrete and not candidate_edges:
+                # If we have no candidates the rhs may be a virtual i.e. %mpi or %mpi@3:
+                candidate_edges = lhs_parent.edges_to_dependencies(virtuals=(rhs_child.name,))
+                if candidate_edges and rhs_edge.spec.versions == spack.version.any_version:
+                    if not any(_compatible_edges(l, rhs_edge, resolve_virtuals=resolve_virtuals) for l in candidate_edges):
+                        return False
+                    # If this virtual doesn't impose version constraints, avoid checking package.py
+                    continue
+
+            elif not self.concrete and resolve_virtuals and spack.repo.PATH.is_virtual(rhs_child.name):
+                # If we know the rhs is a virtual package, we need to *also* consider edges with
+                # virtuals. We cannot consider only those, because the lhs itself can be of the
+                # form %mpi@3: since it's abstract
+                candidate_edges.extend(
+                    lhs_parent.edges_to_dependencies(virtuals=(rhs_child.name,))
+                )
+
+            # Select the child node from edges that have compatible properties
+            candidates = [
+                lhs_edge.spec
+                for lhs_edge in candidate_edges
+                if _compatible_edges(lhs_edge, rhs_edge, resolve_virtuals)
+            ]
+
+            # For old specs, consider compiler dependencies from annotations
+            if not candidates and lhs_parent.original_spec_format() < 5:
+                compiler_spec = lhs_parent.annotations.compiler_node_attribute
+                if compiler_spec is not None:
+                    candidates.append(compiler_spec)
+
+            if not any(
+                x._satisfies_node(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
+                for x in candidates
+            ):
+                return False
+
+        if not transitive_edges:
+            return True
+
+        # Construct a map of the link/run subDAG + direct "build" edges, keyed by dependency name
+        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
+        for lhs_edge in self.traverse_edges(root=False, cover="edges", deptype=("link", "run")):
+            lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+            for virtual_name in lhs_edge.virtuals:
+                lhs_edges[virtual_name].add(lhs_edge)
+
+        build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
+        for lhs_edge in build_edges:
+            lhs_edges[lhs_edge.spec.name].add(lhs_edge)
+            for virtual_name in lhs_edge.virtuals:
+                lhs_edges[virtual_name].add(lhs_edge)
+
+        for rhs_edge in transitive_edges:
+            rhs_child = rhs_edge.spec
+            # We don't have edges to this dependency
+            rhs_child_name = rhs_child.name
+            if rhs_child_name and rhs_child_name not in lhs_edges:
+                return False
+            elif rhs_child_name:
+                set_of_edges = lhs_edges[rhs_child_name]
+            else:
+                set_of_edges = set(itertools.chain(*lhs_edges.values()))
+
+            candidate_edges = [
+                lhs_edge
+                for lhs_edge in set_of_edges
+                if _compatible_edges(lhs_edge, rhs_edge, resolve_virtuals)
+            ]
+            if not candidate_edges:
+                return False
+
+            for virtual in rhs_edge.virtuals:
+                # Check the name because ^mpi has the "mpi" virtual
+                has_virtual = any(
+                    virtual in edge.virtuals or virtual == edge.spec.name
+                    for edge in candidate_edges
+                )
+                if not has_virtual:
+                    return False
+
+            for lhs_edge in candidate_edges:
+                if lhs_edge.spec._satisfies_node(rhs_edge.spec, resolve_virtuals=resolve_virtuals):
+                    break
+            else:
+                return False
+
+        return True
+
+    def _lhs_parent(self, rhs_edge: DependencySpec) -> Optional["Spec"]:
+        """Returns the parent node in self corresponding to the parent in rhs_edge.
+
+        If the rhs edge has no parent, self is returned. If the rhs has a parent not in self,
+        None is returned.
+        """
+        result = None
+        if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
+            result = self
+        elif rhs_edge.parent.name in self:
+            result = self[rhs_edge.parent.name]
+        return result
+
+    def _satisfies_node(self, other: "Spec", resolve_virtuals: bool = True) -> bool:
+        """Compares self and other without looking at dependencies"""
         if other.concrete:
             # The left-hand side must be the same singleton with identical hash. Notice that
             # package hashes can be different for otherwise indistinguishable concrete Spec
@@ -3426,183 +3587,6 @@ class Spec:
 
         if not self.compiler_flags.satisfies(other.compiler_flags):
             return False
-
-        # If we need to descend into dependencies, do it, otherwise we're done.
-        if not deps:
-            return True
-
-        # If there are no constraints to satisfy, we're done.
-        if not other._dependencies:
-            return True
-
-        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
-        # all the edges that have an abstract parent, and verify that they match some edge in the
-        # lhs.
-        #
-        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
-        # verify the edge properties, cause everything is encoded in the hash of the nodes that
-        # will be verified later.
-        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
-        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # Check satisfaction of the dependency only if its when condition can apply
-            if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
-                test_spec = self
-            elif rhs_edge.parent.name in self:
-                test_spec = self[rhs_edge.parent.name]
-            else:
-                test_spec = None
-            if test_spec and not test_spec._intersects(
-                rhs_edge.when, resolve_virtuals=resolve_virtuals
-            ):
-                continue
-
-            if rhs_edge.direct:
-                # Note: this relies on abstract specs from string not being deeper than 2 levels
-                # e.g. in foo %fee ^bar %baz we cannot go deeper than "baz" and e.g. specify its
-                # dependencies too.
-                #
-                # We also need to account for cases like gcc@<new> %gcc@<old> where the parent
-                # name is the same as the child name
-                #
-                # The same assumptions hold on Spec.constrain, and Spec.intersect
-                current_node = self
-                if rhs_edge.parent.name and rhs_edge.parent.name != rhs_edge.spec.name:
-                    try:
-                        current_node = self[rhs_edge.parent.name]
-                    except KeyError:
-                        return False
-
-                if self.concrete:
-                    # For a concrete spec, virtual info is encoded in edge.virtuals.
-                    #
-                    # The rhs edge may name either a concrete package or a virtual. If virtuals are
-                    # already annotated on the rhs edge, the name AND virtual must match. Otherwise
-                    # try both a name-based lookup and a virtual-based lookup and union the results
-                    if rhs_edge.virtuals:
-                        candidate_edges = current_node.edges_to_dependencies(
-                            name=rhs_edge.spec.name, virtuals=rhs_edge.virtuals
-                        )
-                    else:
-                        dep_name = rhs_edge.spec.name
-                        candidate_edges = current_node.edges_to_dependencies(name=dep_name)
-                        # It _may_ be a virtual
-                        if not candidate_edges:
-                            candidate_edges = current_node.edges_to_dependencies(
-                                virtuals=(dep_name,)
-                            )
-                            # If this virtual doesn't impose further version constraints, avoid
-                            # Further checks that may require package.py
-                            if (
-                                candidate_edges
-                                and rhs_edge.spec.versions == spack.version.any_version
-                            ):
-                                # Don't mutate objects in memory that may be referred elsewhere
-                                rhs_edge = rhs_edge.copy()
-                                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
-                                rhs_edge.spec = EMPTY_SPEC
-                        candidate_edges = lang.dedupe(candidate_edges)
-                else:
-                    # For an abstract spec, consult the repo to determine whether the rhs dep
-                    # name is a virtual, annotate the edge, then build candidate_edges.
-                    rhs_is_virtual = resolve_virtuals and spack.repo.PATH.is_virtual(
-                        rhs_edge.spec.name
-                    )
-                    if rhs_is_virtual:
-                        # Don't mutate objects in memory that may be referred elsewhere
-                        rhs_edge = rhs_edge.copy()
-                        dep_name = None
-                        rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
-                        candidate_edges = current_node.edges_to_dependencies(
-                            name=rhs_edge.spec.name
-                        )
-                    else:
-                        dep_name = rhs_edge.spec.name
-                        candidate_edges = []
-
-                    candidate_edges.extend(
-                        current_node.edges_to_dependencies(
-                            name=dep_name, virtuals=rhs_edge.virtuals or None
-                        )
-                    )
-
-                # Select at least the deptypes on the rhs_edge, and conditional edges that
-                # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
-                candidates = [
-                    lhs_edge.spec
-                    for lhs_edge in candidate_edges
-                    if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                    and rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
-                ]
-
-                # For old specs, consider compiler dependencies from annotations
-                if current_node.original_spec_format() < 5:
-                    compiler_spec = current_node.annotations.compiler_node_attribute
-                    if compiler_spec is not None:
-                        candidates.append(compiler_spec)
-
-                if not candidates or not any(
-                    x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
-                    for x in candidates
-                ):
-                    return False
-
-                continue
-
-            # Skip edges from a concrete sub-DAG
-            if rhs_edge.parent.concrete:
-                continue
-
-            if not lhs_edges:
-                # Construct a map of the link/run subDAG + direct "build" edges,
-                # keyed by dependency name
-                for lhs_edge in self.traverse_edges(
-                    root=False, cover="edges", deptype=("link", "run")
-                ):
-                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
-                    for virtual_name in lhs_edge.virtuals:
-                        lhs_edges[virtual_name].add(lhs_edge)
-
-                build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
-                for lhs_edge in build_edges:
-                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
-                    for virtual_name in lhs_edge.virtuals:
-                        lhs_edges[virtual_name].add(lhs_edge)
-
-            # We don't have edges to this dependency
-            current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name and current_dependency_name not in lhs_edges:
-                return False
-
-            if not current_dependency_name:
-                # Here we have an anonymous spec e.g. ^ dev_path=*
-                candidate_edges = list(itertools.chain(*lhs_edges.values()))
-
-            else:
-                candidate_edges = [
-                    lhs_edge
-                    for lhs_edge in lhs_edges[current_dependency_name]
-                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
-                ]
-
-            if not candidate_edges:
-                return False
-
-            for virtual in rhs_edge.virtuals:
-                # Check the name because ^mpi has the "mpi" virtual
-                has_virtual = any(
-                    virtual in edge.virtuals or virtual == edge.spec.name
-                    for edge in candidate_edges
-                )
-                if not has_virtual:
-                    return False
-
-            for lhs_edge in candidate_edges:
-                if lhs_edge.spec._satisfies(
-                    rhs_edge.spec, deps=False, resolve_virtuals=resolve_virtuals
-                ):
-                    break
-            else:
-                return False
 
         return True
 
@@ -5221,6 +5205,25 @@ class Spec:
 
     def has_virtual_dependency(self, virtual: str) -> bool:
         return bool(self.dependencies(virtuals=(virtual,)))
+
+
+def _compatible_edges(
+    lhs_edge: DependencySpec, rhs_edge: DependencySpec, resolve_virtuals: bool
+) -> bool:
+    """Returns True if the lhs edge properties satisfy the rhs edge"""
+    return (
+        (
+            # All the deptypes of the rhs edge must be there
+            (lhs_edge.depflag & rhs_edge.depflag)
+            ^ rhs_edge.depflag
+        )
+        == 0
+        # All the rhs edge virtuals must be there
+        and all(v in lhs_edge.virtuals for v in rhs_edge.virtuals)
+        # Select conditional edges that constrain a bigger portion of the search space
+        # (so it's rhs.when <= lhs.when)
+        and rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
+    )
 
 
 class VariantMap(lang.HashableMap[str, vt.VariantValue]):

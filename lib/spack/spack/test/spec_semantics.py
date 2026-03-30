@@ -689,6 +689,8 @@ class TestSpecSemantics:
         assert concrete.satisfies("%c=gcc")
         assert concrete.satisfies("%mpi=mpich")
 
+        assert not concrete.satisfies("%c,mpi=mpich")
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
