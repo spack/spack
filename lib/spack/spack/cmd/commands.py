@@ -19,7 +19,7 @@ import spack.paths
 import spack.platforms
 from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from spack.llnl.util.tty.colify import colify
-from spack.main import section_descriptions
+from spack.main import SpackArgumentParser, section_descriptions
 
 description = "list available spack commands"
 section = "config"
@@ -774,6 +774,14 @@ def names(args: Namespace, out: IO) -> None:
     colify(commands, output=out)
 
 
+def get_all_spack_commands() -> SpackArgumentParser:
+    parser = spack.main.make_argument_parser(
+        **( {"color": False} if sys.version_info >= (3, 14) else {} )
+    )
+    spack.main.add_all_commands(parser)
+    return parser
+
+
 @formatter
 def bash(args: Namespace, out: IO) -> None:
     """Bash tab-completion script.
@@ -782,9 +790,7 @@ def bash(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands()
     aliases_config = spack.config.get("config:aliases")
     if aliases_config:
         aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
@@ -796,9 +802,7 @@ def bash(args: Namespace, out: IO) -> None:
 
 @formatter
 def fish(args, out):
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands()
     writer = FishCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
