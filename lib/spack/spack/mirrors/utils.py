@@ -15,6 +15,7 @@ import spack.version
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp
 from spack.mirrors.mirror import Mirror, MirrorCollection
+from spack.package import InstallError
 
 
 def get_all_versions(specs):
@@ -209,6 +210,11 @@ def create_mirror_from_package_object(
         True if the spec was added successfully, False otherwise
     """
     tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
+    # Skip placeholder packages
+    try:
+        pkg_obj.fetcher
+    except InstallError:
+        return False
     max_retries = 3
     for num_retries in range(max_retries):
         try:

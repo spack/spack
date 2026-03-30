@@ -57,6 +57,11 @@ class Lock(Llnl_lock):
             return super()._lock(op, timeout)
         return 0.0, 0
 
+    def _poll_lock(self, op: int) -> bool:
+        if self._enable:
+            return super()._poll_lock(op)
+        return True
+
     def _unlock(self) -> None:
         """Unlock call that always succeeds."""
         if self._enable:

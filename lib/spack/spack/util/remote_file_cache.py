@@ -80,7 +80,7 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
 
     # Allow paths (and URLs) to contain spack config/environment variables,
     # etc.
-    path = canonicalize_path(raw_path)
+    path = canonicalize_path(raw_path, dest)
 
     # Save off the Windows drive of the canonicalized path (since now absolute)
     # to ensure recognized by URL parsing as a valid file "scheme".

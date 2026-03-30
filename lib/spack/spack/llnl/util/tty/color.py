@@ -185,11 +185,13 @@ def try_enable_terminal_color_on_windows() -> None:
             _force_color = False
 
 
-def get_color_when() -> bool:
+def get_color_when(stdout=None) -> bool:
     """Return whether commands should print color or not."""
     if _force_color is not None:
         return _force_color
-    return sys.stdout.isatty()
+    if stdout is None:
+        stdout = sys.stdout
+    return stdout.isatty()
 
 
 def set_color_when(when: Union[str, bool, None]) -> None:

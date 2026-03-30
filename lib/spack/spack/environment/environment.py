@@ -33,6 +33,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
+import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
@@ -1219,7 +1220,7 @@ class Environment:
             if isinstance(include, spack.config.GitIncludePaths):
                 # Git includes must be cloned first; paths are relative to the
                 # clone destination, not to the manifest directory.
-                destination = include._clone()
+                destination = include._clone(self.manifest.env_config_scope)
                 if destination is None:
                     continue
                 resolved = [os.path.join(destination, p) for p in include.paths]
@@ -1247,6 +1248,9 @@ class Environment:
         self._process_included_lockfiles()
 
     def _sync_speclists(self):
+        self._spec_lists_parser = SpecListParser(
+            toolchains=spack.config.CONFIG.get("toolchains", {})
+        )
         self.spec_lists = {}
         self.spec_lists.update(
             self._spec_lists_parser.parse_definitions(
@@ -1972,12 +1976,9 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        if spack.config.get("config:installer", "old") == "new":
-            from spack.new_installer import PackageInstaller
-        else:
-            from spack.installer import PackageInstaller  # type: ignore[assignment]
-
-        builder = PackageInstaller([spec.package for spec in specs], **install_args)
+        builder = spack.installer_dispatch.create_installer(
+            [spec.package for spec in specs], **install_args
+        )
 
         try:
             builder.install()
@@ -3124,13 +3125,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         lockfile = manifest_dir / lockfile_name
         with lockfile.open("r", encoding="utf-8") as f:
             data = sjson.load(f)
-        user_specs = data["roots"]
+        roots = data["roots"]
+
+        user_specs_by_group: Dict[str, List[str]] = {}
+        for item in roots:
+            # "group" is not there for Lockfile v6 and lower
+            group = item.get("group", DEFAULT_USER_SPEC_GROUP)
+            user_specs_by_group.setdefault(group, []).append(item["spec"])
 
         default_content = manifest_dir / manifest_name
         default_content.write_text(default_manifest_yaml())
         manifest = EnvironmentManifestFile(manifest_dir)
-        for item in user_specs:
-            manifest.add_user_spec(item["spec"])
+
+        for group, specs in user_specs_by_group.items():
+            for spec in specs:
+                manifest.add_user_spec(spec, group=group)
+
         manifest.flush()
         return manifest
 
@@ -3241,15 +3251,44 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise ValueError(f"user specs group '{group}' not found in {self.manifest_file}")
         return group
 
-    def add_user_spec(self, user_spec: str) -> None:
-        """Appends the user spec passed as input to the default list of root specs.
+    def add_user_spec(self, user_spec: str, *, group: Optional[str] = None) -> None:
+        """Appends the user spec passed as input to the list of root specs for the given group.
 
         Args:
             user_spec: user spec to be appended
+            group: group where the spec should be added. If None, the default group is used.
         """
-        self.configuration.setdefault("specs", []).append(user_spec)
-        self._user_specs[DEFAULT_USER_SPEC_GROUP].append(user_spec)
+        group = group or DEFAULT_USER_SPEC_GROUP
+
+        if group == DEFAULT_USER_SPEC_GROUP:
+            # Append to top-most specs: attribute
+            specs_yaml = self.configuration.setdefault("specs", [])
+            specs_yaml.append(user_spec)
+        else:
+            # Append to specs: attribute within a group
+            group_in_yaml = self._get_group(group)
+            group_in_yaml.setdefault("specs", []).append(user_spec)
+
+        self._user_specs[group].append(user_spec)
         self.changed = True
+
+    def _get_group(self, group: str) -> Dict:
+        """Find or create the group entry in the manifest"""
+        specs_yaml = self.configuration.setdefault("specs", [])
+        group_entry = None
+        for item in specs_yaml:
+            if isinstance(item, dict) and item.get("group") == group:
+                group_entry = item
+                break
+
+        if group_entry is None:
+            group_entry = {"group": group, "specs": []}
+            specs_yaml.append(group_entry)
+            self._groups[group] = tuple()
+            self._config_override[group] = None
+            self._user_specs[group] = []
+
+        return group_entry
 
     def remove_user_spec(self, user_spec: str) -> None:
         """Removes the user spec passed as input from the default list of root specs

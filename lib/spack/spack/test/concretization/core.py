@@ -4465,7 +4465,10 @@ def test_concretization_cache_roundtrip(
     # ensure subsequent concretizations of the same spec produce the same spec
     # object
     for _ in range(5):
-        assert h == spack.concretize.concretize_one("hdf5")
+        hdf5 = spack.concretize.concretize_one("hdf5")
+
+        assert h.to_json(pretty=True) == hdf5.to_json(pretty=True)
+        assert h == hdf5
 
 
 def test_concretization_cache_roundtrip_result(use_concretization_cache):
@@ -4980,3 +4983,97 @@ def test_virtual_gets_multiple_dupes(mock_packages, config):
     assert len(selected_lines) == 1
     max_dupes_c = selected_lines[0]
     assert 'max_dupes("c",2).' == max_dupes_c, f"should have max_dupes=2, but got: {max_dupes_c}"
+
+
+def test_compiler_selection_when_external_has_variant_penalty(mutable_config, mock_packages):
+    """Tests that a compiler that should be preferred is not swapped with a less preferred
+    compiler because of penalties on variants.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc::
+    externals:
+    - spec: "gcc@15.2.0 languages='c,c++' ~binutils"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+  llvm::
+    buildable: false
+    externals:
+    - spec: "llvm@20 +clang"
+      prefix: /path
+      extra_attributes:
+        compilers:
+          c: /path/bin/gcc
+          cxx: /path/bin/g++
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    concrete = spack.concretize.concretize_one("libdwarf")
+
+    # GCC is the preferred provider, but has a penalty on its variants
+    assert concrete.satisfies("%gcc@15.2.0 ~binutils"), concrete.tree()
+    # LLVM is the second provider choice, with no penalty on variants
+    assert not concrete.satisfies("%llvm@20 +clang")
+
+
+def test_mpi_selection_when_external_has_variant_penalty(mutable_config, mock_packages):
+    """Tests that conflicting with a default provider doesn't cause a variant values to be
+    flipped to avoid the variant dependency.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  all:
+    variants: +mpi
+  mpich:
+    buildable: false
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    concrete = spack.concretize.concretize_one("transitive-conditional-virtual-dependency")
+
+    # GCC is the preferred provider, but has a penalty on its variants
+    assert concrete.satisfies("%conditional-virtual-dependency+mpi"), concrete.tree()
+    # LLVM is the second provider choice, with no penalty on variants
+    assert concrete.satisfies("^mpi=zmpi")
+
+
+def test_preferring_different_compilers_for_different_languages(mutable_config, mock_packages):
+    """Tests that in a case where we prefer different compilers for different languages, steering
+    towards using a unique toolchain is lower priority with respect to flipping variants to turn
+    off a language, or selecting a non-default provider.
+    """
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  all:
+    providers:
+      c:: [llvm, gcc]
+      cxx:: [llvm, gcc]
+      fortran:: [gcc]
+  c:
+    prefer:
+    - llvm
+  cxx:
+    prefer:
+    - llvm
+  fortran:
+    prefer:
+    - gcc
+  mpileaks:
+    variants: +fortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    mpileaks = spack.concretize.concretize_one("mpileaks")
+
+    assert mpileaks.satisfies("%c,cxx=llvm %fortran=gcc"), mpileaks.tree()
+    assert mpileaks.satisfies("%mpi=mpich")
+    assert mpileaks["mpich"].satisfies("%c,cxx=llvm %fortran=gcc")

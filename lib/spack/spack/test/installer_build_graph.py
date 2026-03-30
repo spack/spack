@@ -664,3 +664,26 @@ class TestBuildGraphTestDeps:
         assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
         assert specs_with_test_deps["test_dep"].dag_hash() in graph.nodes
         assert specs_with_test_deps["dep_test_dep"].dag_hash() in graph.nodes
+
+    def test_mark_explicit_spec_excludes_build_only_deps(
+        self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """An installed-implicit spec in explicit_set should only traverse link/run deps,
+        not build-only deps."""
+        root = specs_with_build_deps["root"]
+        install_spec_in_db(root, temporary_store)
+        assert temporary_store.db._data[root.dag_hash()].explicit is False
+        graph = BuildGraph(
+            specs=[root],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            database=temporary_store.db,
+            explicit_set={root.dag_hash()},
+        )
+        # root should be in graph (not pruned) because it needs to be marked explicit.
+        assert root.dag_hash() in graph.nodes
+        # build-only dep should NOT be pulled in since root is already installed.
+        assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes

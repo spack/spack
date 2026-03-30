@@ -321,8 +321,16 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     if depth and protocol_supports_shallow_clone(url):
         fetch.extend(DEPTH(version, str(depth)))
 
-    fetch.extend([*FILTER_BLOB_NONE(version), url, ref])
-    cmds = [init, remote, config, fetch]
+    filter_args = FILTER_BLOB_NONE(version)
+    if filter_args:
+        fetch.extend(filter_args)
+    fetch.extend([url, ref])
+
+    partial_clone = ["config", "extensions.partialClone", "true"] if filter_args else None
+    if partial_clone is not None:
+        cmds = [init, partial_clone, remote, config, fetch]
+    else:
+        cmds = [init, remote, config, fetch]
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 

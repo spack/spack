@@ -61,7 +61,7 @@ def change(parser, args):
 
     match_spec = None
     if args.match_spec:
-        match_spec = spack.spec.Spec(args.match_spec)
+        match_spec = spack.cmd.parse_specs([args.match_spec])[0]
     specs = spack.cmd.parse_specs(args.specs)
 
     with env.write_transaction():

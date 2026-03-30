@@ -4,6 +4,7 @@
 """Test environment internals without CLI"""
 
 import filecmp
+import json
 import os
 import pathlib
 import pickle
@@ -16,6 +17,7 @@ import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.spec_parser
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import (
@@ -1198,7 +1200,10 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_using_toolchain_as_requirement(unify, tmp_path: pathlib.Path, mutable_config):
+@pytest.mark.parametrize("requirement_type", ["require", "prefer"])
+def test_using_toolchain_as_requirement(
+    unify, requirement_type, tmp_path: pathlib.Path, mutable_config
+):
     """Tests using a toolchain as a default requirement in an environment"""
     spack_yaml = f"""
 spack:
@@ -1210,7 +1215,7 @@ spack:
     {MIXED_TOOLCHAIN}
   packages:
     all:
-      require:
+      {requirement_type}:
       - "%mixed-toolchain"
   concretizer:
     unify: {unify}
@@ -1602,7 +1607,8 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        s = spack.spec.Spec("mpileaks %gnu ^callpath %gnu")
+        toolchains = spack.config.CONFIG.get("toolchains", {})
+        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 
@@ -1980,6 +1986,46 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             with pytest.raises(ev.SpackEnvironmentConfigError, match=r"among groups: alpha, beta"):
                 e.concretize()
+
+    def test_from_lockfile_preserves_groups(self, tmp_path):
+        """Tests that EnvironmentManifestFile.from_lockfile reconstructs groups correctly
+        from a v7 lockfile that contains group information in its roots.
+        """
+        lockfile_data = {
+            "_meta": {"file-type": "spack-lockfile", "lockfile-version": 7, "specfile-version": 5},
+            "roots": [
+                {"hash": "aaa", "spec": "mpileaks", "group": "default"},
+                {"hash": "bbb", "spec": "libelf", "group": "default"},
+                {"hash": "ccc", "spec": "gcc@14", "group": "compilers"},
+            ],
+            "concrete_specs": {},
+        }
+        lockfile_path = tmp_path / "spack.lock"
+        lockfile_path.write_text(json.dumps(lockfile_data))
+
+        manifest = EnvironmentManifestFile.from_lockfile(tmp_path)
+
+        # The reconstructed manifest must have both groups
+        assert set(manifest.groups()) == {"default", "compilers"}
+        assert manifest.user_specs(group="default") == ["mpileaks", "libelf"]
+        assert manifest.user_specs(group="compilers") == ["gcc@14"]
+
+    def test_from_lockfile_without_groups_stays_default(self, tmp_path):
+        """Tests that a lockfile without group info (v6 and earlier) reconstructs all specs
+        into the default group only.
+        """
+        lockfile_data = {
+            "_meta": {"file-type": "spack-lockfile", "lockfile-version": 6, "specfile-version": 5},
+            "roots": [{"hash": "aaa", "spec": "mpileaks"}, {"hash": "bbb", "spec": "libelf"}],
+            "concrete_specs": {},
+        }
+        lockfile_path = tmp_path / "spack.lock"
+        lockfile_path.write_text(json.dumps(lockfile_data))
+
+        manifest = EnvironmentManifestFile.from_lockfile(tmp_path)
+
+        assert set(manifest.groups()) == {"default"}
+        assert manifest.user_specs(group="default") == ["mpileaks", "libelf"]
 
 
 @pytest.mark.regression("51995")
