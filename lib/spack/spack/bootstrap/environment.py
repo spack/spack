@@ -107,16 +107,15 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                mirrors = []
-                for mirror in bootstrap_mirror_names():
-                    mirrors.append(
-                        spack.mirrors.mirror.Mirror(
-                            name=mirror,
-                            data=spack.config.get("mirrors", scope=self.scope_name)[mirror],
-                        )
+                mirrors = [
+                    spack.mirrors.mirror.Mirror(
+                        name=mirror,
+                        data=spack.config.get("mirrors", scope=self.scope_name)[mirror],
                     )
+                    for mirror in dev_bootstrap_mirror_names()
+                ]
                 with self.mirror_keys_enabled(*mirrors):
-                    self.install_all(fail_fast=True, root_policy="cache_only", dependencies_policy="cache_only")
+                    self.install_all(fail_fast=True, root_policy="cache_only", install_deps=False)
                     self.write(regenerate=True)
 
     def load(self) -> None:
@@ -161,7 +160,9 @@ def ruff_root_spec() -> str:
     return _root_spec("py-ruff@0.15.0")
 
 
-def bootstrap_mirror_names() -> List[str]:
+def dev_bootstrap_mirror_names() -> List[str]:
+    """Return the mirror names used for bootstrapping dev
+    requirements"""
     return [
         "developer-tools-darwin",
         "developer-tools-x86_64_v3-linux-gnu",

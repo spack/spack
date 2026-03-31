@@ -21,7 +21,6 @@ spack:
 
   packages:
     python:
-      buildable: false
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"

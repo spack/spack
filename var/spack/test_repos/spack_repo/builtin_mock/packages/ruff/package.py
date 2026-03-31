@@ -8,17 +8,17 @@ from spack.package import *
 
 
 class Ruff(Package):
-    """Package containing as many acceptable ``PEP8`` violations as possible.
+    """Package containing ``PEP8`` violations.
 
-    All of these violations are exceptions that we allow in ``package.py`` files, and
-    Spack is more lenient than ``ruff`` is for things like URLs and long SHA sums.
+    Ruff check + format handle most errors robustly and those that
+    cannot be handled directly are infrequent enough we can noqa them
 
-    See ``pyproject.toml`` for specifics of how we handle ``ruff``
-    exemptions.
+    This file contains a number of errors ruff should be able to reformat
+    and pass style over
 
     """
 
-    # Used to tell whether or not the package has been modified
+    # Used to tell whether or not the package has been modifiedå
     state = "unmodified"
 
     # Make sure pre-existing noqa is not interfered with
@@ -57,10 +57,6 @@ class Ruff(Package):
     # ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
     # file://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-ignore-by-default
 
-    # Strings and comments with really long checksums require no noqa annotation.
-    sha512sum = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-    # the sha512sum is "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-
     def install(self, spec, prefix):
         # Make sure lines with '# noqa' work as expected. Don't just
         # remove them entirely. This will mess up the indentation of
@@ -76,6 +72,6 @@ class Ruff(Package):
 
     # '@when' decorated functions are exempt from redefinition errors
     @when("@2.0")
-    def install(self, spec, prefix):
+    def install(self, spec, prefix):  # noqa: F811
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)

@@ -15,7 +15,7 @@ import spack.cmd.style
 import spack.main
 import spack.paths
 import spack.repo
-from spack.cmd.style import _run_import_check, changed_files
+from spack.cmd.style import _run_import_check
 from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
 
@@ -28,14 +28,6 @@ style = spack.main.SpackCommand("style")
 
 RUFF = which("ruff")
 MYPY = which("mypy")
-
-
-@pytest.fixture(autouse=True)
-def has_develop_branch(git):
-    """spack style requires git and a develop branch to run -- skip if we're missing either."""
-    git("show-ref", "--verify", "--quiet", "refs/heads/develop", fail_on_error=False)
-    if git.returncode != 0:
-        pytest.skip("requires git and a develop branch")
 
 
 @pytest.fixture(scope="function")
@@ -78,76 +70,6 @@ def ruff_package_with_errors(scope="function"):
     yield tmp
 
 
-def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path):
-    """Test arbitrary git ref as base."""
-    with working_dir(str(tmp_path)):
-        git("init")
-        git("checkout", "-b", "main")
-        git("config", "user.name", "test user")
-        git("config", "user.email", "test@user.com")
-        git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
-
-        (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
-        (tmp_path / "bin" / "spack").touch()
-        assert changed_files(base="HEAD") == [pathlib.Path("bin/spack")]
-        assert changed_files(base="main") == [pathlib.Path("bin/spack")]
-
-        git("add", "bin/spack")
-        git("commit", "--no-gpg-sign", "-m", "v1")
-        assert changed_files(base="HEAD") == []
-        assert changed_files(base="HEAD~") == [pathlib.Path("bin/spack")]
-
-
-def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
-    """Ensure that we fail gracefully with no base branch."""
-    (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "bin" / "spack").touch()
-    with working_dir(str(tmp_path)):
-        git("init")
-        git("config", "user.name", "test user")
-        git("config", "user.email", "test@user.com")
-        git("add", ".")
-        git("commit", "--no-gpg-sign", "-m", "initial commit")
-
-        with pytest.raises(SystemExit):
-            changed_files(base="foobar")
-
-        out, err = capfd.readouterr()
-        assert "This repository does not have a 'foobar'" in err
-
-
-def test_changed_files_all_files(mock_packages):
-    # it's hard to guarantee "all files", so do some sanity checks.
-    files = {
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
-        for path in changed_files(all_files=True)
-    }
-
-    # spack has a lot of files -- check that we're in the right ballpark
-    assert len(files) > 500
-
-    # a builtin package
-    zlib = spack.repo.PATH.get_pkg_class("zlib")
-    zlib_file = zlib.module.__file__
-    if zlib_file.endswith("pyc"):
-        zlib_file = zlib_file[:-1]
-    assert zlib_file in files
-
-    # a core spack file
-    assert os.path.join(spack.paths.module_path, "spec.py") in files
-
-    # a mock package
-    repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    filename = repo.filename_for_package_name("ruff")
-    assert filename in files
-
-    # this test
-    assert __file__ in files
-
-    # ensure externals are excluded
-    assert not any(f.startswith(spack.paths.vendor_path) for f in files)
-
-
 def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""
     output = style("--root", str(tmp_path), fail_on_error=False)
@@ -156,8 +78,8 @@ def test_bad_root(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def external_style_root(git, ruff_package_with_errors, tmp_path: pathlib.Path):
-    """Create a mock git repository for running spack style."""
+def external_style_root(ruff_package_with_errors, tmp_path: pathlib.Path):
+    """Create a mock repository for running spack style."""
     # create a sort-of spack-looking directory
     script = tmp_path / "bin" / "spack"
     script.parent.mkdir(parents=True, exist_ok=True)
@@ -169,25 +91,10 @@ def external_style_root(git, ruff_package_with_errors, tmp_path: pathlib.Path):
     llnl_dir.mkdir(parents=True, exist_ok=True)
     (llnl_dir / "__init__.py").touch()
 
-    # create a base develop branch
-    with working_dir(str(tmp_path)):
-        git("init")
-        git("config", "user.name", "test user")
-        git("config", "user.email", "test@user.com")
-        git("add", ".")
-        git("commit", "--no-gpg-sign", "-m", "initial commit")
-        git("branch", "-m", "develop")
-        git("checkout", "-b", "feature")
-
     # copy the buggy package in
     py_file = spack_dir / "dummy.py"
     py_file.touch()
     shutil.copy(ruff_package_with_errors, str(py_file))
-
-    # add the buggy file on the feature branch
-    with working_dir(str(tmp_path)):
-        git("add", str(py_file))
-        git("commit", "--no-gpg-sign", "-m", "add new file")
 
     yield tmp_path, py_file
 

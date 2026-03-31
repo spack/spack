@@ -76,7 +76,7 @@ jobs:
           spack bootstrap now
           spack -v solve zlib
     - name: Bootstrap Development Dependencies
-      if: ${{ matrix.python-version != '3.9' && matrix.python-version != '3.8'}}
+      if: ${{ matrix.python-version != '3.9' && matrix.python-version != '3.8' && matrix.python-version != '3.7' }}
       env:
         SPACK_PYTHON: python
       run: |

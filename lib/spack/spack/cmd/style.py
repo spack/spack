@@ -459,6 +459,19 @@ def run_import_check(file_list, args):
     return exit_code
 
 
+def print_style_header(file_list: List[Path], args, tools_to_run):
+    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools_to_run))
+    # translate modified paths to cwd_relative if needed
+    if file_list:
+        paths = file_list
+        if not args.root_relative:
+            paths = [
+                cwd_relative(filename, args.root, args.initial_working_dir) for filename in paths
+            ]
+        tty.msg("Checking Files:", *[str(pth) for pth in paths])
+    sys.stdout.flush()
+
+
 def validate_toolset(arg_value):
     """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
@@ -518,6 +531,8 @@ def style(parser, args):
     tools_to_run = [t for t in tool_names if t in selected]
     if missing_tools(tools_to_run):
         _bootstrap_dev_dependencies()
+
+    print_style_header(file_list, args, tools_to_run)
 
     return_code = 0
     with working_dir(str(args.root)):

@@ -55,6 +55,7 @@ test = "./bin/spack unit-test"
 features = ["dev", "ci"]
 
 [tool.ruff]
+target-version = "py37"
 line-length = 99
 extend-include = [
   "lib/spack/**/*.py",
