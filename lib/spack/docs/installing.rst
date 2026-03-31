@@ -116,13 +116,13 @@ For best results on a cluster, it's recommended to limit per-process package-lev
 Non-interactive mode
 --------------------
 
-In CI pipelines, when redirecting output to a file, or when running in the background, Spack skips the TUI and prints simple line-based status updates instead.
-Use ``-v`` to also print build output.
+When the controlling process is not a tty, such as in CI pipelines, when redirecting output to a file, or when running in the background, Spack skips the TUI and prints simple line-based status updates instead.
+Use ``spack install -v`` to also print build output.
 
 You can also background builds:
 
 * **Suspend and resume**: press ``Ctrl-Z`` to suspend the install, then ``bg`` to let it continue in the background or ``fg`` to bring it back.
-  Child builds are paused while suspended and resumed when foregrounded.
+  Child builds are paused while suspended, and resumed when continued in the background or foreground.
   The TUI is suppressed while backgrounded and restored on ``fg``.
 * **Start in the background**: run ``spack install ... &`` to skip the TUI entirely and build in the background from the start.
 
