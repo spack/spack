@@ -98,6 +98,66 @@ colors = {
     "W": 97,
 }  # white
 
+
+class Style:
+    def __init__(self, style_code: int):
+        self.style = f"\033[{style_code}m"
+
+    def __repr__(self):
+        return self.style
+
+
+class Color:
+    def __init__(self, normal_code: int):
+        self.normal = f"\033[0;{normal_code}m"
+        self.bright = f"\033[0;{normal_code + 60}m"
+
+    def __repr__(self):
+        return self.normal
+
+
+class NullColor:
+    bright = ""
+
+    def __repr__(self):
+        return ""
+
+
+def get_colors(color: Optional[bool] = None):
+    active = get_color_when() if color is None else color
+    return COLORS_ACTIVE() if active else COLORS_INACTIVE()
+
+
+class COLORS_ACTIVE:
+    BLACK = Color(30)
+    RED = Color(31)
+    GREEN = Color(32)
+    YELLOW = Color(33)
+    BLUE = Color(34)
+    MAGENTA = Color(35)
+    CYAN = Color(36)
+    WHITE = Color(37)
+
+    BOLD = Style(1)
+    UNDERLINE = Style(4)
+
+    RESET = "\033[0m"
+
+
+class COLORS_INACTIVE:
+    BLACK = NullColor()
+    RED = NullColor()
+    GREEN = NullColor()
+    YELLOW = NullColor()
+    BLUE = NullColor()
+    MAGENTA = NullColor()
+    CYAN = NullColor()
+    WHITE = NullColor()
+    BOLD = NullColor()
+    UNDERLINE = NullColor()
+    RESET = NullColor()
+
+
 # Regex to be used for color formatting
 COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 

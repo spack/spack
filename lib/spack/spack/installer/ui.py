@@ -15,7 +15,7 @@ import time
 from typing import Callable, Dict, Generator, List, NamedTuple, Optional, Union, cast
 
 import spack.config
-import spack.util.tty.color as tty_color
+import spack.util.tty.color as coloring
 from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
@@ -215,10 +215,11 @@ class TerminalUI(InstallerUI):
         self.terminal_size_changed: bool = True
         self.get_time = get_time
         self.is_tty = is_tty if is_tty is not None else stdout.isatty()
-        if color is not None:
-            self.color = color
-        else:
-            self.color = tty_color.get_color_when(stdout)
+
+        if color is None:
+            color = coloring.get_color_when(stdout)
+        self.color = coloring.get_colors(color)
+
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -362,7 +363,7 @@ class TerminalUI(InstallerUI):
         self.tracked_build_id = new_build_id
 
         # @@ to escape @, @c for cyan, @. for reset
-        version_str = tty_color.colorize(f"@c@@{new_build.version}@.", color=self.color)
+        version_str = f"{self.color.CYAN}@{new_build.version}{self.color.RESET}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
@@ -539,10 +540,6 @@ class TerminalUI(InstallerUI):
         self.total_lines = 0
 
         if not finalize:
-            bold = "@*"
-            reset = "@."
-            cyan = "@c"
-
             if self.actual_jobs != self.target_jobs:
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
@@ -555,17 +552,17 @@ class TerminalUI(InstallerUI):
                 # Need {{}} for Progress because {bold} otherwise consumes one additional character
                 self._println(
                     buffer,
-                    tty_color.colorize(
-                        f"{bold}{{Progress:}}{reset} {self.completed}/{self.total}"
-                        f"  {cyan}+{reset}/{cyan}-{reset}: "
-                        f"{jobs_str} jobs"
-                        f"  {cyan}/{reset}: filter  {cyan}v{reset}: logs"
-                        f"  {cyan}n{reset}/{cyan}p{reset}: next/prev",
-                        color=self.color,
-                    ),
+                    f"{self.color.BOLD}{{Progress:}}{self.color.RESET} {self.completed}/{self.total}"
+                    f"  {self.color.CYAN}+{self.color.RESET}/{self.color.CYAN}-{self.color.RESET}: "
+                    f"{jobs_str} jobs"
+                    f"  {self.color.CYAN}/{self.color.RESET}: filter  {self.color.CYAN}v{self.color.RESET}: logs"
+                    f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}: next/prev",
                 )
             else:
-                self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
+                self._println(
+                    buffer,
+                    f"{self.color.BOLD}Progress:{self.color.RESET} {self.completed}/{self.total}",
+                )
 
         if self.blocked and not has_unfinished:
             self._println(buffer, "Waiting for other Spack install process...")
@@ -639,7 +636,7 @@ class TerminalUI(InstallerUI):
         line_width = 0
         for component in self._generate_line_components(build_info, now=now):
             if max_width > 0:
-                line_width += tty_color.clen(component)
+                line_width += coloring.clen(component)
                 if line_width > max_width:
                     break
             buffer.write(component)
@@ -649,16 +646,6 @@ class TerminalUI(InstallerUI):
     ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
-        cyan = "@c"
-        green = "@g"
-        grey = "@K"
-        red = "@r"
-        white = "@W"
-        reset = "@."
-
-        def colorize(string):
-            return tty_color.colorize(string, color=self.color)
-
         if build_info.external:
             indicator = "[e]"
         elif build_info.state == "finished":
@@ -671,19 +658,20 @@ class TerminalUI(InstallerUI):
             indicator = f"[{SPINNER_CHARS[self.spinner_index]}]"
 
         if build_info.state == "failed":
-            color_code = red
+            color_code = self.color.RED
         elif build_info.state == "finished":
-            color_code = green
+            color_code = self.color.GREEN
         else:
             color_code = ""
 
-        yield colorize(f"{color_code}{indicator}{reset}")
+        yield f"{color_code}{indicator}{self.color.RESET}"
         yield " "
-        yield colorize(f"{grey}{build_info.hash}{reset}")
+        yield f"{self.color.BLACK.bright}{build_info.hash}{self.color.RESET}"
         yield " "
         # Package name in bold white if explicit, default otherwise
-        yield colorize(f"{white if build_info.explicit else ''}{build_info.name}{reset}")
-        yield colorize(f"{cyan}@@{build_info.version}{reset}")  # @@ escapes @
+        name_color = self.color.WHITE.bright if build_info.explicit else ""
+        yield f"{name_color}{build_info.name}{self.color.RESET}"
+        yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
         # progress or state
         if build_info.progress_percent is not None:
@@ -706,4 +694,4 @@ class TerminalUI(InstallerUI):
             else (now - build_info.start_time)
         )
         if elapsed > 0:
-            yield colorize(f"{grey} ({pretty_duration(elapsed)}){reset}")
+            yield f"{self.color.BLACK.bright} {pretty_duration(elapsed)}{self.color.RESET}"
