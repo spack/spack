@@ -866,9 +866,8 @@ class RepoPath:
         """
         if self._patch_index is not None and (self._index_is_fresh or allow_stale):
             return self._patch_index
-        from spack.patch import PatchCache
 
-        index = PatchCache(repository=self)
+        index = spack.patch.PatchCache(repository=self)
         for repo in reversed(self.repos):
             index.update(repo.get_patch_index(allow_stale=allow_stale))
         self._patch_index = index
@@ -890,18 +889,16 @@ class RepoPath:
         Raises:
             PatchLookupError: if a sha256 cannot be found even after a full rebuild.
         """
-        stale_cache = self.get_patch_index(allow_stale=True)
-        if stale_cache is not None:
-            try:
-                return [
-                    stale_cache.patch_for_package(sha256, pkg_cls, validate=True)
-                    for sha256 in sha256s
-                ]
-            except spack.error.PatchLookupError:
-                pass
+        stale_index = self.get_patch_index(allow_stale=True)
+        try:
+            return [
+                stale_index.patch_for_package(sha256, pkg_cls, validate=True) for sha256 in sha256s
+            ]
+        except spack.error.PatchLookupError:
+            pass
 
-        index = self.get_patch_index()
-        return [index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
+        current_index = self.get_patch_index(allow_stale=False)
+        return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         all_packages = self._all_package_names_set(include_virtuals=False)

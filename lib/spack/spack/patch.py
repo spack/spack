@@ -461,7 +461,7 @@ class PatchCache:
                     f"Patch for {pkg.fullname} with sha256 {sha256} has no owner in cache"
                 )
             try:
-                owner_pkg_cls = self.repository.get_pkg_class(owner.split(".")[-1])
+                owner_pkg_cls = self.repository.get_pkg_class(owner)
                 current_index = PatchCache._index_patches(owner_pkg_cls, self.repository)
             except Exception as e:
                 raise spack.error.PatchLookupError(
