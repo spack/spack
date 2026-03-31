@@ -7,6 +7,7 @@ import os
 import types
 
 import pytest
+
 import spack.concretize
 import spack.spec
 from spack.hooks.sbom_generate import post_install
