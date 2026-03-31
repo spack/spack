@@ -284,7 +284,7 @@ def mock_git_version_info(git, tmp_path: Path, redirect_user_repos_cache_path):
 
 
 @pytest.fixture
-def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path, monkeypatch):
+def mock_git_package_changes(git, tmp_path: Path, redirect_user_repos_cache_path):
     """Create a mock git repo with known structure of package edits
 
     The structure of commits in this repo is as follows::
