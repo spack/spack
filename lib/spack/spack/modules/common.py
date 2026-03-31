@@ -416,7 +416,8 @@ class BaseConfiguration:
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Compute the list of matching include / exclude rules, and whether excluded as implicit
+        # Compute the list of matching include / exclude rules,
+        # and whether excluded as implicit or external
         include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
         exclude_matches = [x for x in conf.get("exclude", []) if spec.satisfies(x)]
         excluded_as_implicit = not self.explicit and conf.get("exclude_implicits", False)

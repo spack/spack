@@ -13,6 +13,7 @@ import spack.config
 import spack.error
 import spack.modules
 import spack.modules.common
+import spack.modules.lmod
 import spack.modules.tcl
 import spack.package_base
 import spack.package_prefs
@@ -230,3 +231,19 @@ def test_module_writers_are_pickleable(default_mock_concretization, module_type)
     s = default_mock_concretization("mpileaks")
     writer = spack.modules.module_types[module_type](s, "default")
     assert pickle.loads(pickle.dumps(writer)).spec == s
+
+
+def test_modules_externals_can_be_excluded():
+    # The code tested is common to all module types, but has to be tested from
+    # one. This test uses Lmod.
+    spack.config.set("modules:mpileaks:lmod", {"exclude_externals": False})
+    spec = spack.concretize.concretize_one("mpileaks")
+    lconf = spack.modules.lmod.LmodConfiguration(spec, "mpileaks", False)
+    assert not lconf.excluded
+
+    # fake that the spec is external
+    spec.external_path = True
+    assert not lconf.excluded
+
+    spack.config.set("modules:mpileaks:lmod", {"exclude_externals": True})
+    assert lconf.excluded
