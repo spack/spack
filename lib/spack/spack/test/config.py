@@ -6,6 +6,7 @@ import collections
 import io
 import os
 import pathlib
+import shutil
 import stat
 import sys
 import tempfile
@@ -1722,7 +1723,7 @@ def test_included_path_string(
     assert len(scopes) == 1
     assert isinstance(scopes[0], spack.config.SingleFileScope)
 
-    # Second pass uses the scopes previously built
+    # Second pass uses the previously built scope
     assert include._scopes is not None
     scopes = include.scopes(parent_scope)
     captured = capfd.readouterr()[1]
@@ -1784,6 +1785,7 @@ def test_included_path_destination(
     tmp_path: pathlib.Path, mock_fetch_url_text, mock_low_high_config, ensure_debug
 ):
     destination = tmp_path / "remotes"
+    fs.mkdirp(str(destination))
     entry = {
         "path": "https://github.com/path/to/raw/config/config.yaml",
         "destination": str(destination),
@@ -1795,7 +1797,7 @@ def test_included_path_destination(
 
     # confirm proper remote include with destination works
     if sys.platform != "win32":
-        entry["sha256"] = "805ab8e677f83311a141e948674e5a3ad57d94b54fc126d410a853937ca8255f"
+        entry["sha256"] = "fdfde5b0a67544eeda35e2351e829de9310a5b407ce6fda160ddb7a25094f663"
     else:
         entry["sha256"] = "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
 
@@ -1899,9 +1901,6 @@ def test_included_path_git(
     assert isinstance(include, spack.config.GitIncludePaths)
     assert not include.optional and include.evaluate_condition()
 
-    destination = include.base_directory(include.git)
-    assert destination and not os.path.exists(destination)
-
     # set up minimal git and repository operations
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):
@@ -1964,7 +1963,7 @@ def test_included_path_local_no_dest(path):
     """Confirm that local paths have no cache destination."""
     entry = {"path": path}
     include = spack.config.included_path(entry)
-    destination = include.base_directory(entry["path"])
+    destination = include.base_directory(path)
     assert not destination, f"Expected local include ({include}) to NOT have a cache destination"
 
 
@@ -2017,7 +2016,6 @@ def test_included_path_git_default_paths(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, paths, dest
 ):
     """Confirm the default selection of paths."""
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 
     class MockIncludeGit(spack.util.executable.Executable):
         def __init__(self, required: bool):
@@ -2043,7 +2041,8 @@ def test_included_path_git_default_paths(
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
 
-    destination = path if dest else include._destination_directory(include.git)
+    parent_scope = mock_low_high_config.scopes["low"]
+    destination = path if path else include.base_directory(include.git, parent_scope)
 
     # set up minimal git and repository operations
     monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
@@ -2065,17 +2064,18 @@ def test_included_path_git_default_paths(
     monkeypatch.setattr(spack.util.git, "pull_checkout_branch", _checkout)
 
     # Ensure the repository is cloned and the paths, if any, are chosen
-    parent_scope = mock_low_high_config.scopes["low"]
-    scopes = include.scopes(parent_scope)
-    assert len(scopes) == len(paths)
-    for scope in scopes:
-        assert isinstance(scope, spack.config.SingleFileScope)
-        assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+    try:
+        scopes = include.scopes(parent_scope)
+        assert len(scopes) == len(paths)
+        for scope in scopes:
+            assert isinstance(scope, spack.config.SingleFileScope)
+            assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+    finally:
+        # Clean up between parameterized tests.
+        shutil.rmtree(str(include.destination))
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
-
     paths = ["concretizer.yaml"]
     entry = {
         "git": "https://example.com/linux/configs.git",
@@ -2260,18 +2260,18 @@ def test_included_path_unwritable_dest(tmp_path: pathlib.Path, mock_fetch_url_te
     sha256 = (
         "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
         if sys.platform == "win32"
-        else "805ab8e677f83311a141e948674e5a3ad57d94b54fc126d410a853937ca8255f"
+        else "fdfde5b0a67544eeda35e2351e829de9310a5b407ce6fda160ddb7a25094f663"
     )
     entry = {
         "path": "https://github.com/path/to/raw/config/config.yaml",
         "destination": str(dest),
         "sha256": sha256,
     }
-    include = spack.config.included_path(entry)
 
-    parent_scope = spack.config.ConfigScope("FakeScope")
     try:
-        with pytest.raises(AssertionError, match="to unwritable"):
+        include = spack.config.included_path(entry)
+        parent_scope = spack.config.ConfigScope("fake")
+        with pytest.raises(AssertionError, match="Unable to write to"):
             include.scopes(parent_scope)
     finally:
         dest.chmod(current_mode)
@@ -2290,11 +2290,11 @@ def test_included_path_git_unwritable_dest(tmp_path: pathlib.Path):
         "paths": ["config.yaml"],
         "destination": str(dest),
     }
-    include = spack.config.included_path(entry)
 
     parent_scope = spack.config.ConfigScope("fake")
     try:
-        with pytest.raises(AssertionError, match="to unwritable"):
+        include = spack.config.included_path(entry)
+        with pytest.raises(spack.error.ConfigError, match="Unable to initialize"):
             include.scopes(parent_scope)
     finally:
         dest.chmod(current_mode)
