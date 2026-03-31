@@ -1799,7 +1799,7 @@ def test_included_path_destination(
     if sys.platform != "win32":
         entry["sha256"] = "fdfde5b0a67544eeda35e2351e829de9310a5b407ce6fda160ddb7a25094f663"
     else:
-        entry["sha256"] = "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
+        entry["sha256"] = "4672076f2085f5c266308ce4dfcb026dbb7bd146d5aa4d4e88f1590a1c72c335"
 
     include = spack.config.included_path(entry)
     assert include.scopes(mock_low_high_config.scopes["low"])
@@ -2258,7 +2258,7 @@ def test_included_path_unwritable_dest(tmp_path: pathlib.Path, mock_fetch_url_te
     dest.chmod(current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
 
     sha256 = (
-        "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
+        "4672076f2085f5c266308ce4dfcb026dbb7bd146d5aa4d4e88f1590a1c72c335"
         if sys.platform == "win32"
         else "fdfde5b0a67544eeda35e2351e829de9310a5b407ce6fda160ddb7a25094f663"
     )
