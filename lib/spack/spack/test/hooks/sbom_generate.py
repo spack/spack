@@ -174,7 +174,9 @@ def test_sbom_dependency_supplier_uses_dependency_package(
     monkeypatch.setattr(root_pkg, "supplier", None, raising=False)
     monkeypatch.setattr(root_pkg, "git", "https://github.com/root-org/mpileaks.git", raising=False)
     monkeypatch.setattr(dep.package, "supplier", None, raising=False)
-    monkeypatch.setattr(dep.package, "git", "https://github.com/dep-org/callpath.git", raising=False)
+    monkeypatch.setattr(
+        dep.package, "git", "https://github.com/dep-org/callpath.git", raising=False
+    )
 
     post_install(spec)
 
