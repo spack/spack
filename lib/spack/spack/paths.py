@@ -139,14 +139,6 @@ class SpackPaths:
     def user_cache_path(self):
         return self.state_home
 
-    @contextmanager
-    def redirect_state_home(self, x):
-        old = self._state_home
-        self._state_home = x
-        yield
-        if old:
-            self._state_home = old
-
     @property
     def default_install_location(self):
         return self._decide_old_or_new_location(
@@ -220,10 +212,18 @@ class SpackPaths:
             return self._user_repos_cache_path
         return os.path.join(self.state_home, "git_repos")
 
-    @user_repos_cache_path.setter
-    def user_repos_cache_path(self, val):
-        # setter for tests
-        self._user_repos_cache_path = val
+    @contextmanager
+    def redirect_state_home(self, x):
+        old = self._state_home
+        self._state_home = x
+        yield
+        self._state_home = old
+
+    @contextmanager
+    def redirect_user_repos_cache_path(self, x):
+        self._user_repos_cache_path = x
+        yield
+        delattr(self, "_user_repos_cache_path")
 
     @property
     def package_repos_path(self):

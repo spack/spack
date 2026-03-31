@@ -157,20 +157,28 @@ def override_path(monkeypatch):
         if hasattr(spack.paths_base.locations, path_attr):
             monkeypatch.setattr(spack.paths_base.locations, path_attr, new_path)
         elif hasattr(spack.paths.locations, path_attr):
-            monkeypatch.setattr(spack.paths.locations, path_attr, new_path)
+            raise ValueError(
+                "To redirect individual spack.paths attributes, use (or add)"
+                " an appropriate redirect to spack.paths and conftest"
+            )
 
     return _override
 
 
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path, monkeypatch, override_path):
+def redirect_user_repos_cache_path(tmp_path: Path):
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    override_path("user_repos_cache_path", str(tmp_git_path))
+    spack.paths.locations.redirect_user_repos_cache_path(tmp_git_path)
 
 
 @pytest.fixture
-def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
+def redirect_user_cache(tmp_path: Path):
+    spack.paths.locations.redirect_state_home(tmp_path)
+
+
+@pytest.fixture
+def mock_git_version_info(git, tmp_path: Path, redirect_user_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::

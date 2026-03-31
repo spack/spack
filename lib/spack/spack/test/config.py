@@ -1924,11 +1924,6 @@ def test_included_path_git_temp_dest(mock_low_high_config):
         assert dest_dir == temp_dir, pre + rest
 
 
-@pytest.fixture
-def redirect_user_cache(tmp_path: pathlib.Path):
-    spack_paths.redirect_state_home(tmp_path)
-
-
 def test_included_path_git_errs(mock_low_high_config, monkeypatch, redirect_user_cache):
     paths = ["concretizer.yaml"]
     entry = {
