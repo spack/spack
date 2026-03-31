@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+
 import importlib
 import sys
 import time
@@ -260,9 +261,9 @@ def concretize_one(
         name = providers[0]
 
     node = SpecBuilder.make_node(pkg=name)
-    assert (
-        node in answer
-    ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    assert node in answer, (
+        f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    )
 
     concretized = answer[node]
     return concretized

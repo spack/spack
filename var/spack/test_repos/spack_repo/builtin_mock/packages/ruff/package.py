@@ -31,7 +31,7 @@ class Ruff(Package):
     #
     # but the one below can't even be fixed that way -- you have to add noqa, or break
     # it up inside parens yourself.
-    blatant_violation = "line-that-has-absolutely-no-execuse-for-being-over-99-characters-and-that-black-cannot-fix-with-parens" # noqa: E501
+    blatant_violation = "line-that-has-absolutely-no-execuse-for-being-over-99-characters-and-that-black-cannot-fix-with-parens"  # noqa: E501
 
     # All URL strings are exempt from line-length checks.
     #

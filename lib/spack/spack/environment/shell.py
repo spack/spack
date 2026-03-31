@@ -194,7 +194,7 @@ def activate(
             "Environment view is broken due to a missing package or repo.\n",
             "  To activate without views enabled, activate with:\n",
             "    spack env activate -V {0}\n".format(env.name),
-            "  To remove it and resolve the issue, " "force concretize with the command:\n",
+            "  To remove it and resolve the issue, force concretize with the command:\n",
             "    spack -e {0} concretize --force".format(env.name),
         )
 

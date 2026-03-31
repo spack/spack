@@ -7,6 +7,7 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
+
 import argparse
 import gc
 import inspect
@@ -155,7 +156,6 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
 
     def add_argument(self, action):
         if action.help is not argparse.SUPPRESS:
-
             # find all invocations
             get_invocation = self._format_action_invocation
             invocation_lengths = [color.clen(get_invocation(action)) + self._current_indent]
@@ -886,8 +886,7 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
                 )
             if key in all_commands:
                 tty.warn(
-                    f"Alias '{key}' (mapping to '{value}') attempts to override"
-                    " built-in command."
+                    f"Alias '{key}' (mapping to '{value}') attempts to override built-in command."
                 )
 
     if cmd_name not in all_commands:

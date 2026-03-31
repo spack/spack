@@ -6,6 +6,7 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
+
 import os
 import re
 import subprocess
@@ -148,7 +149,7 @@ def path_from_modules(modules):
         candidate_path = get_path_from_module_contents(text, module_name)
 
         if candidate_path and not os.path.exists(candidate_path):
-            msg = "Extracted path from module does not exist " "[module={0}, path={1}]"
+            msg = "Extracted path from module does not exist [module={0}, path={1}]"
             tty.warn(msg.format(module_name, candidate_path))
 
         # If anything is found, then it's the best choice. This means

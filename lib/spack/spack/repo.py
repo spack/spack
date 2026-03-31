@@ -540,9 +540,8 @@ class ProviderIndexer(Indexer):
         self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
     def update(self, pkgs_fullname: Set[str]):
-        is_virtual = (
-            lambda name: not self.repository.exists(name)
-            or self.repository.get_pkg_class(name).virtual
+        is_virtual = lambda name: (
+            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
         )
         non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
         non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}

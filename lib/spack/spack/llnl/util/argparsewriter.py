@@ -263,9 +263,7 @@ class ArgparseRstWriter(ArgparseWriter):
 {1}
 {2}
 
-""".format(
-            prog.replace(" ", "-"), prog, self.rst_levels[self.level] * len(prog)
-        )
+""".format(prog.replace(" ", "-"), prog, self.rst_levels[self.level] * len(prog))
 
     def description(self, description: str) -> str:
         """Description of a command.
@@ -292,9 +290,7 @@ class ArgparseRstWriter(ArgparseWriter):
 
     {0}
 
-""".format(
-            usage
-        )
+""".format(usage)
 
     def begin_positionals(self) -> str:
         """Text to print before positional arguments.
@@ -318,9 +314,7 @@ class ArgparseRstWriter(ArgparseWriter):
 ``{0}``
   {1}
 
-""".format(
-            name, help
-        )
+""".format(name, help)
 
     def end_positionals(self) -> str:
         """Text to print after positional arguments.
@@ -352,9 +346,7 @@ class ArgparseRstWriter(ArgparseWriter):
 ``{0}``
   {1}
 
-""".format(
-            opts, help
-        )
+""".format(opts, help)
 
     def end_optionals(self) -> str:
         """Text to print after optional arguments.

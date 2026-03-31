@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for bootstrap.yaml configuration file."""
+
 from typing import Any, Dict
 
 #: Schema of a single source
@@ -28,11 +29,11 @@ _dev_schema: Dict[str, Any] = {
     "type": "object",
     "description": "Dev Bootstrap configuration",
     "properties": {
-        "enable_source" : {
-            "type" : "boolean",
-            "description": "Enable bootstrapping dev dependencies from source"
+        "enable_source": {
+            "type": "boolean",
+            "description": "Enable bootstrapping dev dependencies from source",
         }
-    }
+    },
 }
 
 properties: Dict[str, Any] = {
@@ -60,7 +61,7 @@ properties: Dict[str, Any] = {
                 "additionalProperties": {"type": "boolean"},
                 "description": "Controls which sources are enabled for automatic bootstrapping",
             },
-            "dev" : _dev_schema
+            "dev": _dev_schema,
         },
     }
 }

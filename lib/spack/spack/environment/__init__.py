@@ -495,10 +495,11 @@ Version 6
 Version 6 uses specs where compilers are modeled as real dependencies, and not as a node attribute.
 It doesn't change the top-level lockfile format.
 
-As part of Spack v1.0, compilers stopped being a node attribute, and became a build-only dependency. Packages may
-declare a dependency on the c, cxx, or fortran languages, which are now treated as virtuals, and compilers would
-be providers for one or more of those languages. Compilers can also inject runtime dependency, on the node being
-compiled. The compiler-wrapper is explicitly represented as a node in the DAG, and enters the hash.
+As part of Spack v1.0, compilers stopped being a node attribute, and became a build-only
+dependency. Packages may declare a dependency on the c, cxx, or fortran languages, which are now
+treated as virtuals, and compilers would be providers for one or more of those languages. Compilers
+can also inject runtime dependency, on the node being compiled. The compiler-wrapper is explicitly
+represented as a node in the DAG, and enters the hash.
 
 .. code-block:: json
 

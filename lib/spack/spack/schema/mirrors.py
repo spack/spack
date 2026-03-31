@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/mirrors.py
    :lines: 13-
 """
+
 from typing import Any, Dict
 
 #: Common properties for connection specification

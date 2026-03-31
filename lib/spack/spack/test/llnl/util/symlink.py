@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for Windows symlink functionality."""
+
 import os
 import pathlib
 import tempfile

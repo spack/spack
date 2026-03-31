@@ -146,8 +146,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
     remove_parser.add_argument(
         "path",
-        help="colon-separated path to config that should be removed,"
-        " e.g. 'config:default:true'",
+        help="colon-separated path to config that should be removed, e.g. 'config:default:true'",
     )
 
     # Make the add parser available later

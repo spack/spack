@@ -100,9 +100,9 @@ def local_path(raw_path: str, sha256: str, dest: Optional[str] = None) -> str:
         if url.scheme in ("http", "https", "ftp"):
             if not dest:
                 raise ValueError("Requires the destination argument to cache remote files")
-            assert os.path.isabs(
-                dest
-            ), f"Remote file destination '{dest}' must be an absolute path"
+            assert os.path.isabs(dest), (
+                f"Remote file destination '{dest}' must be an absolute path"
+            )
 
             # Stage the remote configuration file
             tmpdir = tempfile.mkdtemp()

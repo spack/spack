@@ -392,7 +392,11 @@ def test_conditional_patched_dependencies(mock_packages, config):
 
 
 def check_multi_dependency_patch_specs(
-    libelf, libdwarf, fake, owner, package_dir  # specs
+    libelf,
+    libdwarf,
+    fake,
+    owner,
+    package_dir,  # specs
 ):  # parent spec properties
     """Validate patches on dependencies of patch-several-dependencies."""
     # basic patch on libelf

@@ -26,8 +26,7 @@ style_data = os.path.join(spack.paths.test_path, "data", "style")
 style = spack.main.SpackCommand("style")
 
 pytestmark = pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="CI uses cross drive paths that raise errors with relpath"
+    sys.platform == "win32", reason="CI uses cross drive paths that raise errors with relpath"
 )
 
 RUFF = which("ruff")
@@ -150,6 +149,7 @@ def test_changed_files_all_files(mock_packages):
 
     # ensure externals are excluded
     assert not any(f.startswith(spack.paths.vendor_path) for f in files)
+
 
 def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""

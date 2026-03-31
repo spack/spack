@@ -1126,7 +1126,7 @@ class TestSpecSemantics:
         fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
-        assert " it is handled by an attribute of the 'values' " "argument" in str(exc_info.value)
+        assert " it is handled by an attribute of the 'values' argument" in str(exc_info.value)
 
         # We can't leave None as a default value
         fn = variant("foo", default=None)
@@ -2135,7 +2135,9 @@ def test_virtual_queries_work_for_strings_and_lists():
     """Ensure that ``dependencies()`` works with both virtuals=str and virtuals=[str, ...]."""
     parent, child = Spec("parent"), Spec("child")
     parent._add_dependency(
-        child, depflag=dt.BUILD, virtuals=("cxx", "fortran")  # multi-char dep names
+        child,
+        depflag=dt.BUILD,
+        virtuals=("cxx", "fortran"),  # multi-char dep names
     )
 
     assert not parent.dependencies(virtuals="c")  # not in virtuals but shares a char with cxx

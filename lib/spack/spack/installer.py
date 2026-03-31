@@ -1289,9 +1289,9 @@ class BuildTask(Task):
     def poll(self):
         """Check if task has successfully executed, caused an InstallError,
         or the child process has information ready to receive."""
-        assert (
-            self.started or self.no_op
-        ), "Can't call `poll()` before `start()` or identified no-operation task"
+        assert self.started or self.no_op, (
+            "Can't call `poll()` before `start()` or identified no-operation task"
+        )
         return self.no_op or self.success_result or self.error_result or self.process_handle.poll()
 
     def succeed(self):
@@ -1324,9 +1324,9 @@ class BuildTask(Task):
         Complete the installation of the requested spec and/or dependency
         represented by the build task.
         """
-        assert (
-            self.started or self.no_op
-        ), "Can't call `complete()` before `start()` or identified no-operation task"
+        assert self.started or self.no_op, (
+            "Can't call `complete()` before `start()` or identified no-operation task"
+        )
         pkg = self.pkg
 
         self.status = BuildStatus.INSTALLING
@@ -1841,10 +1841,9 @@ class PackageInstaller:
         Return:
             (lock_type, lock) tuple where lock will be None if it could not be obtained
         """
-        assert lock_type in [
-            "read",
-            "write",
-        ], f'"{lock_type}" is not a supported package management lock type'
+        assert lock_type in ["read", "write"], (
+            f'"{lock_type}" is not a supported package management lock type'
+        )
 
         pkg_id = package_id(pkg.spec)
         ltype, lock = self.locks.get(pkg_id, (lock_type, None))
@@ -2380,9 +2379,7 @@ class PackageInstaller:
         except KeyboardInterrupt as exc:
             # The build has been terminated with a Ctrl-C so terminate
             # regardless of the number of remaining specs.
-            tty.error(
-                f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
-            )
+            tty.error(f"Failed to install {pkg.name} due to {exc.__class__.__name__}: {str(exc)}")
             raise
 
         except BuildcacheEntryError as exc:
@@ -2423,7 +2420,7 @@ class PackageInstaller:
                 # lower levels -- skip printing if already printed.
                 # TODO: sort out this and SpackError.print_context()
                 tty.error(
-                    f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
+                    f"Failed to install {pkg.name} due to {exc.__class__.__name__}: {str(exc)}"
                 )
             # Terminate if requested to do so on the first failure.
             if self.fail_fast:
@@ -2524,7 +2521,7 @@ class PackageInstaller:
             # be dependencies of this task.
             term_status.clear()
             tty.error(
-                f"Detected uninstalled dependencies for {task.pkg_id}: " f"{task.uninstalled_deps}"
+                f"Detected uninstalled dependencies for {task.pkg_id}: {task.uninstalled_deps}"
             )
             left = [dep_id for dep_id in task.uninstalled_deps if dep_id not in self.installed]
             if not left:

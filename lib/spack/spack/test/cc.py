@@ -6,6 +6,7 @@
 This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
+
 import os
 
 import pytest

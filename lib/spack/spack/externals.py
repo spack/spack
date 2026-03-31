@@ -14,6 +14,7 @@ This is mainly done by the ``ExternalSpecsParser`` class, which is responsible f
 The helper function ``extract_dicts_from_configuration`` is used to transform the configuration
 into the intermediate representation.
 """
+
 import re
 import uuid
 import warnings

@@ -240,7 +240,7 @@ class LinkParser(HTMLParser):
 
         # GitLab uses a javascript function to place dropdown links:
         #  <div class="js-source-code-dropdown" ...
-        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>
+        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>  # noqa: E501
         if tag == "div" and ("class", "js-source-code-dropdown") in attrs:
             try:
                 links_str = next(val for key, val in attrs if key == "data-download-links")

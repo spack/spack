@@ -487,7 +487,7 @@ def match_predicate(*args):
                     return True
             else:
                 raise ValueError(
-                    "args to match_predicate must be regex, " "list of regexes, or callable."
+                    "args to match_predicate must be regex, list of regexes, or callable."
                 )
         return False
 

@@ -19,6 +19,7 @@ This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom
 features.
 """
+
 import importlib
 import types
 from typing import List, Optional

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Wrapper for ``spack.llnl.util.lock`` allows locking to be enabled/disabled."""
+
 import os
 import stat
 import sys

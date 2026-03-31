@@ -5,6 +5,7 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
 import pathlib
@@ -280,9 +281,7 @@ all:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
+""".format(group_name)
     )
     spack.config.set("packages", conf, scope="user")
 

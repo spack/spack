@@ -104,7 +104,6 @@ def stage(parser, args):
 def _stage_env(env: ev.Environment, filter):
     tty.msg(f"Staging specs from environment {env.name}")
     for spec in spack.traverse.traverse_nodes(env.concrete_roots()):
-
         if filter(spec):
             continue
 

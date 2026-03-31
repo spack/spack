@@ -33,7 +33,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
     ],
 )
 def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, monkeypatch):
-    TEMPLATE = "#!/bin/sh\n" 'echo "{version}"\n'
+    TEMPLATE = '#!/bin/sh\necho "{version}"\n'
 
     with fs.working_dir(str(tmp_path)):
         for fname in (cmd_name, "gpgconf"):

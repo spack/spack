@@ -46,6 +46,7 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.
 """
+
 import collections
 import collections.abc
 import enum
@@ -928,7 +929,6 @@ def _shared_subset_pair_iterate(container1, container2):
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
-
     def satisfies(self, other):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
@@ -2909,9 +2909,9 @@ class Spec:
 
         # ensure that patch state is consistent
         patch_variant = self.variants["patches"]
-        assert hasattr(
-            patch_variant, "_patches_in_order_of_appearance"
-        ), "patches should always be assigned with a patch variant."
+        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), (
+            "patches should always be assigned with a patch variant."
+        )
 
         return True
 
@@ -5173,7 +5173,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         # Raise an error if name and vspec.name don't match
         if name != vspec.name:
             raise KeyError(
-                f'Inconsistent key "{name}", must be "{vspec.name}" to ' "match VariantSpec"
+                f'Inconsistent key "{name}", must be "{vspec.name}" to match VariantSpec'
             )
 
         # Set the item

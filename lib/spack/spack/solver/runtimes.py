@@ -115,7 +115,7 @@ class RuntimePropertyRecorder:
                     f"  provider(ProviderNode, {runtime_node}),\n"
                 )
 
-            rule = f"{head_str} :-\n" f"{depends_on_constraint}" f"{body_str}."
+            rule = f"{head_str} :-\n{depends_on_constraint}{body_str}."
             self.rules.append(rule)
 
         self.reset()

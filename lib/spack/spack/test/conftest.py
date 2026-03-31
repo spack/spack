@@ -2256,9 +2256,7 @@ def binary_with_rpaths(prefix_tmpdir: Path):
         int main(){{
             printf("{0}");
         }}
-        """.format(
-                message
-            )
+        """.format(message)
         )
         gcc = spack.util.executable.which("gcc", required=True)
         executable = source.parent / "main.x"

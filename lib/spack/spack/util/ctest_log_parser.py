@@ -68,6 +68,7 @@ algorithms that duplicate the way CTest scrapes log files.  To keep this
 up to date with CTest, just make sure the ``*_matches`` and
 ``*_exceptions`` lists are kept up to date with CTest's build handler.
 """
+
 import io
 import math
 import re
@@ -418,7 +419,6 @@ class CTestLogParser:
             ("warning_matches", _warning_matches),
             ("warning_exceptions", _warning_exceptions),
         ]:
-
             print()
             print(name)
             for i, elt in enumerate(arr):

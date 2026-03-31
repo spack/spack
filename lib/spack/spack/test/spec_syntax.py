@@ -417,12 +417,12 @@ def specfile_for(default_mock_concretization):
         ),
         # Version hash pair
         (
-            rf"develop-branch-version@{'abc12'*8}=develop",
+            rf"develop-branch-version@{'abc12' * 8}=develop",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="develop-branch-version"),
-                Token(SpecTokens.VERSION_HASH_PAIR, value=f"@{'abc12'*8}=develop"),
+                Token(SpecTokens.VERSION_HASH_PAIR, value=f"@{'abc12' * 8}=develop"),
             ],
-            rf"develop-branch-version@{'abc12'*8}=develop",
+            rf"develop-branch-version@{'abc12' * 8}=develop",
         ),
         # Redundant specs
         (
@@ -1655,7 +1655,7 @@ def test_parse_specfile_dependency(default_mock_concretization, tmp_path: pathli
 
         # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
         spec = SpecParser(
-            f"libdwarf^..{os.path.sep}{specfile.parent.name}" f"{os.path.sep}{specfile.name}"
+            f"libdwarf^..{os.path.sep}{specfile.parent.name}{os.path.sep}{specfile.name}"
         ).next_spec()
         assert spec and spec["libelf"] == s["libelf"]
 

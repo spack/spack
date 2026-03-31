@@ -4,7 +4,6 @@
 
 import pathlib
 
-
 import spack.cmd.common.spec_strings
 
 
@@ -111,6 +110,3 @@ spec:
 "x=y %gcc": 2
 """
     )
-
-
-

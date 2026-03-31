@@ -4,6 +4,7 @@
 """String manipulation functions that do not have other dependencies than Python
 standard library
 """
+
 from typing import List, Optional, Sequence
 
 

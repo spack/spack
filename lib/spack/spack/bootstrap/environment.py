@@ -82,7 +82,6 @@ class BootstrapEnvironment(spack.environment.Environment):
             spack.binary_distribution.get_keys(install=True, trust=True)
             yield
 
-
     def update_installations(self) -> None:
         """Update the installations of this environment."""
         log_enabled = tty.is_debug() or tty.is_verbose()

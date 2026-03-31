@@ -2196,7 +2196,6 @@ class StdinReader:
 
 
 class PackageInstaller:
-
     explicit: Set[str]
 
     def __init__(

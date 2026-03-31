@@ -147,9 +147,7 @@ def _ensure_bootstrap_configuration() -> Generator:
     ), spack.config.use_configuration(
         # Default configuration scopes excluding command line and builtin
         *_bootstrap_config_scopes()
-    ), spack.store.use_store(
-        bootstrap_store_path, extra_data={"padded_length": 0}
-    ):
+    ), spack.store.use_store(bootstrap_store_path, extra_data={"padded_length": 0}):
         spack.config.set("bootstrap", user_configuration["bootstrap"])
         spack.config.set("config", user_configuration["config"])
         spack.config.set("repos", user_configuration["repos"])

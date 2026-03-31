@@ -150,9 +150,7 @@ spack:
   view: true
   concretizer:
     unify: {}
-""".format(
-        "true" if spack.config.get("concretizer:unify") else "false"
-    )
+""".format("true" if spack.config.get("concretizer:unify") else "false")
 
 
 sep_re = re.escape(os.sep)
@@ -1720,9 +1718,9 @@ class Environment:
         discarded, self.concretized_roots = stable_partition(
             self.concretized_roots, lambda x: x.group == group and x.root == spec
         )
-        assert (
-            len({x.hash for x in discarded}) == 1
-        ), "More than one hash associated with a single user spec"
+        assert len({x.hash for x in discarded}) == 1, (
+            "More than one hash associated with a single user spec"
+        )
         dag_hash = discarded[0].hash
         self._maybe_remove_dag_hash(dag_hash)
 

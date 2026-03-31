@@ -67,9 +67,7 @@ def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
         f.write(
             """#!/bin/sh
 echo {0}
-""".format(
-                sha
-            )
+""".format(sha)
         )
     fs.set_executable(str(git))
 

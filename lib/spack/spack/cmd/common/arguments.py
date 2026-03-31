@@ -105,7 +105,7 @@ class SetParallelJobs(argparse.Action):
         # Jobs is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
         if jobs < 1:
-            msg = 'invalid value for argument "{0}" ' '[expected a positive integer, got "{1}"]'
+            msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
         spack.config.set("config:build_jobs", jobs, scope="command_line")
@@ -122,7 +122,7 @@ class SetConcurrentPackages(argparse.Action):
 
     def __call__(self, parser, namespace, concurrent_packages, option_string):
         if concurrent_packages < 1:
-            msg = 'invalid value for argument "{0}" ' '[expected a positive integer, got "{1}"]'
+            msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, concurrent_packages))
 
         spack.config.set("config:concurrent_packages", concurrent_packages, scope="command_line")
@@ -513,10 +513,10 @@ def add_cdash_args(subparser, add_help):
             "defaults to spec of the package to operate on"
         )
         cdash_help["site"] = (
-            "site name that will be reported to CDash\n\n" "defaults to current system hostname"
+            "site name that will be reported to CDash\n\ndefaults to current system hostname"
         )
         cdash_help["track"] = (
-            "results will be reported to this group on CDash\n\n" "defaults to Experimental"
+            "results will be reported to this group on CDash\n\ndefaults to Experimental"
         )
         cdash_help["buildstamp"] = (
             "use custom buildstamp\n\n"
