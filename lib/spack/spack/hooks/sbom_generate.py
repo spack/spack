@@ -39,7 +39,7 @@ def post_install(spec, explicit=None):
         if not license_data:
             return "NOASSERTION"
 
-        licenses = [license for when, lic in license_data.items() if pkg.spec.satisfies(when)]
+        licenses = [lic for when, lic in license_data.items() if pkg.spec.satisfies(when)]
 
         return " OR ".join(licenses) if licenses else "NOASSERTION"
 

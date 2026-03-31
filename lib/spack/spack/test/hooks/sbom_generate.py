@@ -7,8 +7,8 @@ import os
 import types
 
 import pytest
-
 import spack.concretize
+import spack.spec
 from spack.hooks.sbom_generate import post_install
 from spack.store import STORE
 
@@ -162,7 +162,8 @@ def test_sbom_supplier_derived_from_git_url(
 
 
 @pytest.mark.parametrize(
-    "licenses,expected", [({"main": "MIT"}, "MIT"), ({}, "NOASSERTION"), (None, None)]
+    "licenses,expected",
+    [({spack.spec.Spec(): "MIT"}, "MIT"), ({}, "NOASSERTION"), (None, "NOASSERTION")],
 )
 def test_sbom_license_declared_from_package_licenses(
     mock_packages, install_mockery, monkeypatch, licenses, expected
