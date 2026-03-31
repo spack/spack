@@ -12,6 +12,7 @@ import spack.util.spack_json as sjson
 from spack.llnl.util import tty
 from spack.store import STORE
 
+
 # SPDX 2.3 Generation
 def generate_spdx_2_3(spec):
     pkg = spec.package
@@ -160,6 +161,7 @@ def generate_spdx_2_3(spec):
     with open(sbom_path, "w", encoding="utf-8") as f:
         sjson.dump(sbom, f)
     tty.debug(f"[SBOM] Wrote SPDX 2.3 SBOM to {sbom_path}")
+
 
 # Post-install hook that generates SBOMs
 def post_install(spec, explicit=None):
