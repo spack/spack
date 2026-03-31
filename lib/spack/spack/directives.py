@@ -46,7 +46,7 @@ import os
 import re
 import warnings
 from functools import partial
-from typing import Any, Callable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import spack.deptypes as dt
 import spack.error
@@ -661,7 +661,8 @@ def variant(
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
     when: Optional[Union[str, bool]] = None,
     sticky: bool = False,
-    deprecated: Union[bool, dict] = False,
+    deprecated: bool = False,
+    substitutions: Optional[Dict[str, str]] = None,
 ):
     """Declare a variant for a package.
 
@@ -681,8 +682,11 @@ def variant(
         when: Optional condition on which the variant applies
         sticky: The variant should not be changed by the concretizer to find a valid concrete spec
         deprecated: If ``False`` the variant is normal. If ``True``, the variant is accepted but
-            silently dropped before concretization. If a ``dict``, each key is a condition and each
-            value is the replacement constraint to apply when the condition matches.
+            dropped before concretization (with a warning), optionally replacing it with the
+            constraints in ``substitutions``.
+        substitutions: Optional mapping of old variant conditions to replacement spec constraints.
+            Each key is a condition string (e.g. ``"+shared"``) and each value is the replacement
+            constraint (e.g. ``"libs=shared"``). Only valid when ``deprecated=True``.
 
     Raises:
         spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
@@ -698,6 +702,7 @@ def variant(
         when=when,
         sticky=sticky,
         deprecated=deprecated,
+        substitutions=substitutions,
     )
 
 
@@ -716,11 +721,16 @@ def _execute_variant(
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]],
     when: Optional[Union[str, bool]],
     sticky: bool,
-    deprecated: Union[bool, dict] = False,
+    deprecated: bool = False,
+    substitutions: Optional[Dict[str, str]] = None,
 ):
+    if substitutions is not None and not deprecated:
+        raise DirectiveError(
+            f"variant '{name}' in {pkg.name}: 'substitutions' requires 'deprecated=True'"
+        )
     # Handle deprecated variants early — they bypass all normal variant logic
-    if deprecated is not False:
-        _handle_deprecated_variant(pkg, name=name, when=when, deprecated=deprecated)
+    if deprecated:
+        _handle_deprecated_variant(pkg, name=name, when=when, substitutions=substitutions)
         return
 
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
@@ -816,24 +826,25 @@ def _execute_variant(
 
 
 def _handle_deprecated_variant(
-    pkg: "Type[PackageBase]", *, name: str, when: Any, deprecated: Union[bool, dict]
+    pkg: "Type[PackageBase]",
+    *,
+    name: str,
+    when: Any,
+    substitutions: Optional[Dict[str, str]] = None,
 ) -> None:
     if when is not None:
         raise DirectiveError(
             f"variant '{name}' in {pkg.name}: 'deprecated' and 'when' cannot be combined"
         )
-    if deprecated is True:
+    if substitutions is None:
         pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name)
-    elif isinstance(deprecated, dict):
-        if not all(isinstance(k, str) and isinstance(v, str) for k, v in deprecated.items()):
-            raise DirectiveError(
-                f"variant '{name}' in {pkg.name}: deprecated mapping keys and values "
-                f"must be strings"
-            )
-        pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name, mapping=deprecated)
     else:
-        raise DirectiveError(
-            f"variant '{name}' in {pkg.name}: 'deprecated' must be True or a dict"
+        if not all(isinstance(k, str) and isinstance(v, str) for k, v in substitutions.items()):
+            raise DirectiveError(
+                f"variant '{name}' in {pkg.name}: substitutions keys and values must be strings"
+            )
+        pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(
+            name, mapping=substitutions
         )
 
 

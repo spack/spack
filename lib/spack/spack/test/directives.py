@@ -297,13 +297,17 @@ def test_patched_dependencies_sets_class_attribute():
     assert DoesNotPatchDependencies.patches  # type: ignore
 
 
+def _fake_pkg():
+    return type("FakePkg", (), {"name": "fake", "deprecated_variants": {}})()
+
+
 def test_deprecated_with_when_raises(mock_packages):
     """Tests that using 'deprecated=' and 'when=' together raises an error."""
     with pytest.raises(
         spack.directives.DirectiveError, match="'deprecated' and 'when' cannot be combined"
     ):
         spack.directives._execute_variant(
-            type("FakePkg", (), {"name": "fake", "deprecated_variants": {}})(),
+            _fake_pkg(),
             name="bad",
             default=True,
             description="",
@@ -313,4 +317,45 @@ def test_deprecated_with_when_raises(mock_packages):
             when="+foo",
             sticky=False,
             deprecated=True,
+            substitutions=None,
+        )
+
+
+def test_substitutions_without_deprecated_raises():
+    """Tests that passing 'substitutions' without 'deprecated=True' raises an error."""
+    with pytest.raises(
+        spack.directives.DirectiveError, match="'substitutions' requires 'deprecated=True'"
+    ):
+        spack.directives._execute_variant(
+            _fake_pkg(),
+            name="bad",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
+            deprecated=False,
+            substitutions={"+bad": "good=val"},
+        )
+
+
+def test_deprecated_substitutions_invalid_types_raises():
+    """Tests that non-string keys or values in 'substitutions' raise an error."""
+    with pytest.raises(
+        spack.directives.DirectiveError, match="substitutions keys and values must be strings"
+    ):
+        spack.directives._execute_variant(
+            _fake_pkg(),
+            name="bad",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
+            deprecated=True,
+            substitutions={"+bad": 42},  # type: ignore[dict-item]
         )

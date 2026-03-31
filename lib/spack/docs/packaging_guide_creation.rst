@@ -1650,13 +1650,13 @@ To simply remove a variant that is no longer needed:
 
 Any reference to ``old_flag`` (e.g., ``foo+old_flag``) will be silently dropped with a warning message.
 
-To rename a variant or map old values to new ones, pass a dictionary that maps old variant settings to replacement spec constraints:
+To rename a variant or map old values to new ones, set ``deprecated=True`` and pass a ``substitutions`` dictionary that maps old variant settings to replacement spec constraints:
 
 .. code-block:: python
 
    class Foo(Package):
        ...
-       variant("shared", default=True, deprecated={
+       variant("shared", default=True, deprecated=True, substitutions={
            "+shared": "libs=shared",
            "~shared": "libs=static",
        })
@@ -1673,7 +1673,7 @@ Multi-valued variants can also be mapped:
    class Foo(Package):
        ...
        variant("old_backends", default="none", values=("a", "b", "none"), multi=True,
-               deprecated={
+               deprecated=True, substitutions={
                    "old_backends=a": "backends=alpha",
                    "old_backends=b": "backends=beta",
                })
@@ -1686,6 +1686,7 @@ Here ``foo old_backends=a,b`` becomes ``foo backends=alpha,beta``.
 
    The ``deprecated`` parameter cannot be combined with ``when``.
    Deprecated variants are always unconditional.
+   Passing ``substitutions`` without ``deprecated=True`` raises a ``DirectiveError``.
 
 .. note::
 

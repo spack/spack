@@ -361,6 +361,16 @@ class TestDeprecatedVariant:
         assert pkg_cls.has_variant("libs")
         assert pkg_cls.has_variant("backends")
 
+    def test_deprecated_mapping_stored_correctly(self, mock_packages):
+        """Tests that 'substitutions' is stored as 'mapping' in DeprecatedVariant."""
+        pkg_cls = mock_packages.get_pkg_class("deprecated-variant-pkg")
+
+        assert pkg_cls.deprecated_variants["old_flag"].mapping is None
+        assert pkg_cls.deprecated_variants["shared"].mapping == {
+            "+shared": "libs=shared",
+            "~shared": "libs=static",
+        }
+
     def test_deprecated_true_removal(self):
         """Tests that variants using 'deprecated=True' are removed on deprecated variants
         expansion.

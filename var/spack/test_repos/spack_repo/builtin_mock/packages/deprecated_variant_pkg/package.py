@@ -16,7 +16,10 @@ class DeprecatedVariantPkg(Package):
 
     # Case 2: bool variant with mapping
     variant(
-        "shared", default=True, deprecated={"+shared": "libs=shared", "~shared": "libs=static"}
+        "shared",
+        default=True,
+        deprecated=True,
+        substitutions={"+shared": "libs=shared", "~shared": "libs=static"},
     )
 
     # The replacement variant for shared
@@ -28,7 +31,8 @@ class DeprecatedVariantPkg(Package):
         default="none",
         values=("a", "b", "c", "none"),
         multi=True,
-        deprecated={
+        deprecated=True,
+        substitutions={
             "old_backends=a": "backends=alpha",
             "old_backends=b": "backends=beta",
             "old_backends=c": "backends=gamma",
