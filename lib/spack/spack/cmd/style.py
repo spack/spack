@@ -13,7 +13,11 @@ import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
-from spack.cmd.common.spec_strings import _spec_str_default_handler,  _spec_str_fix_handler, _check_spec_strings
+from spack.cmd.common.spec_strings import (
+    _check_spec_strings,
+    _spec_str_default_handler,
+    _spec_str_fix_handler,
+)
 from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable, which
 
@@ -346,8 +350,7 @@ def _run_import_check(
 
     exit_code = 0
     files = file_list or [
-        path for path in Path(spack.paths.lib_path).rglob("*.py")
-        if "vendor" not in path.parts
+        path for path in Path(spack.paths.lib_path).rglob("*.py") if "vendor" not in path.parts
     ]
     for file in files:
         to_add: Set[str] = set()
