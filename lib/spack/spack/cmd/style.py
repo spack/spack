@@ -138,9 +138,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
-        "-a", "--all", action="store_true", help="check all files, not just changed files"
-    )
-    subparser.add_argument(
         "-r",
         "--root-relative",
         action="store_true",
@@ -226,22 +223,6 @@ def rewrite_and_print_output(
         print(line)
 
 
-def print_style_header(file_list, args, tools_to_run):
-    tty.msg("Running style checks on spack", "selected: " + ", ".join(tools_to_run))
-    # translate modified paths to cwd_relative if needed
-    paths = file_list
-    if not args.root_relative:
-        paths = [cwd_relative(filename, args.root, args.initial_working_dir) for filename in paths]
-    tty.msg("Modified files", *[str(x) for x in paths])
-    sys.stdout.flush()
-
-
-def print_tool_header(tool: str):
-    sys.stdout.flush()
-    tty.msg("Running %s checks" % tool)
-    sys.stdout.flush()
-
-
 def print_tool_result(tool, returncode):
     if returncode == 0:
         color.cprint("  @g{%s checks were clean}" % tool)
@@ -250,7 +231,7 @@ def print_tool_result(tool, returncode):
 
 
 @tool("ruff-check", cmd="ruff")
-def ruff_check(file_list, args, repo: Optional[spack.repo.Repo] = None):
+def ruff_check(file_list, args):
     """Run the ruff-check command. Handles config and non generic ruff argument logic"""
     cmd_args = ["--config", os.path.join(spack.paths.prefix, "pyproject.toml"), "--quiet"]
     if args.fix:
@@ -263,7 +244,7 @@ def ruff_check(file_list, args, repo: Optional[spack.repo.Repo] = None):
 
 
 @tool("ruff-format", cmd="ruff")
-def ruff_format(file_list, args, repo: Optional[spack.repo.Repo] = None):
+def ruff_format(file_list, args):
     """Run the ruff format command"""
     cmd_args = ["--config", os.path.join(spack.paths.prefix, "pyproject.toml"), "--quiet"]
     if not args.fix:
@@ -367,8 +348,11 @@ def _run_import_check(
     is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     exit_code = 0
-
-    for file in file_list:
+    files = file_list or [
+        path for path in Path(spack.paths.lib_path).rglob("*.py")
+        if "vendor" not in path.parts
+    ]
+    for file in files:
         to_add: Set[str] = set()
         to_remove: List[str] = []
 
@@ -756,12 +740,9 @@ def style(parser, args):
 
     return_code = 0
     with working_dir(str(args.root)):
-        if not file_list:
-            file_list = changed_files(args.base, args.untracked, args.all)
-        print_style_header(file_list, args, tools_to_run)
         for tool_name in tools_to_run:
             tool = tools[tool_name]
-            print_tool_header(tool_name)
+            tty.msg(f"Running {tool.name} checks")
             return_code |= tool.fun(file_list, args)
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))
