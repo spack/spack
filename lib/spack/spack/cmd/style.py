@@ -284,80 +284,80 @@ def print_tool_result(tool, returncode):
         color.cprint("  @r{%s found errors}" % tool)
 
 
-# def _handle_special_linter_exemptions(
-#     output: str, root: Path, original_returncode: int
-# ) -> Tuple[str, int]:
-#     """Process ruff output to exempt our specific patterns
+def _handle_special_linter_exemptions(
+    output: str, root: Path, original_returncode: int
+) -> Tuple[str, int]:
+    """Process ruff output to exempt our specific patterns
 
-#     Ruff does not have the capacity to exempt certain occurances
-#     of a linter violation the way flake8 does, so we do it as a
-#     post processing step instead of during lint time.
-#     """
-#     if not output:
-#         return output, original_returncode
+    Ruff does not have the capacity to exempt certain occurances
+    of a linter violation the way flake8 does, so we do it as a
+    post processing step instead of during lint time.
+    """
+    if not output:
+        return output, original_returncode
 
-#     filtered_lines = []
-#     current_block: List[str] = []
-#     current_err_code = None
-#     current_is_exempt = False
-#     real_errors_count = 0
+    filtered_lines = []
+    current_block: List[str] = []
+    current_err_code = None
+    current_is_exempt = False
+    real_errors_count = 0
 
-#     for line in output.splitlines():
-#         clean_line = ANSI_ESCAPE.sub("", line)
+    for line in output.splitlines():
+        clean_line = ANSI_ESCAPE.sub("", line)
 
-#         match_start = ERROR_START_PATTERN.match(clean_line)
-#         if match_start:
-#             if current_block and not current_is_exempt:
-#                 filtered_lines.extend(current_block)
-#                 real_errors_count += 1
+        match_start = ERROR_START_PATTERN.match(clean_line)
+        if match_start:
+            if current_block and not current_is_exempt:
+                filtered_lines.extend(current_block)
+                real_errors_count += 1
 
-#             current_block = [line]
-#             current_err_code = match_start.group(1)
-#             current_is_exempt = False
-#             continue
+            current_block = [line]
+            current_err_code = match_start.group(1)
+            current_is_exempt = False
+            continue
 
-#         match_loc = LOCATION_PATTERN.match(clean_line)
-#         if match_loc and current_block:
-#             current_block.append(line)
+        match_loc = LOCATION_PATTERN.match(clean_line)
+        if match_loc and current_block:
+            current_block.append(line)
 
-#             if current_err_code in LINTER_EXEMPTIONS:
-#                 filepath, line_num = match_loc.groups()
-#                 abs_fp = Path(filepath) if os.path.isabs(filepath) else (root / filepath)
-#                 line_idx = int(line_num)
-#                 linecache.checkcache(str(abs_fp))
+            if current_err_code in LINTER_EXEMPTIONS:
+                filepath, line_num = match_loc.groups()
+                abs_fp = Path(filepath) if os.path.isabs(filepath) else (root / filepath)
+                line_idx = int(line_num)
+                linecache.checkcache(str(abs_fp))
 
-#                 lines_to_check = [linecache.getline(str(abs_fp), line_idx)]
-#                 if line_idx > 1:
-#                     lines_to_check.append(linecache.getline(str(abs_fp), line_idx - 1))
+                lines_to_check = [linecache.getline(str(abs_fp), line_idx)]
+                if line_idx > 1:
+                    lines_to_check.append(linecache.getline(str(abs_fp), line_idx - 1))
 
-#                 patterns = LINTER_EXEMPTIONS[current_err_code]
-#                 if any(p.search(text) for text in lines_to_check for p in patterns):
-#                     current_is_exempt = True
-#             continue
+                patterns = LINTER_EXEMPTIONS[current_err_code]
+                if any(p.search(text) for text in lines_to_check for p in patterns):
+                    current_is_exempt = True
+            continue
 
-#         if SUMMARY_PATTERN.match(clean_line):
-#             if current_block and not current_is_exempt:
-#                 filtered_lines.extend(current_block)
-#                 real_errors_count += 1
-#             current_block = []
+        if SUMMARY_PATTERN.match(clean_line):
+            if current_block and not current_is_exempt:
+                filtered_lines.extend(current_block)
+                real_errors_count += 1
+            current_block = []
 
-#             if real_errors_count > 0:
-#                 msg = f"Found {real_errors_count} error{'s' if real_errors_count > 1 else ''}."
-#                 filtered_lines.append(color.colorize(f"@*r{{{msg}}}"))
-#             continue
+            if real_errors_count > 0:
+                msg = f"Found {real_errors_count} error{'s' if real_errors_count > 1 else ''}."
+                filtered_lines.append(color.colorize(f"@*r{{{msg}}}"))
+            continue
 
-#         if current_block:
-#             current_block.append(line)
-#         else:
-#             filtered_lines.append(line)
+        if current_block:
+            current_block.append(line)
+        else:
+            filtered_lines.append(line)
 
-#     if current_block and not current_is_exempt:
-#         filtered_lines.extend(current_block)
-#         real_errors_count += 1
+    if current_block and not current_is_exempt:
+        filtered_lines.extend(current_block)
+        real_errors_count += 1
 
-#     new_output = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
-#     new_rc = original_returncode if real_errors_count > 0 else 0
-#     return new_output, new_rc
+    new_output = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
+    new_rc = original_returncode if real_errors_count > 0 else 0
+    return new_output, new_rc
 
 
 @tool("ruff-check", cmd="ruff")
@@ -408,10 +408,10 @@ def run_ruff(
         packed_args = (cmd,) + (*args,) + tuple([str(x) for x in chunk])
         output = ruff_cmd(*packed_args, fail_on_error=False, output=str, error=str)
         chunk_returncode = ruff_cmd.returncode
-        # if cmd == "check" and output:
-        #     output, chunk_returncode = _handle_special_linter_exemptions(
-        #         output, root, chunk_returncode
-        #     )
+        if cmd == "check" and output:
+            output, chunk_returncode = _handle_special_linter_exemptions(
+                output, root, chunk_returncode
+            )
 
         returncode |= chunk_returncode
         rewrite_and_print_output(output, root, working_dir, root_relative, pat, replacement)
