@@ -3,20 +3,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import ast
-import linecache
 import os
 import re
 import sys
 import warnings
-from itertools import zip_longest
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Set, Union
 
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
-import spack.util.git
 import spack.util.spack_yaml
 from spack.llnl.util.filesystem import working_dir
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
