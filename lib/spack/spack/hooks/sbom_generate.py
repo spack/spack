@@ -165,4 +165,4 @@ def generate_spdx_2_3(spec):
 
 # Post-install hook that generates SBOMs
 def post_install(spec, explicit=None):
-    generate_spdx_2_3(spec, explicit=None)
+    generate_spdx_2_3(spec)
