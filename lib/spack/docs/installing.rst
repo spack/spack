@@ -25,7 +25,7 @@ Interactive terminal UI
 -----------------------
 
 By default, ``spack install`` shows live progress inline in the terminal.
-Completed packages scroll into terminal history, while active builds are updated in place below a progress header.
+Completed packages scroll into terminal history, while active builds update dynamically below the progress header.
 
 Every package in the install plan is shown with its current status:
 
