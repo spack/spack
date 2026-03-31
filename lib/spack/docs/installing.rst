@@ -14,8 +14,9 @@
 Installing Packages
 ===================
 
-See :doc:`package_fundamentals` for basic usage and spec syntax.
-This page covers the install experience: the interactive terminal user interface (TUI), parallelism, background execution, and handling build failures.
+This page covers the ``spack install`` experience in detail, including the interactive terminal UI (TUI), parallelism, background execution, and handling build failures.
+
+Before diving in, ensure you are familiar with :doc:`package_fundamentals` for basic usage and spec syntax.
 
 .. versionadded:: 1.2
    The TUI and POSIX jobserver are new in Spack 1.2 and require a Unix-like platform.
