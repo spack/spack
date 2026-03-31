@@ -21,7 +21,6 @@ spack:
 
   packages:
     python:
-      buildable: false
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
@@ -37,7 +36,14 @@ spack:
     unify: true
 
   mirrors:
-    dev-bootstrap:
-      url: {{ mirror_url }}
+    developer-tools-darwin:
+      url: https://binaries.spack.io/releases/v2026.03/developer-tools-darwin
       signed: true
+    developer-tools-x86_64_v3-linux-gnu:
+      url: https://binaries.spack.io/releases/v2026.03/developer-tools-x86_64_v3-linux-gnu
+      signed: true
+    developer-tools-aarch64-linux-gnu:
+      url: https://binaries.spack.io/releases/v2026.03/developer-tools-aarch64-linux-gnu
+      signed: true
+
 

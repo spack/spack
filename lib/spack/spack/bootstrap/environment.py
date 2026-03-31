@@ -79,17 +79,20 @@ class BootstrapEnvironment(spack.environment.Environment):
         return cls.environment_root().joinpath("spack.yaml")
 
     @contextlib.contextmanager
-    def mirror_keys_enabled(self, mirror: spack.mirrors.mirror.Mirror):
+    def mirror_keys_enabled(self, *mirrors: spack.mirrors.mirror.Mirror):
         bootstrap_keys = []
-        if mirror.signed:
-            bootstrap_keys = spack.binary_distribution.get_keys(
-                install=True, trust=True, mirrors={mirror.name: mirror}
-            )
+        for mirror in mirrors:
+            if mirror.signed:
+                bootstrap_keys.extend(
+                    spack.binary_distribution.get_keys(
+                        install=True, trust=True, mirrors={mirror.name: mirror}
+                    )
+                )
         try:
             yield
         finally:
             if bootstrap_keys:
-                spack.util.gpg.untrust(False, bootstrap_keys)
+                spack.util.gpg.untrust(False, *bootstrap_keys)
 
     def update_installations(self) -> None:
         """Update the installations of this environment."""
@@ -104,12 +107,15 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                mirror_name = "dev-bootstrap"
-                bootstrap_mirror = spack.mirrors.mirror.Mirror(
-                    name=mirror_name,
-                    data=spack.config.get("mirrors", scope=self.scope_name)[mirror_name],
-                )
-                with self.mirror_keys_enabled(bootstrap_mirror):
+                mirrors = []
+                for mirror in bootstrap_mirror_names():
+                    mirrors.append(
+                        spack.mirrors.mirror.Mirror(
+                            name=mirror,
+                            data=spack.config.get("mirrors", scope=self.scope_name)[mirror],
+                        )
+                    )
+                with self.mirror_keys_enabled(*mirrors):
                     self.install_all(fail_fast=True, root_policy="cache_only", install_deps=False)
                     self.write(regenerate=True)
 
@@ -134,7 +140,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
-            "mirror_url": "<placeholder-CHANGE-ME>",
+            # "mirror_url": "<placeholder-CHANGE-ME>",
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
@@ -153,6 +159,14 @@ def pytest_root_spec() -> str:
 def ruff_root_spec() -> str:
     """Return the root spec used to bootstrap ruff"""
     return _root_spec("py-ruff@0.15.0")
+
+
+def bootstrap_mirror_names() -> List[str]:
+    return [
+        "developer-tools-darwin",
+        "developer-tools-x86_64_v3-linux-gnu",
+        "developer-tools-aarch64-linux-gnu",
+    ]
 
 
 def ensure_environment_dependencies() -> None:

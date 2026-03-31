@@ -75,6 +75,12 @@ jobs:
           spack bootstrap disable spack-install
           spack bootstrap now
           spack -v solve zlib
+    - name: Bootstrap Development Dependencies
+      env:
+        SPACK_PYTHON: python
+      run: |
+        . share/spack/setup-env.sh
+          spack bootstrap now --dev
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
@@ -225,6 +231,7 @@ jobs:
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
         spack solve zlib
+        spack bootstrap now --dev
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
