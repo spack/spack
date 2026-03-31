@@ -98,16 +98,19 @@ You can adjust parallelism while a build is running:
 * Press ``+`` to add a job (increases ``-j`` by 1)
 * Press ``-`` to remove a job (decreases ``-j`` by 1)
 
+When reducing parallelism, Spack waits for currently running jobs to finish before the new limit takes effect; it does not kill active processes.
 The progress header shows the adjustment in progress, e.g. ``+/-: 4=>2 jobs``, until the actual count reaches the target.
 
 
 Multi-process and multi-node installs
 --------------------------------------
 
-Multiple ``spack install`` processes can run concurrently against the same store, which is useful on clusters where different nodes install different parts of a software stack.
-Spack coordinates through per-prefix filesystem locks: before building a package, the process acquires an exclusive lock on its install prefix.
+Multiple ``spack install`` processes can safely run concurrently, whether on the same machine or across multiple nodes in a cluster with a shared filesystem.
+Spack coordinates through :ref:`per-prefix filesystem locks <filesystem-requirements>`: before building a package, the process acquires an exclusive lock on its install prefix.
 If another process already holds the lock, Spack waits rather than building a second copy.
-When a process encounters a prefix that was already installed, it simply skips it and moves on to the next dependency.
+When a process encounters a prefix that was already installed, it simply skips it and moves on to the next install.
+
+For best results on a cluster, it's recommended to limit per-process package-level parallelism (e.g., ``spack install -p2``) for better load balancing.
 
 
 Non-interactive mode
