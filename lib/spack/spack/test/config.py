@@ -2298,3 +2298,6 @@ def test_included_path_git_unwritable_dest(tmp_path: pathlib.Path):
             include.scopes(parent_scope)
     finally:
         dest.chmod(current_mode)
+        # Ensure the unwritable temp dir is removed to avoid failure on some
+        # platforms (e.g., rhel8).
+        shutil.rmtree(include.destination)
