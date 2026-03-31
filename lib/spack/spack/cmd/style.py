@@ -24,27 +24,6 @@ description = "runs source code style checks on spack"
 section = "developer"
 level = "long"
 
-
-LINTER_EXEMPTIONS = {
-    "E501": [
-        re.compile(r"(ssh|https?|ftp|file)\:"),  # URLs
-        re.compile(r"([\'\"])[0-9a-fA-F]{32,}\1"),  # long hex checksums
-    ],
-    "F403": [
-        re.compile(r"^from spack\.package import \*$"),
-        re.compile(r"^from spack\.package_defs import \*$"),
-    ],
-    "F811": [
-        # Redefinitions are okay if preceded by a @when decorator
-        re.compile(r"^\s*@when\(.*\)")
-    ],
-}
-ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-ERROR_START_PATTERN = re.compile(r"^([A-Z]{1,4}[0-9]{3,4})\s+")
-LOCATION_PATTERN = re.compile(r"^\s*-->\s+(.+?):(\d+):\d+")
-SUMMARY_PATTERN = re.compile(r"^Found \d+ errors?")
-
-
 def grouper(iterable: Iterable[Any], n: int, fillvalue=None):
     """Collect data into fixed-length chunks or blocks"""
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
@@ -281,82 +260,6 @@ def print_tool_result(tool, returncode):
         color.cprint("  @r{%s found errors}" % tool)
 
 
-def _handle_special_linter_exemptions(
-    output: str, root: Path, original_returncode: int
-) -> Tuple[str, int]:
-    """Process ruff output to exempt our specific patterns
-
-    Ruff does not have the capacity to exempt certain occurances
-    of a linter violation the way flake8 does, so we do it as a
-    post processing step instead of during lint time.
-    """
-    if not output:
-        return output, original_returncode
-
-    filtered_lines = []
-    current_block: List[str] = []
-    current_err_code = None
-    current_is_exempt = False
-    real_errors_count = 0
-
-    for line in output.splitlines():
-        clean_line = ANSI_ESCAPE.sub("", line)
-
-        match_start = ERROR_START_PATTERN.match(clean_line)
-        if match_start:
-            if current_block and not current_is_exempt:
-                filtered_lines.extend(current_block)
-                real_errors_count += 1
-
-            current_block = [line]
-            current_err_code = match_start.group(1)
-            current_is_exempt = False
-            continue
-
-        match_loc = LOCATION_PATTERN.match(clean_line)
-        if match_loc and current_block:
-            current_block.append(line)
-
-            if current_err_code in LINTER_EXEMPTIONS:
-                filepath, line_num = match_loc.groups()
-                abs_fp = Path(filepath) if os.path.isabs(filepath) else (root / filepath)
-                line_idx = int(line_num)
-                linecache.checkcache(str(abs_fp))
-
-                lines_to_check = [linecache.getline(str(abs_fp), line_idx)]
-                if line_idx > 1:
-                    lines_to_check.append(linecache.getline(str(abs_fp), line_idx - 1))
-
-                patterns = LINTER_EXEMPTIONS[current_err_code]
-                if any(p.search(text) for text in lines_to_check for p in patterns):
-                    current_is_exempt = True
-            continue
-
-        if SUMMARY_PATTERN.match(clean_line):
-            if current_block and not current_is_exempt:
-                filtered_lines.extend(current_block)
-                real_errors_count += 1
-            current_block = []
-
-            if real_errors_count > 0:
-                msg = f"Found {real_errors_count} error{'s' if real_errors_count > 1 else ''}."
-                filtered_lines.append(color.colorize(f"@*r{{{msg}}}"))
-            continue
-
-        if current_block:
-            current_block.append(line)
-        else:
-            filtered_lines.append(line)
-
-    if current_block and not current_is_exempt:
-        filtered_lines.extend(current_block)
-        real_errors_count += 1
-
-    new_output = "\n".join(filtered_lines) + ("\n" if filtered_lines else "")
-    new_rc = original_returncode if real_errors_count > 0 else 0
-    return new_output, new_rc
-
-
 @tool("ruff-check", cmd="ruff")
 def ruff_check(file_list, args, repo: Optional[spack.repo.Repo] = None):
     """Run the ruff-check command. Handles config and non generic ruff argument logic"""
@@ -395,23 +298,16 @@ def run_ruff(
         tty.warn("Cannot execute requested tool: ruff\nCannot find tool")
         return -1
 
+    files = (str(x) for x in file_list)
     if color.get_color_when():
         args += ("--color", "auto")
     pat = re.compile("would reformat +(.*)")
     replacement = "would reformat {0}"
-    returncode = 0
 
-    for chunk in grouper(file_list, 100):
-        packed_args = (cmd,) + (*args,) + tuple([str(x) for x in chunk])
-        output = ruff_cmd(*packed_args, fail_on_error=False, output=str, error=str)
-        chunk_returncode = ruff_cmd.returncode
-        if cmd == "check" and output:
-            output, chunk_returncode = _handle_special_linter_exemptions(
-                output, root, chunk_returncode
-            )
-
-        returncode |= chunk_returncode
-        rewrite_and_print_output(output, root, working_dir, root_relative, pat, replacement)
+    packed_args = (cmd,) + (*args,) + tuple(files)
+    output = ruff_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+    returncode = ruff_cmd.returncode
+    rewrite_and_print_output(output, root, working_dir, root_relative, pat, replacement)
 
     print_tool_result(f"ruff-{cmd}", returncode)
     return returncode
