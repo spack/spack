@@ -1924,7 +1924,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
         assert dest_dir == temp_dir, pre + rest
 
 
-def test_included_path_git_errs(mock_low_high_config, monkeypatch, redirect_user_cache):
+def test_included_path_git_errs(mock_low_high_config, monkeypatch, redirect_state_home):
     paths = ["concretizer.yaml"]
     entry = {
         "git": "https://example.com/linux/configs.git",

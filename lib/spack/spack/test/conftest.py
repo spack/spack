@@ -173,7 +173,7 @@ def redirect_user_repos_cache_path(tmp_path: Path):
 
 
 @pytest.fixture
-def redirect_user_cache(tmp_path: Path):
+def redirect_state_home(tmp_path: Path):
     spack.paths.locations.redirect_state_home(tmp_path)
 
 

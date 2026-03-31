@@ -221,6 +221,8 @@ class SpackPaths:
 
     @contextmanager
     def redirect_user_repos_cache_path(self, x):
+        # This is under state_home, but tests may want to selectively redirect
+        # only this attribute (e.g. to avoid regenerating provider cache)
         self._user_repos_cache_path = x
         yield
         delattr(self, "_user_repos_cache_path")
