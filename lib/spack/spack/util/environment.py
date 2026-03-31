@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Set, unset or modify environment variables."""
+
 import collections
 import contextlib
 import inspect

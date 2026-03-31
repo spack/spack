@@ -116,9 +116,7 @@ module_index:
   {0}:
     path: /path/to/a
     use_name: a
-""".format(
-        s1.dag_hash()
-    )
+""".format(s1.dag_hash())
 
     module_indices = [{"tcl": spack.modules.common._read_module_index(tcl_module_index)}, {}]
 
@@ -154,9 +152,7 @@ module_index:
   {0}:
     path: /path/to/a
     use_name: a
-""".format(
-        s1.dag_hash()
-    )
+""".format(s1.dag_hash())
 
     module_indices = [{}, {"tcl": spack.modules.common._read_module_index(tcl_module_index)}]
 

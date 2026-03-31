@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for BuildGraph class in new_installer"""
+
 import sys
 from typing import Dict, List, Tuple, Union
 

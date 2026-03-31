@@ -2145,7 +2145,6 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
 
 
 class PackageInstaller:
-
     explicit: Set[str]
 
     def __init__(

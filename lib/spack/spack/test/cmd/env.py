@@ -265,7 +265,6 @@ def test_change_match_spec():
 
     e = ev.read("test")
     with e:
-
         add("mpileaks@2.1")
         add("mpileaks@2.2")
 
@@ -1161,9 +1160,7 @@ packages:
     - spec: pkg-a@2.0
       prefix: {a_prefix}
     buildable: false
-""".format(
-            a_prefix=str(fake_prefix)
-        )
+""".format(a_prefix=str(fake_prefix))
     )
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
@@ -1347,9 +1344,7 @@ spack:
   - {0}
   specs:
   - mpileaks
-""".format(
-        include_path
-    )
+""".format(include_path)
 
 
 def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
@@ -3105,7 +3100,7 @@ spack:
         "dtlink2",
         "dtlink3",
         "dtlink4",
-        "dtlink5" "dtbuild1",
+        "dtlink5dtbuild1",
         "dtbuild2",
         "dtbuild3",
     ):
@@ -3781,9 +3776,7 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
+""".format(install_root)
     )
     current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != str(install_root)
@@ -4508,7 +4501,7 @@ view:
         f"""\
 spack:
   include:
-{''.join(includes)}
+{"".join(includes)}
   specs:
   - mpileaks
 """

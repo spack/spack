@@ -1043,7 +1043,6 @@ def check_index_fn(args):
             )
 
         for spec_manifest in manifest_files:
-
             # Spec manifests have a naming format
             # <name>-<version>-<hash>.spec.manifest.json
             spec_hash = spec_manifest.rsplit("-", 1)[1].split(".", 1)[0]

@@ -3655,9 +3655,9 @@ packages:
   libelf:
     externals:
     - spec: "libelf@0.8.12 %gcc@10"
-      prefix: {tmp_path / 'gcc'}
+      prefix: {tmp_path / "gcc"}
     - spec: "libelf@0.8.13 %clang"
-      prefix: {tmp_path / 'clang'}
+      prefix: {tmp_path / "clang"}
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -3689,9 +3689,9 @@ packages:
     buildable: false
     externals:
     - spec: "libelf@0.8.12 %gcc@10"
-      prefix: {tmp_path / 'libelf-gcc10'}
+      prefix: {tmp_path / "libelf-gcc10"}
     - spec: "libelf@0.8.13 %gcc@9.4.0"
-      prefix: {tmp_path / 'libelf-gcc9'}
+      prefix: {tmp_path / "libelf-gcc9"}
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -3795,7 +3795,7 @@ packages:
     buildable: false
     externals:
     - spec: {spec_str}
-      prefix: {tmp_path / 'libelf'}
+      prefix: {tmp_path / "libelf"}
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -3818,7 +3818,7 @@ packages:
     buildable: false
     externals:
     - spec: libelf@0.8.12 %gcc@10
-      prefix: {tmp_path / 'libelf'}
+      prefix: {tmp_path / "libelf"}
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -3865,17 +3865,17 @@ packages:
     buildable: false
     externals:
     - spec: gcc@12.1.0 languages:='c,c++'
-      prefix: {tmp_path / 'gcc-12'}
+      prefix: {tmp_path / "gcc-12"}
       extra_attributes:
           compilers:
-            c: {tmp_path / 'gcc-12'}/bin/gcc
-            cxx: {tmp_path / 'gcc-12'}/bin/g++
+            c: {tmp_path / "gcc-12"}/bin/gcc
+            cxx: {tmp_path / "gcc-12"}/bin/g++
 
     - spec: gcc@14.1.0 languages:=fortran
-      prefix: {tmp_path / 'gcc-14'}
+      prefix: {tmp_path / "gcc-14"}
       extra_attributes:
         compilers:
-            fortran: {tmp_path / 'gcc-14'}/bin/gfortran
+            fortran: {tmp_path / "gcc-14"}/bin/gfortran
 """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -3991,7 +3991,7 @@ def test_spec_parts_on_fresh_compilers(
         buildable: false
         externals:
         - spec: "llvm@20 +clang {constraint_in_yaml}"
-          prefix: {tmp_path / 'llvm-20'}
+          prefix: {tmp_path / "llvm-20"}
     """
     )
     mutable_config.set("packages", packages_yaml["packages"])
@@ -4054,7 +4054,7 @@ def test_spec_parts_on_reused_compilers(
         buildable: false
         externals:
         - spec: "llvm+clang@20 {constraint_in_yaml}"
-          prefix: {tmp_path / 'llvm-20'}
+          prefix: {tmp_path / "llvm-20"}
       mpileaks:
         buildable: true
     """

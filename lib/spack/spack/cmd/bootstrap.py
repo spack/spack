@@ -270,9 +270,8 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
     matches = [s for s in sources if s["name"] == name]
     if not matches:
         names = [s["name"] for s in sources]
-        msg = (
-            'there is no bootstrapping method named "{0}". Valid '
-            "method names are: {1}".format(name, ", ".join(names))
+        msg = 'there is no bootstrapping method named "{0}". Valid method names are: {1}'.format(
+            name, ", ".join(names)
         )
         raise RuntimeError(msg)
 
@@ -381,8 +380,7 @@ def _remove(args):
             sources = [s for s in sources if s["name"] != args.name]
             spack.config.set("bootstrap:sources", sources, scope=current_scope)
             msg = (
-                'Removed the bootstrapping source named "{0}" from the '
-                '"{1}" configuration scope.'
+                'Removed the bootstrapping source named "{0}" from the "{1}" configuration scope.'
             )
             spack.llnl.util.tty.msg(msg.format(args.name, current_scope))
         trusted = spack.config.get("bootstrap:trusted", scope=current_scope) or []

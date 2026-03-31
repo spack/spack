@@ -1084,9 +1084,9 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capfd):
 
     assert b_id in installer.failed, "Expected b to be marked as failed"
     assert c_id in installer.failed, "Expected c to be marked as failed"
-    assert (
-        a_id not in installer.installed
-    ), "Package a cannot install due to its dependencies failing"
+    assert a_id not in installer.installed, (
+        "Package a cannot install due to its dependencies failing"
+    )
     # check that b's active process got killed when c failed
 
     assert f"{b_id} failed to install" in capfd.readouterr().err

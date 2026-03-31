@@ -6,6 +6,7 @@
 .. literalinclude:: ../spack/schema/ci.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 # Schema for script fields

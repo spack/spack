@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Debug signal handler: enters pdb on ctrl-C."""
+
 import os
 import signal
 

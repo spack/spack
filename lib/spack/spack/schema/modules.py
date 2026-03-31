@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 import spack.schema.environment

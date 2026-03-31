@@ -50,8 +50,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store",
         type=int,
         default=None,
-        help="number of jobs to parse log file (default: 1 for short logs, "
-        "ncpus for long logs)",
+        help="number of jobs to parse log file (default: 1 for short logs, ncpus for long logs)",
     )
 
     subparser.add_argument("file", help="a log file containing build output, or - for stdin")

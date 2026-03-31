@@ -58,6 +58,7 @@ The console can be reset later to plain text with ``@.``.
 
 To output an ``@``, use ``@@``.  To output a ``}`` inside braces, use ``}}``.
 """
+
 import io
 import os
 import re

@@ -181,9 +181,7 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
+""".format(install_root)
     )
     with spack.environment.Environment(str(tmp_path)):
         assert spack.environment.active_environment()

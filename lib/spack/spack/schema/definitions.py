@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/definitions.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 from .spec_list import spec_list_schema

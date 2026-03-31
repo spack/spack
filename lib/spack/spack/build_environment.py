@@ -787,9 +787,9 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     tty.debug("setup_package: adding compiler wrappers paths")
     env_by_name = env_mods.group_by_name()
     for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
-        assert isinstance(
-            x, PrependPath
-        ), "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        assert isinstance(x, PrependPath), (
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        )
         env_mods.prepend_path("PATH", x.value)
 
     # Check whether we want to force RPATH or RUNPATH

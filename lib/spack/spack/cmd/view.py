@@ -32,6 +32,7 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 """
+
 import argparse
 import sys
 

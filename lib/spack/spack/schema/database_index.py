@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/database_index.py
    :lines: 17-
 """
+
 from typing import Any, Dict
 
 import spack.schema.spec

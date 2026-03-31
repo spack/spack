@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tools to produce reports of spec installations or tests"""
+
 import collections
 import gzip
 import os
@@ -55,7 +56,7 @@ class RequestRecord(Record):
         self.time = None
         self.timestamp = time.strftime("%a, %d %b %Y %H:%M:%S", time.gmtime())
         self.properties = [
-            Property("architecture", spec.architecture),
+            Property("architecture", spec.architecture)
             # Property("compiler", spec.compiler),
         ]
         self.packages = []

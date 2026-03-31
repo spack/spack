@@ -8,6 +8,7 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+
 import os
 from pathlib import PurePath
 
