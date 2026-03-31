@@ -24,17 +24,6 @@ description = "runs source code style checks on spack"
 section = "developer"
 level = "long"
 
-def grouper(iterable: Iterable[Any], n: int, fillvalue=None):
-    """Collect data into fixed-length chunks or blocks"""
-    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    args = [iter(iterable)] * n
-    for group in zip_longest(*args, fillvalue=fillvalue):
-        yield filter(None, group)
-
-
-#: List of paths to exclude from checks -- relative to spack root
-exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
-
 #: Order in which tools should be run.
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
