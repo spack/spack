@@ -162,6 +162,31 @@ def test_sbom_supplier_derived_from_git_url(
     assert sbom["packages"][0]["supplier"] == expected
 
 
+def test_sbom_dependency_supplier_uses_dependency_package(
+    mock_packages, install_mockery, monkeypatch
+):
+    """Dependency supplier data should come from the dependency package, not the root package."""
+
+    spec = spack.concretize.concretize_one("mpileaks")
+    root_pkg = spec.package
+    dep = next(d for d in spec.dependencies(deptype="all") if d.name == "callpath")
+
+    monkeypatch.setattr(root_pkg, "supplier", None, raising=False)
+    monkeypatch.setattr(root_pkg, "git", "https://github.com/root-org/mpileaks.git", raising=False)
+    monkeypatch.setattr(dep.package, "supplier", None, raising=False)
+    monkeypatch.setattr(dep.package, "git", "https://github.com/dep-org/callpath.git", raising=False)
+
+    post_install(spec)
+
+    with open(_sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    packages_by_name = {pkg["name"]: pkg for pkg in sbom["packages"]}
+
+    assert packages_by_name["mpileaks"]["supplier"] == "Organization: root-org"
+    assert packages_by_name["callpath"]["supplier"] == "Organization: dep-org"
+
+
 @pytest.mark.parametrize(
     "licenses,expected",
     [({spack.spec.Spec(): "MIT"}, "MIT"), ({}, "NOASSERTION"), (None, "NOASSERTION")],

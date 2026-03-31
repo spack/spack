@@ -126,7 +126,7 @@ def post_install(spec, explicit=None):
             "SPDXID": f"SPDXRef-PACKAGE-{dep_name}-{str(dep_spec.version)}",
             "name": dep_name,
             "versionInfo": str(spec.version),
-            "supplier": get_supplier(pkg),
+            "supplier": get_supplier(dep_pkg) if dep_pkg else "NOASSERTION",
             "downloadLocation": str(getattr(dep_pkg, "url", None) or "NOASSERTION"),
             "filesAnalyzed": False,
             "licenseDeclared": license_declared,
