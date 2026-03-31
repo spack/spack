@@ -675,6 +675,16 @@ class TestSpecSemantics:
         # We should not create again the index
         assert spack.repo.PATH._provider_index is None
 
+    def test_abstract_satisfies_with_lhs_provider_rhs_virtual(self):
+        """If the left-hand side mentions a provider among dependencies and the right-hand side
+        mentions a virtual among its deps, we only have satisfaction if the edge attribute
+        specifies this virtual is provided."""
+        assert not Spec("mpileaks ^mpich").satisfies("mpileaks ^mpi")
+        assert not Spec("mpileaks %mpich").satisfies("mpileaks %mpi")
+        assert Spec("mpileaks ^[virtuals=mpi] mpich").satisfies("mpileaks ^mpi")
+        assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks ^mpi")
+        assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks %mpi")
+
     def test_concrete_checks_on_virtual_names_dont_need_repo(
         self, default_mock_concretization, monkeypatch
     ):
