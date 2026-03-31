@@ -833,8 +833,9 @@ def _handle_deprecated_variant(
     substitutions: Optional[Dict[str, str]] = None,
 ) -> None:
     if when is not None:
-        raise DirectiveError(
-            f"variant '{name}' in {pkg.name}: 'deprecated' and 'when' cannot be combined"
+        warnings.warn(
+            f"variant '{name}' in {pkg.name}: 'deprecated' and 'when' are used together; "
+            f"the 'when' condition is ignored for deprecated variants"
         )
     if substitutions is None:
         pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name)

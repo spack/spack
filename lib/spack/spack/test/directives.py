@@ -301,13 +301,12 @@ def _fake_pkg():
     return type("FakePkg", (), {"name": "fake", "deprecated_variants": {}})()
 
 
-def test_deprecated_with_when_raises(mock_packages):
-    """Tests that using 'deprecated=' and 'when=' together raises an error."""
-    with pytest.raises(
-        spack.directives.DirectiveError, match="'deprecated' and 'when' cannot be combined"
-    ):
+def test_deprecated_with_when_warns(mock_packages):
+    """Tests that using 'deprecated=' and 'when=' together issues a warning."""
+    pkg = _fake_pkg()
+    with pytest.warns(UserWarning, match="'when' condition is ignored for deprecated variants"):
         spack.directives._execute_variant(
-            _fake_pkg(),
+            pkg,
             name="bad",
             default=True,
             description="",
@@ -319,6 +318,7 @@ def test_deprecated_with_when_raises(mock_packages):
             deprecated=True,
             substitutions=None,
         )
+    assert "bad" in pkg.deprecated_variants
 
 
 def test_substitutions_without_deprecated_raises():
