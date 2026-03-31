@@ -1121,9 +1121,10 @@ class OptionalInclude:
             path_or_url: path or URL of the include
             parent_scope: including scope
 
-        Returns: ``None`` for an absolute path, the explicit destination (if writable)
-            or an appropriate subdirectory of the enclosing (parent) scope's writable directory
-            (when available); otherwise a stable temporary directory.
+        Returns: ``None`` for an absolute or relative local path, the explicit destination (if
+            writable), an appropriate subdirectory of the enclosing (parent) scope's writable
+            directory (when available); otherwise
+            a stable temporary directory.
 
         Raises:
             AssertionError: The explicit destination is not writable
@@ -1133,15 +1134,22 @@ class OptionalInclude:
             tty.debug(f"The included path ({self}) is absolute so needs no base directory")
             return None
 
-        # Use the explicit destination but require it to be writable.
-        if self.destination:
-            assert filesystem.can_write_to_dir(self.destination)
-            return self.destination
+        # Use the explicit destination, which is required to be writable, for a remote
+        # include.
+        destination = getattr(self, "destination", "")
+        if self.remote and destination:
+            assert filesystem.can_write_to_dir(destination)
+            return destination
 
-        # Prefer the (writable) parent scope directory for a local relative file.
+        # Prefer the (writable) parent scope directory for a local relative path.
         scope_dir = self._parent_scope_directory(parent_scope)
-        if not self.remote and filesystem.can_write_to_dir(scope_dir):
+        if not self.remote and scope_dir and filesystem.can_write_to_dir(scope_dir):
             return scope_dir
+
+        # Local relative paths do not have a destination since they default to the working
+        # directory.
+        if not self.remote:
+            return None
 
         def _subdir():
             # Prefer the provided include name over the git repository name.
@@ -1347,9 +1355,6 @@ class IncludePath(OptionalInclude):
             # since already a circular import for spack.util.remote_file_cache.
             self.destination = rfc_util.canonicalize_path(self.destination)
 
-            # Ensure the explicit destination is writable.
-            assert filesystem.can_write_to_dir(self.destination)
-
         self.remote = urllib.parse.urlparse(self.path).scheme in ("http", "https", "ftp")
         if self.remote and not self.sha256:
             raise spack.error.ConfigError(f"Remote include {self.path} requires a 'sha256'")
@@ -1384,21 +1389,16 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        def _destination():
-            if self.destination:
-                return self.destination
+        # Ensure the explicit destination for a remote file is writable.
+        base = self.destination or self.base_directory(self.path, parent_scope)
+        if self.remote and base and os.path.isdir(base):
+            assert filesystem.can_write_to_dir(
+                self.destination
+            ), f"Cannot include {self.path}. Unable to write to {base}"
 
-            return self.base_directory(self.path, parent_scope)
-
-        # Make sure to use a proper working directory when obtaining the local
-        # path for a local (or remote) file.
-        base = _destination()
         tty.debug(f"Local base directory for {self.path} is {base}")
-
         config_path = rfc_util.local_path(self.path, self.sha256, base)
         assert config_path
-
-        # TODO/TLD/TBD: Is this the right thing to do here?
         if not self.destination:
             self.destination = config_path
 
@@ -1474,7 +1474,6 @@ class GitIncludePaths(OptionalInclude):
 
         Args:
             parent_scope: enclosing scope
-
 
         Returns: destination path if cloned or ``None``
 
