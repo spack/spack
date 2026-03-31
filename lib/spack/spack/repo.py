@@ -887,7 +887,7 @@ class RepoPath:
             List of Patch objects in the same order as sha256s.
 
         Raises:
-            PatchLookupError: if a sha256 cannot be found even after a full rebuild.
+            spack.error.PatchLookupError: if a sha256 cannot be found even after a full rebuild.
         """
         stale_index = self.get_patch_index(allow_stale=True)
         try:

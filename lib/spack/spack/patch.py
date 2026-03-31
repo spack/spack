@@ -432,7 +432,7 @@ class PatchCache:
             sha256: sha256 hash to look up
             pkg: Package class to get patch for.
             validate: if True, validate the cached entry against the owner's current package
-                class and raise ``spack.error.PatchLookupError`` if the entry is missing or stale.
+                class and raise ``PatchLookupError`` if the entry is missing or stale.
 
         Returns:
             The patch object.
