@@ -362,7 +362,6 @@ class TerminalUI(InstallerUI):
 
         self.tracked_build_id = new_build_id
 
-        # @@ to escape @, @c for cyan, @. for reset
         version_str = f"{self.color.CYAN}@{new_build.version}{self.color.RESET}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
@@ -555,7 +554,6 @@ class TerminalUI(InstallerUI):
                 " next/prev"
             )
             if coloring.clen(long_header) < max_width:
-                # Need {{}} for Progress because {bold} otherwise consumes one additional character
                 self._println(buffer, long_header)
             else:
                 self._println(
