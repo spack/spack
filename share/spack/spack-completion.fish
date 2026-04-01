@@ -3083,14 +3083,12 @@ complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack style
-set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings
+set -g __fish_spack_optspecs_spack_style h/help b/base= r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings
 
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -f -a base
 complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -d 'branch to compare against to determine changed files (default: develop)'
-complete -c spack -n '__fish_spack_using_command style' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command style' -s a -l all -d 'check all files, not just changed files'
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -f -a root_relative
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative)'
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -f -a untracked
