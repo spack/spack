@@ -105,6 +105,8 @@ class Style(str):
 
 
 class Color(str):
+    bright: str
+
     def __new__(cls, normal_code: int):
         instance = super().__new__(cls, f"\033[0;{normal_code}m")
         instance.bright = f"\033[0;{normal_code + 60}m"
@@ -112,6 +114,8 @@ class Color(str):
 
 
 class NullColor(str):
+    bright: str
+
     def __new__(cls):
         instance = super().__new__(cls, "")
         instance.bright = ""
