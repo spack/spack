@@ -98,10 +98,9 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     )
     (pathlib.Path(new_default_installs_dir) / "afile").touch()
     assert p1.default_install_location == new_default_installs_dir
-    assert (
-        f"{new_default_installs_dir} is where it should look"
-        in p1.bypassed_old_installs_warning(_show=False)
-    )
+    warning_msg1 = p1.bypassed_old_installs_warning(_show=False)
+    assert f"Bypassing data for installs existing in: {p1.base.old_install_path}" in warning_msg1
+    assert f"In favor of: {new_default_installs_dir}" in warning_msg1
 
     spack.config.set("config:locations", {})
 
@@ -113,9 +112,8 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     p4 = SpackPaths(paths_base_nonempty_old_install())
     xdg_installs_location = _ensure_dir(pathlib.Path(xdg_data_home) / "spack" / "installs")
     assert p4.default_install_location == str(xdg_installs_location)
-    assert f"{xdg_installs_location} is where it should look" in p4.bypassed_old_installs_warning(
-        _show=False
-    )
+    warning_msg4 = p4.bypassed_old_installs_warning(_show=False)
+    assert f"In favor of: {xdg_installs_location}" in warning_msg4
 
     # (sanity) XDG_DATA_HOME still overrides when there is something in it
     (pathlib.Path(xdg_installs_location) / "afile").touch()

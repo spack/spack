@@ -149,43 +149,28 @@ class SpackPaths:
         )
 
     def bypassed_old_installs_warning(self, _show=True):
-        msg = (
-            f"Detected installs in {self.base.old_install_path}; Spack's default"
-            " install path resolution mechanism is active and determined that"
-            f" {self.default_install_location} is where it should look for and"
-            " place new installs. You can suppress this warning by setting"
-            " config:install_tree:root, config:locations:home, config:locations:data,"
-            " SPACK_DATA_HOME, or SPACK_HOME"
-        )
+        cfg_settings = ["config:install_tree:root", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
         return self._bypass_warning(
-            self.default_install_location, self.base.old_install_path, msg, _show=_show
+            self.default_install_location, self.base.old_install_path, "installs", cfg_settings, _show=_show
         )
 
     def bypassed_old_envs_warning(self, _show=True):
-        msg = (
-            f"Detected environments in {self.base.old_envs_path}; Spack's default"
-            " environment path resolution mechanism is active and determined that"
-            f" {self.default_envs_path} is where it should look for and"
-            " place new environments. You can suppress this warning by setting"
-            " config:environments_root, config:locations:home, config:locations:data,"
-            " SPACK_DATA_HOME, or SPACK_HOME"
-        )
+        cfg_settings = ["config:environments_root", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
         return self._bypass_warning(
-            self.default_envs_path, self.base.old_envs_path, msg, _show=_show
+            self.default_envs_path, self.base.old_envs_path, "environments", cfg_settings,  _show=_show
         )
 
     def bypassed_old_gpg_warning(self, _show=True):
-        msg = (
-            f"Detected GPG keys in {self.base.old_gpg_path}; Spack's default"
-            " gpg keys resolution mechanism is active and determined that"
-            f" {self.gpg_path} is where it should look for and"
-            " place new GPG keys. You can suppress this warning by setting"
-            " config:locations:home, config:locations:data,"
-            " SPACK_GNUPGHOME, SPACK_DATA_HOME, or SPACK_HOME"
-        )
-        return self._bypass_warning(self.gpg_path, self.base.old_gpg_path, msg, _show=_show)
+        cfg_settings = ["SPACK_GNUPGHOME", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
+        return self._bypass_warning(self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings,  _show=_show)
 
-    def _bypass_warning(self, chosen_path, old_path, msg, _show=True):
+    def _bypass_warning(self, chosen_path, old_path, data_category, cfg_settings, _show=True, ):
+        msg = (
+            f"Bypassing data for {data_category} existing in: {old_path}"
+            f"\nIn favor of: {chosen_path}"
+            "\nYou can explicitly designate a location (and suppress this warning)"
+            f" by setting one of: {', '.join(cfg_settings)}"
+        )
         if (
             chosen_path != old_path
             and dir_is_occupied(old_path)
