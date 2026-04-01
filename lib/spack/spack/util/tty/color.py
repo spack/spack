@@ -99,36 +99,31 @@ colors = {
 }  # white
 
 
-class Style:
-    def __init__(self, style_code: int):
-        self.style = f"\033[{style_code}m"
-
-    def __repr__(self):
-        return self.style
+class Style(str):
+    def __new__(cls, style_code: int):
+        return super().__new__(cls, f"\033[{style_code}m")
 
 
-class Color:
-    def __init__(self, normal_code: int):
-        self.normal = f"\033[0;{normal_code}m"
-        self.bright = f"\033[0;{normal_code + 60}m"
-
-    def __repr__(self):
-        return self.normal
+class Color(str):
+    def __new__(cls, normal_code: int):
+        instance = super().__new__(cls, f"\033[0;{normal_code}m")
+        instance.bright = f"\033[0;{normal_code + 60}m"
+        return instance
 
 
-class NullColor:
-    bright = ""
-
-    def __repr__(self):
-        return ""
+class NullColor(str):
+    def __new__(cls):
+        instance = super().__new__(cls, "")
+        instance.bright = ""
+        return instance
 
 
 def get_colors(color: Optional[bool] = None):
     active = get_color_when() if color is None else color
-    return COLORS_ACTIVE() if active else COLORS_INACTIVE()
+    return ColorsActive if active else ColorsInactive
 
 
-class COLORS_ACTIVE:
+class ColorsActive:
     BLACK = Color(30)
     RED = Color(31)
     GREEN = Color(32)
@@ -144,18 +139,9 @@ class COLORS_ACTIVE:
     RESET = "\033[0m"
 
 
-class COLORS_INACTIVE:
-    BLACK = NullColor()
-    RED = NullColor()
-    GREEN = NullColor()
-    YELLOW = NullColor()
-    BLUE = NullColor()
-    MAGENTA = NullColor()
-    CYAN = NullColor()
-    WHITE = NullColor()
-    BOLD = NullColor()
-    UNDERLINE = NullColor()
-    RESET = NullColor()
+class ColorsInactive:
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = NullColor()
+    BOLD = UNDERLINE = RESET = ""
 
 
 # Regex to be used for color formatting
