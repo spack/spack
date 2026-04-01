@@ -70,7 +70,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.paths
-import spack.repo
 import spack.report
 import spack.spec
 import spack.stage
@@ -327,10 +326,6 @@ class GlobalState:
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
         self.spack_working_dir = spack.paths.spack_working_dir
-        # Avoid 8k stat calls in build process. The downside of this is the additional startup
-        # cost that blocks the parent process in `proc.start()`, but we avoid filesystem pressure.
-        # TODO: we don't need to send this if Spec.satisfies(...) etc does not depend on the repo.
-        self.repo_cache = spack.repo.FastPackageChecker._paths_cache
 
     def restore(self):
         if multiprocessing.get_start_method() == "fork":
@@ -347,7 +342,6 @@ class GlobalState:
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
         spack.paths.spack_working_dir = self.spack_working_dir
-        spack.repo.FastPackageChecker._paths_cache = self.repo_cache
 
 
 class PrefixPivoter:
