@@ -115,7 +115,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                     for mirror in dev_bootstrap_mirror_names()
                 ]
                 with self.mirror_keys_enabled(*mirrors):
-                    self.install_all(fail_fast=True, root_policy="auto", dependencies_policy="cache_only", include_build_deps=False)
+                    self.install_all(fail_fast=True, root_policy="cache_only", dependencies_policy="cache_only", include_build_deps=False)
                     self.write(regenerate=True)
 
     def load(self) -> None:
