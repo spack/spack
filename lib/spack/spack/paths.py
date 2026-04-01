@@ -149,27 +149,44 @@ class SpackPaths:
         )
 
     def bypassed_old_installs_warning(self, _show=True):
-        cfg_settings = ["config:install_tree:root", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
+        cfg_settings = ["config:install_tree:root"]
         return self._bypass_warning(
-            self.default_install_location, self.base.old_install_path, "installs", cfg_settings, _show=_show
+            self.default_install_location,
+            self.base.old_install_path,
+            "installs",
+            cfg_settings,
+            _show=_show,
         )
 
     def bypassed_old_envs_warning(self, _show=True):
-        cfg_settings = ["config:environments_root", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
+        cfg_settings = ["config:environments_root"]
         return self._bypass_warning(
-            self.default_envs_path, self.base.old_envs_path, "environments", cfg_settings,  _show=_show
+            self.default_envs_path,
+            self.base.old_envs_path,
+            "environments",
+            cfg_settings,
+            _show=_show,
         )
 
     def bypassed_old_gpg_warning(self, _show=True):
-        cfg_settings = ["SPACK_GNUPGHOME", "config:locations:home", "config:locations:data", "SPACK_DATA_HOME", "SPACK_HOME"]
-        return self._bypass_warning(self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings,  _show=_show)
+        cfg_settings = ["SPACK_GNUPGHOME"]
+        return self._bypass_warning(
+            self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings, _show=_show
+        )
 
-    def _bypass_warning(self, chosen_path, old_path, data_category, cfg_settings, _show=True, ):
+    def _bypass_warning(self, chosen_path, old_path, data_category, cfg_settings, _show=True):
+        generic_cfg = [
+            "config:locations:home",
+            "config:locations:data",
+            "SPACK_DATA_HOME",
+            "SPACK_HOME",
+        ]
         msg = (
             f"Bypassing data for {data_category} existing in: {old_path}"
             f"\nIn favor of: {chosen_path}"
             "\nYou can explicitly designate a location (and suppress this warning)"
             f" by setting one of: {', '.join(cfg_settings)}"
+            f"\nOr use a catch-all setting: {', '.join(generic_cfg)}"
         )
         if (
             chosen_path != old_path
