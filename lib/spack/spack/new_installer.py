@@ -326,10 +326,6 @@ class GlobalState:
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
         self.spack_working_dir = spack.paths_base.spack_working_dir
-        # Avoid 8k stat calls in build process. The downside of this is the additional startup
-        # cost that blocks the parent process in `proc.start()`, but we avoid filesystem pressure.
-        # TODO: we don't need to send this if Spec.satisfies(...) etc does not depend on the repo.
-        self.repo_cache = spack.repo.FastPackageChecker._paths_cache
 
     def restore(self):
         if multiprocessing.get_start_method() == "fork":
