@@ -10,7 +10,7 @@ from spack.installer import PackageInstaller
 tags = spack.main.SpackCommand("tags")
 
 
-def test_tags_bad_options():
+def test_tags_bad_options(mock_packages):
     out = tags("-a", "tag1", fail_on_error=False)
     assert "option OR provide" in out
 
