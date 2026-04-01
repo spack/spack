@@ -975,15 +975,17 @@ class ViewDescriptor:
                 msg += str(e)
                 tty.warn(msg)
 
-    def _exclude_duplicate_runtimes(self, nodes):
-        all_runtimes = spack.repo.PATH.packages_with_tags("runtime")
-        runtimes_by_name = {}
-        for s in nodes:
-            if s.name not in all_runtimes:
+    def _exclude_duplicate_runtimes(self, specs: List[Spec]) -> List[Spec]:
+        """Stably filter out duplicates of "runtime" tagged packages, keeping only latest."""
+        # Maps packages tagged "runtime" to the spec with latest version.
+        latest: Dict[str, Spec] = {}
+        for s in specs:
+            if "runtime" not in getattr(s.package, "tags", ()):
                 continue
-            current_runtime = runtimes_by_name.get(s.name, s)
-            runtimes_by_name[s.name] = max(current_runtime, s, key=lambda x: x.version)
-        return [x for x in nodes if x.name not in all_runtimes or runtimes_by_name[x.name] == x]
+            elif s.name not in latest or latest[s.name].version < s.version:
+                latest[s.name] = s
+
+        return [x for x in specs if x.name not in latest or latest[x.name] is x]
 
 
 def env_subdir_path(manifest_dir: Union[str, pathlib.Path]) -> str:
