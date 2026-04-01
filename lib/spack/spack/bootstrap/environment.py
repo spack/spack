@@ -139,7 +139,6 @@ class BootstrapEnvironment(spack.environment.Environment):
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
-            # "mirror_url": "<placeholder-CHANGE-ME>",
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
