@@ -73,6 +73,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    :caption: Configuration
 
    configuration_basics
+   where_spack_writes_data
    config_yaml
    packages_yaml
    toolchains_yaml
