@@ -2172,7 +2172,11 @@ class PackageInstaller:
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
-        spack.binary_distribution.BINARY_INDEX.update()
+        try:
+            spack.binary_distribution.BINARY_INDEX.update()
+        except spack.binary_distribution.FetchCacheError:
+            pass
+
         self.binary_cache_for_spec = {
             s.dag_hash(): spack.binary_distribution.BINARY_INDEX.find_by_hash(s.dag_hash())
             for s in self.build_graph.nodes.values()
