@@ -72,7 +72,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    :maxdepth: 2
    :caption: Configuration
 
-   configuration
+   configuration_basics
    config_yaml
    packages_yaml
    toolchains_yaml

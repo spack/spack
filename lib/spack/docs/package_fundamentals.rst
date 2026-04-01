@@ -116,29 +116,6 @@ And if you *only* wanted to see packages that provide MPI-2, you would add a ver
 
 Notice that the package versions that provide insufficient MPI versions are now filtered out.
 
-Controlling where spack writes data
------------------------------------
-
-A fresh checkout of spack will not write anything into the `$spack`` prefix; instead, all data is placed under the user's home directory.
-You can control this in the following ways:
-
-* Redirect everything with environment variables: set ``SPACK_HOME`` and one of ``SPACK_USER_CONFIG_PATH`` or ``SPACK_DISABLE_LOCAL_CONFIG=1``
-* Or redirect everything with config:
-
-  * set ``config:locations:home``
-  * Update the ``user`` config scope with ``spack config --scope=spack edit include``
-* Or redirect installs, environments, and cached downloads (everything that takes up significant space) by setting ``SPACK_DATA_HOME``
-* Or use finer-grained configuration settings, for example:
-
-  * ``config:install_tree:root`` to control where installs go
-  * ``config:build_stage`` to control where builds are staged
-
-For more on this, see:
-
-* :ref:`Variables controlling data location <config-file-data-variables>`
-* :ref:`include.yaml <include-yaml>`
-* :ref:`config.yaml <config-yaml>`
-
 Installing and Uninstalling
 ---------------------------
 

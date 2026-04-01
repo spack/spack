@@ -9,8 +9,16 @@
 
 .. _configuration:
 
+Configuration Basics
+====================
+
+Spack is configured with YAML files.
+You can customize Spack's behavior by modifying these files, and you can also tell it to look for files in custom locations.
+This section covers how configuration is generally organized and processed.
+The configuration is organized into categories with predefined schemas, and individual sections cover each of these categories.
+
 Configuration Files
-===================
+-------------------
 
 Spack has many configuration files.
 Here is a quick list of them, in case you want to skip directly to specific docs:
@@ -25,6 +33,29 @@ Here is a quick list of them, in case you want to skip directly to specific docs
 * :ref:`toolchains.yaml <toolchains>`
 
 You can also add any of these as inline configuration in the YAML manifest file (``spack.yaml``) describing an :ref:`environment <environment-configuration>`.
+
+Controlling where spack writes data
+-----------------------------------
+
+A fresh checkout of spack will not write anything into the `$spack`` prefix; instead, all data is placed under the user's home directory.
+You can control this in the following ways:
+
+* Redirect everything with environment variables: set ``SPACK_HOME`` and one of ``SPACK_USER_CONFIG_PATH`` or ``SPACK_DISABLE_LOCAL_CONFIG=1``
+* Or redirect everything with config:
+
+  * set ``config:locations:home``
+  * Update the ``user`` config scope with ``spack config --scope=spack edit include``
+* Or redirect installs, environments, and cached downloads (everything that takes up significant space) by setting ``SPACK_DATA_HOME``
+* Or use finer-grained configuration settings, for example:
+
+  * ``config:install_tree:root`` to control where installs go
+  * ``config:build_stage`` to control where builds are staged
+
+For more on this, see:
+
+* :ref:`Variables controlling data location <config-file-data-variables>`
+* :ref:`include.yaml <include-yaml>`
+* :ref:`config.yaml <config-yaml>`
 
 YAML Format
 -----------
