@@ -178,7 +178,7 @@ class SpackPaths:
                 " environment path resolution mechanism is active and determined that"
                 f" {self.default_envs_path} is where it should look for and"
                 " place new environments. You can suppress this warning by setting"
-                " config:install_tree:root, config:locations:home, config:locations:data,"
+                " config:environments_root, config:locations:home, config:locations:data,"
                 " SPACK_DATA_HOME, or SPACK_HOME"
             )
             if _show:
