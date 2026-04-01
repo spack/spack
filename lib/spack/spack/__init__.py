@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import functools
 import os
 import re
 from typing import Optional
@@ -37,6 +38,7 @@ def __try_int(v):
 spack_version_info = tuple([__try_int(v) for v in __version__.split(".")])
 
 
+@functools.lru_cache(maxsize=None)
 def get_spack_commit() -> Optional[str]:
     """Get the Spack git commit sha.
 

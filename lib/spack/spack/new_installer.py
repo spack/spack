@@ -70,7 +70,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.paths_base
-import spack.repo
 import spack.report
 import spack.spec
 import spack.stage
@@ -347,7 +346,6 @@ class GlobalState:
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
         spack.paths_base.spack_working_dir = self.spack_working_dir
-        spack.repo.FastPackageChecker._paths_cache = self.repo_cache
 
 
 class PrefixPivoter:

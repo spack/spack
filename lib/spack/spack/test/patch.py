@@ -174,6 +174,33 @@ def test_patch_in_spec(mock_packages, config):
     )
 
 
+def test_stale_patch_cache_falls_back_to_fresh(mock_packages, config):
+    """spec.patches returns correct patches even when the stale in-memory cache is wrong."""
+    spec = spack.concretize.concretize_one("patch@=1.0")
+    pkg_cls = spack.repo.PATH.get_pkg_class("patch")
+
+    # Inject a stale PatchCache: foo_sha256 points to a non-existent patch file
+    stale_cache = spack.patch.PatchCache(repository=spack.repo.PATH)
+    stale_cache.index = {
+        foo_sha256: {
+            pkg_cls.fullname: {
+                "owner": pkg_cls.fullname,
+                "relative_path": "stale_wrong.patch",
+                "level": 1,
+                "working_dir": ".",
+                "reverse": False,
+            }
+        }
+    }
+    spack.repo.PATH._patch_index = stale_cache
+    spack.repo.PATH._index_is_fresh = False
+
+    patches = spec.patches
+
+    assert len(patches) == 2
+    assert {p.relative_path for p in patches} == {"foo.patch", "baz.patch"}
+
+
 def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     """If we have a package with mixed x.y and x.y.z versions, make sure that
     a patch applied to a version range of x.y.z versions is not applied to

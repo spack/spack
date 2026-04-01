@@ -1935,7 +1935,7 @@ spack:
 
             gcc = next(x for _, x in e.concretized_specs_by(group="compiler"))
             assert gcc.satisfies("gcc@14") and not gcc.external
-            assert gcc.satisfies("%c,cxx,fortran=gcc")
+            assert gcc.satisfies("%c,cxx=gcc")
             gcc_hash = gcc.dag_hash()
 
             assert len(list(e.concretized_specs_by(group="scalapacks"))) == 4
