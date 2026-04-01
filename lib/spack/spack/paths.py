@@ -185,7 +185,7 @@ class SpackPaths:
             f"Bypassing data for {data_category} existing in: {old_path}"
             f"\nIn favor of: {chosen_path}"
             "\nYou can explicitly designate a location (and suppress this warning)"
-            f" by setting one of: {', '.join(cfg_settings)}"
+            f" by setting: {', '.join(cfg_settings)}"
             f"\nOr use a catch-all setting: {', '.join(generic_cfg)}"
         )
         if (
