@@ -20,8 +20,8 @@ spack:
     install_status: false
 
   packages:
-    buildable: false
     python:
+      buildable: false
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
@@ -35,6 +35,8 @@ spack:
   concretizer:
     reuse: true
     unify: true
+    targets:
+      granularity: generic
 
   mirrors:
     developer-tools-darwin:
@@ -46,5 +48,3 @@ spack:
     developer-tools-aarch64-linux-gnu:
       url: https://binaries.spack.io/releases/v2026.03/developer-tools-aarch64-linux-gnu
       signed: true
-
-

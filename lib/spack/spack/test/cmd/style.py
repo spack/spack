@@ -91,7 +91,7 @@ def external_style_root(git, ruff_package_with_errors, tmp_path: pathlib.Path):
     llnl_dir.mkdir(parents=True, exist_ok=True)
     (llnl_dir / "__init__.py").touch()
 
-        # create a base develop branch
+    # create a base develop branch
     with working_dir(str(tmp_path)):
         git("init")
         git("config", "user.name", "test user")
@@ -125,7 +125,9 @@ def test_fix_style(external_style_root):
     # check, don't fail on those errors, just check to make sure
     # we fixed the intended file correctly
     # Note: can't just specify the correct file due to cross drive issues on Windows
-    style("--root", str(tmp_path), "--tool", "ruff-check,ruff-format", "--fix", fail_on_error=False)
+    style(
+        "--root", str(tmp_path), "--tool", "ruff-check,ruff-format", "--fix", fail_on_error=False
+    )
     assert filecmp.cmp(broken_py, fixed_py)
 
 
