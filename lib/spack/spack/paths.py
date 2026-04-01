@@ -186,6 +186,25 @@ class SpackPaths:
             return msg
         return ""
 
+    def bypassed_old_gpg_warning(self, _show=True):
+        if (
+            self.gpg_path != self.base.old_gpg_path
+            and dir_is_occupied(self.base.old_gpg_path)
+            and not self._data_home_provenance.unilateral_override()
+        ):
+            msg = (
+                f"Detected GPG keys in {self.base.old_gpg_path}; Spack's default"
+                " gpg keys resolution mechanism is active and determined that"
+                f" {self.gpg_path} is where it should look for and"
+                " place new GPG keys. You can suppress this warning by setting"
+                " config:locations:home, config:locations:data,"
+                " SPACK_GNUPGHOME, SPACK_DATA_HOME, or SPACK_HOME"
+            )
+            if _show:
+                tty.warn(msg)
+            return msg
+        return ""
+
     @property
     def default_envs_path(self):
         return self._decide_old_or_new_location(
