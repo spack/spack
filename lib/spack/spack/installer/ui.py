@@ -544,20 +544,19 @@ class TerminalUI(InstallerUI):
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-            long_header_len = len(
-                f"Progress: {self.completed}/{self.total}  +/-: {jobs_str} jobs"
-                "  /: filter  v: logs  n/p: next/prev"
+
+            long_header = (
+                f"{self.color.BOLD}Progress:{self.color.RESET} {self.completed}/{self.total}"
+                f"  {self.color.CYAN}+{self.color.RESET}/{self.color.CYAN}-{self.color.RESET}: "
+                f"{jobs_str} jobs"
+                f"  {self.color.CYAN}/{self.color.RESET}: filter"
+                f"  {self.color.CYAN}v{self.color.RESET}: logs"
+                f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}:"
+                " next/prev"
             )
-            if long_header_len < max_width:
+            if coloring.clen(long_header) < max_width:
                 # Need {{}} for Progress because {bold} otherwise consumes one additional character
-                self._println(
-                    buffer,
-                    f"{self.color.BOLD}{{Progress:}}{self.color.RESET} {self.completed}/{self.total}"
-                    f"  {self.color.CYAN}+{self.color.RESET}/{self.color.CYAN}-{self.color.RESET}: "
-                    f"{jobs_str} jobs"
-                    f"  {self.color.CYAN}/{self.color.RESET}: filter  {self.color.CYAN}v{self.color.RESET}: logs"
-                    f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}: next/prev",
-                )
+                self._println(buffer, long_header)
             else:
                 self._println(
                     buffer,
