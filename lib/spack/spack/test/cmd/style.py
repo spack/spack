@@ -78,7 +78,7 @@ def test_bad_root(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def external_style_root(ruff_package_with_errors, tmp_path: pathlib.Path):
+def external_style_root(git, ruff_package_with_errors, tmp_path: pathlib.Path):
     """Create a mock repository for running spack style."""
     # create a sort-of spack-looking directory
     script = tmp_path / "bin" / "spack"
@@ -90,6 +90,16 @@ def external_style_root(ruff_package_with_errors, tmp_path: pathlib.Path):
     llnl_dir = tmp_path / "lib" / "spack" / "llnl"
     llnl_dir.mkdir(parents=True, exist_ok=True)
     (llnl_dir / "__init__.py").touch()
+
+        # create a base develop branch
+    with working_dir(str(tmp_path)):
+        git("init")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("add", ".")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
+        git("branch", "-m", "develop")
+        git("checkout", "-b", "feature")
 
     # copy the buggy package in
     py_file = spack_dir / "dummy.py"

@@ -20,6 +20,7 @@ spack:
     install_status: false
 
   packages:
+    buildable: false
     python:
       externals:
         - spec: "{{ python_spec }}"
