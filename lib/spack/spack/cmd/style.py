@@ -515,7 +515,7 @@ def style(parser, args):
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
 
     def prefix_relative(path: Union[Path, str]) -> Path:
-        return Path(os.path.relpath(os.path.abspath(path), args.root))
+        return Path(os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root))
 
     file_list = [prefix_relative(file) for file in args.files]
 
@@ -534,10 +534,10 @@ def style(parser, args):
     if missing_tools(tools_to_run):
         _bootstrap_dev_dependencies()
 
-    print_style_header(file_list, args, tools_to_run)
 
     return_code = 0
     with working_dir(str(args.root)):
+        print_style_header(file_list, args, tools_to_run)
         for tool_name in tools_to_run:
             tool = tools[tool_name]
             tty.msg(f"Running {tool.name} checks")

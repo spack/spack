@@ -121,7 +121,11 @@ def test_fix_style(external_style_root):
     shutil.copy(broken_dummy, broken_py)
     assert not filecmp.cmp(broken_py, fixed_py)
 
-    style("--root", str(tmp_path), "--tool", "ruff-check,ruff-format", "--fix", str(broken_py))
+    # dummy.py is in the same directory and will raise errors unrelated to this
+    # check, don't fail on those errors, just check to make sure
+    # we fixed the intended file correctly
+    # Note: can't just specify the correct file due to cross drive issues on Windows
+    style("--root", str(tmp_path), "--tool", "ruff-check,ruff-format", "--fix", fail_on_error=False)
     assert filecmp.cmp(broken_py, fixed_py)
 
 
