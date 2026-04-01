@@ -13,6 +13,7 @@ import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
+import spack.util.git
 from spack.cmd.common.spec_strings import (
     _check_spec_strings,
     _spec_str_default_handler,
@@ -24,6 +25,9 @@ from spack.util.executable import Executable, which
 description = "runs source code style checks on spack"
 section = "developer"
 level = "long"
+
+#: List of paths to exclude from checks -- relative to spack root
+exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run.
 #: The list maps an executable name to a method to ensure the tool is
@@ -349,9 +353,7 @@ def _run_import_check(
     is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     exit_code = 0
-    files = file_list or [
-        path for path in Path(spack.paths.lib_path).rglob("*.py") if "vendor" not in path.parts
-    ]
+    files = file_list or changed_files(root=root)
     for file in files:
         to_add: Set[str] = set()
         to_remove: List[str] = []
