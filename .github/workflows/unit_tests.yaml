@@ -60,7 +60,7 @@ jobs:
       run: |
           # See https://github.com/coveragepy/coveragepy/issues/2082
           pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
-          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade "mypy>=0.900" "click" "ruff"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -75,13 +75,6 @@ jobs:
           spack bootstrap disable spack-install
           spack bootstrap now
           spack -v solve zlib
-    - name: Bootstrap Development Dependencies
-      if: ${{ matrix.python-version != '3.9' && matrix.python-version != '3.8' && matrix.python-version != '3.7' }}
-      env:
-        SPACK_PYTHON: python
-      run: |
-        . share/spack/setup-env.sh
-          spack bootstrap now --dev
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
@@ -232,7 +225,6 @@ jobs:
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
         spack solve zlib
-        spack -d bootstrap now --dev
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
