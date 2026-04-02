@@ -232,10 +232,6 @@ def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
     if pkg.last_phase and pkg.last_phase not in phases:  # type: ignore[attr-defined]
         raise BadInstallPhase(pkg.name, pkg.last_phase)  # type: ignore[attr-defined]
 
-    # If we got a last_phase, make sure it's not already last
-    if pkg.last_phase and pkg.last_phase == phases[-1]:  # type: ignore[attr-defined]
-        pkg.last_phase = None  # type: ignore[attr-defined]
-
 
 def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
     """
