@@ -1814,11 +1814,12 @@ def test_included_path_git_unsat(
 
 
 def test_included_path_git_substitutions():
-    # check path substitutions for the git url *and* paths
+    # check path substitutions for the git url, branch, tag, and paths
     paths = ["./$platform/config.yaml", "$platform/packages.yaml"]
     entry = {
         "git": "https://example.com/$platform/configs.git",
-        "branch": "develop",
+        "branch": "$platform",
+        "tag": "$platform",
         "name": "site",
         "paths": paths,
         "when": 'platform == "test"',
@@ -1827,6 +1828,8 @@ def test_included_path_git_substitutions():
     assert isinstance(include, spack.config.GitIncludePaths)
     assert not include.optional and include.evaluate_condition()
     assert "test" in include.git, "Expected the git url to contain the platform"
+    assert include.branch == "test", "Expected the branch to contain the platform"
+    assert include.tag == "test", "Expected the tag to contain the platform"
     for path in include.paths:
         assert "test" in path, "Expected the included git path to contain the platform"
 
