@@ -59,6 +59,7 @@ import re
 import socket
 import warnings
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -74,7 +75,6 @@ from typing import (
 )
 
 import spack.vendor.archspec.cpu
-from spack.vendor.typing_extensions import Literal
 
 import spack
 import spack.aliases
@@ -88,7 +88,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
-import spack.patch
 import spack.paths
 import spack.platforms
 import spack.provider_index
@@ -105,6 +104,11 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 
 from .enums import InstallRecordStatus, PropagationPolicy
+
+if TYPE_CHECKING:
+    from spack.vendor.typing_extensions import Literal
+
+    import spack.patch
 
 __all__ = [
     "CompilerSpec",
@@ -2119,7 +2123,7 @@ class Spec:
         cover: spack.traverse.CoverType = ...,
         direction: spack.traverse.DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
-        depth: Literal[False] = False,
+        depth: "Literal[False]" = False,
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
     ) -> Iterable["Spec"]: ...
@@ -2133,7 +2137,7 @@ class Spec:
         cover: spack.traverse.CoverType = ...,
         direction: spack.traverse.DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
-        depth: Literal[True],
+        depth: "Literal[True]",
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
     ) -> Iterable[Tuple[int, "Spec"]]: ...
@@ -2172,7 +2176,7 @@ class Spec:
         cover: spack.traverse.CoverType = ...,
         direction: spack.traverse.DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
-        depth: Literal[False] = False,
+        depth: "Literal[False]" = False,
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
     ) -> Iterable[DependencySpec]: ...
@@ -2186,7 +2190,7 @@ class Spec:
         cover: spack.traverse.CoverType = ...,
         direction: spack.traverse.DirectionType = ...,
         deptype: Union[dt.DepFlag, dt.DepTypes] = ...,
-        depth: Literal[True],
+        depth: "Literal[True]",
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
     ) -> Iterable[Tuple[int, DependencySpec]]: ...
@@ -5788,7 +5792,7 @@ def eval_conditional(string):
 def _inject_patches_variant(root: Spec) -> None:
     # This dictionary will store object IDs rather than Specs as keys
     # since the Spec __hash__ will change as patches are added to them
-    spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
+    spec_to_patches: "Dict[int, Set[spack.patch.Patch]]" = {}
     for s in root.traverse():
         assert s.namespace is not None, (
             f"internal error: {s.name} has no namespace after concretization. "
@@ -5815,7 +5819,7 @@ def _inject_patches_variant(root: Spec) -> None:
 
         pkg_deps = spack.repo.PATH.get_pkg_class(dspec.parent.fullname).dependencies
 
-        edge_patches: List[spack.patch.Patch] = []
+        edge_patches: "List[spack.patch.Patch]" = []
         for cond, deps_by_name in pkg_deps.items():
             dependency = deps_by_name.get(dspec.spec.name)
             if not dependency:

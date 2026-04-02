@@ -7,13 +7,14 @@ import os
 import re
 import shutil
 import sys
-from typing import List, Optional, overload
-
-from spack.vendor.typing_extensions import Literal
+from typing import TYPE_CHECKING, List, Optional, overload
 
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.util.executable as exe
+
+if TYPE_CHECKING:
+    from spack.vendor.typing_extensions import Literal
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -95,7 +96,7 @@ SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version
 
 
 @overload
-def git(required: Literal[True]) -> GitExecutable: ...
+def git(required: "Literal[True]") -> GitExecutable: ...
 
 
 @overload

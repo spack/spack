@@ -10,20 +10,23 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
 import spack.caches
 import spack.llnl.path
 import spack.llnl.util.lang
 import spack.schema.environment
-import spack.spec
 import spack.util.executable
 import spack.util.libc
 import spack.util.module_cmd
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 from spack.util.environment import filter_system_paths
-from spack.util.file_cache import FileCache
+
+if TYPE_CHECKING:
+    import spack.spec
+    from spack.util.file_cache import FileCache
+
 
 #: regex for parsing linker lines
 _LINKER_LINE = re.compile(r"^( *|.*[/\\])" r"(link|ld|([^/\\]+-)?ld|collect2)" r"[^/\\]*( |$)")
@@ -139,7 +142,7 @@ def _parse_link_paths(string):
 class CompilerPropertyDetector:
     """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
-    def __init__(self, compiler_spec: spack.spec.Spec):
+    def __init__(self, compiler_spec: "spack.spec.Spec"):
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
         self.spec = compiler_spec
         self.cache = COMPILER_CACHE
@@ -232,7 +235,7 @@ class CompilerPropertyDetector:
 
         return spack.util.libc.parse_dynamic_linker(output)
 
-    def default_libc(self) -> Optional[spack.spec.Spec]:
+    def default_libc(self) -> "Optional[spack.spec.Spec]":
         """Determine libc targeted by the compiler from link line"""
         # technically this should be testing the target platform of the compiler, but we don't have
         # that, so stick to host platform for now.
@@ -305,7 +308,7 @@ class DefaultDynamicLinkerFilter:
         return [p for p in dirs if not self.is_dynamic_loader_default_path(p)]
 
 
-def dynamic_linker_filter_for(node: spack.spec.Spec) -> Optional[DefaultDynamicLinkerFilter]:
+def dynamic_linker_filter_for(node: "spack.spec.Spec") -> Optional[DefaultDynamicLinkerFilter]:
     compiler = compiler_spec(node)
     if compiler is None:
         return None
@@ -316,7 +319,7 @@ def dynamic_linker_filter_for(node: spack.spec.Spec) -> Optional[DefaultDynamicL
     return DefaultDynamicLinkerFilter(dynamic_linker)
 
 
-def compiler_spec(node: spack.spec.Spec) -> Optional[spack.spec.Spec]:
+def compiler_spec(node: "spack.spec.Spec") -> "Optional[spack.spec.Spec]":
     """Returns a compiler :class:`~spack.spec.Spec` associated with the node passed as argument.
 
     The function looks for a ``c``, ``cxx``, and ``fortran`` compiler in that order,
@@ -365,10 +368,10 @@ class CompilerCacheEntry:
 class CompilerCache:
     """Base class for compiler output cache. Default implementation does not cache anything."""
 
-    def value(self, compiler: spack.spec.Spec) -> Dict[str, Optional[str]]:
+    def value(self, compiler: "spack.spec.Spec") -> Dict[str, Optional[str]]:
         return {"c_compiler_output": CompilerPropertyDetector(compiler)._compile_dummy_c_source()}
 
-    def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
+    def get(self, compiler: "spack.spec.Spec") -> CompilerCacheEntry:
         return CompilerCacheEntry.from_dict(self.value(compiler))
 
 
@@ -393,7 +396,7 @@ class FileCompilerCache(CompilerCache):
             pass
         return None
 
-    def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
+    def get(self, compiler: "spack.spec.Spec") -> CompilerCacheEntry:
         # Cache hit
         try:
             with self.cache.read_transaction(self.name) as f:
@@ -429,7 +432,7 @@ class FileCompilerCache(CompilerCache):
 
             return entry
 
-    def _key(self, compiler: spack.spec.Spec) -> str:
+    def _key(self, compiler: "spack.spec.Spec") -> str:
         as_bytes = json.dumps(compiler.to_dict(), separators=(",", ":")).encode("utf-8")
         return hashlib.sha256(as_bytes).hexdigest()
 

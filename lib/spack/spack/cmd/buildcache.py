@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import spack.binary_distribution
 import spack.cmd
@@ -33,7 +33,7 @@ from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
 from spack.llnl.util.lang import elide_list, stable_partition
-from spack.spec import Spec, save_dependency_specfiles
+from spack.spec import save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
 from ..buildcache_prune import prune_buildcache
@@ -46,6 +46,9 @@ from ..url_buildcache import (
     get_entries_from_cache,
     get_url_buildcache_class,
 )
+
+if TYPE_CHECKING:
+    from spack.spec import Spec
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -374,7 +377,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     migrate.set_defaults(func=migrate_fn)
 
 
-def _matching_specs(specs: List[Spec]) -> List[Spec]:
+def _matching_specs(specs: "List[Spec]") -> "List[Spec]":
     """Disambiguate specs and return a list of matching specs"""
     return [
         spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
@@ -382,7 +385,7 @@ def _matching_specs(specs: List[Spec]) -> List[Spec]:
     ]
 
 
-def _format_spec(spec: Spec) -> str:
+def _format_spec(spec: "Spec") -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
 
 
@@ -408,7 +411,7 @@ def _skip_no_redistribute_for_public(specs):
 class PackagesAreNotInstalledError(spack.error.SpackError):
     """Raised when a list of specs is not installed but picked to be packaged."""
 
-    def __init__(self, specs: List[Spec]):
+    def __init__(self, specs: "List[Spec]"):
         super().__init__(
             "Cannot push non-installed packages",
             ", ".join(elide_list([_format_spec(s) for s in specs], 5)),
@@ -420,8 +423,8 @@ class PackageNotInstalledError(spack.error.SpackError):
 
 
 def _specs_to_be_packaged(
-    requested: List[Spec], things_to_install: str, build_deps: bool
-) -> List[Spec]:
+    requested: "List[Spec]", things_to_install: str, build_deps: bool
+) -> "List[Spec]":
     """Collect all non-external with or without roots and dependencies"""
     if "dependencies" not in things_to_install:
         deptype = dt.NONE
@@ -489,7 +492,7 @@ def push_fn(args):
 
     # Pushing not installed specs is an error. Either fail fast or populate the error list and
     # push installed package in best effort mode.
-    failed: List[Tuple[Spec, BaseException]] = []
+    failed: "List[Tuple[Spec, BaseException]]" = []
     with spack.store.STORE.db.read_transaction():
         if any(not s.installed for s in specs):
             specs, not_installed = stable_partition(specs, lambda s: s.installed)

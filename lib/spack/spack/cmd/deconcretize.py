@@ -4,14 +4,16 @@
 
 import argparse
 import sys
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
-import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.spec
 from spack.cmd.common import arguments
+
+if TYPE_CHECKING:
+    import spack.environment as ev
+    import spack.spec
 
 description = "remove specs from the lockfile of an environment"
 section = "environments"
@@ -36,8 +38,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def get_deconcretize_list(
-    args: argparse.Namespace, specs: List[spack.spec.Spec], env: ev.Environment
-) -> List[spack.spec.Spec]:
+    args: argparse.Namespace, specs: "List[spack.spec.Spec]", env: "ev.Environment"
+) -> "List[spack.spec.Spec]":
     """
     Get list of environment roots to deconcretize
     """

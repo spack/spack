@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from functools import cmp_to_key
-from typing import Dict, List, NamedTuple
+from typing import TYPE_CHECKING, Dict, List, NamedTuple
 
 import spack.deptypes as dt
-from spack.spec import Spec
 from spack.traverse import by_dag_hash, traverse_nodes
+
+if TYPE_CHECKING:
+    from spack.spec import Spec
 
 
 class Splice(NamedTuple):
     #: The spec being spliced into a parent
-    splice_spec: Spec
+    splice_spec: "Spec"
     #: The name of the child that splice spec is replacing
     child_name: str
     #: The hash of the child that ``splice_spec`` is replacing
@@ -19,13 +21,13 @@ class Splice(NamedTuple):
 
 
 def _resolve_collected_splices(
-    specs: List[Spec], splices: Dict[Spec, List[Splice]]
-) -> Dict[Spec, Spec]:
+    specs: "List[Spec]", splices: "Dict[Spec, List[Splice]]"
+) -> "Dict[Spec, Spec]":
     """After all of the specs have been concretized, apply all immediate splices.
     Returns a dict mapping original specs to their resolved counterparts
     """
 
-    def splice_cmp(s1: Spec, s2: Spec):
+    def splice_cmp(s1: "Spec", s2: "Spec"):
         """This function can be used to sort a list of specs such that that any
         spec which will be spliced into a parent comes after the parent it will
         be spliced into. This order ensures that transitive splices will be
@@ -46,7 +48,7 @@ def _resolve_collected_splices(
         [x for x in traverse_nodes(splice_order, order="topo", key=by_dag_hash) if x in specs]
     )
 
-    already_resolved: Dict[Spec, Spec] = {}
+    already_resolved: "Dict[Spec, Spec]" = {}
     for spec in reverse_topo_order:
         immediate = splices.get(spec, [])
         if not immediate and not any(

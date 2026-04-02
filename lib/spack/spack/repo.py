@@ -49,7 +49,6 @@ import spack.paths
 import spack.provider_index
 import spack.tag
 import spack.util.executable
-import spack.util.file_cache
 import spack.util.git
 import spack.util.hash
 import spack.util.lock
@@ -61,6 +60,7 @@ from spack.llnl.util.filesystem import working_dir
 if TYPE_CHECKING:
     import spack.package_base
     import spack.spec
+    import spack.util.file_cache
 
 PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
@@ -593,7 +593,7 @@ class RepoIndex:
         packages_path: str,
         package_checker: "Callable[[], FastPackageChecker]",
         namespace: str,
-        cache: spack.util.file_cache.FileCache,
+        cache: "spack.util.file_cache.FileCache",
     ):
         self._get_checker = package_checker
         self._checker: Optional[FastPackageChecker] = None
@@ -719,7 +719,7 @@ class RepoPath:
     @staticmethod
     def from_descriptors(
         descriptors: "RepoDescriptors",
-        cache: spack.util.file_cache.FileCache,
+        cache: "spack.util.file_cache.FileCache",
         overrides: Optional[Dict[str, Any]] = None,
     ) -> "RepoPath":
         repo_path, errors = descriptors.construct(cache=cache, fetch=True, overrides=overrides)
@@ -1114,7 +1114,7 @@ class Repo:
         self,
         root: str,
         *,
-        cache: spack.util.file_cache.FileCache,
+        cache: "spack.util.file_cache.FileCache",
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Instantiate a package repository from a filesystem path.
@@ -1707,7 +1707,7 @@ class RepoDescriptor:
         return None
 
     def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+        self, cache: "spack.util.file_cache.FileCache", overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
         """Construct Repo instances from the descriptor."""
         raise RuntimeError("construct() must be implemented in subclasses")
@@ -1722,7 +1722,7 @@ class LocalRepoDescriptor(RepoDescriptor):
         return f"{self.__class__.__name__}(name={self.name!r}, path={self.path!r})"
 
     def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+        self, cache: "spack.util.file_cache.FileCache", overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
         try:
             return {self.path: Repo(self.path, cache=cache, overrides=overrides)}
@@ -1920,7 +1920,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         )
 
     def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+        self, cache: "spack.util.file_cache.FileCache", overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
         if self.error:
             return {self.destination: Exception(self.error)}
@@ -1954,7 +1954,7 @@ class BrokenRepoDescriptor(RepoDescriptor):
         pass
 
     def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+        self, cache: "spack.util.file_cache.FileCache", overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
         return {self.name or "<unknown>": Exception(self.error)}
 
@@ -1993,7 +1993,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
     def construct(
         self,
-        cache: spack.util.file_cache.FileCache,
+        cache: "spack.util.file_cache.FileCache",
         fetch: bool = True,
         find_git: Callable[[], MaybeExecutable] = lambda: spack.util.git.git(required=True),
         overrides: Optional[Dict[str, Any]] = None,

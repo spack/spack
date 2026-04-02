@@ -4,13 +4,16 @@
 import os
 import re
 import sys
+from typing import TYPE_CHECKING
 
 import spack.build_environment
 import spack.config
-import spack.spec
 import spack.util.environment as environment
 from spack import traverse
 from spack.context import Context
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -64,7 +67,7 @@ def unconditional_environment_modifications(view):
 
 
 def project_env_mods(
-    *specs: spack.spec.Spec, view, env: environment.EnvironmentModifications
+    *specs: "spack.spec.Spec", view, env: environment.EnvironmentModifications
 ) -> None:
     """Given a list of environment modifications, project paths changes to the view."""
     prefix_to_prefix = {
@@ -80,7 +83,7 @@ def project_env_mods(
 
 
 def environment_modifications_for_specs(
-    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
+    *specs: "spack.spec.Spec", view=None, set_package_py_globals: bool = True
 ):
     """List of environment (shell) modifications to be processed for spec.
 

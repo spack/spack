@@ -8,7 +8,7 @@ import os
 import re
 import sys
 import warnings
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import spack.config
 import spack.detection
@@ -19,10 +19,12 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
-import spack.spec
 from spack.externals import ExternalSpecsParser, external_spec
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: Tag used to identify packages providing a compiler
 COMPILER_TAG = "compiler"
@@ -43,7 +45,7 @@ def compiler_config_files():
 
 def add_compiler_to_config(new_compilers, *, scope=None) -> None:
     """Add a Compiler object to the configuration, at the required scope."""
-    by_name: Dict[str, List[spack.spec.Spec]] = {}
+    by_name: "Dict[str, List[spack.spec.Spec]]" = {}
     for x in new_compilers:
         by_name.setdefault(x.name, []).append(x)
 
@@ -55,7 +57,7 @@ def find_compilers(
     *,
     scope: Optional[str] = None,
     max_workers: Optional[int] = None,
-) -> List[spack.spec.Spec]:
+) -> "List[spack.spec.Spec]":
     """Searches for compiler in the paths given as argument. If any new compiler is found, the
     configuration is updated, and the list of new compiler objects is returned.
 
@@ -83,8 +85,8 @@ def find_compilers(
 
 
 def select_new_compilers(
-    candidates: List[spack.spec.Spec], *, scope: Optional[str] = None
-) -> List[spack.spec.Spec]:
+    candidates: "List[spack.spec.Spec]", *, scope: Optional[str] = None
+) -> "List[spack.spec.Spec]":
     """Given a list of compilers, remove those that are already defined in
     the configuration.
     """
@@ -97,7 +99,9 @@ def supported_compilers() -> List[str]:
     return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
 
 
-def all_compilers(scope: Optional[str] = None, init_config: bool = True) -> List[spack.spec.Spec]:
+def all_compilers(
+    scope: Optional[str] = None, init_config: bool = True
+) -> "List[spack.spec.Spec]":
     """Returns all the compilers from the current global configuration.
 
     Args:
@@ -120,7 +124,7 @@ def _init_packages_yaml(
     # Try importing from compilers.yaml
     legacy_compilers = CompilerFactory.from_compilers_yaml(configuration, scope=scope)
     if legacy_compilers:
-        by_name: Dict[str, List[spack.spec.Spec]] = {}
+        by_name: "Dict[str, List[spack.spec.Spec]]" = {}
         for legacy in legacy_compilers:
             by_name.setdefault(legacy.name, []).append(legacy)
         spack.detection.update_configuration(by_name, buildable=True, scope=scope)
@@ -142,7 +146,7 @@ def _init_packages_yaml(
 
 def all_compilers_from(
     configuration: spack.config.Configuration, scope: Optional[str] = None
-) -> List[spack.spec.Spec]:
+) -> "List[spack.spec.Spec]":
     """Returns all the compilers from the current global configuration.
 
     Args:
@@ -161,7 +165,9 @@ class CompilerRemover:
         self.configuration = configuration
         self.marked_packages_yaml: List[Tuple[str, Any]] = []
 
-    def mark_compilers(self, *, match: str, scope: Optional[str] = None) -> List[spack.spec.Spec]:
+    def mark_compilers(
+        self, *, match: str, scope: Optional[str] = None
+    ) -> "List[spack.spec.Spec]":
         """Marks compilers to be removed in configuration, and returns a corresponding list
         of specs.
 
@@ -221,8 +227,8 @@ class CompilerRemover:
 
 
 def compilers_for_arch(
-    arch_spec: spack.spec.ArchSpec, *, scope: Optional[str] = None
-) -> List[spack.spec.Spec]:
+    arch_spec: "spack.spec.ArchSpec", *, scope: Optional[str] = None
+) -> "List[spack.spec.Spec]":
     """Returns the compilers that can be used on the input architecture"""
     compilers = all_compilers_from(spack.config.CONFIG, scope=scope)
     query = f"platform={arch_spec.platform} target=:{arch_spec.target}"
@@ -232,7 +238,7 @@ def compilers_for_arch(
 _EXTRA_ATTRIBUTES_KEY = "extra_attributes"
 
 
-def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
+def name_os_target(spec: "spack.spec.Spec") -> Tuple[str, str, str]:
     if not spec.architecture:
         host_platform = spack.platforms.host()
         operating_system = host_platform.operating_system("default_os")
@@ -257,7 +263,7 @@ class CompilerFactory:
     @staticmethod
     def from_packages_yaml(
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
-    ) -> List[spack.spec.Spec]:
+    ) -> "List[spack.spec.Spec]":
         """Returns the compiler specs defined in the "packages" section of the configuration"""
         externals_dicts = []
         compiler_package_names = supported_compilers()
@@ -283,7 +289,7 @@ class CompilerFactory:
         return external_parser.all_specs()
 
     @staticmethod
-    def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:
+    def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> "List[spack.spec.Spec]":
         """Returns a list of external specs, corresponding to a compiler entry
         from compilers.yaml.
         """
@@ -321,9 +327,9 @@ class CompilerFactory:
     @staticmethod
     def from_compilers_yaml(
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
-    ) -> List[spack.spec.Spec]:
+    ) -> "List[spack.spec.Spec]":
         """Returns the compiler specs defined in the "compilers" section of the configuration"""
-        result: List[spack.spec.Spec] = []
+        result: "List[spack.spec.Spec]" = []
         for item in configuration.get("compilers", scope=scope):
             result.extend(CompilerFactory.from_legacy_yaml(item["compiler"]))
         return result

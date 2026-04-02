@@ -37,7 +37,7 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional, Type
+from typing import TYPE_CHECKING, Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
@@ -55,7 +55,10 @@ import spack.version
 from spack.llnl.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
-from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.executable import CommandNotFoundError, which
+
+if TYPE_CHECKING:
+    from spack.util.executable import Executable
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -359,12 +362,12 @@ class URLFetchStrategy(FetchStrategy):
 
         self.expand_archive: bool = kwargs.get("expand", True)
         self.extra_options: dict = kwargs.get("fetch_options", {})
-        self._curl: Optional[Executable] = None
+        self._curl: "Optional[Executable]" = None
         self.extension: Optional[str] = kwargs.get("extension", None)
         self._effective_url: Optional[str] = None
 
     @property
-    def curl(self) -> Executable:
+    def curl(self) -> "Executable":
         if not self._curl:
             self._curl = web_util.require_curl()
         return self._curl

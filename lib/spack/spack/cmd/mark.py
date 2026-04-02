@@ -4,15 +4,17 @@
 
 import argparse
 import sys
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
 import spack.cmd
-import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.llnl.util import tty
 
 from ..enums import InstallRecordStatus
+
+if TYPE_CHECKING:
+    import spack.spec
 
 description = "mark packages as explicitly or implicitly installed"
 section = "build"
@@ -54,8 +56,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def find_matching_specs(
-    specs: List[Union[str, spack.spec.Spec]], allow_multiple_matches: bool = False
-) -> List[spack.spec.Spec]:
+    specs: "List[Union[str, spack.spec.Spec]]", allow_multiple_matches: bool = False
+) -> "List[spack.spec.Spec]":
     """Returns a list of specs matching the not necessarily concretized specs given from cli
 
     Args:

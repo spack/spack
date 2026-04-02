@@ -3,18 +3,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import io
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import spack.cmd
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.spec
 import spack.store
 import spack.verify
 import spack.verify_libraries
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
 from spack.llnl.util.filesystem import visit_directory_tree
+
+if TYPE_CHECKING:
+    import spack.spec
 
 description = "verify spack installations on disk"
 section = "admin"
@@ -167,7 +169,7 @@ def verify_libraries(args):
         return 1
 
 
-def _verify_libraries(spec: spack.spec.Spec, unresolved_libraries: List[str]) -> Optional[str]:
+def _verify_libraries(spec: "spack.spec.Spec", unresolved_libraries: List[str]) -> Optional[str]:
     """Go over the prefix of the installed spec and verify its shared libraries can be resolved."""
     visitor = spack.verify_libraries.ResolveSharedElfLibDepsVisitor(
         [*spack.verify_libraries.ALLOW_UNRESOLVED, *unresolved_libraries]

@@ -2,11 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
-from typing import List, NamedTuple, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, List, NamedTuple, Optional, Sequence, Tuple
 
-import spack.config
 import spack.error
-import spack.package_base
 import spack.repo
 import spack.spec
 import spack.spec_parser
@@ -14,6 +12,10 @@ import spack.traverse
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
+
+if TYPE_CHECKING:
+    import spack.config
+    import spack.package_base
 
 
 class RequirementKind(enum.Enum):
@@ -100,7 +102,7 @@ def conflict(
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
-    def __init__(self, configuration: spack.config.Configuration):
+    def __init__(self, configuration: "spack.config.Configuration"):
         self.config = configuration
         self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
         self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
@@ -113,7 +115,7 @@ class RequirementParser:
             spack.spec_parser.expand_toolchains(result, self.toolchains)
         return result
 
-    def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         result = []
         result.extend(self.rules_from_input_specs(pkg))
         result.extend(self.rules_from_package_py(pkg))
@@ -130,7 +132,9 @@ class RequirementParser:
                     root_name = edge.parent.name
                     self.preferences_from_input.append((constraint, root_name))
 
-    def rules_from_input_specs(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_input_specs(
+        self, pkg: "spack.package_base.PackageBase"
+    ) -> List[RequirementRule]:
         return [
             preference(
                 pkg.name,
@@ -141,7 +145,9 @@ class RequirementParser:
             for s, root_name in self.preferences_from_input
         ]
 
-    def rules_from_package_py(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_package_py(
+        self, pkg: "spack.package_base.PackageBase"
+    ) -> List[RequirementRule]:
         rules = []
         for when_spec, requirement_list in pkg.requirements.items():
             for requirements, policy, message in requirement_list:
@@ -170,11 +176,11 @@ class RequirementParser:
 
         return result
 
-    def rules_from_require(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_require(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         kind, requirements = self._raw_yaml_data(pkg.name, section="require")
         return self._rules_from_requirements(pkg.name, requirements, kind=kind)
 
-    def rules_from_prefer(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_prefer(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         kind, preferences = self._raw_yaml_data(pkg.name, section="prefer")
         return self._rules_from_preferences(pkg.name, preferences=preferences, kind=kind)
 
@@ -189,7 +195,7 @@ class RequirementParser:
             )
         return result
 
-    def rules_from_conflict(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
+    def rules_from_conflict(self, pkg: "spack.package_base.PackageBase") -> List[RequirementRule]:
         kind, conflicts = self._raw_yaml_data(pkg.name, section="conflict")
         return self._rules_from_conflicts(pkg.name, conflicts=conflicts, kind=kind)
 

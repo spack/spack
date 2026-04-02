@@ -5,11 +5,11 @@
 from typing import TYPE_CHECKING, Dict, List, Type
 
 import spack.deptypes as dt
-import spack.spec
 
 if TYPE_CHECKING:
     import spack.package_base
     import spack.patch
+    import spack.spec
 
 
 class Dependency:
@@ -44,7 +44,7 @@ class Dependency:
     def __init__(
         self,
         pkg: Type["spack.package_base.PackageBase"],
-        spec: spack.spec.Spec,
+        spec: "spack.spec.Spec",
         depflag: dt.DepFlag = dt.DEFAULT,
     ):
         """Create a new Dependency.
@@ -59,7 +59,7 @@ class Dependency:
 
         # This dict maps condition specs to lists of Patch objects, just
         # as the patches dict on packages does.
-        self.patches: Dict[spack.spec.Spec, List["spack.patch.Patch"]] = {}
+        self.patches: 'Dict[spack.spec.Spec, List["spack.patch.Patch"]]' = {}
         self.depflag = depflag
 
     @property

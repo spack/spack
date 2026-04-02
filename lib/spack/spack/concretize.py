@@ -7,21 +7,22 @@ import sys
 import time
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
-import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
-from spack.spec import ArchSpec, CompilerSpec, Spec
+from spack.spec import Spec
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 
 if TYPE_CHECKING:
+    import spack.compilers
     from spack.solver.reuse import SpecFiltersFactory
+    from spack.spec import ArchSpec, CompilerSpec
 
 
 def _concretize_specs_together(
@@ -272,7 +273,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
     """Raised when there is no available compiler that satisfies a
     compiler spec."""
 
-    def __init__(self, compiler_spec: CompilerSpec, arch: Optional[ArchSpec] = None) -> None:
+    def __init__(self, compiler_spec: "CompilerSpec", arch: "Optional[ArchSpec]" = None) -> None:
         err_msg = f"No compilers with spec {compiler_spec} found"
         if arch:
             err_msg += f" for operating system {arch.os} and target {arch.target}."

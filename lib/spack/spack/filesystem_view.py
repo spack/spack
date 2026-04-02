@@ -10,12 +10,11 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 from spack.vendor.typing_extensions import Literal
 
 import spack.config
-import spack.directory_layout
 import spack.projections
 import spack.relocate
 import spack.schema.projections
@@ -43,6 +42,9 @@ from spack.llnl.util.link_tree import (
     SourceMergeVisitor,
 )
 from spack.llnl.util.tty.color import colorize
+
+if TYPE_CHECKING:
+    import spack.directory_layout
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -159,7 +161,7 @@ class FilesystemView:
     def __init__(
         self,
         root: str,
-        layout: spack.directory_layout.DirectoryLayout,
+        layout: "spack.directory_layout.DirectoryLayout",
         *,
         projections: Optional[Dict] = None,
         ignore_conflicts: bool = False,
@@ -286,7 +288,7 @@ class YamlFilesystemView(FilesystemView):
     def __init__(
         self,
         root: str,
-        layout: spack.directory_layout.DirectoryLayout,
+        layout: "spack.directory_layout.DirectoryLayout",
         *,
         projections: Optional[Dict] = None,
         ignore_conflicts: bool = False,

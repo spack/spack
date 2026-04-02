@@ -6,13 +6,12 @@ import json
 import os
 import pathlib
 import tempfile
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import spack.binary_distribution
 import spack.database as spack_db
 import spack.error
 import spack.llnl.util.tty as tty
-import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -29,6 +28,9 @@ from .url_buildcache import (
     sign_file,
     try_verify,
 )
+
+if TYPE_CHECKING:
+    import spack.mirrors.mirror
 
 
 def v2_tarball_directory_name(spec):
@@ -243,7 +245,7 @@ def _migrate_spec(
 
 
 def migrate(
-    mirror: spack.mirrors.mirror.Mirror, unsigned: bool = False, delete_existing: bool = False
+    mirror: "spack.mirrors.mirror.Mirror", unsigned: bool = False, delete_existing: bool = False
 ) -> None:
     """Perform migration of the given mirror
 

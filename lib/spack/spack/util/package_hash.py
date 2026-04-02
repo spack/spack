@@ -4,15 +4,17 @@
 
 import ast
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import spack.directives_meta
 import spack.error
 import spack.fetch_strategy
 import spack.repo
-import spack.spec
 import spack.util.hash
 from spack.util.unparse import unparse
+
+if TYPE_CHECKING:
+    import spack.spec
 
 if sys.version_info >= (3, 8):
 
@@ -178,7 +180,7 @@ def _is_when_decorator(node: ast.Call) -> bool:
 class TagMultiMethods(ast.NodeVisitor):
     """Tag @when-decorated methods in a package AST."""
 
-    def __init__(self, spec: spack.spec.Spec) -> None:
+    def __init__(self, spec: "spack.spec.Spec") -> None:
         self.spec = spec
         # map from function name to (implementation, condition_list) tuples
         self.methods: Dict[str, List[Tuple[ast.FunctionDef, List[Optional[bool]]]]] = {}
@@ -335,7 +337,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
 
 
 def canonical_source(
-    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+    spec: "spack.spec.Spec", filter_multimethods: bool = True, source: Optional[bytes] = None
 ) -> str:
     """Get canonical source for a spec's package.py by unparsing its AST.
 
@@ -347,7 +349,7 @@ def canonical_source(
     return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
 
 
-def package_hash(spec: spack.spec.Spec, source: Optional[bytes] = None) -> str:
+def package_hash(spec: "spack.spec.Spec", source: Optional[bytes] = None) -> str:
     """Get a hash of a package's canonical source code.
 
     This function is used to determine whether a spec needs a rebuild when a
@@ -362,7 +364,7 @@ def package_hash(spec: spack.spec.Spec, source: Optional[bytes] = None) -> str:
 
 
 def package_ast(
-    spec: spack.spec.Spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+    spec: "spack.spec.Spec", filter_multimethods: bool = True, source: Optional[bytes] = None
 ) -> ast.AST:
     """Get the AST for the ``package.py`` file corresponding to ``spec``.
 

@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Optional, Set
+from typing import TYPE_CHECKING, Optional, Set
 
 import spack.config
 import spack.modules
-import spack.spec
 from spack.llnl.util import tty
+
+if TYPE_CHECKING:
+    import spack.spec
 
 
 def _for_each_enabled(
-    spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None
+    spec: "spack.spec.Spec", method_name: str, explicit: Optional[bool] = None
 ) -> None:
     """Calls a method for each enabled module"""
     set_names: Set[str] = set(spack.config.get("modules", {}).keys())

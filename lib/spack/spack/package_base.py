@@ -19,13 +19,22 @@ import sys
 import textwrap
 import time
 import traceback
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
-
-from spack.vendor.typing_extensions import Literal
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import spack.config
-import spack.dependency
-import spack.deptypes as dt
 import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
@@ -43,7 +52,6 @@ import spack.stage as stg
 import spack.store
 import spack.url
 import spack.util.archive
-import spack.util.environment
 import spack.util.executable
 import spack.util.git
 import spack.util.naming
@@ -59,11 +67,19 @@ from spack.llnl.util.filesystem import (
     islink,
     symlink,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
-from spack.resource import Resource
+from spack.llnl.util.lang import classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+
+if TYPE_CHECKING:
+    from spack.vendor.typing_extensions import Literal
+
+    import spack.dependency
+    import spack.deptypes as dt
+    import spack.util.environment
+    from spack.llnl.util.lang import ClassProperty
+    from spack.resource import Resource
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -551,10 +567,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.version` directives
     versions: Dict[StandardVersion, Dict[str, Any]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
-    resources: Dict[spack.spec.Spec, List[Resource]]
+    resources: "Dict[spack.spec.Spec, List[Resource]]"
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
     #: :func:`~spack.directives.extends` directives
-    dependencies: Dict[spack.spec.Spec, Dict[str, spack.dependency.Dependency]]
+    dependencies: "Dict[spack.spec.Spec, Dict[str, spack.dependency.Dependency]]"
     #: Class level dictionary populated by :func:`~spack.directives.extends` directives
     extendees: Dict[str, Tuple[spack.spec.Spec, spack.spec.Spec]]
     #: Class level dictionary populated by :func:`~spack.directives.conflicts` directives
@@ -675,10 +691,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     _verbose = None
 
     #: Package homepage where users can find more information about the package
-    homepage: ClassProperty[Optional[str]] = None
+    homepage: "ClassProperty[Optional[str]]" = None
 
     #: Default list URL (place to find available versions)
-    list_url: ClassProperty[Optional[str]] = None
+    list_url: "ClassProperty[Optional[str]]" = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth: int = 0
@@ -896,7 +912,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return True
 
     @property
-    def keep_werror(self) -> Optional[Literal["all", "specific", "none"]]:
+    def keep_werror(self) -> 'Optional[Literal["all", "specific", "none"]]':
         """Keep ``-Werror`` flags, matches ``config:flags:keep_werror`` to override config.
 
         Valid return values are:
@@ -1384,7 +1400,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         self._fetcher.set_package(self)
 
     @classmethod
-    def dependencies_of_type(cls, deptypes: dt.DepFlag):
+    def dependencies_of_type(cls, deptypes: "dt.DepFlag"):
         """Get names of dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
@@ -2075,7 +2091,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """See :func:`spack.package.build_system_flags`."""
         return None, None, flags
 
-    def setup_run_environment(self, env: spack.util.environment.EnvironmentModifications) -> None:
+    def setup_run_environment(
+        self, env: "spack.util.environment.EnvironmentModifications"
+    ) -> None:
         """Sets up the run environment for a package.
 
         Args:
@@ -2085,7 +2103,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         pass
 
     def setup_dependent_run_environment(
-        self, env: spack.util.environment.EnvironmentModifications, dependent_spec: spack.spec.Spec
+        self,
+        env: "spack.util.environment.EnvironmentModifications",
+        dependent_spec: spack.spec.Spec,
     ) -> None:
         """Sets up the run environment of packages that depend on this one.
 

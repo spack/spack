@@ -3,16 +3,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import spack.cmd
 import spack.llnl.util.tty as tty
-import spack.spec
+
+if TYPE_CHECKING:
+    import spack.spec
+
 
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
-def confirm_action(specs: List[spack.spec.Spec], participle: str, noun: str):
+def confirm_action(specs: "List[spack.spec.Spec]", participle: str, noun: str):
     """Display the list of specs to be acted on and ask for confirmation.
 
     Args:

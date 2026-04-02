@@ -9,13 +9,26 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
-from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
-
-from spack.vendor.typing_extensions import Literal
+from typing import (
+    TYPE_CHECKING,
+    BinaryIO,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    overload,
+)
 
 import spack.error
 import spack.llnl.util.tty as tty
 from spack.util.environment import EnvironmentModifications
+
+if TYPE_CHECKING:
+    from spack.vendor.typing_extensions import Literal
 
 __all__ = ["Executable", "which", "which_string", "ProcessError"]
 
@@ -360,7 +373,7 @@ class Executable:
 
 @overload
 def which_string(
-    *args: str, path: Optional[Union[List[str], str]] = ..., required: Literal[True]
+    *args: str, path: Optional[Union[List[str], str]] = ..., required: "Literal[True]"
 ) -> str: ...
 
 
@@ -425,7 +438,7 @@ def which_string(
 
 @overload
 def which(
-    *args: str, path: Optional[Union[List[str], str]] = ..., required: Literal[True]
+    *args: str, path: Optional[Union[List[str], str]] = ..., required: "Literal[True]"
 ) -> Executable: ...
 
 

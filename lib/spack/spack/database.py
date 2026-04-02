@@ -25,6 +25,7 @@ import sys
 import time
 from json import JSONDecoder
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Container,
@@ -60,16 +61,15 @@ import spack.traverse as tr
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
-from spack.directory_layout import (
-    DirectoryLayout,
-    DirectoryLayoutError,
-    InconsistentInstallDirectoryError,
-)
+from spack.directory_layout import DirectoryLayoutError, InconsistentInstallDirectoryError
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
 from .enums import InstallRecordStatus
+
+if TYPE_CHECKING:
+    from spack.directory_layout import DirectoryLayout
 
 # TODO: Provide an API automatically retrying a build after detecting and
 # TODO: clearing a failure.
@@ -565,7 +565,7 @@ class Database:
         upstream_dbs: Optional[List["Database"]] = None,
         is_upstream: bool = False,
         lock_cfg: LockConfiguration = DEFAULT_LOCK_CFG,
-        layout: Optional[DirectoryLayout] = None,
+        layout: "Optional[DirectoryLayout]" = None,
     ) -> None:
         """Database for Spack installations.
 

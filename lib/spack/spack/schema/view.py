@@ -7,10 +7,12 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/view.py
    :lines: 15-
 """
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
-import spack.schema
 import spack.schema.projections
+
+if TYPE_CHECKING:
+    import spack.schema
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {

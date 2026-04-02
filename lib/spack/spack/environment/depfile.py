@@ -10,13 +10,15 @@ import os
 import re
 import shlex
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import spack.deptypes as dt
-import spack.environment.environment as ev
 import spack.paths
-import spack.spec
 import spack.traverse as traverse
+
+if TYPE_CHECKING:
+    import spack.environment.environment as ev
+    import spack.spec
 
 
 class UseBuildCache(Enum):
@@ -48,7 +50,10 @@ class DepfileNode:
     buildcache only/never/auto."""
 
     def __init__(
-        self, target: spack.spec.Spec, prereqs: List[spack.spec.Spec], buildcache: UseBuildCache
+        self,
+        target: "spack.spec.Spec",
+        prereqs: "List[spack.spec.Spec]",
+        buildcache: UseBuildCache,
     ):
         self.target = MakefileSpec(target)
         self.prereqs = list(MakefileSpec(x) for x in prereqs)
@@ -125,8 +130,8 @@ class MakefileModel:
 
     def __init__(
         self,
-        env: ev.Environment,
-        roots: List[spack.spec.Spec],
+        env: "ev.Environment",
+        roots: "List[spack.spec.Spec]",
         adjacency_list: List[DepfileNode],
         make_prefix: Optional[str],
         jobserver: bool,
@@ -242,9 +247,9 @@ class MakefileModel:
 
     @staticmethod
     def from_env(
-        env: ev.Environment,
+        env: "ev.Environment",
         *,
-        filter_specs: Optional[List[spack.spec.Spec]] = None,
+        filter_specs: "Optional[List[spack.spec.Spec]]" = None,
         pkg_buildcache: UseBuildCache = UseBuildCache.AUTO,
         dep_buildcache: UseBuildCache = UseBuildCache.AUTO,
         make_prefix: Optional[str] = None,

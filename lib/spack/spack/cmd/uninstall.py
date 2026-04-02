@@ -4,13 +4,12 @@
 
 import argparse
 import sys
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.package_base
-import spack.spec
 import spack.store
 import spack.traverse as traverse
 from spack.cmd.common import arguments
@@ -18,6 +17,9 @@ from spack.llnl.util import tty
 from spack.llnl.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
+
+if TYPE_CHECKING:
+    import spack.spec
 
 description = "remove installed packages"
 section = "build"
@@ -79,10 +81,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def find_matching_specs(
     env: Optional[ev.Environment],
-    specs: List[spack.spec.Spec],
+    specs: "List[spack.spec.Spec]",
     allow_multiple_matches: bool = False,
     origin=None,
-) -> List[spack.spec.Spec]:
+) -> "List[spack.spec.Spec]":
     """Returns a list of specs matching the not necessarily concretized specs given from cli
 
     Args:
@@ -95,7 +97,7 @@ def find_matching_specs(
     hashes = env.all_hashes() if env else None
 
     # List of specs that match expressions given via command line
-    specs_from_cli: List[spack.spec.Spec] = []
+    specs_from_cli: "List[spack.spec.Spec]" = []
     has_errors = False
     for spec in specs:
         matching = spack.store.STORE.db.query_local(
@@ -130,7 +132,7 @@ def find_matching_specs(
     return specs_from_cli
 
 
-def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+def installed_dependents(specs: "List[spack.spec.Spec]") -> "List[spack.spec.Spec]":
     # Note: the combination of arguments (in particular order=breadth
     # and root=False) ensures dependents and matching_specs are non-overlapping;
     # In the extreme case of "spack uninstall --all" we get the entire database as
@@ -155,8 +157,8 @@ def installed_dependents(specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
 
 
 def dependent_environments(
-    specs: List[spack.spec.Spec], current_env: Optional[ev.Environment] = None
-) -> Dict[ev.Environment, List[spack.spec.Spec]]:
+    specs: "List[spack.spec.Spec]", current_env: Optional[ev.Environment] = None
+) -> "Dict[ev.Environment, List[spack.spec.Spec]]":
     # For each tracked environment, get the specs we would uninstall from it.
     # Don't instantiate current environment twice.
     env_names = ev.all_environment_names()
@@ -164,7 +166,7 @@ def dependent_environments(
         env_names = (name for name in env_names if name != current_env.name)
 
     # Mapping from Environment -> non-zero list of specs contained in it.
-    other_envs_to_specs: Dict[ev.Environment, List[spack.spec.Spec]] = {}
+    other_envs_to_specs: "Dict[ev.Environment, List[spack.spec.Spec]]" = {}
     for other_env in (ev.Environment(ev.root(name)) for name in env_names):
         specs_in_other_env = all_specs_in_env(other_env, specs)
         if specs_in_other_env:
@@ -173,7 +175,9 @@ def dependent_environments(
     return other_envs_to_specs
 
 
-def all_specs_in_env(env: ev.Environment, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+def all_specs_in_env(
+    env: ev.Environment, specs: "List[spack.spec.Spec]"
+) -> "List[spack.spec.Spec]":
     """Given a list of specs, return those that are in the env"""
     hashes = set(env.all_hashes())
     return [s for s in specs if s.dag_hash() in hashes]
@@ -189,7 +193,7 @@ def _remove_from_env(spec, env):
         pass  # ignore non-root specs
 
 
-def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
+def do_uninstall(specs: "List[spack.spec.Spec]", force: bool = False):
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = set(s.dag_hash() for s in specs)
@@ -201,7 +205,7 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
             spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
 
 
-def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Environment]):
+def get_uninstall_list(args, specs: "List[spack.spec.Spec]", env: Optional[ev.Environment]):
     """Returns unordered uninstall_list and remove_list: these may overlap (some things
     may be both uninstalled and removed from the current environment).
 

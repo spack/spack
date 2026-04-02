@@ -62,7 +62,6 @@ import spack.binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
-import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -76,16 +75,17 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.traverse
-import spack.url_buildcache
 import spack.util.environment
-import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if TYPE_CHECKING:
+    import spack.database
     import spack.package_base
+    import spack.url_buildcache
+    import spack.util.lock
 
 #: Type for specifying installation source modes
 InstallPolicy = Literal["auto", "cache_only", "source_only"]
@@ -121,9 +121,9 @@ class DatabaseAction:
     __slots__ = ("spec", "prefix_lock")
 
     spec: "spack.spec.Spec"
-    prefix_lock: Optional[spack.util.lock.Lock]
+    prefix_lock: "Optional[spack.util.lock.Lock]"
 
-    def save_to_db(self, db: spack.database.Database) -> None: ...
+    def save_to_db(self, db: "spack.database.Database") -> None: ...
 
 
 class MarkExplicitAction(DatabaseAction):
@@ -136,7 +136,7 @@ class MarkExplicitAction(DatabaseAction):
         self.spec = spec
         self.prefix_lock = None
 
-    def save_to_db(self, db: spack.database.Database) -> None:
+    def save_to_db(self, db: "spack.database.Database") -> None:
         db._mark(self.spec, "explicit", True)
 
 
@@ -162,9 +162,9 @@ class ChildInfo(DatabaseAction):
         self.control_w_conn = control_w_conn
         self.log_path = log_path
         self.explicit = explicit
-        self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        self.prefix_lock: "Optional[spack.util.lock.Lock]" = None
 
-    def save_to_db(self, db: spack.database.Database) -> None:
+    def save_to_db(self, db: "spack.database.Database") -> None:
         return db._add(self.spec, explicit=self.explicit)
 
     def cleanup(self, selector: selectors.BaseSelector) -> None:
@@ -278,7 +278,7 @@ class Tee:
 
 
 def install_from_buildcache(
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
+    mirrors: "List[spack.url_buildcache.MirrorMetadata]",
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
@@ -420,7 +420,7 @@ class PrefixPivoter:
 def worker_function(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
+    mirrors: "List[spack.url_buildcache.MirrorMetadata]",
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -646,7 +646,7 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
+    mirrors: "List[spack.url_buildcache.MirrorMetadata]",
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -906,7 +906,7 @@ class JobServer:
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
-    mirrors: List[spack.url_buildcache.MirrorMetadata],
+    mirrors: "List[spack.url_buildcache.MirrorMetadata]",
     unsigned: Optional[bool],
     install_policy: InstallPolicy,
     dirty: bool,
@@ -1602,7 +1602,7 @@ class BuildGraph:
         include_build_deps: bool,
         install_package: bool,
         install_deps: bool,
-        database: spack.database.Database,
+        database: "spack.database.Database",
         overwrite_set: Optional[Set[str]] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         explicit_set: Optional[Set[str]] = None,
@@ -1728,10 +1728,10 @@ class ScheduleResult(NamedTuple):
     blocked: bool
     #: ``(dag_hash, lock)`` pairs where the write lock is held and the caller must start the build
     #: and eventually release the lock.
-    to_start: List[Tuple[str, spack.util.lock.Lock]]
+    to_start: "List[Tuple[str, spack.util.lock.Lock]]"
     #: ``(dag_hash, spec, lock)`` triples found already installed by another process; the read lock
     #: is held and the caller must add it to retained_read_locks.
-    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
+    newly_installed: "List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]"
     #: Actions to mark already installed specs explicit in the DB.
     to_mark_explicit: List[MarkExplicitAction]
 
@@ -1739,8 +1739,8 @@ class ScheduleResult(NamedTuple):
 def schedule_builds(
     pending: List[str],
     build_graph: BuildGraph,
-    db: spack.database.Database,
-    prefix_locker: spack.database.SpecLocker,
+    db: "spack.database.Database",
+    prefix_locker: "spack.database.SpecLocker",
     overwrite: Set[str],
     overwrite_time: float,
     capacity: int,
@@ -1778,8 +1778,8 @@ def schedule_builds(
         A :class:`ScheduleResult` with ``blocked``, ``to_start``, and ``newly_installed``
         fields; see :class:`ScheduleResult` for field semantics.
     """
-    to_start: List[Tuple[str, spack.util.lock.Lock]] = []
-    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
+    to_start: "List[Tuple[str, spack.util.lock.Lock]]" = []
+    newly_installed: "List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]" = []
     to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
 
@@ -2237,7 +2237,7 @@ class PackageInstaller:
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
-        retained_read_locks: List[spack.util.lock.Lock] = []
+        retained_read_locks: "List[spack.util.lock.Lock]" = []
         next_database_write = 0.0
 
         failures: List[spack.spec.Spec] = []
@@ -2477,7 +2477,7 @@ class PackageInstaller:
     def _save_to_db(
         self,
         database_actions: List[DatabaseAction],
-        retained_read_locks: List[spack.util.lock.Lock],
+        retained_read_locks: "List[spack.util.lock.Lock]",
     ) -> bool:
         if not self.db.lock.try_acquire_write():
             return False
@@ -2507,7 +2507,7 @@ class PackageInstaller:
         self,
         selector: selectors.BaseSelector,
         jobserver: JobServer,
-        retained_read_locks: List[spack.util.lock.Lock],
+        retained_read_locks: "List[spack.util.lock.Lock]",
         database_actions: List[DatabaseAction],
     ) -> bool:
         """Try to schedule as many pending builds as possible.
@@ -2552,7 +2552,7 @@ class PackageInstaller:
         selector: selectors.BaseSelector,
         jobserver: JobServer,
         dag_hash: str,
-        prefix_lock: spack.util.lock.Lock,
+        prefix_lock: "spack.util.lock.Lock",
     ) -> None:
         self.capacity -= 1
         explicit = dag_hash in self.explicit

@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Optional
 
 import spack.fetch_strategy
 import spack.llnl.url
-import spack.oci.image
 import spack.repo
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp, symlink
 
 if TYPE_CHECKING:
+    import spack.oci.image
     import spack.spec
 
 
@@ -74,7 +74,7 @@ class OCILayout(MirrorLayout):
     """Follow the OCI Image Layout Specification to archive blobs where paths are of the form
     ``blobs/<algorithm>/<digest>``"""
 
-    def __init__(self, digest: spack.oci.image.Digest) -> None:
+    def __init__(self, digest: "spack.oci.image.Digest") -> None:
         super().__init__(os.path.join("blobs", digest.algorithm, digest.digest))
 
 

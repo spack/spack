@@ -4,6 +4,7 @@
 import os
 import traceback
 from collections import Counter
+from typing import TYPE_CHECKING
 
 import spack.caches
 import spack.config
@@ -14,8 +15,11 @@ import spack.util.spack_yaml as syaml
 import spack.version
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp
-from spack.mirrors.mirror import Mirror, MirrorCollection
+from spack.mirrors.mirror import MirrorCollection
 from spack.package import InstallError
+
+if TYPE_CHECKING:
+    from spack.mirrors.mirror import Mirror
 
 
 def get_all_versions(specs):
@@ -112,7 +116,7 @@ def get_mirror_cache(path, skip_unstable_versions=False):
     return mirror_cache
 
 
-def add(mirror: Mirror, scope=None):
+def add(mirror: "Mirror", scope=None):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get("mirrors", scope=scope)
     if not mirrors:

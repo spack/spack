@@ -5,7 +5,7 @@ import copy
 import os
 import shutil
 import urllib
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import spack.vendor.ruamel.yaml
 
@@ -15,7 +15,6 @@ import spack.config
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
-import spack.spec
 import spack.util.path as path_util
 import spack.util.spack_yaml as syaml
 
@@ -31,6 +30,9 @@ from .common import (
     write_pipeline_manifest,
 )
 from .generator_registry import generator
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # See https://docs.gitlab.com/ee/ci/yaml/#retry for descriptions of conditions
 JOB_RETRY_CONDITIONS = [
@@ -56,7 +58,7 @@ def _remove_reserved_tags(tags):
     return [tag for tag in tags if tag not in SPACK_RESERVED_TAGS]
 
 
-def get_job_name(spec: spack.spec.Spec, build_group: Optional[str] = None) -> str:
+def get_job_name(spec: "spack.spec.Spec", build_group: Optional[str] = None) -> str:
     """Given a spec and possibly a build group, return the job name. If the
     resulting name is longer than 255 characters, it will be truncated.
 

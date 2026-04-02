@@ -6,10 +6,13 @@
 paths inside text files and binaries."""
 
 import re
-from typing import IO, Dict, Iterable, List, Union
+from typing import IO, TYPE_CHECKING, Dict, Iterable, List, Union
 
 import spack.error
-from spack.llnl.util.lang import PatternBytes
+
+if TYPE_CHECKING:
+    from spack.llnl.util.lang import PatternBytes
+
 
 Prefix = Union[str, bytes]
 PrefixToPrefix = Union[Dict[str, str], Dict[bytes, bytes]]
@@ -23,18 +26,18 @@ def _prefix_to_prefix_as_bytes(prefix_to_prefix: PrefixToPrefix) -> Dict[bytes, 
     return {encode_path(k): encode_path(v) for (k, v) in prefix_to_prefix.items()}
 
 
-def utf8_path_to_binary_regex(prefix: str) -> PatternBytes:
+def utf8_path_to_binary_regex(prefix: str) -> "PatternBytes":
     """Create a binary regex that matches the input path in utf8"""
     prefix_bytes = re.escape(prefix).encode("utf-8")
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
 
 
-def _byte_strings_to_single_binary_regex(prefixes: Iterable[bytes]) -> PatternBytes:
+def _byte_strings_to_single_binary_regex(prefixes: Iterable[bytes]) -> "PatternBytes":
     all_prefixes = b"|".join(re.escape(p) for p in prefixes)
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
-def utf8_paths_to_single_binary_regex(prefixes: Iterable[str]) -> PatternBytes:
+def utf8_paths_to_single_binary_regex(prefixes: Iterable[str]) -> "PatternBytes":
     """Create a (binary) regex that matches any input path in utf8"""
     return _byte_strings_to_single_binary_regex(p.encode("utf-8") for p in prefixes)
 
@@ -145,7 +148,7 @@ class BinaryFilePrefixReplacer(PrefixReplacer):
     @classmethod
     def binary_text_regex(
         cls, binary_prefixes: Iterable[bytes], suffix_safety_size: int = 7
-    ) -> PatternBytes:
+    ) -> "PatternBytes":
         """Create a regex that looks for exact matches of prefixes, and also tries to match a
         C-string type null terminator in a small lookahead window.
 

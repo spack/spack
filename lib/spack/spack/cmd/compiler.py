@@ -4,7 +4,7 @@
 
 import argparse
 import sys
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import spack.binary_distribution
 import spack.compilers.config
@@ -16,7 +16,10 @@ from spack.cmd.common import arguments
 from spack.llnl.util.lang import index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
-from spack.spec import Spec
+
+if TYPE_CHECKING:
+    from spack.spec import Spec
+
 
 description = "manage compilers"
 section = "config"
@@ -222,7 +225,7 @@ def compiler_list(args):
         colify(reversed(sorted(result)))
 
 
-def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
+def _all_available_compilers(scope: Optional[str], remote: bool) -> "List[Spec]":
     supported_compilers = spack.compilers.config.supported_compilers()
 
     def _is_compiler(x):

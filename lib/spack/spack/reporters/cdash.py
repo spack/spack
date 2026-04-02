@@ -12,7 +12,7 @@ import socket
 import time
 import warnings
 import xml.sax.saxutils
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 from urllib.parse import urlencode
 from urllib.request import Request
 
@@ -20,7 +20,6 @@ import spack
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.platforms
-import spack.spec
 import spack.tengine
 import spack.util.git
 import spack.util.web as web_util
@@ -31,6 +30,9 @@ from spack.util.log_parse import parse_log_events
 
 from .base import Reporter
 from .extract import extract_test_parts
+
+if TYPE_CHECKING:
+    import spack.spec
 
 # Mapping Spack phases to the corresponding CTest/CDash phase.
 # TODO: Some of the phases being lumped into configure in the CDash tables
@@ -374,7 +376,7 @@ class CDash(Reporter):
         self.finalize_report()
 
     def test_skipped_report(
-        self, report_dir: str, spec: spack.spec.Spec, reason: Optional[str] = None
+        self, report_dir: str, spec: "spack.spec.Spec", reason: Optional[str] = None
     ):
         """Explicitly report spec as being skipped (e.g., CI).
 

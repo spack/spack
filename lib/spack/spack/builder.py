@@ -6,7 +6,7 @@ import collections.abc
 import copy
 import functools
 import os
-from typing import Callable, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.directives
 import spack.error
@@ -15,10 +15,13 @@ import spack.package_base
 import spack.phase_callbacks
 import spack.relocate
 import spack.repo
-import spack.spec
-import spack.util.environment
 from spack.error import SpackError
-from spack.util.prefix import Prefix
+
+if TYPE_CHECKING:
+    import spack.spec
+    import spack.util.environment
+    from spack.util.prefix import Prefix
+
 
 #: Builder classes, as registered by the ``builder`` decorator
 BUILDER_CLS: Dict[str, Type["Builder"]] = {}
@@ -201,14 +204,14 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
         # the (self) signature of methods, so they are added explicitly to avoid using a
         # catch-all (*args, **kwargs)
         def setup_build_environment(
-            self, env: spack.util.environment.EnvironmentModifications
+            self, env: "spack.util.environment.EnvironmentModifications"
         ) -> None:
             return self.pkg_with_dispatcher.setup_build_environment(env)
 
         def setup_dependent_build_environment(
             self,
-            env: spack.util.environment.EnvironmentModifications,
-            dependent_spec: spack.spec.Spec,
+            env: "spack.util.environment.EnvironmentModifications",
+            dependent_spec: "spack.spec.Spec",
         ) -> None:
             return self.pkg_with_dispatcher.setup_dependent_build_environment(env, dependent_spec)
 
@@ -446,7 +449,7 @@ class BaseBuilder(metaclass=BuilderMeta):
         self.pkg = pkg
 
     @property
-    def spec(self) -> spack.spec.Spec:
+    def spec(self) -> "spack.spec.Spec":
         return self.pkg.spec
 
     @property
@@ -458,7 +461,7 @@ class BaseBuilder(metaclass=BuilderMeta):
         return self.pkg.prefix
 
     def setup_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications
+        self, env: "spack.util.environment.EnvironmentModifications"
     ) -> None:
         """Sets up the build environment for a package.
 
@@ -474,7 +477,9 @@ class BaseBuilder(metaclass=BuilderMeta):
         super().setup_build_environment(env)  # type: ignore
 
     def setup_dependent_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications, dependent_spec: spack.spec.Spec
+        self,
+        env: "spack.util.environment.EnvironmentModifications",
+        dependent_spec: "spack.spec.Spec",
     ) -> None:
         """Sets up the build environment of a package that depends on this one.
 
@@ -762,6 +767,6 @@ class GenericBuilder(BuilderWithDefaults):
     # unconditionally perform any post-install phase tests
     spack.phase_callbacks.run_after("install")(execute_install_time_tests)
 
-    def install(self, pkg: Package, spec: spack.spec.Spec, prefix: Prefix) -> None:
+    def install(self, pkg: Package, spec: "spack.spec.Spec", prefix: "Prefix") -> None:
         """Install phase for the generic builder, to be implemented by packagers."""
         raise NotImplementedError

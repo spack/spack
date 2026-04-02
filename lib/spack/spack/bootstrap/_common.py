@@ -10,14 +10,13 @@ import re
 import sys
 import sysconfig
 import warnings
-from typing import Optional, Sequence, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Union
 
 import spack.vendor.archspec.cpu
 from spack.vendor.typing_extensions import TypedDict
 
 import spack.llnl.util.filesystem as fs
 import spack.platforms
-import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
@@ -25,9 +24,12 @@ from spack.llnl.util import tty
 
 from .config import spec_for_current_python
 
+if TYPE_CHECKING:
+    import spack.spec
+
 
 class QueryInfo(TypedDict, total=False):
-    spec: spack.spec.Spec
+    spec: "spack.spec.Spec"
     command: spack.util.executable.Executable
 
 

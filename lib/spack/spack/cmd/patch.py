@@ -3,14 +3,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+from typing import TYPE_CHECKING
 
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.package_base
 import spack.traverse
 from spack.cmd.common import arguments
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 description = "patch expanded sources in preparation for install"
 section = "build"
@@ -44,7 +47,7 @@ def _patch_env(env: ev.Environment):
         _patch(spec.package)
 
 
-def _patch(pkg: spack.package_base.PackageBase):
+def _patch(pkg: "spack.package_base.PackageBase"):
     pkg.stage.keep = True
     with pkg.stage:
         pkg.do_patch()

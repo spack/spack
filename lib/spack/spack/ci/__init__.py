@@ -13,14 +13,13 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import Request
 
 import spack
 import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
-import spack.environment as ev
 import spack.llnl.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
@@ -56,6 +55,9 @@ from .generator_registry import UnknownGeneratorException, get_generator
 # Import any modules with generator functions from here, so they get
 # registered without introducing any import cycles.
 from .gitlab import generate_gitlab_yaml  # noqa: F401
+
+if TYPE_CHECKING:
+    import spack.environment as ev
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -172,7 +174,7 @@ def compute_affected_packages(
 
 
 def get_spec_filter_list(
-    env: ev.Environment, affected_pkgs: Set[str], dependent_traverse_depth: Optional[int] = None
+    env: "ev.Environment", affected_pkgs: Set[str], dependent_traverse_depth: Optional[int] = None
 ) -> Set[spack.spec.Spec]:
     """Given a list of package names and an active/concretized environment, return the set of all
     concrete specs from the environment that could have been affected by changing the list of
@@ -350,7 +352,7 @@ def check_for_broken_specs(pipeline_specs: List[spack.spec.Spec], broken_specs_u
     return False
 
 
-def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
+def collect_pipeline_options(env: "ev.Environment", args) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables"""
     pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
@@ -420,7 +422,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
 
 def get_unaffected_pruners(
-    env: ev.Environment, untouched_pruning_dependent_depth: Optional[int]
+    env: "ev.Environment", untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
 
     # If the stack env has changed, do not apply unaffected pruning
@@ -461,7 +463,7 @@ def get_unaffected_pruners(
     return create_unaffected_pruner(affected_specs)
 
 
-def generate_pipeline(env: ev.Environment, args) -> None:
+def generate_pipeline(env: "ev.Environment", args) -> None:
     """Given an environment and the command-line args, generate a pipeline.
 
     Arguments:

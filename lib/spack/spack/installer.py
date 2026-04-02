@@ -46,7 +46,6 @@ import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
-import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -71,6 +70,7 @@ from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 
 if TYPE_CHECKING:
+    import spack.database
     import spack.spec
 
 #: Counter to support unique spec sequencing that is used to ensure packages
@@ -1202,7 +1202,7 @@ class Task:
         """
 
 
-def check_db(spec: "spack.spec.Spec") -> Tuple[Optional[spack.database.InstallRecord], bool]:
+def check_db(spec: "spack.spec.Spec") -> "Tuple[Optional[spack.database.InstallRecord], bool]":
     """Determine if the spec is flagged as installed in the database
 
     Args:

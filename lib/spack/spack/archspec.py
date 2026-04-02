@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Adapter for the archspec library."""
 
+from typing import TYPE_CHECKING
+
 import spack.vendor.archspec.cpu
 
-import spack.spec
+if TYPE_CHECKING:
+    import spack.spec
 
 
-def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
+def microarchitecture_flags(spec: "spack.spec.Spec", language: str) -> str:
     """Get compiler flags for the spec's microarchitecture.
 
     Args:
@@ -38,7 +41,7 @@ def microarchitecture_flags(spec: spack.spec.Spec, language: str) -> str:
 
 
 def microarchitecture_flags_from_target(
-    target: spack.vendor.archspec.cpu.Microarchitecture, compiler: spack.spec.Spec
+    target: spack.vendor.archspec.cpu.Microarchitecture, compiler: "spack.spec.Spec"
 ) -> str:
     """Get compiler flags for the spec's microarchitecture. Similar to
     :func:`microarchitecture_flags`, but takes a ``target`` and ``compiler`` directly instead of a

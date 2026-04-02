@@ -6,13 +6,15 @@
 non-hierarchical modules.
 """
 import os
-from typing import Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 import spack.config
-import spack.spec
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
+
+if TYPE_CHECKING:
+    import spack.spec
 
 
 #: Tcl specific part of the configuration
@@ -25,7 +27,7 @@ configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
 
 
 def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    spec: "spack.spec.Spec", module_set_name: str, explicit: Optional[bool] = None
 ) -> BaseConfiguration:
     """Returns the tcl configuration for spec"""
     explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
@@ -39,14 +41,14 @@ def make_configuration(
 
 
 def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    spec: "spack.spec.Spec", module_set_name: str, explicit: Optional[bool] = None
 ) -> BaseFileLayout:
     """Returns the layout information for spec"""
     return TclFileLayout(make_configuration(spec, module_set_name, explicit))
 
 
 def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    spec: "spack.spec.Spec", module_set_name: str, explicit: Optional[bool] = None
 ) -> BaseContext:
     """Returns the context information for spec"""
     return TclContext(make_configuration(spec, module_set_name, explicit))

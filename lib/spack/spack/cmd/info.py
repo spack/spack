@@ -9,11 +9,10 @@ import shutil
 import sys
 import textwrap
 from argparse import Namespace
-from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple
 
 import spack.builder
 import spack.cmd
-import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
@@ -23,11 +22,15 @@ import spack.package_base
 import spack.repo
 import spack.spec
 import spack.variant
-import spack.version
 from spack.cmd.common import arguments
 from spack.llnl.util.tty.colify import colify
-from spack.package_base import PackageBase
-from spack.util.typing import SupportsRichComparison
+
+if TYPE_CHECKING:
+    import spack.dependency
+    import spack.version
+    from spack.package_base import PackageBase
+    from spack.util.typing import SupportsRichComparison
+
 
 description = "get detailed information on a particular package"
 section = "query"
@@ -157,10 +160,10 @@ def format_deptype(depflag: int) -> str:
 
 
 class DependencyFormatter(Formatter):
-    def format_name(self, dep: spack.dependency.Dependency) -> str:
+    def format_name(self, dep: "spack.dependency.Dependency") -> str:
         return dep.spec._long_spec(color=color.get_color_when())
 
-    def format_values(self, dep: spack.dependency.Dependency) -> str:
+    def format_values(self, dep: "spack.dependency.Dependency") -> str:
         return str(format_deptype(dep.depflag))
 
 
@@ -181,12 +184,12 @@ def count_bool_variant_conditions(
     return list(reversed(sorted((n, t) for t, n in top.items())))
 
 
-def print_dependencies(pkg: PackageBase, args: Namespace) -> None:
+def print_dependencies(pkg: "PackageBase", args: Namespace) -> None:
     """output build, link, and run package dependencies"""
     print_definitions(pkg, "Dependencies", pkg.dependencies, DependencyFormatter(), args.by_name)
 
 
-def print_dependency_suggestion(pkg: PackageBase) -> None:
+def print_dependency_suggestion(pkg: "PackageBase") -> None:
     variant_counts = count_bool_variant_conditions(pkg.dependencies)
     big_variants = [
         (name, val)
@@ -214,7 +217,7 @@ def print_dependency_suggestion(pkg: PackageBase) -> None:
             )
 
 
-def print_detectable(pkg: PackageBase, args: Namespace) -> None:
+def print_detectable(pkg: "PackageBase", args: Namespace) -> None:
     """output information on external detection"""
 
     color.cprint("")
@@ -242,7 +245,7 @@ def print_detectable(pkg: PackageBase, args: Namespace) -> None:
         color.cprint("    False")
 
 
-def print_maintainers(pkg: PackageBase, args: Namespace) -> None:
+def print_maintainers(pkg: "PackageBase", args: Namespace) -> None:
     """output package maintainers"""
 
     if len(pkg.maintainers) > 0:
@@ -251,7 +254,7 @@ def print_maintainers(pkg: PackageBase, args: Namespace) -> None:
         color.cprint(section_title("Maintainers: ") + mnt)
 
 
-def print_namespace(pkg: PackageBase, args: Namespace) -> None:
+def print_namespace(pkg: "PackageBase", args: Namespace) -> None:
     """output package namespace"""
 
     repo = spack.repo.PATH.get_repo(pkg.namespace)
@@ -260,7 +263,7 @@ def print_namespace(pkg: PackageBase, args: Namespace) -> None:
     color.cprint(f"    @c{{{repo.namespace}}} at {repo.root}")
 
 
-def print_phases(pkg: PackageBase, args: Namespace) -> None:
+def print_phases(pkg: "PackageBase", args: Namespace) -> None:
     """output installation phases"""
 
     builder = spack.builder.create(pkg)
@@ -274,7 +277,7 @@ def print_phases(pkg: PackageBase, args: Namespace) -> None:
         color.cprint(phase_str)
 
 
-def print_tags(pkg: PackageBase, args: Namespace) -> None:
+def print_tags(pkg: "PackageBase", args: Namespace) -> None:
     """output package tags"""
 
     color.cprint("")
@@ -286,7 +289,7 @@ def print_tags(pkg: PackageBase, args: Namespace) -> None:
         color.cprint("    None")
 
 
-def print_tests(pkg: PackageBase, args: Namespace) -> None:
+def print_tests(pkg: "PackageBase", args: Namespace) -> None:
     """output relevant build-time and stand-alone tests"""
 
     # Some built-in base packages (e.g., Autotools) define callback (e.g.,
@@ -435,7 +438,7 @@ def max_name_length(when_indexed_dictionary: Dict, formatter: Formatter) -> int:
 
 
 def print_grouped_by_when(
-    pkg: PackageBase, header: str, when_indexed_dictionary: Dict, formatter: Formatter
+    pkg: "PackageBase", header: str, when_indexed_dictionary: Dict, formatter: Formatter
 ) -> None:
     """Generic method to print metadata grouped by when conditions."""
     if not print_header(header, when_indexed_dictionary, formatter):
@@ -476,7 +479,7 @@ def print_grouped_by_when(
 
 
 def print_by_name(
-    pkg: PackageBase, header: str, when_indexed_dictionary: Dict, formatter: Formatter
+    pkg: "PackageBase", header: str, when_indexed_dictionary: Dict, formatter: Formatter
 ) -> None:
     if not print_header(header, when_indexed_dictionary, formatter):
         return
@@ -486,7 +489,7 @@ def print_by_name(
 
     indent = 4
 
-    def unconditional_first(definition: Any) -> SupportsRichComparison:
+    def unconditional_first(definition: Any) -> "SupportsRichComparison":
         spec = getattr(definition, "spec", None)
         if spec:
             return (spec != spack.spec.Spec(spec.name), spec)
@@ -514,7 +517,7 @@ def print_by_name(
 
 
 def print_definitions(
-    pkg: PackageBase,
+    pkg: "PackageBase",
     header: str,
     when_indexed_dictionary: Dict,
     formatter: Formatter,
@@ -557,17 +560,17 @@ class VariantFormatter(Formatter):
         return variant.description
 
 
-def print_variants(pkg: PackageBase, args: Namespace) -> None:
+def print_variants(pkg: "PackageBase", args: Namespace) -> None:
     """output variants"""
     print_definitions(pkg, "Variants", pkg.variants, VariantFormatter(), args.by_name)
 
 
-def print_licenses(pkg: PackageBase, args: Namespace) -> None:
+def print_licenses(pkg: "PackageBase", args: Namespace) -> None:
     """Output the licenses of the project."""
     print_definitions(pkg, "Licenses", pkg.licenses, Formatter(), args.by_name)
 
 
-def print_versions(pkg: PackageBase, args: Namespace) -> None:
+def print_versions(pkg: "PackageBase", args: Namespace) -> None:
     """output versions"""
 
     color.cprint("")
@@ -588,7 +591,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         preferred = spack.package_base.preferred_version(pkg)
 
-        def get_url(version: spack.version.VersionType) -> str:
+        def get_url(version: "spack.version.VersionType") -> str:
             try:
                 return str(fs.for_package_version(pkg, version))
             except fs.InvalidArgsError:
@@ -622,7 +625,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
                 color.cprint(line)
 
 
-def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
+def print_virtuals(pkg: "PackageBase", args: Namespace) -> None:
     """output virtual packages"""
 
     color.cprint("")

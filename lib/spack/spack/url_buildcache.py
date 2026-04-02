@@ -15,7 +15,7 @@ from contextlib import closing, contextmanager
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
@@ -25,7 +25,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.tty as tty
-import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -36,6 +35,9 @@ from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_s
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
 from spack.util.executable import which
+
+if TYPE_CHECKING:
+    import spack.mirrors.mirror
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -1065,7 +1067,7 @@ def get_url_buildcache_class(
         )
 
 
-def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
+def check_mirror_for_layout(mirror: "spack.mirrors.mirror.Mirror"):
     """Check specified mirror, and warn if missing layout.json"""
     cache_class = get_url_buildcache_class()
     if not cache_class.check_layout_json_exists(mirror.fetch_url):

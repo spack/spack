@@ -31,7 +31,7 @@ import inspect
 import os
 import re
 import string
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import spack.vendor.jinja2
 
@@ -46,7 +46,6 @@ import spack.paths
 import spack.projections as proj
 import spack.schema
 import spack.schema.environment
-import spack.spec
 import spack.store
 import spack.tengine as tengine
 import spack.user_environment
@@ -56,6 +55,9 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
+
+if TYPE_CHECKING:
+    import spack.spec
 
 
 #: config section for this file
@@ -128,7 +130,7 @@ def update_dictionary_extending_lists(target, update):
             target[key] = update[key]
 
 
-def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec.Spec]:
+def dependencies(spec: "spack.spec.Spec", request: str = "all") -> "List[spack.spec.Spec]":
     """Returns the list of dependent specs for a given spec.
 
     Args:
@@ -327,7 +329,7 @@ class BaseConfiguration:
 
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
-    def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
+    def __init__(self, spec: "spack.spec.Spec", module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
@@ -774,7 +776,7 @@ class BaseModuleFileWriter:
     modulerc_header: List[str]
 
     def __init__(
-        self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+        self, spec: "spack.spec.Spec", module_set_name: str, explicit: Optional[bool] = None
     ) -> None:
         self.spec = spec
 

@@ -13,20 +13,17 @@ import sys
 import time
 from collections import deque
 from enum import Enum
-from typing import Dict, Generator, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
 import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
-import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
-import spack.mirrors.mirror
 import spack.schema
-import spack.spec
 import spack.util.compression as compression
 import spack.util.web as web_util
 from spack import traverse
@@ -35,6 +32,11 @@ from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
+
+if TYPE_CHECKING:
+    import spack.environment as ev
+    import spack.mirrors.mirror
+    import spack.spec
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -200,7 +202,7 @@ class CDashHandler:
             win_quote(self.build_stamp),
         ]
 
-    def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
+    def build_name(self, spec: "Optional[spack.spec.Spec]" = None) -> Optional[str]:
         """Returns the CDash build name.
 
         A name will be generated if the ``spec`` is provided,
@@ -283,7 +285,7 @@ class CDashHandler:
         if not group_id:
             tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
-    def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
+    def report_skipped(self, spec: "spack.spec.Spec", report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI
         configuration identifies it as known to have broken tests or
         the CI installation failed).
@@ -320,8 +322,8 @@ class PipelineOptions:
 
     def __init__(
         self,
-        env: ev.Environment,
-        buildcache_destination: spack.mirrors.mirror.Mirror,
+        env: "ev.Environment",
+        buildcache_destination: "spack.mirrors.mirror.Mirror",
         artifacts_root: str = "jobs_scratch_dir",
         print_summary: bool = True,
         output_file: Optional[str] = None,
@@ -378,11 +380,11 @@ class PipelineOptions:
 
 
 class PipelineNode:
-    spec: spack.spec.Spec
+    spec: "spack.spec.Spec"
     parents: Set[str]
     children: Set[str]
 
-    def __init__(self, spec: spack.spec.Spec):
+    def __init__(self, spec: "spack.spec.Spec"):
         self.spec = spec
         self.parents = set()
         self.children = set()
@@ -398,10 +400,10 @@ class PipelineDag:
     of edge types."""
 
     @classmethod
-    def key(cls, spec: spack.spec.Spec) -> str:
+    def key(cls, spec: "spack.spec.Spec") -> str:
         return spec.dag_hash()
 
-    def __init__(self, specs: List[spack.spec.Spec]) -> None:
+    def __init__(self, specs: "List[spack.spec.Spec]") -> None:
         # Build dictionary of nodes
         self.nodes: Dict[str, PipelineNode] = {
             PipelineDag.key(s): PipelineNode(s)

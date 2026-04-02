@@ -6,7 +6,7 @@ import argparse
 import os
 import shutil
 import sys
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import spack.cmd
 import spack.config
@@ -14,20 +14,22 @@ import spack.environment as ev
 import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.paths
-import spack.spec
 import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
-from spack.installer import InstallPolicy
 from spack.llnl.string import plural
 from spack.llnl.util import tty
+
+if TYPE_CHECKING:
+    import spack.spec
+    from spack.installer import InstallPolicy
 
 description = "build and install packages"
 section = "build"
 level = "short"
 
 
-def cache_opt(use_buildcache: str, default: InstallPolicy) -> InstallPolicy:
+def cache_opt(use_buildcache: str, default: "InstallPolicy") -> "InstallPolicy":
     if use_buildcache == "only":
         return "cache_only"
     elif use_buildcache == "never":
@@ -235,7 +237,7 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
-def report_filename(args: argparse.Namespace, specs: List[spack.spec.Spec]) -> str:
+def report_filename(args: argparse.Namespace, specs: "List[spack.spec.Spec]") -> str:
     """Return the filename to be used for reporting to JUnit or CDash format."""
     result = args.log_file or default_log_file(specs[0])
     return result

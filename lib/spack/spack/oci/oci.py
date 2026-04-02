@@ -7,18 +7,20 @@ import json
 import os
 import urllib.error
 import urllib.parse
-from typing import List, NamedTuple, Tuple
+from typing import TYPE_CHECKING, List, NamedTuple, Tuple
 from urllib.request import Request
 
 import spack.fetch_strategy
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
-import spack.mirrors.mirror
 import spack.oci.opener
 import spack.stage
 import spack.util.url
 
 from .image import Digest, ImageReference
+
+if TYPE_CHECKING:
+    import spack.mirrors.mirror
 
 
 class Blob(NamedTuple):
@@ -208,7 +210,7 @@ def upload_manifest(
     return digest, size
 
 
-def image_from_mirror(mirror: spack.mirrors.mirror.Mirror) -> ImageReference:
+def image_from_mirror(mirror: "spack.mirrors.mirror.Mirror") -> ImageReference:
     """Given an OCI based mirror, extract the URL and image name from it"""
     return ImageReference.from_url(mirror.push_url)
 

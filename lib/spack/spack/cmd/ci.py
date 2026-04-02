@@ -7,7 +7,7 @@ import json
 import os
 import shutil
 import sys
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
@@ -23,7 +23,6 @@ import spack.hash_types as ht
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
-import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
@@ -33,9 +32,12 @@ import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.llnl.util import tty
-from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line
+
+if TYPE_CHECKING:
+    import spack.package_base
+    from spack.version import StandardVersion
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -728,7 +730,7 @@ def _gitlab_artifacts_url(url: str) -> str:
 
 
 def validate_standard_versions(
-    pkg: spack.package_base.PackageBase, versions: List[StandardVersion]
+    pkg: "spack.package_base.PackageBase", versions: "List[StandardVersion]"
 ) -> bool:
     """Get and test the checksum of a package version based on a tarball.
     Args:
@@ -736,7 +738,7 @@ def validate_standard_versions(
       versions: list of package versions to validate
     Returns: True if all versions are valid, False if any version is invalid.
     """
-    url_dict: Dict[StandardVersion, str] = {}
+    url_dict: "Dict[StandardVersion, str]" = {}
 
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
@@ -766,7 +768,7 @@ def validate_standard_versions(
 
 
 def validate_git_versions(
-    pkg: spack.package_base.PackageBase, versions: List[StandardVersion]
+    pkg: "spack.package_base.PackageBase", versions: "List[StandardVersion]"
 ) -> bool:
     """Get and test the commit and tag of a package version based on a git repository.
     Args:
@@ -847,8 +849,8 @@ def ci_verify_versions(args):
             continue
 
         # Store versions checksums / commits for future loop
-        url_version_to_checksum: Dict[StandardVersion, str] = {}
-        git_version_to_checksum: Dict[StandardVersion, str] = {}
+        url_version_to_checksum: "Dict[StandardVersion, str]" = {}
+        git_version_to_checksum: "Dict[StandardVersion, str]" = {}
         for version in pkg.versions:
             # If the package version defines a sha256 we'll use that as the high entropy
             # string to detect which versions have been added between from_ref and to_ref
@@ -863,7 +865,9 @@ def ci_verify_versions(args):
             # TODO: enforce every version have a commit or a sha256 defined if not
             # an infinite version (there are a lot of packages where this doesn't work yet.)
 
-        def filter_added_versions(versions: Dict[StandardVersion, str]) -> List[StandardVersion]:
+        def filter_added_versions(
+            versions: "Dict[StandardVersion, str]",
+        ) -> "List[StandardVersion]":
             added_checksums = spack_ci.filter_added_checksums(
                 versions.values(), path, from_ref=args.from_ref, to_ref=args.to_ref
             )

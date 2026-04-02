@@ -5,12 +5,12 @@
 import sys
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
-from spack.vendor.typing_extensions import Literal
-
 import spack.config
 import spack.traverse
 
 if TYPE_CHECKING:
+    from spack.vendor.typing_extensions import Literal
+
     import spack.installer
     import spack.new_installer
     import spack.package_base
@@ -38,8 +38,8 @@ def create_installer(
     unsigned: Optional[bool] = None,
     verbose: bool = False,
     concurrent_packages: Optional[int] = None,
-    root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
-    dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
+    root_policy: 'Literal["auto", "cache_only", "source_only"]' = "auto",
+    dependencies_policy: 'Literal["auto", "cache_only", "source_only"]' = "auto",
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = (

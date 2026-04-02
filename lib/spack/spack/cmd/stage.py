@@ -4,14 +4,17 @@
 
 import argparse
 import os
+from typing import TYPE_CHECKING
 
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-import spack.package_base
 import spack.traverse
 from spack.cmd.common import arguments
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 description = "expand downloaded archive in preparation for install"
 section = "build"
@@ -111,7 +114,7 @@ def _stage_env(env: ev.Environment, filter):
         _stage(spec.package)
 
 
-def _stage(pkg: spack.package_base.PackageBase):
+def _stage(pkg: "spack.package_base.PackageBase"):
     # Use context manager to ensure we don't restage while an installation is in progress
     # keep = True ensures that the stage is not removed after exiting the context manager
     pkg.stage.keep = True

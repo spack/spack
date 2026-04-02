@@ -12,13 +12,12 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
 import spack.llnl.util.filesystem
 import spack.llnl.util.lang
 import spack.llnl.util.tty
-import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment
@@ -36,6 +35,9 @@ from .common import (
     library_prefix,
     path_to_dict,
 )
+
+if TYPE_CHECKING:
+    import spack.spec
 
 #: Timeout used for package detection (seconds)
 DETECTION_TIMEOUT = 60
@@ -268,7 +270,7 @@ class Finder:
             return []
 
         result = []
-        resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> prefix of first detection
+        resolved_specs: "Dict[spack.spec.Spec, str]" = {}  # spec -> prefix of first detection
         for candidate_path, items_in_prefix in _group_by_prefix(
             spack.llnl.util.lang.dedupe(paths)
         ).items():

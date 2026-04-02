@@ -10,11 +10,10 @@ import os
 import re
 import sys
 from html import escape
-from typing import Optional, Type
+from typing import TYPE_CHECKING, Optional, Type
 
 import spack.deptypes as dt
 import spack.llnl.util.tty as tty
-import spack.package_base
 import spack.repo
 import spack.util.git
 from spack.cmd.common import arguments
@@ -22,6 +21,9 @@ from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty.colify import colify
 from spack.util.url import path_to_file_url
 from spack.version import VersionList
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 description = "list and search available packages"
 section = "query"
@@ -143,7 +145,7 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
-def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
+def github_url(pkg: "Type[spack.package_base.PackageBase]") -> Optional[str]:
     """Link to a package file in spack package's github or the path to the file.
 
     Args:

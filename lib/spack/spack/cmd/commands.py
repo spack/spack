@@ -9,7 +9,20 @@ import re
 import shlex
 import sys
 from argparse import ArgumentParser, Namespace
-from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import spack.cmd
 import spack.config
@@ -17,9 +30,13 @@ import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
+from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter
 from spack.llnl.util.tty.colify import colify
-from spack.main import SpackArgumentParser, section_descriptions
+from spack.main import section_descriptions
+
+if TYPE_CHECKING:
+    from spack.llnl.util.argparsewriter import Command
+    from spack.main import SpackArgumentParser
 
 description = "list available spack commands"
 section = "config"
@@ -148,7 +165,7 @@ class SpackArgparseRstWriter(ArgparseRstWriter):
 class SubcommandWriter(ArgparseWriter):
     """Write argparse output as a list of subcommands."""
 
-    def format(self, cmd: Command) -> str:
+    def format(self, cmd: "Command") -> str:
         """Return the string representation of a single node in the parser tree.
 
         Args:
@@ -182,7 +199,7 @@ _positional_to_subroutine: Dict[str, str] = {
 class BashCompletionWriter(ArgparseWriter):
     """Write argparse output as bash programmable tab completion."""
 
-    def format(self, cmd: Command) -> str:
+    def format(self, cmd: "Command") -> str:
         """Return the string representation of a single node in the parser tree.
 
         Args:
@@ -398,7 +415,7 @@ def _fish_dest_get_complete(prog: str, dest: str) -> Optional[str]:
 class FishCompletionWriter(ArgparseWriter):
     """Write argparse output as bash programmable tab completion."""
 
-    def format(self, cmd: Command) -> str:
+    def format(self, cmd: "Command") -> str:
         """Return the string representation of a single node in the parser tree.
 
         Args:
@@ -772,7 +789,7 @@ def names(args: Namespace, out: IO) -> None:
     colify(commands, output=out)
 
 
-def get_all_spack_commands(out: IO) -> SpackArgumentParser:
+def get_all_spack_commands(out: IO) -> "SpackArgumentParser":
     is_tty = hasattr(out, "isatty") and out.isatty()
     # Argparse python 3.14 adds a default color argument that
     # adds color control characters to argparse output

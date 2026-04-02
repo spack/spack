@@ -7,17 +7,19 @@ include Tcl non-hierarchical modules, Lua hierarchical modules, and others.
 """
 
 import os
-from typing import Dict, Type
+from typing import TYPE_CHECKING, Dict, Type
 
 import spack.llnl.util.tty as tty
 import spack.repo
-import spack.spec
 import spack.store
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
+
+if TYPE_CHECKING:
+    import spack.spec
 
 __all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
 
@@ -28,7 +30,7 @@ module_types: Dict[str, Type[BaseModuleFileWriter]] = {
 
 
 def get_module(
-    module_type, spec: spack.spec.Spec, get_full_path, module_set_name="default", required=True
+    module_type, spec: "spack.spec.Spec", get_full_path, module_set_name="default", required=True
 ):
     """Retrieve the module file for a given spec and module type.
 

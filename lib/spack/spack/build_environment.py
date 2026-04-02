@@ -47,6 +47,7 @@ from enum import Flag, auto
 from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
+    TYPE_CHECKING,
     Any,
     BinaryIO,
     Callable,
@@ -90,7 +91,6 @@ from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
-    ModificationList,
     PrependPath,
     env_flag,
     filter_system_paths,
@@ -101,6 +101,9 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module
+
+if TYPE_CHECKING:
+    from spack.util.environment import ModificationList
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -828,7 +831,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     return env_base
 
 
-def _extract_dtags_arg(env_by_name: Dict[str, ModificationList], *, var_name: str) -> str:
+def _extract_dtags_arg(env_by_name: "Dict[str, ModificationList]", *, var_name: str) -> str:
     try:
         enable_new_dtags = env_by_name[var_name][0].value  # type: ignore[union-attr]
     except (KeyError, IndexError, AttributeError):

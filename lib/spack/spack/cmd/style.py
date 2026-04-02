@@ -8,7 +8,7 @@ import re
 import sys
 import warnings
 from itertools import zip_longest
-from typing import Callable, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set
 
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
@@ -19,7 +19,10 @@ import spack.util.spack_yaml
 from spack.llnl.util.filesystem import working_dir
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
-from spack.util.executable import Executable, which
+from spack.util.executable import which
+
+if TYPE_CHECKING:
+    from spack.util.executable import Executable
 
 description = "runs source code style checks on spack"
 section = "developer"
@@ -78,7 +81,7 @@ class tool:
         return bool(which(self.name)) if self.external else True
 
     @property
-    def executable(self) -> Optional[Executable]:
+    def executable(self) -> "Optional[Executable]":
         return which(self.name) if self.external else None
 
 

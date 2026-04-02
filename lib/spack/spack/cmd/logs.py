@@ -9,12 +9,15 @@ import io
 import os
 import shutil
 import sys
+from typing import TYPE_CHECKING
 
 import spack.cmd
-import spack.spec
 import spack.util.compression as compression
 from spack.cmd.common import arguments
 from spack.error import SpackError
+
+if TYPE_CHECKING:
+    import spack.spec
 
 description = "print out logs for packages"
 section = "query"
@@ -31,7 +34,7 @@ def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
     shutil.copyfileobj(instream, outstream)
 
 
-def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
+def _logs(cmdline_spec: "spack.spec.Spec", concrete_spec: "spack.spec.Spec"):
     if concrete_spec.installed:
         log_path = concrete_spec.package.install_log_path
     elif os.path.exists(concrete_spec.package.stage.path):

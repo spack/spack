@@ -20,7 +20,6 @@ import spack.llnl.string
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.oci.image
-import spack.resource
 import spack.spec
 import spack.util.crypto
 import spack.util.lock
@@ -50,6 +49,7 @@ if TYPE_CHECKING:
     import spack.mirrors.layout
     import spack.mirrors.mirror
     import spack.mirrors.utils
+    import spack.resource
 
 
 # The well-known stage source subdirectory name.
@@ -754,7 +754,7 @@ class ResourceStage(Stage):
         self,
         fetch_strategy: "fs.FetchStrategy",
         root: Stage,
-        resource: spack.resource.Resource,
+        resource: "spack.resource.Resource",
         *,
         name=None,
         mirror_paths: Optional["spack.mirrors.layout.MirrorLayout"] = None,
