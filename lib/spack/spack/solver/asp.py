@@ -895,10 +895,28 @@ class ErrorHandler:
         )
         return "\n".join((header, *messages))
 
+    def format_errors(self, error_args):
+        errors = sorted(
+            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
+        )
+        try:
+            return self.message(errors)
+        except Exception as e:
+            msg = (
+                f"unexpected error during concretization [{e}]. "
+                f"Please report a bug at https://github.com/spack/spack/issues"
+            )
+            raise spack.error.SpackError(msg) from e
+
     def raise_if_errors(self):
         initial_error_args = extract_args(self.model, "error")
         if not initial_error_args:
             return
+
+        # Print initial error message before starting secondary solve for causal trees
+        simple_error_message = self.format_errors(initial_error_args)
+        msg = f"{simple_error_message}\n    Starting secondary solve for error causes."
+        tty.error(msg)
 
         error_causation = make_error_control()
 
@@ -919,18 +937,7 @@ class ErrorHandler:
 
         # No choices so there will be only one model
         error_args = extract_args(self.full_model, "error")
-        errors = sorted(
-            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
-        )
-        try:
-            msg = self.message(errors)
-        except Exception as e:
-            msg = (
-                f"unexpected error during concretization [{str(e)}]. "
-                f"Please report a bug at https://github.com/spack/spack/issues"
-            )
-            raise spack.error.SpackError(msg) from e
-        raise UnsatisfiableSpecError(msg)
+        raise UnsatisfiableSpecError(self.format_errors(error_args))
 
 
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
