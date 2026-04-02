@@ -606,8 +606,9 @@ class StreamWrapper:
             if sys_stream:
                 # Flush the system stream before redirection
                 sys_stream.flush()
-        except BaseException:
+        except BaseException as e:
             # swallow flush errors
+            tty.debug(f"Encountered error flushing stream: {e}")
             pass
 
     def close(self):
@@ -711,12 +712,10 @@ class winlog:
         try:
             while True:
                 data = read.recv_bytes(maxlength=4096)
-                # import pdb; pdb.set_trace()
                 if not data:
                     # the pipe is closed or otherwise inaccesible
                     return
                 norm_data = data.decode(encoding="utf-8", errors="replace")
-                # stdout.write(data.decode())
                 clean_line, num_controls = control.subn("", norm_data)
 
                 log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
@@ -747,7 +746,6 @@ class winlog:
         finally:
             read.close()
             log_writer.close()
-            stdout.flush()
             stdout.close()
 
 

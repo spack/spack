@@ -160,7 +160,7 @@ def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
 
         # Check captured output (echoed content)
         # Note: 'logged' is not echoed because force_echo() scope ended
-        # "print(echo)" above automatically uses an "\r\n" on Windows
+        # Note: "print(echo)" above automatically uses an "\r\n" on Windows
         # and will replace any \n with \r\n (so end=\n does not work)
         # \r\n is expected and correct here
         newline = "\r\n" if sys.platform == "win32" else "\n"
