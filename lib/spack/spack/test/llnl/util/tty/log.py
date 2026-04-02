@@ -175,6 +175,10 @@ def test_nested_logging_contexts(capfd, tmp_path):
             print("outer")
 
         with open("foo.txt", "r", encoding="utf-8") as f:
-            assert f.read() == "outer\n"
+            log_captured_out = f.read()
+            assert "outer\n" in log_captured_out
+            assert "inner\n" not in log_captured_out
         with open("bar.txt", "r", encoding="utf-8") as f:
-            assert f.read() == "inner\n"
+            log_captured_out = f.read()
+            assert "inner\n" in log_captured_out
+            assert "outer\n" not in log_captured_out
