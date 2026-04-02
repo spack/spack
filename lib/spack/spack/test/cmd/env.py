@@ -1103,14 +1103,10 @@ spack:
 
     e2 = ev.create("test2", init_file=str(e1_manifest))
 
-    # Check new environment's (manifest) includes
+    # Check new environment's (manifest) includes, all of which are simple
+    # file includes.
     new_env_includes = e2.manifest.configuration.get("include", [])
     for orig, new in zip(files, new_env_includes):
-        assert new.endswith(orig.strip("./"))
-
-    # Check configured environment's includes
-    config_includes = ev.included_env_config("include", [])
-    for orig, new in zip(files, config_includes):
         assert new.endswith(orig.strip("./"))
 
 
@@ -4752,54 +4748,28 @@ spack:
 """
 
     specs = ["libdwarf", "mpileaks"]
-    includes = []
+    paths = []
     includes_dir = tmp_path / "includes"
     for pkg in specs:
         include = includes_dir / pkg / ev.manifest_name
         fs.mkdirp(include.parent)
         include.write_text(specs_template.format(pkg))
-        includes.append(str(include))
+        paths.append(str(include))
 
     include_condition = 'platform == "test"'
 
-    # TODO: Remove this once minimum python is python@3.9
-    def remove_prefix(text, prefix):
-        if text.startswith(prefix):
-            return text[len(prefix) :]
-        return text
-
-    def include_entry(path):
-        return f"- path: {path}\n    when: {include_condition}"
-
-    prefix = str(tmp_path) + os.sep
-    # TODO: Once minimum python is python@3.9
-    # rel_paths = [include.removeprefix(prefix) for include in includes]
-    rel_paths = [remove_prefix(include, prefix) for include in includes]
-    paths_str = "\n  ".join([include_entry(path) for path in rel_paths])
     e = environment_from_manifest(
         f"""\
 spack:
   include:
-  {paths_str}
+  - path: {paths[0]}
+    when: {include_condition}
+  - path: {paths[1]}
+    when: {include_condition}
 """
     )
 
-    for spec in specs:
-        assert Spec(spec) in e.user_specs
-
-    # Confirm the relative included paths were replaced with absolute paths
-    # and the include condition is unchanged.
-    env_includes = e.manifest[ev.TOP_LEVEL_KEY].get("include", [])
-    for orig, include_path in zip(rel_paths, env_includes):
-        assert not os.path.isabs(orig)
-
-        full_path = include_path["path"]
-        assert os.path.isabs(full_path)
-        # TODO: Once minimum python is python@3.9
-        # assert full_path.removeprefix(prefix) == orig
-        assert remove_prefix(full_path, prefix)
-
-        assert include_path["when"] == include_condition
+    assert [Spec(s) for s in specs] == e.user_specs.specs
 
 
 def test_env_include_env_pkgs_def(
@@ -4831,9 +4801,7 @@ spack:
     e = environment_from_manifest(env_yaml)
 
     specs = ["libelf@0.8.10", "mpileaks", "libdwarf"]
-    user_specs = e.user_specs
-    for spec in specs:
-        assert Spec(spec) in user_specs
+    assert [Spec(s) for s in specs] == e.user_specs.specs
 
     # Confirm manifest contents include explicit and not included specs
     e.write()
