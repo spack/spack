@@ -2143,7 +2143,7 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
 def test_env_include_env_includes(tmp_path, mutable_config):
     """Confirm that an environment that includes two other environments,
     each including their own configuration, picks up the specs from both
-    but its own configuration setting."""
+    but prefers its configuration setting."""
     includes_dir = tmp_path / "includes"
     fs.mkdirp(includes_dir)
 

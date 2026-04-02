@@ -979,17 +979,6 @@ class ConcretizedRootInfo:
         )
 
 
-def included_env_config(key: str, default: Optional[Any] = None) -> Any:
-    """Extract the included environment configuration for the key.
-
-    Args:
-      key: environment manifest configuration key
-      default: optional default value if key is not detected under ``spack:``
-    """
-    data = spack.config.CONFIG.get(TOP_LEVEL_KEY, {})
-    return data.get(key, default)
-
-
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
@@ -1214,14 +1203,12 @@ class Environment:
     def _sync_speclists(self):
         # Combined toolchains from global config and included environments.
         toolchains = spack.config.CONFIG.get("toolchains", {})
-        toolchains.update(included_env_config("toolchains", {}))
         self._spec_lists_parser = SpecListParser(toolchains=toolchains)
 
         # Combined definitions from the global config and included environments.
         self.spec_lists = {}
         combined_yaml = []
         combined_yaml.extend(spack.config.CONFIG.get("definitions", []))
-        combined_yaml.extend(included_env_config("definitions", []))
         self.spec_lists.update(self._spec_lists_parser.parse_definitions(data=combined_yaml))
 
         # TODO/TLD/TBD: Make sure process groups from included manifests
@@ -1231,12 +1218,6 @@ class Environment:
             self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
                 name=key, yaml_list=self.manifest.user_specs(group=group)
             )
-            # TODO/TLD/TBD: Resolve this correctly
-            # self.spec_lists[key].extend(
-            #     self._spec_lists_parser.parse_user_specs(
-            #         name=key, yaml_list=included_env_config.user_specs(group=group)
-            #     )
-            # )
 
     def _user_specs_key(self, *, group: Optional[str] = None) -> str:
         if group is None or group == DEFAULT_USER_SPEC_GROUP:

@@ -156,11 +156,7 @@ class ConfigScope:
             tty.debug(f"Retrieved configuration includes for {self.name}: {includes}", level=3)
             return includes
 
-        spack = self.get_section("spack")
-        if spack:
-            includes = spack["spack"]
-            tty.debug(f"Retrieved environment includes for {self.name}: {includes}", level=3)
-        return includes
+        return  None
 
     @property
     def included_scopes(self) -> List["ConfigScope"]:
@@ -1264,10 +1260,17 @@ class OptionalInclude:
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             if os.path.basename(config_path) == "spack.yaml":
                 schema = spack.schema.env.schema
+                yaml_path = ["spack"]
             else:
                 schema = spack.schema.merged.schema
+                yaml_path = None
             return SingleFileScope(
-                config_name, config_path, schema, prefer_modify=self.prefer_modify, included=True
+                config_name,
+                config_path,
+                schema,
+                yaml_path=yaml_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
             )
         elif exists:
             raise ValueError(
@@ -1359,7 +1362,7 @@ class IncludePath(OptionalInclude):
 
     def __repr__(self):
         return (
-            f"IncludePath('{self.name}', '{self.path}', sha256={self.sha256}, "
+            f"IncludePath('{self.name}', path='{self.path}', sha256={self.sha256}, "
             f"when='{self.when}', optional={self.optional}, "
             f"destination={self.destination})"
         )
