@@ -389,6 +389,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a graph -d 'generat
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a help -d 'get help on spack and its commands'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a info -d 'get detailed information on a particular package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a install -d 'build and install packages'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a isolate -d 'force spack to only use/write data from/to an isolated prefix'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list and check license headers on files in spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and search available packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
@@ -2200,6 +2201,18 @@ complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reus
 complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
+
+# spack isolate
+set -g __fish_spack_optspecs_spack_isolate h/help force-scopes force-home force-all
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 isolate' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command isolate' -l force-scopes -f -a force_scopes
+complete -c spack -n '__fish_spack_using_command isolate' -l force-scopes -d 'remove all config scopes in ~'
+complete -c spack -n '__fish_spack_using_command isolate' -l force-home -f -a force_home
+complete -c spack -n '__fish_spack_using_command isolate' -l force-home -d 'override home even if user setting is detected'
+complete -c spack -n '__fish_spack_using_command isolate' -l force-all -f -a force_all
+complete -c spack -n '__fish_spack_using_command isolate' -l force-all -d 'set all '"'"'force'"'"' options'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
