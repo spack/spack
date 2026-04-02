@@ -232,10 +232,9 @@ class BinaryCacheIndex:
             db = BuildCacheDatabase(tmpdir)
 
             try:
-                self._index_file_cache.init_entry(cache_key)
-                cache_path = self._index_file_cache.cache_path(cache_key)
-                with self._index_file_cache.read_transaction(cache_key):
-                    db._read_from_file(pathlib.Path(cache_path))
+                with self._index_file_cache.read_transaction(cache_key) as f:
+                    if f is not None:
+                        db._read_from_stream(f)
             except spack.database.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index for the "

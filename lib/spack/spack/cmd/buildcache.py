@@ -946,7 +946,9 @@ def update_view(
             cache_index = BINARY_INDEX._local_index_cache.get(str(mirror_metadata))
             if cache_index:
                 cache_key = cache_index["index_path"]
-                db._read_from_file(BINARY_INDEX._index_file_cache.cache_path(cache_key))
+                with BINARY_INDEX._index_file_cache.read_transaction(cache_key) as f:
+                    if f is not None:
+                        db._read_from_stream(f)
 
         spack.binary_distribution._url_generate_package_index(url, tmpdir, db, name, filter_fn)
 
@@ -1006,9 +1008,9 @@ def check_index_fn(args):
             db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
             cache_entry = BINARY_INDEX._local_index_cache[str(mirror_metadata)]
             cache_key = cache_entry["index_path"]
-            cache_path = BINARY_INDEX._index_file_cache.cache_path(cache_key)
-            with BINARY_INDEX._index_file_cache.read_transaction(cache_key):
-                db._read_from_file(cache_path)
+            with BINARY_INDEX._index_file_cache.read_transaction(cache_key) as f:
+                if f is not None:
+                    db._read_from_stream(f)
 
             index_hash_list = set(
                 [
