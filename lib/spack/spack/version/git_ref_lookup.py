@@ -60,9 +60,6 @@ class GitRefLookup(AbstractRefLookup):
             key_base = "git_metadata"
             self._cache_key = (Path(key_base) / self.repository_uri).as_posix()
 
-            # Cache data in MISC_CACHE
-            # If this is the first lazy access, initialize the cache as well
-            spack.caches.MISC_CACHE.init_entry(self.cache_key)
         return self._cache_key
 
     @property
@@ -103,8 +100,8 @@ class GitRefLookup(AbstractRefLookup):
 
     def load_data(self):
         """Load data if the path already exists."""
-        if os.path.isfile(self.cache_path):
-            with spack.caches.MISC_CACHE.read_transaction(self.cache_key) as cache_file:
+        with spack.caches.MISC_CACHE.read_transaction(self.cache_key) as cache_file:
+            if cache_file is not None:
                 self.data = sjson.load(cache_file)
 
     def get(self, ref) -> Tuple[Optional[str], int]:

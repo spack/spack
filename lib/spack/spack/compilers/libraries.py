@@ -380,7 +380,6 @@ class FileCompilerCache(CompilerCache):
 
     def __init__(self, cache: "FileCache") -> None:
         self.cache = cache
-        self.cache.init_entry(self.name)
         self._data: Dict[str, Dict[str, Optional[str]]] = {}
 
     def _get_entry(self, key: str, *, allow_empty: bool) -> Optional[CompilerCacheEntry]:
@@ -395,13 +394,16 @@ class FileCompilerCache(CompilerCache):
 
     def get(self, compiler: spack.spec.Spec) -> CompilerCacheEntry:
         # Cache hit
-        try:
-            with self.cache.read_transaction(self.name) as f:
-                assert f is not None
-                self._data = json.loads(f.read())
-                assert isinstance(self._data, dict)
-        except (json.JSONDecodeError, AssertionError):
-            self._data = {}
+        with self.cache.read_transaction(self.name) as f:
+            if f is not None:
+                try:
+                    self._data = json.loads(f.read())
+                    if not isinstance(self._data, dict):
+                        self._data = {}
+                except json.JSONDecodeError:
+                    self._data = {}
+            else:
+                self._data = {}
 
         key = self._key(compiler)
         value = self._get_entry(key, allow_empty=False)
@@ -410,11 +412,14 @@ class FileCompilerCache(CompilerCache):
 
         # Cache miss
         with self.cache.write_transaction(self.name) as (old, new):
-            try:
-                assert old is not None
-                self._data = json.loads(old.read())
-                assert isinstance(self._data, dict)
-            except (json.JSONDecodeError, AssertionError):
+            if old is not None:
+                try:
+                    self._data = json.loads(old.read())
+                    if not isinstance(self._data, dict):
+                        self._data = {}
+                except json.JSONDecodeError:
+                    self._data = {}
+            else:
                 self._data = {}
 
             # Use cache entry that may have been created by another process in the meantime.
