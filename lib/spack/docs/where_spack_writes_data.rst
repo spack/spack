@@ -12,7 +12,7 @@
 Controlling where spack writes data
 ===================================
 
-A fresh checkout of spack will not write anything into the `$spack`` prefix; instead, all data is placed under the user's home directory.
+A fresh checkout of spack will not write anything into the ``$spack`` prefix; instead, all data is placed under the user's home directory.
 You can control this in the following ways:
 
 * Redirect everything with environment variables: set ``SPACK_HOME`` and one of ``SPACK_USER_CONFIG_PATH`` or ``SPACK_DISABLE_LOCAL_CONFIG=1``
