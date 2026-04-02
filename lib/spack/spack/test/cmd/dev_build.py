@@ -72,7 +72,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, in
         with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(spec.package.original_string)  # type: ignore
 
-        dev_build("-u", last_phase, "dev-build-test-install@0.0.0")
+        dev_build("--until", last_phase, "dev-build-test-install@0.0.0")
 
         assert spec.package.filename in os.listdir(os.getcwd())  # type: ignore
         with open(spec.package.filename, "r", encoding="utf-8") as f:  # type: ignore
