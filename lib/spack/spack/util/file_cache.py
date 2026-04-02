@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import hashlib
 import math
 import os
 import pathlib
@@ -87,6 +88,7 @@ class FileCache:
         self.root = root
         self.root.mkdir(parents=True, exist_ok=True)
 
+        self.lock_path = self.root / ".lock"
         self._locks: Dict[Union[pathlib.Path, str], Lock] = {}
         self.lock_timeout = timeout
 
@@ -102,18 +104,28 @@ class FileCache:
         """Path to the file in the cache for a particular key."""
         return self.root / key
 
-    def _lock_path(self, key: Union[str, pathlib.Path]):
-        """Path to the file in the cache for a particular key."""
-        keyfile = os.path.basename(key)
-        keydir = os.path.dirname(key)
-
-        return self.root / keydir / ("." + keyfile + ".lock")
+    def _get_lock_offsets(self, key: str) -> Tuple[int, int]:
+        """Hash function to determine byte-range offsets for a key. Returns (start, length) for
+        the lock."""
+        hasher = hashlib.sha256(key.encode("utf-8"))
+        hash_int = int.from_bytes(hasher.digest()[:8], "little")
+        start_offset = hash_int % (2**63 - 1)
+        return start_offset, 1
 
     def _get_lock(self, key: Union[str, pathlib.Path]):
-        """Create a lock for a key, if necessary, and return a lock object."""
-        if key not in self._locks:
-            self._locks[key] = Lock(str(self._lock_path(key)), default_timeout=self.lock_timeout)
-        return self._locks[key]
+        """Create a lock for a key using byte-range offsets."""
+        key_str = str(key)
+
+        if key_str not in self._locks:
+            start, length = self._get_lock_offsets(key_str)
+            self._locks[key_str] = Lock(
+                str(self.lock_path),
+                start=start,
+                length=length,
+                default_timeout=self.lock_timeout,
+                desc=f"key:{key_str}",
+            )
+        return self._locks[key_str]
 
     def init_entry(self, key: Union[str, pathlib.Path]):
         """Ensure we can access a cache file. Create a lock for it if needed.
