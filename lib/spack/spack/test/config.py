@@ -1674,7 +1674,8 @@ def test_config_include_similar_name(tmp_path: pathlib.Path):
 
     # Ensure all of the scopes are found
     assert len(config.matching_scopes("^test$")) == 1
-    assert len(config.matching_scopes("^test:")) == 2
+    assert len(config.matching_scopes("^test:a/config$")) == 1
+    assert len(config.matching_scopes("^test:b/config$")) == 1
 
 
 def test_deepcopy_as_builtin(env_yaml):
