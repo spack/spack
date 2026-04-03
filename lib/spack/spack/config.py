@@ -63,6 +63,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.specs
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
@@ -98,6 +99,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "cdash": spack.schema.cdash.schema,
     "toolchains": spack.schema.toolchains.schema,
     "spack": spack.schema.env.schema,
+    "specs": spack.schema.specs.schema,
 }
 
 #: Path to the main configuration scope
@@ -156,7 +158,7 @@ class ConfigScope:
             tty.debug(f"Retrieved configuration includes for {self.name}: {includes}", level=3)
             return includes
 
-        return  None
+        return None
 
     @property
     def included_scopes(self) -> List["ConfigScope"]:

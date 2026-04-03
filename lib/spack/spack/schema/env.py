@@ -13,8 +13,6 @@ from typing import Any, Dict
 
 import spack.schema.merged
 
-from .spec_list import spec_list_properties, spec_list_schema
-
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
 
@@ -26,27 +24,6 @@ include_concrete = {
     "from their spack.lock files without modifying the source environments. Useful "
     "for phased deployments where you want to build on existing concrete specs.",
     "items": {"type": "string"},
-}
-
-group_name_and_deps = {
-    "group": {"type": "string", "description": "Name for this group of specs"},
-    "explicit": {
-        "type": "boolean",
-        "default": True,
-        "description": "When false, specs in this group are installed as implicit "
-        "dependencies and are eligible for garbage collection.",
-    },
-    "needs": {
-        "type": "array",
-        "description": "Groups of specs that are needed by this group",
-        "items": {"type": "string"},
-    },
-    "override": {
-        "type": "object",
-        "description": "Top-most configuration scope for this group of specs",
-        "additionalProperties": False,
-        "properties": {**spack.schema.merged.ref_sections},
-    },
 }
 
 
@@ -61,37 +38,6 @@ properties: Dict[str, Any] = {
             # merged configuration scope schemas
             **spack.schema.merged.ref_sections,
             # extra environment schema properties
-            "specs": {
-                "type": "array",
-                "description": "List of specs to include in the environment, "
-                "supporting both simple specs and matrix configurations",
-                "default": [],
-                "items": {
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "description": "Matrix configuration for generating multiple specs"
-                            " from combinations of constraints",
-                            "additionalProperties": False,
-                            "properties": {**spec_list_properties},
-                        },
-                        {"type": "string", "description": "Simple spec string"},
-                        {"type": "null"},
-                        {
-                            "type": "object",
-                            "description": "User spec group with a single matrix",
-                            "additionalProperties": False,
-                            "properties": {**spec_list_properties, **group_name_and_deps},
-                        },
-                        {
-                            "type": "object",
-                            "description": "User spec group with multiple matrices",
-                            "additionalProperties": False,
-                            "properties": {**group_name_and_deps, "specs": spec_list_schema},
-                        },
-                    ]
-                },
-            },
             # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
             # nested environments
