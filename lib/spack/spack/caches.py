@@ -19,7 +19,7 @@ def misc_cache_location():
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get("config:misc_cache", "$state_home/cache")
+    path = spack.config.get("config:misc_cache", "$state_home/$spack_instance_id/cache")
     return spack.util.path.canonicalize_path(path)
 
 
