@@ -11,6 +11,29 @@ matrix_schema = {
     },
 }
 
+
+group_name_and_deps = {
+    "group": {"type": "string", "description": "Name for this group of specs"},
+    "explicit": {
+        "type": "boolean",
+        "default": True,
+        "description": "When false, specs in this group are installed as implicit "
+        "dependencies and are eligible for garbage collection.",
+    },
+    "needs": {
+        "type": "array",
+        "description": "Groups of specs that are needed by this group",
+        "items": {"type": "string"},
+    },
+    "override": {
+        "type": "object",
+        "description": "Top-most configuration scope for this group of specs",
+        "additionalProperties": False,
+        "properties": {**spack.schema.merged.ref_sections},
+    },
+}
+
+
 spec_list_properties = {
     "matrix": matrix_schema,
     "exclude": {
@@ -36,6 +59,18 @@ spec_list_schema = {
             },
             {"type": "string", "description": "Simple spec string"},
             {"type": "null"},
+            {
+                "type": "object",
+                "description": "User spec group with a single matrix",
+                "additionalProperties": False,
+                "properties": {**spec_list_properties, **group_name_and_deps},
+            },
+            {
+                "type": "object",
+                "description": "User spec group with multiple matrices",
+                "additionalProperties": False,
+                "properties": {**group_name_and_deps, "specs": spec_list_schema},
+            },
         ]
     },
 }

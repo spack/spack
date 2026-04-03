@@ -1265,22 +1265,26 @@ class Environment:
         self._process_view(spack.config.get("view", True))
         self._process_included_lockfiles()
 
-    # TODO/TLD/TBD: Properly resolve the conflicts related to adding included
-    # TODO/TLD/TBD: user specs
+    # TODO/50207: Properly resolve the conflicts related to adding included
+    # TODO/50207: user specs.
     def _sync_speclists(self):
-        # Combined toolchains from global config and included environments.
         toolchains = spack.config.CONFIG.get("toolchains", {})
         self._spec_lists_parser = SpecListParser(toolchains=toolchains)
 
-        # Combined definitions from the global config and included environments.
         self.spec_lists = {}
-        combined_yaml = []
-        combined_yaml.extend(spack.config.CONFIG.get("definitions", []))
-        self.spec_lists.update(self._spec_lists_parser.parse_definitions(data=combined_yaml))
+        self.spec_lists.update(
+            self._spec_lists_parser.parse_definitions(
+                data=spack.config.CONFIG.get("definitions", [])
+            )
+        )
 
-        # TODO/TLD/TBD: Make sure process groups from included manifests
+        # TODO/50207: Fix this to handle grabbing specs though not clear yet
+        # TODO/50207:   how useful grabbing them from spack.config.CONFIG is
+        # TODO/50207:   since it requires appropriate substitutions (e.g.,
+        # TODO/50207:   definitions) and group handling.
         for group in self.manifest.groups():
             tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
+
             key = self._user_specs_key(group=group)
             self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
                 name=key, yaml_list=self.manifest.user_specs(group=group)
