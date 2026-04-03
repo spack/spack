@@ -25,20 +25,6 @@ def clear_env_vars(working_env):
     spack.paths._unset_path_vars(os.environ)
 
 
-@pytest.fixture
-def set_home(working_env):
-    def _set_home(val):
-        # Clear some env vars that can interfere w/ expanduser(~) on Windows
-        os.environ.pop("USERPROFILE", None)
-        os.environ.pop("HOMEDRIVE", None)
-        os.environ["HOMEPATH"] = val
-
-        # For expanduser on Linux
-        os.environ["HOME"] = val
-
-    yield _set_home
-
-
 def test_install_location(working_env, tmp_path, mutable_config, set_home):
     # If prior default install dir inside spack prefix does not
     # exist, place installs in $HOME

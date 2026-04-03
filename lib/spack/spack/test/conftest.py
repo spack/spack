@@ -178,6 +178,20 @@ def redirect_state_home(tmp_path: Path):
 
 
 @pytest.fixture
+def set_home(working_env):
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
+
+
+@pytest.fixture
 def mock_git_version_info(git, tmp_path: Path, redirect_user_repos_cache_path):
     """Create a mock git repo with known structure
 
