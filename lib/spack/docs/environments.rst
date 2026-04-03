@@ -229,10 +229,7 @@ The same rule applies to the ``install`` and ``uninstall`` commands.
   ==> 0 installed packages
 
   $ spack install zlib@1.2.11
-  ==> Installing zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
-  ==> No binary for zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv found: installing from source
-  ==> zlib: Executing phase: 'install'
-  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
+  [+] q6cqrdt zlib@1.2.11 ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv (12s)
 
   $ spack env activate myenv
 
@@ -242,10 +239,7 @@ The same rule applies to the ``install`` and ``uninstall`` commands.
   ==> 0 installed packages
 
   $ spack install zlib@1.2.8
-  ==> Installing zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
-  ==> No binary for zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x found: installing from source
-  ==> zlib: Executing phase: 'install'
-  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
+  [+] yfc7epf zlib@1.2.8 ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x (12s)
   ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
 
   $ spack find
