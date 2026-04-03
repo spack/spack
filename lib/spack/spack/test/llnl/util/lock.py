@@ -648,6 +648,36 @@ def test_upgrade_read_to_write(private_lock_path):
     assert not lock._file_ref.fh.closed  # recycle the file handle for next lock
 
 
+def test_release_write_downgrades_to_shared(private_lock_path):
+    """Releasing a write lock while a read lock is held must downgrade the POSIX lock
+    from exclusive to shared, allowing other processes to acquire read locks."""
+    lock = lk.Lock(private_lock_path)
+    lock.acquire_read()
+    lock.acquire_write()
+    lock.release_write()
+    assert lock._reads == 1
+    assert lock._writes == 0
+
+    ctx = multiprocessing.get_context()
+    q = ctx.Queue()
+
+    # Another process must be able to acquire a shared read lock concurrently.
+    p = ctx.Process(target=_child_try_acquire_read, args=(private_lock_path, q))
+    p.start()
+    p.join()
+    assert q.get() is True
+
+    # But must not be able to acquire an exclusive write lock.
+    p = ctx.Process(target=_child_try_acquire_write, args=(private_lock_path, q))
+    p.start()
+    p.join()
+    assert q.get() is False
+
+    lock.release_read()
+    assert lock._reads == 0
+    assert lock._writes == 0
+
+
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""

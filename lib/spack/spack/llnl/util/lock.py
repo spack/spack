@@ -665,25 +665,23 @@ class Lock:
         release_fn = release_fn or true_fn
 
         locktype = "WRITE LOCK"
-        if self._writes == 1 and self._reads == 0:
+        if self._writes == 1:
             self._log_releasing(locktype)
 
             # we need to call release_fn before releasing the lock
             result = release_fn()
 
-            self._unlock()  # can raise LockError.
+            if self._reads > 0:
+                self._lock(LockType.READ)
+            else:
+                self._unlock()  # can raise LockError.
+
             self._writes = 0
             self._log_released(locktype)
             return result
         else:
             self._writes -= 1
-
-            # when the last *write* is released, we call release_fn here
-            # instead of immediately before releasing the lock.
-            if self._writes == 0:
-                return release_fn()
-            else:
-                return False
+            return False
 
     def cleanup(self) -> None:
         if self._reads == 0 and self._writes == 0:
