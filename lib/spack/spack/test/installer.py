@@ -30,6 +30,7 @@ import spack.report
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+import spack.variant
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
 
@@ -201,6 +202,20 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 def test_try_install_from_binary_cache(install_mockery, mock_packages, monkeypatch):
     """Test return false when no match exists in the mirror"""
     spec = spack.concretize.concretize_one("mpich")
+    result = inst._try_install_from_binary_cache(spec.package, False, False)
+    assert not result
+
+
+def test_try_install_from_binary_cache_skips_develop(install_mockery, mock_packages, monkeypatch):
+    """Test that develop specs are skipped when trying to install from binary cache."""
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    # Mark as develop spec
+    spec.variants["dev_path"] = spack.variant.VariantValue(
+        spack.variant.VariantType.SINGLE, "dev_path", ("/tmp/dev",), concrete=True
+    )
+    assert spec.is_develop
+
+    # Should return False without even checking mirrors
     result = inst._try_install_from_binary_cache(spec.package, False, False)
     assert not result
 

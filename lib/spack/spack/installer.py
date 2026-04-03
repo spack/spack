@@ -502,6 +502,13 @@ def _try_install_from_binary_cache(
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         timer: timer to keep track of binary install phases.
     """
+    # Skip develop specs -- they should always be built from source.
+    if pkg.spec.is_develop:
+        tty.debug(
+            f"Skipping binary cache for {package_id(pkg.spec)}: develop spec"
+        )
+        return False
+
     # Early exit if no binary mirrors are configured.
     if not spack.mirrors.mirror.MirrorCollection(binary=True):
         return False

@@ -405,6 +405,25 @@ def _skip_no_redistribute_for_public(specs):
     return remaining_specs
 
 
+def _skip_develop_specs(specs):
+    remaining_specs = list()
+    removed_specs = list()
+    for spec in specs:
+        if spec.is_develop:
+            removed_specs.append(spec)
+        else:
+            remaining_specs.append(spec)
+    if removed_specs:
+        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.info(
+            "The following specs will not be pushed to the binary cache"
+            " because they are develop specs:\n"
+            f"{colified_output}\n"
+            "Develop specs are excluded from binary caching by default."
+        )
+    return remaining_specs
+
+
 class PackagesAreNotInstalledError(spack.error.SpackError):
     """Raised when a list of specs is not installed but picked to be packaged."""
 
@@ -483,6 +502,8 @@ def push_fn(args):
 
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
+
+    specs = _skip_develop_specs(specs)
 
     if len(specs) > 1:
         tty.info(f"Selected {len(specs)} specs to push to {push_url}")

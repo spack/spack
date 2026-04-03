@@ -197,6 +197,52 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
     assert (mirror_autopush_dir / specs_dirs / manifest_file).exists()
 
 
+def test_buildcache_push_skips_develop_specs(
+    tmp_path: pathlib.Path, monkeypatch, default_mock_concretization, temporary_store
+):
+    """Test that develop specs (with dev_path) are excluded from buildcache push."""
+    spec = default_mock_concretization("dttop")
+    PackageInstaller([spec.package], explicit=True, fake=True).install()
+    slash_hash = f"/{spec.dag_hash()}"
+
+    class DontUpload(spack.binary_distribution.Uploader):
+        def __init__(self):
+            super().__init__(
+                spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path)), False, False
+            )
+            self.pushed = []
+
+        def push(self, specs: List[spack.spec.Spec]):
+            self.pushed.extend(s.name for s in specs)
+            return [], []  # nothing skipped, nothing errored
+
+    uploader = DontUpload()
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    # Monkeypatch is_develop to return True for the root spec
+    original_is_develop = type(spec).is_develop
+    monkeypatch.setattr(
+        type(spec), "is_develop", property(lambda self: self.name == "dttop")
+    )
+
+    buildcache("create", "--unsigned", "--only", "package", str(tmp_path), slash_hash)
+
+    # The develop spec should have been filtered out
+    assert "dttop" not in uploader.pushed
+
+
+def test_skip_develop_specs_filters_correctly():
+    """Unit test for _skip_develop_specs helper."""
+    normal_spec = spack.spec.Spec("foo@1.0")
+    develop_spec = spack.spec.Spec("bar@2.0 dev_path=/tmp/dev")
+
+    result = spack.cmd.buildcache._skip_develop_specs([normal_spec, develop_spec])
+    assert len(result) == 1
+    assert result[0].name == "foo"
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery,
