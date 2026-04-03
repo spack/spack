@@ -9,7 +9,7 @@ import sys
 import time
 from datetime import datetime
 from types import TracebackType
-from typing import IO, Callable, ContextManager, Dict, Generator, Optional, Tuple, Type, Union
+from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type
 
 from spack.llnl.util import lang, tty
 
@@ -34,7 +34,11 @@ __all__ = [
 ]
 
 
-ReleaseFnType = Optional[Callable[[], bool]]
+ExitFnType = Callable[
+    [Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]],
+    Optional[bool],
+]
+ReleaseFnType = Optional[Callable[[], Optional[bool]]]
 DevIno = Tuple[int, int]  # (st_dev, st_ino) from os.stat_result
 
 
@@ -642,7 +646,7 @@ class Lock:
             self._unlock()  # can raise LockError.
             self._reads = 0
             self._log_released(locktype)
-            return result
+            return bool(result)
         else:
             self._reads -= 1
             return False
@@ -678,7 +682,7 @@ class Lock:
 
             self._writes = 0
             self._log_released(locktype)
-            return result
+            return bool(result)
         else:
             self._writes -= 1
             return False
@@ -746,43 +750,27 @@ class LockTransaction:
 
     Arguments:
         lock: underlying lock for this transaction to be acquired on enter and released on exit
-        acquire: function to be called after lock is acquired, or contextmanager to enter after
-            acquire and leave before release.
-        release: function to be called before release. If ``acquire`` is a contextmanager, this
-            will be called *after* exiting the nested context and before the lock is released.
+        acquire: function to be called after lock is acquired
+        release: function to be called before release, with ``(exc_type, exc_value, traceback)``
         timeout: number of seconds to set for the timeout when acquiring the lock (default no
             timeout)
-
-    If the ``acquire_fn`` returns a value, it is used as the return value for ``__enter__``,
-    allowing it to be passed as the ``as`` argument of a ``with`` statement.
-
-    If ``acquire_fn`` returns a context manager, *its* ``__enter__`` function will be called after
-    the lock is acquired, and its ``__exit__`` function will be called before ``release_fn`` in
-    ``__exit__``, allowing you to nest a context manager inside this one.
-
-    Timeout for lock is customizable.
     """
 
     def __init__(
         self,
         lock: Lock,
-        acquire: Union[ReleaseFnType, ContextManager] = None,
-        release: Union[ReleaseFnType, ContextManager] = None,
+        acquire: Optional[Callable[[], None]] = None,
+        release: Optional[ExitFnType] = None,
         timeout: Optional[float] = None,
     ) -> None:
         self._lock = lock
         self._timeout = timeout
         self._acquire_fn = acquire
         self._release_fn = release
-        self._as = None
 
     def __enter__(self):
         if self._enter() and self._acquire_fn:
-            self._as = self._acquire_fn()
-            if hasattr(self._as, "__enter__"):
-                return self._as.__enter__()
-            else:
-                return self._as
+            return self._acquire_fn()
 
     def __exit__(
         self,
@@ -790,26 +778,17 @@ class LockTransaction:
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
     ) -> bool:
-        suppress = False
-
         def release_fn():
             if self._release_fn is not None:
                 return self._release_fn(exc_type, exc_value, traceback)
 
-        if self._as and hasattr(self._as, "__exit__"):
-            if self._as.__exit__(exc_type, exc_value, traceback):
-                suppress = True
-
-        if self._exit(release_fn):
-            suppress = True
-
-        return suppress
+        return bool(self._exit(release_fn))
 
     def _enter(self) -> bool:
-        return NotImplemented
+        raise NotImplementedError
 
     def _exit(self, release_fn: ReleaseFnType) -> bool:
-        return NotImplemented
+        raise NotImplementedError
 
 
 class ReadTransaction(LockTransaction):
