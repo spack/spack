@@ -72,7 +72,7 @@ def project_env_mods(
         for s in specs
         if not s.external and s in view
     }
-    # Avoid empty regex if all external
+    # Avoid empty regex if mapping empty
     if not prefix_to_prefix:
         return
     prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
