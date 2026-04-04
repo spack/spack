@@ -19,6 +19,10 @@ def post_install(spec, explicit):
     if pkg.installed_from_binary_cache:
         return
 
+    # Do nothing if spec is a develop spec
+    if spec.is_develop:
+        return
+
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
         signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
