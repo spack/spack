@@ -1201,6 +1201,44 @@ packages:
         assert str(fake_bin) in env_variables["PATH"]
 
 
+def test_env_excluded_spec_run_env_not_remapped_to_view(
+    tmp_path: pathlib.Path, mock_fetch, mock_packages, install_mockery
+):
+    """Ensure setup_run_environment paths for specs excluded from a view
+    are not incorrectly remapped to the view root."""
+    view_root = tmp_path / "view"
+    manifest_dir = tmp_path / "environment"
+    manifest_dir.mkdir(parents=True, exist_ok=False)
+    manifest_file = manifest_dir / ev.manifest_name
+    manifest_file.write_text(
+        f"""\
+spack:
+  specs:
+  - sets-path-in-run-env
+  view:
+    default:
+      root: {view_root}
+      exclude: [sets-path-in-run-env]
+"""
+    )
+
+    e = ev.create("test", manifest_file)
+    e.concretize()
+    e.install_all(fake=True)
+    e.write()
+
+    env_mod = spack.util.environment.EnvironmentModifications()
+    e.add_view_to_env(env_mod, "default")
+    env_variables: Dict[str, str] = {}
+    env_mod.apply_modifications(env_variables)
+
+    pkg_spec = next(s for s in e.concrete_roots() if s.name == "sets-path-in-run-env")
+    expected = str(pkg_spec.prefix.share.join("my-data"))
+
+    # The env var must retain the install-prefix path
+    assert env_variables.get("SETS_PATH_IN_RUN_ENV_DIR") == expected
+
+
 def test_init_with_file_and_remove(tmp_path: pathlib.Path, monkeypatch):
     """Ensure a user can remove from any position in the spack.yaml file."""
     path = tmp_path / "spack.yaml"
