@@ -18,7 +18,7 @@ class Ruff(Package):
 
     """
 
-    # Used to tell whether or not the package has been modifiedå
+    # Used to tell whether or not the package has been modified
     state = "unmodified"
 
     # Make sure pre-existing noqa is not interfered with
@@ -31,13 +31,11 @@ class Ruff(Package):
     #
     # but the one below can't even be fixed that way -- you have to add noqa, or break
     # it up inside parens yourself.
-    blatant_violation = "line-that-has-absolutely-no-execuse-for-being-over-99-characters-and-that-black-cannot-fix-with-parens"  # noqa: E501
+    blatant_violation = "line-that-has-absolutely-no-execuse-for-being-over-99-characters-and-that-black-cannot-fix-with-parens" # noqa: E501
 
     # All URL strings are exempt from line-length checks.
     #
-    # ruff normally would complain about these, but the fix it wants (a multi-line
-    # string) is ugbly, and we're more lenient since there are many places where Spack
-    # wants URLs in strings.
+    # ruff will not complain about these
     hg = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
     list_url = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
     git = "ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-ruff-will-not-ignore-by-default"
@@ -72,6 +70,6 @@ class Ruff(Package):
 
     # '@when' decorated functions are exempt from redefinition errors
     @when("@2.0")
-    def install(self, spec, prefix):  # noqa: F811
+    def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)

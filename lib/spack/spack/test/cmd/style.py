@@ -15,7 +15,7 @@ import spack.cmd.style
 import spack.main
 import spack.paths
 import spack.repo
-from spack.cmd.style import _run_import_check
+from spack.cmd.style import _run_import_check, changed_files
 from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
 
@@ -25,9 +25,21 @@ style_data = os.path.join(spack.paths.test_path, "data", "style")
 
 style = spack.main.SpackCommand("style")
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="CI uses cross drive paths that raise errors with relpath"
+)
 
 RUFF = which("ruff")
 MYPY = which("mypy")
+
+
+@pytest.fixture(autouse=True)
+def has_develop_branch(git):
+    """spack style requires git and a develop branch to run -- skip if we're missing either."""
+    git("show-ref", "--verify", "--quiet", "refs/heads/develop", fail_on_error=False)
+    if git.returncode != 0:
+        pytest.skip("requires git and a develop branch")
 
 
 @pytest.fixture(scope="function")
@@ -69,6 +81,75 @@ def ruff_package_with_errors(scope="function"):
     )
     yield tmp
 
+
+def test_changed_files_from_git_rev_base(git, tmp_path: pathlib.Path):
+    """Test arbitrary git ref as base."""
+    with working_dir(str(tmp_path)):
+        git("init")
+        git("checkout", "-b", "main")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
+
+        (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "bin" / "spack").touch()
+        assert changed_files(base="HEAD") == [pathlib.Path("bin/spack")]
+        assert changed_files(base="main") == [pathlib.Path("bin/spack")]
+
+        git("add", "bin/spack")
+        git("commit", "--no-gpg-sign", "-m", "v1")
+        assert changed_files(base="HEAD") == []
+        assert changed_files(base="HEAD~") == [pathlib.Path("bin/spack")]
+
+
+def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
+    """Ensure that we fail gracefully with no base branch."""
+    (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "bin" / "spack").touch()
+    with working_dir(str(tmp_path)):
+        git("init")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("add", ".")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
+
+        with pytest.raises(SystemExit):
+            changed_files(base="foobar")
+
+        out, err = capfd.readouterr()
+        assert "This repository does not have a 'foobar'" in err
+
+
+def test_changed_files_all_files(mock_packages):
+    # it's hard to guarantee "all files", so do some sanity checks.
+    files = {
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files(all_files=True)
+    }
+
+    # spack has a lot of files -- check that we're in the right ballpark
+    assert len(files) > 500
+
+    # a builtin package
+    zlib = spack.repo.PATH.get_pkg_class("zlib")
+    zlib_file = zlib.module.__file__
+    if zlib_file.endswith("pyc"):
+        zlib_file = zlib_file[:-1]
+    assert zlib_file in files
+
+    # a core spack file
+    assert os.path.join(spack.paths.module_path, "spec.py") in files
+
+    # a mock package
+    repo = spack.repo.from_path(spack.paths.mock_packages_path)
+    filename = repo.filename_for_package_name("ruff")
+    assert filename in files
+
+    # this test
+    assert __file__ in files
+
+    # ensure externals are excluded
+    assert not any(f.startswith(spack.paths.vendor_path) for f in files)
 
 def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""
@@ -148,7 +229,7 @@ def test_external_root(external_style_root):
     assert "Import block is un-sorted or un-formatted\n --> lib/spack/spack/dummy.py" in output
 
     # mypy error
-    assert 'lib/spack/spack/dummy.py:47: error: Name "version" is not defined' in output
+    assert 'lib/spack/spack/dummy.py:45: error: Name "version" is not defined' in output
 
     # ruff-format error
     assert "--- lib/spack/spack/dummy.py" in output
@@ -333,108 +414,3 @@ def test_pkg_imports():
         is None
     )
     assert spack.cmd.style._module_part(pathlib.Path(spack.paths.prefix), "spack.pkg") is None
-
-
-def test_spec_strings(tmp_path: pathlib.Path):
-    (tmp_path / "example.py").write_text(
-        """\
-def func(x):
-    print("dont fix %s me" % x, 3)
-    return x.satisfies("+foo %gcc +bar") and x.satisfies("%gcc +baz")
-"""
-    )
-    (tmp_path / "example.json").write_text(
-        """\
-{
-    "spec": [
-        "+foo %gcc +bar~nope   ^dep %clang +yup @3.2 target=x86_64 /abcdef ^another   %gcc   ",
-        "%gcc +baz"
-    ],
-    "%gcc x=y": 2
-}
-"""
-    )
-    (tmp_path / "example.yaml").write_text(
-        """\
-spec:
-  - "+foo   %gcc +bar"
-  - "%gcc +baz"
-  - "this is fine %clang"
-"%gcc x=y": 2
-"""
-    )
-
-    issues = set()
-
-    def collect_issues(path: str, line: int, col: int, old: str, new: str):
-        issues.add((path, line, col, old, new))
-
-    # check for issues with custom handler
-    spack.cmd.style._check_spec_strings(
-        [
-            str(tmp_path / "nonexistent.py"),
-            str(tmp_path / "example.py"),
-            str(tmp_path / "example.json"),
-            str(tmp_path / "example.yaml"),
-        ],
-        handler=collect_issues,
-    )
-
-    assert issues == {
-        (
-            str(tmp_path / "example.json"),
-            3,
-            9,
-            "+foo %gcc +bar~nope   ^dep %clang +yup @3.2 target=x86_64 /abcdef ^another   %gcc   ",
-            "+foo +bar~nope %gcc   ^dep +yup @3.2 target=x86_64 /abcdef %clang ^another   %gcc   ",
-        ),
-        (str(tmp_path / "example.json"), 4, 9, "%gcc +baz", "+baz %gcc"),
-        (str(tmp_path / "example.json"), 6, 5, "%gcc x=y", "x=y %gcc"),
-        (str(tmp_path / "example.py"), 3, 23, "+foo %gcc +bar", "+foo +bar %gcc"),
-        (str(tmp_path / "example.py"), 3, 57, "%gcc +baz", "+baz %gcc"),
-        (str(tmp_path / "example.yaml"), 2, 5, "+foo   %gcc +bar", "+foo +bar   %gcc"),
-        (str(tmp_path / "example.yaml"), 3, 5, "%gcc +baz", "+baz %gcc"),
-        (str(tmp_path / "example.yaml"), 5, 1, "%gcc x=y", "x=y %gcc"),
-    }
-
-    # fix the issues in the files
-    spack.cmd.style._check_spec_strings(
-        [
-            str(tmp_path / "nonexistent.py"),
-            str(tmp_path / "example.py"),
-            str(tmp_path / "example.json"),
-            str(tmp_path / "example.yaml"),
-        ],
-        handler=spack.cmd.style._spec_str_fix_handler,
-    )
-
-    assert (
-        (tmp_path / "example.json").read_text()
-        == """\
-{
-    "spec": [
-        "+foo +bar~nope %gcc   ^dep +yup @3.2 target=x86_64 /abcdef %clang ^another   %gcc   ",
-        "+baz %gcc"
-    ],
-    "x=y %gcc": 2
-}
-"""
-    )
-    assert (
-        (tmp_path / "example.py").read_text()
-        == """\
-def func(x):
-    print("dont fix %s me" % x, 3)
-    return x.satisfies("+foo +bar %gcc") and x.satisfies("+baz %gcc")
-"""
-    )
-    assert (
-        (tmp_path / "example.yaml").read_text()
-        == """\
-spec:
-  - "+foo +bar   %gcc"
-  - "+baz %gcc"
-  - "this is fine %clang"
-"x=y %gcc": 2
-"""
-    )

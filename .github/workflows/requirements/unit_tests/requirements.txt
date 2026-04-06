@@ -1,0 +1,6 @@
+pytest==9.0.2
+pytest-cov==7.1.0
+pytest-xdist==3.3.1
+coverage[toml]<=7.11.0
+clingo==5.8.0
+click==8.1.7
