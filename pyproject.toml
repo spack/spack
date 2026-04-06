@@ -57,19 +57,11 @@ features = ["dev", "ci"]
 [tool.ruff]
 target-version = "py37"
 line-length = 99
-extend-include = [
-  "bin/spack"
-]
+extend-include = ["bin/spack"]
 exclude = [
-  "etc",
-  "opt",
-  "share",
-  "var/spack/cache",
-  "var/spack/gpg*",
-  "var/spack/junit-report",
-  "var/spack/mock-configs",
+  "var/spack/environments",
   "lib/spack/spack/vendor",
-  "*.pyi"
+  "opt/spack",
 ]
 src = ["lib"]
 
@@ -81,7 +73,7 @@ line-ending = "lf"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = ["E203", "E731"]
+ignore = ["E203", "E731", "F811"]
 typing-modules = ["spack.vendor.typing_extensions"]
 
 [tool.ruff.lint.isort]
