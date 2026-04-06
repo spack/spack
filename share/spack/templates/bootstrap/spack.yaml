@@ -38,13 +38,9 @@ spack:
     targets:
       granularity: generic
 
-  mirrors:
-    developer-tools-darwin:
-      url: https://binaries.spack.io/releases/v2026.03/developer-tools-darwin
+  mirrors::
+{% for mirror in bootstrap_mirrors %}
+    {{mirror}}:
+      url: https://binaries.spack.io/releases/v2026.03/{{mirror}}
       signed: true
-    developer-tools-x86_64_v3-linux-gnu:
-      url: https://binaries.spack.io/releases/v2026.03/developer-tools-x86_64_v3-linux-gnu
-      signed: true
-    developer-tools-aarch64-linux-gnu:
-      url: https://binaries.spack.io/releases/v2026.03/developer-tools-aarch64-linux-gnu
-      signed: true
+{% endfor %}

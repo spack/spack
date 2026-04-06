@@ -13,16 +13,13 @@ from typing import Iterable, List
 import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
-import spack.config
 import spack.environment
-import spack.mirrors.mirror
 import spack.spec
 import spack.tengine
 import spack.util.gpg
 import spack.util.path
 from spack.llnl.util import tty
 
-from ._common import _root_spec
 from .config import root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
 
@@ -79,15 +76,8 @@ class BootstrapEnvironment(spack.environment.Environment):
         return cls.environment_root().joinpath("spack.yaml")
 
     @contextlib.contextmanager
-    def mirror_keys_enabled(self, *mirrors: spack.mirrors.mirror.Mirror):
-        bootstrap_keys = []
-        for mirror in mirrors:
-            if mirror.signed:
-                bootstrap_keys.extend(
-                    spack.binary_distribution.get_keys(
-                        install=True, trust=True, mirrors={mirror.name: mirror}
-                    )
-                )
+    def mirror_keys_enabled(self):
+        bootstrap_keys = spack.binary_distribution.get_keys(install=True, trust=True)
         try:
             yield
         finally:
@@ -107,15 +97,10 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                mirrors = [
-                    spack.mirrors.mirror.Mirror(
-                        name=mirror,
-                        data=spack.config.get("mirrors", scope=self.scope_name)[mirror],
+                with self.mirror_keys_enabled():
+                    self.install_all(
+                        fail_fast=True, root_policy="cache_only", dependencies_policy="cache_only"
                     )
-                    for mirror in dev_bootstrap_mirror_names()
-                ]
-                with self.mirror_keys_enabled(*mirrors):
-                    self.install_all(fail_fast=True, root_policy="cache_only", dependencies_policy="cache_only", include_build_deps=False)
                     self.write(regenerate=True)
 
     def load(self) -> None:
@@ -139,6 +124,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),
+            "bootstrap_mirrors": dev_bootstrap_mirror_names(),
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
@@ -146,17 +132,17 @@ class BootstrapEnvironment(spack.environment.Environment):
 
 def mypy_root_spec() -> str:
     """Return the root spec used to bootstrap mypy"""
-    return _root_spec("py-mypy@0.900: ^py-mypy-extensions@:1.0")
+    return "py-mypy@0.900: ^py-mypy-extensions@:1.0"
 
 
 def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap flake8"""
-    return _root_spec("py-pytest@6.2.4:")
+    return "py-pytest@6.2.4:"
 
 
 def ruff_root_spec() -> str:
     """Return the root spec used to bootstrap ruff"""
-    return _root_spec("py-ruff@0.15.0")
+    return "py-ruff@0.15.0"
 
 
 def dev_bootstrap_mirror_names() -> List[str]:

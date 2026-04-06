@@ -23,6 +23,18 @@ _source_schema: Dict[str, Any] = {
     "required": ["name", "metadata"],
 }
 
+#: schema for dev bootstrap configuration
+_dev_schema: Dict[str, Any] = {
+    "type": "object",
+    "description": "Dev Bootstrap configuration",
+    "properties": {
+        "enable_source" : {
+            "type" : "boolean",
+            "description": "Enable bootstrapping dev dependencies from source"
+        }
+    }
+}
+
 properties: Dict[str, Any] = {
     "bootstrap": {
         "type": "object",
@@ -48,6 +60,7 @@ properties: Dict[str, Any] = {
                 "additionalProperties": {"type": "boolean"},
                 "description": "Controls which sources are enabled for automatic bootstrapping",
             },
+            "dev" : _dev_schema
         },
     }
 }
