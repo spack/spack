@@ -86,13 +86,8 @@ class SpackPaths:
         self._data_home = None
         self._cache_home = None
 
-        self.default_state_home, self.default_data_home, self.default_cache_home = (
-            os.path.join(os.path.expanduser("~"), x, "spack")
-            for x in [
-                SpackPaths.relative_state_home,
-                SpackPaths.relative_data_home,
-                SpackPaths.relative_cache_home,
-            ]
+        self.default_data_home = os.path.join(
+            os.path.expanduser("~"), SpackPaths.relative_data_home, "spack"
         )
 
     @property
