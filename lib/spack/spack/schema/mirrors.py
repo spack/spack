@@ -95,9 +95,19 @@ mirror_entry = {
             "precompiled packages",
         },
         "signed": {
-            "type": "boolean",
-            "description": "Whether to require GPG signature verification for packages from "
-            "this mirror",
+            "oneOf": [
+                {
+                    "type": "boolean",
+                    "description": "Whether to require GPG signature verification for packages from "
+                    "this mirror",
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string", "enum", ["gnupg-clearsign", "gnupg-detached"], "default": "gnupg-detached"},
+                    }
+                },
+            ]
         },
         "fetch": {
             **fetch_and_push,

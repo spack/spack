@@ -124,6 +124,7 @@ CONFIG_DEFAULTS = {
         "license_dir": spack.paths.default_license_dir,
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
+    "signing": {"gpg": "detached"},
 }
 
 #: metavar to use for commands that accept scopes

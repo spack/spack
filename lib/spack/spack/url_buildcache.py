@@ -190,6 +190,7 @@ class URLBuildcacheEntry:
     SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
     TARBALL_MEDIATYPE = "application/vnd.spack.install.v2.tar+gzip"
     PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
+    PGP_SIGNATURE_MEDIATYPE = "application/pgp-signature"
     PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
@@ -198,6 +199,7 @@ class URLBuildcacheEntry:
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", "index"],
         BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
         BuildcacheComponent.SPEC: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
+        BuildcacheComponent.SIG: [f"v{LAYOUT_VERSION}", "manifests", "sig"],
         BuildcacheComponent.KEY_INDEX: [f"v{LAYOUT_VERSION}", "manifests", "key"],
         BuildcacheComponent.TARBALL: ["blobs"],
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
@@ -285,6 +287,24 @@ class URLBuildcacheEntry:
         )
 
     @classmethod
+    def get_sig_url_for_file(cls, file: str, fingerprint: str, mirror_url: str) -> str:
+        assert os.path.exists(file)
+        with open(file, "rb") as fd:
+            return cls.get_sig_url_for_content(fd.read(), fingerprint, mirror_url)
+
+    @classmethod
+    def get_sig_url_for_content(cls, content: bytes, fingerprint: str, mirror_url: str) -> str:
+        digest = hashlib.sha256(content).hexdigest()
+        return cls.get_sig_url_for_digest(digest, fingerprint, mirror_url)
+
+    @classmethod
+    def get_sig_url_for_digest(cls, digest: str, fingerprint: str, mirror_url: str) -> str:
+        path_components = cls.get_relative_path_components(BuildcacheComponent.SIG)
+        return url_util.join(
+            mirror_url, *path_components, digest[:2], digest + ".asc"
+        )
+
+    @classmethod
     def get_buildcache_component_include_pattern(
         cls, buildcache_component: BuildcacheComponent
     ) -> str:
@@ -295,6 +315,8 @@ class URLBuildcacheEntry:
             return "*.manifest.json"
         elif buildcache_component == BuildcacheComponent.SPEC:
             return "*.spec.manifest.json"
+        elif buildcache_component == BuildcacheComponent.SIG:
+            return "*.sig.manifest.json"
         elif buildcache_component == BuildcacheComponent.INDEX:
             return ".*index.manifest.json"
         elif buildcache_component == BuildcacheComponent.KEY:
@@ -317,6 +339,9 @@ class URLBuildcacheEntry:
             return cls.PUBLIC_KEY_MEDIATYPE
         elif component == BuildcacheComponent.KEY_INDEX:
             return cls.PUBLIC_KEY_INDEX_MEDIATYPE
+        elif buildcache_component == BuildcacheComponent.SIG:
+            # TODO support for cosign
+            return cls.PGP_SIGNATURE_MEDIATYPE
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
@@ -420,25 +445,91 @@ class URLBuildcacheEntry:
 
         return True
 
+    def _fetch_detached_sig(self, fprs: List[str]) -> Optional[BlobRecord]
+        if not self.spec:
+            raise BuildcacheEntryError("A spec is required to read a manifests for spec signatures")
+
+        # Try to read the manifests for the known public keys
+        for fingerprint in fprs:
+            sig_manifest_url = URLBuildcacheEntry.get_sig_manifest_url(, self.mirror_url)
+            try:
+                # Read the signature (signatures are never signed)
+                manifest = URLBuildcacheEntry.read_manifest_from_url(sig_manifest_url, verify=False)
+                sig = manifest.get_blob_records(self.component_to_media_type(BuildcacheComponent.SIG))
+
+                # Skip records with signatures we don't understand
+                if not sig:
+                    tty.error(f"Found empty signature manifest: {self.spec.dag_hash}@{fpr}")
+                    continue
+
+                tty.debug(f"Found signature {self.spec.dag_hash}@{fpr}")
+                return sig
+
+            except BuildcacheEntryError:
+                continue
+
+        return None
+
     @classmethod
     def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
         """Possibly verify clearsig, then extract contents and return as json"""
-        if spack.util.gpg.is_clearsig(manifest_contents):
-            if verify:
+        # Cache the manifest on disc if we are going to verify
+        if verify:
+            manifest_path = os.path.join(tmpdir, "manifest.json.sig")
+            # Try to verify and raise if we fail
+            with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+                # Cache the contents for use with GPG
+                with open(manifest_path, "w", encoding="utf-8") as fd:
+                    fd.write(manifest_contents)
+
+                # If the manifest isn't cleartext signed, look for detached signatures
+                signature = None
+                if spack.util.gpg.is_clearsig(manifest_contents):
+                    # TODO: Have better control over the signatures to search
+                    fprs = spack.util.gpg.public_keys()
+                    detached_sigs = self._fetch_detached_sig(manifest_contents)
+                    if not detached_sigs:
+                        raise NoVerifyException("No signature found for verification")
+
+                    signature = self.fetch_blob(detached_sigs)
+
                 # Try to verify and raise if we fail
-                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                    manifest_path = os.path.join(tmpdir, "manifest.json.sig")
-                    with open(manifest_path, "w", encoding="utf-8") as fd:
-                        fd.write(manifest_contents)
-                    if not try_verify(manifest_path):
-                        raise NoVerifyException("Signature could not be verified")
+                if not try_verify(manifest_path, signature):
+                    raise NoVerifyException("Signature could not be verified")
 
-            return spack.util.gpg.extract_json_from_clearsig(manifest_contents)
-        elif verify:
-            raise NoVerifyException("Required signature was not found on manifest")
-        return json.loads(manifest_contents)
+        # Return the manifest contents
+        if spack.util.gpg.is_clearsig(manifest_contents):
+            return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
+        else:
+            return json.loads(manifest_contents)
 
-    def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
+    @classmethod
+    def read_manifest_from_url(self, manifest_url: str, verify: Optional[bool] = None) -> BuildcacheManifest:
+        """Read and process the the buildcache entry manifest."""
+        manifest = None
+        manifest_contents = ""
+
+        try:
+            manifest_contents = web_util.read_text(manifest_url)
+        except (web_util.SpackWebError, OSError) as e:
+            raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
+
+        if not manifest_contents:
+            raise BuildcacheEntryError("Unable to read manifest or manifest empty")
+
+        verify = verify if verify is not None else not self.allow_unsigned
+        manifest_contents = cls.verify_and_extract_manifest(
+            manifest_contents, verify=verify
+        )
+
+        manifest = BuildcacheManifest.from_dict(manifest_contents)
+
+        if manifest.version != 3:
+            raise BuildcacheEntryError("Layout version mismatch in fetched manifest")
+
+        return manifest
+
+    def read_manifest(self, manifest_url: Optional[str] = None, verify: Optional[bool] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
 
         If no manifest url is provided, build the url from the internal spec and
@@ -463,23 +554,7 @@ class URLBuildcacheEntry:
         self.remote_manifest_url = manifest_url
         manifest_contents = ""
 
-        try:
-            manifest_contents = web_util.read_text(manifest_url)
-        except (web_util.SpackWebError, OSError) as e:
-            raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
-
-        if not manifest_contents:
-            raise BuildcacheEntryError("Unable to read manifest or manifest empty")
-
-        manifest_contents = self.verify_and_extract_manifest(
-            manifest_contents, verify=not self.allow_unsigned
-        )
-
-        self.manifest = BuildcacheManifest.from_dict(manifest_contents)
-
-        if self.manifest.version != 3:
-            raise BuildcacheEntryError("Layout version mismatch in fetched manifest")
-
+        self.manifest = self.read_manifest_from_url(manifest_url, verify)
         return self.manifest
 
     def fetch_metadata(self) -> dict:
@@ -752,6 +827,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.INDEX: ["build_cache"],
         BuildcacheComponent.KEY: ["build_cache", "_pgp"],
         BuildcacheComponent.SPEC: ["build_cache"],
+        BuildcacheComponent.SIG: ["build_cache"],
         BuildcacheComponent.KEY_INDEX: ["build_cache", "_pgp"],
         BuildcacheComponent.TARBALL: ["build_cache"],
         BuildcacheComponent.LAYOUT_JSON: ["build_cache", "layout.json"],
@@ -1330,7 +1406,7 @@ def sign_file(key: str, file_path: str) -> str:
     return signed_file_path
 
 
-def try_verify(specfile_path):
+def try_verify(specfile_path, sigfile=None):
     """Utility function to attempt to verify a local file.  Assumes the
     file is a clearsigned signature file.
 
@@ -1343,7 +1419,10 @@ def try_verify(specfile_path):
     suppress = config.get("config:suppress_gpg_warnings", False)
 
     try:
-        spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
+        if sigfile:
+            spack.util.gpg.verify(sigfile, file=specfile_path, suppress_warnings=suppress)
+        else:
+            spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
     except Exception:
         return False
 
