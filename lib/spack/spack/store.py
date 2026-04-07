@@ -78,7 +78,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
         unpadded_root = install_tree.get("root", None)
         if not unpadded_root:
             unpadded_root = paths.default_install_location
-            paths.bypassed_old_installs_warning()
+            paths.warn_unused_old_installs()
 
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 

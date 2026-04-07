@@ -148,9 +148,9 @@ class SpackPaths:
             self._data_home_provenance,
         )
 
-    def bypassed_old_installs_warning(self, _show=True):
+    def warn_unused_old_installs(self, _show=True):
         cfg_settings = ["config:install_tree:root"]
-        return self._bypass_warning(
+        return self._warn_on_unused_old_data(
             self.default_install_location,
             self.base.old_install_path,
             "installs",
@@ -158,9 +158,9 @@ class SpackPaths:
             _show=_show,
         )
 
-    def bypassed_old_envs_warning(self, _show=True):
+    def warn_unused_old_envs(self, _show=True):
         cfg_settings = ["config:environments_root"]
-        return self._bypass_warning(
+        return self._warn_on_unused_old_data(
             self.default_envs_path,
             self.base.old_envs_path,
             "environments",
@@ -168,13 +168,13 @@ class SpackPaths:
             _show=_show,
         )
 
-    def bypassed_old_gpg_warning(self, _show=True):
+    def warn_unused_old_gpg(self, _show=True):
         cfg_settings = ["SPACK_GNUPGHOME"]
-        return self._bypass_warning(
+        return self._warn_on_unused_old_data(
             self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings, _show=_show
         )
 
-    def _bypass_warning(self, chosen_path, old_path, data_category, cfg_settings, _show=True):
+    def _warn_on_unused_old_data(self, chosen_path, old_path, data_category, cfg_settings, _show=True):
         generic_cfg = [
             "config:locations:home",
             "config:locations:data",

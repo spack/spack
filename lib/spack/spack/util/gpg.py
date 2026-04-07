@@ -60,7 +60,7 @@ def init(gnupghome=None, force=False):
     GNUPGHOME = gnupghome or os.getenv("SPACK_GNUPGHOME")
     if not GNUPGHOME:
         GNUPGHOME = paths.gpg_path
-        paths.bypassed_old_gpg_warning()
+        paths.warn_unused_old_gpg()
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():
