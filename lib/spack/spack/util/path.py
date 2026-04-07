@@ -52,21 +52,6 @@ def get_user():
 NOMATCH = object()
 
 
-class ResolutionContextError(ValueError):
-    def __init__(self, var):
-        msg = f"Cannot resolve {var}"
-        super().__init__(msg)
-        self.var = var
-
-
-class CannotResolve:
-    def __init__(self, var):
-        self.var = var
-
-    def __call__(self):
-        raise ResolutionContextError(self.var)
-
-
 # Substitutions to perform
 def replacements():
     # break circular imports
