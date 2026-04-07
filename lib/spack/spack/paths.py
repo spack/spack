@@ -121,7 +121,7 @@ class SpackPaths:
                 "SPACK_DATA_HOME", "data", SpackPaths.relative_data_home, "XDG_DATA_HOME"
             )
         return self._data_home
-        
+
     @property
     def data_home_provenance(self):
         if not self._data_home_provenance:
@@ -182,7 +182,9 @@ class SpackPaths:
             self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings, _show=_show
         )
 
-    def _warn_on_unused_old_data(self, chosen_path, old_path, data_category, cfg_settings, _show=True):
+    def _warn_on_unused_old_data(
+        self, chosen_path, old_path, data_category, cfg_settings, _show=True
+    ):
         generic_cfg = [
             "config:locations:home",
             "config:locations:data",
