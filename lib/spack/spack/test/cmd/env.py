@@ -4939,4 +4939,4 @@ spack:
         assert libdwarf.satisfies("cflags=-Wall")
         # Sanity check: make sure the target we expect was applied to the
         # compiler entry
-        assert libdwarf["c"].satisfies("target=x86_64_v3")
+        assert libdwarf["c"].satisfies("gcc@12.100.100 languages:=c,c++ target=x86_64_v3")
