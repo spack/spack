@@ -260,7 +260,7 @@ class CompilerFactory:
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
         compiler_package_names = supported_compilers()
-        packages_yaml = configuration.get_config("packages", scope=scope)
+        packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
         init_external_dicts = list(
