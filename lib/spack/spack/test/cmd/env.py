@@ -645,51 +645,6 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
     assert os.path.islink(filepath_mid)
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
-def test_compiler_target_env(install_mockery, tmp_path: pathlib.Path):
-    path = tmp_path / "spack.yaml"
-
-    with fs.working_dir(str(tmp_path)):
-        with open(str(path), "w", encoding="utf-8") as f:
-            cflags = "-Wall"
-            f.write(
-                f"""\
-spack:
-  specs:
-  - libdwarf
-  packages:
-    all:
-      require:
-      # Right now, if this is expressed as
-      # - spec: "target=x86_64_v3"
-      # then the target is not actually applied to externals (including the
-      # compiler), and the test passes (but for the wrong reason).
-      - "target=x86_64_v3"
-    gcc:
-      externals:
-      - spec: gcc@12.100.100 languages:=c,c++
-        prefix: /fake
-        extra_attributes:
-          compilers:
-            c: /fake/bin/gcc
-            cxx: /fake/bin/g++
-          flags:
-            cflags: {cflags}
-      require: "gcc"
-"""
-            )
-        env("create", "test", "spack.yaml")
-
-    with ev.read("test") as e:
-        e.concretize()
-        x = list(e.concretized_specs())
-        y = x[0][1]
-        assert y.satisfies("cflags=-Wall")
-        # The next assert is a sanity check addressing the note above in the
-        # environment packages: section
-        assert y["c"].satisfies("target=x86_64_v3")
-
-
 def test_env_install_two_specs_same_dep(
     install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
@@ -4946,3 +4901,51 @@ spack:
         e.write()
         assert len(e.user_specs) == 0
         assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
+def test_compiler_target_env(install_mockery, tmp_path: pathlib.Path):
+    """Tests that Spack doesn't drop flag definitions on compilers
+    when a target is required in config.
+    """
+    path = tmp_path / "spack.yaml"
+
+    with fs.working_dir(str(tmp_path)):
+        with open(str(path), "w", encoding="utf-8") as f:
+            cflags = "-Wall"
+            f.write(
+                f"""\
+spack:
+  specs:
+  - libdwarf
+  packages:
+    all:
+      require:
+      # Right now, if this is expressed as
+      # - spec: "target=x86_64_v3"
+      # then the target is not actually applied to externals (including the
+      # compiler), and the test passes (but for the wrong reason).
+      - "target=x86_64_v3"
+    gcc:
+      externals:
+      - spec: gcc@12.100.100 languages:=c,c++
+        prefix: /fake
+        extra_attributes:
+          compilers:
+            c: /fake/bin/gcc
+            cxx: /fake/bin/g++
+          flags:
+            cflags: {cflags}
+      require: "gcc"
+"""
+            )
+        env("create", "test", "spack.yaml")
+
+    with ev.read("test") as e:
+        e.concretize()
+        x = list(e.concretized_specs())
+        y = x[0][1]
+        assert y.satisfies("cflags=-Wall")
+        # The next assert is a sanity check addressing the note above in the
+        # environment packages: section
+        assert y["c"].satisfies("target=x86_64_v3")
