@@ -89,6 +89,8 @@ config:
   # This can be purged with `spack clean --misc-cache`
   misc_cache: $user_cache_path/cache
 
+  # Naming format for individual stage directories
+  stage_name: "spack-stage-{name}-{version}-{hash}"
 
   # Abort downloads after this many seconds if not data is received.
   # Setting this to 0 will disable the timeout.
