@@ -98,7 +98,7 @@ class SpackPaths:
     @property
     def state_home(self):
         if not self._state_home:
-            self._state_home, self._state_home_provenance = self.resolve_a_home(
+            self._state_home, _ = self.resolve_a_home(
                 ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
                 "state",
                 SpackPaths.relative_state_home,
@@ -109,7 +109,7 @@ class SpackPaths:
     @property
     def cache_home(self):
         if not self._cache_home:
-            self._cache_home, self._cache_home_provenance = self.resolve_a_home(
+            self._cache_home, _ = self.resolve_a_home(
                 "SPACK_CACHE_HOME", "cache", SpackPaths.relative_cache_home, "XDG_CACHE_HOME"
             )
         return self._cache_home
@@ -121,6 +121,14 @@ class SpackPaths:
                 "SPACK_DATA_HOME", "data", SpackPaths.relative_data_home, "XDG_DATA_HOME"
             )
         return self._data_home
+        
+    @property
+    def data_home_provenance(self):
+        if not self._data_home_provenance:
+            self._data_home, self._data_home_provenance = self.resolve_a_home(
+                "SPACK_DATA_HOME", "data", SpackPaths.relative_data_home, "XDG_DATA_HOME"
+            )
+        return self._data_home_provenance
 
     @property
     def spack_home(self):
@@ -145,7 +153,7 @@ class SpackPaths:
             self.base.old_install_path,
             os.path.join(self.data_home, "installs"),
             os.path.join(self.default_data_home, "installs"),
-            self._data_home_provenance,
+            self.data_home_provenance,
         )
 
     def warn_unused_old_installs(self, _show=True):
@@ -191,7 +199,7 @@ class SpackPaths:
         if (
             chosen_path != old_path
             and dir_is_occupied(old_path)
-            and not self._data_home_provenance.unilateral_override()
+            and not self.data_home_provenance.unilateral_override()
         ):
             if _show:
                 tty.warn(msg)
@@ -204,7 +212,7 @@ class SpackPaths:
             self.base.old_envs_path,
             os.path.join(self.data_home, "environments"),
             os.path.join(self.default_data_home, "environments"),
-            self._data_home_provenance,
+            self.data_home_provenance,
         )
 
     @property
@@ -250,7 +258,7 @@ class SpackPaths:
             self.base.old_gpg_path,
             os.path.join(self.data_home, "gpg"),
             os.path.join(self.default_data_home, "gpg"),
-            self._data_home_provenance,
+            self.data_home_provenance,
         )
 
     @property
@@ -259,7 +267,7 @@ class SpackPaths:
             self.base.old_gpg_keys_path,
             os.path.join(self.data_home, "gpg-keys"),
             os.path.join(self.default_data_home, "gpg-keys"),
-            self._data_home_provenance,
+            self.data_home_provenance,
         )
 
     def __getattr__(self, name):
