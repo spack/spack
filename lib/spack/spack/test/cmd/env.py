@@ -4918,10 +4918,6 @@ spack:
   packages:
     all:
       require:
-      # Right now, if this is expressed as
-      # - spec: "target=x86_64_v3"
-      # then the target is not actually applied to externals (including the
-      # compiler), and the test passes (but for the wrong reason).
       - "target=x86_64_v3"
     gcc:
       externals:
@@ -4941,6 +4937,6 @@ spack:
         env.concretize()
         libdwarf = env.concrete_roots()[0]
         assert libdwarf.satisfies("cflags=-Wall")
-        # The next assert is a sanity check addressing the note above in the
-        # environment packages: section
+        # Sanity check: make sure the target we expect was applied to the
+        # compiler entry
         assert libdwarf["c"].satisfies("target=x86_64_v3")
