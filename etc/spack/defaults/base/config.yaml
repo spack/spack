@@ -83,7 +83,7 @@ config:
   ## Directory where spack managed environments are created and stored
   # If set to a non-default value, this setting has precedence.
   # This default value tells spack to: 
-  # * Prefer $data_home/envs
+  # * Prefer $data_home/environments
   # * The old location for envs is $spack/var/spack/environments: Spack will
   #   use this old location if the new location is empty and the old one isn't
   environments_root: $default_envs_root
