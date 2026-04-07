@@ -16,7 +16,7 @@ from spack.store import STORE
 def get_license(pkg):
     if not pkg:
         return "NOASSERTION"
-    
+
     license_data = getattr(pkg, "licenses", None)
 
     if not license_data:
@@ -25,6 +25,7 @@ def get_license(pkg):
     licenses = [lic for when, lic in license_data.items() if pkg.spec.satisfies(when)]
 
     return " OR ".join(licenses) if licenses else "NOASSERTION"
+
 
 def get_supplier(pkg):
     supplier = getattr(pkg, "supplier", None)
@@ -100,8 +101,7 @@ def sbom_path(spec):
 
 # SPDX 2.3 Generation
 def generate_spdx_2_3(spec):
-    pkg = spec.package
-    
+
     if spec.external:
         return
 
@@ -162,6 +162,7 @@ def generate_spdx_2_3(spec):
     with open(path, "w", encoding="utf-8") as f:
         sjson.dump(sbom, f)
     tty.debug(f"[SBOM] Wrote SPDX 2.3 SBOM to {path}")
+
 
 # Call SBOM generation in post-install hook
 def post_install(spec, explicit=None):

@@ -6,10 +6,10 @@ import json
 import os
 
 import pytest
+
 import spack.concretize
 import spack.spec
 from spack.hooks.sbom_generate import post_install, sbom_path
-from spack.store import STORE
 
 
 def test_sbom_generated_with_post_install(mock_packages, install_mockery):
@@ -215,14 +215,7 @@ def test_sbom_download_location_and_checksum_from_version_metadata(
     version = spec.version
 
     # The hook looks up version metadata by both string and Version key in different places.
-    monkeypatch.setattr(
-        spec.package,
-        "versions",
-        {
-            version: {"sha256": "a" * 64},
-        },
-        raising=False,
-    )
+    monkeypatch.setattr(spec.package, "versions", {version: {"sha256": "a" * 64}}, raising=False)
     monkeypatch.setattr(
         spec.package, "url_for_version", lambda version: "https://example.com/src.tar.gz"
     )
@@ -255,7 +248,10 @@ def test_sbom_download_location_from_package_url(mock_packages, install_mockery,
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(
-        spec.package, "url", "https://example.com/trivial-install-test-package-1.0.tar.gz", raising=False
+        spec.package,
+        "url",
+        "https://example.com/trivial-install-test-package-1.0.tar.gz",
+        raising=False,
     )
 
     post_install(spec)
@@ -273,7 +269,10 @@ def test_sbom_download_location_from_package_url_with_different_version(
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(
-        spec.package, "url", "https://example.com/trivial-install-test-package-9.9.tar.gz", raising=False
+        spec.package,
+        "url",
+        "https://example.com/trivial-install-test-package-9.9.tar.gz",
+        raising=False,
     )
 
     post_install(spec)
@@ -296,21 +295,13 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
     dep = next(d for d in spec.dependencies(deptype="all") if d.name == "callpath")
 
     monkeypatch.setattr(
-        spec.package,
-        "versions",
-        {spec.version: {"sha256": "a" * 64}},
-        raising=False,
+        spec.package, "versions", {spec.version: {"sha256": "a" * 64}}, raising=False
     )
     monkeypatch.setattr(
-        dep.package,
-        "versions",
-        {dep.version: {"sha256": "b" * 64}},
-        raising=False,
+        dep.package, "versions", {dep.version: {"sha256": "b" * 64}}, raising=False
     )
     monkeypatch.setattr(
-        dep.package,
-        "url_for_version",
-        lambda version: "https://example.com/callpath.tar.gz",
+        dep.package, "url_for_version", lambda version: "https://example.com/callpath.tar.gz"
     )
 
     post_install(spec)
