@@ -4939,9 +4939,8 @@ spack:
 
     with env:
         env.concretize()
-        x = list(env.concretized_specs())
-        y = x[0][1]
-        assert y.satisfies("cflags=-Wall")
+        libdwarf = env.concrete_roots()[0]
+        assert libdwarf.satisfies("cflags=-Wall")
         # The next assert is a sanity check addressing the note above in the
         # environment packages: section
-        assert y["c"].satisfies("target=x86_64_v3")
+        assert libdwarf["c"].satisfies("target=x86_64_v3")
