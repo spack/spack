@@ -4904,17 +4904,14 @@ spack:
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
-def test_compiler_target_env(install_mockery, tmp_path: pathlib.Path):
+def test_compiler_target_env(install_mockery, environment_from_manifest):
     """Tests that Spack doesn't drop flag definitions on compilers
     when a target is required in config.
     """
-    path = tmp_path / "spack.yaml"
 
-    with fs.working_dir(str(tmp_path)):
-        with open(str(path), "w", encoding="utf-8") as f:
-            cflags = "-Wall"
-            f.write(
-                f"""\
+    cflags = "-Wall"
+    env = environment_from_manifest(
+        f"""\
 spack:
   specs:
   - libdwarf
@@ -4938,12 +4935,11 @@ spack:
             cflags: {cflags}
       require: "gcc"
 """
-            )
-        env("create", "test", "spack.yaml")
+    )
 
-    with ev.read("test") as e:
-        e.concretize()
-        x = list(e.concretized_specs())
+    with env:
+        env.concretize()
+        x = list(env.concretized_specs())
         y = x[0][1]
         assert y.satisfies("cflags=-Wall")
         # The next assert is a sanity check addressing the note above in the
