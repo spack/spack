@@ -564,9 +564,9 @@ Each of these variables can be set with config or with environment variables.
 For example ``$data_home`` evaluates to one of the following (highest-priority first):
 
 #. ``SPACK_DATA_HOME`` env var if that is set
-#. Under ``SPACK_HOME`` env var; for ``$data_home``, it is this plus ``.local/share/spack``
+#. Under ``SPACK_HOME`` env var; for ``$data_home``, it is ``$SPACK_HOME/.local/share/spack``
 #. ``config:locations:data``
-#. Under ``config:locations:home``; for ``$data_home`` it is this plus ``.local/share/spack``
+#. Under ``config:locations:home``; for ``$data_home`` it is ``$spack_home/.local/share/spack``
 #. ``XDG_DATA_HOME/spack`` if XDG_DATA_HOME is set
 #. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
 
