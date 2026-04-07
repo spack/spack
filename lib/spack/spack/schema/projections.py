@@ -10,29 +10,30 @@
 from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {
-    "projections": {
-        "type": "object",
-        "description": "Customize directory structure and naming schemes by mapping specs to "
-        "format strings.",
-        "properties": {
-            "all": {
-                "type": "string",
-                "description": "Default projection format string used as fallback for all specs "
-                "that do not match other entries. Uses spec format syntax like "
-                '"{name}/{version}/{hash:16}".',
-            }
-        },
-        "additionalKeysAreSpecs": True,
-        "additionalProperties": {
+projections: Dict[str, Any] = {
+    "type": "object",
+    "description": "Customize directory structure and naming schemes by mapping specs to "
+    "format strings.",
+    "properties": {
+        "all": {
             "type": "string",
-            "description": "Projection format string for specs matching this key. Uses spec "
-            "format syntax supporting tokens like {name}, {version}, {compiler.name}, "
-            "{^dependency.name}, etc.",
-        },
-    }
+            "description": "Default projection format string used as fallback for all specs "
+            "that do not match other entries. Uses spec format syntax like "
+            '"{name}/{version}/{hash:16}".',
+        }
+    },
+    "additionalKeysAreSpecs": True,
+    "additionalProperties": {
+        "type": "string",
+        "description": "Projection format string for specs matching this key. Uses spec "
+        "format syntax supporting tokens like {name}, {version}, {compiler.name}, "
+        "{^dependency.name}, etc.",
+    },
 }
 
+
+#: $ref pointer for use in merged schema
+ref_properties: Dict[str, Any] = {"projections": {"$ref": "#/definitions/projections"}}
 
 #: Full schema with metadata
 schema = {
@@ -40,5 +41,6 @@ schema = {
     "title": "Spack view projection configuration file schema",
     "type": "object",
     "additionalProperties": False,
-    "properties": properties,
+    "properties": ref_properties,
+    "definitions": {"projections": projections},
 }

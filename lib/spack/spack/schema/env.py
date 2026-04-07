@@ -39,7 +39,7 @@ group_name_and_deps = {
         "type": "object",
         "description": "Top-most configuration scope for this group of specs",
         "additionalProperties": False,
-        "properties": {**spack.schema.merged.properties},
+        "properties": {**spack.schema.merged.ref_sections},
     },
 }
 
@@ -53,7 +53,7 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "properties": {
             # merged configuration scope schemas
-            **spack.schema.merged.properties,
+            **spack.schema.merged.ref_sections,
             # extra environment schema properties
             "specs": {
                 "type": "array",
@@ -98,6 +98,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": spack.schema.merged.defs,
 }
 
 

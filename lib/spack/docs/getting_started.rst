@@ -101,54 +101,14 @@ The output of this command should look similar to the following:
 
 .. code-block:: text
 
-   [+] /usr (external gcc-10.5.0-zmjbkxxgltryn6hxwzan35qxxw4skbgl)
-   ==> No binary for compiler-wrapper-1.0-lrmjw5qy3pjeynmxlyfkyzktarvnycfx found: installing from source
-   ==> Installing compiler-wrapper-1.0-lrmjw5qy3pjeynmxlyfkyzktarvnycfx [2/7]
-   [+] /usr (external glibc-2.31-rawvy4pmq4nwhk6ipqnesomvstwyopxq)
-   ==> No binary for gcc-runtime-10.5.0-vchaib2njqlk2cud4a2n33tabq526qjj found: installing from source
-   ==> Using cached archive: /tmp/try/spack/var/spack/cache/_source-cache/archive/c6/c65a9d2b2d4eef67ab5cb0684d706bb9f005bb2be94f53d82683d7055bdb837c
-   ==> No patches needed for compiler-wrapper
-   ==> Installing gcc-runtime-10.5.0-vchaib2njqlk2cud4a2n33tabq526qjj [4/7]
-   ==> compiler-wrapper: Executing phase: 'install'
-   ==> No patches needed for gcc-runtime
-   ==> compiler-wrapper: Successfully installed compiler-wrapper-1.0-lrmjw5qy3pjeynmxlyfkyzktarvnycfx
-     Stage: 0.00s.  Install: 0.00s.  Post-install: 0.01s.  Total: 0.07s
-   [+] /home/spack/.local/spack/opt/linux-icelake/compiler-wrapper-1.0-lrmjw5qy3pjeynmxlyfkyzktarvnycfx
-   ==> gcc-runtime: Executing phase: 'install'
-   ==> gcc-runtime: Successfully installed gcc-runtime-10.5.0-vchaib2njqlk2cud4a2n33tabq526qjj
-     Stage: 0.00s.  Install: 0.04s.  Post-install: 0.05s.  Total: 0.14s
-   [+] /home/spack/.local/spack/opt/linux-icelake/gcc-runtime-10.5.0-vchaib2njqlk2cud4a2n33tabq526qjj
-   ==> No binary for gmake-4.4.1-ifn6em7abtw6ozpog5ezy565vu66gsrm found: installing from source
-   ==> Installing gmake-4.4.1-ifn6em7abtw6ozpog5ezy565vu66gsrm [5/7]
-   ==> Using cached archive: /tmp/try/spack/var/spack/cache/_source-cache/archive/dd/dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3.tar.gz
-   ==> No patches needed for gmake
-   ==> gmake: Executing phase: 'install'
-   ==> gmake: Successfully installed gmake-4.4.1-ifn6em7abtw6ozpog5ezy565vu66gsrm
-     Stage: 0.05s.  Install: 15.91s.  Post-install: 0.01s.  Total: 16.00s
-   [+] /home/spack/.local/spack/opt/linux-icelake/gmake-4.4.1-ifn6em7abtw6ozpog5ezy565vu66gsrm
-   ==> No binary for zlib-ng-2.2.4-j5ddfaq7nyykn2bovorx73gykhjcl5nz found: installing from source
-   ==> Installing zlib-ng-2.2.4-j5ddfaq7nyykn2bovorx73gykhjcl5nz [6/7]
-   ==> Using cached archive: /tmp/try/spack/var/spack/cache/_source-cache/archive/a7/a73343c3093e5cdc50d9377997c3815b878fd110bf6511c2c7759f2afb90f5a3.tar.gz
-   ==> No patches needed for zlib-ng
-   ==> zlib-ng: Executing phase: 'autoreconf'
-   ==> zlib-ng: Executing phase: 'configure'
-   ==> zlib-ng: Executing phase: 'build'
-   ==> zlib-ng: Executing phase: 'install'
-   ==> zlib-ng: Successfully installed zlib-ng-2.2.4-j5ddfaq7nyykn2bovorx73gykhjcl5nz
-     Stage: 0.03s.  Autoreconf: 0.00s.  Configure: 3.63s.  Build: 2.52s.  Install: 0.09s.  Post-install: 0.02s.  Total: 6.49s
-   [+] /home/spack/.local/spack/opt/linux-icelake/zlib-ng-2.2.4-j5ddfaq7nyykn2bovorx73gykhjcl5nz
-   ==> No binary for tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv found: installing from source
-   ==> Installing tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv [7/7]
-   ==> Fetching https://mirror.spack.io/_source-cache/archive/26/26c995dd0f167e48b11961d891ee555f680c175f7173ff8cb829f4ebcde4c1a6.tar.gz
-       [100%]   10.35 MB @   48.5 MB/s
-   ==> No patches needed for tcl
-   ==> tcl: Executing phase: 'autoreconf'
-   ==> tcl: Executing phase: 'configure'
-   ==> tcl: Executing phase: 'build'
-   ==> tcl: Executing phase: 'install'
-   ==> tcl: Successfully installed tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv
-     Stage: 0.46s.  Autoreconf: 0.00s.  Configure: 9.25s.  Build: 1m 8.71s.  Install: 3.32s.  Post-install: 0.68s.  Total: 1m 22.61s
-   [+] /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv
+   [e] zmjbkxx gcc@10.5.0 /usr (0s)
+   [e] rawvy4p glibc@2.31 /usr (0s)
+   [+] 5qfbgng compiler-wrapper@1.0 /home/spack/.local/spack/opt/linux-icelake/compiler-wrapper-1.0-5qfbgngzoqcjfbwrjn2vh75fr3g25c35 (0s)
+   [+] vchaib2 gcc-runtime@10.5.0 /home/spack/.local/spack/opt/linux-icelake/gcc-runtime-10.5.0-vchaib2njqlk2cud4a2n33tabq526qjj (0s)
+   [+] vzazvty gmake@4.4.1 /home/spack/.local/spack/opt/linux-icelake/gmake-4.4.1-vzazvtyn5cjdmg3vkkuau35x7hzu7pyl (12s)
+   [+] soedrhb zlib-ng@2.3.3 /home/spack/.local/spack/opt/linux-icelake/zlib-ng-2.3.3-soedrhbnpeordiixaib6utcple6tpgya (3s)
+   [+] u6nztpk tcl@8.6.17 /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.17-u6nztpkhzbga4ul665qqhxucxqk3cins (49s)
+
 
 Congratulations!
 You just installed your first package with Spack!
@@ -160,7 +120,7 @@ Once you have installed ``tcl``, you can immediately use it by starting the ``tc
 
 .. code-block:: console
 
-   $ /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv/bin/tclsh
+   $ /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.17-u6nztpkhzbga4ul665qqhxucxqk3cins/bin/tclsh
    >% echo "Hello world!"
    Hello world!
 

@@ -474,8 +474,9 @@ def worker_function(
 
     global_state.restore()
 
-    # Start a new session, so our SIGTERM handler can kill all child processes.
-    os.setsid()
+    # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
+    # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+    os.setpgid(0, 0)
 
     # Reset SIGTSTP to default in case the parent had a custom handler.
     signal.signal(signal.SIGTSTP, signal.SIG_DFL)
@@ -2172,7 +2173,11 @@ class PackageInstaller:
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
-        spack.binary_distribution.BINARY_INDEX.update()
+        try:
+            spack.binary_distribution.BINARY_INDEX.update()
+        except spack.binary_distribution.FetchCacheError:
+            pass
+
         self.binary_cache_for_spec = {
             s.dag_hash(): spack.binary_distribution.BINARY_INDEX.find_by_hash(s.dag_hash())
             for s in self.build_graph.nodes.values()

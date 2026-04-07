@@ -289,7 +289,7 @@ properties: Dict[str, Any] = {
                                         "patternProperties": {r"^\w": {"type": "string"}},
                                         "additionalProperties": False,
                                     },
-                                    "environment": spack.schema.environment.definition,
+                                    "environment": spack.schema.environment.ref_env_modifications,
                                     "extra_rpaths": extra_rpaths,
                                     "implicit_rpaths": implicit_rpaths,
                                     "flags": flags,
@@ -360,6 +360,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"env_modifications": spack.schema.environment.env_modifications},
 }
 
 
