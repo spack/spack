@@ -17,6 +17,7 @@ import spack.environment as ev
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
