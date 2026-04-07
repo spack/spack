@@ -129,7 +129,7 @@ The ``locations`` section includes variables that control where spack stores dat
 * ``locations:cache``
 * ``locations:home``
 
-The additional flag setting ``locations:disable_env`` will prevent environment variables from influencing these locations.
+The additional flag setting ``locations:disable_env`` will prevent the environment variables described in :ref:`config-file-data-variables` from influencing these locations.
 
 ``verify_ssl``
 --------------------
