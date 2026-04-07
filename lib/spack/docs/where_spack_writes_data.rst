@@ -26,6 +26,8 @@ You can control this in the following ways:
   * ``config:install_tree:root`` to control where installs go
   * ``config:build_stage`` to control where builds are staged
 
+In the absence of any Spack-specific settings, Spack will respect [XDG](https://specifications.freedesktop.org/basedir/latest/) environment variables controlling the home directory for specific types of data.
+
 For more on this, see:
 
 * :ref:`Variables controlling data location <config-file-data-variables>`
