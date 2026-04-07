@@ -81,7 +81,6 @@ def replacements():
         "user_cache_path": lambda: paths.user_cache_path,
         "default_install_root": lambda: paths.default_install_location,
         "default_envs_root": lambda: paths.default_envs_path,
-        "modules_base": lambda: paths.modules_base,
         "data_home": lambda: paths.data_home,
         "cache_home": lambda: paths.cache_home,
         "state_home": lambda: paths.state_home,

@@ -32,10 +32,9 @@ modules:
   # These are configurations for the module set named "default"
   default:
     # Where to install modules
-    # If set to a non-default value, this setting has precedence.
     roots:
-     tcl:    $modules_base/modules
-     lmod:   $modules_base/lmod
+     tcl:    $data_home/modules
+     lmod:   $data_home/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 
