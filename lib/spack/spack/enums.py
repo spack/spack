@@ -54,3 +54,12 @@ class Context(enum.Enum):
         elif s == "test":
             return Context.TEST
         raise ValueError(f"context should be one of 'build', 'run', 'test', got {s}")
+
+
+class PartStyle(enum.Enum):
+    """Style to apply when formatting a part of a Spec string"""
+
+    NORMAL = "normal"
+    HIGHLIGHT = "highlight"
+    DIM = "dim"
+    HIDDEN = "hidden"

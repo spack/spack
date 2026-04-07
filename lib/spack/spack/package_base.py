@@ -27,6 +27,7 @@ import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.directives_meta
+import spack.enums
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -2608,25 +2609,35 @@ def preferred_version(
     return version
 
 
-def non_preferred_version(node: spack.spec.Spec) -> bool:
-    """Returns True if the spec version is not the preferred one, according to the package.py"""
+def non_preferred_version(node: spack.spec.Spec) -> spack.enums.PartStyle:
+    """Returns :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the spec version is not the preferred
+    one according to package.py, :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+    """
     if not node.versions.concrete:
-        return False
+        return spack.enums.PartStyle.NORMAL
 
     try:
-        return node.version != preferred_version(node.package)
+        is_preferred = node.version == preferred_version(node.package)
     except ValueError:
-        return False
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.NORMAL if is_preferred else spack.enums.PartStyle.HIGHLIGHT
 
 
-def non_default_variant(node: spack.spec.Spec, variant_name: str) -> bool:
-    """Returns True if the variant in the spec has a non-default value."""
+def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums.PartStyle:
+    """Return :attr:`~spack.enums.PartStyle.HIGHLIGHT` if the variant has a non-default value,
+    :attr:`~spack.enums.PartStyle.NORMAL` otherwise.
+
+    Intended for use as ``variant_style_fn`` in :meth:`~spack.spec.Spec.format`.
+    """
     try:
         default_variant = node.package.get_variant(variant_name).make_default()
-        return not node.satisfies(str(default_variant))
+        is_non_default = not node.satisfies(str(default_variant))
     except ValueError:
-        # This is the case for special variants like "patches" etc.
-        return False
+        # Special variants like "patches" have no meaningful default.
+        return spack.enums.PartStyle.NORMAL
+
+    return spack.enums.PartStyle.HIGHLIGHT if is_non_default else spack.enums.PartStyle.NORMAL
 
 
 def sort_by_pkg_preference(
