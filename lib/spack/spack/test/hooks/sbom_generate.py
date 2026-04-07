@@ -6,6 +6,7 @@ import json
 import os
 
 import pytest
+
 import spack.concretize
 import spack.spec
 from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
