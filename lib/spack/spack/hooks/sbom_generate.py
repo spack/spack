@@ -3,107 +3,124 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Generate a Software Bill of Materials (SBOM) for each Spack installation."""
 
-import hashlib
 import os
 import time
 import urllib.parse
 
+import spack.error
 import spack.util.spack_json as sjson
 from spack.llnl.util import tty
 from spack.store import STORE
 
 
-# SPDX 2.3 Generation
-def generate_spdx_2_3(spec):
-    pkg = spec.package
+def get_license(pkg):
+    if not pkg:
+        return "NOASSERTION"
+    
+    license_data = getattr(pkg, "licenses", None)
 
-    if spec.external:
-        return
-
-    # Get the URL location
-    download_url = None
-    if hasattr(pkg, "versions") and str(spec.version) in pkg.versions:
-        # grab url associated with specific version
-        version_data = pkg.versions[str(spec.version)]
-        download_url = getattr(version_data, "url", None) or "NOASSERTION"
-
-    # Get the license
-    def get_license(pkg):
-
-        if not pkg:
-            return "NOASSERTION"
-
-        license_data = getattr(pkg, "licenses", None)
-
-        if not license_data:
-            return "NOASSERTION"
-
-        licenses = [lic for when, lic in license_data.items() if pkg.spec.satisfies(when)]
-
-        return " OR ".join(licenses) if licenses else "NOASSERTION"
-
-    # Get the supplier
-    def get_supplier(pkg):
-        supplier = getattr(pkg, "supplier", None)
-        if supplier:
-            return supplier
-
-        git_url = getattr(pkg, "git", None)
-        if git_url:
-            path = None
-
-            # Support SCP-style SSH remotes such as git@host:owner/repo.git.
-            if git_url.startswith("git@") and ":" in git_url:
-                path = git_url.split(":", 1)[1]
-            else:
-                path = urllib.parse.urlparse(git_url).path
-
-            repo_path = path.strip("/")
-            if repo_path.endswith(".git"):
-                repo_path = repo_path[:-4]
-
-            parts = [part for part in repo_path.split("/") if part]
-            if len(parts) >= 2:
-                namespace = "/".join(parts[:-1])
-                return f"Organization: {namespace}"
-
+    if not license_data:
         return "NOASSERTION"
 
-    # Get the checksums from package version metadata
-    def get_checksums(spec):
-        vmeta = spec.package.versions.get(spec.version) or {}
-        sha256 = vmeta.get("sha256")
-        if not sha256:
-            return []
-        return [{"algorithm": "SHA256", "checksumValue": sha256}]
+    licenses = [lic for when, lic in license_data.items() if pkg.spec.satisfies(when)]
 
-    # Document information
-    t = time.gmtime()
-    created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
+    return " OR ".join(licenses) if licenses else "NOASSERTION"
 
-    # Create path and dir for sbom
-    sbom_path = os.path.join(STORE.layout.metadata_path(spec), "spdx-2.3-sbom.json")
-    os.makedirs(os.path.dirname(sbom_path), exist_ok=True)
+def get_supplier(pkg):
+    supplier = getattr(pkg, "supplier", None)
+    if supplier:
+        return supplier
 
-    unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
-    unique_hash = hashlib.sha256(unique_str.encode("utf-8")).hexdigest()
-    document_namespace = f"https://spack.io/sbom/{unique_hash}"
+    git_url = getattr(pkg, "git", None)
+    if git_url:
+        path = None
 
-    # Package entry for each installation.
-    # Represents the top-level component in the SBOM (the package being installed).
-    pkg_entry = {
+        # Support SCP-style SSH remotes such as git@host:owner/repo.git.
+        if git_url.startswith("git@") and ":" in git_url:
+            path = git_url.split(":", 1)[1]
+        else:
+            path = urllib.parse.urlparse(git_url).path
+
+        repo_path = path.strip("/")
+        if repo_path.endswith(".git"):
+            repo_path = repo_path[:-4]
+
+        parts = [part for part in repo_path.split("/") if part]
+        if len(parts) >= 2:
+            namespace = "/".join(parts[:-1])
+            return f"Organization: {namespace}"
+
+    return "NOASSERTION"
+
+
+def get_checksums(spec):
+    version_metadata = getattr(spec.package, "versions", {})
+    vmeta = version_metadata.get(spec.version) or version_metadata.get(str(spec.version)) or {}
+    sha256 = vmeta.get("sha256") if hasattr(vmeta, "get") else getattr(vmeta, "sha256", None)
+    if not sha256:
+        return []
+    return [{"algorithm": "SHA256", "checksumValue": sha256}]
+
+
+def get_download_location(spec):
+    pkg = getattr(spec, "package", None)
+    if not pkg:
+        return "NOASSERTION"
+
+    try:
+        return str(pkg.url_for_version(spec.version))
+    except spack.error.NoURLError:
+        pass
+
+    git_url = pkg.version_or_package_attr("git", spec.version, default=None)
+    if git_url and pkg.needs_commit(spec.version):
+        return str(git_url)
+
+    return "NOASSERTION"
+
+
+def make_package_entry(spec):
+    pkg = getattr(spec, "package", None)
+    return {
         "SPDXID": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         "name": spec.name,
         "versionInfo": str(spec.version),
         "supplier": get_supplier(pkg),
-        "downloadLocation": str(download_url or getattr(pkg, "url", None) or "NOASSERTION"),
+        "downloadLocation": get_download_location(spec),
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg),
         "licenseConcluded": "NOASSERTION",
         "checksum": get_checksums(spec),
     }
 
-    # Package entry for each dependency of a spec.
+
+def sbom_path(spec):
+    return os.path.join(STORE.layout.metadata_path(spec), "spdx-2.3-sbom.json")
+
+
+# SPDX 2.3 Generation
+def generate_spdx_2_3(spec):
+    pkg = spec.package
+    
+    if spec.external:
+        return
+
+    # Document information
+    t = time.gmtime()
+    created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
+
+    # Create path and dir for sbom
+    path = sbom_path(spec)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
+    document_namespace = f"https://spack.io/sbom/{spec.dag_hash()}"
+
+    # Package entry for each installation.
+    # Represents the top-level component in the SBOM (the package being installed).
+    pkg_entry = make_package_entry(spec)
+
+    # Package entry for each dependency in the concretized DAG.
     # Each dependency becomes its own entry, linked to the top-level component.
     deps = []
     relationships = [
@@ -114,24 +131,8 @@ def generate_spdx_2_3(spec):
         }
     ]
 
-    for dep in spec.dependencies(deptype="all"):
-        dep_name = dep.name
-        dep_spec = dep
-        dep_pkg = getattr(dep, "package", None)
-
-        license_declared = get_license(dep_pkg) if dep_pkg else "NOASSERTION"
-
-        dep_entry = {
-            "SPDXID": f"SPDXRef-PACKAGE-{dep_name}-{str(dep_spec.version)}",
-            "name": dep_name,
-            "versionInfo": str(spec.version),
-            "supplier": get_supplier(dep_pkg) if dep_pkg else "NOASSERTION",
-            "downloadLocation": str(getattr(dep_pkg, "url", None) or "NOASSERTION"),
-            "filesAnalyzed": False,
-            "licenseDeclared": license_declared,
-            "licenseConcluded": "NOASSERTION",
-            "checksum": get_checksums(spec),
-        }
+    for dep in spec.traverse(root=False, deptype="all"):
+        dep_entry = make_package_entry(dep)
         deps.append(dep_entry)
 
         relationships.append(
@@ -158,11 +159,10 @@ def generate_spdx_2_3(spec):
     }
 
     # Write to SBOM file
-    with open(sbom_path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         sjson.dump(sbom, f)
-    tty.debug(f"[SBOM] Wrote SPDX 2.3 SBOM to {sbom_path}")
+    tty.debug(f"[SBOM] Wrote SPDX 2.3 SBOM to {path}")
 
-
-# Post-install hook that generates SBOMs
+# Call SBOM generation in post-install hook
 def post_install(spec, explicit=None):
     generate_spdx_2_3(spec)

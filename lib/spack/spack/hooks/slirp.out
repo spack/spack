@@ -1,0 +1,29 @@
+sent tapfd=5 for tap0
+received tapfd=5
+read JSON allowlist: {"ipv4_allow": [
+  "192.168.64.1",
+  "192.168.255.1",
+  "128.15.130.110",
+  "134.9.45.5"
+]}
+
+adding 192.168.64.1 as 140a8c0
+adding 192.168.255.1 as 1ffa8c0
+adding 128.15.130.110 as 6e820f80
+adding 134.9.45.5 as 52d0986
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: cdn-185-199-110-133.github.com (185.199.110.133) (856ec7b9): Pay special attention to any non LLNL IP's in your allow list
+deny: cdn-185-199-108-133.github.com (185.199.108.133) (856cc7b9): Pay special attention to any non LLNL IP's in your allow list
+deny: cdn-185-199-111-133.github.com (185.199.111.133) (856fc7b9): Pay special attention to any non LLNL IP's in your allow list
+deny: cdn-185-199-109-133.github.com (185.199.109.133) (856dc7b9): Pay special attention to any non LLNL IP's in your allow list
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
+deny: ipv6
