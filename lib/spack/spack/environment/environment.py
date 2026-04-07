@@ -2724,7 +2724,7 @@ class EnvironmentConcretizer:
                 if all(d in done for d in deps):
                     ready.append(current)
 
-            # Check we can progress — if nothing is ready, there is a cycle
+            # Check we can progress - if nothing is ready, there is a cycle
             if not ready:
                 raise SpackEnvironmentConfigError(
                     f"cyclic dependency detected among groups: {', '.join(sorted(remaining))}",
