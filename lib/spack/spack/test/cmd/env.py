@@ -4914,7 +4914,7 @@ def test_compiler_target_env(install_mockery, environment_from_manifest):
         f"""\
 spack:
   specs:
-  - libdwarf
+  - libdwarf %c=gcc@12.100.100
   packages:
     all:
       require:
