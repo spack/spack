@@ -1395,6 +1395,83 @@ def test_acquire_after_fork(tmp_path: pathlib.Path, acquire: str):
         lock.release_write()
 
 
+def _child_try_acquire_write(lock_path: str, result_queue):
+    lock = lk.Lock(lock_path)
+    result_queue.put(lock.try_acquire_write())
+
+
+def _child_try_acquire_read(lock_path: str, result_queue):
+    lock = lk.Lock(lock_path)
+    result_queue.put(lock.try_acquire_read())
+
+
+def test_try_acquire_read(tmp_path: pathlib.Path):
+    """Test non-blocking try_acquire_read."""
+    lock = lk.Lock(str(tmp_path / "lockfile"))
+
+    # Succeeds on unlocked lock
+    assert lock.try_acquire_read() is True
+    assert lock._reads == 1
+
+    # Succeeds again (nested)
+    assert lock.try_acquire_read() is True
+    assert lock._reads == 2
+
+    lock.release_read()
+    lock.release_read()
+    ctx = multiprocessing.get_context()
+
+    # Fails when another process holds an exclusive write lock
+    lock.acquire_write()
+    try:
+        q = ctx.Queue()
+        p = ctx.Process(target=_child_try_acquire_read, args=(str(tmp_path / "lockfile"), q))
+        p.start()
+        p.join()
+        assert q.get() is False
+    finally:
+        lock.release_write()
+
+
+def test_try_acquire_write(tmp_path: pathlib.Path):
+    """Test non-blocking try_acquire_write."""
+    lock = lk.Lock(str(tmp_path / "lockfile"))
+    ctx = multiprocessing.get_context()
+
+    # Succeeds on unlocked lock
+    assert lock.try_acquire_write() is True
+    assert lock._writes == 1
+
+    # Succeeds again (nested)
+    assert lock.try_acquire_write() is True
+    assert lock._writes == 2
+
+    lock.release_write()
+    lock.release_write()
+
+    # Fails when another process holds a write lock
+    lock.acquire_write()
+    try:
+        q = ctx.Queue()
+        p = ctx.Process(target=_child_try_acquire_write, args=(str(tmp_path / "lockfile"), q))
+        p.start()
+        p.join()
+        assert q.get() is False
+    finally:
+        lock.release_write()
+
+    # Fails when another process holds a read lock
+    lock.acquire_read()
+    try:
+        q = ctx.Queue()
+        p = ctx.Process(target=_child_try_acquire_write, args=(str(tmp_path / "lockfile"), q))
+        p.start()
+        p.join()
+        assert q.get() is False
+    finally:
+        lock.release_read()
+
+
 def _child_fails_to_acquire_read(_lock: lk.Lock):
     try:
         _lock.acquire_read(timeout=1e-9)

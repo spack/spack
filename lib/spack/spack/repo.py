@@ -590,12 +590,14 @@ class RepoIndex:
 
     def __init__(
         self,
-        package_checker: FastPackageChecker,
+        packages_path: str,
+        package_checker: "Callable[[], FastPackageChecker]",
         namespace: str,
         cache: spack.util.file_cache.FileCache,
     ):
-        self.checker = package_checker
-        self.packages_path = self.checker.packages_path
+        self._get_checker = package_checker
+        self._checker: Optional[FastPackageChecker] = None
+        self.packages_path = packages_path
         if sys.platform == "win32":
             self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
@@ -603,6 +605,15 @@ class RepoIndex:
         self.indexers: Dict[str, Indexer] = {}
         self.indexes: Dict[str, Any] = {}
         self.cache = cache
+
+        #: Whether the indexes are up to date with the package repository.
+        self.is_fresh = False
+
+    @property
+    def checker(self) -> FastPackageChecker:
+        if self._checker is None:
+            self._checker = self._get_checker()
+        return self._checker
 
     def add_indexer(self, name: str, indexer: Indexer):
         """Add an indexer to the repo index.
@@ -613,17 +624,22 @@ class RepoIndex:
         self.indexers[name] = indexer
 
     def __getitem__(self, name):
-        """Get the index with the specified name, reindexing if needed."""
+        """Get an up-to-date index with the specified name."""
+        return self.get_index(name, allow_stale=False)
+
+    def get_index(self, name, allow_stale: bool = False):
+        """Get the index with the specified name. The index will be updated if it is stale, unless
+        allow_stale is True, in which case its contents are not validated against the package
+        repository. When no cache is available, the index will be updated regardless of the value
+        of allow_stale."""
         indexer = self.indexers.get(name)
         if not indexer:
             raise KeyError("no such index: %s" % name)
-
-        if name not in self.indexes:
-            self._build_all_indexes()
-
+        if name not in self.indexes or (not allow_stale and not self.is_fresh):
+            self._build_all_indexes(allow_stale=allow_stale)
         return self.indexes[name]
 
-    def _build_all_indexes(self):
+    def _build_all_indexes(self, allow_stale: bool = False) -> None:
         """Build all the indexes at once.
 
         We regenerate *all* indexes whenever *any* index needs an update,
@@ -631,11 +647,14 @@ class RepoIndex:
         can take tens of seconds to regenerate sequentially, and we'd
         rather only pay that cost once rather than on several
         invocations."""
+        is_fresh = True
         for name, indexer in self.indexers.items():
-            self.indexes[name] = self._build_index(name, indexer)
+            is_fresh &= self._update_index(name, indexer, allow_stale=allow_stale)
+        self.is_fresh = is_fresh
 
-    def _build_index(self, name: str, indexer: Indexer):
-        """Determine which packages need an update, and update indexes."""
+    def _update_index(self, name: str, indexer: Indexer, allow_stale: bool = False) -> bool:
+        """Determine which packages need an update, and update indexes. Returns true if the
+        index is fresh."""
 
         # Filename of the provider index cache (we assume they're all json)
         from spack.spec import SPECFILE_FORMAT_VERSION
@@ -644,13 +663,21 @@ class RepoIndex:
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
-        needs_update = self.checker.modified_since(index_mtime)
 
         index_existed = self.cache.init_entry(cache_filename)
+        if index_existed and allow_stale:
+            with self.cache.read_transaction(cache_filename) as f:
+                indexer.read(f)
+            self.indexes[name] = indexer.index
+            return False
+
+        needs_update = self.checker.modified_since(index_mtime)
         if index_existed and not needs_update:
             # If the index exists and doesn't need an update, read it
             with self.cache.read_transaction(cache_filename) as f:
                 indexer.read(f)
+            self.indexes[name] = indexer.index
+            return True
 
         else:
             # Otherwise update it and rewrite the cache file
@@ -666,7 +693,8 @@ class RepoIndex:
                 indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
                 indexer.write(new)
 
-        return indexer.index
+            self.indexes[name] = indexer.index
+            return True
 
 
 class RepoPath:
@@ -682,6 +710,7 @@ class RepoPath:
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
         self._patch_index: Optional[spack.patch.PatchCache] = None
+        self._index_is_fresh: bool = False
         self._tag_index: Optional[spack.tag.TagIndex] = None
 
         for repo in repos:
@@ -828,16 +857,48 @@ class RepoPath:
                 self._tag_index.merge(repo.tag_index)
         return self._tag_index
 
-    @property
-    def patch_index(self) -> spack.patch.PatchCache:
-        """Merged PatchIndex from all Repos in the RepoPath."""
-        if self._patch_index is None:
-            from spack.patch import PatchCache
+    def get_patch_index(self, allow_stale: bool = False) -> spack.patch.PatchCache:
+        """Return the merged patch index for all repos in this path.
 
-            self._patch_index = PatchCache(repository=self)
-            for repo in reversed(self.repos):
-                self._patch_index.update(repo.patch_index)
+        Args:
+            allow_stale: if True, return a possibly out-of-date index from cache files,
+                avoiding filesystem calls to check whether the index is up to date.
+        """
+        if self._patch_index is not None and (self._index_is_fresh or allow_stale):
+            return self._patch_index
+
+        index = spack.patch.PatchCache(repository=self)
+        for repo in reversed(self.repos):
+            index.update(repo.get_patch_index(allow_stale=allow_stale))
+        self._patch_index = index
+        self._index_is_fresh = not allow_stale
         return self._patch_index
+
+    def get_patches_for_package(
+        self, sha256s: List[str], pkg_cls: Type["spack.package_base.PackageBase"]
+    ) -> List["spack.patch.Patch"]:
+        """Look up patches by sha256, trying stale cache first to avoid stat calls.
+
+        Args:
+            sha256s: ordered list of patch sha256 hashes
+            pkg_cls: package class the patches belong to
+
+        Returns:
+            List of Patch objects in the same order as sha256s.
+
+        Raises:
+            spack.error.PatchLookupError: if a sha256 cannot be found even after a full rebuild.
+        """
+        stale_index = self.get_patch_index(allow_stale=True)
+        try:
+            return [
+                stale_index.patch_for_package(sha256, pkg_cls, validate=True) for sha256 in sha256s
+            ]
+        except spack.error.PatchLookupError:
+            pass
+
+        current_index = self.get_patch_index(allow_stale=False)
+        return [current_index.patch_for_package(sha256, pkg_cls) for sha256 in sha256s]
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         all_packages = self._all_package_names_set(include_virtuals=False)
@@ -1285,7 +1346,9 @@ class Repo:
     def index(self) -> RepoIndex:
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
+            self._repo_index = RepoIndex(
+                self.packages_path, lambda: self._pkg_checker, self.namespace, cache=self._cache
+            )
             self._repo_index.add_indexer("providers", ProviderIndexer(self))
             self._repo_index.add_indexer("tags", TagIndexer(self))
             self._repo_index.add_indexer("patches", PatchIndexer(self))
@@ -1293,18 +1356,18 @@ class Repo:
 
     @property
     def provider_index(self) -> spack.provider_index.ProviderIndex:
-        """A provider index with names *specific* to this repo."""
+        """A fresh provider index with names *specific* to this repo."""
         return self.index["providers"]
 
     @property
     def tag_index(self) -> spack.tag.TagIndex:
-        """Index of tags and which packages they're defined on."""
+        """Fresh index of tags and which packages they're defined on."""
         return self.index["tags"]
 
-    @property
-    def patch_index(self) -> spack.patch.PatchCache:
-        """Index of patches and packages they're defined on."""
-        return self.index["patches"]
+    def get_patch_index(self, allow_stale: bool = False) -> spack.patch.PatchCache:
+        """Index of patches and packages they're defined on. Set allow_stale is True to bypass
+        cache validation and return a potentially stale index."""
+        return self.index.get_index("patches", allow_stale=allow_stale)
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         providers = self.provider_index.providers_for(virtual)

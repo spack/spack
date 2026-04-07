@@ -9,7 +9,6 @@
 """
 from typing import Any, Dict
 
-import spack.schema
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
@@ -75,7 +74,7 @@ properties: Dict[str, Any] = {
                             "description": "List of specs to exclude from the view "
                             "(default: exclude nothing)",
                         },
-                        **spack.schema.projections.properties,
+                        **spack.schema.projections.ref_properties,
                     },
                 },
             },
@@ -90,4 +89,5 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"projections": spack.schema.projections.projections},
 }

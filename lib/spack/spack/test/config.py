@@ -1844,19 +1844,11 @@ def test_included_path_git_substitutions():
 def test_included_path_git(
     tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, key, value, capfd
 ):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+    """Check git includes for branch, commit, and tag using relative paths.
 
-    class MockIncludeGit(spack.util.executable.Executable):
-        def __init__(self, required: bool):
-            pass
-
-        def __call__(self, *args, **kwargs) -> str:  # type: ignore
-            action = args[0]
-
-            if action == "config":
-                return "origin"
-
-            return ""
+    Note the mock config fixture does NOT create the scope path so a temporary
+    directory will be used for caching the files.
+    """
 
     # Specifying two relative paths, one explicit, one implicit
     paths = ["./config.yaml", "packages.yaml"]
@@ -1871,18 +1863,30 @@ def test_included_path_git(
     assert isinstance(include, spack.config.GitIncludePaths)
     assert not include.optional and include.evaluate_condition()
 
-    destination = include._destination()
-    assert not os.path.exists(destination)
-
     # set up minimal git and repository operations
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "config":
+                return "origin"
+
+            return ""
+
     monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
 
     def _init_repo(*args, **kwargs):
-        fs.mkdirp(fs.join_path(destination, ".git"))
+        # Make sure the directory exists, where assuming called from within
+        # the working directory.
+        fs.mkdirp(fs.join_path(os.getcwd(), ".git"))
 
     def _checkout(*args, **kwargs):
-        # Make sure the files exist at the clone destination
-        with fs.working_dir(destination):
+        # Make sure the files exist at the clone destination, where assuming
+        # called from within the working directory.
+        with fs.working_dir(os.getcwd()):
             for p in paths:
                 fs.touch(p)
 
@@ -1892,7 +1896,7 @@ def test_included_path_git(
     # First successful pass builds the scope
     parent_scope = mock_low_high_config.scopes["low"]
     scopes = include.scopes(parent_scope)
-    assert scopes and len(scopes) == len(paths)
+    assert len(scopes) == len(paths)
 
     base_paths = [os.path.basename(p) for p in paths]
     for scope in scopes:
@@ -1911,9 +1915,60 @@ def test_included_path_git(
     # A direct clone now returns already cloned destination and debug message.
     # Again only need to run this test once.
     if key == "tag":
-        assert include._clone() == include.destination
+        assert include._clone(parent_scope) == include.destination
         captured = capfd.readouterr()[1]
         assert "already cloned" in captured
+
+
+@pytest.mark.parametrize("path", ["./config.yaml", "/path/to/my/special/package.yaml"])
+def test_included_path_local_no_dest(path):
+    """Confirm that local paths have no cache destination."""
+    entry = {"path": path}
+    include = spack.config.included_path(entry)
+    destination = include.base_directory(entry["path"])
+    assert not destination, f"Expected local include ({include}) to NOT have a cache destination"
+
+
+def test_included_path_url_temp_dest(mock_low_high_config):
+    """Check that remote (raw) path under different scopes end up with temporary
+    cache destinations."""
+    entry = {
+        "path": "https://github.com/path/to/raw/config/config.yaml",
+        "sha256": "26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b",
+    }
+    include = spack.config.included_path(entry)
+
+    parent_scope = mock_low_high_config.scopes["low"]
+    parent_scope.path = ""
+    pre = f"Expected temporary cache destination for raw include path ({include}) for "
+
+    for scope in [None, parent_scope]:
+        rest = "parent scope with no path" if scope else "no parent scope"
+        destination = include.base_directory(entry["path"], parent_scope=scope)
+        dest_dir = str(pathlib.Path(destination).parent)
+        temp_dir = tempfile.gettempdir()
+        assert dest_dir == temp_dir, pre + rest
+
+
+def test_included_path_git_temp_dest(mock_low_high_config):
+    """Check a remote (relative) path with different parent scope options that
+    result in a temporary cache destination."""
+    entry = {
+        "git": "https://example.com/linux/configs.git",
+        "branch": "develop",
+        "paths": ["config.yaml"],
+    }
+    include = spack.config.included_path(entry)
+    parent_scope = mock_low_high_config.scopes["low"]
+    parent_scope.path = ""
+    pre = f"Expected temporary cache destination for git include path ({include}) for "
+
+    for scope in [None, parent_scope]:
+        rest = "parent scope with no path" if scope else "no parent scope"
+        destination = include.base_directory(entry["git"], parent_scope=scope)
+        dest_dir = str(pathlib.Path(destination).parent)
+        temp_dir = tempfile.gettempdir()
+        assert dest_dir == temp_dir, pre + rest
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):

@@ -11,6 +11,7 @@ from typing import List
 import spack.cmd
 import spack.config
 import spack.environment as ev
+import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.spec
@@ -439,13 +440,8 @@ def install_without_active_env(args, install_kwargs, reporter):
     installs = [s.package for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
 
-    if spack.config.get("config:installer", "old") == "new":
-        from spack.new_installer import PackageInstaller
-    else:
-        from spack.installer import PackageInstaller
-
     try:
-        builder = PackageInstaller(installs, **install_kwargs)
+        builder = spack.installer_dispatch.create_installer(installs, **install_kwargs)
         builder.install()
     finally:
         if reporter:

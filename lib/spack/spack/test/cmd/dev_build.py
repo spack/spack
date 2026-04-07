@@ -44,7 +44,7 @@ def test_dev_build_basics(tmp_path: pathlib.Path, install_mockery):
     assert os.path.exists(str(tmp_path))
 
 
-def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -62,7 +62,7 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
-def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -102,7 +102,7 @@ def test_dev_build_until_last_phase(tmp_path: pathlib.Path, install_mockery):
     assert os.path.exists(str(tmp_path))
 
 
-def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -120,12 +120,14 @@ def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
         out = dev_build("-u", bad_phase, "dev-build-test-install@0.0.0", fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
-        assert not_installed in out
+        if installer_variant == "old":
+            assert not_installed in out
 
         out = dev_build("-b", bad_phase, "dev-build-test-install@0.0.0", fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
-        assert not_installed in out
+        if installer_variant == "old":
+            assert not_installed in out
 
 
 def _print_spack_short_spec(*args):

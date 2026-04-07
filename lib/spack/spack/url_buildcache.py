@@ -465,8 +465,7 @@ class URLBuildcacheEntry:
         manifest_contents = ""
 
         try:
-            _, _, manifest_file = web_util.read_from_url(manifest_url)
-            manifest_contents = io.TextIOWrapper(manifest_file, encoding="utf-8").read()
+            manifest_contents = web_util.read_text(manifest_url)
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 

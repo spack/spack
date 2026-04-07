@@ -528,6 +528,42 @@ class Lock:
         if not self._poll_lock(op):
             raise LockTimeoutError(op, self.path, time=0, attempts=1)
 
+    def try_acquire_read(self) -> bool:
+        """Non-blocking attempt to acquire a shared read lock.
+
+        Returns True if the lock was acquired, False if it would block.
+        """
+        if self._reads == 0 and self._writes == 0:
+            self._ensure_valid_handle()
+            if not self._poll_lock(LockType.READ):
+                return False
+            self._reads += 1
+            self._log_acquired("READ LOCK", 0, 1)
+            return True
+        else:
+            self._reaffirm_lock()
+            self._reads += 1
+            return True
+
+    def try_acquire_write(self) -> bool:
+        """Non-blocking attempt to acquire an exclusive write lock.
+
+        Returns True if the lock was acquired, False if it would block.
+        """
+        if self._writes == 0:
+            fh = self._ensure_valid_handle()
+            if LockType.to_module(LockType.WRITE) == fcntl.LOCK_EX and fh.mode == "rb":
+                raise LockROFileError(self.path)
+            if not self._poll_lock(LockType.WRITE):
+                return False
+            self._writes += 1
+            self._log_acquired("WRITE LOCK", 0, 1)
+            return True
+        else:
+            self._reaffirm_lock()
+            self._writes += 1
+            return True
+
     def is_write_locked(self) -> bool:
         """Returns ``True`` if the path is write locked, otherwise, ``False``"""
         try:

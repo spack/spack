@@ -207,11 +207,11 @@ class RequirementParser:
     def _parse_prefer_conflict_item(self, item):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = parse_spec_from_yaml_string(item)
+            spec = self._parse_and_expand(item)
             condition = spack.spec.Spec()
             message = None
         else:
-            spec = parse_spec_from_yaml_string(item["spec"])
+            spec = self._parse_and_expand(item["spec"])
             condition = spack.spec.Spec(item.get("when"))
             message = item.get("message")
         return spec, condition, message
@@ -260,7 +260,7 @@ class RequirementParser:
                     for constraint in constraints
                 ]
                 when_str = requirement.get("when")
-                when = parse_spec_from_yaml_string(when_str) if when_str else spack.spec.Spec()
+                when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
 
                 constraints = [
                     x

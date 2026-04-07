@@ -48,13 +48,13 @@ from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
     Any,
+    BinaryIO,
     Callable,
     Dict,
     List,
     Optional,
     Sequence,
     Set,
-    TextIO,
     Tuple,
     Type,
     Union,
@@ -199,9 +199,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -218,9 +218,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
+        input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable] = ...,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        error: spack.util.executable.OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -237,8 +237,8 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: spack.util.executable.OutType = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...

@@ -19,17 +19,19 @@ import spack.schema.container
 import spack.schema.definitions
 import spack.schema.develop
 import spack.schema.env_vars
+import spack.schema.environment
 import spack.schema.include
 import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
+import spack.schema.projections
 import spack.schema.repos
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {
+sections: Dict[str, Any] = {
     **spack.schema.bootstrap.properties,
     **spack.schema.cdash.properties,
     **spack.schema.compilers.properties,
@@ -50,11 +52,28 @@ properties: Dict[str, Any] = {
     **spack.schema.view.properties,
 }
 
+#: Canonical definitions for JSON Schema $ref
+defs: Dict[str, Any] = {
+    # Section schemas, prefixed to avoid collisions with sub-schema definitions
+    **{f"section_{name}": schema for name, schema in sections.items()},
+    # Sub-schema definitions hoisted for $ref resolution in env.py
+    "ci_job_attributes": spack.schema.ci.ci_job_attributes,
+    "env_modifications": spack.schema.environment.env_modifications,
+    "module_file_configuration": spack.schema.modules.module_file_configuration,
+    "projections": spack.schema.projections.projections,
+}
+
+#: Properties using $ref pointers into $defs
+ref_sections: Dict[str, Any] = {
+    name: {"$ref": f"#/definitions/section_{name}"} for name in sections
+}
+
 #: Full schema with metadata
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack merged configuration file schema",
     "type": "object",
     "additionalProperties": False,
-    "properties": properties,
+    "properties": ref_sections,
+    "definitions": defs,
 }

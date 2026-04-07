@@ -26,6 +26,11 @@ pytestmark = pytest.mark.not_on_windows(
 )
 
 
+@pytest.fixture(autouse=True)
+def _clear_commit_cache():
+    spack.get_spack_commit.cache_clear()
+
+
 def test_version_git_nonsense_output(tmp_path: pathlib.Path, working_env, monkeypatch):
     git = tmp_path / "git"
     with open(git, "w", encoding="utf-8") as f:

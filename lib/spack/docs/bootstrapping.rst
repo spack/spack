@@ -47,8 +47,6 @@ Running a command that concretizes a spec, like:
 .. code-block:: console
 
    % spack solve zlib
-   ==> Bootstrapping clingo from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.1/build_cache/darwin-catalina-x86_64/apple-clang-12.0.0/clingo-bootstrap-spack/darwin-catalina-x86_64-apple-clang-12.0.0-clingo-bootstrap-spack-p5on7i4hejl775ezndzfdkhvwra3hatn.spack
    ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
    [ ... ]
 
@@ -59,13 +57,7 @@ Users can also bootstrap all Spack's dependencies in a single command, which is 
 .. code-block:: console
 
    $ spack bootstrap now
-   ==> Bootstrapping clingo from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spack
    ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
-   ==> Bootstrapping patchelf from pre-built binaries
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spec.json
-   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
    ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
 
 .. _cmd-spack-bootstrap-root:

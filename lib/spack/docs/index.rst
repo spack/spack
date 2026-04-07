@@ -54,6 +54,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    :caption: Basic Usage
 
    package_fundamentals
+   installing
    configuring_compilers
    environments_basics
    frequently_asked_questions

@@ -34,6 +34,7 @@ import spack.concretize
 import spack.config
 import spack.detection
 import spack.error
+import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.platforms
 import spack.spec
@@ -290,12 +291,7 @@ class SourceBootstrapper(Bootstrapper):
 
         # Install the spec that should make the module importable
         with spack.config.override(self.mirror_scope):
-            if spack.config.get("config:installer", "old") == "new":
-                from spack.new_installer import PackageInstaller  # type: ignore
-            else:
-                from spack.installer import PackageInstaller  # type: ignore
-
-            PackageInstaller(
+            spack.installer_dispatch.create_installer(
                 [concrete_spec.package],
                 fail_fast=True,
                 root_policy="source_only",
@@ -323,11 +319,7 @@ class SourceBootstrapper(Bootstrapper):
         msg = "[BOOTSTRAP] Try installing '{0}' from sources"
         tty.debug(msg.format(abstract_spec_str))
         with spack.config.override(self.mirror_scope):
-            if spack.config.get("config:installer", "old") == "new":
-                from spack.new_installer import PackageInstaller  # type: ignore
-            else:
-                from spack.installer import PackageInstaller  # type: ignore
-            PackageInstaller([concrete_spec.package]).install()
+            spack.installer_dispatch.create_installer([concrete_spec.package]).install()
         if _executables_in_store(executables, concrete_spec, query_info=info):
             self.last_search = info
             return True

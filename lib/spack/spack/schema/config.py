@@ -71,7 +71,7 @@ properties: Dict[str, Any] = {
                         "relocation of binaries (true for max length, integer for specific "
                         "length)",
                     },
-                    **spack.schema.projections.properties,
+                    **spack.schema.projections.ref_properties,
                 },
             },
             "install_hash_length": {
@@ -243,6 +243,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"projections": spack.schema.projections.projections},
 }
 
 

@@ -76,7 +76,6 @@ from spack.llnl.util.filesystem import (
     join_path,
     mkdirp,
     remove_linked_tree,
-    touchp,
     working_dir,
 )
 from spack.main import SpackCommand
@@ -703,8 +702,6 @@ def mock_packages_repo():
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.install_log_path):
-        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -2486,12 +2483,6 @@ def write_config_file(tmp_path: Path):
 
 def _include_cache_root():
     return join_path(str(tempfile.mkdtemp()), "user_cache", "includes")
-
-
-@pytest.fixture()
-def mock_include_cache(monkeypatch):
-    """Override the include cache directory so tests don't pollute user cache."""
-    monkeypatch.setattr(spack.config, "_include_cache_location", _include_cache_root)
 
 
 @pytest.fixture()

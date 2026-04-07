@@ -4,6 +4,7 @@
 
 import email.message
 import errno
+import functools
 import io
 import json
 import os
@@ -13,13 +14,17 @@ import socket
 import ssl
 import stat
 import sys
+import time
 import traceback
 import urllib.parse
 from html.parser import HTMLParser
+from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
+
+from spack.vendor.typing_extensions import ParamSpec
 
 import spack
 import spack.config
@@ -44,12 +49,43 @@ def is_transient_error(e: Exception) -> bool:
         return True
     if isinstance(e, URLError) and isinstance(e.reason, socket.timeout):
         return True
-    if isinstance(e, socket.timeout):
+    if isinstance(e, (socket.timeout, IncompleteRead)):
         return True
-    # botocore.exceptions.ResponseStreamingError (IncompleteRead mid-stream)
-    if type(e).__name__ == "ResponseStreamingError":
+    # exceptions not inherited from the above used in urllib3 and botocore.
+    if type(e).__name__ in (
+        "ConnectionClosedError",
+        "IncompleteReadError",
+        "ProtocolError",
+        "ReadTimeoutError",
+        "ResponseStreamingError",
+    ):
         return True
     return False
+
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def retry_on_transient_error(
+    f: Callable[_P, _R], retries: int = 5, sleep: Optional[Callable[[float], None]] = None
+) -> Callable[_P, _R]:
+    """Retry a function on transient HTTP/network errors with exponential backoff."""
+    sleep = sleep or time.sleep
+
+    @functools.wraps(f)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        for i in range(retries):
+            try:
+                return f(*args, **kwargs)
+            except Exception as e:
+                if i + 1 != retries and is_transient_error(e):
+                    sleep(2**i)  # type: ignore[misc]  # mypy still thinks it's possibly None.
+                    continue
+                raise
+        raise AssertionError("unreachable")
+
+    return wrapper
 
 
 class DetailedHTTPError(HTTPError):
@@ -268,6 +304,38 @@ def read_from_url(url, accept_content_type=None):
     return response.url, response.headers, response
 
 
+def _read_text(url: str) -> str:
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return io.TextIOWrapper(response, encoding="utf-8").read()
+
+
+def _read_json(url: str):
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return json.load(response)
+
+
+_read_text_with_retry = retry_on_transient_error(_read_text)
+_read_json_with_retry = retry_on_transient_error(_read_json)
+
+
+def read_text(url: str) -> str:
+    """Fetch url and return the response body decoded as UTF-8 text."""
+    try:
+        return _read_text_with_retry(url)
+    except Exception as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
+def read_json(url: str):
+    """Fetch url and return the response body parsed as JSON."""
+    try:
+        return _read_json_with_retry(url)
+    except Exception as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
     remote_url = urllib.parse.urlparse(remote_path)
     if remote_url.scheme == "file":
@@ -441,9 +509,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     else:
         try:
-            _, _, response = read_from_url(url)
-
-            output = io.TextIOWrapper(response, encoding="utf-8").read()
+            output = read_text(url)
             if output:
                 with working_dir(dest_dir, create=True):
                     with open(filename, "w", encoding="utf-8") as f:
@@ -455,6 +521,17 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
             raise spack.error.FetchError(f"Urllib fetch failed: {err}")
 
     return None
+
+
+def _url_exists_urllib_impl(url):
+    with urlopen(
+        Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+        timeout=spack.config.get("config:connect_timeout", 10),
+    ) as _:
+        pass
+
+
+_url_exists_urllib = retry_on_transient_error(_url_exists_urllib_impl)
 
 
 def url_exists(url, curl=None):
@@ -490,12 +567,9 @@ def url_exists(url, curl=None):
 
     # Otherwise use urllib.
     try:
-        urlopen(
-            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-            timeout=spack.config.get("config:connect_timeout", 10),
-        )
+        _url_exists_urllib(url)
         return True
-    except OSError as e:
+    except Exception as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
 
@@ -761,7 +835,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
-        page = io.TextIOWrapper(response, encoding="utf-8").read()
+        with response:
+            page = io.TextIOWrapper(response, encoding="utf-8").read()
         pages[response_url] = page
 
         # Parse out the include-fragments in the page
@@ -788,7 +863,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             if not fragment_response_url or not fragment_response:
                 continue
 
-            fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
+            with fragment_response:
+                fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
             fragments.add(fragment)
 
             pages[fragment_response_url] = fragment

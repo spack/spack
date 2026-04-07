@@ -268,7 +268,8 @@ class CDashHandler:
         group_id = None
 
         try:
-            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
+            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                response_text = response.read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
 
@@ -581,6 +582,7 @@ class SpackCIConfig:
                     "script": [
                         "cd {env_dir}",
                         "spack env activate --without-view .",
+                        "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
                 }
@@ -713,8 +715,8 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _urlopen(request)
-                        config = json.load(response)
+                        with _urlopen(request) as response:
+                            config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI

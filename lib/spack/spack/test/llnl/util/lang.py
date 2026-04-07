@@ -133,6 +133,15 @@ def test_pretty_seconds():
     assert spack.llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
 
 
+def test_pretty_duration():
+    assert spack.llnl.util.lang.pretty_duration(0) == "0s"
+    assert spack.llnl.util.lang.pretty_duration(45) == "45s"
+    assert spack.llnl.util.lang.pretty_duration(60) == "1m00s"
+    assert spack.llnl.util.lang.pretty_duration(125) == "2m05s"
+    assert spack.llnl.util.lang.pretty_duration(3600) == "1h00m"
+    assert spack.llnl.util.lang.pretty_duration(3661) == "1h01m"
+
+
 def test_match_predicate():
     matcher = match_predicate(lambda x: True)
     assert matcher("foo")

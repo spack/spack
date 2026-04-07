@@ -19,7 +19,7 @@ import spack.paths
 import spack.platforms
 from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from spack.llnl.util.tty.colify import colify
-from spack.main import section_descriptions
+from spack.main import SpackArgumentParser, section_descriptions
 
 description = "list available spack commands"
 section = "config"
@@ -688,8 +688,7 @@ def subcommands(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
+    parser = get_all_spack_commands(out)
     writer = SubcommandWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
@@ -735,8 +734,7 @@ def rst(args: Namespace, out: IO) -> None:
         out: File object to write to.
     """
     # create a parser with all commands
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
+    parser = get_all_spack_commands(out)
 
     # extract cross-refs of the form `_cmd-spack-<cmd>:` from rst files
     documented_commands: Set[str] = set()
@@ -774,6 +772,20 @@ def names(args: Namespace, out: IO) -> None:
     colify(commands, output=out)
 
 
+def get_all_spack_commands(out: IO) -> SpackArgumentParser:
+    is_tty = hasattr(out, "isatty") and out.isatty()
+    # Argparse python 3.14 adds a default color argument that
+    # adds color control characters to argparse output
+    # that breaks expected output format from spack formatters
+    # when written to non tty IO
+    # If 3.14 and newer and not tty, disable color
+    parser = spack.main.make_argument_parser(
+        **({"color": False} if sys.version_info[:2] >= (3, 14) and not is_tty else {})
+    )
+    spack.main.add_all_commands(parser)
+    return parser
+
+
 @formatter
 def bash(args: Namespace, out: IO) -> None:
     """Bash tab-completion script.
@@ -782,9 +794,7 @@ def bash(args: Namespace, out: IO) -> None:
         args: Command-line arguments.
         out: File object to write to.
     """
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands(out)
     aliases_config = spack.config.get("config:aliases")
     if aliases_config:
         aliases = ";".join(f"{key}:{val}" for key, val in aliases_config.items())
@@ -796,9 +806,7 @@ def bash(args: Namespace, out: IO) -> None:
 
 @formatter
 def fish(args, out):
-    parser = spack.main.make_argument_parser()
-    spack.main.add_all_commands(parser)
-
+    parser = get_all_spack_commands(out)
     writer = FishCompletionWriter(parser.prog, out, args.aliases)
     writer.write(parser)
 
