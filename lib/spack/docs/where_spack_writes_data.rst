@@ -5,7 +5,7 @@
 
 .. meta::
    :description lang=en:
-      Learn how to control where Spack generates files.
+      Learn how to control where Spack generates files and reads files, and how to effectively isolate a Spack installation.
 
 .. _where_spack_writes_data:
 
@@ -28,8 +28,88 @@ You can control this in the following ways:
 
 In the absence of any Spack-specific settings, Spack will respect [XDG](https://specifications.freedesktop.org/basedir/latest/) environment variables controlling the home directory for specific types of data.
 
+.. _config-file-data-variables:
+
+Spack-specific variables controlling data location
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Files generated and used by spack are organized roughly into four categories:
+
+* Persistent, large quantities of data (e.g. installs and environments)
+* Temporary (or assumed temporary) large quantities of data (e.g. stages for installs)
+* Persistent caches/indices used by spack to speed up its commands (small quantities of data)
+* The configuration files themselves
+
+The corresponding variables that describe where this data is placed are:
+
+* ``$data_home``
+* ``$cache_home``
+* ``$state_home`` (also known as ``$user_cache_path``)
+* Config file locations are an exception: they can only be controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>`
+
+You can refer to these variables when configuring locations for stages, misc cache, etc.
+
+The following table may help visualize where spack puts all the files it may generate:
+
++-----------------+-----------+------------+------------+--------------------+
+|                 | data_home | state_home | cache_home | somewhere_else     |
++=================+===========+============+============+====================+
+| installs        | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| build stages    |           |            |            | x [#wheretable-1]_ |
++-----------------+-----------+------------+------------+--------------------+
+| download cache  | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| gpg keys        | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| modules         | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| environments    | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| misc cache      |           | x          |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| test stages     |           | x          |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| licenses        | x         |            |            |                    |
++-----------------+-----------+------------+------------+--------------------+
+| config files    |           |            |            | x [#wheretable-2]_ |
++-----------------+-----------+------------+------------+--------------------+
+
+.. [#wheretable-1] cache_home is used as a backup, but Spack prefers to write into the users temp dir if it's available
+.. [#wheretable-2] as discussed elsewhere in this section, config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>`
+
+Each of these variables are the *default* (fallback) for data in their category: more-specific data in that category may have config that overrides these defaults.
+For example while build stages would reasonably be placed in ``$cache_home``, Spack's default configuration sets ``config:build_stage`` to the user's tempdir.
+Any configuration controlling location that is more-specific than the above variables will always take precedence (e.g. ``config:install_tree:root``).
+
+Each of these variables can be set with config or with environment variables.
+For example ``$data_home`` evaluates to one of the following (highest-priority first):
+
+#. ``SPACK_DATA_HOME`` env var if that is set
+#. Under ``SPACK_HOME`` env var; for ``$data_home``, it is ``$SPACK_HOME/.local/share/spack``
+#. ``config:locations:data``
+#. Under ``config:locations:home``; for ``$data_home`` it is ``$spack_home/.local/share/spack``
+#. ``XDG_DATA_HOME/spack`` if XDG_DATA_HOME is set
+#. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
+
+``config:locations:home`` / ``SPACK_HOME`` can be used to control all 3 of ``data_home``, ``cache_home``, and ``state_home``.
+
+Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
+These are controlled by ``$data_home``.
+Older installs of spack placed these within ``$spack``, and fallback scheme in these cases is augmented to prefer these old locations if no data is detected in the corresponding new locations:
+
+* ``$default_install_root``: the location where installs go by default.
+  Overridden by ``config:install_tree:root``.
+  Prefers ``$data_home/installs``, but if there are no installs there and there are installs in the old location ``$spack/opt/spack``, then the old location will be used.
+* ``$default_envs_root``: the location where environments are managed by default.
+  Overridden by ``config:environments_root``.
+  Prefers ``$data_home/envs`` but if there are no envs there and there are envs in the old location ``$spack/var/spack/environments``, then the old location will be used.
+
+References
+^^^^^^^^^^
+
 For more on this, see:
 
-* :ref:`Variables controlling data location <config-file-data-variables>`
 * :ref:`include.yaml <include-yaml>`
 * :ref:`config.yaml <config-yaml>`
+* :ref:`Environment variables controlling config scopes <local-config-overrides>`
