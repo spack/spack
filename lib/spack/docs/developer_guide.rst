@@ -66,7 +66,6 @@ So that you can familiarize yourself with the project, we will start with a high
 
       etc/
          spack/            <- Spack config files.
-                              Can be overridden by files in ~/.config/spack.
 
       var/
          spack/
