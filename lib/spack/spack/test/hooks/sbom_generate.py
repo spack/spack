@@ -6,10 +6,9 @@ import json
 import os
 
 import pytest
-
 import spack.concretize
 import spack.spec
-from spack.hooks.sbom_generate import post_install, sbom_path
+from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
 
 
 def test_sbom_generated_with_post_install(mock_packages, install_mockery):
@@ -45,7 +44,7 @@ def test_sbom_contains_dependencies(mock_packages, install_mockery):
     # Use a mock package that has dependencies
     spec = spack.concretize.concretize_one("mpileaks")
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     path = sbom_path(spec)
     with open(path, encoding="utf-8") as f:
@@ -72,7 +71,7 @@ def test_sbom_has_document_namespace(mock_packages, install_mockery):
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     path = sbom_path(spec)
     with open(path, encoding="utf-8") as f:
@@ -92,7 +91,7 @@ def test_sbom_external_package_skipped(mock_packages, install_mockery):
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     spec.external_path = "/fake/external/path"
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     path = sbom_path(spec)
     assert not os.path.exists(path)
@@ -103,7 +102,7 @@ def test_sbom_license_and_download_defaults(mock_packages, install_mockery):
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     path = sbom_path(spec)
     with open(path, encoding="utf-8") as f:
@@ -122,7 +121,7 @@ def test_sbom_supplier_prefers_package_supplier(mock_packages, install_mockery, 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(spec.package, "supplier", "Person: Unit Test", raising=False)
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -151,7 +150,7 @@ def test_sbom_supplier_derived_from_git_url(
     monkeypatch.setattr(spec.package, "supplier", None, raising=False)
     monkeypatch.setattr(spec.package, "git", git_url, raising=False)
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -175,7 +174,7 @@ def test_sbom_dependency_supplier_uses_dependency_package(
         dep.package, "git", "https://github.com/dep-org/callpath.git", raising=False
     )
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -198,7 +197,7 @@ def test_sbom_license_declared_from_package_licenses(
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     monkeypatch.setattr(spec.package, "licenses", licenses, raising=False)
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -220,7 +219,7 @@ def test_sbom_download_location_and_checksum_from_version_metadata(
         spec.package, "url_for_version", lambda version: "https://example.com/src.tar.gz"
     )
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -235,7 +234,7 @@ def test_sbom_download_location_from_git_url(mock_packages, install_mockery):
 
     spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -254,7 +253,7 @@ def test_sbom_download_location_from_package_url(mock_packages, install_mockery,
         raising=False,
     )
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -275,7 +274,7 @@ def test_sbom_download_location_from_package_url_with_different_version(
         raising=False,
     )
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
@@ -304,7 +303,7 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
         dep.package, "url_for_version", lambda version: "https://example.com/callpath.tar.gz"
     )
 
-    post_install(spec)
+    generate_spdx_2_3(spec)
 
     with open(sbom_path(spec), encoding="utf-8") as f:
         sbom = json.load(f)
