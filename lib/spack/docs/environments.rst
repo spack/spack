@@ -63,14 +63,14 @@ An environment is created by:
 
    $ spack env create myenv
 
-The directory ``$data_home/envs/myenv`` is created to manage the environment.
+The directory ``$data_home/environments/myenv`` is created to manage the environment.
 
 .. note::
 
-   By default, all managed environments are stored in the ``$data_home/envs`` folder.
+   By default, all managed environments are stored in the ``$data_home/environments`` folder.
    This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
 
-Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$data_home/envs/myenv``.
+Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$data_home/environments/myenv``.
 User interaction occurs through the ``spack.yaml`` file and the Spack commands that affect it.
 Metadata and, by default, the view are stored in the ``.spack-env`` directory.
 When the environment is concretized, Spack creates the ``spack.lock`` file with the fully configured specs and dependencies for the environment.
@@ -240,7 +240,7 @@ The same rule applies to the ``install`` and ``uninstall`` commands.
 
   $ spack install zlib@1.2.8
   [+] yfc7epf zlib@1.2.8 ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x (12s)
-  ==> Updating view at ~/.local/share/spack/envs/myenv/.spack-env/view
+  ==> Updating view at ~/.local/share/spack/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv

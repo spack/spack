@@ -202,8 +202,8 @@ class SpackPaths:
     def default_envs_path(self):
         return self._decide_old_or_new_location(
             self.base.old_envs_path,
-            os.path.join(self.data_home, "envs"),
-            os.path.join(self.default_data_home, "envs"),
+            os.path.join(self.data_home, "environments"),
+            os.path.join(self.default_data_home, "environments"),
             self._data_home_provenance,
         )
 
