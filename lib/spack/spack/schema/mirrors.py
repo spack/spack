@@ -98,8 +98,8 @@ mirror_entry = {
             "oneOf": [
                 {
                     "type": "boolean",
-                    "description": "Whether to require GPG signature verification for packages from "
-                    "this mirror",
+                    "description": "Whether to require GPG signature verification for packages "
+                    "from this mirror",
                 },
                 {
                     "type": "object",

@@ -14,8 +14,8 @@ import urllib.parse
 from contextlib import closing, contextmanager
 from datetime import datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from tempfile import TemporaryDirectory, mkdtemp
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
@@ -289,18 +289,19 @@ class URLBuildcacheEntry:
         )
 
     @classmethod
-    def get_sig_url_for_file(cls, file: str, fingerprint: str, mirror_url: str) -> str:
+    def get_sig_url_for_file(cls, file: str, mirror_url: str) -> str:
         assert os.path.exists(file)
-        with open(file, "rb") as fd:
-            return cls.get_sig_url_for_content(fd.read(), fingerprint, mirror_url)
+        with open(file, "r", encoding="utf-8") as fd:
+            return cls.get_sig_url_for_content(fd.read(), mirror_url)
 
     @classmethod
-    def get_sig_url_for_content(cls, content: bytes, fingerprint: str, mirror_url: str) -> str:
-        digest = hashlib.sha256(content).hexdigest()
-        return cls.get_sig_url_for_digest(digest, fingerprint, mirror_url)
+    def get_sig_url_for_content(cls, content: str, mirror_url: str) -> str:
+        hasher = hash_fun_for_algo("sha256")()
+        hasher.update(content.encode())
+        return cls.get_sig_url_for_digest(hasher.hexdigest(), mirror_url)
 
     @classmethod
-    def get_sig_url_for_digest(cls, digest: str, fingerprint: str, mirror_url: str) -> str:
+    def get_sig_url_for_digest(cls, digest: str, mirror_url: str) -> str:
         path_components = cls.get_relative_path_components(BuildcacheComponent.SIG)
         return url_util.join(mirror_url, *path_components, digest[:2], digest + ".asc")
 
@@ -339,7 +340,7 @@ class URLBuildcacheEntry:
             return cls.PUBLIC_KEY_MEDIATYPE
         elif component == BuildcacheComponent.KEY_INDEX:
             return cls.PUBLIC_KEY_INDEX_MEDIATYPE
-        elif buildcache_component == BuildcacheComponent.SIG:
+        elif component == BuildcacheComponent.SIG:
             # TODO support for cosign
             return cls.PGP_SIGNATURE_MEDIATYPE
 
@@ -453,18 +454,22 @@ class URLBuildcacheEntry:
             manifest_contents, mirror_url
         )
         # Read the signature (signatures are never signed)
-        manifest = URLBuildcacheEntry.read_manifest_from_url(sig_manifest_url, verify=False)
+        manifest = URLBuildcacheEntry.read_manifest_from_url(
+            sig_manifest_url, mirror_url, verify=False
+        )
         sigs = manifest.get_blob_records(cls.component_to_media_type(BuildcacheComponent.SIG))
 
         # Skip records with signatures we don't understand
         if not sigs:
-            raise BuildcacheEntryError(f"Found empty signature manifest")
+            raise BuildcacheEntryError("Found empty signature manifest")
 
-        blob_url = cls.get_blob_url(mirror_url, detached_sigs[0])
+        blob_url = cls.get_blob_url(mirror_url, sigs[0])
         return web_util.read_text(blob_url)
 
     @classmethod
-    def read_manifest_from_url(cls, manifest_url: str, verify: bool = True) -> BuildcacheManifest:
+    def read_manifest_from_url(
+        cls, manifest_url: str, mirror_url: str, verify: bool = True
+    ) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest."""
         manifest = None
         manifest_contents = ""
@@ -497,9 +502,7 @@ class URLBuildcacheEntry:
 
         return manifest
 
-    def read_manifest(
-        self, manifest_url: Optional[str] = None, verify: Optional[bool] = None
-    ) -> BuildcacheManifest:
+    def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
 
         If no manifest url is provided, build the url from the internal spec and
@@ -522,9 +525,9 @@ class URLBuildcacheEntry:
             manifest_url = self.get_manifest_url(self.spec, self.mirror_url)
 
         self.remote_manifest_url = manifest_url
-        manifest_contents = ""
-
-        self.manifest = self.read_manifest_from_url(manifest_url, verify)
+        self.manifest = self.read_manifest_from_url(
+            manifest_url, self.mirror_url, verify=not self.allow_unsigned
+        )
         return self.manifest
 
     def fetch_metadata(self) -> dict:
@@ -650,7 +653,7 @@ class URLBuildcacheEntry:
             with compression_writer(blob_to_push, compression, checksum_algo) as (
                 fout,
                 checker,
-            ), open(local_file_path, "rb") as fin:
+            ), open(local_file_path, "rb", encoding="utf-8") as fin:
                 shutil.copyfileobj(fin, fout)
 
             record = BlobRecord(
@@ -1386,22 +1389,22 @@ def try_verify(data: str, sig: Optional[str] = None):
 
     try:
         # Make a working directory for verification
-        tmppath = tempfile.mkdtemp(dir=spack.stage.get_stage_root())
+        tmppath = mkdtemp(dir=spack.stage.get_stage_root())
         if not os.path.exists(data):
             data_path = os.path.join(tmppath, "data.txt")
-            with open(data_path, "rb") as fd:
+            with open(data_path, "r", encoding="utf-8") as fd:
                 fd.write(data)
         else:
             data_path = data
 
-        if sig and not os.path.exists(sig):
-            sig_path = os.path.join(tmppath, "data.txt")
-            with open(sig_path, "rb") as fd:
-                fd.write(sig)
-        else:
-            sig_path = sig
+        if sig:
+            if not os.path.exists(sig):
+                sig_path = os.path.join(tmppath, "data.txt")
+                with open(sig_path, "r", encoding="utf-8") as fd:
+                    fd.write(sig)
+            else:
+                sig_path = sig
 
-        if sigfile:
             spack.util.gpg.verify(sig_path, file=data_path, suppress_warnings=suppress)
         else:
             spack.util.gpg.verify(data_path, suppress_warnings=suppress)
