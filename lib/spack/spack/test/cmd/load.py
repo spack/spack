@@ -90,17 +90,17 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
     "shell,set_command",
     (
         [
-            ("--sh", "spack_env_set %s %s"),
-            ("--csh", "spack_env_set %s %s"),
-            ("--fish", "spack_env_set %s %s"),
+            ("--sh", "_spack_env_set %s %s"),
+            ("--csh", "_spack_env_set %s %s"),
+            ("--fish", "_spack_env_set %s %s"),
             ("--pwsh", "$Env:%s = %s"),
             ("--bat", 'set "%s=%s"'),
         ]
         if sys.platform == "win32"
         else [
-            ("--sh", "spack_env_set %s %s"),
-            ("--csh", "spack_env_set %s %s"),
-            ("--fish", "spack_env_set %s %s"),
+            ("--sh", "_spack_env_set %s %s"),
+            ("--csh", "_spack_env_set %s %s"),
+            ("--fish", "_spack_env_set %s %s"),
         ]
     ),
 )
@@ -155,7 +155,8 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
         [
             ("--sh", "_spack_env_unset %s"),
             ("--csh", "_spack_env_unset %s"),
-            ("--fish", "_spack_env_unset %s")("--bat", 'set "%s="'),
+            ("--fish", "_spack_env_unset %s"),
+            ("--bat", 'set "%s="'),
             ("--pwsh", "Remove-Item Env:%s"),
         ]
         if sys.platform == "win32"

@@ -1036,7 +1036,7 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-    def get_env_modifications(self) -> EnvironmentModifications:
+    def get_env_modifications(self, cached_repo=None) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
         - Updating PATH for packages that are required at runtime
@@ -1048,11 +1048,15 @@ class SetupContext:
 
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
-        Spack's prefixes, and dependents override variables set by dependencies."""
+        Spack's prefixes, and dependents override variables set by dependencies.
+        TODO: Add args"""
         env = EnvironmentModifications()
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")
-            pkg = dspec.package
+            if cached_repo:
+                pkg = cached_repo.get_pkg_class(dspec.name)
+            else:
+                pkg = dspec.package
 
             if self.should_setup_dependent_build_env & flag:
                 self._make_buildtime_detectable(dspec, env)

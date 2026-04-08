@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import glob
 import os
 import sys
 
@@ -10,6 +11,7 @@ import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
 import spack.hooks.generate_spec_scripts as generate_script
+import spack.repo
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
 
@@ -76,18 +78,30 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def _get_environment_modifications(spec, shell) -> str:
+def _get_environment_modifications(spec, shell, repo) -> str:
     """Find the environment modifcations for spec
 
     Args:
-        spec: the spec package
+        spec: the spec that needs environment modifications
         shell: user's shell
+        repo: repo to get spec from if not in builtin repo
     """
 
-    env_mod = uenv.environment_modifications_for_specs(spec)
+    # TODO: if spec is not in builtin repo, pass cached repo or repo path
+
+    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
     env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
 
     return env_mod.shell_modifications(shell)
+
+
+def _make_repo_path(root):
+    """Make a RepoPath from the repo subdirectories in an environment."""
+    repos = (
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    )
+    return spack.repo.RepoPath(*repos)
 
 
 def load(parser, args):
@@ -122,8 +136,11 @@ def load(parser, args):
             load_script = generate_script.path_to_load_shell_script(spec, shell)
 
             if not os.path.isfile(load_script):
-                mods = _get_environment_modifications(spec, shell)
+                repo_path = _make_repo_path(os.path.join(spec.prefix, ".spack"))
+                mods = _get_environment_modifications(spec, shell, repo_path)
+
                 generate_script.write_spec_scripts(load_script, mods)
+                # TODO: if fails -> raise error
 
             source = "." if shell == "sh" else "source"
             commands = f"{source} {load_script}"

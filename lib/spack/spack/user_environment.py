@@ -57,7 +57,6 @@ def unconditional_environment_modifications(view):
     env = environment.EnvironmentModifications()
 
     for subdir, vars in prefix_inspections(sys.platform).items():
-        full_subdir = os.path.join(view.root, subdir)
         full_subdir = spack.util.path.canonicalize_path(full_subdir)
         for var in vars:
             env.prepend_path(var, full_subdir)
@@ -82,7 +81,10 @@ def project_env_mods(
 
 
 def environment_modifications_for_specs(
-    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
+    *specs: spack.spec.Spec,
+    view=None,
+    set_package_py_globals: bool = True,
+    repo=None
 ):
     """List of environment (shell) modifications to be processed for spec.
 
@@ -95,6 +97,7 @@ def environment_modifications_for_specs(
         set_package_py_globals: whether or not to set the global variables in the
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
+        TODO: update
     """
     env = environment.EnvironmentModifications()
     topo_ordered = list(
@@ -112,7 +115,7 @@ def environment_modifications_for_specs(
     setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
     if set_package_py_globals:
         setup_context.set_all_package_py_globals()
-    env.extend(setup_context.get_env_modifications())
+    env.extend(setup_context.get_env_modifications(cached_repo=repo))
 
     # Apply view projections if any.
     if view:
