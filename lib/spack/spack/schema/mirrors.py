@@ -104,8 +104,12 @@ mirror_entry = {
                 {
                     "type": "object",
                     "properties": {
-                        "type": {"type": "string", "enum", ["gnupg-clearsign", "gnupg-detached"], "default": "gnupg-detached"},
-                    }
+                        "type": {
+                            "type": "string",
+                            "enum": ["gnupg-clearsign", "gnupg-detached"],
+                            "default": "gnupg-detached",
+                        }
+                    },
                 },
             ]
         },

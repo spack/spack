@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+import enum
 import errno
 import functools
+import json
 import os
 import re
 from typing import Any, Dict, List
@@ -24,8 +26,10 @@ SOCKET_DIR = None
 #: GNUPGHOME environment variable in the context of this Python module
 GNUPGHOME = None
 
-CLEARSIGN = "clearsign"
-DETACHED_SIG = "detached"
+
+class Signature(enum.Enum):
+    Cleartext = enum.auto()
+    Detached = enum.auto()
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -76,15 +80,22 @@ CLEARSIGN_FILE_REGEX = re.compile(
 )
 
 
+def is_clearsig(data) -> bool:
+    """Check if data is wrapped in a cleartext signature"""
+    magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
+    return data.startswith(magic_string)
+
+
 def extract_message_from_clearsig(data) -> str:
+    """Extract a message from a cleartext signature"""
     m = CLEARSIGN_FILE_REGEX.search(data)
     if m:
         return m.group(1)
     return data
 
 
-def extract_json_from_clearsig(data) -> str:
-    import json
+def extract_json_from_clearsig(data) -> Dict[Any, Any]:
+    """Extract a message as json from a cleartext signature"""
     return json.loads(extract_message_from_clearsig(data))
 
 
