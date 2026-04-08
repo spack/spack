@@ -65,6 +65,29 @@ def clear():
     GPG, GPGCONF, SOCKET_DIR, GNUPGHOME = None, None, None, None
 
 
+#: Regular expression to pull spec contents out of clearsigned signature
+#: file.
+CLEARSIGN_FILE_REGEX = re.compile(
+    (
+        r"^-----BEGIN PGP SIGNED MESSAGE-----"
+        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
+    ),
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def extract_message_from_clearsig(data) -> str:
+    m = CLEARSIGN_FILE_REGEX.search(data)
+    if m:
+        return m.group(1)
+    return data
+
+
+def extract_json_from_clearsig(data) -> str:
+    import json
+    return json.loads(extract_message_from_clearsig(data))
+
+
 def init(gnupghome=None, force=False):
     """Initialize the global objects in the module, if not set.
 

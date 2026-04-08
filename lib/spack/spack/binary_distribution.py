@@ -2590,7 +2590,7 @@ class IndexHandler:
 
         manifest = BuildcacheManifest.from_dict(
             # Currently we do not sign buildcache index, but we could
-            spack.spec.Spec.extract_json_from_clearsig(result)
+            spack.util.gpg.extract_json_from_clearsig(result)
         )
         blob_record = manifest.get_blob_records(
             cache_class.component_to_media_type(BuildcacheComponent.INDEX)
