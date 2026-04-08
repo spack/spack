@@ -1674,7 +1674,7 @@ propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, S
 attr("node_flag", PackageNode, NodeFlag) :- propagated_flag(PackageNode, NodeFlag, _).
 
 % Cannot propagate the same flag from two distinct sources
-error(flag_propagation_conflict(Source2, FlagType), 100, node(ID, Package)) :-
+error(flag_propagation_conflict(Source1, Source2, FlagType), 100, node(ID, Package)) :-
   propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source1)),
   propagated_flag(node(ID, Package), node_flag(FlagType, _, _, _), node(_, Source2)),
   Source1 < Source2.
