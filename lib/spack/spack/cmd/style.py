@@ -143,6 +143,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="branch to compare against to determine changed files (default: develop)",
     )
     subparser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="check all files, not just changed files (applies only to Import Check)",
+    )
+    subparser.add_argument(
         "-r",
         "--root-relative",
         action="store_true",
@@ -345,6 +351,8 @@ def _run_import_check(
     root: Path,
     working_dir: Path,
     out=sys.stdout,
+    base="develop",
+    all=False,
 ):
     if sys.version_info < (3, 9):
         print("import check requires Python 3.9 or later")
@@ -353,7 +361,7 @@ def _run_import_check(
     is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
 
     exit_code = 0
-    files = file_list or changed_files(root=root)
+    files = file_list or changed_files(root=root, base=base, all_files=all)
     for file in files:
         to_add: Set[str] = set()
         to_remove: List[str] = []
@@ -456,6 +464,8 @@ def run_import_check(file_list, args):
         root_relative=args.root_relative,
         root=args.root,
         working_dir=args.initial_working_dir,
+        base=args.base,
+        all=args.all,
     )
     print_tool_result("import", exit_code)
     return exit_code
@@ -533,7 +543,6 @@ def style(parser, args):
     tools_to_run = [t for t in tool_names if t in selected]
     if missing_tools(tools_to_run):
         _bootstrap_dev_dependencies()
-
 
     return_code = 0
     with working_dir(str(args.root)):
