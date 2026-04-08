@@ -216,8 +216,12 @@ class ErrorFormatter:
             f"{source} because package: {pkg} is set to exclude it"
         )
 
-    def flag_propagation_conflict(self, pkg: str, source1: str, source2: str, flag_type: str) -> str:
-        return f"{source1} and {source2} cannot both propagate compiler flags '{flag_type}' to {pkg}"
+    def flag_propagation_conflict(
+        self, pkg: str, source1: str, source2: str, flag_type: str
+    ) -> str:
+        return (
+            f"{source1} and {source2} cannot both propagate compiler flags '{flag_type}' to {pkg}"
+        )
 
     def compiler_mixing_disabled(self, pkg: str, language: str) -> str:
         return f"Compiler mixing is disabled for the {language} language"
