@@ -18,9 +18,14 @@ import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+import uuid
+import warnings
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Union
+
+from spack.vendor.typing_extensions import TypedDict
 
 import spack.config
+import spack.deptypes
 import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.schema
@@ -41,11 +46,144 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     return already_defined_specs
 
 
-ExternalEntryType = Union[str, Dict[str, str]]
+ExternalEntryType = Union[str, Dict[str, Any], List[Any]]
+
+
+class DependencyHint(TypedDict, total=False):
+    """Dict form accepted by ``determine_dependencies``.
+
+    Package authors may return plain dicts with these keys instead of just a spec. When returning
+    a dict, the ``spec`` key is required and all other keys are optional.
+    """
+
+    spec: str
+    prefix: str
+    deptypes: "spack.deptypes.DepTypes"
+    virtuals: Tuple[str, ...]
+
+
+#: Keys that are valid in a ``DependencyHint`` dict.
+_DEPENDENCY_HINT_KEYS: frozenset = frozenset(DependencyHint.__annotations__)
+
+
+class DetectedDependency(NamedTuple):
+    """A dependency detected alongside an external package"""
+
+    spec: "spack.spec.Spec"
+    deptypes: Optional[spack.deptypes.DepTypes] = None
+    virtuals: Optional[Tuple[str, ...]] = None
+
+
+def _normalize_dependency(dep: Union[str, Dict]) -> DetectedDependency:
+    """Normalize a single value returned by ``determine_dependencies``."""
+    if isinstance(dep, dict):
+        if "spec" not in dep:
+            raise ValueError(
+                f"determine_dependencies returned a dict without the required 'spec' key: {dep!r}"
+            )
+        unknown = set(dep) - _DEPENDENCY_HINT_KEYS
+        if unknown:
+            warnings.warn(
+                f"determine_dependencies returned a dict with unknown keys {sorted(unknown)};"
+                f" valid keys are {sorted(_DEPENDENCY_HINT_KEYS)}. Unknown keys are ignored."
+            )
+        spec = spack.spec.Spec(dep["spec"])
+        if "prefix" in dep:
+            spec.external_path = dep["prefix"]
+        return DetectedDependency(
+            spec=spec, deptypes=dep.get("deptypes"), virtuals=dep.get("virtuals")
+        )
+
+    return DetectedDependency(spec=spack.spec.Spec(dep))
+
+
+def determine_external_dependencies(
+    *,
+    detected_packages: Dict[str, List["spack.spec.Spec"]],
+    detected_dependencies: Dict["spack.spec.Spec", List["DetectedDependency"]],
+    known_packages: Optional[List["spack.spec.Spec"]] = None,
+) -> Dict["spack.spec.Spec", List["DetectedDependency"]]:
+    """Resolves dependency candidates against the available specs.
+
+    The resolution tries ``known_packages`` first (specs already present in ``packages.yaml``
+    from a previous run), then falls back to the detected specs.
+
+    For each resolved candidate:
+
+    - 0 matches  -> warning, dependency skipped.
+    - 1 match    -> the matching Spec object replaces the abstract candidate.
+    - 2+ matches -> warning (ambiguous), dependency skipped.
+
+    Args:
+        detected_packages: mapping of package name to detected specs, used as the
+            fallback resolution pool.
+        detected_dependencies: pre-collected output of ``collect_dependencies``
+        known_packages: optional list of specs already present in ``packages.yaml``.
+            Each spec must have ``external_path`` set so that ``update_configuration``
+            can locate the corresponding YAML entry via ``_find_entry``.
+
+    Returns:
+        Mapping of detected Spec to its list of resolved ``DetectedDependency`` entries.
+        Only specs for which at least one dependency was successfully resolved appear as keys.
+    """
+    all_detected = [spec for specs in detected_packages.values() for spec in specs]
+    known = known_packages or []
+
+    result = {}
+
+    for spec, deps in detected_dependencies.items():
+        resolved = []
+        for dep in deps:
+            # Prefer known packages
+            matches = [s for s in known if s.satisfies(dep.spec)]
+            if not matches:
+                matches = [s for s in all_detected if s.satisfies(dep.spec)]
+
+            if len(matches) == 0:
+                warnings.warn(
+                    f'"{dep.spec}" declared as a dependency of "{spec}" was not detected'
+                    f" on the system and will be skipped"
+                )
+            elif len(matches) > 1:
+                warnings.warn(
+                    f'"{dep.spec}" declared as a dependency of "{spec}" is ambiguous:'
+                    f" {len(matches)} detected specs satisfy it. Skipping"
+                )
+            else:
+                resolved.append(
+                    DetectedDependency(
+                        spec=matches[0], deptypes=dep.deptypes, virtuals=dep.virtuals
+                    )
+                )
+
+        if resolved:
+            result[spec] = resolved
+
+    return result
+
+
+def _find_entry(packages_yaml: Dict, spec: "spack.spec.Spec") -> Optional[Dict]:
+    """Return the raw YAML external entry in ``packages_yaml`` that matches ``spec``."""
+    if not spec.external_path:
+        return None
+    target_prefix = pathlib.Path(spec.external_path).as_posix()
+    pkg_config = packages_yaml.get(spec.name)
+    if not isinstance(pkg_config, dict):
+        return None
+    for entry in pkg_config.get("externals", []):
+        entry_prefix = pathlib.Path(entry.get("prefix", "")).as_posix()
+        if entry_prefix != target_prefix:
+            continue
+        if spec.satisfies(spack.spec.Spec(entry["spec"])):
+            return entry
+    return None
 
 
 def _pkg_config_dict(
     external_pkg_entries: List["spack.spec.Spec"],
+    *,
+    ids: Optional[Dict["spack.spec.Spec", str]] = None,
+    dependencies: Optional[Dict["spack.spec.Spec", List]] = None,
 ) -> Dict[str, Union[bool, List[Dict[str, ExternalEntryType]]]]:
     """Generate a package specific config dict according to the packages.yaml schema.
 
@@ -79,6 +217,12 @@ def _pkg_config_dict(
             external_items.append(
                 ("extra_attributes", spack.util.spack_yaml.syaml_dict(e.extra_attributes.items()))
             )
+
+        if ids and e in ids:
+            external_items.append(("id", ids[e]))
+
+        if dependencies and e in dependencies:
+            external_items.append(("dependencies", dependencies[e]))
 
         # external_items.extend(e.spec.extra_attributes.items())
         pkg_dict["externals"].append(spack.util.spack_yaml.syaml_dict(external_items))
@@ -204,6 +348,7 @@ def update_configuration(
     detected_packages: Dict[str, List["spack.spec.Spec"]],
     scope: Optional[str] = None,
     buildable: bool = True,
+    resolved_dependencies: Optional[Dict["spack.spec.Spec", List[DetectedDependency]]] = None,
 ) -> List[spack.spec.Spec]:
     """Add the packages passed as arguments to packages.yaml
 
@@ -211,13 +356,62 @@ def update_configuration(
         detected_packages: list of specs to be added
         scope: configuration scope where to add the detected packages
         buildable: whether the detected packages are buildable or not
+        resolved_dependencies: optional mapping from a detected spec to the list of its resolved
+            dependencies. When provided, the generated packages.yaml entries include ``id`` and
+            ``dependencies`` fields. Pre-existing entries that lack ``dependencies`` are augmented
+            in-place. Entries that already have ``dependencies`` are left untouched.
     """
+    # Read the target scope up-front so we can reuse existing IDs and augment after merge.
+    scope = scope or spack.config.default_modify_scope()
+    packages_yaml = spack.config.CONFIG.deepcopy_as_builtin("packages", scope=scope)
+
+    # Build stable IDs and serialized dependency lists for participating specs.
+    ids, serialized_deps = {}, {}
+    if resolved_dependencies:
+        # Collect all specs that appear as a parent or a child in the dependency map.
+        participating = set()
+        for parent_spec, dependencies in resolved_dependencies.items():
+            if dependencies:
+                participating.add(parent_spec)
+                participating.update(dep.spec for dep in dependencies)
+
+        # Assign UUIDs, reusing any ID that already exists in the target scope.
+        for spec in participating:
+            existing_entry = _find_entry(packages_yaml, spec)
+            if existing_entry and "id" in existing_entry:
+                ids[spec] = existing_entry["id"]
+            else:
+                ids[spec] = str(uuid.uuid4())
+
+        # Serialize each parent's dependency list into DependencyDict-compatible dicts.
+        for parent_spec, dependencies in resolved_dependencies.items():
+            dep_dicts = []
+            for dep in dependencies:
+                if dep.spec not in ids:
+                    continue
+                dep_items: List[Tuple[str, Any]] = [("id", ids[dep.spec])]
+                if dep.deptypes is not None:
+                    dep_items.append(("deptypes", list(dep.deptypes)))
+                if dep.virtuals is not None:
+                    dep_items.append(("virtuals", ",".join(dep.virtuals)))
+                dep_dicts.append(spack.util.spack_yaml.syaml_dict(dep_items))
+            if dep_dicts:
+                serialized_deps[parent_spec] = dep_dicts
+
+        # Record which parent specs already have a 'dependencies' field *before* we write
+        # anything, so the post-merge warning only fires for truly pre-existing entries.
+        specs_with_existing_deps = set()
+        for parent_spec in resolved_dependencies:
+            existing = _find_entry(packages_yaml, parent_spec)
+            if existing is not None and "dependencies" in existing:
+                specs_with_existing_deps.add(parent_spec)
+
     predefined_external_specs = _externals_in_packages_yaml()
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
         new_entries = [s for s in entries if s not in predefined_external_specs]
 
-        pkg_config = _pkg_config_dict(new_entries)
+        pkg_config = _pkg_config_dict(new_entries, ids=ids, dependencies=serialized_deps)
         external_entries = pkg_config.get("externals", [])
         assert not isinstance(external_entries, bool), "unexpected value for external entry"
 
@@ -226,10 +420,28 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
-    scope = scope or spack.config.default_modify_scope()
-    pkgs_cfg = spack.config.get("packages", scope=scope)
-    pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set("packages", pkgs_cfg, scope=scope)
+    packages_yaml = spack.schema.merge_yaml(packages_yaml, pkg_to_cfg)
+    if resolved_dependencies:
+        # Backfill 'id' on all pre-existing entries that participate in the
+        # dependency graph so they can be referenced by other entries.
+        # Never add a 'dependencies' field to a pre-existing entry: manually
+        # written dependency relationships are authoritative and must not be
+        # changed by auto-detection.
+        for spec, spec_id in ids.items():
+            entry = _find_entry(packages_yaml, spec)
+            if entry is not None and "id" not in entry:
+                entry["id"] = spec_id
+
+        for parent_spec, deps in resolved_dependencies.items():
+            if parent_spec in specs_with_existing_deps:
+                dep_names = ", ".join(str(d.spec) for d in deps)
+                warnings.warn(
+                    f"{parent_spec} already exists in packages.yaml;"
+                    f" skipping auto-detected dependencies [{dep_names}]."
+                    f" Edit packages.yaml directly to update dependency relationships."
+                )
+
+    spack.config.set("packages", packages_yaml, scope=scope)
 
     return all_new_specs
 

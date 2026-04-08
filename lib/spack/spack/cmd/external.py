@@ -4,16 +4,15 @@
 import argparse
 import errno
 import os
-import re
 import sys
-from typing import List, Optional, Set
+from typing import Set
 
-import spack
 import spack.cmd
 import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
+import spack.externals
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify as colify
 import spack.package_base
@@ -127,15 +126,24 @@ def external_find(args):
         # If the user didn't specify anything, search for build tools by default
         args.tags = ["core-packages", "build-tools"]
 
-    candidate_packages = packages_to_search_for(
+    candidate_packages = spack.detection.packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
-    detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
-    )
 
+    packages_yaml = spack.config.CONFIG.get_config("packages", scope=args.scope)
+    known_packages = spack.externals.root_nodes_from_config(packages_yaml)
+    detected_packages, detected_dependencies = spack.detection.by_path_with_dependencies(
+        candidate_packages,
+        path_hints=args.path,
+        max_workers=args.jobs,
+        known_packages=known_packages,
+        exclude=args.exclude,
+    )
     new_specs = spack.detection.update_configuration(
-        detected_packages, scope=args.scope, buildable=not args.not_buildable
+        detected_packages,
+        scope=args.scope,
+        buildable=not args.not_buildable,
+        resolved_dependencies=detected_dependencies,
     )
 
     # If the user runs `spack external find --not-buildable mpich` we also mark `mpi` non-buildable
@@ -156,28 +164,6 @@ def external_find(args):
         spack.cmd.display_specs(new_specs)
     else:
         tty.msg("No new external packages detected")
-
-
-def packages_to_search_for(
-    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
-):
-    result = list(
-        {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
-    )
-
-    if names:
-        # Match both fully qualified and unqualified
-        parts = [rf"(^{x}$|[.]{x}$)" for x in names]
-        select_re = re.compile("|".join(parts))
-        result = [x for x in result if select_re.search(x)]
-
-    if exclude:
-        # Match both fully qualified and unqualified
-        parts = [rf"(^{x}$|[.]{x}$)" for x in exclude]
-        select_re = re.compile("|".join(parts))
-        result = [x for x in result if not select_re.search(x)]
-
-    return result
 
 
 def external_read_cray_manifest(args):

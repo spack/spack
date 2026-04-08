@@ -14,15 +14,16 @@ import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
+import spack.externals
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.environment
 from spack.externals import ExternalSpecsParser, external_spec
 from spack.operating_systems import windows_os
-from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler
 COMPILER_TAG = "compiler"
@@ -65,19 +66,27 @@ def find_compilers(
         scope: configuration scope to modify
         max_workers: number of processes used to search for compilers
     """
-    if path_hints is None:
-        path_hints = get_path("PATH")
-    default_paths = fs.search_paths_for_executables(*path_hints)
+    default_paths = path_hints
+    if path_hints is not None:
+        default_paths = fs.search_paths_for_executables(*path_hints)
+
     if sys.platform == "win32":
+        default_paths = default_paths or spack.util.environment.get_path("PATH")
         default_paths.extend(windows_os.WindowsOs().compiler_search_paths)
+
     compiler_pkgs = spack.repo.PATH.packages_with_tags(COMPILER_TAG, full=True)
 
-    detected_packages = spack.detection.by_path(
-        compiler_pkgs, path_hints=default_paths, max_workers=max_workers
-    )
+    packages_yaml = spack.config.CONFIG.get_config("packages", scope=scope)
+    known_packages = spack.externals.root_nodes_from_config(packages_yaml)
 
+    detected_packages, detected_dependencies = spack.detection.by_path_with_dependencies(
+        compiler_pkgs,
+        path_hints=default_paths,
+        max_workers=max_workers,
+        known_packages=known_packages,
+    )
     new_compilers = spack.detection.update_configuration(
-        detected_packages, buildable=True, scope=scope
+        detected_packages, scope=scope, buildable=True, resolved_dependencies=detected_dependencies
     )
     return new_compilers
 
@@ -259,28 +268,27 @@ class CompilerFactory:
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
-        externals_dicts = []
         compiler_package_names = supported_compilers()
-        packages_yaml = configuration.get_config("packages", scope=scope)
-        for name, entry in packages_yaml.items():
-            if name not in compiler_package_names:
-                continue
+        # Use a deep copy to prevent ExternalSpecsParser mutations from being written back into
+        # the memoized config objects returned by get_config.
+        packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
-            externals_config = entry.get("externals", None)
-            if not externals_config:
-                continue
+        # Pass all external entries to ExternalSpecsParser so that dependency ids can be resolved
+        # even when a compiler's dependency is not itself a compiler package
+        all_external_dicts = spack.externals.extract_dicts_from_configuration(packages_yaml)
+        discarded_dicts, selected_dicts = spack.llnl.util.lang.stable_partition(
+            all_external_dicts,
+            lambda x: spack.spec.Spec(x.get("spec", "")).name in compiler_package_names
+            and _EXTRA_ATTRIBUTES_KEY not in x,
+        )
+        for entry in discarded_dicts:
+            header = f"The external spec '{entry['spec']}' cannot be used as a compiler"
+            tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
 
-            for current in externals_config:
-                # If extra_attributes is not there don't use this entry as a compiler.
-                if _EXTRA_ATTRIBUTES_KEY not in current:
-                    header = f"The external spec '{current['spec']}' cannot be used as a compiler"
-                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
-                    continue
-
-                externals_dicts.append(current)
-
-        external_parser = ExternalSpecsParser(externals_dicts)
-        return external_parser.all_specs()
+        external_parser = ExternalSpecsParser(selected_dicts)
+        return [
+            spec for spec in external_parser.all_specs() if spec.name in compiler_package_names
+        ]
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:

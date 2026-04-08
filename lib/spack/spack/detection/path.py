@@ -26,11 +26,14 @@ import spack.util.ld_so_conf
 import spack.util.parallel
 
 from .common import (
+    DetectedDependency,
     WindowsCompilerExternalPaths,
     WindowsKitExternalPaths,
     _convert_to_iterable,
+    _normalize_dependency,
     compute_windows_program_path_for_package,
     compute_windows_user_path_for_package,
+    determine_external_dependencies,
     executable_prefix,
     find_win32_additional_install_paths,
     library_prefix,
@@ -41,6 +44,12 @@ from .common import (
 DETECTION_TIMEOUT = 60
 if sys.platform == "win32":
     DETECTION_TIMEOUT = 120
+
+
+#: Maps a package name to a list of detected specs.
+PkgToSpecsDict = Dict[str, List["spack.spec.Spec"]]
+#: Maps a detected spec to a list of its dependencies.
+SpecToDepsDict = Dict["spack.spec.Spec", List[DetectedDependency]]
 
 
 def common_windows_package_paths(pkg_cls=None) -> List[str]:
@@ -411,6 +420,36 @@ class LibrariesFinder(Finder):
         return result
 
 
+def packages_to_search_for(
+    *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
+) -> List[str]:
+    """Return the list of packages to search for, filtered by names, tags, and exclusions.
+
+    Args:
+        names: optional list of package names (qualified or unqualified) to restrict the search
+        tags: list of tags used to select the candidate packages from the repository
+        exclude: optional list of package names to exclude from the result
+    """
+    # TODO: move to top-level once the circular import with spack.repo is resolved
+    import spack.repo
+
+    result = list(
+        {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
+    )
+
+    if names:
+        parts = [rf"(^{x}$|[.]{x}$)" for x in names]
+        select_re = re.compile("|".join(parts))
+        result = [x for x in result if select_re.search(x)]
+
+    if exclude:
+        parts = [rf"(^{x}$|[.]{x}$)" for x in exclude]
+        select_re = re.compile("|".join(parts))
+        result = [x for x in result if not select_re.search(x)]
+
+    return result
+
+
 def by_path(
     packages_to_search: Iterable[str],
     *,
@@ -426,6 +465,7 @@ def by_path(
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
+    # TODO: move to top-level once the circular import with spack.repo is resolved
     from spack.repo import PATH, partition_package_name
 
     # TODO: Packages should be able to define both .libraries and .executables in the future
@@ -474,3 +514,187 @@ def by_path(
                     )
 
     return result
+
+
+def _prefix_hints_from_unresolved_deps(
+    detected_dependencies: "SpecToDepsDict",
+    detected_packages: "PkgToSpecsDict",
+    known_packages: List["spack.spec.Spec"],
+) -> List[str]:
+    """Return prefix hints from unresolved dependency specs that carry ``external_path``.
+
+    When a package author declares a dependency via the dict form with a ``prefix`` key,
+    ``_normalize_dependency`` stores that path as ``dep.spec.external_path``.  This helper
+    collects those paths for deps that are not yet resolvable so the caller can pass them
+    as additional ``path_hints`` to the next ``by_path`` round.
+
+    Args:
+        detected_dependencies: raw dependencies as returned by ``collect_dependencies``
+        detected_packages: all currently detected packages
+        known_packages: specs already present in ``packages.yaml``
+    """
+    all_available = [s for specs in detected_packages.values() for s in specs]
+    all_available.extend(known_packages)
+
+    hints = set()
+    for dep_list in detected_dependencies.values():
+        for dep in dep_list:
+            if any(s.satisfies(dep.spec) for s in all_available):
+                continue  # already resolvable, no need to hint
+            if dep.spec.external_path:
+                hints.add(dep.spec.external_path)
+    return sorted(hints)
+
+
+def by_path_with_dependencies(
+    packages_to_search: Iterable[str],
+    *,
+    path_hints: Optional[List[str]] = None,
+    max_workers: Optional[int] = None,
+    known_packages: Optional[List["spack.spec.Spec"]] = None,
+    exclude: Optional[List[str]] = None,
+) -> Tuple[PkgToSpecsDict, SpecToDepsDict]:
+    """Detect packages by path, then iteratively detect any missing dependencies.
+
+    Starts with an initial round of ``by_path`` detection on ``packages_to_search``, then
+    repeats detection for dependency packages that were declared by already-detected specs
+    but could not yet be resolved. Iteration stops when no new packages are found or all
+    declared dependencies are accounted for.
+
+    Args:
+        packages_to_search: initial list of packages to detect (qualified or unqualified names)
+        path_hints: additional paths to search; falls back to PATH when ``None``
+        max_workers: maximum number of parallel detection workers
+        known_packages: specs already present in ``packages.yaml``. Used to skip deps that are
+            already known without re-detecting them
+        exclude: package names to exclude from every detection round
+
+    Returns:
+        A tuple ``(detected_packages, detected_dependencies)`` accumulated across all rounds.
+    """
+    detected_packages = by_path(packages_to_search, path_hints=path_hints, max_workers=max_workers)
+    detected_dependencies = collect_dependencies(detected_packages)
+
+    already_searched = set(detected_packages)
+    known_packages = known_packages or []
+
+    extra_prefix_hints = _prefix_hints_from_unresolved_deps(
+        detected_dependencies, detected_packages, known_packages
+    )
+
+    to_detect = (
+        missing_dependency_package_names(
+            detected_packages=detected_packages,
+            detected_dependencies=detected_dependencies,
+            known_packages=known_packages,
+        )
+        - already_searched
+    )
+
+    while to_detect:
+        extra_pkgs = packages_to_search_for(
+            names=list(to_detect), tags=["detectable"], exclude=exclude
+        )
+        already_searched.update(to_detect)
+
+        if not extra_pkgs:
+            break
+
+        combined_hints = (list(path_hints or []) + extra_prefix_hints) or None
+        extra_detected = by_path(extra_pkgs, path_hints=combined_hints, max_workers=max_workers)
+
+        if not extra_detected:
+            break
+
+        for name, specs in extra_detected.items():
+            detected_packages.setdefault(name, []).extend(specs)
+
+        extra_dependencies = collect_dependencies(extra_detected)
+        detected_dependencies.update(extra_dependencies)
+
+        extra_prefix_hints = _prefix_hints_from_unresolved_deps(
+            extra_dependencies, detected_packages, known_packages
+        )
+
+        to_detect = (
+            missing_dependency_package_names(
+                detected_packages=detected_packages,
+                detected_dependencies=extra_dependencies,
+                known_packages=known_packages,
+            )
+            - already_searched
+        )
+
+    resolved_dependencies = determine_external_dependencies(
+        detected_packages=detected_packages,
+        detected_dependencies=detected_dependencies,
+        known_packages=known_packages,
+    )
+
+    return detected_packages, resolved_dependencies
+
+
+def collect_dependencies(detected_packages: PkgToSpecsDict) -> SpecToDepsDict:
+    """Call ``determine_dependencies`` once per detected spec and returns a mapping from each
+    detected spec to its list of unresolved dependencies.
+
+    Args:
+        detected_packages: mapping of package name to detected specs.
+    """
+    # TODO: move to top-level once the circular import with spack.repo is resolved
+    import spack.repo
+
+    result = {}
+    for pkg_name, specs in detected_packages.items():
+        try:
+            pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        except Exception as e:
+            spack.llnl.util.tty.debug(
+                f"[{__name__}] cannot load package class for '{pkg_name}': {e}"
+            )
+            continue
+
+        if not hasattr(pkg_cls, "determine_dependencies"):
+            continue
+
+        for spec in specs:
+            try:
+                detected_deps = _convert_to_iterable(pkg_cls.determine_dependencies(spec))
+                normalized = [_normalize_dependency(dep) for dep in detected_deps]
+            except Exception as e:
+                warnings.warn(f'error calling determine_dependencies for "{spec}": {e}')
+                continue
+
+            if not normalized:
+                continue
+
+            result[spec] = normalized
+
+    return result
+
+
+def missing_dependency_package_names(
+    *,
+    detected_packages: Optional[Dict[str, List["spack.spec.Spec"]]] = None,
+    detected_dependencies: Dict["spack.spec.Spec", List[DetectedDependency]],
+    known_packages: Optional[List["spack.spec.Spec"]] = None,
+) -> Set[str]:
+    """Returns the package names declared as dependencies that cannot be resolved.
+
+    Args:
+        detected_packages: all currently detected packages
+        detected_dependencies: pre-collected output of ``collect_dependencies`` for the packages
+        known_packages: specs already present in ``packages.yaml``. Dependency candidates that
+            match entries here are considered resolved and are not included in the returned set.
+    """
+    all_available = []
+    if detected_packages is not None:
+        all_available = [s for specs in detected_packages.values() for s in specs]
+    all_available.extend(known_packages or [])
+
+    missing = set()
+    for dep_list in detected_dependencies.values():
+        for dep in dep_list:
+            if not any(s.satisfies(dep.spec) for s in all_available):
+                missing.add(dep.spec.name)
+    return missing
