@@ -728,9 +728,9 @@ def _execute_variant(
         raise DirectiveError(
             f"variant '{name}' in {pkg.name}: 'substitutions' requires 'deprecated=True'"
         )
-    # Handle deprecated variants early — they bypass all normal variant logic
+    # Handle deprecated variants early - they bypass all normal variant logic
     if deprecated:
-        _handle_deprecated_variant(pkg, name=name, when=when, substitutions=substitutions)
+        _handle_deprecated_variant(pkg, name=name, substitutions=substitutions)
         return
 
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
@@ -826,17 +826,8 @@ def _execute_variant(
 
 
 def _handle_deprecated_variant(
-    pkg: "Type[PackageBase]",
-    *,
-    name: str,
-    when: Any,
-    substitutions: Optional[Dict[str, str]] = None,
+    pkg: "Type[PackageBase]", *, name: str, substitutions: Optional[Dict[str, str]] = None
 ) -> None:
-    if when is not None:
-        warnings.warn(
-            f"variant '{name}' in {pkg.name}: 'deprecated' and 'when' are used together; "
-            f"the 'when' condition is ignored for deprecated variants"
-        )
     if substitutions is None:
         pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name)
     else:

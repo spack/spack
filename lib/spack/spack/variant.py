@@ -837,15 +837,6 @@ class DeprecatedVariant:
         self.mapping = mapping
 
 
-def _parse_spec_no_deprecated_expansion(text: str) -> "spack.spec.Spec":
-    """Parse a spec string without triggering deprecated variant expansion."""
-    parser = spack.spec_parser.SpecParser(text)
-    result = parser.next_spec()
-    if result is None:
-        raise InvalidVariantValueError(f"expected a single spec, but got none: {text}")
-    return result
-
-
 def expand_deprecated_variants(
     spec: "spack.spec.Spec", *, origin: str = "the input spec", pkg_name: Optional[str] = None
 ) -> None:
@@ -863,7 +854,7 @@ def expand_deprecated_variants(
         pkg_name: optional package name override, used when the spec is an anonymous constraint
             (e.g. ``+shared`` from packages.yaml) but the target package is known from context
     """
-    for node in list(spec.traverse()):
+    for node in spec.traverse():
         name = node.name or pkg_name
         if not name:
             continue
@@ -877,7 +868,7 @@ def expand_deprecated_variants(
         if not deprecated:
             continue
 
-        for dv_name, dv in list(deprecated.items()):
+        for dv_name, dv in deprecated.items():
             if dv_name not in node.variants:
                 continue
 
@@ -894,7 +885,7 @@ def expand_deprecated_variants(
             # More complicated: map each match to a replacement
             replacements = []
             for key, replacement in dv.mapping.items():
-                key_spec = _parse_spec_no_deprecated_expansion(f"{name} {key}")
+                key_spec = spack.spec_parser.parse_one_or_raise(f"{name} {key}")
                 key_vv = key_spec.variants[dv_name]
                 if old_variant.satisfies(key_vv):
                     replacements.append(replacement)
@@ -904,7 +895,7 @@ def expand_deprecated_variants(
 
             # Apply each replacement constraint
             for repl in replacements:
-                repl_spec = _parse_spec_no_deprecated_expansion(f"{name} {repl}")
+                repl_spec = spack.spec_parser.parse_one_or_raise(f"{name} {repl}")
                 # Carry over propagation from the original variant
                 if propagate:
                     for vv in repl_spec.variants.values():
