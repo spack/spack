@@ -324,10 +324,13 @@ class ErrorHandler:
         ]
 
         # Build causes lookup: (ErrorType, Node) -> [(cond_id, cause_id), ...]
+        # Use symbol_to_string rather than str() to correctly handle string atoms
+        # (e.g. conflict("msg")) across both native clingo and the CFFI binding.
         causes_by_error: Dict[ErrorTypeTuple, List[CauseType]] = {}
         for sym in cause_symbols:
-            error_key = (str(sym.arguments[0]), str(sym.arguments[1]))
-            cond_id, cause_id = str(sym.arguments[2]), str(sym.arguments[3])
+            error_key = (symbol_to_string(sym.arguments[0]), symbol_to_string(sym.arguments[1]))
+            cond_id = symbol_to_string(sym.arguments[2])
+            cause_id = symbol_to_string(sym.arguments[3])
             causes_by_error.setdefault(error_key, []).append((cond_id, cause_id))
 
         # Sort errors by weight descending
@@ -353,7 +356,7 @@ class ErrorHandler:
                     msg = formatter.format(error_type_sym, node_sym)
                 except Exception as e:
                     msg = f"unknown error [{e}]"
-                error_key = (str(error_type_sym), str(node_sym))
+                error_key = (symbol_to_string(error_type_sym), symbol_to_string(node_sym))
                 seen_causes: Set[Tuple[str, str]] = set()
                 for cond_id, cause_id in causes_by_error.get(error_key, []):
                     cause = (cond_id, cause_id)
