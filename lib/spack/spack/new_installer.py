@@ -512,6 +512,13 @@ def worker_function(
         sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
     )
 
+    # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
+    # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
+    devnull_fd = os.open(os.devnull, os.O_RDONLY)
+    os.dup2(devnull_fd, 0)
+    os.close(devnull_fd)
+    sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
+
     # Open the log file created by the parent process.
     log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
     tee = Tee(echo_control, parent, log_fd)
