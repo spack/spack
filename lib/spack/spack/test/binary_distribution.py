@@ -575,7 +575,7 @@ def test_v2_etag_fetching_304():
                 url,
                 304,
                 "Not Modified",
-                hdrs={},
+                hdrs={},  # type: ignore[arg-type]
                 fp=None,  # type: ignore[arg-type]
             )
         assert False, "Should not fetch {}".format(url)
@@ -1262,7 +1262,7 @@ def test_etag_fetching_304():
                 url,
                 304,
                 "Not Modified",
-                hdrs={},
+                hdrs={},  # type: ignore[arg-type]
                 fp=None,  # type: ignore[arg-type]
             )
         assert False, "Unexpected request {}".format(url)
