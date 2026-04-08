@@ -142,7 +142,7 @@ def mypy_root_spec() -> str:
 
 
 def pytest_root_spec() -> str:
-    """Return the root spec used to bootstrap flake8"""
+    """Return the root spec used to bootstrap pytest"""
     return "py-pytest@6.2.4:"
 
 
