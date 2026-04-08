@@ -1938,7 +1938,7 @@ _spack_stage() {
 _spack_style() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -b --base -r --root-relative -U --no-untracked -f --fix --root -t --tool -s --skip --spec-strings"
+        SPACK_COMPREPLY="-h --help -b --base -a --all -r --root-relative -U --no-untracked -f --fix --root -t --tool -s --skip --spec-strings"
     else
         SPACK_COMPREPLY=""
     fi
