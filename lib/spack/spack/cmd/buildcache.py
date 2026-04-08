@@ -134,6 +134,15 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="for a private mirror, include non-redistributable packages",
     )
+    push.add_argument(
+        "--group",
+        action="append",
+        default=None,
+        dest="groups",
+        metavar="GROUP",
+        help="push only specs from the given environment group "
+        "(can be specified multiple times, requires an active environment)",
+    )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn)
 
@@ -446,7 +455,20 @@ def _specs_to_be_packaged(
 
 def push_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.specs:
+    if args.specs and args.groups:
+        tty.die("--group and explicit specs are mutually exclusive")
+
+    if args.groups:
+        env = spack.cmd.require_active_env(cmd_name="buildcache push")
+        available_groups = env.manifest.groups()
+        if any(g not in available_groups for g in args.groups):
+            tty.die(
+                f"Some of the groups do not exist in the environment. "
+                f"Available groups are: {', '.join(sorted(available_groups))}"
+            )
+
+        roots = [c for g in args.groups for _, c in env.concretized_specs_by(group=g)]
+    elif args.specs:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
