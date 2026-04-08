@@ -4904,7 +4904,7 @@ spack:
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
-def test_compiler_target_env(install_mockery, environment_from_manifest):
+def test_compiler_target_env(mock_packages, environment_from_manifest):
     """Tests that Spack doesn't drop flag definitions on compilers
     when a target is required in config.
     """
