@@ -180,13 +180,13 @@ class CompilerPropertyDetector:
     def _compile_dummy_c_source(self) -> Optional[str]:
         compiler_pkg = self.spec.package
         if getattr(compiler_pkg, "cc"):
-            cc = compiler_pkg.cc
+            cc = compiler_pkg.cc  # type: ignore[attr-defined]
             ext = "c"
         else:
-            cc = compiler_pkg.cxx
+            cc = compiler_pkg.cxx  # type: ignore[attr-defined]
             ext = "cc"
 
-        if not cc or not self.spec.package.verbose_flags:
+        if not cc or not self.spec.package.verbose_flags:  # type: ignore[attr-defined]
             return None
 
         try:
@@ -202,11 +202,8 @@ class CompilerPropertyDetector:
 
             if self.spec.external:
                 compiler_flags = self.spec.extra_attributes.get("flags", {})
-                for flag_type in [
-                    "cflags" if cc == compiler_pkg.cc else "cxxflags",
-                    "cppflags",
-                    "ldflags",
-                ]:
+                is_cc = cc == compiler_pkg.cc  # type: ignore[attr-defined]
+                for flag_type in ["cflags" if is_cc else "cxxflags", "cppflags", "ldflags"]:
                     current_flags = compiler_flags.get(flag_type, "").strip()
                     if current_flags:
                         cc_exe.add_default_arg(*current_flags.split(" "))
@@ -254,11 +251,9 @@ class CompilerPropertyDetector:
             return []
 
         link_dirs = parse_non_system_link_dirs(output)
-        all_required_libs = list(self.spec.package.implicit_rpath_libs) + [
-            "libc",
-            "libc++",
-            "libstdc++",
-        ]
+        all_required_libs = list(
+            self.spec.package.implicit_rpath_libs  # type: ignore[attr-defined]
+        ) + ["libc", "libc++", "libstdc++"]
         dynamic_linker = self.default_dynamic_linker()
         result = DefaultDynamicLinkerFilter(dynamic_linker)(
             paths_containing_libs(link_dirs, all_required_libs)

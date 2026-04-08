@@ -67,9 +67,11 @@ def _try_import_from_store(
 
         # if python is installed, ask it for the layout
         if python.installed:
+            purelib = python.package.purelib  # type: ignore[attr-defined]
+            platlib = python.package.platlib  # type: ignore[attr-defined]
             module_paths = [
-                os.path.join(candidate_spec.prefix, python.package.purelib),
-                os.path.join(candidate_spec.prefix, python.package.platlib),
+                os.path.join(candidate_spec.prefix, purelib),
+                os.path.join(candidate_spec.prefix, platlib),
             ]
         # otherwise search for the site-packages directory
         # (clingo from binaries with truncated python-venv runtime)

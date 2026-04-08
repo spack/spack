@@ -190,9 +190,9 @@ def test_mirror_spec_from_env(
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmp_path: pathlib.Path):
     s = spack.concretize.concretize_one("trivial-pkg-with-valid-hash")
-    local_url_basename = os.path.basename(s.package.url)
+    local_url_basename = os.path.basename(s.package.url)  # type: ignore[attr-defined]
     local_path = tmp_path / local_url_basename
-    local_path.write_text(s.package.hashed_content, encoding="utf-8")
+    local_path.write_text(s.package.hashed_content, encoding="utf-8")  # type: ignore[attr-defined]
     local_url = url_util.path_to_file_url(str(local_path))
     s.package.versions[spack.version.Version("1.0")]["url"] = local_url
 

@@ -71,7 +71,10 @@ class BootstrapEnvironment(spack.environment.Environment):
 
     def python_dirs(self) -> Iterable[pathlib.Path]:
         python = next(s for s in self.all_specs_generator() if s.name == "python-venv").package
-        return {self.view_root().joinpath(p) for p in (python.platlib, python.purelib)}
+        return {
+            self.view_root().joinpath(p)
+            for p in (python.platlib, python.purelib)  # type: ignore[attr-defined]
+        }
 
     @classmethod
     def spack_yaml(cls) -> pathlib.Path:
