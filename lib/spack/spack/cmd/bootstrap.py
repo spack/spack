@@ -310,7 +310,7 @@ def _status(args):
         sections.append("develop")
 
     header = "@*b{{Spack v{0} - {1}}}".format(
-        spack.spack_version, spack.bootstrap.config.spec_for_current_python()
+        spack.spack_version, spack.bootstrap.config.abi_spec_for_current_python()
     )
     print(spack.llnl.util.tty.color.colorize(header))
     print()

@@ -17,7 +17,7 @@ import spack.util.path
 from spack.llnl.util import tty
 
 from ._common import _root_spec
-from .config import root_path, spec_for_current_python, store_path
+from .config import root_path, abi_spec_for_current_python, store_path
 from .core import _add_externals_if_missing
 
 
@@ -49,7 +49,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     def environment_root(cls) -> pathlib.Path:
         """Environment root directory"""
         bootstrap_root_path = root_path()
-        python_part = spec_for_current_python().replace("@", "")
+        python_part = abi_spec_for_current_python().replace("@", "")
         arch_part = spack.vendor.archspec.cpu.host().family
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
@@ -109,7 +109,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         env = spack.tengine.make_environment()
         template = env.get_template("bootstrap/spack.yaml")
         context = {
-            "python_spec": f"{spec_for_current_python()}+ctypes",
+            "python_spec": f"{abi_spec_for_current_python()}+ctypes",
             "python_prefix": sys.exec_prefix,
             "architecture": spack.vendor.archspec.cpu.host().family,
             "environment_path": self.environment_root(),

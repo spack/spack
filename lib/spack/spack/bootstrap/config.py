@@ -27,7 +27,7 @@ def is_bootstrapping() -> bool:
     return _REF_COUNT > 0
 
 
-def spec_for_current_python() -> str:
+def abi_spec_for_current_python() -> str:
     """For bootstrapping purposes we are just interested in the Python
     minor version (all patches are ABI compatible with the same minor).
 
@@ -64,7 +64,7 @@ def spack_python_interpreter() -> Generator:
     available.
     """
     python_prefix = sys.exec_prefix
-    external_python = spec_for_current_python()
+    external_python = abi_spec_for_current_python()
 
     entry = {
         "buildable": False,

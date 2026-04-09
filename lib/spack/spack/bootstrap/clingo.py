@@ -25,7 +25,7 @@ import spack.spec
 import spack.traverse
 import spack.version
 
-from .config import spec_for_current_python
+from .config import abi_spec_for_current_python
 
 
 def _select_best_version(
@@ -204,7 +204,7 @@ class ClingoBootstrapConcretizer:
 
     def python_external_spec(self) -> "spack.spec.Spec":
         """Python external spec corresponding to the current running interpreter"""
-        result = spack.spec.Spec(spec_for_current_python(), external_path=sys.exec_prefix)
+        result = spack.spec.Spec(abi_spec_for_current_python(), external_path=sys.exec_prefix)
         return self._external_spec(result)
 
     def libc_external_spec(self) -> "spack.spec.Spec":

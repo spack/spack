@@ -56,7 +56,7 @@ from ._common import (
     _try_import_from_store,
 )
 from .clingo import ClingoBootstrapConcretizer
-from .config import spack_python_interpreter, spec_for_current_python
+from .config import spack_python_interpreter, abi_spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -236,7 +236,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 
         tty.debug(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec, bincache_platform = self._spec_and_platform(
-            abstract_spec_str + " ^" + spec_for_current_python()
+            abstract_spec_str + " ^" + abi_spec_for_current_python()
         )
         data = self._read_metadata(module)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
@@ -282,7 +282,7 @@ class SourceBootstrapper(Bootstrapper):
                 concrete_spec = bootstrapper.concretize()
             else:
                 abstract_spec = spack.spec.Spec(
-                    abstract_spec_str + " ^" + spec_for_current_python()
+                    abstract_spec_str + " ^" + abi_spec_for_current_python()
                 )
                 concrete_spec = spack.concretize.concretize_one(abstract_spec)
 

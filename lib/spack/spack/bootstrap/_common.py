@@ -23,7 +23,7 @@ import spack.util.environment
 import spack.util.executable
 from spack.llnl.util import tty
 
-from .config import spec_for_current_python
+from .config import abi_spec_for_current_python
 
 
 class QueryInfo(TypedDict, total=False):
@@ -54,7 +54,7 @@ def _try_import_from_store(
     # If it is a string assume it's one of the root specs by this module
     if isinstance(query_spec, str):
         # We have to run as part of this python interpreter
-        query_spec += " ^" + spec_for_current_python()
+        query_spec += " ^" + abi_spec_for_current_python()
 
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
