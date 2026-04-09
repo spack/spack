@@ -11,6 +11,7 @@ import spack.cmd
 import spack.cmd.common
 import spack.environment as ev
 import spack.hooks.generate_spec_scripts as generate_script
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
@@ -142,8 +143,8 @@ def load(parser, args):
                     mods = _get_environment_modifications(spec, shell, cached_repo)
 
                     generate_script.write_spec_scripts(load_script_path, mods)
-                except OSError as e:
-                    raise OSError(f"Error writing to {load_script_path}\n{e}")
+                except Exception as err:
+                    tty.die(f"Error writing to {load_script_path}\n{err}")
 
             source = "." if shell == "sh" else "source"
             commands = f"{source} {load_script_path}"

@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import glob
 import os
 
 import spack.cmd
 import spack.cmd.common
 import spack.error
 import spack.hooks.generate_spec_scripts as generate_script
+import spack.llnl.util.tty as tty
+import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
@@ -65,18 +68,28 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def _get_environment_modifications(spec, shell) -> str:
+def _get_environment_modifications(spec, shell, repo) -> str:
     """Find the environment modifcations for spec
 
     Args:
         spec: the spec package
         shell: user's shell
+        repo: optional repo to use when spec is not in builtin repo
     """
 
-    env_mod = uenv.environment_modifications_for_specs(spec)
+    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
     env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
 
     return env_mod.shell_modifications(shell)
+
+
+def _make_repo_path(root):
+    """Make a RepoPath from the repo subdirectories in an environment."""
+    repos = (
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    )
+    return spack.repo.RepoPath(*repos)
 
 
 def unload(parser, args):
@@ -111,13 +124,19 @@ def unload(parser, args):
         if spec.external:
             commands = _get_environment_modifications(spec, shell)
         else:
-            unload_script = generate_script.path_to_unload_shell_script(spec, shell)
+            unload_script_path = generate_script.path_to_unload_shell_script(spec, shell)
 
-            if not os.path.isfile(unload_script):
-                mods = _get_environment_modifications(spec, shell)
-                generate_script.write_spec_scripts(unload_script, mods)
+            if not os.path.isfile(unload_script_path):
+                try:
+                    repo_path = _make_repo_path(os.path.join(spec.prefix, ".spack"))
+                    cached_repo = repo_path if repo_path.repos else None
+                    mods = _get_environment_modifications(spec, shell, cached_repo)
+
+                    generate_script.write_spec_scripts(unload_script_path, mods)
+                except Exception as err:
+                    tty.die(f"Error writing to {unload_script_path}\n{err}")
 
             source = "." if shell == "sh" else "source"
-            commands = f"{source} {unload_script}"
+            commands = f"{source} {unload_script_path}"
 
         print(f"{commands}")
