@@ -7,9 +7,9 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+import stat
 
 import pytest
-import stat
 
 import spack.build_environment
 import spack.config
@@ -254,11 +254,7 @@ def callable_base_compiler(wrapper_environment, tmp_path):
     fake_cc.chmod(fake_cc.stat().st_mode | stat.S_IEXEC)
     fake_cc_path = str(fake_cc)
 
-    with set_env(
-        SPACK_CC=fake_cc_path,
-        SPACK_CXX=fake_cc_path,
-        SPACK_FC=fake_cc_path
-    ):
+    with set_env(SPACK_CC=fake_cc_path, SPACK_CXX=fake_cc_path, SPACK_FC=fake_cc_path):
         yield
 
 
@@ -268,11 +264,7 @@ def test_wrapper_logging(callable_base_compiler, wrapper_dir, tmp_path):
     log_dir = str(tmp_path)
     log_id = "testlogid"
 
-    with set_env(
-        SPACK_DEBUG_LOG_DIR=log_dir,
-        SPACK_DEBUG_LOG_ID=log_id,
-        SPACK_DEBUG="TRUE",
-    ):
+    with set_env(SPACK_DEBUG_LOG_DIR=log_dir, SPACK_DEBUG_LOG_ID=log_id, SPACK_DEBUG="TRUE"):
         output = cc(output=str)
         assert "fakecc" in output
         for x in spack.package_base.PackageBase._compiler_wrapper_log_locations(log_dir, log_id):
