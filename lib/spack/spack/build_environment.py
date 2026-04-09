@@ -486,8 +486,10 @@ def set_wrapper_variables(pkg, env):
     if spack.config.get("config:debug"):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
-    env.set(SPACK_DEBUG_LOG_DIR, spack.paths.spack_working_dir)
+
+    wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_prefix
+    env.set(SPACK_DEBUG_LOG_ID, wrapper_log_id)
+    env.set(SPACK_DEBUG_LOG_DIR, wrapper_log_dir)
 
     if spack.config.get("config:ccache"):
         # Enable ccache in the compiler wrapper

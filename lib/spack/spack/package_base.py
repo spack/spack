@@ -1327,6 +1327,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return log_files
 
     @property
+    def compiler_wrapper_log_prefix(self):
+        # Compiler wrapper will create a .in and .out log with the
+        # prefix returned here
+        return self.stage.path, self.spec.format("{name}-{hash:7}")
+
+        # If the log is stored in the stage root, then it should be linked for
+        # failed builds
+        # return os.path.join(stg.get_stage_root(), self.spec.format("{name}-{hash:7}"))
+
+    @property
     def install_log_path(self):
         """Return the (compressed) build log file path on successful installation"""
         # Backward compatibility: Return the name of an existing install log.
