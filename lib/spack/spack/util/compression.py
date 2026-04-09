@@ -12,6 +12,7 @@ from typing import Any, BinaryIO, Callable, Dict, List, Optional
 
 import spack.llnl.url
 from spack.error import SpackError
+from spack.llnl.path import convert_to_posix_path
 from spack.llnl.util import tty
 from spack.util.executable import CommandNotFoundError, which
 
@@ -39,6 +40,29 @@ except ImportError:
     LZMA_SUPPORTED = False
 
 
+def _convert_to_msys_path(path: str) -> str:
+    """Convert Windows path to MSYS2/Cygwin format for Git for Windows tar.
+
+    Converts C:\\path\\to\\file or C:/path/to/file to /c/path/to/file
+
+    Args:
+        path: Windows-style path
+
+    Returns:
+        MSYS2-style path, or original path if not Windows
+    """
+    if sys.platform != "win32":
+        return path
+
+    path = convert_to_posix_path(path)
+
+    if len(path) >= 2 and path[1] == ':':
+        drive = path[0].lower()
+        return f"/{drive}{path[2:]}"
+
+    return path
+
+
 def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
     """Returns path to unarchived tar file. Untars archive via system tar.
 
@@ -61,7 +85,7 @@ def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
     # than where they are extracted. In certain cases like rootless containers, setting original
     # ownership is known to fail, so we need to disable it.
     tar.add_default_arg("-oxf")
-    tar(archive_file)
+    tar(_convert_to_msys_path(archive_file))
     if remove_archive_file:
         # remove input file to prevent two stage
         # extractions from being treated as exploding
