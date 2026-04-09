@@ -1058,9 +1058,7 @@ class SetupContext:
                 try:
                     pkg = cached_repo.get_pkg_class(dspec.name)(dspec)
                 except spack.repo.UnknownPackageError:
-                    tty.debug(
-                        f"{dspec.name} not found in cached repo, using package from dspec"
-                    )
+                    tty.debug(f"{dspec.name} not found in cached repo, using package from dspec")
                     pkg = dspec.package
             else:
                 pkg = dspec.package

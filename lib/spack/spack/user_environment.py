@@ -82,10 +82,7 @@ def project_env_mods(
 
 
 def environment_modifications_for_specs(
-    *specs: spack.spec.Spec,
-    view=None,
-    set_package_py_globals: bool = True,
-    repo=None
+    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True, repo=None
 ):
     """List of environment (shell) modifications to be processed for spec.
 
