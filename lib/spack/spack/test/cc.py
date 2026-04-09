@@ -13,6 +13,7 @@ import stat
 
 import spack.build_environment
 import spack.config
+import spack.package_base
 from spack.util.environment import SYSTEM_DIR_CASE_ENTRY, set_env
 from spack.util.executable import Executable, ProcessError
 
@@ -267,9 +268,12 @@ def test_wrapper_logging(callable_base_compiler, wrapper_dir, tmp_path):
     with set_env(
         SPACK_DEBUG_LOG_DIR=log_dir,
         SPACK_DEBUG_LOG_ID=log_id,
+        SPACK_DEBUG="TRUE",
     ):
         output = cc(output=str)
         assert "fakecc" in output
+        for x in spack.package_base.PackageBase._compiler_wrapper_log_locations(log_dir, log_id):
+            assert os.path.exists(x)
 
 
 def test_modes(wrapper_environment, wrapper_dir):
