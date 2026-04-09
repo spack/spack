@@ -246,6 +246,9 @@ def test_no_wrapper_environment(wrapper_dir):
 
 @pytest.fixture
 def callable_base_compiler(wrapper_environment, tmp_path):
+    """For calling the compiler wrapper in cases where we actually
+    want it to execute the underlying SPACK_CC compiler.
+    """
     fake_cc = tmp_path / "noop.sh"
     fake_cc.write_text("#!/usr/bin/env sh\necho 'fakecc'\nexit 0\n")
     fake_cc.chmod(fake_cc.stat().st_mode | stat.S_IEXEC)
