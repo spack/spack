@@ -71,7 +71,6 @@ import spack.error
 import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
-import spack.paths
 import spack.platforms
 import spack.schema.environment
 import spack.spec
