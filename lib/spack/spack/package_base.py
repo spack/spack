@@ -1336,10 +1336,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @property
     def compiler_wrapper_log_locations(self):
         log_dir, log_id = self.compiler_wrapper_log_settings
-        return [
-            os.path.join(log_dir, f"spack-cc-{log_id}.{x}.log")
-            for x in ["in", "out"]
-        ]
+        return [os.path.join(log_dir, f"spack-cc-{log_id}.{x}.log") for x in ["in", "out"]]
 
     @property
     def install_log_path(self):
