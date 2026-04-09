@@ -9,6 +9,7 @@ arguments correctly.
 import os
 
 import pytest
+import stat
 
 import spack.build_environment
 import spack.config
@@ -240,6 +241,35 @@ def test_no_wrapper_environment(wrapper_dir):
     with pytest.raises(ProcessError):
         output = cc(output=str)
         assert "Spack compiler must be run from Spack" in output
+
+
+@pytest.fixture
+def callable_base_compiler(wrapper_environment, tmp_path):
+    fake_cc = tmp_path / "noop.sh"
+    fake_cc.write_text("#!/usr/bin/env sh\necho 'fakecc'\nexit 0\n")
+    fake_cc.chmod(fake_cc.stat().st_mode | stat.S_IEXEC)
+    fake_cc_path = str(fake_cc)
+
+    with set_env(
+        SPACK_CC=fake_cc_path,
+        SPACK_CXX=fake_cc_path,
+        SPACK_FC=fake_cc_path
+    ):
+        yield
+
+
+def test_wrapper_logging(callable_base_compiler, wrapper_dir, tmp_path):
+    cc = Executable(str(wrapper_dir / "cc"))
+
+    log_dir = str(tmp_path)
+    log_id = "testlogid"
+
+    with set_env(
+        SPACK_DEBUG_LOG_DIR=log_dir,
+        SPACK_DEBUG_LOG_ID=log_id,
+    ):
+        output = cc(output=str)
+        assert "fakecc" in output
 
 
 def test_modes(wrapper_environment, wrapper_dir):
