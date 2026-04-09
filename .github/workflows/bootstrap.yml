@@ -189,3 +189,31 @@ jobs:
           spack -d gpg list
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/
+
+  dev-bootstrap:
+    runs-on: ubuntu-latest
+    container: registry.access.redhat.com/ubi8/ubi
+    steps:
+    - name: Install dependencies
+      run: |
+          dnf install -y \
+              bzip2 curl gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch python3.11 tcl unzip which xz
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - name: Setup repo and non-root user
+      run: |
+          git --version
+          git config --global --add safe.directory '*'
+          git fetch --unshallow
+          . .github/workflows/bin/setup_git.sh
+    - name: Setup a virtual environment with platform-python
+      run: |
+          python3.11 -m venv ~/platform-spack-311
+          source ~/platform-spack-311/bin/activate
+          pip install --upgrade pip clingo
+    - name: Bootstrap Spack development environment and run unit tests
+      run: |
+          source ~/platform-spack-311/bin/activate
+          source share/spack/setup-env.sh
+          spack debug report
+          spack -d bootstrap now --dev
