@@ -599,12 +599,7 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         spack.llnl.util.tty.debug(e)
 
     try:
-        wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_prefix
-        logs_glob_expr = os.path.join(wrapper_log_dir, f"spack-cc-{wrapper_log_id}") + "*"
-        spack.llnl.util.tty.debug(f"glob: {logs_glob_expr}")
-        wrapper_logs = list(glob.glob(logs_glob_expr))
-        spack.llnl.util.tty.debug(f"wrapper logs: {wrapper_logs}")
-        for x in wrapper_logs:
+        for x in pkg.compiler_wrapper_log_locations:
             shutil.copy(x, pkg.spec.package.metadata_dir)
     except Exception as e:
         spack.llnl.util.tty.debug(f"Failure to copy compiler wrapper logs: {str(e)}")

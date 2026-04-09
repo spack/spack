@@ -486,7 +486,7 @@ def set_wrapper_variables(pkg, env):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
 
-    wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_prefix
+    wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_settings
     env.set(SPACK_DEBUG_LOG_ID, wrapper_log_id)
     env.set(SPACK_DEBUG_LOG_DIR, wrapper_log_dir)
 
