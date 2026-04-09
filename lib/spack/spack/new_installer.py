@@ -564,10 +564,6 @@ def worker_function(
             except Exception:
                 pass  # don't fail the build just because log compression failed
 
-        # wrapper_logs = list(glob.glob(f"{spec.package.compiler_wrapper_log_prefix}*"))
-        # for x in wrapper_logs:
-        #    shutil.copyfile(x, spec.package.metadata_dir)
-
         # Remove the uncompressed log file from the stage dir on successful install.
         if not keep_stage:
             try:
@@ -602,14 +598,16 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
     except Exception as e:
         spack.llnl.util.tty.debug(e)
 
-    wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_prefix
-    logs_glob_expr = os.path.join(wrapper_log_dir, f"spack-cc-{wrapper_log_id}") + "*"
-    # logs_glob_expr = f"{pkg.spec.package.compiler_wrapper_log_prefix}*"
-    spack.llnl.util.tty.msg(f"glob: {logs_glob_expr}")
-    wrapper_logs = list(glob.glob(logs_glob_expr))
-    spack.llnl.util.tty.msg(f"wrapper logs: {wrapper_logs}")
-    for x in wrapper_logs:
-        shutil.copy(x, pkg.spec.package.metadata_dir)
+    try:
+        wrapper_log_dir, wrapper_log_id = pkg.compiler_wrapper_log_prefix
+        logs_glob_expr = os.path.join(wrapper_log_dir, f"spack-cc-{wrapper_log_id}") + "*"
+        spack.llnl.util.tty.debug(f"glob: {logs_glob_expr}")
+        wrapper_logs = list(glob.glob(logs_glob_expr))
+        spack.llnl.util.tty.debug(f"wrapper logs: {wrapper_logs}")
+        for x in wrapper_logs:
+            shutil.copy(x, pkg.spec.package.metadata_dir)
+    except Exception as e:
+        spack.llnl.util.tty.debug(f"Failure to copy compiler wrapper logs: {str(e)}")
 
     # Archive package-specific files matched by archive_files glob patterns
     try:

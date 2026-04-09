@@ -1328,13 +1328,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @property
     def compiler_wrapper_log_prefix(self):
-        # Compiler wrapper will create a .in and .out log with the
-        # prefix returned here
+        # Return log_dir and log_id
+        # compiler wrapper will create logs in log_dir
+        # specifically spack-cc-{log_id}.in.log and spack-cc-{log_id}.out.log
         return self.stage.path, self.spec.format("{name}-{hash:7}")
-
-        # If the log is stored in the stage root, then it should be linked for
-        # failed builds
-        # return os.path.join(stg.get_stage_root(), self.spec.format("{name}-{hash:7}"))
 
     @property
     def install_log_path(self):
