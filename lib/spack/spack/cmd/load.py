@@ -84,7 +84,7 @@ def _get_environment_modifications(spec, shell, repo) -> str:
     Args:
         spec: the spec that needs environment modifications
         shell: user's shell
-        repo: repo to get spec from if not in builtin repo
+        repo: optional repo to use when spec is not in builtin repo
     """
 
     # TODO: if spec is not in builtin repo, pass cached repo or repo path
@@ -133,16 +133,19 @@ def load(parser, args):
         if spec.external:
             commands = _get_environment_modifications(spec, shell)
         else:
-            load_script = generate_script.path_to_load_shell_script(spec, shell)
+            load_script_path = generate_script.path_to_load_shell_script(spec, shell)
 
-            if not os.path.isfile(load_script):
-                repo_path = _make_repo_path(os.path.join(spec.prefix, ".spack"))
-                mods = _get_environment_modifications(spec, shell, repo_path)
+            if not os.path.isfile(load_script_path):
+                try:
+                    repo_path = _make_repo_path(os.path.join(spec.prefix, ".spack"))
+                    cached_repo = repo_path if repo_path.repos else None
+                    mods = _get_environment_modifications(spec, shell, cached_repo)
 
-                generate_script.write_spec_scripts(load_script, mods)
-                # TODO: if fails -> raise error
+                    generate_script.write_spec_scripts(load_script_path, mods)
+                except OSError as e:
+                    raise OSError(f"Error writing to {load_script_path}\n{e}")
 
             source = "." if shell == "sh" else "source"
-            commands = f"{source} {load_script}"
+            commands = f"{source} {load_script_path}"
 
         print(f"{commands}")

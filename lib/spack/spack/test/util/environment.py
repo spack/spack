@@ -162,5 +162,6 @@ def test_shell_modifications_are_properly_escaped():
     changes.set("RM_RF", "$(rm -rf /)")
 
     script = changes.shell_modifications(shell="sh")
-    assert f"export VAR='$PATH{os.pathsep}$ANOTHER_PATH'" in script
-    assert "export RM_RF='$(rm -rf /)'" in script
+    assert "_spack_env_set VAR $PATH" in script
+    assert f"_spack_env_append VAR $ANOTHER_PATH {os.pathsep}" in script
+    assert "_spack_env_set RM_RF $(rm -rf /)" in script

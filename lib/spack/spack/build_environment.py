@@ -73,6 +73,7 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
@@ -1054,7 +1055,13 @@ class SetupContext:
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")
             if cached_repo:
-                pkg = cached_repo.get_pkg_class(dspec.name)
+                try:
+                    pkg = cached_repo.get_pkg_class(dspec.name)(dspec)
+                except spack.repo.UnknownPackageError:
+                    tty.debug(
+                        f"{dspec.name} not found in cached repo, using package from dspec"
+                    )
+                    pkg = dspec.package
             else:
                 pkg = dspec.package
 
