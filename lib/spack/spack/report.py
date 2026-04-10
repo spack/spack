@@ -135,9 +135,11 @@ class InstallRecord(SpecRecord):
         """Install log comes from install prefix on success, or stage dir on failure."""
         try:
             if os.path.exists(self._package.install_log_path):
-                stream = gzip.open(self._package.install_log_path, "rt", encoding="utf-8")
+                stream = gzip.open(
+                    self._package.install_log_path, "rt", encoding="utf-8", errors="replace"
+                )
             else:
-                stream = open(self._package.log_path, encoding="utf-8")
+                stream = open(self._package.log_path, encoding="utf-8", errors="replace")
             with stream as f:
                 return f.read()
         except OSError:
@@ -159,7 +161,7 @@ class TestRecord(SpecRecord):
         """Get output from test log"""
         log_file = os.path.join(self.directory, self._package.test_suite.test_log_name(self._spec))
         try:
-            with open(log_file, "r", encoding="utf-8") as stream:
+            with open(log_file, "r", encoding="utf-8", errors="replace") as stream:
                 return "".join(stream.readlines())
         except Exception:
             return f"Cannot open log for {self._spec.cshort_spec}"
