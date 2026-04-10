@@ -6,6 +6,7 @@ import hashlib
 import os
 import pathlib
 import shutil
+import uuid
 from contextlib import contextmanager
 from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
@@ -42,17 +43,17 @@ class ReadContextManager:
 class WriteContextManager:
     def __init__(self, path: str) -> None:
         self.path = path
-        self.tmp_path = f"{self.path}.tmp"
+        self.tmp_path = f"{self.path}-{uuid.uuid4()}.tmp"
 
     def __enter__(self) -> Tuple[Optional[IO[str]], IO[str]]:
         """Return (old_file, new_file) file objects, where old_file is optional."""
-        self.old_file = _maybe_open(self.path)
         try:
-            try:
-                self.new_file = open(self.tmp_path, "w", encoding="utf-8")
-            except FileNotFoundError:
+            self.old_file = _maybe_open(self.path)
+
+            if not self.old_file:
                 os.makedirs(os.path.dirname(self.path), exist_ok=True)
-                self.new_file = open(self.tmp_path, "w", encoding="utf-8")
+
+            self.new_file = open(self.tmp_path, "w", encoding="utf-8")
         except PermissionError:
             if self.old_file:
                 self.old_file.close()
