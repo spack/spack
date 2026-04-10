@@ -205,7 +205,7 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
+def tee(control_r: int, log_r: int, log_path: str, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
@@ -214,22 +214,25 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
     selector.register(control_r, selectors.EVENT_READ)
 
     try:
-        while True:
-            for key, _ in selector.select():
-                if key.fd == log_r:
-                    data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                    if not data:  # EOF: exit the thread
-                        return
-                    os.write(file_w, data)
-                    if echo_on:
-                        os.write(parent_w, data)
+        with open(log_path, "wb") as log_file, open(parent_w, "wb", closefd=False) as parent:
+            while True:
+                for key, _ in selector.select():
+                    if key.fd == log_r:
+                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                        if not data:  # EOF: exit the thread
+                            return
+                        log_file.write(data)
+                        log_file.flush()
+                        if echo_on:
+                            parent.write(data)
+                            parent.flush()
 
-                elif key.fd == control_r:
-                    control_data = os.read(control_r, 1)
-                    if not control_data:
-                        return
-                    else:
-                        echo_on = control_data == b"1"
+                    elif key.fd == control_r:
+                        control_data = os.read(control_r, 1)
+                        if not control_data:
+                            return
+                        else:
+                            echo_on = control_data == b"1"
     except OSError:  # do not raise
         pass
     finally:
@@ -240,19 +243,19 @@ class Tee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
     process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
 
-    def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
+    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
         self.control = control
         self.parent = parent
         # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
         # redirect their file descriptors in addition to the original fds 1 and 2.
         fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
         self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The file descriptor of the log file
-        self.log_fd = log_fd
+        #: The path of the log file
+        self.log_path = log_path
         r, w = os.pipe()
         self.tee_thread = threading.Thread(
             target=tee,
-            args=(self.control.fileno(), r, self.log_fd, self.parent.fileno()),
+            args=(self.control.fileno(), r, self.log_path, self.parent.fileno()),
             daemon=True,
         )
         self.tee_thread.start()
@@ -274,7 +277,6 @@ class Tee:
         # Only then close the other fds.
         self.control.close()
         self.parent.close()
-        os.close(self.log_fd)
 
 
 def install_from_buildcache(
@@ -519,9 +521,8 @@ def worker_function(
     os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
-    # Open the log file created by the parent process.
-    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
-    tee = Tee(echo_control, parent, log_fd)
+    # Start the tee thread to forward output to the log file and parent process.
+    tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
