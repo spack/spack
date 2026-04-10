@@ -37,7 +37,10 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional, Type
+from typing import TYPE_CHECKING, Callable, List, Mapping, Optional, Type
+
+if TYPE_CHECKING:
+    import spack.stage
 
 import spack.config
 import spack.error
@@ -104,12 +107,18 @@ class FetchStrategy:
         # The stage is initialized late, so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self.stage = None
+        self.stage: Optional["spack.stage.Stage"] = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop("no_cache", False)
 
         self.package = None
+
+    @property
+    def _stage(self) -> "spack.stage.Stage":
+        """Get the stage, asserting it is not None."""
+        assert self.stage is not None
+        return self.stage
 
     def set_package(self, package):
         self.package = package
@@ -429,7 +438,7 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def _fetch_urllib(self, url, chunk_size=65536, retries=5):
         """Fetch a URL using urllib, with retries on transient errors and progress reporting."""
-        save_file = self.stage.save_filename
+        save_file = self._stage.save_filename
         part_file = save_file + ".part"
 
         request = urllib.request.Request(
@@ -479,9 +488,9 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_curl(self, url, config_args=[]):
         save_file = None
         partial_file = None
-        if self.stage.save_filename:
-            save_file = self.stage.save_filename
-            partial_file = self.stage.save_filename + ".part"
+        if self._stage.save_filename:
+            save_file = self._stage.save_filename
+            partial_file = self._stage.save_filename + ".part"
         tty.verbose(f"Fetching {url}")
         if partial_file:
             save_args = [
@@ -509,7 +518,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
-        with working_dir(self.stage.path):
+        with working_dir(self._stage.path):
             headers = curl(*curl_args, output=str, fail_on_error=False)
 
         if curl.returncode != 0:
@@ -534,7 +543,7 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        return self.stage.archive_file
+        return self._stage.archive_file
 
     @property
     def cachable(self):
@@ -545,12 +554,12 @@ class URLFetchStrategy(FetchStrategy):
         if not self.expand_archive:
             tty.debug(
                 "Staging unexpanded archive {0} in {1}".format(
-                    self.archive_file, self.stage.source_path
+                    self.archive_file, self._stage.source_path
                 )
             )
-            if not self.stage.expanded:
-                mkdirp(self.stage.source_path)
-            dest = os.path.join(self.stage.source_path, os.path.basename(self.archive_file))
+            if not self._stage.expanded:
+                mkdirp(self._stage.source_path)
+            dest = os.path.join(self._stage.source_path, os.path.basename(self.archive_file))
             shutil.move(self.archive_file, dest)
             return
 
@@ -565,8 +574,8 @@ class URLFetchStrategy(FetchStrategy):
         if not self.extension:
             self.extension = spack.llnl.url.determine_url_file_extension(self.url)
 
-        if self.stage.expanded:
-            tty.debug("Source already staged to %s" % self.stage.source_path)
+        if self._stage.expanded:
+            tty.debug("Source already staged to %s" % self._stage.source_path)
             return
 
         decompress = decompressor_for(self.archive_file, self.extension)
@@ -606,8 +615,8 @@ class URLFetchStrategy(FetchStrategy):
             )
 
         # Remove everything but the archive from the stage
-        for filename in os.listdir(self.stage.path):
-            abspath = os.path.join(self.stage.path, filename)
+        for filename in os.listdir(self._stage.path):
+            abspath = os.path.join(self._stage.path, filename)
             if abspath != self.archive_file:
                 shutil.rmtree(abspath, ignore_errors=True)
 
@@ -634,7 +643,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             raise NoCacheError(f"No cache of {path}")
 
         # remove old symlink if one is there.
-        filename = self.stage.save_filename
+        filename = self._stage.save_filename
         if os.path.lexists(filename):
             os.remove(filename)
 
@@ -662,7 +671,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        file = self.stage.save_filename
+        file = self._stage.save_filename
 
         if os.path.lexists(file):
             os.remove(file)
@@ -716,11 +725,11 @@ class VCSFetchStrategy(FetchStrategy):
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
         assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
-        assert self.stage.source_path.startswith(self.stage.path)
+        assert self._stage.source_path.startswith(self._stage.path)
         # We need to prepend this dir name to every entry of the tarfile
-        top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
+        top_level_dir = PurePath(self._stage.srcdir or os.path.basename(self._stage.source_path))
 
-        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(
+        with working_dir(self._stage.source_path), spack.util.archive.gzip_compressed_tarfile(
             destination
         ) as (tar, _, _):
             spack.util.archive.reproducible_tarfile_from_prefix(
@@ -777,7 +786,7 @@ class GoFetchStrategy(VCSFetchStrategy):
     def fetch(self):
         tty.debug("Getting go resource: {0}".format(self.url))
 
-        with working_dir(self.stage.path):
+        with working_dir(self._stage.path):
             try:
                 os.mkdir("go")
             except OSError:
@@ -794,12 +803,12 @@ class GoFetchStrategy(VCSFetchStrategy):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
         # Move the directory to the well-known stage source path
-        repo_root = _ensure_one_stage_entry(self.stage.path)
-        shutil.move(repo_root, self.stage.source_path)
+        repo_root = _ensure_one_stage_entry(self._stage.path)
+        shutil.move(repo_root, self._stage.source_path)
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             self.go("clean")
 
     def __str__(self):
@@ -931,8 +940,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug(f"Already fetched {self.stage.source_path}")
+        if self._stage.expanded:
+            tty.debug(f"Already fetched {self._stage.source_path}")
             return
 
         self._clone_src()
@@ -961,7 +970,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     def _clone_src(self) -> None:
         """Clone a repository to a path using git."""
         # Default to spack source path
-        dest = self.stage.source_path
+        dest = self._stage.source_path
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         depth = None if self.get_full_repo else 1
@@ -992,12 +1001,12 @@ class GitFetchStrategy(VCSFetchStrategy):
                 spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
 
             if self.stage:
-                self.stage.srcdir = repo_name
+                self._stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)
         return
 
     def submodule_operations(self):
-        dest = self.stage.source_path
+        dest = self._stage.source_path
         git = self.git
 
         if self.submodules_delete:
@@ -1032,7 +1041,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             co_args = ["checkout", "."]
             clean_args = ["clean", "-f"]
             if spack.config.get("config:debug"):
@@ -1120,8 +1129,8 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self._stage.expanded:
+            tty.debug("Already fetched {0}".format(self._stage.source_path))
             return
 
         tty.debug("Checking out CVS repository: {0}".format(self.url))
@@ -1138,12 +1147,12 @@ class CvsFetchStrategy(VCSFetchStrategy):
             self.cvs(*args)
             # Rename repo
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self._stage.srcdir = repo_name
+            shutil.move(repo_name, self._stage.source_path)
 
     def _remove_untracked_files(self):
         """Removes untracked files in a CVS repository."""
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             status = self.cvs("-qn", "update", output=str)
             for line in status.split("\n"):
                 if re.match(r"^[?]", line):
@@ -1157,7 +1166,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             self.cvs("update", "-C", ".")
 
     def __str__(self):
@@ -1213,8 +1222,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self._stage.expanded:
+            tty.debug("Already fetched {0}".format(self._stage.source_path))
             return
 
         tty.debug("Checking out subversion repository: {0}".format(self.url))
@@ -1227,12 +1236,12 @@ class SvnFetchStrategy(VCSFetchStrategy):
         with temp_cwd():
             self.svn(*args)
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self._stage.srcdir = repo_name
+            shutil.move(repo_name, self._stage.source_path)
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             status = self.svn("status", "--no-ignore", output=str)
             self.svn("status", "--no-ignore")
             for line in status.split("\n"):
@@ -1250,7 +1259,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
+        with working_dir(self._stage.source_path):
             self.svn("revert", ".", "-R")
 
     def __str__(self):
@@ -1322,8 +1331,8 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self._stage.expanded:
+            tty.debug("Already fetched {0}".format(self._stage.source_path))
             return
 
         args = []
@@ -1344,16 +1353,16 @@ class HgFetchStrategy(VCSFetchStrategy):
         with temp_cwd():
             self.hg(*args)
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self._stage.srcdir = repo_name
+            shutil.move(repo_name, self._stage.source_path)
 
     def archive(self, destination):
         super().archive(destination, exclude=".hg")
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.path):
-            source_path = self.stage.source_path
+        with working_dir(self._stage.path):
+            source_path = self._stage.source_path
             scrubbed = "scrubbed-source-tmp"
 
             args = ["clone"]
@@ -1431,7 +1440,7 @@ class FetchAndVerifyExpandedFile(URLFetchStrategy):
         super().expand()
 
         # Ensure a single patch file.
-        src_dir = self.stage.source_path
+        src_dir = self._stage.source_path
         files = os.listdir(src_dir)
 
         if len(files) != 1:
