@@ -581,13 +581,6 @@ def worker_function(
             except Exception:
                 pass  # don't fail the build just because log compression failed
 
-        # Remove the uncompressed log file from the stage dir on successful install.
-        if not keep_stage:
-            try:
-                os.unlink(log_path)
-            except OSError:
-                pass
-
     sys.exit(exit_code)
 
 
@@ -1956,18 +1949,21 @@ class ReportData:
         record.start()
         self.build_records[spec.dag_hash()] = record
 
-    def finish_record(self, spec: spack.spec.Spec, exitcode: int) -> None:
+    def finish_record(
+        self, spec: spack.spec.Spec, exitcode: int, log_path: Optional[str] = None
+    ) -> None:
         """Mark the InstallRecord for a spec as succeeded or failed."""
         record = self.build_records.get(spec.dag_hash())
         if record is None or spec.external:
             return
         if exitcode == 0:
-            record.succeed()
+            record.succeed(log_path)
         else:
             record.fail(
                 spack.error.InstallError(
                     f"Installation of {spec.name} failed; see log for details"
-                )
+                ),
+                log_path,
             )
 
     def finalize(
@@ -2016,7 +2012,9 @@ class NullReportData(ReportData):
     def start_record(self, spec: spack.spec.Spec) -> None:
         pass
 
-    def finish_record(self, spec: spack.spec.Spec, exitcode: int) -> None:
+    def finish_record(
+        self, spec: spack.spec.Spec, exitcode: int, log_path: Optional[str] = None
+    ) -> None:
         pass
 
     def finalize(
@@ -2533,6 +2531,16 @@ class PackageInstaller:
         except Exception as e:
             spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
 
+        # Clean up temp log files now that reports have consumed them.
+        if not self.keep_stage:
+            for log_path in self.log_paths.values():
+                if log_path == os.devnull:
+                    continue
+                try:
+                    os.unlink(log_path)
+                except OSError:
+                    pass
+
         if failures:
             for s in failures:
                 build_info = self.build_status.builds[s.dag_hash()]
@@ -2563,7 +2571,7 @@ class PackageInstaller:
             build.cleanup(selector)
             exitcode = build.proc.exitcode
             assert exitcode is not None, "Finished build should have exit code set"
-            self.report_data.finish_record(build.spec, exitcode)
+            self.report_data.finish_record(build.spec, exitcode, build.log_path)
             if exitcode == 0:
                 # Add successful builds for database insertion (after a short delay)
                 database_actions.append(build)
