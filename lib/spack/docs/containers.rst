@@ -461,6 +461,33 @@ If finer tuning is needed, it can be obtained by adding the relevant metadata un
 
 A detailed description of the options available can be found in the :ref:`container_config_options` section.
 
+Excluding Build-only Groups From the Runtime Image
+"""""""""""""""""""""""""""""""""""""""""""""""""""
+
+When using :ref:`environment groups <environment-spec-groups>` to install a compiler separately from the rest of the software, the compiler would normally end up in the final container image because it is a root spec and ``spack gc`` never removes roots.
+The ``groups`` key under ``container`` lets you list only the groups that should survive into the runtime image.
+Groups not listed are removed before garbage collection, so their specs and any dependencies not needed by the runtime groups are pruned from the final layer.
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - group: compilers
+       specs: [gcc]
+     - group: packages
+       needs: [compilers]
+       specs: [zlib, hdf5]
+
+     container:
+       format: docker
+       images:
+         os: "ubuntu:22.04"
+         spack: develop
+       # Only 'packages' ends up in the runtime image; 'compilers' is dropped after the build.
+       groups: [packages]
+
+Under the hood, the generated recipe calls ``spack gc -y --drop-group compilers``, which treats the compiler group's roots as non-roots for garbage collection purposes.
+
 Setting Base Images
 ^^^^^^^^^^^^^^^^^^^
 
@@ -903,6 +930,10 @@ The tables below describe all the configuration options that are currently suppo
    * - ``labels``
      - Labels to tag the image
      - Pairs of key-value strings
+     - No
+   * - ``groups``
+     - Groups that should survive into the runtime image; groups not listed are dropped before garbage collection
+     - List of group names defined in the environment
      - No
 
 .. list-table:: Configuration options specific to Singularity
