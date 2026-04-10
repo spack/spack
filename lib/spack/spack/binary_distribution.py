@@ -2688,7 +2688,7 @@ class EtagIndexFetcherV2(IndexFetcher):
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.status == 304:
                 # Not modified; that means fresh.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
             raise FetchIndexError(f"Could not fetch index {url}", e) from e
@@ -2848,7 +2848,7 @@ class EtagIndexFetcher(IndexFetcher):
         try:
             response = self.urlopen(urllib.request.Request(manifest_url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.status == 304:
                 # The remote manifest has not been modified, i.e. the index we
                 # already have is the freshest there is.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)

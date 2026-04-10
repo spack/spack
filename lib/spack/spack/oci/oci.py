@@ -222,7 +222,7 @@ def blob_exists(
         with _urlopen(Request(url=ref.blob_url(digest), method="HEAD")) as response:
             return response.status == 200
     except urllib.error.HTTPError as e:
-        if e.getcode() == 404:
+        if e.status == 404:
             return False
         raise
 
