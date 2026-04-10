@@ -20,6 +20,7 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
+import codecs
 import fcntl
 import glob
 import io
@@ -2143,6 +2144,28 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
             pass
 
 
+class StdinReader:
+    """Helper class to do non-blocking, incremental decoding of stdin, stripping ANSI escape
+    sequences. The input is the backing file descriptor for stdin (instead of the TextIOWrapper) to
+    avoid double buffering issues: the event loop triggers when the fd is ready to read, and if we
+    do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
+    internally, which the event loop is not aware of, and user input doesn't come through."""
+
+    def __init__(self, fd: int) -> None:
+        self.fd = fd
+        #: Handle multi-byte UTF-8 characters
+        self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        #: For stripping out arrow and navigation keys
+        self.ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z~]")
+
+    def read(self) -> str:
+        try:
+            chars = self.decoder.decode(os.read(self.fd, 1024))
+            return self.ansi_escape_re.sub("", chars)
+        except OSError:
+            return ""
+
+
 class PackageInstaller:
 
     explicit: Set[str]
@@ -2275,7 +2298,9 @@ class PackageInstaller:
 
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[TerminalState] = None
+        stdin_reader: Optional[StdinReader] = None
         if sys.stdin.isatty():
+            stdin_reader = StdinReader(sys.stdin.fileno())
             terminal = TerminalState(
                 selector,
                 self.build_status,
@@ -2397,28 +2422,25 @@ class PackageInstaller:
                         child.proc.terminate()
                     self.pending_builds.clear()
 
-                if stdin_ready:
-                    try:
-                        char = sys.stdin.read(1)
-                    except OSError:
-                        continue
-                    overview = self.build_status.overview_mode
-                    if overview and self.build_status.search_mode:
-                        self.build_status.search_input(char)
-                    elif overview and char == "/":
-                        self.build_status.enter_search()
-                    elif char == "v" or char in ("q", "\x1b") and not overview:
-                        self.build_status.toggle()
-                    elif char == "n":
-                        self.build_status.next(1)
-                    elif char == "p" or char == "N":
-                        self.build_status.next(-1)
-                    elif char == "+":
-                        jobserver.increase_parallelism()
-                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
-                    elif char == "-":
-                        jobserver.decrease_parallelism()
-                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                if stdin_ready and stdin_reader is not None:
+                    for char in stdin_reader.read():
+                        overview = self.build_status.overview_mode
+                        if overview and self.build_status.search_mode:
+                            self.build_status.search_input(char)
+                        elif overview and char == "/":
+                            self.build_status.enter_search()
+                        elif char == "v" or char in ("q", "\x1b") and not overview:
+                            self.build_status.toggle()
+                        elif char == "n":
+                            self.build_status.next(1)
+                        elif char == "p" or char == "N":
+                            self.build_status.next(-1)
+                        elif char == "+":
+                            jobserver.increase_parallelism()
+                            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                        elif char == "-":
+                            jobserver.decrease_parallelism()
+                            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 # Insert into the database if we have any finished builds, and either the delay
                 # interval has passed, or we're done with all builds. The database save is not
