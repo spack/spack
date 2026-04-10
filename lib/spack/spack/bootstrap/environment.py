@@ -77,13 +77,11 @@ class BootstrapEnvironment(spack.environment.Environment):
         return cls.environment_root().joinpath("spack.yaml")
 
     @contextlib.contextmanager
-    def mirror_keys_enabled(self):
-        bootstrap_keys = spack.binary_distribution.get_keys(install=True, trust=True)
-        try:
+    def trust_bootstrap_mirror_keys(self):
+        with spack.util.gpg.gnupghome_override(os.path.join(root_path(), ".bootstrap-gpg")):
+            spack.binary_distribution.get_keys(install=True, trust=True)
             yield
-        finally:
-            if bootstrap_keys:
-                spack.util.gpg.untrust(False, *bootstrap_keys)
+
 
     def update_installations(self) -> None:
         """Update the installations of this environment."""
@@ -98,7 +96,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                with self.mirror_keys_enabled():
+                with self.trust_bootstrap_mirror_keys():
                     fetch_policy = (
                         "cache_only"
                         if not spack.config.get("bootstrap:dev:enable_source", False)
