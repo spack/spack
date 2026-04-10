@@ -4,7 +4,7 @@
 import copy
 import os
 import shutil
-import urllib
+import urllib.parse
 from typing import List, Optional
 
 import spack.vendor.ruamel.yaml

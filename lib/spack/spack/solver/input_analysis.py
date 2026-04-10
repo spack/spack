@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
 import collections
-from typing import Dict, List, NamedTuple, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Set, Tuple, Union
 
 import spack.vendor.archspec.cpu
+
+if TYPE_CHECKING:
+    import spack.solver.asp
 
 import spack.binary_distribution
 import spack.concretize

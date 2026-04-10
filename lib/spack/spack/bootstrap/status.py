@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Query the status of bootstrapping on this machine"""
 import sys
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
 
 import spack.util.executable
+
+if TYPE_CHECKING:
+    import spack.spec
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration

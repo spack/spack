@@ -18,9 +18,12 @@ import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 import spack.config
+
+if TYPE_CHECKING:
+    import spack.package_base
 import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.schema

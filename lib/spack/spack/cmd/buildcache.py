@@ -8,7 +8,10 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    import spack.llnl.util.tty.colify  # noqa: F811
 
 import spack.binary_distribution
 import spack.cmd
