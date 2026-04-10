@@ -22,9 +22,9 @@ set -o noclobber \
 
 # Install the software, remove unnecessary deps
 {% if depfile %}
-RUN cd {{ paths.environment }} && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
+RUN cd {{ paths.environment }} && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && {{ gc_command }}
 {% else %}
-RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
+RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && {{ gc_command }}
 {% endif %}
 {% if strip %}
 

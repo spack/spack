@@ -6,6 +6,7 @@ import re
 import pytest
 
 import spack.container.writers as writers
+import spack.error
 
 
 def test_manifest(minimal_configuration):
@@ -144,3 +145,52 @@ def test_using_single_quotes_in_dockerfiles(minimal_configuration):
     manifest_in_docker = writers.create(minimal_configuration).manifest
     assert not re.search(r"echo\s*\"", manifest_in_docker, flags=re.MULTILINE)
     assert re.search(r"echo\s*'", manifest_in_docker)
+
+
+def test_gc_command_default(minimal_configuration):
+    """Tests the default spack gc command, if no groups are specified."""
+    writer = writers.create(minimal_configuration)
+    assert writer.gc_command == "spack gc -y"
+
+
+def test_gc_command_with_runtime_groups(minimal_configuration):
+    """Tests that with groups specified, only those groups are not dropped."""
+    minimal_configuration["spack"]["specs"] = [
+        {"group": "compilers", "specs": ["gcc"]},
+        {"group": "packages", "specs": ["zlib"]},
+    ]
+    minimal_configuration["spack"]["container"]["groups"] = ["packages"]
+    writer = writers.create(minimal_configuration)
+    assert writer.gc_command == "spack gc -y --drop-group compilers"
+
+
+def test_gc_command_multiple_drop_groups(minimal_configuration):
+    """Tests that we drop multiple groups when needed."""
+    minimal_configuration["spack"]["specs"] = [
+        {"group": "compilers", "specs": ["gcc"]},
+        {"group": "tools", "specs": ["cmake"]},
+        {"group": "packages", "specs": ["zlib"]},
+    ]
+    minimal_configuration["spack"]["container"]["groups"] = ["packages"]
+    writer = writers.create(minimal_configuration)
+    # drop_groups is sorted, so compilers before tools
+    assert writer.gc_command == "spack gc -y --drop-group compilers --drop-group tools"
+
+
+def test_gc_command_all_groups_are_runtime(minimal_configuration):
+    """Tests that if we explicitly specify all groups, we get the default `spack gc` command."""
+    minimal_configuration["spack"]["specs"] = [{"group": "tools", "specs": ["cmake"]}]
+    minimal_configuration["spack"]["container"]["groups"] = ["tools"]
+    writer = writers.create(minimal_configuration)
+    assert writer.gc_command == "spack gc -y"
+
+
+def test_gc_command_unknown_group_raises(minimal_configuration):
+    """Tests that a group name in container.groups that is not in the env raises SpackError."""
+    minimal_configuration["spack"]["specs"] = [
+        {"group": "compilers", "specs": ["gcc"]},
+        {"group": "packages", "specs": ["zlib"]},
+    ]
+    minimal_configuration["spack"]["container"]["groups"] = ["packages", "typo"]
+    with pytest.raises(spack.error.SpackError, match="typo"):
+        _ = writers.create(minimal_configuration).gc_command

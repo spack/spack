@@ -1246,7 +1246,7 @@ _spack_find() {
 _spack_gc() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -E --except-any-environment -e --except-environment -b --keep-build-dependencies -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help -E --except-any-environment -e --except-environment -b --keep-build-dependencies --drop-group -y --yes-to-all"
     else
         _installed_packages
     fi

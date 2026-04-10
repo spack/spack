@@ -28,7 +28,7 @@ EOF
 {% else %}
   spack -e . install
 {% endif %}
-  spack gc -y
+  {{ gc_command }}
   spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh
 {% if strip %}
 

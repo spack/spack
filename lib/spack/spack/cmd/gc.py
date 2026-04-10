@@ -41,6 +41,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="do not remove installed build-only dependencies of roots\n"
         "(default is to keep only link & run dependencies)",
     )
+    subparser.add_argument(
+        "--drop-group",
+        metavar="GROUP",
+        action="append",
+        default=[],
+        help="treat specs in this group as non-roots for garbage collection\n"
+        "(can be repeated; requires an active environment)",
+    )
     spack.cmd.common.arguments.add_common_arguments(subparser, ["yes_to_all", "constraint"])
 
 
@@ -79,6 +87,18 @@ def gc(parser, args):
 
     active_env = ev.active_environment()
 
+    if args.drop_group:
+        if not active_env:
+            tty.die("--drop-group requires an active environment")
+        if args.except_environment or args.except_any_environment:
+            tty.die("--drop-group cannot be combined with -e/--except-environment or -E")
+        unknown_groups = set(args.drop_group) - active_env.manifest.groups()
+        if unknown_groups:
+            tty.die(
+                f"some groups are not defined in the environment '{active_env.name}': "
+                f"{', '.join(sorted(unknown_groups))}"
+            )
+
     # wrap the whole command with a read transaction to avoid multiple
     with spack.store.STORE.db.read_transaction():
         if args.except_environment or args.except_any_environment:
@@ -92,6 +112,13 @@ def gc(parser, args):
             root_hashes = set(spack.store.STORE.db.all_hashes())  # keep everything
             root_hashes -= set(active_env.all_hashes())  # except this env
             root_hashes |= {x.hash for x in active_env.concretized_roots}  # but keep its roots
+
+            # remove roots belonging to dropped groups so they can be pruned
+            for group in args.drop_group:
+                drop_hashes = {
+                    c.dag_hash() for _, c in active_env.concretized_specs_by(group=group)
+                }
+                root_hashes -= drop_hashes
         else:
             # consider all explicit specs roots (the default for db.unused_specs())
             root_hashes = None

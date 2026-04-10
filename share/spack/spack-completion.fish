@@ -1945,7 +1945,7 @@ complete -c spack -n '__fish_spack_using_command find' -l end-date -r -f -a end_
 complete -c spack -n '__fish_spack_using_command find' -l end-date -r -d 'latest date of installation [YYYY-MM-DD]'
 
 # spack gc
-set -g __fish_spack_optspecs_spack_gc h/help E/except-any-environment e/except-environment= b/keep-build-dependencies y/yes-to-all
+set -g __fish_spack_optspecs_spack_gc h/help E/except-any-environment e/except-environment= b/keep-build-dependencies drop-group= y/yes-to-all
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gc' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gc' -s h -l help -d 'show this help message and exit'
@@ -1955,6 +1955,8 @@ complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment 
 complete -c spack -n '__fish_spack_using_command gc' -s e -l except-environment -r -d 'remove everything unless needed by specified environment'
 complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -f -a keep_build_dependencies
 complete -c spack -n '__fish_spack_using_command gc' -s b -l keep-build-dependencies -d 'do not remove installed build-only dependencies of roots'
+complete -c spack -n '__fish_spack_using_command gc' -l drop-group -r -f -a drop_group
+complete -c spack -n '__fish_spack_using_command gc' -l drop-group -r -d 'treat specs in this group as non-roots for garbage collection'
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -f -a yes_to_all
 complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 

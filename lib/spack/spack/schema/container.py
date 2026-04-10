@@ -82,6 +82,8 @@ container_schema = {
         },
         "docker": {"type": "object", "additionalProperties": False, "default": {}},
         "depfile": {"type": "boolean", "default": False},
+        # Groups that should survive into the runtime image
+        "groups": {"type": "array", "items": {"type": "string"}},
     },
 }
 

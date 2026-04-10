@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.store
 import spack.traverse
 from spack.installer import PackageInstaller
 
@@ -165,3 +166,61 @@ def test_gc_except_specific_dir_env(
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")
+
+
+@pytest.mark.db
+def test_gc_drop_group(install_mockery, mock_fetch, mutable_mock_env_path, tmp_path: pathlib.Path):
+    """Tests that --drop-group removes the roots of the dropped group and their unique deps."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        """\
+spack:
+  specs:
+  - group: tools
+    specs:
+    - cmake
+  - group: apps
+    specs:
+    - libelf
+"""
+    )
+    e = ev.create("test_gc_drop_group", init_file=str(spack_yaml))
+    with e:
+        e.concretize()
+        e.install_all(fake=True)
+        e.write()
+        output = gc("-y", "--drop-group", "tools")
+
+    assert "Restricting garbage collection" in output
+    assert "Successfully uninstalled cmake" in output
+    assert not spack.store.STORE.db.query_local("cmake")
+    assert spack.store.STORE.db.query_local("libelf")
+
+
+@pytest.mark.db
+def test_gc_drop_group_requires_active_env(mutable_database):
+    """Tests that --drop-group fails without an active environment."""
+    output = gc("--drop-group", "tools", fail_on_error=False)
+    assert gc.returncode == 1
+    assert "--drop-group requires an active environment" in output
+
+
+@pytest.mark.db
+def test_gc_drop_group_unknown_group(mutable_mock_env_path):
+    """Tests that --drop-group fails when the group is not defined in the environment."""
+    e = ev.create("test_gc_bad_group")
+    with e:
+        add("cmake")
+        output = gc("--drop-group", "nonexistent", fail_on_error=False)
+    assert gc.returncode == 1
+    assert "nonexistent" in output
+
+
+@pytest.mark.db
+def test_gc_drop_group_incompatible_with_e(mutable_database, mutable_mock_env_path):
+    """Tests that --drop-group cannot be combined with -e."""
+    e = ev.create("test_gc_compat")
+    with e:
+        output = gc("--drop-group", "tools", "-e", "test_gc_compat", fail_on_error=False)
+    assert gc.returncode == 1
+    assert "--drop-group cannot be combined" in output

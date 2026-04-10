@@ -273,6 +273,30 @@ class PathContext(tengine.Context):
         return os_pkg_manager
 
     @tengine.context_property
+    def gc_command(self):
+        groups_to_keep = self.container_config.get("groups")
+        if groups_to_keep is None:
+            return "spack gc -y"
+
+        env_group_names = {
+            item["group"]
+            for item in self.config.get("specs", [])
+            if isinstance(item, dict) and "group" in item
+        }
+        unknown = set(groups_to_keep) - env_group_names
+        if unknown:
+            raise spack.error.SpackError(
+                f"container:groups references groups not defined in the environment: "
+                f"{', '.join(sorted(unknown))}"
+            )
+
+        drop_groups = sorted(env_group_names - set(groups_to_keep))
+        if not drop_groups:
+            return "spack gc -y"
+        flags = " ".join(f"--drop-group {g}" for g in drop_groups)
+        return f"spack gc -y {flags}"
+
+    @tengine.context_property
     def labels(self):
         return self.container_config.get("labels", {})
 
