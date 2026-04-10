@@ -11,6 +11,7 @@ import importlib
 import importlib.machinery
 import importlib.util
 import itertools
+import math
 import os
 import re
 import shutil
@@ -661,40 +662,36 @@ class RepoIndex:
 
         cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
 
-        # Compute which packages needs to be updated in the cache
-        index_mtime = self.cache.mtime(cache_filename)
+        with self.cache.read_transaction(cache_filename) as f:
+            # Get the mtime of the cache if it exists, of -inf.
+            index_mtime = os.fstat(f.fileno()).st_mtime if f is not None else -math.inf
 
-        index_existed = self.cache.init_entry(cache_filename)
-        if index_existed and allow_stale:
-            with self.cache.read_transaction(cache_filename) as f:
+            if f is not None and allow_stale:
+                # Cache exists and caller accepts stale data: skip the expensive modified_since.
                 indexer.read(f)
-            self.indexes[name] = indexer.index
-            return False
+                self.indexes[name] = indexer.index
+                return False
 
-        needs_update = self.checker.modified_since(index_mtime)
-        if index_existed and not needs_update:
-            # If the index exists and doesn't need an update, read it
-            with self.cache.read_transaction(cache_filename) as f:
+            needs_update = self.checker.modified_since(index_mtime)
+
+            if f is not None and not needs_update:
+                # Cache exists and is up to date.
                 indexer.read(f)
-            self.indexes[name] = indexer.index
-            return True
+                self.indexes[name] = indexer.index
+                return True
 
-        else:
-            # Otherwise update it and rewrite the cache file
-            with self.cache.write_transaction(cache_filename) as (old, new):
-                indexer.read(old) if old else indexer.create()
+        # Cache is missing or stale: acquire write lock and rebuild.
+        with self.cache.write_transaction(cache_filename) as (old, new):
+            old_mtime = os.fstat(old.fileno()).st_mtime if old is not None else -math.inf
+            # Re-check in case another writer updated the index while we waited for the lock.
+            if old_mtime != index_mtime:
+                needs_update = self.checker.modified_since(old_mtime)
+            indexer.read(old) if old is not None else indexer.create()
+            indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
+            indexer.write(new)
 
-                # Compute which packages needs to be updated **again** in case someone updated them
-                # while we waited for the lock
-                new_index_mtime = self.cache.mtime(cache_filename)
-                if new_index_mtime != index_mtime:
-                    needs_update = self.checker.modified_since(new_index_mtime)
-
-                indexer.update({f"{self.namespace}.{pkg_name}" for pkg_name in needs_update})
-                indexer.write(new)
-
-            self.indexes[name] = indexer.index
-            return True
+        self.indexes[name] = indexer.index
+        return True
 
 
 class RepoPath:

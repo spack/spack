@@ -48,7 +48,7 @@ def test_failed_write_and_read_cache_file(file_cache):
     assert os.listdir(file_cache.root) == [".lock"]
 
     # File does not exist
-    assert not file_cache.init_entry("test.yaml")
+    assert not os.path.exists(file_cache.cache_path("test.yaml"))
 
 
 def test_write_and_remove_cache_file(file_cache):
@@ -84,39 +84,37 @@ def test_write_and_remove_cache_file(file_cache):
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
-def test_cache_init_entry_fails(file_cache):
-    """Test init_entry failures."""
+def test_bad_cache_permissions(file_cache, request):
+    """Test that transactions raise CacheError on permission problems."""
     relpath = fs.join_path("test-dir", "read-only-file.txt")
     cachefile = file_cache.cache_path(relpath)
     fs.touchp(cachefile)
 
-    # Ensure directory causes exception
+    # A directory where a file is expected raises CacheError on read
     with pytest.raises(CacheError, match="not a file"):
-        file_cache.init_entry(os.path.dirname(relpath))
+        with file_cache.read_transaction(os.path.dirname(relpath)) as _:
+            pass
 
-    # Ensure non-readable file causes exception
+    # A directory where a file is expected raises CacheError on write
+    with pytest.raises(CacheError, match="not a file"):
+        with file_cache.write_transaction(os.path.dirname(relpath)) as _:
+            pass
+
+    # A non-readable file raises CacheError on read
     os.chmod(cachefile, 0o200)
+    request.addfinalizer(lambda c=cachefile: os.chmod(c, 0o600))
     with pytest.raises(CacheError, match="Cannot access cache file"):
-        file_cache.init_entry(relpath)
+        with file_cache.read_transaction(relpath) as _:
+            pass
 
-    # Ensure read-only parent causes exception
-    relpath = fs.join_path("test-dir", "another-file.txxt")
-    cachefile = file_cache.cache_path(relpath)
-    os.chmod(os.path.dirname(cachefile), 0o400)
-    with pytest.raises(CacheError, match="Cannot access cache dir"):
-        file_cache.init_entry(relpath)
-
-
-@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
-def test_cache_write_readonly_cache_fails(file_cache):
-    """Test writing a read-only cached file."""
-    filename = "read-only-file.txt"
-    path = file_cache.cache_path(filename)
-    fs.touch(path)
-    os.chmod(path, 0o400)
-
-    with pytest.raises(CacheError, match="Insufficient permissions to write"):
-        file_cache.write_transaction(filename)
+    # A read-only parent directory raises CacheError on write
+    relpath2 = fs.join_path("test-dir", "another-file.txxt")
+    parent = str(file_cache.cache_path(relpath2).parent)
+    os.chmod(parent, 0o400)
+    request.addfinalizer(lambda p=parent: os.chmod(p, 0o700))
+    with pytest.raises(CacheError):
+        with file_cache.write_transaction(relpath2) as _:
+            pass
 
 
 @pytest.mark.regression("31475")

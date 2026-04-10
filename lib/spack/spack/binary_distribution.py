@@ -188,13 +188,9 @@ class BinaryCacheIndex:
     def _init_local_index_cache(self):
         if not self._index_file_cache_initialized:
             cache_key = self._index_contents_key
-            self._index_file_cache.init_entry(cache_key)
-
-            cache_path = self._index_file_cache.cache_path(cache_key)
-
             self._local_index_cache = {}
-            if os.path.isfile(cache_path):
-                with self._index_file_cache.read_transaction(cache_key) as cache_file:
+            with self._index_file_cache.read_transaction(cache_key) as cache_file:
+                if cache_file is not None:
                     self._local_index_cache = json.load(cache_file)
 
             self._index_file_cache_initialized = True
@@ -231,17 +227,17 @@ class BinaryCacheIndex:
         with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
-            try:
-                with self._index_file_cache.read_transaction(cache_key) as f:
-                    if f is not None:
+            with self._index_file_cache.read_transaction(cache_key) as f:
+                if f is not None:
+                    try:
                         db._read_from_stream(f)
-            except spack.database.InvalidDatabaseVersionError as e:
-                tty.warn(
-                    "you need a newer Spack version to read the buildcache index for the "
-                    f"following v{mirror_metadata.version} mirror: '{mirror_metadata.url}'. "
-                    f"{e.database_version_message}"
-                )
-                return
+                    except spack.database.InvalidDatabaseVersionError as e:
+                        tty.warn(
+                            "you need a newer Spack version to read the buildcache index for the "
+                            f"following v{mirror_metadata.version} mirror: "
+                            f"'{mirror_metadata.url}'. {e.database_version_message}"
+                        )
+                        return
 
             spec_list = [
                 s
@@ -484,7 +480,6 @@ class BinaryCacheIndex:
         # Persist new index.json
         url_hash = compute_hash(str(mirror_metadata))
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        self._index_file_cache.init_entry(cache_key)
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             new.write(result.data)
 

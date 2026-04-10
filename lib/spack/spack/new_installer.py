@@ -1398,24 +1398,32 @@ class BuildStatus:
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
-        # Move cursor up to the start of the display area
+        # Move cursor up to the start of the display area assuming the same terminal width. If the
+        # terminal resized, lines may have wrapped, and we should've moved up further. We do not
+        # try to track that (would require keeping track of each line's width).
         if self.active_area_rows > 0:
             buffer.write(f"\033[{self.active_area_rows}A\r")
 
         if self.terminal_size_changed:
             self.terminal_size = self.get_terminal_size()
             self.terminal_size_changed = False
+            # After resize, active_area_rows is invalidated due to possible line wrapping. Set to
+            # 0 to force newlines instead of cursor movement.
+            self.active_area_rows = 0
         max_width, max_height = self.terminal_size
 
-        self.total_lines = 0
-        total_finished = len(self.finished_builds)
-
         # First flush the finished builds. These are "persisted" in terminal history.
-        for build in self.finished_builds:
-            self._render_build(build, buffer, now=now)
-        self.finished_builds.clear()
+        if self.finished_builds:
+            for build in self.finished_builds:
+                self._render_build(build, buffer, now=now)
+                self._println(buffer, force_newline=True)  # should scroll the terminal
+            self.finished_builds.clear()
+            # Finished builds can span multiple lines, overlapping our "active area", invalidating
+            # active_area_rows. Set to 0 to force newlines instead of cursor movement.
+            self.active_area_rows = 0
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+        self.total_lines = 0
 
         if not finalize:
             if self.color:
@@ -1461,6 +1469,7 @@ class BuildStatus:
                 self._println(buffer, f"{len_builds - i + 1} more...")
                 break
             self._render_build(build, buffer, max_width, now=now)
+            self._println(buffer)
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
@@ -1473,18 +1482,18 @@ class BuildStatus:
         self.stdout.flush()
 
         # Update the number of lines drawn for next time. It reflects the number of active builds.
-        self.active_area_rows = self.total_lines - total_finished
+        self.active_area_rows = self.total_lines
         self.dirty = False
 
         # Schedule next UI update
         self.next_update = now + SPINNER_INTERVAL / 2
 
-    def _println(self, buffer: io.StringIO, line: str = "") -> None:
+    def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""
         self.total_lines += 1
         if line:
             buffer.write(line)
-        if self.total_lines > self.active_area_rows:
+        if self.total_lines > self.active_area_rows or force_newline:
             buffer.write("\033[0m\033[K\n")  # reset, clear to EOL, newline
         else:
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
@@ -1515,7 +1524,6 @@ class BuildStatus:
                 if line_width > max_width:
                     break
             buffer.write(component)
-        self._println(buffer)
 
     def _generate_line_components(
         self, build_info: BuildInfo, static: bool = False, now: float = 0.0
