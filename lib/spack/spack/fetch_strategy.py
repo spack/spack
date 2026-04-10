@@ -530,7 +530,7 @@ class URLFetchStrategy(FetchStrategy):
         if save_file and (partial_file is not None):
             fs.rename(partial_file, save_file)
 
-    @property  # type: ignore # decorated properties unsupported in mypy
+    @property
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""

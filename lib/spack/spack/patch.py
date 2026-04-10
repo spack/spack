@@ -184,7 +184,7 @@ class FilePatch(Patch):
         abs_path: Optional[str] = None
         # At different times we call FilePatch on instances and classes
         pkg_cls = pkg if isinstance(pkg, type) else pkg.__class__
-        for cls in pkg_cls.__mro__:  # type: ignore
+        for cls in pkg_cls.__mro__:
             if not hasattr(cls, "module"):
                 # We've gone too far up the MRO
                 break

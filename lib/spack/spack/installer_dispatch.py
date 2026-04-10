@@ -54,9 +54,9 @@ def create_installer(
                 use_old_installer = True
                 break
     if use_old_installer:
-        from spack.installer import PackageInstaller  # type: ignore
+        from spack.installer import PackageInstaller
     else:
-        from spack.new_installer import PackageInstaller  # type: ignore
+        from spack.new_installer import PackageInstaller  # type: ignore[assignment]
 
     return PackageInstaller(
         packages,

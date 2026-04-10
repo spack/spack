@@ -181,7 +181,7 @@ def compiler_list(args):
     compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
     if not sys.stdout.isatty():
-        for c in sorted(compilers):  # type: ignore
+        for c in sorted(compilers):
             print(c.format("{name}@{version}"))
         return
 

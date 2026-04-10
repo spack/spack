@@ -9,7 +9,7 @@ import uuid
 from concurrent.futures import Future, as_completed
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, cast
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 import spack.binary_distribution
 import spack.error
@@ -230,7 +230,7 @@ def _prune_orphans(
     for manifest in manifests:
         cache_entry: Optional[URLBuildcacheEntry] = None
         try:
-            cache_entry = cast(URLBuildcacheEntry, read_fn(manifest))
+            cache_entry = read_fn(manifest)
             assert cache_entry.manifest is not None  # to satisfy type checker
             blob_to_manifest_mapping.update(
                 {

@@ -526,7 +526,7 @@ class Configuration:
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
-        return next(self.scopes.reversed_values())  # type: ignore
+        return next(self.scopes.reversed_values())
 
     @_config_mutator
     def push_scope_incremental(
@@ -1189,7 +1189,7 @@ for file scopes, or no extension for directory scopes (currently {ext})"
 
     def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
-        # enforced by type checking but those can always be # type: ignore'd
+        # enforced by type checking but those can always be type: ignore'd
         assert isinstance(
             parent_scope, ConfigScope
         ), f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"

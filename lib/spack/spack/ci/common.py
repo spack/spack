@@ -218,7 +218,7 @@ class CDashHandler:
         tty.debug(f"Using CDash build name ({env_build_name}) from the environment")
         return env_build_name
 
-    @property  # type: ignore
+    @property
     def build_stamp(self):
         """Returns the CDash build stamp.
 
@@ -236,7 +236,7 @@ class CDashHandler:
         tty.debug(f"Generated new build stamp ({build_stamp})")
         return build_stamp
 
-    @property  # type: ignore
+    @property
     @memoized
     def project_enc(self):
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")

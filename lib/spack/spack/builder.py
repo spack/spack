@@ -164,9 +164,9 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # with the same name is defined in the Package, it will override this definition
     # (when _ForwardToBaseBuilder is initialized)
     for method_name in (
-        base_cls.phases  # type: ignore
-        + package_methods(base_cls)  # type: ignore
-        + package_long_methods(base_cls)  # type: ignore
+        base_cls.phases  # type: ignore[union-attr]
+        + package_methods(base_cls)  # type: ignore[arg-type]
+        + package_long_methods(base_cls)  # type: ignore[arg-type]
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
         setattr(_ForwardToBaseBuilder, method_name, forward_method_to_getattr(method_name))
@@ -177,14 +177,14 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
 
         return __forward
 
-    for attribute_name in package_attributes(base_cls):  # type: ignore
+    for attribute_name in package_attributes(base_cls):  # type: ignore[arg-type]
         setattr(
             _ForwardToBaseBuilder,
             attribute_name,
             property(forward_property_to_getattr(attribute_name)),
         )
 
-    class Adapter(base_cls, metaclass=_PackageAdapterMeta):  # type: ignore
+    class Adapter(base_cls, metaclass=_PackageAdapterMeta):  # type: ignore[valid-type,misc]
         def __init__(self, pkg):
             # Deal with custom phases in packages here
             if hasattr(pkg, "phases"):
@@ -234,7 +234,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
 class BuilderMeta(
     spack.phase_callbacks.PhaseCallbacksMeta,
     spack.multimethod.MultiMethodMeta,
-    type(collections.abc.Sequence),  # type: ignore
+    type(collections.abc.Sequence),  # type: ignore[misc]
 ):
     pass
 
