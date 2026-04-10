@@ -103,7 +103,7 @@ CLEANUP_TIMEOUT = 2.0
 DATABASE_WRITE_INTERVAL = 5.0
 
 #: Size of the output buffer for child processes
-OUTPUT_BUFFER_SIZE = 4096
+OUTPUT_BUFFER_SIZE = 32768
 
 #: Suffix for temporary backup during overwrite install
 OVERWRITE_BACKUP_SUFFIX = ".old"
