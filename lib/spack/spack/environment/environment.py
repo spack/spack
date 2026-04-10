@@ -1986,7 +1986,7 @@ class Environment:
         }
 
         builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], **install_args
+            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
         )
 
         try:

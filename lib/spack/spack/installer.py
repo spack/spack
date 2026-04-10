@@ -925,7 +925,8 @@ class Task:
         self.request = request
 
         # Report for tracking install success/failure
-        self.record = spack.report.InstallRecord(self.pkg.spec)
+        record_cls = self.request.install_args.get("record_cls", spack.report.InstallRecord)
+        self.record = record_cls(self.pkg.spec)
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
@@ -1485,6 +1486,7 @@ class PackageInstaller:
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
+        create_reports: bool = False,
     ) -> None:
         """
         Arguments:
@@ -1510,6 +1512,7 @@ class PackageInstaller:
             concurrent_packages: Max packages to be built concurrently
             root_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
             dependencies_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
+            create_reports: whether to generate reports for each install
         """
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
@@ -1554,6 +1557,11 @@ class PackageInstaller:
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg in packages]
 
+        # When no reporter is configured, use NullInstallRecord to skip log file reads.
+        if not create_reports:
+            for br in self.build_requests:
+                br.install_args["record_cls"] = spack.report.NullInstallRecord
+
         # Priority queue of tasks
         self.build_pq: List[Tuple[Tuple[int, int], Task]] = []
 
@@ -1586,12 +1594,17 @@ class PackageInstaller:
         self.max_active_tasks = self.concurrent_packages
 
         # Reports on install success/failure
-        self.reports: Dict[str, spack.report.RequestRecord] = {}
-        for build_request in self.build_requests:
-            # Skip reporting for already installed specs
-            request_record = spack.report.RequestRecord(build_request.pkg.spec)
-            request_record.skip_installed()
-            self.reports[build_request.pkg_id] = request_record
+        if create_reports:
+            self.reports: Dict[str, spack.report.RequestRecord] = {}
+            for build_request in self.build_requests:
+                # Skip reporting for already installed specs
+                request_record = spack.report.RequestRecord(build_request.pkg.spec)
+                request_record.skip_installed()
+                self.reports[build_request.pkg_id] = request_record
+        else:
+            self.reports = {
+                br.pkg_id: spack.report.NullRequestRecord() for br in self.build_requests
+            }
 
     def __repr__(self) -> str:
         """Returns a formal representation of the package installer."""

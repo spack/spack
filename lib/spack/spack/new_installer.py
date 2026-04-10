@@ -1995,6 +1995,26 @@ class ReportData:
                 reports[root_hash].append_record(record)
 
 
+class NullReportData(ReportData):
+    """No-op drop-in for ReportData when no reporter is configured.
+
+    Avoids creating InstallRecords and reading log files on every completed build."""
+
+    def __init__(self) -> None:
+        pass
+
+    def start_record(self, spec: spack.spec.Spec) -> None:
+        pass
+
+    def finish_record(self, spec: spack.spec.Spec, exitcode: int) -> None:
+        pass
+
+    def finalize(
+        self, reports: Dict[str, spack.report.RequestRecord], build_graph: "BuildGraph"
+    ) -> None:
+        pass
+
+
 class TerminalState:
     """Manages terminal settings, stdin selector registration, and suspend/resume signals.
 
@@ -2172,6 +2192,7 @@ class PackageInstaller:
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
+        create_reports: bool = False,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -2261,10 +2282,13 @@ class PackageInstaller:
         else:
             self.capacity = concurrent_packages
 
-        #: The reports property is what the old installer has and used as public interface.
-        self.reports = {spec.dag_hash(): spack.report.RequestRecord(spec) for spec in specs}
-        #: Internal data collected for reports during installation.
-        self.report_data = ReportData(specs)
+        # The reports property is what the old installer has and used as public interface.
+        if create_reports:
+            self.reports = {spec.dag_hash(): spack.report.RequestRecord(spec) for spec in specs}
+            self.report_data = ReportData(specs)
+        else:
+            self.reports = {}
+            self.report_data = NullReportData()
 
     def install(self) -> None:
         self._installer()

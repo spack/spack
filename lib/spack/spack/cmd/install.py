@@ -441,7 +441,9 @@ def install_without_active_env(args, install_kwargs, reporter):
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
 
     try:
-        builder = spack.installer_dispatch.create_installer(installs, **install_kwargs)
+        builder = spack.installer_dispatch.create_installer(
+            installs, create_reports=reporter is not None, **install_kwargs
+        )
         builder.install()
     finally:
         if reporter:
