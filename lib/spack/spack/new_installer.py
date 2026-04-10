@@ -221,7 +221,7 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
                     if not data:  # EOF: exit the thread
                         return
                     os.write(file_w, data)
-                    if echo_on:
+                    if True or echo_on:
                         os.write(parent_w, data)
 
                 elif key.fd == control_r:
@@ -1086,6 +1086,7 @@ class BuildInfo:
         "control_w_conn",
         "log_path",
         "log_summary",
+        "phase_progress",
     )
 
     def __init__(
@@ -1110,6 +1111,7 @@ class BuildInfo:
         self.control_w_conn = control_w_conn
         self.log_path: Optional[str] = log_path
         self.log_summary: Optional[str] = None
+        self.phase_progress: Optional[str] = None
 
 
 class BuildStatus:
@@ -1318,6 +1320,7 @@ class BuildStatus:
         build_info = self.builds[build_id]
         build_info.state = state
         build_info.progress_percent = None
+        build_info.phase_progress = None
 
         if state in ("finished", "failed"):
             self.completed += 1
@@ -1354,6 +1357,13 @@ class BuildStatus:
         summary = buf.getvalue()
         if summary:
             build_info.log_summary = summary
+
+    def update_phase_progress(self, build_id: str, progress: str) -> None:
+        """Update the phase progress of a package and mark the display as dirty."""
+        build_info = self.builds[build_id]
+        if build_info.phase_progress != progress:
+            build_info.phase_progress = progress
+            self.dirty = True
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -1516,17 +1526,17 @@ class BuildStatus:
         self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0
     ) -> None:
         """Print a single build line to the buffer, truncating to max_width (if > 0)."""
-        line_width = 0
-        for component in self._generate_line_components(build_info, now=now):
+        self.line_width = 0
+        for component in self._generate_line_components(build_info, now=now, max_width=max_width):
             # ANSI escape sequence(s), does not contribute to width
             if not component.startswith("\033") and max_width > 0:
-                line_width += len(component)
-                if line_width > max_width:
+                self.line_width += len(component)
+                if self.line_width > max_width:
                     break
             buffer.write(component)
 
     def _generate_line_components(
-        self, build_info: BuildInfo, static: bool = False, now: float = 0.0
+        self, build_info: BuildInfo, static: bool = False, now: float = 0.0, max_width = 0
     ) -> Generator[str, None, None]:
         """Yield formatted line components for a package. Escape sequences are yielded as separate
         strings so they do not contribute to the line width."""
@@ -1587,6 +1597,15 @@ class BuildStatus:
                 yield f": {build_info.log_path}"
         else:
             yield f" {build_info.state}"
+
+        if build_info.phase_progress is not None and not static:
+            # Leave 10 characters for duration
+            remaining_width = max_width - self.line_width - 10
+            if(len(build_info.phase_progress) <= (remaining_width - 2)):
+                yield f": {build_info.phase_progress}"
+            else:
+                half_remaining_width = int((remaining_width - 7) / 2)
+                yield f": {build_info.phase_progress[:half_remaining_width] + " ... " + build_info.phase_progress[-half_remaining_width:]}"
 
         # Duration
         elapsed = (
@@ -2266,6 +2285,9 @@ class PackageInstaller:
         #: Internal data collected for reports during installation.
         self.report_data = ReportData(specs)
 
+        self.progress_regex = re.compile(r'(.*)\n(.*)', re.MULTILINE)
+        self.current_log_line = ""
+
     def install(self) -> None:
         self._installer()
 
@@ -2669,6 +2691,21 @@ class PackageInstaller:
             except KeyError:
                 pass
             return
+
+        # Build up last complete log file line
+        data_str = data.decode('utf-8', errors='ignore')
+        last_completed = None
+        matches = re.search(self.progress_regex, data_str)
+        if matches:
+            last_completed = self.current_log_line + matches.group(1)
+            self.current_log_line = matches.group(2)
+        else:
+            self.current_log_line = self.current_log_line + data_str
+
+        if last_completed:
+            self.build_status.update_phase_progress(
+                child_info.spec.dag_hash(), last_completed
+            )
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
