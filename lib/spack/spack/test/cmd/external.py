@@ -338,13 +338,15 @@ def test_failures_in_scanning_do_not_result_in_an_error(
         "cmake", output="echo cmake version 3.23.3", subdir=("second", "bin")
     )
 
-    # Remove access from the first directory executable
-    cmake_exe1.parent.chmod(0o600)
+    monkeypatch.setenv("PATH", f"{cmake_exe1.parent}{os.pathsep}{cmake_exe2.parent}")
 
-    value = os.pathsep.join([str(cmake_exe1.parent), str(cmake_exe2.parent)])
-    monkeypatch.setenv("PATH", value)
+    try:
+        # Remove access from the first directory executable
+        cmake_exe1.parent.chmod(0o600)
+        output = external("find", "cmake")
+    finally:
+        cmake_exe1.parent.chmod(0o700)
 
-    output = external("find", "cmake")
     assert external.returncode == 0
     assert "The following specs have been" in output
     assert "cmake" in output
