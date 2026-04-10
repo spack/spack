@@ -13,6 +13,7 @@ from typing import Iterable, List
 import spack.vendor.archspec.cpu
 
 import spack.binary_distribution
+import spack.config
 import spack.environment
 import spack.spec
 import spack.tengine
@@ -98,8 +99,13 @@ class BootstrapEnvironment(spack.environment.Environment):
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
                 with self.mirror_keys_enabled():
+                    fetch_policy = (
+                        "cache_only"
+                        if not spack.config.get("bootstrap:dev:enable_source", False)
+                        else "auto"
+                    )
                     self.install_all(
-                        fail_fast=True, root_policy="cache_only", dependencies_policy="cache_only"
+                        fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
                     )
                     self.write(regenerate=True)
 
