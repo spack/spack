@@ -6,7 +6,7 @@ import errno
 import functools
 import os
 import re
-from typing import List
+from typing import List, Optional
 
 import spack.error
 import spack.llnl.util.filesystem
@@ -15,13 +15,13 @@ import spack.util.executable
 import spack.version
 
 #: Executable instance for "gpg", initialized lazily
-GPG = None
+GPG: Optional[spack.util.executable.Executable] = None
 #: Executable instance for "gpgconf", initialized lazily
-GPGCONF = None
+GPGCONF: Optional[spack.util.executable.Executable] = None
 #: Socket directory required if a non default home directory is used
-SOCKET_DIR = None
+SOCKET_DIR: Optional[str] = None
 #: GNUPGHOME environment variable in the context of this Python module
-GNUPGHOME = None
+GNUPGHOME: Optional[str] = None
 
 
 def clear():
@@ -173,6 +173,7 @@ class SpackGPGError(spack.error.SpackError):
 @_autoinit
 def create(**kwargs):
     """Create a new key pair."""
+    assert GPG is not None
     r, w = os.pipe()
     with contextlib.closing(os.fdopen(r, "r")) as r:
         with contextlib.closing(os.fdopen(w, "w")) as w:
@@ -204,6 +205,7 @@ def signing_keys(*args) -> List[str]:
 @_autoinit
 def public_keys_to_fingerprint(*args):
     """Return the keys that can be used to verify binaries."""
+    assert GPG is not None
     output = GPG("--list-public-keys", "--with-colons", "--fingerprint", *args, output=str)
     return _parse_public_keys_output(output)
 
@@ -224,6 +226,7 @@ def export_keys(location, keys, secret=False):
         keys (list): keys to be exported
         secret (bool): whether to export secret keys or not
     """
+    assert GPG is not None
     if secret:
         GPG("--export-secret-keys", "--armor", "--output", location, *keys)
     else:
@@ -237,6 +240,7 @@ def trust(keyfile):
     Args:
         keyfile (str): file with the public key
     """
+    assert GPG is not None
     # Get the public keys we are about to import
     output = GPG("--with-colons", keyfile, output=str, error=str)
     keys = _get_unimported_public_keys(output)
@@ -267,6 +271,7 @@ def untrust(signing, *keys):
         signing (bool): if True deletes the secret keys
         *keys: keys to be deleted
     """
+    assert GPG is not None
     if signing:
         skeys = signing_keys(*keys)
         GPG("--batch", "--yes", "--delete-secret-keys", *skeys)
@@ -287,6 +292,7 @@ def sign(key, file, output, clearsign=False):
         clearsign (bool): if True wraps the document in an ASCII-armored
             signature, if False creates a detached signature
     """
+    assert GPG is not None
     signopt = "--clearsign" if clearsign else "--detach-sign"
     GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
@@ -302,6 +308,7 @@ def verify(signature, file=None, suppress_warnings=False):
         suppress_warnings (bool): whether or not to suppress warnings
             from GnuPG
     """
+    assert GPG is not None
     args = [signature]
     if file:
         args.append(file)
@@ -317,6 +324,7 @@ def list(trusted, signing):
         trusted (bool): if True list public keys
         signing (bool): if True list private keys
     """
+    assert GPG is not None
     if trusted:
         GPG("--list-public-keys")
 
@@ -347,6 +355,7 @@ def _verify_exe_or_raise(exe):
 def _gpgconf():
     exe = spack.util.executable.which("gpgconf", "gpg2conf", "gpgconf2")
     _verify_exe_or_raise(exe)
+    assert exe is not None
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     try:
