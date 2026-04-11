@@ -1129,7 +1129,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         process_command("reproducer", entrypoint_script, work_dir, run=autostart)
 
         inst_list.append("\nOnce on the tagged runner:\n\n")
-        inst_list.extent(
+        inst_list.extend(
             [
                 "    - Run the reproducer script",
                 f"       $ {work_dir}/reproducer.{platform_script_ext}",
