@@ -1107,7 +1107,8 @@ class DeprecatedProperty:
 
         if self.error_lvl == 1:
             warnings.warn(
-                f"accessing the '{self.name}' property of '{instance}', which is deprecated"
+                f"accessing the '{self.name}' property of '{instance}', which is deprecated",
+                stacklevel=2,
             )
         elif self.error_lvl == 2:
             raise AttributeError(f"cannot access the '{self.name}' attribute of '{instance}'")

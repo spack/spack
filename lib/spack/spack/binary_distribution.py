@@ -2131,10 +2131,10 @@ def install_root_node(
     """
     # Early termination
     if spec.external or not spec.concrete:
-        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
+        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()), stacklevel=2)
         return
     elif spec.installed and not force:
-        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
+        warnings.warn("Package for spec {0} already installed.".format(spec.format()), stacklevel=2)
         return
 
     tarball_stage = download_tarball(spec.build_spec, unsigned)

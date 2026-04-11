@@ -1003,7 +1003,7 @@ class PyclingoDriver:
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
-                warnings.warn(f"{header}, using the best configuration found so far")
+                warnings.warn(f"{header}, using the best configuration found so far", stacklevel=2)
                 handle.cancel()
 
             solve_result = handle.get()
@@ -3418,7 +3418,8 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
             rejected.add(c)
             warnings.warn(
                 f"cannot detect libc from {c}. The compiler will not be used "
-                f"during concretization."
+                f"during concretization.",
+                stacklevel=2,
             )
             continue
 

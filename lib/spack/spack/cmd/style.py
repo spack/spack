@@ -738,14 +738,14 @@ def _check_spec_strings(
             with open(path, "r", encoding="utf-8") as f:
                 # skip files that are likely too large to be user code or config
                 if os.fstat(f.fileno()).st_size > 1024 * 1024:
-                    warnings.warn(f"skipping {path}: too large.")
+                    warnings.warn(f"skipping {path}: too large.", stacklevel=2)
                     continue
                 if is_json_or_yaml:
                     _spec_str_json_and_yaml(path, spack.util.spack_yaml.load_config(f), handler)
                 elif is_python:
                     _spec_str_ast(path, ast.parse(f.read()), handler)
         except (OSError, spack.util.spack_yaml.SpackYAMLError, SyntaxError, ValueError):
-            warnings.warn(f"skipping {path}")
+            warnings.warn(f"skipping {path}", stacklevel=2)
             continue
 
 

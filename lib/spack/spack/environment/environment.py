@@ -2482,7 +2482,7 @@ class Environment:
                 "Note that versions of Spack older than {} may not be able to "
                 "use the updated configuration."
             )
-            warnings.warn(msg.format(self.name, self.name, ver))
+            warnings.warn(msg.format(self.name, self.name, ver), stacklevel=2)
 
     def _default_view_as_yaml(self):
         """This internal function assumes the default view is set"""

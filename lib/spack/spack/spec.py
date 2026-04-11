@@ -5351,7 +5351,8 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
                 parent_pkg = edge.parent.package
             except Exception as e:
                 warnings.warn(
-                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}"
+                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}",
+                    stacklevel=2,
                 )
                 continue
 
@@ -5372,7 +5373,8 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
                 child_pkg = edge.spec.package
             except Exception as e:
                 warnings.warn(
-                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}"
+                    f"cannot reconstruct virtual dependencies on {edge.parent.name}: {e}",
+                    stacklevel=2,
                 )
                 continue
             virtuals_provided[child_key].update(x.name for x in child_pkg.virtuals_provided)

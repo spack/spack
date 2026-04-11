@@ -52,7 +52,7 @@ class Platform:
     def target(self, name):
         name = str(name)
         if name in Platform.deprecated_names:
-            warnings.warn(f"target={name} is deprecated, use target={self.default} instead")
+            warnings.warn(f"target={name} is deprecated, use target={self.default} instead", stacklevel=2)
 
         if name in Platform.reserved_targets:
             name = self.default
@@ -73,7 +73,7 @@ class Platform:
 
     def operating_system(self, name):
         if name in Platform.deprecated_names:
-            warnings.warn(f"os={name} is deprecated, use os={self.default_os} instead")
+            warnings.warn(f"os={name} is deprecated, use os={self.default_os} instead", stacklevel=2)
 
         if name in Platform.reserved_oss:
             name = self.default_os

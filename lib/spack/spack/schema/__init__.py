@@ -60,7 +60,7 @@ def _deprecated_properties(validator, deprecated, instance, schema):
         if deprecations[name].error:
             errors.append(msg)
         else:
-            warnings.warn(msg)
+            warnings.warn(msg, stacklevel=2)
 
     if errors:
         yield jsonschema.ValidationError("\n".join(errors))

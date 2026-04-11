@@ -1449,7 +1449,7 @@ def complete_build_process(process: BuildProcess):
         timeout = process.timeout
         process.join(timeout=timeout)
         if process.is_alive():
-            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded", stacklevel=2)
             process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):

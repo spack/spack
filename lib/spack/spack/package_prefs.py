@@ -193,7 +193,8 @@ def get_package_dir_permissions(spec):
             warnings.warn(
                 "Directory {0} seems to be located on AFS. If you"
                 " encounter errors, try disabling the allow_sgid option"
-                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix)
+                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix),
+                stacklevel=2,
             )
     return perms
 

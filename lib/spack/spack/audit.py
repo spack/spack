@@ -1365,7 +1365,7 @@ def _test_detection_by_executable(pkgs, debug_log, error_cls):
     if not selected_pkgs:
         summary = "No detection test to run"
         details = [f'  "{p}" has no detection test' for p in pkgs]
-        warnings.warn("\n".join([summary] + details))
+        warnings.warn("\n".join([summary] + details), stacklevel=2)
         return errors
 
     for pkg_name in selected_pkgs:

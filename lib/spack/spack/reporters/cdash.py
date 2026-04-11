@@ -129,7 +129,7 @@ class CDash(Reporter):
             else self.base_buildname
         )
         if len(buildname) > 190:
-            warnings.warn("Build name exceeds CDash 190 character maximum and will be truncated.")
+            warnings.warn("Build name exceeds CDash 190 character maximum and will be truncated.", stacklevel=2)
             buildname = buildname[:190]
         return buildname
 

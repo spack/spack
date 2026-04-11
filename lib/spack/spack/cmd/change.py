@@ -53,9 +53,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def change(parser, args):
     if args.all and args.concrete_only:
-        warnings.warn("'spack change --all' argument is ignored with '--concrete-only'")
+        warnings.warn("'spack change --all' argument is ignored with '--concrete-only'", stacklevel=2)
     if args.list_name != "specs" and args.concrete_only:
-        warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
+        warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'", stacklevel=2)
 
     env = spack.cmd.require_active_env(cmd_name="change")
 

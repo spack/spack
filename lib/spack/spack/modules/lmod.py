@@ -117,7 +117,8 @@ class LmodConfiguration(BaseConfiguration):
                 if len(set(candidates[language])) > 1:
                     warnings.warn(
                         f"{spec.short_spec} uses more than one compiler, and might not fit the "
-                        f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler."
+                        f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler.",
+                        stacklevel=2,
                     )
                 break
 

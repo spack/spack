@@ -68,7 +68,8 @@ def compiler_from_entry(entry: dict, *, manifest_path: str) -> Optional[spack.sp
             + "\n\t".join(missing_paths)
             + f"\nfor {entry['name']}@{entry['version']}"
             + f"\nin {manifest_path}"
-            + "\nPlease report this issue"
+            + "\nPlease report this issue",
+            stacklevel=2,
         )
 
     try:
@@ -254,7 +255,8 @@ def read(path, apply_updates):
         except Exception:
             warnings.warn(
                 f"Could not add compilers from manifest: {path}"
-                "\nPlease reexecute with 'spack -d' and include the stack trace"
+                "\nPlease reexecute with 'spack -d' and include the stack trace",
+                stacklevel=2,
             )
             tty.debug(f"Include this\n{traceback.format_exc()}")
     if apply_updates:

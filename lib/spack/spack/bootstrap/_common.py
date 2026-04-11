@@ -103,10 +103,10 @@ def _try_import_from_store(
                     "unexpected error while trying to import module "
                     f'"{module}" from spec "{candidate_spec}" [error="{str(exc)}"]'
                 )
-                warnings.warn(msg)
+                warnings.warn(msg, stacklevel=2)
             else:
                 msg = "Spec {0} did not provide module {1}"
-                warnings.warn(msg.format(candidate_spec, module))
+                warnings.warn(msg.format(candidate_spec, module), stacklevel=2)
 
         sys.path = path_before
 

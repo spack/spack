@@ -301,7 +301,8 @@ class CompilerFactory:
             except Exception:
                 warnings.warn(
                     f"[{__name__}] cannot detect {pkg_name} from the "
-                    f"following paths: {', '.join(filtered_paths)}"
+                    f"following paths: {', '.join(filtered_paths)}",
+                    stacklevel=2,
                 )
                 continue
 

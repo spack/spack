@@ -51,7 +51,7 @@ def validate(configuration_file):
                 'the subsection "{0}" in "{1}" is not used when generating'
                 " container recipes and will be discarded"
             )
-            warnings.warn(msg.format(subsection, configuration_file))
+            warnings.warn(msg.format(subsection, configuration_file), stacklevel=2)
             env_dict.pop(subsection)
 
     # Set the default value of the concretization strategy to unify and
@@ -61,7 +61,8 @@ def validate(configuration_file):
         warnings.warn(
             '"concretizer:unify" is not set to "true", which means the '
             "generated image may contain different variants of the same "
-            'packages. Set to "true" to get a consistent set of packages.'
+            'packages. Set to "true" to get a consistent set of packages.',
+            stacklevel=2,
         )
 
     # Check if the install tree was explicitly set to a custom value and warn
@@ -72,7 +73,7 @@ def validate(configuration_file):
             'the "config:install_tree" attribute has been set explicitly '
             "and will be overridden in the container image"
         )
-        warnings.warn(msg)
+        warnings.warn(msg, stacklevel=2)
 
     # Likewise for the view
     environment_view = env_dict.get("view", None)
@@ -81,7 +82,7 @@ def validate(configuration_file):
             'the "view" attribute has been set explicitly '
             "and will be overridden in the container image"
         )
-        warnings.warn(msg)
+        warnings.warn(msg, stacklevel=2)
 
     spack.vendor.jsonschema.validate(config, schema=env.schema)
     return config

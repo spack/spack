@@ -263,7 +263,8 @@ class Finder:
             warnings.warn(
                 f"{pkg.name} must define 'determine_spec_details' in order"
                 f" for Spack to detect externally-provided instances"
-                f" of the package."
+                f" of the package.",
+                stacklevel=2,
             )
             return []
 
@@ -288,7 +289,8 @@ class Finder:
                 else:
                     details = f"[{e.__class__.__name__}: {e}]"
                 warnings.warn(
-                    f'error detecting "{pkg.name}" from prefix {candidate_path}: {details}'
+                    f'error detecting "{pkg.name}" from prefix {candidate_path}: {details}',
+                    stacklevel=2,
                 )
 
             if not specs:
@@ -306,7 +308,8 @@ class Finder:
                 if spec in resolved_specs:
                     prior_prefix = resolved_specs[spec]
                     warnings.warn(
-                        f'"{spec}" detected in "{prefix}" was already detected in "{prior_prefix}"'
+                        f'"{spec}" detected in "{prefix}" was already detected in "{prior_prefix}"',
+                        stacklevel=2,
                     )
                     continue
 
@@ -321,7 +324,7 @@ class Finder:
                         f'"{spec}" has been detected on the system but will '
                         f"not be added to packages.yaml [reason={str(e)}]"
                     )
-                    warnings.warn(msg)
+                    warnings.warn(msg, stacklevel=2)
                     continue
 
                 if not spec.external_path:

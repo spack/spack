@@ -1334,7 +1334,7 @@ class Repo:
                     if os.path.exists(patch.path):
                         fs.install(patch.path, path)
                     else:
-                        warnings.warn(f"Patch file did not exist: {patch.path}")
+                        warnings.warn(f"Patch file did not exist: {patch.path}", stacklevel=2)
 
         # Install the package.py file itself.
         fs.install(self.filename_for_package_name(spec.name), path)

@@ -348,7 +348,7 @@ class ExternalSpecsParser:
                 )
                 continue
             except ExternalSpecError as e:
-                warnings.warn(f"{e}{line_info}")
+                warnings.warn(f"{e}{line_info}", stacklevel=2)
                 continue
 
             package_exists = spack.repo.PATH.exists(node.name)
@@ -381,7 +381,8 @@ class ExternalSpecsParser:
                 warnings.warn(
                     f"Spack is trying attach a Python dependency to '{node}'. This feature is "
                     f"deprecated, and will be removed in v1.2. Please make the dependency "
-                    f"explicit in your configuration."
+                    f"explicit in your configuration.",
+                    stacklevel=2,
                 )
                 external_dict.setdefault("dependencies", []).append({"spec": "python"})
 
