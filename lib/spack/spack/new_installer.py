@@ -125,6 +125,14 @@ class DatabaseAction:
 
     def save_to_db(self, db: spack.database.Database) -> None: ...
 
+    def release_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+            self.prefix_lock = None
+
 
 class MarkExplicitAction(DatabaseAction):
     """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
@@ -2267,6 +2275,8 @@ class PackageInstaller:
         #: Internal data collected for reports during installation.
         self.report_data = ReportData(specs)
 
+        self.next_database_write = 0.0
+
     def install(self) -> None:
         self._installer()
 
@@ -2289,9 +2299,9 @@ class PackageInstaller:
         database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
         retained_read_locks: List[spack.util.lock.Lock] = []
-        next_database_write = 0.0
 
         failures: List[spack.spec.Spec] = []
+        finished_pids: List[int] = []
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
@@ -2326,7 +2336,7 @@ class PackageInstaller:
                     timeout = DATABASE_WRITE_INTERVAL
                 events = selector.select(timeout=timeout)
 
-                finished_pids = []
+                finished_pids.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -2356,40 +2366,10 @@ class PackageInstaller:
                         jobserver.maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
-                current_time = time.monotonic()
-                for pid in finished_pids:
-                    build = self.running_builds.pop(pid)
-                    self.capacity += 1
-                    jobserver.release()
-                    self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
-                    self._drain_child_output(build, selector)
-                    self._drain_child_state(build, selector)
-                    build.cleanup(selector)
-                    exitcode = build.proc.exitcode
-                    assert exitcode is not None, "Finished build should have exit code set"
-                    self.report_data.finish_record(build.spec, exitcode)
-                    if exitcode == 0:
-                        # Add successful builds for database insertion (after a short delay)
-                        database_actions.append(build)
-                        self.build_graph.enqueue_parents(
-                            build.spec.dag_hash(), self.pending_builds
-                        )
-                        next_database_write = current_time + DATABASE_WRITE_INTERVAL
-                        self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    elif exitcode == EXIT_STOPPED_AT_PHASE:
-                        # Partial build: neither failure nor success. Should not be persisted in
-                        # the database, but also not treated as a failure in the UI. Just release
-                        # locks and move on.
-                        if build.prefix_lock is not None:
-                            build.prefix_lock.release_write()
-                            build.prefix_lock = None
-                    elif not self.fail_fast or not failures:
-                        # In fail-fast mode, only record the first failure. Subsequent failures may
-                        # be a consequence of us terminating other builds, and should not be
-                        # reported as failures in the UI.
-                        failures.append(build.spec)
-                        self.build_status.update_state(build.spec.dag_hash(), "failed")
-                        self.build_status.parse_log_summary(build.spec.dag_hash())
+                if finished_pids:
+                    self._handle_finished_builds(
+                        finished_pids, selector, jobserver, database_actions, failures
+                    )
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -2428,7 +2408,7 @@ class PackageInstaller:
                 if (
                     database_actions
                     and (
-                        current_time >= next_database_write
+                        time.monotonic() >= self.next_database_write
                         or not (self.pending_builds or self.running_builds)
                     )
                     and self._save_to_db(database_actions, retained_read_locks)
@@ -2479,24 +2459,15 @@ class PackageInstaller:
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
             for child in self.running_builds.values():
-                try:
-                    if child.prefix_lock is not None:
-                        child.prefix_lock.release_write()
-                        child.prefix_lock = None
-                except Exception:
-                    pass
+                child.release_lock()
+
             for lock in retained_read_locks:
                 try:
                     lock.release_read()
                 except Exception:
                     pass
             for action in database_actions:
-                try:
-                    if action.prefix_lock is not None:
-                        action.prefix_lock.release_write()
-                        action.prefix_lock = None
-                except Exception:
-                    pass
+                action.release_lock()
 
             try:
                 self.build_status.overview_mode = True
@@ -2524,6 +2495,46 @@ class PackageInstaller:
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
+
+    def _handle_finished_builds(
+        self,
+        finished_pids: List[int],
+        selector: selectors.BaseSelector,
+        jobserver: JobServer,
+        database_actions: List[DatabaseAction],
+        failures: List[spack.spec.Spec],
+    ) -> None:
+        """Handle builds that finished since the last event loop iteration."""
+        current_time = time.monotonic()
+        for pid in finished_pids:
+            build = self.running_builds.pop(pid)
+            self.capacity += 1
+            jobserver.release()
+            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+            self._drain_child_output(build, selector)
+            self._drain_child_state(build, selector)
+            build.cleanup(selector)
+            exitcode = build.proc.exitcode
+            assert exitcode is not None, "Finished build should have exit code set"
+            self.report_data.finish_record(build.spec, exitcode)
+            if exitcode == 0:
+                # Add successful builds for database insertion (after a short delay)
+                database_actions.append(build)
+                self.build_graph.enqueue_parents(build.spec.dag_hash(), self.pending_builds)
+                self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
+                self.build_status.update_state(build.spec.dag_hash(), "finished")
+            elif exitcode == EXIT_STOPPED_AT_PHASE:
+                # Partial build: neither failure nor success. Should not be persisted in
+                # the database, but also not treated as a failure in the UI. Just release
+                # locks and move on.
+                build.release_lock()
+            elif not self.fail_fast or not failures:
+                # In fail-fast mode, only record the first failure. Subsequent failures may
+                # be a consequence of us terminating other builds, and should not be
+                # reported as failures in the UI.
+                failures.append(build.spec)
+                self.build_status.update_state(build.spec.dag_hash(), "failed")
+                self.build_status.parse_log_summary(build.spec.dag_hash())
 
     def _save_to_db(
         self,
