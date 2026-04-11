@@ -10,7 +10,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
 import spack.llnl.path
@@ -443,6 +443,4 @@ def _make_compiler_cache():
     return FileCompilerCache(spack.caches.MISC_CACHE)
 
 
-COMPILER_CACHE: CompilerCache = spack.llnl.util.lang.Singleton(  # type: ignore
-    _make_compiler_cache
-)
+COMPILER_CACHE = cast(CompilerCache, spack.llnl.util.lang.Singleton(_make_compiler_cache))

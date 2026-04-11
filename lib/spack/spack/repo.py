@@ -35,6 +35,7 @@ from typing import (
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 import spack
@@ -43,7 +44,6 @@ import spack.config
 import spack.error
 import spack.llnl.path
 import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
@@ -58,6 +58,7 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.filesystem import working_dir
+from spack.llnl.util.lang import Singleton, memoized
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -800,11 +801,11 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @spack.llnl.util.lang.memoized
+    @memoized
     def _all_package_names_set(self, include_virtuals) -> Set[str]:
         return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
 
-    @spack.llnl.util.lang.memoized
+    @memoized
     def _all_package_names(self, include_virtuals: bool) -> List[str]:
         """Return all unique package names in all repositories."""
         return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
@@ -1571,7 +1572,7 @@ class Repo:
 
     def marshal(self):
         cache = self._cache
-        if isinstance(cache, spack.llnl.util.lang.Singleton):
+        if isinstance(cache, Singleton):
             cache = cache.instance
         return self.root, cache, self.overrides
 
@@ -2101,9 +2102,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = spack.llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 
 
 # Add the finder to sys.meta_path

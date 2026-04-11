@@ -37,7 +37,7 @@ import sys
 import tempfile
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
 
 from spack.vendor import jsonschema
 
@@ -1559,7 +1559,7 @@ def create() -> Configuration:
 
 
 #: This is the singleton configuration instance for Spack.
-CONFIG: Configuration = lang.Singleton(create_incremental)  # type: ignore
+CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:

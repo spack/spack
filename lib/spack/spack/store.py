@@ -20,7 +20,7 @@ import os
 import pathlib
 import re
 import uuid
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import spack.config
 import spack.database
@@ -237,7 +237,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE: Store = spack.llnl.util.lang.Singleton(_create_global)  # type: ignore
+STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
 
 
 def reinitialize():
@@ -247,7 +247,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = spack.llnl.util.lang.Singleton(_create_global)
+    STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
 
     return token
 
