@@ -41,7 +41,7 @@ except ImportError:
 
 
 def _convert_to_msys_path(path: str) -> str:
-    """Convert Windows path to MSYS2/Cygwin format for Git for Windows tar.
+    """Convert Windows path to MSYS2 format for Git for Windows tar.
 
     Converts C:\\path\\to\\file or C:/path/to/file to /c/path/to/file
 
@@ -53,13 +53,10 @@ def _convert_to_msys_path(path: str) -> str:
     """
     if sys.platform != "win32":
         return path
-
     path = convert_to_posix_path(path)
-
     if len(path) >= 2 and path[1] == ':':
         drive = path[0].lower()
         return f"/{drive}{path[2:]}"
-
     return path
 
 
