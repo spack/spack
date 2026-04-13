@@ -569,9 +569,9 @@ class StreamWrapper:
             raise KeyError(self.sys_attr)
 
         self.saved_stream = getattr(sys, self.sys_attr)
-        self.saved_std_fd = self.saved_stream.fileno()
+        self.std_fd = self.saved_stream.fileno()
         self.saved_std_handle = kernel32.GetStdHandle(self.STD_HANDLE)
-        self.saved_stream_fd = os.dup(self.saved_std_fd)
+        self.saved_stream_fd = os.dup(self.std_fd)
         self.redirect_fd = None
 
     def redirect_stream(self, write_conn):
@@ -581,15 +581,14 @@ class StreamWrapper:
         redirect_h = write_conn.fileno()
         dup_redirect_h = dup_fh(redirect_h)
         os.set_handle_inheritable(redirect_h, True)
-        os.set_handle_inheritable(dup_redirect_h, True)
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
         kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
-        os.dup2(self.redirect_fd, self.saved_std_fd)
+        os.dup2(self.redirect_fd, self.std_fd)
         setattr(
             sys,
             self.sys_attr,
             os.fdopen(
-                self.saved_std_fd,
+                self.std_fd,
                 "w",
                 encoding="utf-8",
                 buffering=1,
@@ -619,7 +618,7 @@ class StreamWrapper:
                 # restore os handle
                 kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
                 # restore c fd
-                os.dup2(self.saved_stream_fd, self.saved_std_fd)
+                os.dup2(self.saved_stream_fd, self.std_fd)
                 # python level
                 setattr(sys, self.sys_attr, self.saved_stream)
         finally:
@@ -706,7 +705,6 @@ class winlog:
     ):
         force_echo = False
 
-        # Open both write and reading on logfile
         write_mode = "ab+" if append else "wb+"
         log_writer = open(logfile, mode=write_mode)
         try:
