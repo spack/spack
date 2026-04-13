@@ -2604,8 +2604,15 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = spack.vendor.archspec.cpu.TARGETS.get(spec.target.name)
+            target_name = spec.target.name
+            target = spack.vendor.archspec.cpu.TARGETS.get(target_name)
             if not target:
+                if spec.architecture.target_concrete:
+                    raise spack.error.SpecError(
+                        f"the target '{target_name}' in '{spec} is not a known target. "
+                        f"Run 'spack arch --known-targets' to see valid targets."
+                    )
+                # range/list constraint (contains ':' or ','): keep existing path
                 self.target_ranges(spec, None)
                 continue
 

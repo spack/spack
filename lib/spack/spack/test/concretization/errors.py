@@ -265,3 +265,14 @@ def test_package_py_driven_errors(
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)
     assert_actionable_error(exc_info, *expected_handles)
+
+
+@pytest.mark.regression("52209")
+def test_unknown_concrete_target_in_input_spec(mock_packages, mutable_config) -> None:
+    """A spec with an unknown concrete target should fail with a clear message naming the bad
+    target, rather than a confusing 'cannot satisfy constraint' solver error.
+    """
+    s = spack.spec.Spec("pkg-a target=not-a-real-uarch")
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one(s)
+    assert_actionable_error(exc_info, "not-a-real-uarch", "not a known target", "pkg-a")
