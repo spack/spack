@@ -37,6 +37,7 @@ spack:
     unify: true
     targets:
       granularity: generic
+      host_compatible: false
 
   mirrors::
 {% for mirror in bootstrap_mirrors %}
