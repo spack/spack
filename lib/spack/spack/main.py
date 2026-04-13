@@ -42,7 +42,6 @@ import spack.paths
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
@@ -848,17 +847,6 @@ def print_setup_info(*info):
         # instance are the highest-precedence.
         roots_val = ":".join(reversed(paths))
         shell_set("_sp_%s_roots" % name, roots_val)
-
-    # print environment module system if available. This can be expensive
-    # on clusters, so skip it if not needed.
-    if "modules" in info:
-        generic_arch = spack.vendor.archspec.cpu.host().family
-        module_spec = "environment-modules target={0}".format(generic_arch)
-        specs = spack.store.STORE.db.query(module_spec)
-        if specs:
-            shell_set("_sp_module_prefix", specs[-1].prefix)
-        else:
-            shell_set("_sp_module_prefix", "not_installed")
 
 
 def restore_macos_dyld_vars():
