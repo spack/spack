@@ -25,6 +25,7 @@ import sys
 import time
 from json import JSONDecoder
 from typing import (
+    IO,
     Any,
     Callable,
     Container,
@@ -814,24 +815,31 @@ class Database:
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
+
+        Does not do any locking.
+        """
+        with filename.open("r", encoding="utf-8") as f:
+            self._read_from_stream(f, reindex=reindex)
+
+    def _read_from_stream(self, stream: IO[str], *, reindex: bool = False) -> None:
+        """Fill database from a text stream, do not maintain old data.
         Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
+        source = getattr(stream, "name", None) or self._index_path
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
-            fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
+            fdata, _ = JSONDecoder().raw_decode(stream.read())
         except Exception as e:
-            raise CorruptDatabaseError(f"error parsing database at {filename}:", str(e)) from e
+            raise CorruptDatabaseError(f"error parsing database at {source}:", str(e)) from e
 
         if fdata is None:
             return
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(
-                    f"Spack database is corrupt: {msg}", str(self._index_path)
-                )
+                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", str(source))
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -853,7 +861,7 @@ class Database:
             return CorruptDatabaseError(
                 f"Invalid record in Spack database: hash: {hash_key}, cause: "
                 f"{type(error).__name__}: {error}",
-                str(self._index_path),
+                str(source),
             )
 
         # Build up the database in three passes:
@@ -963,8 +971,10 @@ class Database:
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if self._index_path.is_file():
-                    self._read_from_file(self._index_path, reindex=True)
+                with self._index_path.open("r", encoding="utf-8") as f:
+                    self._read_from_stream(f, reindex=True)
+            except FileNotFoundError:
+                pass
             except (CorruptDatabaseError, DatabaseNotReadableError):
                 self._data = {}
                 self._installed_prefixes = set()
@@ -1148,24 +1158,28 @@ class Database:
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if self._index_path.is_file():
+        try:
+            index_file = self._index_path.open("r", encoding="utf-8")
+        except FileNotFoundError:
+            if self.is_upstream:
+                tty.warn(f"upstream not found: {self._index_path}")
+            return
+
+        with index_file as f:
             current_verifier = ""
             if _use_uuid:
                 try:
-                    with self._verifier_path.open("r", encoding="utf-8") as f:
-                        current_verifier = f.read()
+                    with self._verifier_path.open("r", encoding="utf-8") as vf:
+                        current_verifier = vf.read()
                 except BaseException:
                     pass
             if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
             elif self._state_is_inconsistent:
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
                 self._state_is_inconsistent = False
-            return
-        elif self.is_upstream:
-            tty.warn(f"upstream not found: {self._index_path}")
 
     def _add(
         self,

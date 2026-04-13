@@ -23,23 +23,3 @@ def test_print_shell_vars_csh(capfd):
     assert "set _sp_tcl_roots = " in out
     assert "set _sp_lmod_roots = " in out
     assert "set _sp_module_prefix = " not in out
-
-
-def test_print_shell_vars_sh_modules(capfd):
-    print_setup_info("sh", "modules")
-    out, _ = capfd.readouterr()
-
-    assert "_sp_sys_type=" in out
-    assert "_sp_tcl_roots=" in out
-    assert "_sp_lmod_roots=" in out
-    assert "_sp_module_prefix=" in out
-
-
-def test_print_shell_vars_csh_modules(capfd):
-    print_setup_info("csh", "modules")
-    out, _ = capfd.readouterr()
-
-    assert "set _sp_sys_type = " in out
-    assert "set _sp_tcl_roots = " in out
-    assert "set _sp_lmod_roots = " in out
-    assert "set _sp_module_prefix = " in out

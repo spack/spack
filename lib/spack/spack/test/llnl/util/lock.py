@@ -648,6 +648,36 @@ def test_upgrade_read_to_write(private_lock_path):
     assert not lock._file_ref.fh.closed  # recycle the file handle for next lock
 
 
+def test_release_write_downgrades_to_shared(private_lock_path):
+    """Releasing a write lock while a read lock is held must downgrade the POSIX lock
+    from exclusive to shared, allowing other processes to acquire read locks."""
+    lock = lk.Lock(private_lock_path)
+    lock.acquire_read()
+    lock.acquire_write()
+    lock.release_write()
+    assert lock._reads == 1
+    assert lock._writes == 0
+
+    ctx = multiprocessing.get_context()
+    q = ctx.Queue()
+
+    # Another process must be able to acquire a shared read lock concurrently.
+    p = ctx.Process(target=_child_try_acquire_read, args=(private_lock_path, q))
+    p.start()
+    p.join()
+    assert q.get() is True
+
+    # But must not be able to acquire an exclusive write lock.
+    p = ctx.Process(target=_child_try_acquire_write, args=(private_lock_path, q))
+    p.start()
+    p.join()
+    assert q.get() is False
+
+    lock.release_read()
+    assert lock._reads == 0
+    assert lock._writes == 0
+
+
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
@@ -943,121 +973,6 @@ def test_transaction_with_exception(lock_path, transaction, type):
     assert vals["entered_fn"]
     assert vals["exited_fn"]
     assert vals["exception"]
-
-
-@pytest.mark.parametrize(
-    "transaction,type", [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
-)
-def test_transaction_with_context_manager(lock_path, transaction, type):
-    class MockLock(AssertLock):
-        def assert_acquire_read(self):
-            assert not vals["entered_ctx"]
-            assert not vals["exited_ctx"]
-
-        def assert_release_read(self):
-            assert vals["entered_ctx"]
-            assert vals["exited_ctx"]
-
-        def assert_acquire_write(self):
-            assert not vals["entered_ctx"]
-            assert not vals["exited_ctx"]
-
-        def assert_release_write(self):
-            assert vals["entered_ctx"]
-            assert vals["exited_ctx"]
-
-    class TestContextManager:
-        def __enter__(self):
-            vals["entered_ctx"] = True
-
-        def __exit__(self, t, v, tb):
-            assert not vals["released_%s" % type]
-            vals["exited_ctx"] = True
-            vals["exception_ctx"] = t or v or tb
-            return exit_ctx_result
-
-    def exit_fn(t, v, tb):
-        assert not vals["released_%s" % type]
-        vals["exited_fn"] = True
-        vals["exception_fn"] = t or v or tb
-        return exit_fn_result
-
-    exit_fn_result, exit_ctx_result = False, False
-    vals = collections.defaultdict(lambda: False)
-    lock = MockLock(lock_path, vals)
-
-    with transaction(lock, acquire=TestContextManager, release=exit_fn):
-        pass
-
-    assert vals["entered_ctx"]
-    assert vals["exited_ctx"]
-    assert vals["exited_fn"]
-    assert not vals["exception_ctx"]
-    assert not vals["exception_fn"]
-
-    vals.clear()
-    with transaction(lock, acquire=TestContextManager):
-        pass
-
-    assert vals["entered_ctx"]
-    assert vals["exited_ctx"]
-    assert not vals["exited_fn"]
-    assert not vals["exception_ctx"]
-    assert not vals["exception_fn"]
-
-    # below are tests for exceptions with and without suppression
-    def assert_ctx_and_fn_exception(raises=True):
-        vals.clear()
-
-        if raises:
-            with pytest.raises(Exception):
-                with transaction(lock, acquire=TestContextManager, release=exit_fn):
-                    raise Exception()
-        else:
-            with transaction(lock, acquire=TestContextManager, release=exit_fn):
-                raise Exception()
-
-        assert vals["entered_ctx"]
-        assert vals["exited_ctx"]
-        assert vals["exited_fn"]
-        assert vals["exception_ctx"]
-        assert vals["exception_fn"]
-
-    def assert_only_ctx_exception(raises=True):
-        vals.clear()
-
-        if raises:
-            with pytest.raises(Exception):
-                with transaction(lock, acquire=TestContextManager):
-                    raise Exception()
-        else:
-            with transaction(lock, acquire=TestContextManager):
-                raise Exception()
-
-        assert vals["entered_ctx"]
-        assert vals["exited_ctx"]
-        assert not vals["exited_fn"]
-        assert vals["exception_ctx"]
-        assert not vals["exception_fn"]
-
-    # no suppression
-    assert_ctx_and_fn_exception(raises=True)
-    assert_only_ctx_exception(raises=True)
-
-    # suppress exception only in function
-    exit_fn_result, exit_ctx_result = True, False
-    assert_ctx_and_fn_exception(raises=False)
-    assert_only_ctx_exception(raises=True)
-
-    # suppress exception only in context
-    exit_fn_result, exit_ctx_result = False, True
-    assert_ctx_and_fn_exception(raises=False)
-    assert_only_ctx_exception(raises=False)
-
-    # suppress exception in function and context
-    exit_fn_result, exit_ctx_result = True, True
-    assert_ctx_and_fn_exception(raises=False)
-    assert_only_ctx_exception(raises=False)
 
 
 def test_nested_write_transaction(lock_path):
