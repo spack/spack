@@ -2302,7 +2302,6 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -d '
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f -a width
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -d 'wrap width: auto-size to terminal by default; 0 for no wrap'
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
-complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -d 'number of jobs to parse log file (default: 1 for short logs, ncpus for long logs)'
 
 # spack logs
 set -g __fish_spack_optspecs_spack_logs h/help

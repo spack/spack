@@ -5,7 +5,7 @@
 import io
 import shutil
 import sys
-from typing import Optional, TextIO, Union
+from typing import TextIO, Union
 
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
@@ -13,15 +13,12 @@ from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser
 __all__ = ["parse_log_events", "make_log_context"]
 
 
-def parse_log_events(
-    stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None, profile: bool = False
-):
+def parse_log_events(stream: Union[str, TextIO], context: int = 6, profile: bool = False):
     """Extract interesting events from a log file as a list of LogEvent.
 
     Args:
         stream: build log name or file object
         context: lines of context to extract around each log event
-        jobs: number of jobs to parse with; default ncpus
         profile: print out profile information for parsing
 
     Returns:
@@ -37,7 +34,7 @@ def parse_log_events(
         parser = CTestLogParser(profile=profile)
         setattr(parse_log_events, "ctest_parser", parser)
 
-    result = parser.parse(stream, context, jobs)
+    result = parser.parse(stream, context)
     if profile:
         parser.print_timings()
     return result
