@@ -1047,6 +1047,8 @@ def _main(argv=None):
     )
     setup_main_options(args)
 
+    check_for_deprecated_user_scope()
+
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
     # ------------------------------------------------------------------------
@@ -1084,6 +1086,27 @@ def _main(argv=None):
 
     with bootstrap_context:
         return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+
+
+def check_for_deprecated_user_scope():
+    import spack.util.path
+
+    cfg = spack.config.CONFIG
+
+    def is_default(path):
+        resolved = spack.util.path.canonicalize_path(path)
+        test_for = spack.util.path.canonicalize_path("~/.spack/")
+        return resolved == test_for
+
+    for scope in cfg.scopes.values():
+        if scope.name == "backwards-compat" and hasattr(scope, "path") and is_default(scope.path):
+            sentinel = os.path.join(scope.path, ".suppress-deprecation-warning")
+            if os.path.exists(scope.path) and not os.path.exists(sentinel):
+                tty.warn(
+                    f"Spack detected (and is using) legacy user scope at {scope.path}"
+                    f"\n\tRun `touch {sentinel}`"
+                    "\n\tor remove this scope to avoid this warning"
+                )
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
