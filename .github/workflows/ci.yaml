@@ -59,7 +59,7 @@ jobs:
       #
   bootstrap:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
-    needs: [ prechecks, changes ]
+    needs: [ changes ]
     uses: ./.github/workflows/bootstrap.yml
     secrets: inherit
 

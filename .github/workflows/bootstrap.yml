@@ -211,7 +211,7 @@ jobs:
           python3.11 -m venv ~/platform-spack-311
           source ~/platform-spack-311/bin/activate
           pip install --upgrade pip clingo
-    - name: Bootstrap Spack development environment and run unit tests
+    - name: Bootstrap Spack development environment
       run: |
           source ~/platform-spack-311/bin/activate
           source share/spack/setup-env.sh
