@@ -76,8 +76,11 @@ The following table may help visualize where spack puts all the files it may gen
 +----------------+-----------+--------------------+------------+--------------------+
 
 .. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available
-.. [#wheretable-2] ``cache_home`` is modeled after `$XDG_CACHE_HOME <https://specifications.freedesktop.org/basedir/latest/>`_. Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out. Spack caches are intended to be longer-lived, so they live in ``state_home`` instead.
-.. [#wheretable-3] as discussed elsewhere in this section, user-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations. For the locations of other config scopes and how to write to them instead, see :ref:`configuration scopes <configuration-scopes>`.
+.. [#wheretable-2] ``cache_home`` is modeled after `$XDG_CACHE_HOME <https://specifications.freedesktop.org/basedir/latest/>`_.
+                   Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out.
+                   Spack caches are intended to be longer-lived, so they live in ``state_home`` instead.
+.. [#wheretable-3] as discussed elsewhere in this section, user-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
+                   For the locations of other config scopes and how to write to them instead, see :ref:`configuration scopes <configuration-scopes>`.
 
 Each of these variables are the *default* (fallback) for data in their category: more-specific data in that category may have config that overrides these defaults.
 For example while build stages would reasonably be placed in ``$cache_home``, Spack's default configuration sets ``config:build_stage`` to the user's tempdir.
