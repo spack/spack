@@ -1288,6 +1288,11 @@ class Environment:
         key = self._user_specs_key(group=group)
         return self.spec_lists[key]
 
+    def explicit_roots(self):
+        for x in self.concretized_roots:
+            if self.manifest.is_explicit(group=x.group):
+                yield x
+
     @property
     def dev_specs(self):
         dev_specs = {}
@@ -1979,10 +1984,10 @@ class Environment:
             *self._dev_specs_that_need_overwrite(),
         }
 
-        # Only environment roots are marked explicit
+        # Only environment roots in explicit groups are marked explicit
         install_args["explicit"] = {
             *install_args.get("explicit", ()),
-            *(s.dag_hash() for s in roots),
+            *(x.hash for x in self.explicit_roots()),
         }
 
         builder = spack.installer_dispatch.create_installer(
@@ -3158,6 +3163,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
         # Configuration overrides for each group
         self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
+        # Whether specs in each group are marked explicit
+        self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
         self._init_user_specs()
 
         self.changed = False
@@ -3181,6 +3188,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     self._user_specs[group] = []
                     self._groups[group] = tuple(item.get("needs", ()))
                     self._config_override[group] = item.get("override", None)
+                    self._explicit[group] = item.get("explicit", True)
 
                 if "matrix" in item:
                     # Short form if the group is composed of only one matrix
@@ -3192,6 +3200,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
         self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
+        self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
@@ -3235,6 +3244,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         group = self._ensure_group_exists(group)
         return self._groups[group]
 
+    def is_explicit(self, *, group: Optional[str] = None) -> bool:
+        """Returns whether specs in a group are marked explicit.
+
+        When False, specs in the group are installed as implicit dependencies
+        and are eligible for garbage collection once no other spec depends on them.
+        """
+        group = self._ensure_group_exists(group)
+        return self._explicit[group]
+
     def _ensure_group_exists(self, group: Optional[str]) -> str:
         group = DEFAULT_USER_SPEC_GROUP if group is None else group
         if group not in self._groups:
@@ -3277,6 +3295,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._groups[group] = tuple()
             self._config_override[group] = None
             self._user_specs[group] = []
+            self._explicit[group] = True
 
         return group_entry
 
