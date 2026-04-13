@@ -6,6 +6,7 @@ import io
 import os
 import pathlib
 import shutil
+import sys
 import tarfile
 from itertools import product
 
@@ -127,27 +128,45 @@ def test_file_type_check_does_not_advance_stream(tmp_path: pathlib.Path, ext):
         assert f.tell() == 0
 
 
-@pytest.mark.skipif(os.name != "nt", reason="MSYS path conversion only on Windows")
 class TestConvertToMsysPath:
     def test_windows_path_with_backslashes(self):
         result = compression._convert_to_msys_path("C:\\Users\\test\\file.tar")
-        assert result == "/c/Users/test/file.tar"
+        if sys.platform == "win32":
+            assert result == "/c/Users/test/file.tar"
+        else:
+            assert result == "C:\\Users\\test\\file.tar"
 
     def test_windows_path_with_forward_slashes(self):
         result = compression._convert_to_msys_path("C:/Users/test/file.tar")
-        assert result == "/c/Users/test/file.tar"
+        if sys.platform == "win32":
+            assert result == "/c/Users/test/file.tar"
+        else:
+            assert result == "C:/Users/test/file.tar"
 
     def test_different_drive_letters(self):
-        assert compression._convert_to_msys_path("D:\\data\\archive.tar.gz") == "/d/data/archive.tar.gz"
-        assert compression._convert_to_msys_path("E:/temp/file.tar") == "/e/temp/file.tar"
+        d_result = compression._convert_to_msys_path("D:\\data\\archive.tar.gz")
+        e_result = compression._convert_to_msys_path("E:/temp/file.tar")
+        if sys.platform == "win32":
+            assert d_result == "/d/data/archive.tar.gz"
+            assert e_result == "/e/temp/file.tar"
+        else:
+            assert d_result == "D:\\data\\archive.tar.gz"
+            assert e_result == "E:/temp/file.tar"
 
     def test_uppercase_drive_letter(self):
         result = compression._convert_to_msys_path("C:\\Path\\To\\File.tar")
-        assert result == "/c/Path/To/File.tar"
+        if sys.platform == "win32":
+            assert result == "/c/Path/To/File.tar"
+        else:
+            assert result == "C:\\Path\\To\\File.tar"
 
     def test_relative_path_without_drive(self):
         result = compression._convert_to_msys_path("relative/path/file.tar")
         assert result == "relative/path/file.tar"
+
+    def test_unix_style_absolute_path(self):
+        result = compression._convert_to_msys_path("/unix/path/file.tar")
+        assert result == "/unix/path/file.tar"
 
     def test_empty_string(self):
         result = compression._convert_to_msys_path("")
@@ -155,11 +174,7 @@ class TestConvertToMsysPath:
 
     def test_single_drive_letter(self):
         result = compression._convert_to_msys_path("C:")
-        assert result == "/c"
-
-
-@pytest.mark.skipif(os.name == "nt", reason="Test non-Windows behavior")
-def test_convert_to_msys_path_returns_unchanged_on_unix():
-    original = "/unix/style/path"
-    result = compression._convert_to_msys_path(original)
-    assert result == original
+        if sys.platform == "win32":
+            assert result == "/c"
+        else:
+            assert result == "C:"
