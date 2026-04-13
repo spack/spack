@@ -20,7 +20,7 @@ import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
-from spack.externals import ExternalSpecsParser, external_spec
+from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
 
@@ -259,25 +259,24 @@ class CompilerFactory:
         configuration: spack.config.Configuration, *, scope: Optional[str] = None
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
-        externals_dicts = []
         compiler_package_names = supported_compilers()
-        packages_yaml = configuration.get_config("packages", scope=scope)
-        for name, entry in packages_yaml.items():
-            if name not in compiler_package_names:
+        packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
+
+        init_external_dicts = extract_dicts_from_configuration(packages_yaml)
+        init_external_dicts = list(
+            x
+            for x in init_external_dicts
+            if spack.spec.Spec(x["spec"]).name in compiler_package_names
+        )
+
+        externals_dicts = []
+        for current in init_external_dicts:
+            if _EXTRA_ATTRIBUTES_KEY not in current:
+                header = f"The external spec '{current['spec']}' cannot be used as a compiler"
+                tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
                 continue
 
-            externals_config = entry.get("externals", None)
-            if not externals_config:
-                continue
-
-            for current in externals_config:
-                # If extra_attributes is not there don't use this entry as a compiler.
-                if _EXTRA_ATTRIBUTES_KEY not in current:
-                    header = f"The external spec '{current['spec']}' cannot be used as a compiler"
-                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
-                    continue
-
-                externals_dicts.append(current)
+            externals_dicts.append(current)
 
         external_parser = ExternalSpecsParser(externals_dicts)
         return external_parser.all_specs()

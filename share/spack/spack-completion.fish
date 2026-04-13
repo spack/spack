@@ -707,7 +707,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -735,11 +735,13 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r
 complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command buildcache push' -l private -d 'for a private mirror, include non-redistributable packages'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l group -r -f -a groups
+complete -c spack -n '__fish_spack_using_command buildcache push' -l group -r -d 'push only specs from the given environment group (can be specified multiple times, requires an active environment)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -767,6 +769,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t 
 complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command buildcache create' -l private -d 'for a private mirror, include non-redistributable packages'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l group -r -f -a groups
+complete -c spack -n '__fish_spack_using_command buildcache create' -l group -r -d 'push only specs from the given environment group (can be specified multiple times, requires an active environment)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command buildcache create' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 

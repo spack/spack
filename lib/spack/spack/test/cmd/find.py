@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import json
 import os
 import pathlib
@@ -16,6 +17,7 @@ import spack.environment as ev
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
@@ -213,6 +215,15 @@ def test_display_json_deps(database, capfd):
     spack.cmd.display_specs_as_json(specs + specs + specs, deps=True)
     spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
+
+
+@pytest.mark.regression("52219")
+def test_display_abstract_hash():
+    spec = spack.spec.Spec("/foobar")
+    out = io.StringIO()
+
+    spack.cmd.display_specs([spec], output=out)  # errors on failure
+    assert "/foobar" in out.getvalue()
 
 
 @pytest.mark.db

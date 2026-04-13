@@ -1027,6 +1027,16 @@ class ConcretizedRootInfo:
     def __hash__(self) -> int:
         return hash((self.root, self.hash, self.new, self.group))
 
+    @staticmethod
+    def from_info_dict(info_dict: Dict[str, str]) -> "ConcretizedRootInfo":
+        # Lockfile versions < 7 don't have the "group" attribute
+        return ConcretizedRootInfo(
+            root_spec=Spec(info_dict["spec"]),
+            root_hash=info_dict["hash"],
+            new=False,
+            group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
+        )
+
 
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
@@ -1062,10 +1072,8 @@ class Environment:
         self.included_concrete_env_root_dirs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
         self.included_concrete_spec_data: Dict[str, Dict[str, List[str]]] = {}
-        #: User specs from included environments from the last concretization
-        self.included_concretized_user_specs: Dict[str, List[Spec]] = {}
-        #: Roots from included environments with the last concretization, in order
-        self.included_concretized_order: Dict[str, List[str]] = {}
+        #: Roots from included environments from the last concretization, keyed by env path
+        self.included_concretized_roots: Dict[str, List[ConcretizedRootInfo]] = {}
         #: Concretized specs by hash from the included environments
         self.included_specs_by_hash: Dict[str, Dict[str, Spec]] = {}
 
@@ -1280,6 +1288,11 @@ class Environment:
         key = self._user_specs_key(group=group)
         return self.spec_lists[key]
 
+    def explicit_roots(self):
+        for x in self.concretized_roots:
+            if self.manifest.is_explicit(group=x.group):
+                yield x
+
     @property
     def dev_specs(self):
         dev_specs = {}
@@ -1322,8 +1335,7 @@ class Environment:
         self.specs_by_hash = {}  # concretized specs by hash
 
         self.included_concrete_spec_data = {}  # concretized specs from lockfile of included envs
-        self.included_concretized_order = {}  # root specs of the included envs, keyed by env path
-        self.included_concretized_user_specs = {}  # user specs from last concretize's included env
+        self.included_concretized_roots = {}  # root specs of the included envs, keyed by env path
         self.included_specs_by_hash = {}  # concretized specs by hash from the included envs
 
         self.invalidate_repository_cache()
@@ -1972,10 +1984,10 @@ class Environment:
             *self._dev_specs_that_need_overwrite(),
         }
 
-        # Only environment roots are marked explicit
+        # Only environment roots in explicit groups are marked explicit
         install_args["explicit"] = {
             *install_args.get("explicit", ()),
-            *(s.dag_hash() for s in roots),
+            *(x.hash for x in self.explicit_roots()),
         }
 
         builder = spack.installer_dispatch.create_installer(
@@ -2042,21 +2054,18 @@ class Environment:
 
     def concretized_specs_from_all_included_environments(self):
         seen = {(x.root, x.hash) for x in self.concretized_roots}
-        for included_env in self.included_concretized_user_specs:
+        for included_env in self.included_concretized_roots:
             yield from self.concretized_specs_from_included_environment(included_env, _seen=seen)
 
     def concretized_specs_from_included_environment(
         self, included_env: str, *, _seen: Optional[Set[Tuple[spack.spec.Spec, str]]] = None
     ):
         _seen = set() if _seen is None else _seen
-        for s, h in zip(
-            self.included_concretized_user_specs[included_env],
-            self.included_concretized_order[included_env],
-        ):
-            if (s, h) in _seen:
+        for x in self.included_concretized_roots[included_env]:
+            if (x.root, x.hash) in _seen:
                 continue
-            _seen.add((s, h))
-            yield s, self.included_specs_by_hash[included_env][h]
+            _seen.add((x.root, x.hash))
+            yield x.root, self.included_specs_by_hash[included_env][x.hash]
 
     def concrete_roots(self):
         """Same as concretized_specs, except it returns the list of concrete
@@ -2256,39 +2265,38 @@ class Environment:
         self._read_lockfile_dict(lockfile_dict)
         return lockfile_dict
 
-    def set_included_concretized_user_specs(
+    def _set_included_env_roots(
         self,
         env_name: str,
         env_info: Dict[str, Dict[str, Any]],
         included_json_specs_by_hash: Dict[str, Dict[str, Any]],
     ) -> Dict[str, Dict[str, Any]]:
-        """Sets all of the concretized user specs from included environments
-        to include those from nested included environments.
+        """Populates included_concretized_roots from included environment data,
+        including any transitively nested included environments.
 
         Args:
-           env_name: the name (technically the path) of the included environment
+           env_name: the path of the included environment
            env_info: included concrete environment data
            included_json_specs_by_hash: concrete spec data keyed by hash
 
         Returns: updated specs_by_hash
         """
-        self.included_concretized_order[env_name] = []
-        self.included_concretized_user_specs[env_name] = []
+        self.included_concretized_roots[env_name] = []
 
         def add_specs(name, info, specs_by_hash):
             # Add specs from the environment as well as any of its nested
             # environments.
             for root_info in info["roots"]:
-                self.included_concretized_order[name].append(root_info["hash"])
-                self.included_concretized_user_specs[name].append(Spec(root_info["spec"]))
+                self.included_concretized_roots[name].append(
+                    ConcretizedRootInfo.from_info_dict(root_info)
+                )
             if "concrete_specs" in info:
                 specs_by_hash.update(info["concrete_specs"])
 
             if lockfile_include_key in info:
                 for included_name, included_info in info[lockfile_include_key].items():
-                    if included_name not in self.included_concretized_order:
-                        self.included_concretized_order[included_name] = []
-                        self.included_concretized_user_specs[included_name] = []
+                    if included_name not in self.included_concretized_roots:
+                        self.included_concretized_roots[included_name] = []
                     add_specs(included_name, included_info, specs_by_hash)
 
         add_specs(env_name, env_info, included_json_specs_by_hash)
@@ -2298,22 +2306,10 @@ class Environment:
         """Read a lockfile dictionary into this environment."""
         self.specs_by_hash = {}
         self.included_specs_by_hash = {}
-        self.included_concretized_user_specs = {}
-        self.included_concretized_order = {}
+        self.included_concretized_roots = {}
 
         roots = d["roots"]
-        default_user_specs_group = DEFAULT_USER_SPEC_GROUP
-
-        self.concretized_roots = [
-            # Lockfile versions < 7 don't have the "group" attribute
-            ConcretizedRootInfo(
-                root_spec=Spec(r["spec"]),
-                root_hash=r["hash"],
-                new=False,
-                group=r.get("group", default_user_specs_group),
-            )
-            for r in roots
-        ]
+        self.concretized_roots = [ConcretizedRootInfo.from_info_dict(r) for r in roots]
 
         json_specs_by_hash = d["concrete_specs"]
         included_json_specs_by_hash = {}
@@ -2321,9 +2317,7 @@ class Environment:
         if lockfile_include_key in d:
             for env_name, env_info in d[lockfile_include_key].items():
                 included_json_specs_by_hash.update(
-                    self.set_included_concretized_user_specs(
-                        env_name, env_info, included_json_specs_by_hash
-                    )
+                    self._set_included_env_roots(env_name, env_info, included_json_specs_by_hash)
                 )
 
         current_lockfile_format = d["_meta"]["lockfile-version"]
@@ -2346,21 +2340,20 @@ class Environment:
             self.concretized_roots[idx].hash = spec_dag_hash
             self.specs_by_hash[spec_dag_hash] = first_seen[spec_dag_hash]
 
-        if any(self.included_concretized_order.values()):
+        if any(self.included_concretized_roots.values()):
             first_seen = {}
 
-            for env_name, concretized_order in self.included_concretized_order.items():
-                filtered_spec, self.included_concretized_order[env_name] = self._filter_specs(
-                    reader, included_json_specs_by_hash, concretized_order
+            for env_name, roots in self.included_concretized_roots.items():
+                order = [x.hash for x in roots]
+                filtered_spec, new_order = self._filter_specs(
+                    reader, included_json_specs_by_hash, order
                 )
                 first_seen.update(filtered_spec)
+                for idx, spec_dag_hash in enumerate(new_order):
+                    roots[idx].hash = spec_dag_hash
 
-            for env_path, spec_hashes in self.included_concretized_order.items():
-                self.included_specs_by_hash[env_path] = {}
-                for spec_dag_hash in spec_hashes:
-                    self.included_specs_by_hash[env_path].update(
-                        {spec_dag_hash: first_seen[spec_dag_hash]}
-                    )
+            for env_path, roots in self.included_concretized_roots.items():
+                self.included_specs_by_hash[env_path] = {x.hash: first_seen[x.hash] for x in roots}
 
     def _filter_specs(self, reader, json_specs_by_hash, order_concretized):
         # Track specs by their lockfile key.  Currently, spack uses the finest
@@ -3170,6 +3163,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
         # Configuration overrides for each group
         self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
+        # Whether specs in each group are marked explicit
+        self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
         self._init_user_specs()
 
         self.changed = False
@@ -3193,6 +3188,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     self._user_specs[group] = []
                     self._groups[group] = tuple(item.get("needs", ()))
                     self._config_override[group] = item.get("override", None)
+                    self._explicit[group] = item.get("explicit", True)
 
                 if "matrix" in item:
                     # Short form if the group is composed of only one matrix
@@ -3204,6 +3200,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
         self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
+        self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
@@ -3247,6 +3244,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         group = self._ensure_group_exists(group)
         return self._groups[group]
 
+    def is_explicit(self, *, group: Optional[str] = None) -> bool:
+        """Returns whether specs in a group are marked explicit.
+
+        When False, specs in the group are installed as implicit dependencies
+        and are eligible for garbage collection once no other spec depends on them.
+        """
+        group = self._ensure_group_exists(group)
+        return self._explicit[group]
+
     def _ensure_group_exists(self, group: Optional[str]) -> str:
         group = DEFAULT_USER_SPEC_GROUP if group is None else group
         if group not in self._groups:
@@ -3289,6 +3295,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._groups[group] = tuple()
             self._config_override[group] = None
             self._user_specs[group] = []
+            self._explicit[group] = True
 
         return group_entry
 

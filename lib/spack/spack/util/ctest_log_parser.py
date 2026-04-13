@@ -78,6 +78,8 @@ import time
 from contextlib import contextmanager
 from typing import List, Optional, TextIO, Tuple, Union
 
+import spack.config
+
 _error_matches = [
     "^FAIL: ",
     "^FATAL: ",
@@ -404,7 +406,7 @@ class CTestLogParser:
         lines = [line for line in stream]
 
         if jobs is None:
-            jobs = multiprocessing.cpu_count()
+            jobs = spack.config.get("config:build_jobs", 16)
 
         # single-thread small logs
         if len(lines) < 10 * jobs:

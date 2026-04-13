@@ -8,6 +8,7 @@ import io
 import os
 import pathlib
 import shutil
+import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
 
@@ -552,13 +553,16 @@ def test_env_install_include_concrete_env(
 
     test1_user_spec_hashes = [x.hash for x in test1.concretized_roots]
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
-    combined_included_roots = combined.included_concretized_order
 
     for spec in combined.all_specs():
         assert spec.installed
 
-    assert test1_user_spec_hashes == combined_included_roots[test1.path]
-    assert test2_user_spec_hashes == combined_included_roots[test2.path]
+    assert test1_user_spec_hashes == [
+        x.hash for x in combined.included_concretized_roots[test1.path]
+    ]
+    assert test2_user_spec_hashes == [
+        x.hash for x in combined.included_concretized_roots[test2.path]
+    ]
 
     mpileaks_hash = combined.concretized_roots[0].hash
     mpileaks = combined.specs_by_hash[mpileaks_hash]
@@ -2322,12 +2326,14 @@ def test_concretize_include_concrete_env():
 
     # Check the test1 environment includes mpileaks, while the combined environment does not
     assert Spec("mpileaks") in {x.root for x in test1.concretized_roots}
-    assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") not in {
+        x.root for x in combined.included_concretized_roots[test1.path]
+    }
 
     # If we update the combined environment, it will include mpileaks too
     combined.concretize()
     combined.write()
-    assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") in {x.root for x in combined.included_concretized_roots[test1.path]}
 
 
 def test_concretize_nested_include_concrete_envs():
@@ -2357,7 +2363,7 @@ def test_concretize_nested_include_concrete_envs():
         in lockfile_as_dict[ev.lockfile_include_key][test2.path][ev.lockfile_include_key]
     )
 
-    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
+    assert Spec("zlib") in {x.root for x in test3.included_concretized_roots[test1.path]}
 
 
 def test_concretize_nested_included_concrete():
@@ -2378,7 +2384,7 @@ def test_concretize_nested_included_concrete():
     test2.concretize()
     test2.write()
 
-    assert Spec("zlib") in test2.included_concretized_user_specs[test1.path]
+    assert Spec("zlib") in {x.root for x in test2.included_concretized_roots[test1.path]}
 
     # Modify/re-concretize test1 to replace zlib with mpileaks
     with test1:
@@ -2395,9 +2401,9 @@ def test_concretize_nested_included_concrete():
     test3.concretize()
     test3.write()
 
-    included_specs = test3.included_concretized_user_specs[test1.path]
-    assert len(included_specs) == 1
-    assert Spec("mpileaks") in included_specs
+    included_roots = test3.included_concretized_roots[test1.path]
+    assert len(included_roots) == 1
+    assert Spec("mpileaks") in {x.root for x in included_roots}
 
     # The last concretization of test4's included environments should have test2
     # with the original concretized test1 spec and test3 with the re-concretized
@@ -4900,3 +4906,42 @@ spack:
         e.write()
         assert len(e.user_specs) == 0
         assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
+def test_compiler_target_env(mock_packages, environment_from_manifest):
+    """Tests that Spack doesn't drop flag definitions on compilers
+    when a target is required in config.
+    """
+
+    cflags = "-Wall"
+    env = environment_from_manifest(
+        f"""\
+spack:
+  specs:
+  - libdwarf %c=gcc@12.100.100
+  packages:
+    all:
+      require:
+      - "target=x86_64_v3"
+    gcc:
+      externals:
+      - spec: gcc@12.100.100 languages:=c,c++
+        prefix: /fake
+        extra_attributes:
+          compilers:
+            c: /fake/bin/gcc
+            cxx: /fake/bin/g++
+          flags:
+            cflags: {cflags}
+      require: "gcc"
+"""
+    )
+
+    with env:
+        env.concretize()
+        libdwarf = env.concrete_roots()[0]
+        assert libdwarf.satisfies("cflags=-Wall")
+        # Sanity check: make sure the target we expect was applied to the
+        # compiler entry
+        assert libdwarf["c"].satisfies("gcc@12.100.100 languages:=c,c++ target=x86_64_v3")

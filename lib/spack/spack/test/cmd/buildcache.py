@@ -360,6 +360,21 @@ def test_buildcache_create_install(
     cache_entry.destroy()
 
 
+def _mock_uploader(tmp_path: pathlib.Path):
+    class DontUpload(spack.binary_distribution.Uploader):
+        def __init__(self):
+            super().__init__(
+                spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path)), False, False
+            )
+            self.pushed = []
+
+        def push(self, specs: List[spack.spec.Spec]):
+            self.pushed.extend(s.name for s in specs)
+            return [], []
+
+    return DontUpload()
+
+
 @pytest.mark.parametrize(
     "things_to_install,expected",
     [
@@ -411,18 +426,7 @@ def test_correct_specs_are_pushed(
     PackageInstaller([spec.package], explicit=True, fake=True).install()
     slash_hash = f"/{spec.dag_hash()}"
 
-    class DontUpload(spack.binary_distribution.Uploader):
-        def __init__(self):
-            super().__init__(
-                spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path)), False, False
-            )
-            self.pushed = []
-
-        def push(self, specs: List[spack.spec.Spec]):
-            self.pushed.extend(s.name for s in specs)
-            return [], []  # nothing skipped, nothing errored
-
-    uploader = DontUpload()
+    uploader = _mock_uploader(tmp_path)
 
     monkeypatch.setattr(
         spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
@@ -1321,3 +1325,151 @@ def test_buildcache_check_index_full(
         assert "The index blob is missing" in out
         assert "Unindexed specs: 15" in out
         assert "Missing blobs: 1"
+
+
+def test_buildcache_push_with_group(
+    tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Tests that --group pushes only specs from the requested group."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  - group: extra
+    specs:
+    - libdwarf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    uploader = _mock_uploader(mirror_dir)
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    with ev.Environment(env_dir) as e:
+        e.concretize()
+        e.write()
+        for _, root in e.concretized_specs():
+            PackageInstaller([root.package], explicit=True, fake=True).install()
+
+        buildcache("push", "--unsigned", "--only", "package", "--group", "extra", str(mirror_dir))
+
+    assert uploader.pushed == ["libdwarf"]
+
+
+def test_buildcache_push_with_multiple_groups(
+    tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Tests that --group can be repeated to push specs from multiple groups."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  - group: extra
+    specs:
+    - libdwarf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    uploader = _mock_uploader(mirror_dir)
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    with ev.Environment(env_dir) as e:
+        e.concretize()
+        e.write()
+        for _, root in e.concretized_specs():
+            PackageInstaller([root.package], explicit=True, fake=True).install()
+
+        buildcache(
+            "push",
+            "--unsigned",
+            "--only",
+            "package",
+            "--group",
+            "default",
+            "--group",
+            "extra",
+            str(mirror_dir),
+        )
+
+    assert set(uploader.pushed) == {"libelf", "libdwarf"}
+    assert len(uploader.pushed) == len(set(uploader.pushed))
+
+
+def test_buildcache_push_group_nonexistent_errors(tmp_path: pathlib.Path, mutable_mock_env_path):
+    """Tests that --group with a nonexistent group name raises an error."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with ev.Environment(env_dir):
+        with pytest.raises(spack.main.SpackCommandError):
+            buildcache(
+                "push", "--unsigned", "--group", "nonexistent", str(mirror_dir), fail_on_error=True
+            )
+
+
+def test_buildcache_push_group_and_specs_mutually_exclusive(
+    tmp_path: pathlib.Path, mutable_mock_env_path
+):
+    """Tests that --group and explicit specs on the command line are mutually exclusive."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with ev.Environment(env_dir):
+        with pytest.raises(spack.main.SpackCommandError):
+            buildcache(
+                "push",
+                "--unsigned",
+                "--group",
+                "default",
+                str(mirror_dir),
+                "libelf",
+                fail_on_error=True,
+            )
+
+
+def test_buildcache_push_group_requires_active_env(tmp_path: pathlib.Path):
+    """Tests that ck--group without an active environment produces an error."""
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    with pytest.raises(spack.main.SpackCommandError):
+        buildcache("push", "--unsigned", "--group", "default", str(mirror_dir), fail_on_error=True)

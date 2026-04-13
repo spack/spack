@@ -68,7 +68,6 @@ from spack.llnl.util.tty.color import colorize
 from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
-from spack.util.executable import which
 
 if TYPE_CHECKING:
     import spack.spec
@@ -232,10 +231,6 @@ def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
     if pkg.last_phase and pkg.last_phase not in phases:  # type: ignore[attr-defined]
         raise BadInstallPhase(pkg.name, pkg.last_phase)  # type: ignore[attr-defined]
 
-    # If we got a last_phase, make sure it's not already last
-    if pkg.last_phase and pkg.last_phase == phases[-1]:  # type: ignore[attr-defined]
-        pkg.last_phase = None  # type: ignore[attr-defined]
-
 
 def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
     """
@@ -286,10 +281,8 @@ def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
-    fs.touch(os.path.join(pkg.prefix.bin, command))
-    if sys.platform != "win32":
-        chmod = which("chmod", required=True)
-        chmod("+x", os.path.join(pkg.prefix.bin, command))
+    executable = lambda path, flags: os.open(path, flags, 0o700)
+    open(os.path.join(pkg.prefix.bin, command), "wb", opener=executable).close()
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)

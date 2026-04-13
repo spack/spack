@@ -20,6 +20,7 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
+import codecs
 import fcntl
 import glob
 import io
@@ -125,6 +126,14 @@ class DatabaseAction:
 
     def save_to_db(self, db: spack.database.Database) -> None: ...
 
+    def release_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+            self.prefix_lock = None
+
 
 class MarkExplicitAction(DatabaseAction):
     """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
@@ -205,7 +214,7 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
+def tee(control_r: int, log_r: int, log_path: str, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
@@ -214,22 +223,25 @@ def tee(control_r: int, log_r: int, file_w: int, parent_w: int) -> None:
     selector.register(control_r, selectors.EVENT_READ)
 
     try:
-        while True:
-            for key, _ in selector.select():
-                if key.fd == log_r:
-                    data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                    if not data:  # EOF: exit the thread
-                        return
-                    os.write(file_w, data)
-                    if echo_on:
-                        os.write(parent_w, data)
+        with open(log_path, "wb") as log_file, open(parent_w, "wb", closefd=False) as parent:
+            while True:
+                for key, _ in selector.select():
+                    if key.fd == log_r:
+                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                        if not data:  # EOF: exit the thread
+                            return
+                        log_file.write(data)
+                        log_file.flush()
+                        if echo_on:
+                            parent.write(data)
+                            parent.flush()
 
-                elif key.fd == control_r:
-                    control_data = os.read(control_r, 1)
-                    if not control_data:
-                        return
-                    else:
-                        echo_on = control_data == b"1"
+                    elif key.fd == control_r:
+                        control_data = os.read(control_r, 1)
+                        if not control_data:
+                            return
+                        else:
+                            echo_on = control_data == b"1"
     except OSError:  # do not raise
         pass
     finally:
@@ -240,19 +252,19 @@ class Tee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
     process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
 
-    def __init__(self, control: Connection, parent: Connection, log_fd: int) -> None:
+    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
         self.control = control
         self.parent = parent
         # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
         # redirect their file descriptors in addition to the original fds 1 and 2.
         fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
         self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The file descriptor of the log file
-        self.log_fd = log_fd
+        #: The path of the log file
+        self.log_path = log_path
         r, w = os.pipe()
         self.tee_thread = threading.Thread(
             target=tee,
-            args=(self.control.fileno(), r, self.log_fd, self.parent.fileno()),
+            args=(self.control.fileno(), r, self.log_path, self.parent.fileno()),
             daemon=True,
         )
         self.tee_thread.start()
@@ -274,7 +286,6 @@ class Tee:
         # Only then close the other fds.
         self.control.close()
         self.parent.close()
-        os.close(self.log_fd)
 
 
 def install_from_buildcache(
@@ -512,9 +523,15 @@ def worker_function(
         sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
     )
 
-    # Open the log file created by the parent process.
-    log_fd = os.open(log_path, os.O_WRONLY | os.O_TRUNC, 0o644)
-    tee = Tee(echo_control, parent, log_fd)
+    # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
+    # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
+    devnull_fd = os.open(os.devnull, os.O_RDONLY)
+    os.dup2(devnull_fd, 0)
+    os.close(devnull_fd)
+    sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
+
+    # Start the tee thread to forward output to the log file and parent process.
+    tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
@@ -1391,24 +1408,32 @@ class BuildStatus:
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
-        # Move cursor up to the start of the display area
+        # Move cursor up to the start of the display area assuming the same terminal width. If the
+        # terminal resized, lines may have wrapped, and we should've moved up further. We do not
+        # try to track that (would require keeping track of each line's width).
         if self.active_area_rows > 0:
             buffer.write(f"\033[{self.active_area_rows}A\r")
 
         if self.terminal_size_changed:
             self.terminal_size = self.get_terminal_size()
             self.terminal_size_changed = False
+            # After resize, active_area_rows is invalidated due to possible line wrapping. Set to
+            # 0 to force newlines instead of cursor movement.
+            self.active_area_rows = 0
         max_width, max_height = self.terminal_size
 
-        self.total_lines = 0
-        total_finished = len(self.finished_builds)
-
         # First flush the finished builds. These are "persisted" in terminal history.
-        for build in self.finished_builds:
-            self._render_build(build, buffer, now=now)
-        self.finished_builds.clear()
+        if self.finished_builds:
+            for build in self.finished_builds:
+                self._render_build(build, buffer, now=now)
+                self._println(buffer, force_newline=True)  # should scroll the terminal
+            self.finished_builds.clear()
+            # Finished builds can span multiple lines, overlapping our "active area", invalidating
+            # active_area_rows. Set to 0 to force newlines instead of cursor movement.
+            self.active_area_rows = 0
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
+        self.total_lines = 0
 
         if not finalize:
             if self.color:
@@ -1454,6 +1479,7 @@ class BuildStatus:
                 self._println(buffer, f"{len_builds - i + 1} more...")
                 break
             self._render_build(build, buffer, max_width, now=now)
+            self._println(buffer)
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
@@ -1466,18 +1492,18 @@ class BuildStatus:
         self.stdout.flush()
 
         # Update the number of lines drawn for next time. It reflects the number of active builds.
-        self.active_area_rows = self.total_lines - total_finished
+        self.active_area_rows = self.total_lines
         self.dirty = False
 
         # Schedule next UI update
         self.next_update = now + SPINNER_INTERVAL / 2
 
-    def _println(self, buffer: io.StringIO, line: str = "") -> None:
+    def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""
         self.total_lines += 1
         if line:
             buffer.write(line)
-        if self.total_lines > self.active_area_rows:
+        if self.total_lines > self.active_area_rows or force_newline:
             buffer.write("\033[0m\033[K\n")  # reset, clear to EOL, newline
         else:
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
@@ -1508,7 +1534,6 @@ class BuildStatus:
                 if line_width > max_width:
                     break
             buffer.write(component)
-        self._println(buffer)
 
     def _generate_line_components(
         self, build_info: BuildInfo, static: bool = False, now: float = 0.0
@@ -2128,6 +2153,28 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
             pass
 
 
+class StdinReader:
+    """Helper class to do non-blocking, incremental decoding of stdin, stripping ANSI escape
+    sequences. The input is the backing file descriptor for stdin (instead of the TextIOWrapper) to
+    avoid double buffering issues: the event loop triggers when the fd is ready to read, and if we
+    do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
+    internally, which the event loop is not aware of, and user input doesn't come through."""
+
+    def __init__(self, fd: int) -> None:
+        self.fd = fd
+        #: Handle multi-byte UTF-8 characters
+        self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        #: For stripping out arrow and navigation keys
+        self.ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z~]")
+
+    def read(self) -> str:
+        try:
+            chars = self.decoder.decode(os.read(self.fd, 1024))
+            return self.ansi_escape_re.sub("", chars)
+        except OSError:
+            return ""
+
+
 class PackageInstaller:
 
     explicit: Set[str]
@@ -2251,6 +2298,8 @@ class PackageInstaller:
         #: Internal data collected for reports during installation.
         self.report_data = ReportData(specs)
 
+        self.next_database_write = 0.0
+
     def install(self) -> None:
         self._installer()
 
@@ -2260,7 +2309,9 @@ class PackageInstaller:
 
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[TerminalState] = None
+        stdin_reader: Optional[StdinReader] = None
         if sys.stdin.isatty():
+            stdin_reader = StdinReader(sys.stdin.fileno())
             terminal = TerminalState(
                 selector,
                 self.build_status,
@@ -2273,9 +2324,9 @@ class PackageInstaller:
         database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
         retained_read_locks: List[spack.util.lock.Lock] = []
-        next_database_write = 0.0
 
         failures: List[spack.spec.Spec] = []
+        finished_pids: List[int] = []
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
@@ -2310,7 +2361,7 @@ class PackageInstaller:
                     timeout = DATABASE_WRITE_INTERVAL
                 events = selector.select(timeout=timeout)
 
-                finished_pids = []
+                finished_pids.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -2340,40 +2391,10 @@ class PackageInstaller:
                         jobserver.maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
-                current_time = time.monotonic()
-                for pid in finished_pids:
-                    build = self.running_builds.pop(pid)
-                    self.capacity += 1
-                    jobserver.release()
-                    self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
-                    self._drain_child_output(build, selector)
-                    self._drain_child_state(build, selector)
-                    build.cleanup(selector)
-                    exitcode = build.proc.exitcode
-                    assert exitcode is not None, "Finished build should have exit code set"
-                    self.report_data.finish_record(build.spec, exitcode)
-                    if exitcode == 0:
-                        # Add successful builds for database insertion (after a short delay)
-                        database_actions.append(build)
-                        self.build_graph.enqueue_parents(
-                            build.spec.dag_hash(), self.pending_builds
-                        )
-                        next_database_write = current_time + DATABASE_WRITE_INTERVAL
-                        self.build_status.update_state(build.spec.dag_hash(), "finished")
-                    elif exitcode == EXIT_STOPPED_AT_PHASE:
-                        # Partial build: neither failure nor success. Should not be persisted in
-                        # the database, but also not treated as a failure in the UI. Just release
-                        # locks and move on.
-                        if build.prefix_lock is not None:
-                            build.prefix_lock.release_write()
-                            build.prefix_lock = None
-                    elif not self.fail_fast or not failures:
-                        # In fail-fast mode, only record the first failure. Subsequent failures may
-                        # be a consequence of us terminating other builds, and should not be
-                        # reported as failures in the UI.
-                        failures.append(build.spec)
-                        self.build_status.update_state(build.spec.dag_hash(), "failed")
-                        self.build_status.parse_log_summary(build.spec.dag_hash())
+                if finished_pids:
+                    self._handle_finished_builds(
+                        finished_pids, selector, jobserver, database_actions, failures
+                    )
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -2382,28 +2403,25 @@ class PackageInstaller:
                         child.proc.terminate()
                     self.pending_builds.clear()
 
-                if stdin_ready:
-                    try:
-                        char = sys.stdin.read(1)
-                    except OSError:
-                        continue
-                    overview = self.build_status.overview_mode
-                    if overview and self.build_status.search_mode:
-                        self.build_status.search_input(char)
-                    elif overview and char == "/":
-                        self.build_status.enter_search()
-                    elif char == "v" or char in ("q", "\x1b") and not overview:
-                        self.build_status.toggle()
-                    elif char == "n":
-                        self.build_status.next(1)
-                    elif char == "p" or char == "N":
-                        self.build_status.next(-1)
-                    elif char == "+":
-                        jobserver.increase_parallelism()
-                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
-                    elif char == "-":
-                        jobserver.decrease_parallelism()
-                        self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                if stdin_ready and stdin_reader is not None:
+                    for char in stdin_reader.read():
+                        overview = self.build_status.overview_mode
+                        if overview and self.build_status.search_mode:
+                            self.build_status.search_input(char)
+                        elif overview and char == "/":
+                            self.build_status.enter_search()
+                        elif char == "v" or char in ("q", "\x1b") and not overview:
+                            self.build_status.toggle()
+                        elif char == "n":
+                            self.build_status.next(1)
+                        elif char == "p" or char == "N":
+                            self.build_status.next(-1)
+                        elif char == "+":
+                            jobserver.increase_parallelism()
+                            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+                        elif char == "-":
+                            jobserver.decrease_parallelism()
+                            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 # Insert into the database if we have any finished builds, and either the delay
                 # interval has passed, or we're done with all builds. The database save is not
@@ -2412,7 +2430,7 @@ class PackageInstaller:
                 if (
                     database_actions
                     and (
-                        current_time >= next_database_write
+                        time.monotonic() >= self.next_database_write
                         or not (self.pending_builds or self.running_builds)
                     )
                     and self._save_to_db(database_actions, retained_read_locks)
@@ -2463,24 +2481,15 @@ class PackageInstaller:
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
             for child in self.running_builds.values():
-                try:
-                    if child.prefix_lock is not None:
-                        child.prefix_lock.release_write()
-                        child.prefix_lock = None
-                except Exception:
-                    pass
+                child.release_lock()
+
             for lock in retained_read_locks:
                 try:
                     lock.release_read()
                 except Exception:
                     pass
             for action in database_actions:
-                try:
-                    if action.prefix_lock is not None:
-                        action.prefix_lock.release_write()
-                        action.prefix_lock = None
-                except Exception:
-                    pass
+                action.release_lock()
 
             try:
                 self.build_status.overview_mode = True
@@ -2508,6 +2517,46 @@ class PackageInstaller:
             raise spack.error.InstallError(
                 "The following packages failed to install:\n" + "\n".join(lines)
             )
+
+    def _handle_finished_builds(
+        self,
+        finished_pids: List[int],
+        selector: selectors.BaseSelector,
+        jobserver: JobServer,
+        database_actions: List[DatabaseAction],
+        failures: List[spack.spec.Spec],
+    ) -> None:
+        """Handle builds that finished since the last event loop iteration."""
+        current_time = time.monotonic()
+        for pid in finished_pids:
+            build = self.running_builds.pop(pid)
+            self.capacity += 1
+            jobserver.release()
+            self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+            self._drain_child_output(build, selector)
+            self._drain_child_state(build, selector)
+            build.cleanup(selector)
+            exitcode = build.proc.exitcode
+            assert exitcode is not None, "Finished build should have exit code set"
+            self.report_data.finish_record(build.spec, exitcode)
+            if exitcode == 0:
+                # Add successful builds for database insertion (after a short delay)
+                database_actions.append(build)
+                self.build_graph.enqueue_parents(build.spec.dag_hash(), self.pending_builds)
+                self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
+                self.build_status.update_state(build.spec.dag_hash(), "finished")
+            elif exitcode == EXIT_STOPPED_AT_PHASE:
+                # Partial build: neither failure nor success. Should not be persisted in
+                # the database, but also not treated as a failure in the UI. Just release
+                # locks and move on.
+                build.release_lock()
+            elif not self.fail_fast or not failures:
+                # In fail-fast mode, only record the first failure. Subsequent failures may
+                # be a consequence of us terminating other builds, and should not be
+                # reported as failures in the UI.
+                failures.append(build.spec)
+                self.build_status.update_state(build.spec.dag_hash(), "failed")
+                self.build_status.parse_log_summary(build.spec.dag_hash())
 
     def _save_to_db(
         self,
