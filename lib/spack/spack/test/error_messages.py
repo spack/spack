@@ -10,6 +10,8 @@ from typing import Iterable, Optional
 
 import pytest
 
+import spack.vendor.archspec.cpu
+
 import spack.config
 import spack.error
 import spack.repo
@@ -548,3 +550,81 @@ def test_warns_on_compiler_constraint_in_all(concretize_scope, mock_packages, se
     update_packages_config(f"packages:\n  all:\n    {section}:\n    - '%c=gcc'\n")
     with pytest.warns(UserWarning, match="packages: all:"):
         concretize_one("gmake")
+
+
+@pytest.mark.regression("52209")
+def test_unknown_concrete_target_in_input_spec(concretize_scope, test_repo):
+    """Tests that an input spec with an unknown concrete target raises a clear error naming
+    the bad target, rather than a confusing 'cannot satisfy constraint' solver error.
+    """
+    spec_str = "x4 target=not-a-real-uarch"
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        concretize_one(spec_str)
+    check_error(str(exc_info.value), should_mention=[spec_str, "not a known target"])
+
+
+@pytest.mark.regression("52209")
+def test_require_single_unknown_target_errors(concretize_scope, test_repo):
+    """Tests that a single-option require with an unknown target raises a clear error."""
+    target_str = "target=not-a-real-uarch"
+    update_packages_config(
+        f"""\
+packages:
+  x4:
+    require: {target_str}
+"""
+    )
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        concretize_one("x4")
+    check_error(str(exc_info.value), should_mention=[target_str, "unknown target"])
+
+
+@pytest.mark.regression("52209")
+def test_require_all_unknown_targets_errors(concretize_scope, test_repo):
+    """Tests that a group where every option has an unknown target also raises a clear error."""
+    update_packages_config(
+        """\
+packages:
+  x4:
+    require:
+    - any_of: ["target=not-a-real-uarch", "target=also-fake"]
+"""
+    )
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        concretize_one("x4")
+    check_error(
+        str(exc_info.value),
+        should_mention=["target=not-a-real-uarch", "target=also-fake", "unknown target"],
+    )
+
+
+@pytest.mark.regression("52209")
+@pytest.mark.skipif(
+    str(spack.vendor.archspec.cpu.host().family) != "x86_64", reason="test assumes x86_64 uarchs"
+)
+def test_require_mixed_unknown_and_valid_target_warns(concretize_scope, test_repo):
+    """Tests that a "require" group with at least one valid option just warns."""
+    update_packages_config(
+        """\
+packages:
+  x4:
+    require:
+    - one_of: ["target=not-a-real-uarch", "target=x86_64"]
+"""
+    )
+    with pytest.warns(UserWarning, match="not-a-real-uarch"):
+        concretize_one("x4")
+
+
+@pytest.mark.regression("52209")
+def test_prefer_unknown_target_warns(concretize_scope, test_repo):
+    """A preference with an unknown target has the @: fallback, so it only warns."""
+    update_packages_config(
+        """\
+packages:
+  x4:
+    prefer: ["target=not-a-real-uarch"]
+"""
+    )
+    with pytest.warns(UserWarning, match="not-a-real-uarch"):
+        concretize_one("x4")

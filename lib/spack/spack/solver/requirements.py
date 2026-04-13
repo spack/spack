@@ -5,6 +5,8 @@ import enum
 import warnings
 from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
 
+import spack.vendor.archspec.cpu
+
 import spack.config
 import spack.error
 import spack.package_base
@@ -16,6 +18,47 @@ import spack.util.spack_yaml
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
+
+
+def _mark_str(raw) -> str:
+    """Return a 'file:line: ' prefix from the YAML mark on *raw*, or empty string."""
+    mark = get_mark_from_yaml_data(raw)
+    return f"{mark.name}:{mark.line + 1}: " if mark else ""
+
+
+def _check_unknown_targets(
+    raw_strs: List[str], specs: List["spack.spec.Spec"], *, always_warn: bool = False
+) -> None:
+    """Either warns or raises for unknown concrete target names in a set of specs.
+
+    UserWarnings are emitted if *always_warn* is True or if there is at least one spec without
+    unknown targets. If all the specs have unknown targets raises an error.
+    """
+    specs_with_unknown_targets = [
+        (raw, spec)
+        for raw, spec in zip(raw_strs, specs)
+        if spec.architecture
+        and spec.architecture.target_concrete
+        and spec.target.name not in spack.vendor.archspec.cpu.TARGETS
+    ]
+    if not specs_with_unknown_targets:
+        return
+
+    errors = [
+        f"{_mark_str(raw)}'{spec}' contains unknown targets"
+        for raw, spec in specs_with_unknown_targets
+    ]
+    if len(errors) == 1:
+        msg = f"{errors[0]}. Run 'spack arch --known-targets' to see valid targets."
+    else:
+        details = "\n".join([f"{idx}. {part}" for idx, part in enumerate(errors, 1)])
+        msg = (
+            f"unknown targets have been detected in requirements\n{details}\n"
+            f"Run 'spack arch --known-targets' to see valid targets."
+        )
+    if not always_warn and len(specs_with_unknown_targets) == len(specs):
+        raise spack.error.SpecError(msg)
+    warnings.warn(msg)
 
 
 class RequirementKind(enum.Enum):
@@ -220,6 +263,8 @@ class RequirementParser:
             spec = self._parse_and_expand(item["spec"])
             condition = spack.spec.Spec(item.get("when"))
             message = item.get("message")
+        raw_key = item if isinstance(item, str) else item.get("spec", item)
+        _check_unknown_targets([raw_key], [spec], always_warn=True)
         return spec, condition, message
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
@@ -265,10 +310,12 @@ class RequirementParser:
                     self._maybe_warn_compiler_in_all(constraints, "require")
 
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
+                raw_strs = list(constraints)
                 constraints = [
                     self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
-                    for constraint in constraints
+                    for constraint in raw_strs
                 ]
+                _check_unknown_targets(raw_strs, constraints)
                 when_str = requirement.get("when")
                 when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
 
