@@ -93,6 +93,14 @@ For example ``$data_home`` evaluates to one of the following (highest-priority f
 #. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
 
 ``config:locations:home`` / ``SPACK_HOME`` can be used to control all 3 of ``data_home``, ``cache_home``, and ``state_home``.
+They are placed relative to this directory (``$spack_home``):
+
+* ``data_home`` is placed in ``$spack_home/.local/share/spack`` (as described above).
+* ``state_home`` is placed in ``$spack_home/.local/state/spack``.
+* ``cache_home`` is placed in ``$spack_home/.cache/spack``.
+
+Location of installs and environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
 These are controlled by ``$data_home``.
