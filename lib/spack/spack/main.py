@@ -28,6 +28,7 @@ from typing import Any, List, Optional, Set, Tuple
 import spack.vendor.archspec.cpu
 
 import spack
+import spack.bootstrap.base_env as base_env
 import spack.cmd
 import spack.config
 import spack.environment
@@ -46,6 +47,7 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
+
 
 from .enums import ConfigScopePriority
 
@@ -425,6 +427,11 @@ def make_argument_parser(**kwargs):
     )
     general.add_argument(
         "-b", "--bootstrap", action="store_true", help="use bootstrap config, store, and externals"
+    )
+    general.add_argument(
+        "--venv",
+        action="store_true",
+        help="have spack run under a spack environment"
     )
     general.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
@@ -1060,6 +1067,7 @@ def _main(argv=None):
         parser.print_help()
         return 1
 
+    
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]
     cmd_name, args.command = resolve_alias(cmd_name, args.command)
@@ -1068,7 +1076,18 @@ def _main(argv=None):
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
     bootstrap_context = spack.llnl.util.lang.nullcontext()
+    if args.venv and not base_env.spack_in_env():
+        tty.info('Re-executing Spack under a Spack environment')
+        base_env.reexec_spack_under_venv()
+    if base_env.spack_in_env():
+        tty.info('Spack is executing under a Spack environment')
+        tty.info(f'SPACK_SPACK_ENV: {os.environ.get(base_env._SPACK_SPACK_ENV_VAR)}')
+        tty.info(f'SPACK_PYTHON: {os.environ.get("SPACK_PYTHON")}')
+        tty.info(f'sys.executable: {sys.executable}')
+        tty.info(f'PYTHONPATH: {os.environ.get("PYTHONPATH")}')
+    
     if args.bootstrap:
+    
         import spack.bootstrap as bootstrap  # avoid circular imports
 
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()

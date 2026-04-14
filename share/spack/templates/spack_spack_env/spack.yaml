@@ -1,0 +1,15 @@
+spack:
+  specs:
+    - python-venv
+    
+  view: true
+  packages:
+    python:
+      buildable: false
+      externals:
+        - spec: "{{ python_spec }}"
+          prefix: "{{ python_prefix }}"
+
+  concretizer:
+    reuse: false
+    unify: true

@@ -57,7 +57,7 @@ from ._common import (
 )
 from .clingo import ClingoBootstrapConcretizer
 from .config import spack_python_interpreter, abi_spec_for_current_python
-
+from .base_env import SPACK_SPACK_ENV, _splice_in_python_venv_from_buildcache
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
 
@@ -218,7 +218,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 
                 if python_spec is not None and not abstract_spec.intersects(f"^{python_spec}"):
                     continue
-
+                    
                 for _, pkg_hash, pkg_sha256 in item["binaries"]:
                     self._install_by_hash(pkg_hash, pkg_sha256, bincache_platform)
 
@@ -236,7 +236,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 
         tty.debug(f"Bootstrapping {module} from pre-built binaries")
         abstract_spec, bincache_platform = self._spec_and_platform(
-            abstract_spec_str + " ^" + abi_spec_for_current_python()
+           abstract_spec_str + " ^" + abi_spec_for_current_python()
         )
         data = self._read_metadata(module)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
@@ -253,6 +253,51 @@ class BuildcacheBootstrapper(Bootstrapper):
         data = self._read_metadata(abstract_spec.name)
         return self._install_and_test(abstract_spec, bincache_platform, data, test_fn)
 
+@bootstrapper(bootstrapper_type="buildcache")
+class BinarySpackSpackEnvBootstrapper(Bootstrapper):
+    def try_import(self, module: str, abstract_spec_str: str) -> bool:
+        if _python_import(module):
+            tty.debug(f'Able to avoid bootstrap for {module} by importing')
+            return True
+        with open(os.path.join(self.metadata_dir, f"{module}.json")) as f:
+            bincache_metadata = json.load(f)
+        abstract_spec = spack.spec.Spec(
+            abstract_spec_str + f" ^{abi_spec_for_current_python()}"
+        )
+        with spack.config.override(self.mirror_scope):
+            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
+            spack.binary_distribution.update_cache_and_get_specs()
+            for item in bincache_metadata['verified']:
+                candidate_abstract = spack.spec.Spec(item['spec'])
+                if not abstract_spec.intersects(candidate_abstract):
+                    continue
+                candidate_concrete = None
+                for (name, pkg_hash, shasum) in item['binaries']:
+                    if name == candidate_abstract.name:
+                        candidate_concrete = _splice_in_python_venv_from_buildcache(pkg_hash)
+                        tty.debug(f'Got spliced spec: {candidate_concrete}')
+                        SPACK_SPACK_ENV.add_concrete_spec(
+                            abstract_spec,
+                            candidate_concrete
+                        )
+                        tty.debug(f'Added spliced spec to environment')
+                        SPACK_SPACK_ENV.install_all()
+                        SPACK_SPACK_ENV.write(regenerate=True)
+                        SPACK_SPACK_ENV.load()
+                        print(sys.path)
+                        if _python_import(module):
+                            tty.debug(f'Able to import module {module} after bootstrapping')
+                            return True
+                        else:
+                            tty.debug(f'Unable to import module {module} after bootstrapping')
+                        return False
+                if candidate_concrete is None:
+                    tty.debug(f"Unable to find concrete spec for candidate {abstract_spec}")
+                    
+
+        
+    def try_search_path(self, executables: tuple[str], abstract_spec_str: str) -> bool:
+        pass
 
 @bootstrapper(bootstrapper_type="install")
 class SourceBootstrapper(Bootstrapper):
