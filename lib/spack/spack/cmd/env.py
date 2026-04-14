@@ -388,10 +388,10 @@ def env_activate(args):
     )
 
     active_env.manifest.prepare_config_scope()
+
+    ev.activate(active_env, use_env_repo=True)
+
     generate_script.update_env_activate_script(active_env, view)
-
-    ev.activate(active_env)
-
     cmds = generate_script.get_shell_unique_env_cmds(args.shell, env_prompt, view)
 
     if cmds:
