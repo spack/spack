@@ -212,6 +212,9 @@ _file_line_matches = [
 class LogEvent:
     """Class representing interesting events (e.g., errors) in a build log."""
 
+    #: color name when rendering in the terminal
+    color = ""
+
     def __init__(
         self,
         text,
@@ -262,9 +265,13 @@ class LogEvent:
 class BuildError(LogEvent):
     """LogEvent subclass for build errors."""
 
+    color = "R"
+
 
 class BuildWarning(LogEvent):
     """LogEvent subclass for build warnings."""
+
+    color = "Y"
 
 
 def chunks(xs, n):

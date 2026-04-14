@@ -39,12 +39,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="print out a profile of time spent in regexes during parse",
     )
     subparser.add_argument(
-        "-w",
-        "--width",
-        action="store",
-        type=int,
-        default=None,
-        help="wrap width: auto-size to terminal by default; 0 for no wrap",
+        "-w", "--width", action="store", type=int, default=None, help=argparse.SUPPRESS
     )
     subparser.add_argument(
         "-j", "--jobs", action="store", type=int, default=None, help=argparse.SUPPRESS
@@ -60,6 +55,8 @@ def log_parse(parser, args):
             sys.stdin.buffer, encoding="utf-8", errors="replace", closefd=False
         )
 
+    if args.width is not None:
+        warnings.warn("The --width option is deprecated and will be removed in Spack v1.3")
     if args.jobs is not None:
         warnings.warn("The --jobs option is deprecated and will be removed in Spack v1.3")
 
@@ -80,4 +77,4 @@ def log_parse(parser, args):
         events.extend(log_warnings)
         print("%d warnings" % len(log_warnings))
 
-    print(make_log_context(events, args.width))
+    print(make_log_context(events), end="")

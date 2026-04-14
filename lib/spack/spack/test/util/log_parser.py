@@ -5,7 +5,9 @@
 import io
 import pathlib
 
+from spack.llnl.util.tty.color import color_when
 from spack.util.ctest_log_parser import CTestLogParser
+from spack.util.log_parse import make_log_context
 
 
 def test_log_parser(tmp_path: pathlib.Path):
@@ -67,6 +69,56 @@ def test_log_parser_preserves_leading_whitespace():
     assert len(errors) == 1
     assert errors[0].post_context[0] == "    int y = x + 1;"
     assert errors[0].post_context[1] == "            ^"
+
+
+def test_make_log_context_merges_overlapping_events(tmp_path: pathlib.Path):
+    """Overlapping or adjacent context windows should produce a single merged block."""
+
+    # Two errors close together: lines 5 and 10 with context=3 means windows overlap.
+    lines = [f"line {i}\n" for i in range(1, 21)]
+    lines[4] = "error: first problem\n"  # line 5
+    lines[9] = "error: second problem\n"  # line 10
+
+    log_file = tmp_path / "log.txt"
+    log_file.write_text("".join(lines))
+
+    parser = CTestLogParser()
+    errors, warnings = parser.parse(str(log_file), context=3)
+
+    log_events = sorted([*errors, *warnings], key=lambda e: e.line_no)
+    output = make_log_context(log_events)
+
+    # Should be exactly one header for the merged block, not two.
+    assert output.count("-- lines") == 1
+
+    # The header should cover the full merged range.
+    assert "-- lines 2 to 13 --" in output
+
+
+def test_make_log_context_warning_in_error_context_keeps_yellow(tmp_path: pathlib.Path):
+    """A warning line inside an error's context window must be highlighted yellow, not red."""
+    # Line 5 = error, line 8 = warning, context=3 so error window covers lines 2-11
+    # meaning the warning at line 8 falls inside the error's context.
+    lines = [f"line {i}\n" for i in range(1, 16)]
+    lines[4] = "error: something broke\n"  # line 5
+    lines[7] = "/tmp/foo.c:1: warning: something fishy\n"  # line 8
+
+    log_file = tmp_path / "log.txt"
+    log_file.write_text("".join(lines))
+
+    parser = CTestLogParser()
+    errors, warnings = parser.parse(str(log_file), context=3)
+
+    assert len(errors) == len(warnings) == 1
+
+    log_events = sorted([*errors, *warnings], key=lambda e: e.line_no)
+
+    with color_when("always"):
+        output = make_log_context(log_events)
+
+    # The error line should be red (ANSI 91), the warning yellow (ANSI 93).
+    assert "\x1b[0;91m> " in output and "something broke" in output
+    assert "\x1b[0;93m> " in output and "something fishy" in output
 
 
 def test_log_parser_non_utf8_bytes(tmp_path: pathlib.Path):

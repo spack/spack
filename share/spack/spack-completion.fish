@@ -2300,7 +2300,6 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s c -l context -r -
 complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -f -a profile
 complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -d 'print out a profile of time spent in regexes during parse'
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f -a width
-complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -d 'wrap width: auto-size to terminal by default; 0 for no wrap'
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
 
 # spack logs
