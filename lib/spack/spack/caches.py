@@ -25,7 +25,9 @@ def misc_cache_location():
 
 def _misc_cache():
     path = misc_cache_location()
-    return spack.util.file_cache.FileCache(path)
+    return spack.util.file_cache.FileCache(
+        path, enable_lock=spack.config.get("config:locks", True)
+    )
 
 
 #: Spack's cache for small data
