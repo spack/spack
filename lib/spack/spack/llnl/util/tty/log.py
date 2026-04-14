@@ -706,7 +706,7 @@ class winlog:
     ):
         force_echo = False
 
-        write_mode = "ab+" if append else "wb+"
+        write_mode = "ab" if append else "wb"
         log_writer = open(logfile, mode=write_mode)
         try:
             while True:
