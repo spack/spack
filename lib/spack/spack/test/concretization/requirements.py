@@ -1652,6 +1652,6 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
 @pytest.mark.parametrize("section", ["prefer", "require"])
 def test_warns_on_compiler_constraint_in_all(concretize_scope, test_repo, section):
     """Compiler constraints under packages:all: are a footgun and should warn."""
-    update_packages_config("packages:\n  all:\n    prefer:\n    - '%c=gcc'\n")
+    update_packages_config(f"packages:\n  all:\n    {section}:\n    - '%c=gcc'\n")
     with pytest.warns(UserWarning, match="packages: all:"):
         spack.concretize.concretize_one("gmake")
