@@ -222,8 +222,10 @@ class SpackPaths:
             msg = (
                 f"Bypassing config in '{old_path}' in favor of '{default_path}'.\n"
                 f"    Detected config in old location: '{default_path}'.\n"
-                f"    Set `SPACK_USER_CONFIG_PATH` or modify your include.yaml to use '{old_path}'\n"
-                f"    or move files from '{old_path}' to '{default_path}' to suppress this warning."
+                "    Set `SPACK_USER_CONFIG_PATH` or modify your include.yaml"
+                f" to use '{old_path}'\n"
+                f"    or move files from '{old_path}' to '{default_path}'"
+                " to suppress this warning."
             )
             tty.warn(msg)
 

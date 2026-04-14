@@ -38,8 +38,8 @@ import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify
 import spack.llnl.util.tty.color as color
-import spack.paths_base
 import spack.paths
+import spack.paths_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
