@@ -7,3 +7,4 @@ sphinx-sitemap==2.9.0
 furo==2025.12.19
 docutils==0.22.4
 pygments==2.20.0
+pytest==9.0.2
