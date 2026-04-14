@@ -2453,12 +2453,13 @@ class PackageInstaller:
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
             db_exc = None
-            try:
-                with self.db.write_transaction():
-                    for action in database_actions:
-                        action.save_to_db(self.db)
-            except Exception as e:
-                db_exc = e
+            if database_actions:
+                try:
+                    with self.db.write_transaction():
+                        for action in database_actions:
+                            action.save_to_db(self.db)
+                except Exception as e:
+                    db_exc = e
 
             # Send SIGTERM to running builds; this is a no-op in the successful case.
             for child in self.running_builds.values():
