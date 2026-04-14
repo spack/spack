@@ -87,7 +87,8 @@ proc select_installation {spec} {
 
 set selected_installation [select_installation [join $variant_spec_list]]
 {% else %}
-set selected_installation {{ hash }}
+{# Get hash of remaining installation in case of removal #}
+set selected_installation {{ installations[0].hash }}
 {% endif %}
 {% endblock %}
 

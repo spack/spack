@@ -1455,3 +1455,219 @@ class TestTcl:
             == 2
         )
         assert len([x for x in content if re.match("variant hash \\w{7} \\w{7}", x)]) == 1
+
+    def test_variants_varying(self, modulefile_content, module_configuration):
+        """Tests variant definitions when variants mode is ``"varying"``."""
+
+        # module variants enabled
+        module_configuration("variants_varying")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        # Spack automatically defines a build_system variant
+        assert len([x for x in content if "variant " in x]) == 0
+        assert len([x for x in content if "getvariant " in x]) == 0
+
+        # test module file of package with boolean variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 0
+        assert len([x for x in content if "getvariant " in x]) == 0
+
+        # test variant set module check code
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "    {build_system=generic +debug ~fortran ~opt ~shared +static} " in x
+                ]
+            )
+            == 0
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "foreach avail_spec [array names ::avail_installation] {" in x
+                ]
+            )
+            == 0
+        )
+        assert len([x for x in content if 'append err_msg "* \\"$avail_spec\\"\\n' in x]) == 0
+        assert len([x for x in content if "reportError $err_msg" in x]) == 0
+
+        # test dependent module designation (containing variants specifications)
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match("    depends-on callpath/1.0-gcc-10.2.1-\\w{7}", x)
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [x for x in content if re.match("    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7}", x)]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match("    depends-on gcc-runtime/10.2.1-none-none-\\w{7}", x)
+                ]
+            )
+            == 1
+        )
+
+    def test_fold_variants_varying(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test installations folded in same module file when variants mode is ``"varying"``."""
+        module_configuration("fold_variants_varying")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+
+        # install 2 packages folded in same module file, only varying variant should be defined
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        install("--fake", "--add", spec_b)
+        module_file_b = modulefile_filenames("tcl", spec_b)[0]
+        with open(module_file_b, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert module_file_a == module_file_b and content_a != content_b
+        assert len([x for x in content_a if "variant " in x]) == 0
+        assert len([x for x in content_a if "getvariant " in x]) == 0
+        assert len([x for x in content_b if "variant " in x]) == 2
+        assert len([x for x in content_b if "getvariant " in x]) == 1
+        assert len([x for x in content_b if "variant --boolean debug" in x]) == 1
+
+        # uninstall one package, no more variant definition
+        uninstall("-y", spec_b)
+        with open(module_file_b, encoding="utf-8") as f:
+            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert content_a == content_c
+
+        # test varying with valued conditional variant
+        spec_a = "forward-multi-value@1.0"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_a if "variant --boolean" in x]) == 0
+        spec_b = "forward-multi-value@1.0 +cuda"
+        install("--fake", "--add", spec_b)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_b if "variant --boolean cuda" in x]) == 1
+        assert len([x for x in content_b if "variant --default none cuda_arch none" in x]) == 0
+        spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
+        install("--fake", "--add", spec_c)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content_c if "variant --boolean cuda" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content_c
+                    if "variant --default none cuda_arch none 11" in x
+                    or "variant --default none cuda_arch 11 none" in x
+                ]
+            )
+            == 1
+        )
+
+        # test varying on conditional variant dependency
+        spec_a = "conditional-variant-pkg-dependent@1.0 a=v1"
+        spec_b = "conditional-variant-pkg-dependent@1.0 a=v2"
+        spec_c = "conditional-variant-pkg-dependent@1.0 a=v3"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        install("--fake", "--add", spec_c)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "depends-on conditional-variant-pkg/2.0-none-none ~version_based" in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if (
+                        "depends-on conditional-variant-pkg/2.0-none-none "
+                        "+variant_based +version_based"
+                    )
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if (
+                        "depends-on conditional-variant-pkg/2.0-none-none "
+                        "+two_whens +variant_based +version_based"
+                    )
+                    in x
+                ]
+            )
+            == 1
+        )
+
+        # dependency has a variant defined, but not anymore after deletion of one package
+        # check how dependency is loaded
+        uninstall("-y", spec_c)
+        uninstall("-y", spec_b)
+        uninstall("-y", "conditional-variant-pkg@2.0 +two_whens +variant_based +version_based")
+        uninstall("-y", "conditional-variant-pkg@2.0 +variant_based +version_based")
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        # variant still expressed on dependency load statement
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "depends-on conditional-variant-pkg/2.0-none-none ~version_based" in x
+                ]
+            )
+            == 1
+        )
+        module_file_dep = modulefile_filenames("tcl", "conditional-variant-pkg@2.0")[0]
+        with open(module_file_dep, encoding="utf-8") as f:
+            content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        # however variant not defined anymore in module
+        assert len([x for x in content_dep if "variant --boolean" in x]) == 0
+
+        # check two folded installations which only differs from their hash
+        spec_a = "mpileaks@2.2 +debug +opt ^mpich"
+        spec_b = "mpileaks@2.2 +opt +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "variant hash " in x]) == 1

@@ -168,7 +168,7 @@ tcl_configuration = {
         **common_props,
         "variants": {
             "type": "string",
-            "enum": ["none", "all"],
+            "enum": ["none", "all", "varying"],
             "description": "Define variants in module files",
         },
     },

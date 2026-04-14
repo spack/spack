@@ -180,6 +180,7 @@ class TclConfiguration(BaseConfiguration):
         seen_in = {}
         install_specs = self._specs_sharing_modulefile()
         total_installs = len(install_specs)
+        variants_mode = self.variants_mode
 
         specs_need_hash = set(self._specs_need_hash_variant())
         install_variant_dicts = [
@@ -208,6 +209,10 @@ class TclConfiguration(BaseConfiguration):
             # Set a default if single value
             elif len(aggregated[name]["values"]) == 1:
                 aggregated[name]["default"] = list(aggregated[name]["values"])[0]
+
+        if variants_mode == "varying":
+            # filter out variants whose value does not vary across installations
+            aggregated = {name: v for name, v in aggregated.items() if len(v["values"]) > 1}
 
         # Sort variant values for deterministic module file content across regenerations,
         # since dict/set iteration order of strings is not guaranteed to be stable
