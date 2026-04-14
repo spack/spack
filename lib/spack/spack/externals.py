@@ -120,10 +120,9 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     and len(node.variants[name].values) == 1
                 ):
                     # Spec parsing defaults to MULTI for non-boolean variants. Correct the type
-                    # using the package definition, preserving the user-specified value and flags.
+                    # using the package definition, preserving the user-specified value.
                     existing = node.variants[name]
                     corrected = vdef.make_variant(*existing.values)
-                    corrected.propagate = existing.propagate
                     node.variants.substitute(corrected)
             changed = True
 
