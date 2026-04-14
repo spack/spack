@@ -2103,21 +2103,21 @@ opt_criterion(310, "requirement weight").
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)
-opt_criterion(110, "number of packages to build (vs. reuse)").
-#minimize { 0@110: #true }.
-#minimize { 1@110,PackageNode : build(PackageNode), not treat_node_as_concrete(PackageNode) }.
+opt_criterion(120, "number of packages to build (vs. reuse)").
+#minimize { 0@120: #true }.
+#minimize { 1@120,PackageNode : build(PackageNode), not treat_node_as_concrete(PackageNode) }.
 
-opt_criterion(100, "number of nodes from the same package").
-#minimize { 0@100: #true }.
-#minimize { ID@100,Package : attr("node", node(ID, Package)), not self_build_requirement(_, node(ID, Package)) }.
-#minimize { ID@100,Package : attr("virtual_node", node(ID, Package)) }.
+opt_criterion(110, "number of nodes from the same package").
+#minimize { 0@110: #true }.
+#minimize { ID@110,Package : attr("node", node(ID, Package)), not self_build_requirement(_, node(ID, Package)) }.
+#minimize { ID@110,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 
 % Minimize the unification set ID used for build dependencies. This reduces the number of optimal
 % solutions that differ only by which node belongs to which unification set.
-opt_criterion(90, "build unification sets").
-#minimize{ 0@90: #true }.
-#minimize{ ID@90,ParentNode : build_set_id(ParentNode, ID) }.
+opt_criterion(100, "build unification sets").
+#minimize{ 0@100: #true }.
+#minimize{ ID@100,ParentNode : build_set_id(ParentNode, ID) }.
 
 % Minimize the number of deprecated versions being used
 opt_criterion(73, "deprecated versions used").
