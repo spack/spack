@@ -345,21 +345,19 @@ class RequirementParser:
                 continue
             elif edge.virtuals:
                 # The case `%c,cxx=gcc` or similar.
-                data = {"packages": {v: {section: [str(edge.spec)]} for v in edge.virtuals}}
-                suggestions.append(spack.util.spack_yaml.dump(data).rstrip())
+                keys = edge.virtuals
+                comment = ""
             elif edge.spec.name in self.compiler_pkgs:
                 # Just a package `%gcc`.
-                data = {"packages": {"c": {section: [str(edge.spec)]}}}
-                suggestions.append(
-                    "# For each language virtual (c, cxx, fortran, ...):\n"
-                    + spack.util.spack_yaml.dump(data).rstrip()
-                )
+                keys = ("c",)
+                comment = "# For each language virtual (c, cxx, fortran, ...):\n"
             else:
                 # Maybe %mpich or so? Just give a generic suggestion.
-                data = {"packages": {"<virtual>": {section: [str(edge.spec)]}}}
-                suggestions.append(
-                    "# For each virtual:\n" + spack.util.spack_yaml.dump(data).rstrip()
-                )
+                keys = ("<virtual>",)
+                comment = "# For each virtual:\n"
+            data = {"packages": {k: {section: [str(edge.spec)]} for k in keys}}
+            suggestion = spack.util.spack_yaml.dump(data).rstrip()
+            suggestions.append(f"{comment}{suggestion}")
         if suggestions:
             mark = get_mark_from_yaml_data(spec_str)
             location = f"{mark.name}:{mark.line + 1}: " if mark else ""
