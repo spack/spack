@@ -203,7 +203,7 @@ class SpackPaths:
             return msg
         return ""
 
-    def _warn_unused_old_config(self):
+    def _warn_unused_old_config(self, _show=True):
         user_scope = [s for s in config.CONFIG.active_scopes if s.name == "user"]
 
         if not user_scope:
@@ -227,7 +227,10 @@ class SpackPaths:
                 f"    or move files from '{old_path}' to '{default_path}'"
                 " to suppress this warning."
             )
-            tty.warn(msg)
+            if _show:
+                tty.warn(msg)
+            else:
+                return msg
 
     @property
     def default_envs_path(self):

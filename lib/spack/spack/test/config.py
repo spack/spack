@@ -19,6 +19,8 @@ import spack.directory_layout
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
+import spack.paths
+import spack.paths_base
 import spack.platforms
 import spack.schema.compilers
 import spack.schema.config
@@ -2083,3 +2085,20 @@ def test_config_invalid_scope(mock_low_high_config):
     err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
+
+
+def test_unused_old_cfg_warning(set_home, tmp_path_factory):
+    base_prefix = tmp_path_factory.mktemp("home-prefix")
+    home_prefix = tmp_path_factory.mktemp("home-prefix")
+    set_home(str(home_prefix))
+
+    (home_prefix / ".spack").mkdir()
+    (home_prefix / ".spack" / "some-file").touch()
+
+    default_usr_scope_dir = home_prefix / ".config" / "spack"
+    test_cfg = [spack.config.DirectoryConfigScope("user", str(default_usr_scope_dir))]
+
+    with spack.config.use_configuration(*test_cfg) as config:
+        p1 = spack.paths.SpackPaths(spack.paths_base.SpackPathsBase(str(base_prefix)))
+        warning = p1._warn_unused_old_config(_show=False)
+        assert warning and "Detected config in old location" in warning
