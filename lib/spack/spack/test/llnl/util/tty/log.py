@@ -163,6 +163,11 @@ def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
         # Note: "print(echo)" above automatically uses an "\r\n" on Windows
         # and will replace any \n with \r\n (so end=\n does not work)
         # \r\n is expected and correct here
+        # Note: the above line ending constraint is an artifact of
+        # pytest's capfd. This is potentially (however unlikely)
+        # subject to change with future versions of pytest.
+        # if this test suddenly starts failing, verifying the line
+        # endings from capfd is a good starting place.
         newline = "\r\n" if sys.platform == "win32" else "\n"
         assert capfd.readouterr()[0] == f"echo{newline}"
 
