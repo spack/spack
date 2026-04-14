@@ -295,6 +295,7 @@ The ``variants`` key accepts the values:
 
 * ``none`` (default): do not define variants in module files
 * ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
+* ``varying``: define only variants whose values vary across installations projected in the module file
 
 The default value of each module variant is the value of the corresponding variant in the installed spec, so a plain ``module load`` command loads the module as before.
 Users may also state the variant values they expect when loading the module, using the variant syntax of Environment Modules: ``+name`` and ``~name`` (or ``-name``) for boolean variants, and ``name=value`` for the others.
@@ -347,34 +348,43 @@ These neutral values are treated as defaults, and are omitted from the variant s
 
 .. code-block:: console
 
+   $ spack config add modules:default:tcl:variants:varying
    $ spack install python@3.14.3 +tkinter +tix
    ...
    $ spack install python@3.14.3 ~tkinter
    ...
    $ spack module tcl loads python@3.14
    # python@=3.14.3+...~tests+tix+tkinter+uuid+zlib+zstd ...
-   module load python/3.14.3-gcc-15.2.1 ... ~tests +tix +tkinter +uuid +zlib +zstd
+   module load python/3.14.3-gcc-15.2.1 +tix +tkinter
    # python@=3.14.3+...~tests~tkinter+uuid+zlib+zstd ...
-   module load python/3.14.3-gcc-15.2.1 ... ~tests ~tkinter +uuid +zlib +zstd
+   module load python/3.14.3-gcc-15.2.1 ~tkinter
 
 
 If two installations folded in the same module file cannot be distinguished by their variant set, Spack adds a ``hash`` variant to the specification to ensure that each installation can still be selected unambiguously.
 
 .. code-block:: console
 
+   $ spack config add modules:default:tcl:variants:varying
    $ spack install hdf5@1.14 ^openmpi
    ...
    $ spack install hdf5@1.14 ^mpich
    ...
    $ spack module tcl loads hdf5@1.14
    # hdf5@=1.14.6~...~hl~ipo~java~map+mpi+shared~subfiling~szip~threadsafe+tools ...
-   module load hdf5/1.14.6-gcc-15.2.1 ... hash=6dj7iyw ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
+   module load hdf5/1.14.6-gcc-15.2.1 hash=6dj7iyw
    # hdf5@=1.14.6~...~hl~ipo~java~map+mpi+shared~subfiling~szip~threadsafe+tools ...
-   module load hdf5/1.14.6-gcc-15.2.1 ... hash=hyob6r5 ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
+   module load hdf5/1.14.6-gcc-15.2.1 hash=hyob6r5
 
 .. warning::
 
    If installing a package causes a folded module file to require the ``hash`` variant, it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>` for packages depending on it so their dependency load designations are updated accordingly.
+
+.. warning::
+
+   When using ``variants: varying``, installing an additional package projected in an existing module file may cause new variants to become defined.
+   Similarly, removing a package projected together with others in a module file may cause some variants to become undefined.
+   This changes the module designation of previously installed variants and also affects module dependency load commands.
+   In this case it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>`.
 
 Filtering defined variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
