@@ -332,9 +332,16 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(
+        self,
+        lock_path: Union[str, pathlib.Path],
+        default_timeout: Optional[float],
+        *,
+        enable: bool = True,
+    ):
         self.lock_path = pathlib.Path(lock_path)
         self.default_timeout = default_timeout
+        self._enable = enable
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
@@ -369,6 +376,7 @@ class SpecLocker:
             length=1,
             default_timeout=timeout,
             desc=spec.name,
+            enable=self._enable,
         )
 
     def has_lock(self, spec: "spack.spec.Spec") -> bool:
