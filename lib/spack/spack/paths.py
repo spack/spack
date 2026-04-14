@@ -203,6 +203,30 @@ class SpackPaths:
             return msg
         return ""
 
+    def _warn_unused_old_config(self):
+        user_scope = [s for s in config.CONFIG.active_scopes if s.name == "user"]
+
+        if not user_scope:
+            return
+
+        # Note: does not require spack.util.path.canonicalize_path because the
+        # default user scope path only uses "~"
+        default_path = pathlib.Path("~/.config/spack").expanduser().resolve()
+        scope_path = pathlib.Path(getattr(user_scope[0], "path", "")).expanduser().resolve()
+        if scope_path != default_path:
+            # User overrode the scope path, they meant it
+            return
+
+        old_path = pathlib.Path("~/.spack").expanduser()
+        if dir_is_occupied(old_path):
+            msg = (
+                f"Bypassing config in '{old_path}' in favor of '{default_path}'.\n"
+                f"    Detected config in old location: '{default_path}'.\n"
+                f"    Set `SPACK_USER_CONFIG_PATH` or modify your include.yaml to use '{old_path}'\n"
+                f"    or move files from '{old_path}' to '{default_path}' to suppress this warning."
+            )
+            tty.warn(msg)
+
     @property
     def default_envs_path(self):
         return self._decide_old_or_new_location(
