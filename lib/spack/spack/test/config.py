@@ -2092,13 +2092,27 @@ def test_unused_old_cfg_warning(set_home, tmp_path_factory):
     home_prefix = tmp_path_factory.mktemp("home-prefix")
     set_home(str(home_prefix))
 
-    (home_prefix / ".spack").mkdir()
-    (home_prefix / ".spack" / "some-file").touch()
-
     default_usr_scope_dir = home_prefix / ".config" / "spack"
-    test_cfg = [spack.config.DirectoryConfigScope("user", str(default_usr_scope_dir))]
+    test_cfg1 = [spack.config.DirectoryConfigScope("user", str(default_usr_scope_dir))]
 
-    with spack.config.use_configuration(*test_cfg) as config:
+    with spack.config.use_configuration(*test_cfg1):
+        # Start with the default user scope pointing to the 1.2 location,
+        # in ~/.config/spack. ~/.spack is empty, so no warning should be
+        # generated
         p1 = spack.paths.SpackPaths(spack.paths_base.SpackPathsBase(str(base_prefix)))
+        assert not p1._warn_unused_old_config(_show=False)
+
+        # Now make it so ~/.spack is not empty: a warning should be
+        # generated
+        (home_prefix / ".spack").mkdir()
+        (home_prefix / ".spack" / "some-file").touch()
         warning = p1._warn_unused_old_config(_show=False)
         assert warning and "Detected config in old location" in warning
+
+    # Simulate a scenario where the user edits their include.yaml to point the user
+    # scope at the old location (no warning should be generated)
+    custom_usr_scope_dir = home_prefix / ".scope"
+    test_cfg2 = [spack.config.DirectoryConfigScope("user", str(custom_usr_scope_dir))]
+    with spack.config.use_configuration(*test_cfg2):
+        p3 = spack.paths.SpackPaths(spack.paths_base.SpackPathsBase(str(base_prefix)))
+        assert not p3._warn_unused_old_config(_show=False)
