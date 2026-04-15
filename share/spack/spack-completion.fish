@@ -458,7 +458,6 @@ complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out d
 complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -f -a backtrace
 complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -d 'always show backtraces for exceptions'
 complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
-complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
 complete -c spack -n '__fish_spack_using_command ' -s m -l mock -f -a mock
