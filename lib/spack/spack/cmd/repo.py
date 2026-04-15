@@ -641,8 +641,6 @@ def repo_update(args: Any) -> int:
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)
 
-    return 0
-
 
 def repo_show_updates(args: Any) -> int:
     """show version specs that were added between two commits"""
@@ -664,7 +662,7 @@ def repo_show_updates(args: Any) -> int:
         }
 
     if not pkgs:
-        tty.warn("No packages were added or changed between the specified refs")
+        tty.info("No packages were added or changed between the specified refs", stream=sys.stderr)
         return 0
 
     # Collect version specs that were added
@@ -693,7 +691,7 @@ def repo_show_updates(args: Any) -> int:
         # Create specs for new versions
         for version in new_versions:
             version_spec = spack.spec.Spec(pkg_name)
-            version_spec.versions = VersionList([version])
+            version_spec.constrain(f"@={version}")
             specs_to_output.append(version_spec)
 
     # Filter out git versions if requested
@@ -713,14 +711,12 @@ def repo_show_updates(args: Any) -> int:
         ]
 
     if not specs_to_output:
-        tty.warn("No new package versions found between the specified refs")
+        tty.info("No new package versions found between the specified refs", stream=sys.stderr)
         return 0
 
     # Output specs one per line
     for spec in specs_to_output:
         print(spec)
-
-    return 0
 
 
 def repo(parser, args):

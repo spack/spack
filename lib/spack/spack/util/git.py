@@ -120,7 +120,7 @@ def git(required: bool = False) -> Optional[GitExecutable]:
         git.add_default_arg("-c", "protocol.file.allow=always")
 
     # Blacklist environment variables that can interfere with git diff operations
-    # this can cause problems for spack ci verify-versions and spack ci create-source-mirror
+    # this can cause problems for spack ci verify-versions and spack repo show-version-updates
     env_blacklist = EnvironmentModifications()
     env_blacklist.unset("GIT_EXTERNAL_DIFF")
     env_blacklist.unset("GIT_DIFF_OPTS")

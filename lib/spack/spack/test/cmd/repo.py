@@ -951,10 +951,7 @@ def test_repo_show_updates_no_changes(mock_git_package_changes):
         output = repo("show-updates", test_repo.root, commits[-1], commits[-1])
 
         # Should have warning message
-        assert (
-            "No new package versions found" in output
-            or "No packages were added or changed" in output
-        )
+        assert "No packages were added or changed" in output
 
         # Should not have any specs
         assert "diff-test@" not in output
@@ -1002,10 +999,7 @@ def test_repo_show_updates_excludes_manual_packages(monkeypatch, mock_git_packag
 
         # Package should be excluded
         assert "diff-test@" not in output
-        assert (
-            "No packages were added or changed" in output
-            or "No new package versions found" in output
-        )
+        assert "No packages were added or changed" in output
 
 
 def test_repo_show_updates_excludes_non_redistributable(monkeypatch, mock_git_package_changes):
@@ -1024,10 +1018,7 @@ def test_repo_show_updates_excludes_non_redistributable(monkeypatch, mock_git_pa
 
         # Package should be excluded
         assert "diff-test@" not in output
-        assert (
-            "No packages were added or changed" in output
-            or "No new package versions found" in output
-        )
+        assert "No new package versions found" in output
 
 
 def test_repo_show_updates_excludes_git_versions(mock_git_package_changes):
