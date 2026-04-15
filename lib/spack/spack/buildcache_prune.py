@@ -276,6 +276,7 @@ def prune_direct(
         # Attempt to regex match the manifest name in order to extract the name, version,
         # and hash for the spec.
         manifest_name = manifest.split("/")[-1]  # strip off parent directories
+        # Schema is <package>-<version>-<spec hash>
         regex_match = re.match(r"([^ ]+)-([^- ]+)[-_]([^-_\. ]+)", manifest_name)
 
         if regex_match is None:
