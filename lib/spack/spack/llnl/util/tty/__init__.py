@@ -233,21 +233,13 @@ def debug(
         info(message, *args, format=format, stream=stream_arg, **kwargs)
 
 
-def error(
-    message, *args, format: str = "*r", stream: Optional[IO[str]] = None, **kwargs
-) -> None:
+def error(message, *args, format: str = "*r", stream: Optional[IO[str]] = None, **kwargs) -> None:
     """Print an error message."""
     if not error_enabled():
         return
 
     stream = stream or sys.stderr
-    info(
-        f"Error: {message}",
-        *args,
-        format=format,
-        stream=stream,
-        **kwargs,
-    )
+    info(f"Error: {message}", *args, format=format, stream=stream, **kwargs)
 
 
 def warn(message, *args, format: str = "*Y", stream: Optional[IO[str]] = None, **kwargs) -> None:
@@ -256,13 +248,7 @@ def warn(message, *args, format: str = "*Y", stream: Optional[IO[str]] = None, *
         return
 
     stream = stream or sys.stderr
-    info(
-        f"Warning: {message}",
-        *args,
-        format=format,
-        stream=stream,
-        **kwargs,
-    )
+    info(f"Warning: {message}", *args, format=format, stream=stream, **kwargs)
 
 
 def die(message, *args, countback: int = 4, **kwargs) -> NoReturn:
