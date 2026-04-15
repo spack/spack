@@ -83,6 +83,7 @@ import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
+from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
@@ -561,8 +562,11 @@ def worker_function(
             )
     except spack.error.StopPhase:
         exit_code = EXIT_STOPPED_AT_PHASE
+    except ProcessError as e:
+        print(e, file=sys.stderr)
+        exit_code = 1
     except BaseException:
-        traceback.print_exc()  # log the traceback to the log file
+        traceback.print_exc(limit=-4)
         exit_code = 1
     finally:
         tee.close()
