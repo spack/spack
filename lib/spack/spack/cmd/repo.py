@@ -566,7 +566,7 @@ def _iter_repos_from_descriptors(
             yield name, descriptor.repository, None  # None indicates remote descriptor
 
 
-def repo_update(args: Any) -> int:
+def repo_update(args):
     """update one or more package repositories"""
     descriptors = spack.repo.RepoDescriptors.from_config(
         spack.repo.package_repository_lock(), spack.config.CONFIG
@@ -642,7 +642,7 @@ def repo_update(args: Any) -> int:
         spack.config.set("repos", scope_repos, args.scope)
 
 
-def repo_show_updates(args: Any) -> int:
+def repo_show_updates(args):
     """show version specs that were added between two commits"""
     # Get the repository by name or path
     repo = _get_repo(args.repository)
