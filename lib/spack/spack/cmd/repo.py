@@ -25,7 +25,7 @@ import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.llnl.util.tty import color
-from spack.version import StandardVersion, VersionList
+from spack.version import StandardVersion
 
 description = "manage package source repositories"
 section = "config"
