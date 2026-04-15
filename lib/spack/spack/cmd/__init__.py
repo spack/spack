@@ -639,29 +639,26 @@ def extant_file(f):
     return f
 
 
-def require_active_env(cmd_name):
-    """Used by commands to get the active environment
+def require_active_env(parser):
+    """Used by commands to get the active environment.
 
-    If an environment is not found, print an error message that says the calling
-    command *needs* an active environment.
+    If an environment is not found, calls ``parser.error()`` which prints usage and exits.
 
     Arguments:
-        cmd_name (str): name of calling command
+        parser: the subparser for the command (typically ``args.subparser``)
 
     Returns:
         (spack.environment.Environment): the active environment
     """
     env = ev.active_environment()
-
     if env:
         return env
-
-    tty.die(
-        "`spack %s` requires an environment" % cmd_name,
-        "activate an environment first:",
-        "    spack env activate ENV",
-        "or use:",
-        "    spack -e ENV %s ..." % cmd_name,
+    parser.error(
+        "requires an active environment\n"
+        "  activate an environment first:\n"
+        "      spack env activate ENV\n"
+        "  or use:\n"
+        "      spack -e ENV %s ..." % parser.prog.partition(" ")[2]
     )
 
 

@@ -369,6 +369,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 help=module.description,
                 description=module.description,
             )
+            subparser.set_defaults(subparser=subparser)
             module.setup_parser(subparser)
 
         # return the callable function for the command
@@ -628,7 +629,7 @@ def _invoke_command(command, parser, args, unknown_args):
         return_val = command(parser, args, unknown_args)
     else:
         if unknown_args:
-            tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
+            args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
         return_val = command(parser, args)
 
     # Allow commands to return and error code if they want

@@ -104,7 +104,7 @@ def location(parser, args):
     if args.location_env is not False:
         if args.location_env is None:
             # Get current environment path
-            spack.cmd.require_active_env("location -e")
+            spack.cmd.require_active_env(args.subparser)
             path = ev.active_environment().path
         else:
             # Get path of requested environment
@@ -131,10 +131,10 @@ def location(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        tty.die("You must supply a spec.")
+        args.subparser.error("requires a spec")
 
     if len(specs) != 1:
-        tty.die("Too many specs.  Supply only one.")
+        args.subparser.error("too many specs, supply only one")
 
     # install_dir command matches against installed specs.
     if args.install_dir:

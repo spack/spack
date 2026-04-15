@@ -8,7 +8,6 @@ import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.error
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
@@ -68,7 +67,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def unload(parser, args):
     """unload spack packages from the user environment"""
     if args.specs and args.all:
-        raise spack.error.SpackError(
+        args.subparser.error(
             "Cannot specify specs on command line when unloading all specs with '--all'"
         )
 

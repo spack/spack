@@ -57,7 +57,7 @@ def change(parser, args):
     if args.list_name != "specs" and args.concrete_only:
         warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
 
-    env = spack.cmd.require_active_env(cmd_name="change")
+    env = spack.cmd.require_active_env(args.subparser)
 
     match_spec = None
     if args.match_spec:

@@ -52,6 +52,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="show configuration as seen by this environment spec group (requires active env)",
     )
+    get_parser.set_defaults(subparser=get_parser)
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -69,6 +70,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="show configuration as seen by this environment spec group (requires active env)",
     )
+    blame_parser.set_defaults(subparser=blame_parser)
 
     edit_parser = sp.add_parser("edit", help="edit configuration file")
     edit_parser.add_argument(
@@ -81,8 +83,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     edit_parser.add_argument(
         "--print-file", action="store_true", help="print the file name that would be edited"
     )
+    edit_parser.set_defaults(subparser=edit_parser)
 
-    sp.add_parser("list", help="list configuration sections")
+    list_parser = sp.add_parser("list", help="list configuration sections")
+    list_parser.set_defaults(subparser=list_parser)
 
     scopes_parser = sp.add_parser(
         "scopes", help="list defined scopes in descending order of precedence"
@@ -119,6 +123,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         nargs="?",
         choices=spack.config.SECTION_SCHEMAS,
     )
+    scopes_parser.set_defaults(subparser=scopes_parser)
 
     add_parser = sp.add_parser("add", help="add configuration parameters")
     add_parser.add_argument(
@@ -127,10 +132,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="colon-separated path to config that should be added, e.g. 'config:default:true'",
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
+    add_parser.set_defaults(subparser=add_parser)
 
     change_parser = sp.add_parser("change", help="swap variants etc. on specs in config")
     change_parser.add_argument("path", help="colon-separated path to config section with specs")
     change_parser.add_argument("--match-spec", help="only change constraints that match this")
+    change_parser.set_defaults(subparser=change_parser)
 
     prefer_upstream_parser = sp.add_parser(
         "prefer-upstream", help="set package preferences from upstream"
@@ -142,12 +149,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="set packages preferences based on local installs, rather than upstream",
     )
+    prefer_upstream_parser.set_defaults(subparser=prefer_upstream_parser)
 
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
     remove_parser.add_argument(
         "path",
         help="colon-separated path to config that should be removed, e.g. 'config:default:true'",
     )
+    remove_parser.set_defaults(subparser=remove_parser)
 
     # Make the add parser available later
     setattr(setup_parser, "add_parser", add_parser)
@@ -155,12 +164,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     update = sp.add_parser("update", help="update configuration files to the latest format")
     arguments.add_common_arguments(update, ["yes_to_all"])
     update.add_argument("section", help="section to update")
+    update.set_defaults(subparser=update)
 
     revert = sp.add_parser(
         "revert", help="revert configuration files to their state before update"
     )
     arguments.add_common_arguments(revert, ["yes_to_all"])
     revert.add_argument("section", help="section to update")
+    revert.set_defaults(subparser=revert)
 
 
 def _get_scope_and_section(args):
@@ -190,15 +201,16 @@ def _get_scope_and_section(args):
 
 def print_configuration(args, *, blame: bool) -> None:
     if args.scope and args.scope not in spack.config.existing_scope_names():
-        tty.die(f"the argument --scope={args.scope} must refer to an existing scope.")
+        args.subparser.error(f"the argument --scope={args.scope} must refer to an existing scope.")
     if args.scope and args.section is None:
-        tty.die(f"the argument --scope={args.scope} requires specifying a section.")
+        args.subparser.error(f"the argument --scope={args.scope} requires specifying a section.")
 
     group = getattr(args, "group", None)
     if group is not None:
         env = ev.active_environment()
         if env is None:
-            tty.die("the argument --group requires an active environment")
+            args.subparser.error("the argument --group requires an active environment")
+            return  # parser.error exits, but help mypy understand this is unreachable
         try:
             with env.config_override_for_group(group=group):
                 _print_configuration_helper(args, blame=blame)
@@ -282,7 +294,7 @@ def config_edit(args):
         # If we aren't editing a spack.yaml file, get config path from scope.
         scope, section = _get_scope_and_section(args)
         if not scope and not section:
-            tty.die("`spack config edit` requires a section argument or an active environment.")
+            args.subparser.error("requires a section argument or an active environment")
         config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     if args.print_file:

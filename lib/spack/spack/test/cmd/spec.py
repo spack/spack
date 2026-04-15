@@ -140,7 +140,7 @@ def test_spec_deptypes_edges():
 def test_spec_returncode():
     with pytest.raises(SpackCommandError):
         spec()
-    assert spec.returncode == 1
+    assert spec.returncode != 0
 
 
 def test_spec_parse_error():

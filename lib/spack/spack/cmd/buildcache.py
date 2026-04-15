@@ -144,7 +144,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "(can be specified multiple times, requires an active environment)",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
-    push.set_defaults(func=push_fn)
+    push.set_defaults(func=push_fn, subparser=push)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
     install.add_argument(
@@ -167,7 +167,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     arguments.add_common_arguments(install, ["specs"])
-    install.set_defaults(func=install_fn)
+    install.set_defaults(func=install_fn, subparser=install)
 
     listcache = subparsers.add_parser("list", help=list_fn.__doc__)
     arguments.add_common_arguments(listcache, ["long", "very_long", "namespaces"])
@@ -185,7 +185,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="list specs for all available architectures instead of default platform and OS",
     )
     arguments.add_common_arguments(listcache, ["specs"])
-    listcache.set_defaults(func=list_fn)
+    listcache.set_defaults(func=list_fn, subparser=listcache)
 
     keys = subparsers.add_parser("keys", help=keys_fn.__doc__)
     keys.add_argument(
@@ -193,7 +193,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
-    keys.set_defaults(func=keys_fn)
+    keys.set_defaults(func=keys_fn, subparser=keys)
 
     # Check if binaries need to be rebuilt on remote mirror
     check = subparsers.add_parser("check", help=check_fn.__doc__)
@@ -219,7 +219,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     arguments.add_common_arguments(check, ["specs"])
 
-    check.set_defaults(func=check_fn)
+    check.set_defaults(func=check_fn, subparser=check)
 
     # Download tarball and specfile
     download = subparsers.add_parser("download", help=download_fn.__doc__)
@@ -231,7 +231,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=None,
         help="path to directory where tarball should be downloaded",
     )
-    download.set_defaults(func=download_fn)
+    download.set_defaults(func=download_fn, subparser=download)
 
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
     prune.add_argument(
@@ -248,7 +248,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         help="do not actually delete anything from the buildcache, but log what would be deleted",
     )
-    prune.set_defaults(func=prune_fn)
+    prune.set_defaults(func=prune_fn, subparser=prune)
 
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
@@ -263,7 +263,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     savespecfile.add_argument(
         "--specfile-dir", required=True, help="path to directory where spec yamls should be saved"
     )
-    savespecfile.set_defaults(func=save_specfile_fn)
+    savespecfile.set_defaults(func=save_specfile_fn, subparser=savespecfile)
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
@@ -298,7 +298,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="destination mirror name, path, or URL",
     )
 
-    sync.set_defaults(func=sync_fn)
+    sync.set_defaults(func=sync_fn, subparser=sync)
 
     # Check the validity of a buildcache
     check_index = subparsers.add_parser("check-index", help=check_index_fn.__doc__)
@@ -318,7 +318,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     check_index.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
-    check_index.set_defaults(func=check_index_fn)
+    check_index.set_defaults(func=check_index_fn, subparser=check_index)
 
     # Update buildcache index without copying any additional packages
     update_index = subparsers.add_parser(
@@ -359,7 +359,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="if provided, key index will be updated as well as package index",
     )
     arguments.add_common_arguments(update_index, ["yes_to_all"])
-    update_index.set_defaults(func=update_index_fn)
+    update_index.set_defaults(func=update_index_fn, subparser=update_index)
 
     # Migrate a buildcache from layout_version 2 to version 3
     migrate = subparsers.add_parser("migrate", help=migrate_fn.__doc__)
@@ -380,7 +380,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     arguments.add_common_arguments(migrate, ["yes_to_all"])
     # TODO: add -y argument to prompt if user really means to delete existing
-    migrate.set_defaults(func=migrate_fn)
+    migrate.set_defaults(func=migrate_fn, subparser=migrate)
 
 
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
@@ -459,7 +459,7 @@ def push_fn(args):
         tty.die("--group and explicit specs are mutually exclusive")
 
     if args.groups:
-        env = spack.cmd.require_active_env(cmd_name="buildcache push")
+        env = spack.cmd.require_active_env(args.subparser)
         available_groups = env.manifest.groups()
         if any(g not in available_groups for g in args.groups):
             tty.die(
@@ -471,7 +471,7 @@ def push_fn(args):
     elif args.specs:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
-        roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
+        roots = spack.cmd.require_active_env(args.subparser).concrete_roots()
 
     mirror = args.mirror
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
@@ -628,7 +628,7 @@ def check_fn(args: argparse.Namespace):
     if specs_arg:
         specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
     else:
-        specs = spack.cmd.require_active_env("buildcache check").all_specs()
+        specs = spack.cmd.require_active_env(args.subparser).all_specs()
 
     if not specs:
         tty.msg("No specs provided, exiting.")
@@ -795,7 +795,7 @@ def sync_fn(args):
     dest_mirror_url = dest_mirror.push_url
 
     # Get the active environment
-    env = spack.cmd.require_active_env(cmd_name="buildcache sync")
+    env = spack.cmd.require_active_env(args.subparser)
 
     tty.msg(
         "Syncing environment buildcache files from {0} to {1}".format(
@@ -892,6 +892,7 @@ def update_view(
     name: Optional[str] = None,
     update_keys: bool = False,
     yes_to_all: bool = False,
+    parser=None,
 ):
     """update a buildcache view index"""
     # OCI images do not support views.
@@ -951,7 +952,7 @@ def update_view(
             hashes.extend(env.all_hashes())
     else:
         # Get hashes in the current active environment
-        hashes = spack.cmd.require_active_env(cmd_name="buildcache update-view").all_hashes()
+        hashes = spack.cmd.require_active_env(parser).all_hashes()
 
     if not hashes:
         tty.warn("No specs found for view, creating an empty index")
@@ -1130,6 +1131,7 @@ def update_index_fn(args):
             name=args.name,
             update_keys=args.keys,
             yes_to_all=args.yes_to_all,
+            parser=args.subparser,
         )
     else:
         update_index(args.mirror, update_keys=args.keys, timer=t)

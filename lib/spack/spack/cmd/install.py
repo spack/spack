@@ -287,7 +287,7 @@ def _dump_log_on_error(e: InstallError):
             shutil.copyfileobj(log, sys.stderr)
 
 
-def _die_require_env():
+def _die_require_env(parser):
     msg = "install requires a package argument or active environment"
     if "spack.yaml" in os.listdir(os.getcwd()):
         # There's a spack.yaml file in the working dir, the user may
@@ -301,7 +301,7 @@ def _die_require_env():
             "  OR\n"
             "    spack --env . install"
         )
-    tty.die(msg)
+    parser.error(msg)
 
 
 def install(parser, args):
@@ -326,7 +326,7 @@ def install(parser, args):
     env = ev.active_environment()
 
     if not env and not args.spec:
-        _die_require_env()
+        _die_require_env(args.subparser)
 
     try:
         if env:

@@ -49,7 +49,7 @@ def _update_config(specs_to_remove):
 def undevelop(parser, args):
     # TODO: when https://github.com/spack/spack/pull/35307 is merged,
     # an active env is not required if a scope is specified
-    env = spack.cmd.require_active_env(cmd_name="undevelop")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.all:
         remove_specs = [spack.spec.Spec(s) for s in env.dev_specs]

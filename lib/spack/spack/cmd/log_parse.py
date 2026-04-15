@@ -7,7 +7,6 @@ import io
 import sys
 import warnings
 
-import spack.llnl.util.tty as tty
 from spack.util.log_parse import make_log_context, parse_log_events
 
 description = "filter errors and warnings from build logs"
@@ -67,7 +66,7 @@ def log_parse(parser, args):
     types = [s.strip() for s in args.show.split(",")]
     for e in types:
         if e not in event_types:
-            tty.die("Invalid event type: %s" % e)
+            args.subparser.error("invalid event type: %s" % e)
 
     events = []
     if "errors" in types:

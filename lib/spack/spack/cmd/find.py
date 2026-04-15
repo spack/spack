@@ -402,9 +402,9 @@ def find(parser, args):
     env = ev.active_environment()
 
     if not env and args.only_roots:
-        tty.die("-r / --only-roots requires an active environment")
+        args.subparser.error("-r / --only-roots requires an active environment")
     if not env and args.show_concretized:
-        tty.die("-c / --show-concretized requires an active environment")
+        args.subparser.error("-c / --show-concretized requires an active environment")
 
     try:
         results, concretized_but_not_installed = _find_query(args, env)
