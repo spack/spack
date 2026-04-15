@@ -270,7 +270,7 @@ def prune_direct(
             manifest,
             URLBuildcacheEntry.get_buildcache_component_include_pattern(BuildcacheComponent.SPEC),
         ):
-            tty.info(f"Found a non-spec manifest at {manifest}, skipping...")
+            tty.debug(f"Found a non-spec manifest at {manifest}, skipping...")
             continue
 
         # Attempt to regex match the manifest name in order to extract the name, version,
