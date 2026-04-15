@@ -74,7 +74,7 @@ import math
 import re
 import time
 from collections import deque
-from typing import Dict, List, TextIO, Tuple, Union
+from typing import Dict, List, Optional, TextIO, Tuple, Union
 
 _error_matches = [
     "^FAIL: ",
@@ -328,7 +328,7 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
         return True
 
 
-def _parse(stream, profile, context):
+def _parse(stream, profile, context, tail=0):
 
     error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
     error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
@@ -350,12 +350,14 @@ def _parse(stream, profile, context):
     errors = []
     warnings = []
     # rolling window of recent lines
-    pre_context = deque(maxlen=context)
+    pre_context = deque(maxlen=max(context, tail))
     # list of (event, remaining_post_context_lines)
     pending_events: List[Tuple[LogEvent, int]] = []
 
+    last_line_no = 0
     for i, line in enumerate(stream):
         rstripped_line = line.rstrip()
+        last_line_no = i + 1
 
         # feed this line into every event still collecting post_context
         if pending_events:
@@ -379,7 +381,7 @@ def _parse(stream, profile, context):
             pre_context.append(rstripped_line)
             continue
 
-        event.pre_context = list(pre_context)
+        event.pre_context = list(pre_context)[-context:] if context else []
         event.post_context = []
 
         # get file/line number for the event, if possible
@@ -405,7 +407,14 @@ def _parse(stream, profile, context):
         else:
             warnings.append(event)
 
-    return errors, warnings, timings
+    # build tail section from the last N lines of the log, if requested
+    if tail > 0 and last_line_no > 0:
+        lines = list(pre_context)[-tail:]
+        tail_event = LogEvent(text=lines[-1], line_no=last_line_no, pre_context=lines[:-1])
+    else:
+        tail_event = None
+
+    return errors, warnings, tail_event, timings
 
 
 class CTestLogParser:
@@ -436,20 +445,22 @@ class CTestLogParser:
             index += 1
 
     def parse(
-        self, stream: Union[str, TextIO], context: int = 6
-    ) -> Tuple[List[BuildError], List[BuildWarning]]:
+        self, stream: Union[str, TextIO], context: int = 6, tail: int = 0
+    ) -> Tuple[List[BuildError], List[BuildWarning], Optional[LogEvent]]:
         """Parse a log file by searching each line for errors and warnings.
 
         Args:
             stream: filename or stream to read from
             context: lines of context to extract around each log event
+            tail: if > 0, also return a :class:`LogEvent` with the last ``tail`` lines
 
         Returns:
-            two lists containing :class:`BuildError` and :class:`BuildWarning` objects.
+            two lists containing :class:`BuildError` and :class:`BuildWarning` objects,
+            plus an optional :class:`LogEvent` for the tail (None when ``tail=0``).
         """
         if isinstance(stream, str):
             with open(stream, encoding="utf-8", errors="replace") as f:
-                return self.parse(f, context)
+                return self.parse(f, context, tail)
 
-        errors, warnings, self.timings = _parse(stream, self.profile, context)
-        return errors, warnings
+        errors, warnings, tail_event, self.timings = _parse(stream, self.profile, context, tail)
+        return errors, warnings, tail_event

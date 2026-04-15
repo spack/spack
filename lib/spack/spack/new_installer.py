@@ -83,6 +83,7 @@ import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
+from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if TYPE_CHECKING:
@@ -1358,13 +1359,12 @@ class BuildStatus:
         build_info = self.builds[build_id]
         if not build_info.log_path or not os.path.exists(build_info.log_path):
             return
-        buf = io.StringIO()
-        spack.build_environment.write_log_summary(
-            buf, f"{build_info.name}@{build_info.version} build", build_info.log_path
-        )
-        summary = buf.getvalue()
-        if summary:
-            build_info.log_summary = summary
+        errors, warnings, tail_event = parse_log_events(build_info.log_path, tail=20)
+        events = [*errors, *warnings]
+        if tail_event is not None:
+            events.append(tail_event)
+        if events:
+            build_info.log_summary = make_log_context(events)
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""

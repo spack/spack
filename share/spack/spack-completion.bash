@@ -1415,7 +1415,7 @@ _spack_location() {
 _spack_log_parse() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show -c --context -p --profile -w --width -j --jobs"
+        SPACK_COMPREPLY="-h --help --show -c --context -p --profile -w --width -j --jobs -t --tail"
     else
         SPACK_COMPREPLY=""
     fi

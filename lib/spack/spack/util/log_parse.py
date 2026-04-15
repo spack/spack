@@ -3,25 +3,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import io
-from typing import List, TextIO, Union
+from typing import List, TextIO, Tuple, Union
 
 from spack.llnl.util.tty.color import cescape, colorize
-from spack.util.ctest_log_parser import CTestLogParser, LogEvent
+from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser, LogEvent
 
 __all__ = ["parse_log_events", "make_log_context"]
 
 
-def parse_log_events(stream: Union[str, TextIO], context: int = 6, profile: bool = False):
-    """Extract interesting events from a log file as a list of LogEvent.
+def parse_log_events(
+    stream: Union[str, TextIO], context: int = 6, profile: bool = False, tail: int = 0
+) -> Tuple[List[BuildError], List[BuildWarning], Union[LogEvent, None]]:
+    """Extract interesting events from a log file.
 
     Args:
         stream: build log name or file object
         context: lines of context to extract around each log event
         profile: print out profile information for parsing
+        tail: if > 0, also return the last ``tail`` lines
 
     Returns:
         two lists containing :class:`~spack.util.ctest_log_parser.BuildError` and
-        :class:`~spack.util.ctest_log_parser.BuildWarning` objects.
+        :class:`~spack.util.ctest_log_parser.BuildWarning` objects, plus an optional
+        :class:`~spack.util.ctest_log_parser.LogEvent` for the tail (None when ``tail=0``).
 
     This is a wrapper around :class:`~spack.util.ctest_log_parser.CTestLogParser` that
     lazily constructs a single ``CTestLogParser`` object.  This ensures
@@ -32,7 +36,7 @@ def parse_log_events(stream: Union[str, TextIO], context: int = 6, profile: bool
         parser = CTestLogParser(profile=profile)
         setattr(parse_log_events, "ctest_parser", parser)
 
-    result = parser.parse(stream, context)
+    result = parser.parse(stream, context, tail)
     if profile:
         parser.print_timings()
     return result
@@ -54,7 +58,7 @@ def make_log_context(log_events: List[LogEvent]) -> str:
     Parses the log file for lines containing errors, and prints them out with context.
     Errors are highlighted in red and warnings in yellow. Events are sorted by line number.
     """
-    event_colors = {e.line_no: e.color for e in log_events}
+    event_colors = {e.line_no: e.color for e in log_events if e.color}
     log_events = sorted(log_events, key=lambda e: e.line_no)
 
     out = io.StringIO()

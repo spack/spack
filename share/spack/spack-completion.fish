@@ -2284,7 +2284,7 @@ complete -c spack -n '__fish_spack_using_command location' -l first -f -a find_f
 complete -c spack -n '__fish_spack_using_command location' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack log-parse
-set -g __fish_spack_optspecs_spack_log_parse h/help show= c/context= p/profile w/width= j/jobs=
+set -g __fish_spack_optspecs_spack_log_parse h/help show= c/context= p/profile w/width= j/jobs= t/tail=
 
 complete -c spack -n '__fish_spack_using_command log-parse' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command log-parse' -s h -l help -d 'show this help message and exit'
@@ -2296,6 +2296,8 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -f -
 complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -d 'print out a profile of time spent in regexes during parse'
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f -a width
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command log-parse' -s t -l tail -r -f -a tail
+complete -c spack -n '__fish_spack_using_command log-parse' -s t -l tail -r -d 'number of trailing log lines to show (0 to disable)'
 
 # spack logs
 set -g __fish_spack_optspecs_spack_logs h/help
