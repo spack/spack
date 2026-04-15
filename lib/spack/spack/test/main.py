@@ -98,6 +98,10 @@ def test_main_calls_get_version(capfd, working_env, monkeypatch):
     assert spack.spack_version == out.strip()
 
 
+def test_unrecognized_top_level_flag():
+    assert spack.main.main(["-o", "mirror", "list"]) != 0
+
+
 def test_get_version_bad_git(tmp_path: pathlib.Path, working_env, monkeypatch):
     bad_git = str(tmp_path / "git")
     with open(bad_git, "w", encoding="utf-8") as f:
