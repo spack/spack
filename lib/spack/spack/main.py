@@ -1086,11 +1086,12 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:
         _profile_wrapper(command, main_args, parser, args, unknown)
     elif main_args.pdb:
-        args_without_pdb = [arg for arg in sys.argv[1:] if arg != "--pdb"]
-        formatted_args = " ".join(shlex.quote(x) for x in args_without_pdb)
+        new_args = [sys.executable, "-m", "pdb", spack.paths.spack_script]
+        new_args.extend(arg for arg in sys.argv[1:] if arg != "--pdb")
+        formatted_args = " ".join(shlex.quote(arg) for arg in new_args)
         tty.warn(
             "The --pdb flag is deprecated and will be removed in Spack v1.3. "
-            f"Use `{sys.executable} -m pdb {spack.paths.spack_script} {formatted_args}` instead."
+            f"Use `{formatted_args}` instead."
         )
         import pdb
 
