@@ -53,7 +53,7 @@ def test_install_location(working_env, tmp_path, mutable_config, set_home):
     p4 = SpackPaths(paths_base_empty_old_install())
     assert p4.default_install_location == str(pathlib.Path(xdg_data_home) / "spack" / "installs")
 
-    _unconditional_path_override_checks(tmp_path, paths_base_empty_old_install, False)
+    _install_path_checks(tmp_path, paths_base_empty_old_install, False)
 
 
 def test_install_location_old_installs_exist(working_env, tmp_path, mutable_config, set_home):
@@ -99,10 +99,10 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
     (pathlib.Path(xdg_installs_location) / "afile").touch()
     assert p4.default_install_location == nonempty_dir
 
-    _unconditional_path_override_checks(tmp_path, paths_base_nonempty_old_install, True)
+    _install_path_checks(tmp_path, paths_base_nonempty_old_install, True)
 
 
-def _unconditional_path_override_checks(tmp_path, base_paths_generator, force_old_layout):
+def _install_path_checks(tmp_path, base_paths_generator, force_old_layout):
     def check(paths, new_path):
         if force_old_layout:
             assert paths.default_install_location == paths.base.old_install_path
