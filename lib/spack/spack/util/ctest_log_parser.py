@@ -77,6 +77,8 @@ from collections import deque
 from contextlib import contextmanager
 from typing import List, TextIO, Tuple, Union
 
+from spack.llnl.util.lang import optimize_regexes
+
 _error_matches = [
     "^FAIL: ",
     "^FATAL: ",
@@ -317,14 +319,12 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
 
 def _parse(stream, profile, context):
-    def compile(regex_array):
-        return [re.compile(regex) for regex in regex_array]
 
-    error_matches = compile(_error_matches)
-    error_exceptions = compile(_error_exceptions)
-    warning_matches = compile(_warning_matches)
-    warning_exceptions = compile(_warning_exceptions)
-    file_line_matches = compile(_file_line_matches)
+    error_matches = [re.compile(r) for r in optimize_regexes(sorted(_error_matches))]
+    error_exceptions = [re.compile(r) for r in optimize_regexes(sorted(_error_exceptions))]
+    warning_matches = [re.compile(r) for r in optimize_regexes(sorted(_warning_matches))]
+    warning_exceptions = [re.compile(r) for r in optimize_regexes(sorted(_warning_exceptions))]
+    file_line_matches = [re.compile(r) for r in _file_line_matches]
 
     matcher, _ = _match, []
     timings = []
@@ -414,10 +414,10 @@ class CTestLogParser:
 
         index = 0
         for name, arr in [
-            ("error_matches", _error_matches),
-            ("error_exceptions", _error_exceptions),
-            ("warning_matches", _warning_matches),
-            ("warning_exceptions", _warning_exceptions),
+            ("error_matches", optimize_regexes(sorted(_error_matches))),
+            ("error_exceptions", optimize_regexes(sorted(_error_exceptions))),
+            ("warning_matches", optimize_regexes(sorted(_warning_matches))),
+            ("warning_exceptions", optimize_regexes(sorted(_warning_exceptions))),
         ]:
             print()
             print(name)

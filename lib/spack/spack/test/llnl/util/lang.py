@@ -17,6 +17,7 @@ from spack.llnl.util.lang import (
     dedupe,
     match_predicate,
     memoized,
+    optimize_regexes,
     pretty_date,
 )
 
@@ -410,3 +411,71 @@ class TestPriorityOrderedMapping:
 
         assert list(m.values()) == [1, 2, 3]
         assert list(m.reversed_values()) == [3, 2, 1]
+
+
+class TestOptimizeRegexes:
+    def test_groups_by_leading_literal(self):
+        """Regexes sharing a leading literal character are combined into one."""
+        result = optimize_regexes(["bar", "far", "foo"])
+        assert len(result) == 2
+        combined = re.compile(result[0])
+        assert combined.search("bar")
+        combined = re.compile(result[1])
+        assert combined.search("foo")
+        assert combined.search("far")
+
+    def test_groups_anchored_patterns(self):
+        """^-anchored regexes all share the ^ prefix and are combined into one."""
+        result = optimize_regexes(["^Error: ", "^Error ([0-9]+):", "^Fatal"])
+        # ^ is treated as a literal prefix, so all three are grouped together
+        assert len(result) == 1
+        combined_re = re.compile(result[0])
+        assert combined_re.search("Error: something")
+        assert combined_re.search("Error 42:")
+        assert combined_re.search("Fatal")
+
+    def test_singletons_unchanged(self):
+        """A regex that is the only one with its prefix is kept as-is."""
+        result = optimize_regexes(["^unique pattern"])
+        assert result == ["^unique pattern"]
+
+    def test_metachar_prefix_not_grouped(self):
+        """Regexes starting with metacharacters are not grouped together."""
+        inputs = ["\\(foo\\)", "\\(bar\\)", "[abc]"]
+        result = optimize_regexes(inputs)
+        assert len(result) == 3
+
+    def test_semantics_preserved(self):
+        """Optimized regexes match the same strings as the originals."""
+        originals = [
+            "^FAIL: ",
+            "^FATAL: ",
+            "^failed ",
+            ": error",
+            ": warning",
+            "make: Fatal error",
+            "make\\[.*\\]: \\*\\*\\*",
+        ]
+        test_lines = [
+            "FAIL: test_something",
+            "FATAL: crash",
+            "failed to build",
+            "foo.c: error: syntax",
+            "foo.c: warning: unused",
+            "make: Fatal error in target",
+            "make[1]: *** Error 1",
+            "this matches nothing",
+        ]
+        compiled_orig = [re.compile(r) for r in originals]
+        compiled_opt = [re.compile(r) for r in optimize_regexes(originals)]
+
+        for line in test_lines:
+            orig_match = any(r.search(line) for r in compiled_orig)
+            opt_match = any(r.search(line) for r in compiled_opt)
+            assert orig_match == opt_match, f"mismatch on {line!r}"
+
+    def test_fewer_patterns_than_input(self):
+        """Optimization reduces the number of patterns."""
+        inputs = ["make: error", "make: fatal", "ld: error", "ld: fatal", "unique"]
+        result = optimize_regexes(inputs)
+        assert len(result) < len(inputs)
