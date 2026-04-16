@@ -72,38 +72,34 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 
     set_home(home_prefix)
 
-    # The new default installs dir is ignored if it is empty and
-    # the old install location has anything in it
+    # The new default installs dir is ignored if the old install
+    # location has anything in it
     p1 = SpackPaths(paths_base_nonempty_old_install())
     assert p1.default_install_location == nonempty_dir
 
-    # If there are spack installs in the new installs dir, it is
-    # preferred over the old dir
+    # This is continues to hold even if the new default install
+    # directory has installs in it
     new_default_installs_dir = _ensure_dir(
         pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
     )
     (pathlib.Path(new_default_installs_dir) / "afile").touch()
-    assert p1.default_install_location == new_default_installs_dir
-    warning_msg1 = p1.warn_unused_old_installs(_show=False)
-    assert f"Bypassing data for installs existing in: {p1.base.old_install_path}" in warning_msg1
-    assert f"In favor of: {new_default_installs_dir}" in warning_msg1
+    assert p1.default_install_location == nonempty_dir
+
+    # TODO: no warning here
 
     spack.config.set("config:locations", {})
 
-    # XDG_DATA_HOME overrides the old install location *even if it is empty
-    # and the old install location is not*, if there are installs in the new
-    # default location
+    # XDG_DATA_HOME does not override the old install location if it
+    # if there are installs in the old location
     xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p4 = SpackPaths(paths_base_nonempty_old_install())
     xdg_installs_location = _ensure_dir(pathlib.Path(xdg_data_home) / "spack" / "installs")
-    assert p4.default_install_location == str(xdg_installs_location)
-    warning_msg4 = p4.warn_unused_old_installs(_show=False)
-    assert f"In favor of: {xdg_installs_location}" in warning_msg4
+    assert p4.default_install_location == nonempty_dir
 
-    # (sanity) XDG_DATA_HOME still overrides when there is something in it
+    # ... XDG_DATA_HOME still does not override the old install location
     (pathlib.Path(xdg_installs_location) / "afile").touch()
-    assert p4.default_install_location == str(xdg_installs_location)
+    assert p4.default_install_location == nonempty_dir
 
     _unconditional_path_override_checks(tmp_path, paths_base_nonempty_old_install)
 
@@ -196,6 +192,7 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
 
     new_default_gpg_base = pathlib.Path(base_prefix) / ".local" / "share" / "spack"
 
+    # Nothing in any of the old locations: we should use the new one
     p1 = SpackPaths(SpackPathsBase(base_prefix))
     assert p1.gpg_path == str(new_default_gpg_base / "gpg")
     assert p1.gpg_keys_path == str(new_default_gpg_base / "gpg-keys")
@@ -203,7 +200,7 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     old_gpg_dir = pathlib.Path(base_prefix) / "opt" / "spack" / "gpg"
     (old_gpg_dir).mkdir(parents=True)
     p1 = SpackPaths(SpackPathsBase(base_prefix))
-    # Old dir exists, but is empty, so it should not be used
+    # Old dir exists, but is empty, so it should still not be used
     assert p1.gpg_path == str(new_default_gpg_base / "gpg")
 
     # Put something in the old dir: it should now redirect
@@ -211,21 +208,17 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     p1 = SpackPaths(SpackPathsBase(base_prefix))
     assert p1.gpg_path == str(old_gpg_dir)
 
-    # But the keys are handled separately and should use the new path
-    new_gpg_keys_dir = pathlib.Path(new_default_gpg_base / "gpg-keys")
-    assert p1.gpg_keys_path == str(new_gpg_keys_dir)
-
-    # Check that the keys will also redirect
+    # Old keys path is used if old gpg path is used: all data is
+    # relocated together
     old_gpg_keys_dir = pathlib.Path(base_prefix) / "var" / "spack" / "gpg"
-    old_gpg_keys_dir.mkdir(parents=True)
-    (old_gpg_keys_dir / "something").touch()
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
     assert p1.gpg_keys_path == str(old_gpg_keys_dir)
 
-    # When something is in both the new and old locations, prefer the new
-    new_gpg_keys_dir.mkdir(parents=True)
-    (new_gpg_keys_dir / "something").touch()
-    assert p1.gpg_keys_path == str(new_gpg_keys_dir)
+    # When something is in both the new and old locations, prefer the old
+    new_gpg_dir = new_default_gpg_base / "gpg"
+    new_gpg_dir.mkdir(parents=True)
+    (new_gpg_dir / "something").touch()
+    p1 = SpackPaths(SpackPathsBase(base_prefix))
+    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
 
     # And the gpg dir itself remains the old dir: reaffirm that
     assert p1.gpg_path == str(old_gpg_dir)

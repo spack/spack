@@ -23,7 +23,12 @@ import spack.paths_base as paths_base
 def dir_is_occupied(x, except_for=None):
     x = pathlib.Path(x)
     except_for = except_for or set()
-    return x.is_dir() and bool(set(x.iterdir()) - except_for)
+    if not x.is_dir():
+        return False
+    for path in x.iterdir():
+        if path.parts[-1] not in except_for:
+            return True
+    return False
 
 
 class Provenance(Enum):
@@ -89,6 +94,8 @@ class SpackPaths:
         self.default_data_home = os.path.join(
             os.path.expanduser("~"), SpackPaths.relative_data_home, "spack"
         )
+
+        self.old_layout = detect_old_spack_layout(base)
 
     @property
     def state_home(self):
@@ -393,17 +400,26 @@ class SpackPaths:
     def _decide_old_or_new_location(
         self, old_location, new_location, default_new_location, provenance
     ):
-        if dir_is_occupied(new_location) or provenance.unilateral_override():
-            return new_location
-        elif dir_is_occupied(default_new_location):
-            # This can occur e.g. if someone clones a new instance of spack,
-            # which would write into the default new location, and then later
-            # they set XDG_DATA_HOME
-            return new_location
-        elif dir_is_occupied(old_location):
+        if self.old_layout:
             return old_location
         else:
             return new_location
+
+
+def detect_old_spack_layout(paths: paths_base.SpackPathsBase):
+    checks = [
+        # It's important if this directory is occupied but we have a separate
+        # check for that, so exclude that directory here
+        (paths.old_install_path, ["gpg"]),
+        (paths.old_envs_path, []),
+        (paths.old_fetch_cache_path, []),
+        (paths.old_gpg_path, []),
+        (paths.old_gpg_keys_path, ["README.md"]),
+    ]
+    for x, y in checks:
+        if dir_is_occupied(x, except_for=set(y)):
+            return True
+    return False
 
 
 locations = SpackPaths(paths_base.locations)
