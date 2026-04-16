@@ -40,8 +40,6 @@ properties: Dict[str, Any] = {
             # extra environment schema properties
             # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
-            # nested environments
-            "spack": {"$ref": "#/spack/properties"},
         },
     }
 }
