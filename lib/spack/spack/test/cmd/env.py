@@ -4964,3 +4964,34 @@ def test_create_with_orphaned_directory(mutable_mock_env_path: pathlib.Path):
 
     assert ev.exists("test1")
     assert "test1" in env("list")
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        # valid environment: spack.yaml is a regular file
+        pytest.param("valid", id="valid"),
+        # orphaned directory: no spack.yaml at all
+        pytest.param("orphaned", id="orphaned"),
+        # broken manifest symlink: spack.yaml points to a non-existent target
+        pytest.param("broken_symlink", id="broken_symlink"),
+    ],
+)
+@pytest.mark.regression("52247")
+def test_exists_consistent_with_all_environment_names(
+    mutable_mock_env_path: pathlib.Path, setup: str
+):
+    """Tests that exists() and all_environment_names() agree on whether an environment exists."""
+    env_dir = mutable_mock_env_path / "myenv"
+    env_dir.mkdir(parents=True)
+    manifest = env_dir / ev.manifest_name
+
+    if setup == "valid":
+        manifest.write_text(ev.default_manifest_yaml())
+    elif setup == "orphaned":
+        pass  # no manifest
+    elif setup == "broken_symlink":
+        manifest.symlink_to("/nonexistent/spack.yaml")
+
+    listed = "myenv" in ev.all_environment_names()
+    assert ev.exists("myenv") == listed

@@ -311,7 +311,7 @@ def exists(name):
     if not valid_env_name(name):
         return False
     env_root = _root(name)
-    return os.path.isdir(env_root) and os.path.exists(os.path.join(env_root, manifest_name))
+    return os.path.isdir(env_root) and os.path.lexists(os.path.join(env_root, manifest_name))
 
 
 def active(name):
