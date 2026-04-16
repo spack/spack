@@ -1137,7 +1137,7 @@ _spack_env_view() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY=""
+        SPACK_COMPREPLY="disable enable regenerate"
     fi
 }
 
