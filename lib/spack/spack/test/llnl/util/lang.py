@@ -414,15 +414,11 @@ class TestPriorityOrderedMapping:
 
 
 class TestOptimizeRegexes:
-    def test_groups_by_leading_literal(self):
-        """Regexes sharing a leading literal character are combined into one."""
+    def test_groups_by_first_char(self):
+        """Regexes sharing a first character are combined into one."""
         result = optimize_regexes(["bar", "far", "foo"])
         assert len(result) == 2
-        combined = re.compile(result[0])
-        assert combined.search("bar")
-        combined = re.compile(result[1])
-        assert combined.search("foo")
-        assert combined.search("far")
+        assert result == ["bar", "far|foo"]
 
     def test_groups_anchored_patterns(self):
         """^-anchored regexes all share the ^ prefix and are combined into one."""
@@ -439,11 +435,11 @@ class TestOptimizeRegexes:
         result = optimize_regexes(["^unique pattern"])
         assert result == ["^unique pattern"]
 
-    def test_metachar_prefix_not_grouped(self):
-        """Regexes starting with metacharacters are not grouped together."""
+    def test_metachar_prefix_grouped(self):
+        """Regexes starting with the same metacharacter are grouped too."""
         inputs = ["\\(foo\\)", "\\(bar\\)", "[abc]"]
         result = optimize_regexes(inputs)
-        assert len(result) == 3
+        assert len(result) == 2
 
     def test_semantics_preserved(self):
         """Optimized regexes match the same strings as the originals."""
