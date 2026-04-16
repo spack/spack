@@ -303,8 +303,15 @@ def root(name):
 
 
 def exists(name):
-    """Whether an environment with this name exists or not."""
-    return valid_env_name(name) and os.path.isdir(_root(name))
+    """Whether an environment with this name exists or not.
+
+    A managed environment exists when its directory AND its spack.yaml manifest are both present.
+    A directory without a spack.yaml is considered orphaned and does not constitute an environment.
+    """
+    if not valid_env_name(name):
+        return False
+    env_root = _root(name)
+    return os.path.isdir(env_root) and os.path.exists(os.path.join(env_root, manifest_name))
 
 
 def active(name):
