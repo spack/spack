@@ -584,8 +584,8 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-        if not os.path.exists(Environment(env_path).lock_path):
-            non_concrete_envs.add(Environment(env_path).name)
+        if not os.path.exists(os.path.join(env_path, lockfile_name)):
+            non_concrete_envs.add(environment_name(env_path))
 
     if non_concrete_envs:
         msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
