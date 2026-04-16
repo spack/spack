@@ -264,8 +264,6 @@ def prune_direct(
     for manifest in manifest_to_mtime_mapping.keys():
         # Convert back from local to remote path.
         manifest = manifest.replace(tmpspecsdir, manifests_url)
-        if "file://" not in manifests_url:
-            manifest = manifest.replace("file://", "")
         if not fnmatch(
             manifest,
             URLBuildcacheEntry.get_buildcache_component_include_pattern(BuildcacheComponent.SPEC),
@@ -289,9 +287,6 @@ def prune_direct(
 
         spec_name, spec_version, spec_hash = regex_match.groups()
 
-        # Chop off any prefix/parent file path to get just the name
-        spec_name = pathlib.Path(spec_name).name
-
         if spec_hash not in keep_hashes:
             manifests_to_prune.append(manifest)
             specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
@@ -300,9 +295,9 @@ def prune_direct(
         tty.info("No specs to prune - all specs are in the keeplist")
         return
 
-    tty.info(f"Found {len(manifests_to_prune)} spec(s) to prune")
-
     manifests_to_delete = set(_filter_new_specs(manifests_to_prune, pruning_started_at))
+
+    tty.info(f"Found {len(manifests_to_delete)} spec(s) to prune")
 
     total_pruned = _delete_entries_from_cache(
         manifests_to_delete=manifests_to_delete, blobs_to_delete=set(), dry_run=dry_run
