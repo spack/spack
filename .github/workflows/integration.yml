@@ -14,8 +14,8 @@ concurrency:
 
 jobs:
   integration:
-    name: integration-build-${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: integration-build-${{ matrix.sys.os }}
+    runs-on: ${{ matrix.sys.os }}
     strategy:
       matrix:
         sys:
@@ -64,5 +64,5 @@ jobs:
         if: always() && (steps.install.outcome == 'failure')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: "broken-${{ matrix.os }}-stage"
+          name: "broken-${{ matrix.sys.os }}-stage"
           path: $FAILURE_STAGE
