@@ -158,58 +158,6 @@ class SpackPaths:
             self.data_home_provenance,
         )
 
-    def warn_unused_old_installs(self, _show=True):
-        cfg_settings = ["config:install_tree:root"]
-        return self._warn_on_unused_old_data(
-            self.default_install_location,
-            self.base.old_install_path,
-            "installs",
-            cfg_settings,
-            _show=_show,
-        )
-
-    def warn_unused_old_envs(self, _show=True):
-        cfg_settings = ["config:environments_root"]
-        return self._warn_on_unused_old_data(
-            self.default_envs_path,
-            self.base.old_envs_path,
-            "environments",
-            cfg_settings,
-            _show=_show,
-        )
-
-    def warn_unused_old_gpg(self, _show=True):
-        cfg_settings = ["SPACK_GNUPGHOME"]
-        return self._warn_on_unused_old_data(
-            self.gpg_path, self.base.old_gpg_path, "GPG keys", cfg_settings, _show=_show
-        )
-
-    def _warn_on_unused_old_data(
-        self, chosen_path, old_path, data_category, cfg_settings, _show=True
-    ):
-        generic_cfg = [
-            "config:locations:home",
-            "config:locations:data",
-            "SPACK_DATA_HOME",
-            "SPACK_HOME",
-        ]
-        msg = (
-            f"Bypassing data for {data_category} existing in: {old_path}"
-            f"\nIn favor of: {chosen_path}"
-            "\nYou can explicitly designate a location (and suppress this warning)"
-            f" by setting: {', '.join(cfg_settings)}"
-            f"\nOr use a catch-all setting: {', '.join(generic_cfg)}"
-        )
-        if (
-            chosen_path != old_path
-            and dir_is_occupied(old_path)
-            and not self.data_home_provenance.unilateral_override()
-        ):
-            if _show:
-                tty.warn(msg)
-            return msg
-        return ""
-
     def _warn_unused_old_config(self, _show=True):
         user_scope = [s for s in config.CONFIG.active_scopes if s.name == "user"]
 

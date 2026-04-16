@@ -113,7 +113,6 @@ def _unconditional_path_override_checks(tmp_path, base_paths_generator):
     assert p2.default_install_location == str(
         pathlib.Path(spack_home_cfg_prefix) / ".local" / "share" / "spack" / "installs"
     )
-    assert not p2.warn_unused_old_installs(_show=False)
 
     # "config:locations:data" overrides the above
     spack_data_prefix = _ensure_dir(tmp_path / "spack-data")

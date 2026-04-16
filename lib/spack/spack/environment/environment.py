@@ -102,7 +102,6 @@ def default_env_path():
     global _default_env_path
     if not _default_env_path:
         _default_env_path = paths.default_envs_path
-        paths.warn_unused_old_envs()
     return _default_env_path
 
 
