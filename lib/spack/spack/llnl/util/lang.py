@@ -902,47 +902,29 @@ else:
     PatternBytes = typing.Pattern[bytes]
 
 
-# Regex metacharacters that cannot be a literal prefix for grouping
-_REGEX_META_CHARS = frozenset(".[({\\*+?|$")
-
-
-def _regex_leading_literal(regex):
-    """Return a one-character literal prefix suitable for grouping.
-
-    Returns (prefix, rest) where prefix is the first literal char. If the first relevant character
-    is a metacharacter, returns ("", regex).
-    """
-    if regex and regex[0] not in _REGEX_META_CHARS and (len(regex) < 2 or regex[1] not in "*+?{"):
-        return regex[0], regex[1:]
-    return "", regex
-
-
 def optimize_regexes(regex_strings: List[str]) -> List[str]:
-    """Combine regex strings that share a common literal prefix into grouped alternatives.
+    """Combine regex strings that share a common first character into grouped alternatives.
 
-    Groups regexes by their leading literal character and combines each group into a single
-    regex using non-capturing alternation. This reduces the number of compiled regex objects.
+    Groups regexes by their first character and combines each group into a single regex using
+    alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
+    internally, so all we need to do is reduce the number of compiled regex objects.
     """
-    # Group by leading literal prefix
-    groups: Dict[str, List[Tuple[str, str]]] = {}
+    groups: Dict[str, List[str]] = {}
     order: List[str] = []
     for regex in regex_strings:
-        prefix, rest = _regex_leading_literal(regex)
-        if prefix not in groups:
-            groups[prefix] = []
-            order.append(prefix)
-        groups[prefix].append((regex, rest))
+        key = regex[0] if regex else ""
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(regex)
 
     result: List[str] = []
-    for prefix in order:
-        entries = groups[prefix]
-        if len(entries) == 1 or prefix == "":
-            for regex, _ in entries:
-                result.append(regex)
+    for key in order:
+        entries = groups[key]
+        if len(entries) == 1:
+            result.append(entries[0])
         else:
-            alternatives = "|".join(f"(?:{rest})" for _, rest in entries)
-            result.append(f"{prefix}(?:{alternatives})")
-
+            result.append("|".join(entries))
     return result
 
 
