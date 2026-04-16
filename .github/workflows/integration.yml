@@ -18,8 +18,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-15-intel, macos-latest, windows-latest]
+        sys:
+        - { os: windows-latest, shell: 'powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}' }
+        - { os: ubuntu-latest, shell: 'bash source ./share/spack/setup-env.sh; {0}' }
+        - { os: macos-latest, shell: 'bash source ./share/spack/setup-env.sh; {0}' }
+        - { os: macos-15-intel, shell: 'bash source ./share/spack/setup-env.sh; {0}' }
       fail-fast: true
+    defaults:
+      run:
+        shell: ${{ matrix.sys.shell }}
     steps:
       - name: Fetch Spack
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -33,22 +40,22 @@ jobs:
             path: spackages
       - name: Add builtin with shallow clone
         run: |
-          bin/spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
+          spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
       - name: "Add Integration test repo"
         run: |
-          bin/spack repo add ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
+          spack repo add ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
       - name: "Install Clingo Win"
-        if: ${{ matrix.os == 'windows-latest' }} 
+        if: ${{ matrix.sys.os == 'windows-latest' }} 
         run: |
           pip install --upgrade pip clingo pywin32
       - name: "Spack install"
         id: install
         run: |
-          bin/spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
-          bin/spack compiler find
-          bin/spack external find cmake ninja
-          bin/spack concretize -U
-          bin/spack -dv install --test root
+          spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
+          spack compiler find
+          spack external find cmake ninja
+          spack concretize -U
+          spack -dv install --test root
       - name: "Determine failure stage"
         if: always() && (steps.install.outcome == 'failure')
         run: |
