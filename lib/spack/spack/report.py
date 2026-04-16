@@ -150,6 +150,42 @@ class InstallRecord(SpecRecord):
         self.installed_from_binary_cache = self._package.installed_from_binary_cache
 
 
+class NullInstallRecord(InstallRecord):
+    """No-op drop-in for InstallRecord when no reporter is configured.
+
+    Avoids reading log files from disk on every completed build."""
+
+    def start(self) -> None:
+        pass
+
+    def succeed(self) -> None:
+        pass
+
+    def fail(self, exc) -> None:
+        pass
+
+    def skip(self, msg: str = "") -> None:
+        pass
+
+
+class NullRequestRecord(RequestRecord):
+    """No-op drop-in for RequestRecord when no reporter is configured.
+
+    Avoids traversing the DAG and accumulating data that will not be reported."""
+
+    def __init__(self) -> None:
+        dict.__init__(self)
+
+    def skip_installed(self) -> None:
+        pass
+
+    def append_record(self, record) -> None:
+        pass
+
+    def summarize(self) -> None:
+        pass
+
+
 class TestRecord(SpecRecord):
     """Record class with specialization for test logs."""
 

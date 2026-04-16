@@ -321,16 +321,6 @@ def test_failures_in_scanning_do_not_result_in_an_error(
     mock_executable, monkeypatch, mutable_config
 ):
     """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
-    versions = {"first": "3.19.1", "second": "3.23.3"}
-
-    @classmethod
-    def _determine_version(cls, exe):
-        bin_parent = os.path.dirname(exe).split(os.sep)[-2]
-        return versions[bin_parent]
-
-    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
-    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
-
     cmake_exe1 = mock_executable(
         "cmake", output="echo cmake version 3.19.1", subdir=("first", "bin")
     )
@@ -338,18 +328,31 @@ def test_failures_in_scanning_do_not_result_in_an_error(
         "cmake", output="echo cmake version 3.23.3", subdir=("second", "bin")
     )
 
-    # Remove access from the first directory executable
-    cmake_exe1.parent.chmod(0o600)
+    @classmethod
+    def _determine_version(cls, exe):
+        name = pathlib.Path(exe).parent.parent.name
+        if name == "first":
+            return "3.19.1"
+        elif name == "second":
+            return "3.23.3"
+        assert False, f"Unexpected exe path {exe}"
 
-    value = os.pathsep.join([str(cmake_exe1.parent), str(cmake_exe2.parent)])
-    monkeypatch.setenv("PATH", value)
+    cmake_cls = spack.repo.PATH.get_pkg_class("cmake")
+    monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
+    monkeypatch.setenv("PATH", f"{cmake_exe1.parent}{os.pathsep}{cmake_exe2.parent}")
 
-    output = external("find", "cmake")
+    try:
+        # Remove access from the first directory executable
+        cmake_exe1.parent.chmod(0o600)
+        output = external("find", "cmake")
+    finally:
+        cmake_exe1.parent.chmod(0o700)
+
     assert external.returncode == 0
     assert "The following specs have been" in output
     assert "cmake" in output
-    for vers in versions.values():
-        assert vers in output
+    assert "3.19.1" in output
+    assert "3.23.3" in output
 
 
 def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):

@@ -44,7 +44,6 @@ import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.trace
-import spack.util.debug
 import spack.util.environment
 import spack.util.lock
 
@@ -507,7 +506,7 @@ def make_argument_parser(**kwargs):
         default="SPACK_BACKTRACE" in os.environ,
         help="always show backtraces for exceptions",
     )
-    debug.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
+    debug.add_argument("--pdb", action="store_true", help=argparse.SUPPRESS)
     debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     debug.add_argument(
         "-m", "--mock", action="store_true", help="use mock packages instead of real ones"
@@ -594,7 +593,6 @@ def setup_main_options(args):
         spack.error.SHOW_BACKTRACE = True
 
     if args.debug:
-        spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.TRACING_ENABLED = True
 
@@ -976,7 +974,7 @@ def _main(argv=None):
     # them, which reduces startup latency.
     parser = make_argument_parser()
     parser.add_argument("command", nargs=argparse.REMAINDER)
-    args, unknown = parser.parse_known_args(argv)
+    args = parser.parse_args(argv)
 
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
@@ -1100,6 +1098,13 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
     if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:
         _profile_wrapper(command, main_args, parser, args, unknown)
     elif main_args.pdb:
+        new_args = [sys.executable, "-m", "pdb", spack.paths.spack_script]
+        new_args.extend(arg for arg in sys.argv[1:] if arg != "--pdb")
+        formatted_args = " ".join(shlex.quote(arg) for arg in new_args)
+        tty.warn(
+            "The --pdb flag is deprecated and will be removed in Spack v1.3. "
+            f"Use `{formatted_args}` instead."
+        )
         import pdb
 
         pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())

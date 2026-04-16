@@ -199,6 +199,14 @@ def test_bash_completion():
     assert "_spack_compiler_add() {" in out2
 
 
+def test_bash_completion_choices():
+    """Test that bash completion includes choices for positional arguments."""
+    out = commands("--format=bash")
+
+    # `spack env view` has a positional `action` with choices
+    assert 'SPACK_COMPREPLY="disable enable regenerate"' in out
+
+
 def test_fish_completion():
     """Test the fish completion writer."""
     out1 = commands("--format=fish")

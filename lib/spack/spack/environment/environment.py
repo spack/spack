@@ -593,8 +593,8 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-        if not os.path.exists(Environment(env_path).lock_path):
-            non_concrete_envs.add(Environment(env_path).name)
+        if not os.path.exists(os.path.join(env_path, lockfile_name)):
+            non_concrete_envs.add(environment_name(env_path))
 
     if non_concrete_envs:
         msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
@@ -2000,7 +2000,7 @@ class Environment:
         }
 
         builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], **install_args
+            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
         )
 
         try:
@@ -3357,11 +3357,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.configuration[lockfile_include_key] = []
-
-        for env_path in include_concrete:
-            self.configuration[lockfile_include_key].append(env_path)
-
+        self.configuration[lockfile_include_key] = list(include_concrete)
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:

@@ -458,7 +458,6 @@ complete -c spack -n '__fish_spack_using_command ' -s d -l debug -d 'write out d
 complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -f -a backtrace
 complete -c spack -n '__fish_spack_using_command ' -s t -l backtrace -d 'always show backtraces for exceptions'
 complete -c spack -n '__fish_spack_using_command ' -l pdb -f -a pdb
-complete -c spack -n '__fish_spack_using_command ' -l pdb -d 'run spack under the pdb debugger'
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -f -a timestamp
 complete -c spack -n '__fish_spack_using_command ' -l timestamp -d 'add a timestamp to tty output'
 complete -c spack -n '__fish_spack_using_command ' -s m -l mock -f -a mock
@@ -2306,9 +2305,7 @@ complete -c spack -n '__fish_spack_using_command log-parse' -s c -l context -r -
 complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -f -a profile
 complete -c spack -n '__fish_spack_using_command log-parse' -s p -l profile -d 'print out a profile of time spent in regexes during parse'
 complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -f -a width
-complete -c spack -n '__fish_spack_using_command log-parse' -s w -l width -r -d 'wrap width: auto-size to terminal by default; 0 for no wrap'
 complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -f -a jobs
-complete -c spack -n '__fish_spack_using_command log-parse' -s j -l jobs -r -d 'number of jobs to parse log file (default: 1 for short logs, ncpus for long logs)'
 
 # spack logs
 set -g __fish_spack_optspecs_spack_logs h/help

@@ -40,6 +40,7 @@ def create_installer(
     concurrent_packages: Optional[int] = None,
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
+    create_reports: bool = False,
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = (
@@ -81,4 +82,5 @@ def create_installer(
         concurrent_packages=concurrent_packages,
         root_policy=root_policy,
         dependencies_policy=dependencies_policy,
+        create_reports=create_reports,
     )

@@ -26,7 +26,7 @@ import urllib.request
 import warnings
 from collections import defaultdict
 from contextlib import closing
-from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import spack.caches
 import spack.config
@@ -506,7 +506,7 @@ def binary_index_location():
 
 
 #: Default binary cache index instance
-BINARY_INDEX: BinaryCacheIndex = spack.llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
+BINARY_INDEX = cast(BinaryCacheIndex, spack.llnl.util.lang.Singleton(BinaryCacheIndex))
 
 
 def compute_hash(data):
