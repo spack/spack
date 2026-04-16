@@ -104,7 +104,16 @@ def git(required: bool = ...) -> Optional[GitExecutable]: ...
 
 
 def git(required: bool = False) -> Optional[GitExecutable]:
-    """Get a git executable. Raises CommandNotFoundError if ``required`` and git is not found."""
+    """Get a git executable.
+
+    The returned executable automatically unsets ``GIT_EXTERNAL_DIFF`` and ``GIT_DIFF_OPTS``
+    environment variables that can interfere with spack git diff operations.
+
+    Args:
+       required (bool): if True, raises CommandNotFoundError when git is not found
+
+    Returns: GitExecutable, or None if git is not found and required is False
+    """
     git_path = _find_git()
 
     if not git_path:
@@ -116,7 +125,7 @@ def git(required: bool = False) -> Optional[GitExecutable]:
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
-    if git and "pytest" in sys.modules:
+    if "pytest" in sys.modules:
         git.add_default_arg("-c", "protocol.file.allow=always")
 
     # Blacklist environment variables that can interfere with git diff operations

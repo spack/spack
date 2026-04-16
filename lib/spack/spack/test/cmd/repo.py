@@ -942,13 +942,13 @@ def test_repo_update_invalid_flags(monkeypatch, mutable_config, flags):
         repo("update", *flags)
 
 
-def test_repo_show_updates_no_changes(mock_git_package_changes):
-    """Test that show-updates handles empty results gracefully"""
+def test_repo_show_version_updates_no_changes(mock_git_package_changes):
+    """Test that show-version-updates handles empty results gracefully"""
     test_repo, _, commits = mock_git_package_changes
 
     with spack.repo.use_repositories(test_repo):
         # Use the same commit for both refs - no changes
-        output = repo("show-updates", test_repo.root, commits[-1], commits[-1])
+        output = repo("show-version-updates", test_repo.root, commits[-1], commits[-1])
 
         # Should have warning message
         assert "No packages were added or changed" in output
@@ -957,8 +957,8 @@ def test_repo_show_updates_no_changes(mock_git_package_changes):
         assert "diff-test@" not in output
 
 
-def test_repo_show_updates_success(mock_git_package_changes):
-    """Test that show-updates successfully outputs the correct specs"""
+def test_repo_show_version_updates_success(mock_git_package_changes):
+    """Test that show-version-updates successfully outputs the correct specs"""
     test_repo, _, commits = mock_git_package_changes
 
     with spack.repo.use_repositories(test_repo):
@@ -966,7 +966,7 @@ def test_repo_show_updates_success(mock_git_package_changes):
         # commits[-2] = add v2.1.5, commits[-4] = add v2.1.7 and v2.1.8
         # Find versions added between these commits
         # Includes v2.1.6 (git version), v2.1.7, and v2.1.8 (sha256 versions)
-        output = repo("show-updates", test_repo.root, commits[-2], commits[-4])
+        output = repo("show-version-updates", test_repo.root, commits[-2], commits[-4])
 
         # Verify all three versions are included
         assert "diff-test@" in output
@@ -983,7 +983,7 @@ def test_repo_show_updates_success(mock_git_package_changes):
         assert len(lines) == 3
 
 
-def test_repo_show_updates_excludes_manual_packages(monkeypatch, mock_git_package_changes):
+def test_repo_show_version_updates_excludes_manual_packages(monkeypatch, mock_git_package_changes):
     """Test --no-manual-packages flag excludes packages with manual_download=True"""
     test_repo, _, commits = mock_git_package_changes
 
@@ -992,9 +992,13 @@ def test_repo_show_updates_excludes_manual_packages(monkeypatch, mock_git_packag
         pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
         monkeypatch.setattr(pkg_class, "manual_download", True)
 
-        # Run show-updates with --no-manual-packages flag
+        # Run show-version-updates with --no-manual-packages flag
         output = repo(
-            "show-updates", "--no-manual-packages", test_repo.root, commits[-2], commits[-4]
+            "show-version-updates",
+            "--no-manual-packages",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
         )
 
         # Package should be excluded
@@ -1002,7 +1006,9 @@ def test_repo_show_updates_excludes_manual_packages(monkeypatch, mock_git_packag
         assert "No packages were added or changed" in output
 
 
-def test_repo_show_updates_excludes_non_redistributable(monkeypatch, mock_git_package_changes):
+def test_repo_show_version_updates_excludes_non_redistributable(
+    monkeypatch, mock_git_package_changes
+):
     """Test --only-redistributable flag excludes packages if redistribute_source returns False"""
     test_repo, _, commits = mock_git_package_changes
 
@@ -1011,9 +1017,13 @@ def test_repo_show_updates_excludes_non_redistributable(monkeypatch, mock_git_pa
         pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
         monkeypatch.setattr(pkg_class, "redistribute_source", classmethod(lambda cls, spec: False))
 
-        # Run show-updates with --only-redistributable flag
+        # Run show-version-updates with --only-redistributable flag
         output = repo(
-            "show-updates", "--only-redistributable", test_repo.root, commits[-2], commits[-4]
+            "show-version-updates",
+            "--only-redistributable",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
         )
 
         # Package should be excluded
@@ -1021,7 +1031,7 @@ def test_repo_show_updates_excludes_non_redistributable(monkeypatch, mock_git_pa
         assert "No new package versions found" in output
 
 
-def test_repo_show_updates_excludes_git_versions(mock_git_package_changes):
+def test_repo_show_version_updates_excludes_git_versions(mock_git_package_changes):
     """Test --no-git-versions flag excludes versions from git (tag/commit)"""
     test_repo, _, commits = mock_git_package_changes
 
@@ -1029,7 +1039,7 @@ def test_repo_show_updates_excludes_git_versions(mock_git_package_changes):
         # commits[-3] = add v2.1.6 (git version), commits[-4] = add v2.1.7 and v2.1.8 (sha256)
         # Without --no-git-versions, v2.1.6 would be included
         output = repo(
-            "show-updates", "--no-git-versions", test_repo.root, commits[-3], commits[-4]
+            "show-version-updates", "--no-git-versions", test_repo.root, commits[-3], commits[-4]
         )
 
         # v2.1.6 (git version) should be excluded

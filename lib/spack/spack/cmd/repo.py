@@ -177,23 +177,25 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # Show updates
-    show_updates_parser = sp.add_parser("show-updates", help=repo_show_updates.__doc__)
-    show_updates_parser.add_argument(
+    show_version_updates_parser = sp.add_parser(
+        "show-version-updates", help=repo_show_version_updates.__doc__
+    )
+    show_version_updates_parser.add_argument(
         "--no-manual-packages", action="store_true", help="exclude manual packages"
     )
-    show_updates_parser.add_argument(
+    show_version_updates_parser.add_argument(
         "--no-git-versions", action="store_true", help="exclude versions from git"
     )
-    show_updates_parser.add_argument(
+    show_version_updates_parser.add_argument(
         "--only-redistributable", action="store_true", help="exclude non-redistributable packages"
     )
-    show_updates_parser.add_argument(
+    show_version_updates_parser.add_argument(
         "repository", help="name or path of the repository to analyze"
     )
-    show_updates_parser.add_argument(
+    show_version_updates_parser.add_argument(
         "from_ref", help="git ref from which to start looking at changes"
     )
-    show_updates_parser.add_argument("to_ref", help="git ref to end looking at changes")
+    show_version_updates_parser.add_argument("to_ref", help="git ref to end looking at changes")
 
 
 def repo_create(args):
@@ -642,7 +644,7 @@ def repo_update(args):
         spack.config.set("repos", scope_repos, args.scope)
 
 
-def repo_show_updates(args):
+def repo_show_version_updates(args):
     """show version specs that were added between two commits"""
     # Get the repository by name or path
     repo = _get_repo(args.repository)
@@ -730,5 +732,5 @@ def repo(parser, args):
         "rm": repo_remove,
         "migrate": repo_migrate,
         "update": repo_update,
-        "show-updates": repo_show_updates,
+        "show-version-updates": repo_show_version_updates,
     }[args.repo_command](args)
