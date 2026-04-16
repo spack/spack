@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
+
 import importlib
 import pathlib
 from functools import lru_cache
@@ -316,11 +317,5 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
         self.constraint_type = None
 
 
-class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
+class InternalConcretizerError(UnsatisfiableSpecError):
     """Errors that indicate a bug in Spack."""
-
-    def __init__(self, msg):
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
-        self.provided = None
-        self.required = None
-        self.constraint_type = None

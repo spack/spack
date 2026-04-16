@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Error handling and message formatting for Spack's ASP-based concretizer."""
+
 import pathlib
 import typing
 from typing import Dict, List, Sequence, Set, Tuple
@@ -15,6 +16,8 @@ from .core import UnsatisfiableSpecError, clingo, extract_args, symbol_to_string
 if typing.TYPE_CHECKING:
     clingo()
     import clingo as _clingo
+
+_CONSTRAINT_CHARS = "@^+~%="
 
 
 def _is_node_symbol(clingo_symbol: "_clingo.Symbol") -> bool:
@@ -73,12 +76,12 @@ class ErrorFormatter:
 
     def literal_not_in_dag(self, pkg: str) -> str:
         return (
-            f"'{pkg}' is not a direct 'build' or 'test' dependency, "
+            f"{pkg} is not a direct 'build' or 'test' dependency, "
             f"or transitive 'link' or 'run' dependency of any root"
         )
 
     def no_value(self, pkg: str, attribute: str) -> str:
-        return f'Cannot select a single "{attribute}" for package "{pkg}"'
+        return f'No value found for "{attribute}" in package "{pkg}"'
 
     def multiple_values(self, pkg: str, attribute: str) -> str:
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
@@ -129,7 +132,7 @@ class ErrorFormatter:
         return f"{pkg} and {extension_child} must depend on the same {extendee_pkg}"
 
     def conflict(self, pkg: str, msg: str) -> str:
-        return str(msg)
+        return msg
 
     def provided_together_incomplete(self, pkg: str, virtual: str) -> str:
         return f"Package '{pkg}' must also provide '{virtual}', and it does not"
@@ -154,7 +157,7 @@ class ErrorFormatter:
 
     def requirement_unsatisfied(self, pkg: str, message: str) -> str:
         if message:
-            return str(message)
+            return message
         return f"cannot satisfy a requirement for package '{pkg}'."
 
     def variant_undefined(self, pkg: str, variant: str) -> str:
@@ -364,13 +367,12 @@ class ErrorHandler:
                     if cause not in seen_causes:
                         seen_causes.add(cause)
                         lines = self._get_cause_tree(cause, conditions, condition_causes, set())
-                        _constraint_chars = "@^+~%="
                         informative = [
                             line
                             for line in lines
                             if not (
                                 "requested explicitly" in line
-                                and not any(c in line for c in _constraint_chars)
+                                and not any(c in line for c in _CONSTRAINT_CHARS)
                             )
                         ]
                         for line in informative if informative else lines:
