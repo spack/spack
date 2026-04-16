@@ -3348,11 +3348,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.configuration[lockfile_include_key] = []
-
-        for env_path in include_concrete:
-            self.configuration[lockfile_include_key].append(env_path)
-
+        self.configuration[lockfile_include_key] = list(include_concrete)
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
