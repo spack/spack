@@ -40,20 +40,7 @@ def test_install_location(working_env, tmp_path, mutable_config, set_home):
 
     set_home(home_prefix)
 
-    p1 = SpackPaths(paths_base_empty_old_install())
-    assert p1.default_install_location == str(
-        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
-    )
-
-    spack.config.set("config:locations", {})
-
-    # $XDG_DATA_HOME overrides the default
-    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
-    os.environ["XDG_DATA_HOME"] = xdg_data_home
-    p4 = SpackPaths(paths_base_empty_old_install())
-    assert p4.default_install_location == str(pathlib.Path(xdg_data_home) / "spack" / "installs")
-
-    _install_path_checks(tmp_path, paths_base_empty_old_install, False)
+    _install_path_checks(tmp_path, paths_base_empty_old_install, home_prefix, False)
 
 
 def test_install_location_old_installs_exist(working_env, tmp_path, mutable_config, set_home):
@@ -72,45 +59,32 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 
     set_home(home_prefix)
 
-    # The new default installs dir is ignored if the old install
-    # location has anything in it
-    p1 = SpackPaths(paths_base_nonempty_old_install())
-    assert p1.default_install_location == nonempty_dir
-
-    # This is continues to hold even if the new default install
-    # directory has installs in it
-    new_default_installs_dir = _ensure_dir(
-        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
-    )
-    (pathlib.Path(new_default_installs_dir) / "afile").touch()
-    assert p1.default_install_location == nonempty_dir
-
-    spack.config.set("config:locations", {})
-
-    # XDG_DATA_HOME does not override the old install location if it
-    # if there are installs in the old location
-    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
-    os.environ["XDG_DATA_HOME"] = xdg_data_home
-    p4 = SpackPaths(paths_base_nonempty_old_install())
-    xdg_installs_location = _ensure_dir(pathlib.Path(xdg_data_home) / "spack" / "installs")
-    assert p4.default_install_location == nonempty_dir
-
-    # ... XDG_DATA_HOME still does not override the old install location
-    (pathlib.Path(xdg_installs_location) / "afile").touch()
-    assert p4.default_install_location == nonempty_dir
-
-    _install_path_checks(tmp_path, paths_base_nonempty_old_install, True)
+    _install_path_checks(tmp_path, paths_base_nonempty_old_install, home_prefix, True)
 
 
-def _install_path_checks(tmp_path, base_paths_generator, force_old_layout):
+def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
     def check(paths, new_path):
         if force_old_layout:
             assert paths.default_install_location == paths.base.old_install_path
         else:
             assert paths.default_install_location == str(new_path)
 
-    # "config:locations:home" variable overrides the above (even if there
-    # are no installs there and there are installs in the old location)
+    new_default_installs_dir = _ensure_dir(
+        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
+    )
+    (pathlib.Path(new_default_installs_dir) / "afile").touch()
+    p0 = SpackPaths(base_paths_generator())
+    check(p0, pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs")
+
+    # $XDG_DATA_HOME overrides the default
+    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
+    os.environ["XDG_DATA_HOME"] = xdg_data_home
+    p7 = SpackPaths(base_paths_generator())
+    check(p7, pathlib.Path(xdg_data_home) / "spack" / "installs")
+
+    spack.config.set("config:locations", {})
+
+    # "config:locations:home" variable overrides the above
     spack_home_cfg_prefix = _ensure_dir(tmp_path / "spack-home2")
     spack.config.set("config:locations:home", spack_home_cfg_prefix)
     p2 = SpackPaths(base_paths_generator())
