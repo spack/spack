@@ -147,7 +147,7 @@ class TestOptimizeRegexes:
         """Regexes starting with the same metacharacter are grouped too."""
         result = _optimize_regexes(["\\(foo\\)", "\\(bar\\)", "\\*", "[abc]"])
         assert len(result) == 3
-        assert "\\(foo\\)|\\(bar\\)" in result
+        assert "\\(bar\\)|\\(foo\\)" in result
         assert "\\*" in result
         assert "[abc]" in result
 
