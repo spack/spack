@@ -1733,7 +1733,7 @@ def backwards_compat_setup(tmp_path: pathlib.Path):
 
 
 def test_backwards_compat_use_old(backwards_compat_setup):
-    """If target dir doesn't exist, make it and copy over yaml files"""
+    """If target dir doesn't exist, make it and copy over yaml files."""
     src_dir, to_dir, entry = backwards_compat_setup
 
     spack.config.included_path(entry)
@@ -1742,7 +1742,7 @@ def test_backwards_compat_use_old(backwards_compat_setup):
 
 
 def test_backwards_compat_skip_old(backwards_compat_setup):
-    """If target dir exists, copy over nothing from source"""
+    """If target dir exists, copy over nothing from source."""
     src_dir, to_dir, entry = backwards_compat_setup
 
     to_dir.mkdir()
