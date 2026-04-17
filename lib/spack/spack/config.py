@@ -1271,6 +1271,7 @@ def there_are_yaml_files_in(_dir):
 def copy_yaml_files(_from, to):
     _from = pathlib.Path(_from)
     to = pathlib.Path(to)
+    to.parent.mkdir(parents=True, exist_ok=True)
     tmpdir = pathlib.Path(tempfile.mkdtemp(prefix=f".{to.name}.tmp-", dir=to.parent))
 
     try:
