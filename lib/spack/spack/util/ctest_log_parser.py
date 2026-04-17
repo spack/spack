@@ -74,9 +74,8 @@ import re
 import time
 from collections import deque
 from contextlib import contextmanager
+from itertools import groupby
 from typing import List, TextIO, Tuple, Union
-
-from spack.llnl.util.lang import optimize_regexes
 
 _error_matches = [
     "^FAIL: ",
@@ -290,6 +289,20 @@ def _time(times, i):
     times[i] += end - start
 
 
+def _optimize_regexes(regex_strings: List[str]) -> List[str]:
+    """Combine non-empty regex strings sharing a common first character into grouped alternatives.
+
+    Groups regexes by their first character and combines each group into a single regex using
+    alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
+    internally. The result is a shorter list of regexes that all hit a fast path in cpython's regex
+    engine for prefix matching."""
+    result: List[str] = []
+    for _, group in groupby(sorted(regex_strings), key=lambda r: r[0]):
+        entries = list(group)
+        result.append(entries[0] if len(entries) == 1 else "|".join(entries))
+    return result
+
+
 def _match(matches, exceptions, line):
     """True if line matches a regex in matches and none in exceptions."""
     return any(m.search(line) for m in matches) and not any(e.search(line) for e in exceptions)
@@ -319,10 +332,10 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
 def _parse(stream, profile, context):
 
-    error_matches = [re.compile(r) for r in optimize_regexes(sorted(_error_matches))]
-    error_exceptions = [re.compile(r) for r in optimize_regexes(sorted(_error_exceptions))]
-    warning_matches = [re.compile(r) for r in optimize_regexes(sorted(_warning_matches))]
-    warning_exceptions = [re.compile(r) for r in optimize_regexes(sorted(_warning_exceptions))]
+    error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
+    error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
+    warning_matches = [re.compile(r) for r in _optimize_regexes(_warning_matches)]
+    warning_exceptions = [re.compile(r) for r in _optimize_regexes(_warning_exceptions)]
     file_line_matches = [re.compile(r) for r in _file_line_matches]
 
     matcher, _ = _match, []
@@ -413,10 +426,10 @@ class CTestLogParser:
 
         index = 0
         for name, arr in [
-            ("error_matches", optimize_regexes(sorted(_error_matches))),
-            ("error_exceptions", optimize_regexes(sorted(_error_exceptions))),
-            ("warning_matches", optimize_regexes(sorted(_warning_matches))),
-            ("warning_exceptions", optimize_regexes(sorted(_warning_exceptions))),
+            ("error_matches", _optimize_regexes(_error_matches)),
+            ("error_exceptions", _optimize_regexes(_error_exceptions)),
+            ("warning_matches", _optimize_regexes(_warning_matches)),
+            ("warning_exceptions", _optimize_regexes(_warning_exceptions)),
         ]:
 
             print()
