@@ -1034,8 +1034,6 @@ def _main(argv=None):
     )
     setup_main_options(args)
 
-    spack.paths.locations._warn_unused_old_config()
-
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
     # ------------------------------------------------------------------------

@@ -16,7 +16,6 @@ from enum import Enum
 from functools import partial
 
 import spack.config as config
-import spack.llnl.util.tty as tty
 import spack.paths_base as paths_base
 
 
@@ -157,35 +156,6 @@ class SpackPaths:
             os.path.join(self.default_data_home, "installs"),
             self.data_home_provenance,
         )
-
-    def _warn_unused_old_config(self, _show=True):
-        user_scope = [s for s in config.CONFIG.active_scopes if s.name == "user"]
-
-        if not user_scope:
-            return
-
-        # Note: does not require spack.util.path.canonicalize_path because the
-        # default user scope path only uses "~"
-        default_path = pathlib.Path("~/.config/spack").expanduser().resolve()
-        scope_path = pathlib.Path(getattr(user_scope[0], "path", "")).expanduser().resolve()
-        if scope_path != default_path:
-            # User overrode the scope path, they meant it
-            return
-
-        old_path = pathlib.Path("~/.spack").expanduser()
-        if dir_is_occupied(old_path):
-            msg = (
-                f"Bypassing config in '{old_path}' in favor of '{default_path}'.\n"
-                f"    Detected config in old location: '{default_path}'.\n"
-                "    Set `SPACK_USER_CONFIG_PATH` or modify your include.yaml"
-                f" to use '{old_path}'\n"
-                f"    or move files from '{old_path}' to '{default_path}'"
-                " to suppress this warning."
-            )
-            if _show:
-                tty.warn(msg)
-            else:
-                return msg
 
     @property
     def default_envs_path(self):

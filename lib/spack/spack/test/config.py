@@ -19,8 +19,6 @@ import spack.directory_layout
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
-import spack.paths
-import spack.paths_base
 import spack.platforms
 import spack.schema.compilers
 import spack.schema.config
@@ -2104,37 +2102,3 @@ def test_config_invalid_scope(mock_low_high_config):
     err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
-
-
-def test_unused_old_cfg_warning(set_home, tmp_path_factory):
-    base_prefix = tmp_path_factory.mktemp("home-prefix")
-    home_prefix = tmp_path_factory.mktemp("home-prefix")
-    set_home(str(home_prefix))
-
-    default_usr_scope_dir = home_prefix / ".config" / "spack"
-    test_cfg1 = [spack.config.DirectoryConfigScope("user", str(default_usr_scope_dir))]
-    with spack.config.use_configuration(*test_cfg1):
-        # Start with the default user scope pointing to the 1.2 location,
-        # in ~/.config/spack. ~/.spack is empty, so no warning should be
-        # generated
-        p1 = spack.paths.SpackPaths(spack.paths_base.SpackPathsBase(str(base_prefix)))
-        assert not p1._warn_unused_old_config(_show=False)
-
-        # Now make it so ~/.spack is not empty: a warning should be
-        # generated
-        (home_prefix / ".spack").mkdir()
-        (home_prefix / ".spack" / "some-file").touch()
-        warning = p1._warn_unused_old_config(_show=False)
-        assert warning and "Detected config in old location" in warning
-
-    # If the scope isn't called "user" -> no problem
-    test_cfg2 = [spack.config.DirectoryConfigScope("customuser", str(default_usr_scope_dir))]
-    with spack.config.use_configuration(*test_cfg2):
-        assert not p1._warn_unused_old_config(_show=False)
-
-    # If the scope is called "user" but was edited to point at the old location
-    # -> no problem
-    custom_usr_scope_dir = home_prefix / ".scope"
-    test_cfg3 = [spack.config.DirectoryConfigScope("user", str(custom_usr_scope_dir))]
-    with spack.config.use_configuration(*test_cfg3):
-        assert not p1._warn_unused_old_config(_show=False)
