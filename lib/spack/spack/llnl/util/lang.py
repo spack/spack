@@ -902,32 +902,6 @@ else:
     PatternBytes = typing.Pattern[bytes]
 
 
-def optimize_regexes(regex_strings: List[str]) -> List[str]:
-    """Combine regex strings that share a common first character into grouped alternatives.
-
-    Groups regexes by their first character and combines each group into a single regex using
-    alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
-    internally, so all we need to do is reduce the number of compiled regex objects.
-    """
-    groups: Dict[str, List[str]] = {}
-    order: List[str] = []
-    for regex in regex_strings:
-        key = regex[0] if regex else ""
-        if key not in groups:
-            groups[key] = []
-            order.append(key)
-        groups[key].append(regex)
-
-    result: List[str] = []
-    for key in order:
-        entries = groups[key]
-        if len(entries) == 1:
-            result.append(entries[0])
-        else:
-            result.append("|".join(entries))
-    return result
-
-
 def fnmatch_translate_multiple(named_patterns: Dict[str, str]) -> str:
     """Similar to ``fnmatch.translate``, but takes an ordered dictionary where keys are pattern
     names, and values are filename patterns. The output is a regex that matches any of the
