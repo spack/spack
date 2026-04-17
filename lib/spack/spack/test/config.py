@@ -1713,12 +1713,13 @@ def test_included_path_conditional_bad_when(
     assert not scopes
 
 
-def test_copy_backwards_compat(tmp_path: pathlib.Path):
+def test_backwards_compat_use_old(tmp_path: pathlib.Path):
     src_dir = tmp_path / "src"
     sub_dir = src_dir / "subdir"
     sub_dir.mkdir(parents=True)
     (sub_dir / "example.yaml").touch()
 
+    # Path doesn't exist yet
     to_dir = tmp_path / "to"
 
     entry = {
@@ -1730,6 +1731,26 @@ def test_copy_backwards_compat(tmp_path: pathlib.Path):
 
     assert to_dir.exists()
     assert (to_dir / "subdir" / "example.yaml").exists()
+
+
+def test_backwards_compat_skip_old(tmp_path: pathlib.Path):
+    src_dir = tmp_path / "src"
+    sub_dir = src_dir / "subdir"
+    sub_dir.mkdir(parents=True)
+    (sub_dir / "example.yaml").touch()
+
+    to_dir = tmp_path / "to"
+    to_dir.mkdir()
+
+    entry = {
+        "path": str(to_dir),
+        "optional": True,
+        "backwards_compat": {"from": str(src_dir), "to": str(to_dir)},
+    }
+    spack.config.included_path(entry)
+
+    assert to_dir.exists()
+    assert not (to_dir / "subdir" / "example.yaml").exists()
 
 
 def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high_config):
