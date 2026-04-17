@@ -3186,8 +3186,7 @@ class Spec:
             changed = True
 
         changed |= self.versions.intersect(other.versions)
-        changed |= self._constrain_variants(other)
-
+        changed |= self.variants.constrain(other, other._concrete)
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
         sarch, oarch = self.architecture, other.architecture
@@ -3604,28 +3603,6 @@ class Spec:
         self_dict = self.variants.dict
         other_dict = other.variants.dict
         return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
-
-    def _constrain_variants(self, other: "Spec") -> bool:
-        """Add all variants in other that aren't in self to self. Also constrain all multi-valued
-        variants that are already present. Return True iff self changed"""
-        if other is not None and other._concrete:
-            for k in self.variants:
-                if k not in other.variants:
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], "<absent>")
-
-        changed = False
-        for k in other.variants:
-            if k in self.variants:
-                if not self.variants[k].intersects(other.variants[k]):
-                    raise vt.UnsatisfiableVariantSpecError(self.variants[k], other.variants[k])
-                # If they are compatible merge them
-                changed |= self.variants[k].constrain(other.variants[k])
-            else:
-                # If it is not present copy it straight away
-                self.variants[k] = other.variants[k].copy()
-                changed = True
-
-        return changed
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
@@ -5178,6 +5155,24 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 
         # Set the item
         super().__setitem__(name, vspec)
+
+    def constrain(self, other: "VariantMap", other_concrete: bool) -> bool:
+        if concrete:
+            for k in self:
+                if k not in other:
+                    raise vt.UnsatisfiableVariantSpecError(self[k], "<absent>")
+
+        changed = False
+        for k in other:
+            if k in self:
+                if not self[k].intersects(other[k]):
+                    raise vt.UnsatisfiableVariantSpecError(self[k], other[k])
+                changed |= self[k].constrain(other[k])
+            else:
+                self[k] = other[k].copy()
+                changed = True
+
+        return changed
 
     def substitute(self, vspec):
         """Substitutes the entry under ``vspec.name`` with ``vspec``.

@@ -480,7 +480,7 @@ class TestVariantMapTest:
 
         # concrete values cannot be constrained
         with pytest.raises(spack.variant.UnsatisfiableVariantSpecError):
-            a._constrain_variants(b)
+            a.variants.constrain(b.variants, b.concrete)
 
     def test_copy(self) -> None:
         a = VariantMap()
