@@ -1316,7 +1316,9 @@ class IncludePath(OptionalInclude):
             _from = substitute_include_path(backwards_compat.get("from"), context)
             to = substitute_include_path(backwards_compat.get("to"), context)
             if not os.path.exists(_from):
-                os.mkdir(to)
+                # We'll initialize the empty dir and use it from now on (even if
+                # config is written into the old location later)
+                pathlib.Path(to).mkdir(exist_ok=True)
             elif to == self.path:
                 if not os.path.exists(to):
                     if there_are_yaml_files_in(_from):
