@@ -128,12 +128,12 @@ def git(required: bool = False) -> Optional[GitExecutable]:
     if "pytest" in sys.modules:
         git.add_default_arg("-c", "protocol.file.allow=always")
 
-    # Blacklist environment variables that can interfere with git diff operations
+    # Block environment variables that can interfere with git diff operations
     # this can cause problems for spack ci verify-versions and spack repo show-version-updates
-    env_blacklist = EnvironmentModifications()
-    env_blacklist.unset("GIT_EXTERNAL_DIFF")
-    env_blacklist.unset("GIT_DIFF_OPTS")
-    git.add_default_envmod(env_blacklist)
+    env_blocklist = EnvironmentModifications()
+    env_blocklist.unset("GIT_EXTERNAL_DIFF")
+    env_blocklist.unset("GIT_DIFF_OPTS")
+    git.add_default_envmod(env_blocklist)
 
     return git
 
