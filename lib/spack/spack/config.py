@@ -1319,7 +1319,7 @@ class IncludePath(OptionalInclude):
             if not os.path.exists(_from):
                 # We'll initialize the empty dir and use it from now on (even if
                 # config is written into the old location later)
-                pathlib.Path(to).mkdir(exist_ok=True)
+                pathlib.Path(to).mkdir(parents=True, exist_ok=True)
             elif to == self.path:
                 if not os.path.exists(to):
                     if there_are_yaml_files_in(_from):
