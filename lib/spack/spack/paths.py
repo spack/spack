@@ -167,6 +167,13 @@ class SpackPaths:
         )
 
     @property
+    def default_licenses_dir(self):
+        if self.old_layout:
+            return self.base.old_licenses_dir
+        else:
+            return os.path.join(self.data_home, "licenses")
+
+    @property
     def reports_path(self):
         #: junit, cdash, etc. reports about builds
         return os.path.join(self.state_home, "reports")
@@ -333,6 +340,7 @@ def detect_old_spack_layout(paths: paths_base.SpackPathsBase):
         (paths.old_fetch_cache_path, []),
         (paths.old_gpg_path, []),
         (paths.old_gpg_keys_path, ["README.md"]),
+        (paths.old_licenses_path, []),
     ]
     for x, y in checks:
         if dir_is_occupied(x, except_for=set(y)):

@@ -54,6 +54,7 @@ class SpackPathsBase:
         self.old_fetch_cache_path = os.path.join(self.var_path, "cache")
         self.old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
         self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
+        self.old_licenses_path = os.path.join(self.etc_path, "licenses")
 
         #: User configuration location
         self.user_config_path = os.path.expanduser(
