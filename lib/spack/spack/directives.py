@@ -650,6 +650,52 @@ def conditional(*values: Union[str, bool], when: Optional[WhenType] = None):
     )
 
 
+@directive("usages")
+def usage(
+    name: str,
+    default: Optional[Union[bool, str, Tuple[str, ...]]] = None,
+    description: str = "",
+    values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
+    multi: Optional[bool] = None,
+    validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]] = None,
+    when: Optional[Union[str, bool]] = None,
+    sticky: bool = False,
+):
+    """Declare a variant for a package.
+
+    Packager can specify a default value as well as a text description.
+
+    Args:
+        name: Name of the usage
+        default: Default value for the usage, if not specified otherwise the default will be
+            False for a boolean usage and 'nothing' for a multi-valued usage
+        description: Description of the purpose of the usage
+        values: Either a tuple of strings containing the allowed values, or a callable accepting
+            one value and returning True if it is valid
+        multi: If False only one value per spec is allowed for this variant
+        validator: Optional group validator to enforce additional logic. It receives the package
+            name, the variant name and a tuple of values and should raise an instance of SpackError
+            if the group doesn't meet the additional constraints
+        when: Optional condition on which the usage applies
+        sticky: The usage should not be changed by the concretizer to find a valid concrete spec
+
+    Raises:
+        spack.directives_meta.DirectiveError: If arguments passed to the directive are invalid
+    """
+    return partial(
+        _execute_variant,
+        name=name,
+        default=default,
+        description=description,
+        values=values,
+        multi=multi,
+        validator=validator,
+        when=when,
+        sticky=sticky,
+        vtype="usage",
+    )
+
+
 @directive("variants")
 def variant(
     name: str,
@@ -692,11 +738,12 @@ def variant(
         validator=validator,
         when=when,
         sticky=sticky,
+        vtype="variant",
     )
 
 
-def _format_error(msg, pkg, name):
-    msg += " @*r{{[{0}, variant '{1}']}}"
+def _format_error(msg, pkg, name, vtype):
+    msg += " @*r{{[{0}, {vtype} '{1}']}}"
     return spack.llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
 
@@ -710,8 +757,8 @@ def _execute_variant(
     validator: Optional[Callable[[str, str, Tuple[Any, ...]], None]],
     when: Optional[Union[str, bool]],
     sticky: bool,
+    vtype: str,
 ):
-
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
     # For now it's a warning to let people migrate faster.
     if not (
@@ -724,14 +771,16 @@ def _execute_variant(
         else:
             did_you_mean = f"default={str(default)!r}"
         warnings.warn(
-            f"default value for variant '{name}' is not a boolean or string: default={default!r}. "
+            f"default value for {vtype} '{name}' is not a boolean or string: default={default!r}. "
             f"Did you mean {did_you_mean}?",
             stacklevel=3,
             category=spack.error.SpackAPIWarning,
         )
 
     if name in spack.variant.RESERVED_NAMES:
-        raise DirectiveError(_format_error(f"The name '{name}' is reserved by Spack", pkg, name))
+        raise DirectiveError(
+            _format_error(f"The name '{name}' is reserved by Spack", pkg, name, vtype)
+        )
 
     # Ensure we have a sequence of allowed variant values, or a
     # predicate for it.
@@ -759,6 +808,7 @@ def _execute_variant(
                     "by an attribute of the 'values' argument",
                     pkg,
                     name,
+                    vtype,
                 )
             )
 
@@ -786,13 +836,14 @@ def _execute_variant(
     when_spec = _make_when_spec(when)
 
     if not re.match(spack.spec.IDENTIFIER_RE, name):
-        raise DirectiveError("variant", f"Invalid variant name in {pkg.name}: '{name}'")
+        raise DirectiveError(f"{vtype}", f"Invalid {vtype} name in {pkg.name}: '{name}'")
 
     # variants are stored by condition then by name (so only the last variant of a
     # given name takes precedence *per condition*).
     # NOTE: variant defaults and values can conflict if when conditions overlap.
-    variants_by_name = pkg.variants.setdefault(when_spec, {})  # type: ignore[arg-type]
-    variants_by_name[name] = spack.variant.Variant(
+    directive_dict = pkg.variants if vtype == "variant" else pkg.usages
+    by_name = directive_dict.setdefault(when_spec, {})  # type: ignore[arg-type]
+    by_name[name] = spack.variant.Variant(
         name=name,
         default=default,
         description=description,
