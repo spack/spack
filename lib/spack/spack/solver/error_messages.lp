@@ -80,83 +80,62 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
   imposed_nodes(node(ID1, Package1), node(ID, Package)),
   attr("depends_on", node(X, Parent), node(ID, Package), Type).
 
-% The literal startcauses is used to separate the variables that are part of the error from the
-% ones describing the causal tree of the error. After startcauses, each successive pair must be
-% a condition and a condition_set id for which it holds.
-
 #defined choose_version/2.
 
+% error_cause/4 links each error/3 fact to its causation conditions.
+% Format: error_cause(ErrorType, NodeTerm, ConditionID, CauseNodeID)
+
 % More specific error message if the version cannot satisfy some constraint
-% Otherwise covered by `no_version_error` and `versions_conflict_error`.
-error(10000, "Cannot satisfy '{0}@{1}' (selected version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+error_cause(version_constraint_unsatisfied(Constraint), node(ID, Package), ConstraintCause, CauseID)
+  :- error(version_constraint_unsatisfied(Constraint), _, node(ID, Package)),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
-     condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
-     attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     choose_version(node(ID, Package), Version).
+     condition_holds(ConstraintCause, node(CauseID, TriggerPkg)).
 
-error(100, "Cannot satisfy '{0}@{1}' (version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint),
-     pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
-     imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
-     condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
-     attr("version", node(ID, Package), Version),
-     not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     not choose_version(node(ID, Package), Version).
+% Also track the competing constraint that drove the actual version selection,
+% preventing Constraint from being satisfied (the "other side" of a diamond conflict)
+error_cause(version_constraint_unsatisfied(Constraint), node(ID, Package), VersionCause, CauseID)
+  :- error(version_constraint_unsatisfied(Constraint), _, node(ID, Package)),
+     attr("version", node(ID, Package), ActualVersion),
+     imposed_constraint(EffectID, "node_version_satisfies", Package, OtherConstraint),
+     OtherConstraint != Constraint,
+     pkg_fact(Package, version_satisfies(OtherConstraint, ActualVersion)),
+     pkg_fact(TriggerPkg, condition_effect(VersionCause, EffectID)),
+     condition_holds(VersionCause, node(CauseID, TriggerPkg)).
 
-error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constraint2, startcauses, Cause1, C1ID, Cause2, C2ID)
-  :- attr("node_version_satisfies", node(ID, Package), Constraint1),
-     pkg_fact(TriggerPkg1, condition_effect(Cause1, EffectID1)),
-     imposed_constraint(EffectID1, "node_version_satisfies", Package, Constraint1),
-     condition_holds(Cause1, node(C1ID, TriggerPkg1)),
-     % two constraints
-     attr("node_version_satisfies", node(ID, Package), Constraint2),
-     pkg_fact(TriggerPkg2, condition_effect(Cause2, EffectID2)),
-     imposed_constraint(EffectID2, "node_version_satisfies", Package, Constraint2),
-     condition_holds(Cause2, node(C2ID, TriggerPkg2)),
-     % version chosen
-     attr("version", node(ID, Package), Version),
-     % version satisfies one but not the other
-     pkg_fact(Package, version_satisfies(Constraint1, Version)),
-     not pkg_fact(Package, version_satisfies(Constraint2, Version)),
-     Cause1 < Cause2.
-
-% causation tracking error for no or multiple virtual providers
-error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, Cause, CID)
-  :- attr("virtual_node", node(X, Virtual)),
-     not provider(_, node(X, Virtual)),
+% causation tracking for no valid provider
+error_cause(no_valid_provider, node(X, Virtual), Cause, CID)
+  :- error(no_valid_provider, _, node(X, Virtual)),
      imposed_constraint(EID, "dependency_holds", Parent, Virtual, Type),
      pkg_fact(TriggerPkg, condition_effect(Cause, EID)),
      condition_holds(Cause, node(CID, TriggerPkg)).
 
-% At most one variant value for single-valued variants
-error(0, "'{0}' requires conflicting variant values 'Spec({1}={2})' and 'Spec({1}={3})'", Package, Variant, Value1, Value2, startcauses, Cause1, X, Cause2, X)
-  :- attr("node", node(X, Package)),
-     node_has_variant(node(X, Package), Variant, VariantID),
-     variant_single_value(node(X, Package), Variant),
-     build(node(X, Package)),
+% causation tracking for variant value conflicts — one rule per conflicting value
+error_cause(variant_value_conflict(Variant, Value1, Value2), node(X, Package), Cause, X)
+  :- error(variant_value_conflict(Variant, Value1, Value2), _, node(X, Package)),
      attr("variant_value", node(X, Package), Variant, Value1),
      imposed_constraint(EID1, "variant_set", Package, Variant, Value1),
-     pkg_fact(TriggerPkg1, condition_effect(Cause1, EID1)),
-     condition_holds(Cause1, node(X, TriggerPkg1)),
+     pkg_fact(TriggerPkg, condition_effect(Cause, EID1)),
+     condition_holds(Cause, node(X, TriggerPkg)).
+
+error_cause(variant_value_conflict(Variant, Value1, Value2), node(X, Package), Cause, X)
+  :- error(variant_value_conflict(Variant, Value1, Value2), _, node(X, Package)),
      attr("variant_value", node(X, Package), Variant, Value2),
      imposed_constraint(EID2, "variant_set", Package, Variant, Value2),
-     pkg_fact(TriggerPkg2, condition_effect(Cause2, EID2)),
-     condition_holds(Cause2, node(X, TriggerPkg2)),
-     Value1 < Value2. % see[1] in concretize.lp
+     pkg_fact(TriggerPkg, condition_effect(Cause, EID2)),
+     condition_holds(Cause, node(X, TriggerPkg)).
 
-% error message with causes for conflicts
-error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
-  :- attr("node", node(ID, Package)),
+% causation tracking for conflicts (trigger side)
+error_cause(conflict(Msg), node(ID, Package), TriggerID, ID1)
+  :- error(conflict(Msg), _, node(ID, Package)),
      pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
-     % node(ID1, TriggerPackage) is node(ID2, Package) in most, but not all, cases
-     condition_holds(TriggerID, node(ID1, TriggerPackage)),
-     condition_holds(ConstraintID, node(ID2, Package)),
-     unification_set(X, node(ID2, Package)),
-     unification_set(X, node(ID1, TriggerPackage)),
-     build(node(ID, Package)).  % ignore conflicts for concrete packages
+     condition_holds(TriggerID, node(ID1, _)).
+
+% causation tracking for conflicts (constraint side)
+error_cause(conflict(Msg), node(ID, Package), ConstraintID, ID2)
+  :- error(conflict(Msg), _, node(ID, Package)),
+     pkg_fact(Package, conflict(TriggerID, ConstraintID, Msg)),
+     condition_holds(ConstraintID, node(ID2, Package)).
 
 pkg_fact(Package, version_satisfies(Constraint, Version)) :-
     pkg_fact(Package, version_order(Version, VersionIdx)),
@@ -164,31 +143,14 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
     VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
 
 % variables to show
-#show error/2.
 #show error/3.
-#show error/4.
-#show error/5.
-#show error/6.
-#show error/7.
-#show error/8.
-#show error/9.
-#show error/10.
-#show error/11.
-
+#show error_cause/4.
 #show condition_cause/4.
 #show condition_reason/2.
 
 % Define all variables used to avoid warnings at runtime when the model doesn't happen to have one
-#defined error/2.
 #defined error/3.
-#defined error/4.
-#defined error/5.
-#defined error/6.
-#defined error/7.
-#defined error/8.
-#defined error/9.
-#defined error/10.
-#defined error/11.
+#defined error_cause/4.
 #defined attr/2.
 #defined attr/3.
 #defined attr/4.

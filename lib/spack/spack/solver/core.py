@@ -2,11 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
+
 import importlib
 import pathlib
+from functools import lru_cache
 from types import ModuleType
 from typing import Any, Callable, NamedTuple, Optional, Tuple
 
+import spack.error
 import spack.platforms
 from spack.llnl.util import lang
 
@@ -175,6 +178,7 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
         )
 
 
+@lru_cache(maxsize=None)
 def clingo_cffi() -> bool:
     """Returns True if clingo uses the CFFI interface"""
     return hasattr(clingo().Symbol, "_rep")
@@ -257,6 +261,11 @@ def intermediate_repr(sym):
         # that are not functions
         pass
 
+    return symbol_to_string(sym)
+
+
+def symbol_to_string(sym) -> str:
+    """Returns a string representation of a clingo symbol."""
     if clingo_cffi():
         # Clingo w/ CFFI will throw an exception on failure
         try:
@@ -296,3 +305,17 @@ class SourceContext:
 def using_libc_compatibility() -> bool:
     """Returns True if we are currently using libc compatibility"""
     return spack.platforms.host().name == "linux"
+
+
+class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
+    """There was an issue with the spec that was requested (i.e. a user error)."""
+
+    def __init__(self, msg):
+        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
+        self.provided = None
+        self.required = None
+        self.constraint_type = None
+
+
+class InternalConcretizerError(UnsatisfiableSpecError):
+    """Errors that indicate a bug in Spack."""

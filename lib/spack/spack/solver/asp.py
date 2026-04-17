@@ -64,20 +64,22 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
-from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
 from .core import (
     AspFunction,
     AspVar,
+    InternalConcretizerError,
     NodeId,
     SourceContext,
+    UnsatisfiableSpecError,
     clingo,
     extract_args,
     fn,
     using_libc_compatibility,
 )
+from .error_handler import ErrorHandler
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory, create_external_parser
@@ -770,142 +772,6 @@ def _spec_with_default_name(spec_str, name):
     if not spec.name:
         spec.name = name
     return spec
-
-
-class ErrorHandler:
-    def __init__(self, model, input_specs: List[spack.spec.Spec]):
-        self.model = model
-        self.input_specs = input_specs
-        self.full_model = None
-
-    def multiple_values_error(self, attribute, pkg):
-        return f'Cannot select a single "{attribute}" for package "{pkg}"'
-
-    def no_value_error(self, attribute, pkg):
-        return f'Cannot select a single "{attribute}" for package "{pkg}"'
-
-    def _get_cause_tree(
-        self,
-        cause: Tuple[str, str],
-        conditions: Dict[str, str],
-        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]],
-        seen: Set,
-        indent: str = "        ",
-    ) -> List[str]:
-        """
-        Implementation of recursion for self.get_cause_tree. Much of this operates on tuples
-        (condition_id, set_id) in which the latter idea means that the condition represented by
-        the former held in the condition set represented by the latter.
-        """
-        seen.add(cause)
-        parents = [c for e, c in condition_causes if e == cause and c not in seen]
-        local = f"required because {conditions[cause[0]]} "
-
-        return [indent + local] + [
-            c
-            for parent in parents
-            for c in self._get_cause_tree(
-                parent, conditions, condition_causes, seen, indent=indent + "  "
-            )
-        ]
-
-    def get_cause_tree(self, cause: Tuple[str, str]) -> List[str]:
-        """
-        Get the cause tree associated with the given cause.
-
-        Arguments:
-            cause: The root cause of the tree (final condition)
-
-        Returns:
-            A list of strings describing the causes, formatted to display tree structure.
-        """
-        conditions: Dict[str, str] = dict(extract_args(self.full_model, "condition_reason"))
-        condition_causes: List[Tuple[Tuple[str, str], Tuple[str, str]]] = list(
-            ((Effect, EID), (Cause, CID))
-            for Effect, EID, Cause, CID in extract_args(self.full_model, "condition_cause")
-        )
-        return self._get_cause_tree(cause, conditions, condition_causes, set())
-
-    def handle_error(self, msg, *args):
-        """Handle an error state derived by the solver."""
-        if msg == "multiple_values_error":
-            return self.multiple_values_error(*args)
-
-        if msg == "no_value_error":
-            return self.no_value_error(*args)
-
-        try:
-            idx = args.index("startcauses")
-        except ValueError:
-            msg_args = args
-            causes = []
-        else:
-            msg_args = args[:idx]
-            cause_args = args[idx + 1 :]
-            cause_args_conditions = cause_args[::2]
-            cause_args_ids = cause_args[1::2]
-            causes = list(zip(cause_args_conditions, cause_args_ids))
-
-        msg = msg.format(*msg_args)
-
-        # For variant formatting, we sometimes have to construct specs
-        # to format values properly. Find/replace all occurrences of
-        # Spec(...) with the string representation of the spec mentioned
-        specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
-        for spec_str in specs_to_construct:
-            msg = msg.replace(f"Spec({spec_str})", str(spack.spec.Spec(spec_str)))
-
-        for cause in set(causes):
-            for c in self.get_cause_tree(cause):
-                msg += f"\n{c}"
-
-        return msg
-
-    def message(self, errors) -> str:
-        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
-        header = f"failed to concretize {input_specs} for the following reasons:"
-        messages = (
-            f"    {idx+1:2}. {self.handle_error(msg, *args)}"
-            for idx, (_, msg, args) in enumerate(errors)
-        )
-        return "\n".join((header, *messages))
-
-    def raise_if_errors(self):
-        initial_error_args = extract_args(self.model, "error")
-        if not initial_error_args:
-            return
-
-        error_causation = clingo().Control()
-
-        parent_dir = pathlib.Path(__file__).parent
-        errors_lp = parent_dir / "error_messages.lp"
-
-        def on_model(model):
-            self.full_model = model.symbols(shown=True, terms=True)
-
-        with error_causation.backend() as backend:
-            for atom in self.model:
-                atom_id = backend.add_atom(atom)
-                backend.add_rule([atom_id], [], choice=False)
-
-            error_causation.load(str(errors_lp))
-            error_causation.ground([("base", []), ("error_messages", [])])
-            _ = error_causation.solve(on_model=on_model)
-
-        # No choices so there will be only one model
-        error_args = extract_args(self.full_model, "error")
-        errors = sorted(
-            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
-        )
-        try:
-            msg = self.message(errors)
-        except Exception as e:
-            msg = (
-                f"unexpected error during concretization [{str(e)}]. "
-                f"Please report a bug at https://github.com/spack/spack/issues"
-            )
-            raise spack.error.SpackError(msg) from e
-        raise UnsatisfiableSpecError(msg)
 
 
 class PyclingoDriver:
@@ -4066,26 +3932,6 @@ class Solver:
                 reusable_specs.extend(spec.traverse())
 
         self._conc_cache.cleanup()
-
-
-class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
-    """There was an issue with the spec that was requested (i.e. a user error)."""
-
-    def __init__(self, msg):
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
-        self.provided = None
-        self.required = None
-        self.constraint_type = None
-
-
-class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
-    """Errors that indicate a bug in Spack."""
-
-    def __init__(self, msg):
-        super(spack.error.UnsatisfiableSpecError, self).__init__(msg)
-        self.provided = None
-        self.required = None
-        self.constraint_type = None
 
 
 class OutputDoesNotSatisfyInputError(InternalConcretizerError):

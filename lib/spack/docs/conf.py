@@ -368,6 +368,8 @@ nitpick_ignore = [
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
     ("py:class", "SpecFiltersFactory"),
+    # Classes from third party code
+    ("py:class", "_clingo.Symbol"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
     ("py:class", "spack.llnl.util.lang.K"),
