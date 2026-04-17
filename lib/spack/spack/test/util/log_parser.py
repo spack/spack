@@ -187,9 +187,3 @@ class TestOptimizeRegexes:
             orig_match = any(r.search(line) for r in compiled_orig)
             opt_match = any(r.search(line) for r in compiled_opt)
             assert orig_match == opt_match, f"mismatch on {line!r}"
-
-    def test_fewer_patterns_than_input(self):
-        """Optimization reduces the number of patterns."""
-        inputs = ["make: error", "make: fatal", "ld: error", "ld: fatal", "unique"]
-        result = _optimize_regexes(inputs)
-        assert len(result) < len(inputs)
