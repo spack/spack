@@ -1713,7 +1713,8 @@ def test_included_path_conditional_bad_when(
     assert not scopes
 
 
-def test_backwards_compat_use_old(tmp_path: pathlib.Path):
+@pytest.fixture
+def backwards_compat_setup(tmp_path: pathlib.Path):
     src_dir = tmp_path / "src"
     sub_dir = src_dir / "subdir"
     sub_dir.mkdir(parents=True)
@@ -1727,28 +1728,25 @@ def test_backwards_compat_use_old(tmp_path: pathlib.Path):
         "optional": True,
         "backwards_compat": {"from": str(src_dir), "to": str(to_dir)},
     }
-    spack.config.included_path(entry)
 
+    yield src_dir, to_dir, entry
+
+
+def test_backwards_compat_use_old(backwards_compat_setup):
+    """If target dir doesn't exist, make it and copy over yaml files"""
+    src_dir, to_dir, entry = backwards_compat_setup
+
+    spack.config.included_path(entry)
     assert to_dir.exists()
     assert (to_dir / "subdir" / "example.yaml").exists()
 
 
-def test_backwards_compat_skip_old(tmp_path: pathlib.Path):
-    src_dir = tmp_path / "src"
-    sub_dir = src_dir / "subdir"
-    sub_dir.mkdir(parents=True)
-    (sub_dir / "example.yaml").touch()
+def test_backwards_compat_skip_old(backwards_compat_setup):
+    """If target dir exists, copy over nothing from source"""
+    src_dir, to_dir, entry = backwards_compat_setup
 
-    to_dir = tmp_path / "to"
     to_dir.mkdir()
-
-    entry = {
-        "path": str(to_dir),
-        "optional": True,
-        "backwards_compat": {"from": str(src_dir), "to": str(to_dir)},
-    }
     spack.config.included_path(entry)
-
     assert to_dir.exists()
     assert not (to_dir / "subdir" / "example.yaml").exists()
 
