@@ -232,7 +232,6 @@ def test_location_vars_that_use_other_location_vars(
 
 def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch, set_home):
     """Ensure license directory is customizable"""
-    import spack.config
     import spack.package_base
     import spack.repo
 
@@ -285,8 +284,6 @@ def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
     empty_dir = _ensure_dir(tmp_path / "empty")
 
     set_home(home_prefix)
-
-    import spack.paths
 
     pbtest = SpackPathsBase(base_prefix)
     pbtest.old_install_path = empty_dir
