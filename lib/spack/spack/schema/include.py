@@ -48,10 +48,7 @@ properties: Dict[str, Any] = {
                             "type": "object",
                             "description": "For default scopes, old paths where they may be "
                             "found, if they have moved",
-                            "properties": {
-                                "from": {"type": "string"},
-                                "to": {"type": "string"},
-                            }
+                            "properties": {"from": {"type": "string"}, "to": {"type": "string"}},
                         },
                         "sha256": {
                             "type": "string",

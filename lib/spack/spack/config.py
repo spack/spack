@@ -33,6 +33,7 @@ import os
 import os.path
 import pathlib
 import re
+import shutil
 import sys
 import tempfile
 from collections import defaultdict
@@ -1258,9 +1259,6 @@ for file scopes, or no extension for directory scopes (currently {ext})"
 
 _yaml_exts = ".yaml", ".yml"
 is_yaml = lambda x: (x.suffix in _yaml_exts)
-
-
-import shutil
 
 
 def there_are_yaml_files_in(_dir):
