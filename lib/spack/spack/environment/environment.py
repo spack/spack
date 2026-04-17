@@ -1072,7 +1072,7 @@ class Environment:
 
     def _re_read(self):
         """Reinitialize the environment object."""
-        self.clear()
+        self.clear(to_disk=False)
         self._load_manifest_file()
 
     def _read(self):
@@ -1276,7 +1276,7 @@ class Environment:
         add_root_specs(self.included_concrete_spec_data)
         return spec_list
 
-    def clear(self):
+    def clear(self, to_disk=True):
         """Clear the contents of the environment"""
         self.spec_lists = {}
         self._dev_specs = {}
@@ -1290,7 +1290,7 @@ class Environment:
         self.invalidate_repository_cache()
         self._previous_active = None  # previously active environment
 
-        self.manifest.clear()
+        self.manifest.clear(to_disk=to_disk)
 
     @property
     def active(self):
@@ -3057,6 +3057,12 @@ def initialize_environment_dir(
         # error handling for bad manifests is handled on other code paths
         return
 
+    # TODO GBB: Use the config system for this
+    # This probably requires overriding the include config
+    # but still reading from the environment scope
+    # (so that we can construct the scope without the bad includes)
+    # then we can do the modifications, pop the scope, and add it back with includes
+
     # Override relative paths for IncludePath entries.
     # GitIncludePaths should NOT be overriden.
     includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
@@ -3166,7 +3172,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.changed = False
 
     def _init_user_specs(self):
-        specs_yaml = self.configuration.get(USER_SPECS_KEY, [])
+        with self.use_config():
+            specs_yaml = spack.config.CONFIG.get("specs", [])
         for item in specs_yaml:
             if isinstance(item, str):
                 self._user_specs[DEFAULT_USER_SPEC_GROUP].append(item)
@@ -3209,7 +3216,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ValueError: if no equivalent match is found
         """
         result = []
-        for yaml_spec_str in self.configuration["specs"]:
+        for yaml_spec_str in spack.config.CONFIG.get("specs", [], scope=self.scope_name):
             if Spec(yaml_spec_str) == Spec(user_spec):
                 result.append(yaml_spec_str)
 
@@ -3262,23 +3269,26 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             user_spec: user spec to be appended
             group: group where the spec should be added. If None, the default group is used.
         """
-        group = group or DEFAULT_USER_SPEC_GROUP
+        with self.use_config():
+            group = group or DEFAULT_USER_SPEC_GROUP
+            specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
 
-        if group == DEFAULT_USER_SPEC_GROUP:
-            # Append to top-most specs: attribute
-            specs_yaml = self.configuration.setdefault("specs", [])
-            specs_yaml.append(user_spec)
-        else:
-            # Append to specs: attribute within a group
-            group_in_yaml = self._get_group(group)
-            group_in_yaml.setdefault("specs", []).append(user_spec)
+            if group == DEFAULT_USER_SPEC_GROUP:
+                # Append to top-most specs: attribute
+                specs_yaml.append(user_spec)
+            else:
+                # Append to specs: attribute within a group
+                self._add_to_group(group, user_spec, specs_yaml)
 
+            spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
         self._user_specs[group].append(user_spec)
         self.changed = True
 
-    def _get_group(self, group: str) -> Dict:
-        """Find or create the group entry in the manifest"""
-        specs_yaml = self.configuration.setdefault("specs", [])
+    def _add_to_group(self, group: str, addition: str, specs_yaml: Dict) -> Dict:
+        """Find or create a new group in specs_yaml and add to it
+
+        Does the yaml addition, not the in-memory addition"""
+        specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
         group_entry = None
         for item in specs_yaml:
             if isinstance(item, dict) and item.get("group") == group:
@@ -3293,7 +3303,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._user_specs[group] = []
             self._explicit[group] = True
 
-        return group_entry
+        group_entry["specs"].setdefault([]).append(addition)
 
     def remove_user_spec(self, user_spec: str) -> None:
         """Removes the user spec passed as input from the default list of root specs
@@ -3305,17 +3315,22 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec is not in the list
         """
         try:
-            for key in self._all_matches(user_spec):
-                self.configuration["specs"].remove(key)
-                self._user_specs[DEFAULT_USER_SPEC_GROUP].remove(key)
+            with self.use_config():
+                for key in self._all_matches(user_spec):
+                    specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
+                    specs_yaml.remove(key)
+                    spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
+                    self._user_specs[DEFAULT_USER_SPEC_GROUP].remove(key)
         except ValueError as e:
             msg = f"cannot remove {user_spec} from {self}, no such spec exists"
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
-    def clear(self) -> None:
+    def clear(self, to_disk=True) -> None:
         """Clear all user specs from the list of root specs"""
-        self.configuration["specs"] = []
+        if to_disk:
+            with self.use_config():
+                spack.config.CONFIG.set("specs", [], scope=self.scope_name)
         self._clear_user_specs()
         self.changed = True
 
@@ -3330,7 +3345,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec cannot be overridden
         """
         try:
-            self.configuration["specs"][idx] = user_spec
+            specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
+            specs_yaml[idx] = user_spec
+            spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
             self._clear_user_specs()
             self._init_user_specs()
         except ValueError as e:
@@ -3380,8 +3397,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the include cannot be overridden
         """
         try:
-            current_include = self.configuration["include"][idx]
-            self.configuration["include"][idx] = include
+            current_include = spack.config.CONFIG.get("include", [], scope=self.scope_name)
+            current_include[idx] = include
+            spack.config.CONFIG.set("include", current_include, scope=self.scope_name)
         except ValueError as e:
             msg = f"cannot override '{current_include}' with '{include}'"
             raise SpackEnvironmentError(msg) from e
@@ -3489,21 +3507,26 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 True the default view is used for the environment, if False there's no view.
         """
         if isinstance(view, dict):
-            self.configuration["view"][default_view_name].update(view)
+            with self.use_config():
+                views = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
+                views[default_view_name].update(view)
+                spack.config.CONFIG.set("view", views, scope=self.scope_name)
             self.changed = True
             return
 
         if not isinstance(view, bool):
             view = str(view)
 
-        self.configuration["view"] = view
+        with self.use_config():
+            spack.config.CONFIG.set("view", view, scope=self.scope_name)
         self.changed = True
 
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
-        view_data = self.configuration.get("view")
+        view_data = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
         if isinstance(view_data, collections.abc.Mapping):
-            self.configuration["view"].pop(default_view_name)
+            view_data.pop(default_view_name)
+            spack.config.CONFIG.set("view", view_data)
             self.changed = True
             return
 
@@ -3514,8 +3537,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if not self.changed:
             return
 
-        with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
-            _write_yaml(self.yaml_content, f)
+        #        with fs.write_tmp_and_move(os.path.realpath(self.manifest_file)) as f:
+        #            _write_yaml(self.yaml_content, f)
         self.changed = False
 
     @property
@@ -3548,8 +3571,18 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(self) -> None:
+    def prepare_config_scope(self, includes=True) -> None:
         """Add the manifest's scope to the global configuration search path."""
+        if includes:
+            scope = self.env_config_scope
+        else:
+            scope = spack.config.SingleFileScope(
+                self.scope_name,
+                str(self.manifest_file),
+                spack.schema.env.schema,
+                yaml_path=[TOP_LEVEL_KEY],
+            )
+            scope._included_scopes = []  # TODO make this less hacky
         spack.config.CONFIG.push_scope(
             self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
         )
@@ -3559,10 +3592,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         spack.config.CONFIG.remove_scope(self.env_config_scope.name)
 
     @contextlib.contextmanager
-    def use_config(self):
+    def use_config(self, includes=True):
         """Ensure only the manifest's configuration scopes are global."""
         with no_active_environment():
-            self.prepare_config_scope()
+            self.prepare_config_scope(includes=includes)
             yield
             self.deactivate_config_scope()
 
