@@ -537,28 +537,12 @@ def make_argument_parser(**kwargs):
         help="do not use filesystem locking (unsafe)",
     )
 
-    profile = parser.add_argument_group("profiling")
-    profile.add_argument(
-        "-p",
-        "--profile",
-        action="store_true",
-        dest="spack_profile",
-        help="profile execution using cProfile",
+    debug.add_argument(
+        "-p", "--profile", action="store_true", dest="spack_profile", help=argparse.SUPPRESS
     )
-    profile.add_argument("--profile-file", default=None, help="Filename to save profile data to.")
-    profile.add_argument(
-        "--sorted-profile",
-        default=None,
-        metavar="STAT",
-        help="profile and sort by STAT, which can be: calls, ncalls,\n"
-        "cumtime, cumulative, filename, line, module",
-    )
-    profile.add_argument(
-        "--lines",
-        default=20,
-        action="store",
-        help="lines of profile output or 'all' (default: 20)",
-    )
+    debug.add_argument("--profile-file", default=None, help=argparse.SUPPRESS)
+    debug.add_argument("--sorted-profile", default=None, metavar="STAT", help=argparse.SUPPRESS)
+    debug.add_argument("--lines", default=20, action="store", help=argparse.SUPPRESS)
 
     return parser
 
@@ -1084,6 +1068,30 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
 
     # now we can actually execute the command.
     if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:
+        new_args = [sys.executable, "-m", "cProfile"]
+        if main_args.sorted_profile:
+            new_args.extend(["-s", main_args.sorted_profile])
+        if main_args.profile_file:
+            new_args.extend(["-o", main_args.profile_file])
+        new_args.append(spack.paths.spack_script)
+        skip_next = False
+        for arg in sys.argv[1:]:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg in ("--sorted-profile", "--profile-file", "--lines"):
+                skip_next = True
+                continue
+            if arg.startswith(("--sorted-profile=", "--profile-file=", "--lines=")):
+                continue
+            if arg in ("--profile", "-p"):
+                continue
+            new_args.append(arg)
+        formatted_args = " ".join(shlex.quote(a) for a in new_args)
+        tty.warn(
+            "The --profile flag is deprecated and will be removed in Spack v1.3. "
+            f"Use `{formatted_args}` instead."
+        )
         _profile_wrapper(command, main_args, parser, args, unknown)
     elif main_args.pdb:
         new_args = [sys.executable, "-m", "pdb", spack.paths.spack_script]
