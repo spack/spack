@@ -70,6 +70,7 @@ import spack.hooks
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
+import spack.paths
 import spack.paths_base
 import spack.report
 import spack.spec
@@ -328,11 +329,13 @@ class GlobalState:
     but excludes the Spack environment, which is slow to serialize and should not be needed
     during the build."""
 
-    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache")
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "paths_state")
 
     def __init__(self):
+        paths_state = spack.paths.freeze()
         if multiprocessing.get_start_method() == "fork":
             return
+        self.paths_state = paths_state
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
@@ -349,6 +352,7 @@ class GlobalState:
             opener.urlopen._instance = None
             s3_client_cache.clear()
             return
+        spack.paths.restore(self.paths_state)
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()

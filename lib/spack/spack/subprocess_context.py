@@ -95,14 +95,14 @@ class GlobalStateMarshaler:
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
-        # Note: freezing before is sufficient for fork. Spawn starts
-        # must also freeze after
-        spack.paths.freeze()
+        # Make sure paths have been resolved before fork
+        paths_state = spack.paths.freeze()
         if self.is_forked:
             return
 
         from spack.environment import active_environment
 
+        self.paths_state = paths_state
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
@@ -117,7 +117,7 @@ class GlobalStateMarshaler:
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
         self.test_patches.restore()
-        spack.paths.freeze()
+        spack.paths.restore(self.paths_state)
         if self.env:
             from spack.environment import activate
 

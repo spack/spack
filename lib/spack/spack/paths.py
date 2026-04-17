@@ -360,6 +360,16 @@ def freeze():
     Note that for this reason, the private variables like _data_home
     are important for more than just caching.
     """
-    locations.state_home
-    locations.data_home
-    locations.cache_home
+    return {
+        "state_home": locations.state_home,
+        "data_home": locations.data_home,
+        "cache_home": locations.cache_home,
+        "old_layout": locations.old_layout,
+    }
+
+
+def restore(bundled_state):
+    locations._state_home = bundled_state["state_home"]
+    locations._data_home = bundled_state["data_home"]
+    locations._cache_home = bundled_state["cache_home"]
+    locations.old_layout = bundled_state["old_layout"]
