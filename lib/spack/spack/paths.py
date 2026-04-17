@@ -167,9 +167,9 @@ class SpackPaths:
         )
 
     @property
-    def default_licenses_dir(self):
+    def default_license_dir(self):
         if self.old_layout:
-            return self.base.old_licenses_dir
+            return self.base.old_licenses_path
         else:
             return os.path.join(self.data_home, "licenses")
 
