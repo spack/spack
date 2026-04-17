@@ -814,7 +814,7 @@ def test_bad_remove_included_env():
     env("create", "--include-concrete", "test", "combined_env")
 
     with pytest.raises(SpackCommandError):
-        env("remove", "test")
+        env("remove", "-y", "test")
 
 
 def test_force_remove_included_env():
