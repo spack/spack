@@ -3339,7 +3339,7 @@ class Spec:
             if not self.versions.intersects(other.versions):
                 return False
 
-        if not self._intersects_variants(other):
+        if not self.variants.intersects(other.variants):
             return False
 
         if self.architecture and other.architecture:
@@ -3598,11 +3598,6 @@ class Spec:
                     return False
 
         return result
-
-    def _intersects_variants(self, other: "Spec") -> bool:
-        self_dict = self.variants.dict
-        other_dict = other.variants.dict
-        return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
@@ -5155,6 +5150,11 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 
         # Set the item
         super().__setitem__(name, vspec)
+
+    def intersects(self, other):
+        self_dict = self.dict
+        other_dict = other.dict
+        return all(self_dict[k].intersects(other_dict[k]) for k in other_dict if k in self_dict)
 
     def constrain(self, other: "VariantMap", other_concrete: bool) -> bool:
         if concrete:
