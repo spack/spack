@@ -11,6 +11,7 @@ installations performed in Spack unit tests may include additional
 modifications to global state in memory that must be replicated in the
 child process.
 """
+
 import importlib
 import io
 import multiprocessing

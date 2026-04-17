@@ -83,9 +83,9 @@ def test_repo_last_mtime(mock_packages):
         modified_after = "\n    ".join(
             f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
         )
-        assert (
-            max_mtime <= repo_mtime
-        ), f"the following files were modified while running tests:\n    {modified_after}"
+        assert max_mtime <= repo_mtime, (
+            f"the following files were modified while running tests:\n    {modified_after}"
+        )
     assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 

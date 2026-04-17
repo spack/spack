@@ -17,6 +17,7 @@ Tests assume that mock packages provide this::
                     mpi@:10.0: set([zmpi])},
     'stuff': {stuff: set([externalvirtual])}}
 """
+
 import io
 
 import spack.repo

@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/buildcache_spec.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.spec

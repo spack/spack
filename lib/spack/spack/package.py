@@ -132,10 +132,9 @@ from spack.spec import Spec
 from spack.url import substitute_version as substitute_version_in_url
 from spack.user_environment import environment_modifications_for_specs
 from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
-from spack.util.environment import EnvironmentModifications
+from spack.util.environment import EnvironmentModifications, set_env
 from spack.util.environment import filter_system_paths as _filter_system_paths
 from spack.util.environment import is_system_path as _is_system_path
-from spack.util.environment import set_env
 from spack.util.executable import Executable, ProcessError, which, which_string
 from spack.util.filesystem import fix_darwin_install_name
 from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker

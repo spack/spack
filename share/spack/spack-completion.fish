@@ -3096,7 +3096,7 @@ complete -c spack -n '__fish_spack_using_command style' -s h -l help -d 'show th
 complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -f -a base
 complete -c spack -n '__fish_spack_using_command style' -s b -l base -r -d 'branch to compare against to determine changed files (default: develop)'
 complete -c spack -n '__fish_spack_using_command style' -s a -l all -f -a all
-complete -c spack -n '__fish_spack_using_command style' -s a -l all -d 'check all files, not just changed files'
+complete -c spack -n '__fish_spack_using_command style' -s a -l all -d 'check all files, not just changed files (applies only to Import Check)'
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -f -a root_relative
 complete -c spack -n '__fish_spack_using_command style' -s r -l root-relative -d 'print root-relative paths (default: cwd-relative)'
 complete -c spack -n '__fish_spack_using_command style' -s U -l no-untracked -f -a untracked
@@ -3106,9 +3106,9 @@ complete -c spack -n '__fish_spack_using_command style' -s f -l fix -d 'format a
 complete -c spack -n '__fish_spack_using_command style' -l root -r -f -a root
 complete -c spack -n '__fish_spack_using_command style' -l root -r -d 'style check a different spack instance'
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a tool
-complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, isort, black, flake8, mypy)'
+complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, ruff-format, ruff-check, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
-complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
+complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, ruff-format, ruff-check, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be used only on specs from spack v0.X.'
 

@@ -286,15 +286,15 @@ def test_find_format_deps_paths(database, config):
         output
         == f"""\
 mpileaks-2.3                   {mpileaks.prefix}
-    callpath-1.0               {mpileaks['callpath'].prefix}
-        dyninst-8.2            {mpileaks['dyninst'].prefix}
-            libdwarf-20130729  {mpileaks['libdwarf'].prefix}
-            libelf-0.8.13      {mpileaks['libelf'].prefix}
-    compiler-wrapper-1.0       {mpileaks['compiler-wrapper'].prefix}
-    gcc-10.2.1                 {mpileaks['gcc'].prefix}
-    gcc-runtime-10.2.1         {mpileaks['gcc-runtime'].prefix}
-    zmpi-1.0                   {mpileaks['zmpi'].prefix}
-        fake-1.0               {mpileaks['fake'].prefix}
+    callpath-1.0               {mpileaks["callpath"].prefix}
+        dyninst-8.2            {mpileaks["dyninst"].prefix}
+            libdwarf-20130729  {mpileaks["libdwarf"].prefix}
+            libelf-0.8.13      {mpileaks["libelf"].prefix}
+    compiler-wrapper-1.0       {mpileaks["compiler-wrapper"].prefix}
+    gcc-10.2.1                 {mpileaks["gcc"].prefix}
+    gcc-runtime-10.2.1         {mpileaks["gcc-runtime"].prefix}
+    zmpi-1.0                   {mpileaks["zmpi"].prefix}
+        fake-1.0               {mpileaks["fake"].prefix}
 
 """
     )

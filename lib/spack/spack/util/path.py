@@ -6,6 +6,7 @@
 
 TODO: this is really part of spack.config. Consolidate it.
 """
+
 import contextlib
 import getpass
 import os

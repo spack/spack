@@ -94,6 +94,7 @@ class TestCompilerPropertyDetector:
                 return ""
             elif args[0] == "load":
                 monkeypatch.setenv("MODULE_LOADED", "1")
+                monkeypatch.setenv("LOADEDMODULES", "turn_on")
 
         monkeypatch.setattr(spack.util.module_cmd, "module", module)
 
@@ -125,3 +126,20 @@ class TestCompilerPropertyDetector:
         detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
         with detector.compiler_environment():
             assert os.environ["TEST"] == "yes"
+
+    @pytest.mark.not_on_windows("Module files are not supported on Windows")
+    def test_compiler_invalid_module_raises(self, working_env, mock_gcc, monkeypatch):
+        """Test if an exception is raised when a module cannot be loaded"""
+
+        def mock_load_module(module_name):
+            # Simulate module load failure
+            raise spack.util.module_cmd.ModuleLoadError(module_name)
+
+        monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
+
+        mock_gcc.external_modules = ["non_existent"]
+        detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
+
+        with pytest.raises(spack.util.module_cmd.ModuleLoadError):
+            with detector.compiler_environment():
+                pass

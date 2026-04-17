@@ -588,8 +588,9 @@ def versions_per_spec(args):
             num_versions = int(args.versions_per_spec)
         except ValueError:
             raise SpackError(
-                "'--versions-per-spec' must be a number or 'all',"
-                " got '{0}'".format(args.versions_per_spec)
+                "'--versions-per-spec' must be a number or 'all', got '{0}'".format(
+                    args.versions_per_spec
+                )
             )
     return num_versions
 

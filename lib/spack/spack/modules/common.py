@@ -23,6 +23,7 @@ and is divided among four classes:
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
+
 import collections
 import contextlib
 import copy

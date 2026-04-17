@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+
 import collections
 import errno
 import getpass

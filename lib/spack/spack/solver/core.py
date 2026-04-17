@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
+
 import importlib
 import pathlib
 from types import ModuleType

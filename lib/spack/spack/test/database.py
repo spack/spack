@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Check the database is functioning properly, both in memory and in its file."""
+
 import contextlib
 import datetime
 import functools
@@ -352,11 +353,13 @@ def test_recursive_upstream_dbs(
         )
 
         assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (db_a_from_scratch)
-        assert db_a_from_scratch.db_for_spec_hash(spec["y"].dag_hash()) == (
-            upstream_dbs_from_scratch[0]
+        assert (
+            db_a_from_scratch.db_for_spec_hash(spec["y"].dag_hash())
+            == (upstream_dbs_from_scratch[0])
         )
-        assert db_a_from_scratch.db_for_spec_hash(spec["z"].dag_hash()) == (
-            upstream_dbs_from_scratch[1]
+        assert (
+            db_a_from_scratch.db_for_spec_hash(spec["z"].dag_hash())
+            == (upstream_dbs_from_scratch[1])
         )
 
         db_a_from_scratch._check_ref_counts()

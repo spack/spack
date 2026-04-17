@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """URL primitives that just require Python standard library."""
+
 import itertools
 import os
 import re
@@ -90,11 +91,9 @@ def find_list_urls(url: str) -> Set[str]:
         (
             r"luarocks[^/]+/(?:modules|manifests)/(?P<org>[^/]+)/"
             + r"(?P<name>.+?)-[0-9.-]*\.src\.rock",
-            lambda m: "https://luarocks.org/modules/"
-            + m.group("org")
-            + "/"
-            + m.group("name")
-            + "/",
+            lambda m: (
+                "https://luarocks.org/modules/" + m.group("org") + "/" + m.group("name") + "/"
+            ),
         ),
     ]
 
@@ -223,7 +222,7 @@ def split_url_extension(url: str) -> Tuple[str, ...]:
     1. ``('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')``
     2. ``('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin', '.tar.gz', None)``
     3. ``('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')``
-    """
+    """  # noqa: E501
     # Strip off sourceforge download suffix.
     # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
     prefix, suffix = split_url_on_sourceforge_suffix(url)

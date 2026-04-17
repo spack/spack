@@ -438,8 +438,8 @@ class Result:
         Does not include anything related to unsatisfiability as we
         are only interested in storing satisfiable results
         """
-        serial_node_arg = (
-            lambda node_dict: f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
+        serial_node_arg = lambda node_dict: (
+            f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
         )
         ret = dict()
         ret["criteria"] = self.criteria
@@ -744,10 +744,7 @@ class ConcretizationCache:
 
         # update mod/access time for use w/ LRU cleanup
         os.utime(cache_path)
-        return (
-            self._results_from_cache(cache_content),
-            self._stats_from_cache(cache_content),
-        )  # type: ignore
+        return (self._results_from_cache(cache_content), self._stats_from_cache(cache_content))  # type: ignore
 
 
 def _is_checksummed_git_version(v):
@@ -865,7 +862,7 @@ class ErrorHandler:
         input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
         header = f"failed to concretize {input_specs} for the following reasons:"
         messages = (
-            f"    {idx+1:2}. {self.handle_error(msg, *args)}"
+            f"    {idx + 1:2}. {self.handle_error(msg, *args)}"
             for idx, (_, msg, args) in enumerate(errors)
         )
         return "\n".join((header, *messages))
@@ -4089,7 +4086,6 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
 
 
 class OutputDoesNotSatisfyInputError(InternalConcretizerError):
-
     def __init__(
         self, input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]]
     ) -> None:

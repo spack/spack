@@ -9,6 +9,7 @@ Every test asserts two properties:
    input (spec token, config key, package name) that helps identify what to
    change.
 """
+
 import pathlib
 from io import StringIO
 from typing import List
@@ -123,7 +124,7 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
     """
     msg = str(exc_info.value)
     missing = [h for h in required_part if h not in msg]
-    assert not missing, f"Error message is missing parts {missing!r}\n" f"Full message:\n{msg}"
+    assert not missing, f"Error message is missing parts {missing!r}\nFull message:\n{msg}"
 
 
 @pytest.mark.parametrize(

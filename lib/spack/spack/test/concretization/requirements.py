@@ -159,9 +159,7 @@ def test_requirement_adds_new_version(
 packages:
   v:
     require: "@{0}=2.2"
-""".format(
-        a_commit_hash
-    )
+""".format(a_commit_hash)
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("v")
@@ -192,9 +190,7 @@ def test_requirement_adds_version_satisfies(
 packages:
   t:
     require: "@{0}=2.2"
-""".format(
-        commits[0]
-    )
+""".format(commits[0])
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("t")

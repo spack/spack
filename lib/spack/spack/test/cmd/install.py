@@ -443,7 +443,7 @@ def test_junit_output_with_errors(
     tmp_path: pathlib.Path,
     monkeypatch,
 ):
-    throw = _keyboard_error if expected_exc == KeyboardInterrupt else _runtime_error
+    throw = _keyboard_error if expected_exc is KeyboardInterrupt else _runtime_error
     monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
 
     with fs.working_dir(str(tmp_path)):

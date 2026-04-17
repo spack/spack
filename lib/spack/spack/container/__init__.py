@@ -4,6 +4,7 @@
 """Package that provides functions and classes to
 generate container recipes from a Spack environment
 """
+
 import warnings
 
 import spack.vendor.jsonschema

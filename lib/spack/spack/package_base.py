@@ -320,9 +320,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [
-                        getattr(instance, key) == value for key, value in attr_dict.items()
-                    ]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -924,7 +922,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def version(self):
         if not self.spec.versions.concrete:
             raise ValueError(
-                "Version requested for a package that" " does not have a concrete version."
+                "Version requested for a package that does not have a concrete version."
             )
         return self.spec.versions[0]
 
@@ -1628,8 +1626,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         deprecated = spack.config.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
-                "{0} is deprecated and may be removed in a future Spack "
-                "release.".format(self.spec.format("{name}{@version}"))
+                "{0} is deprecated and may be removed in a future Spack release.".format(
+                    self.spec.format("{name}{@version}")
+                )
             )
 
             # Ask the user whether to install deprecated version if we're

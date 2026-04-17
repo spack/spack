@@ -7,6 +7,7 @@
 The YAML and JSON formats preserve DAG information in the spec.
 
 """
+
 import collections
 import collections.abc
 import gzip

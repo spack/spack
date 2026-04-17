@@ -60,7 +60,7 @@ jobs:
       run: |
           # See https://github.com/coveragepy/coveragepy/issues/2082
           pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
-          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade "mypy>=0.900" "click" "ruff"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -112,7 +112,7 @@ jobs:
       run: "brew install kcov"
     - name: Install Python packages
       run: |
-          pip install --upgrade pip pytest coverage[toml] pytest-xdist
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -149,7 +149,7 @@ jobs:
           . .github/workflows/bin/setup_git.sh
     - name: Setup a virtual environment with platform-python
       run: |
-          /usr/libexec/platform-python -m venv ~/platform-spack 
+          /usr/libexec/platform-python -m venv ~/platform-spack
           source ~/platform-spack/bin/activate
           pip install --upgrade pip pytest coverage[toml] pytest-xdist
     - name: Bootstrap Spack development environment and run unit tests
@@ -157,7 +157,7 @@ jobs:
           source ~/platform-spack/bin/activate
           source share/spack/setup-env.sh
           spack debug report
-          spack -d bootstrap now --dev
+          spack -d bootstrap now
           pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
@@ -175,8 +175,8 @@ jobs:
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
     - name: Install Python packages
       run: |
-          pip install --upgrade pip pytest coverage[toml] pytest-cov clingo pytest-xdist
-          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
+          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -212,7 +212,7 @@ jobs:
       run: |
           pip install --upgrade pip
           # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov "coverage<=7.11.0"
+          pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
@@ -247,7 +247,8 @@ jobs:
         python-version: '3.14'
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip pywin32 pytest-cov clingo "coverage<=7.11.0"
+          python -m pip install --upgrade pip pywin32 -r .github/workflows/requirements/unit_tests/requirements.txt
+          python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1

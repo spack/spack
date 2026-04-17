@@ -15,6 +15,7 @@ but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
 """
+
 import contextlib
 import os
 import pathlib
