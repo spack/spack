@@ -410,7 +410,6 @@ def test_case_sensitive_imports(tmp_path: pathlib.Path):
 
 def test_pkg_imports():
     assert (
-        spack.cmd.style._module_part(pathlib.Path(paths.prefix), "spack.pkg.builtin.boost")
-        is None
+        spack.cmd.style._module_part(pathlib.Path(paths.prefix), "spack.pkg.builtin.boost") is None
     )
     assert spack.cmd.style._module_part(pathlib.Path(paths.prefix), "spack.pkg") is None

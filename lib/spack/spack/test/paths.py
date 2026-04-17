@@ -269,9 +269,9 @@ class SetAnXdgVarAndReadDataHome:
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
         expected = str(pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs")
-        assert (
-            spack.paths.locations.default_install_location == expected
-        ), f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
+        assert spack.paths.locations.default_install_location == expected, (
+            f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
+        )
 
 
 def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):

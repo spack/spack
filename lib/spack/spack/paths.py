@@ -79,7 +79,6 @@ def _unset_path_vars(env):
 
 
 class SpackPaths:
-
     relative_state_home = os.path.join(".local", "state")
     relative_data_home = os.path.join(".local", "share")
     relative_cache_home = ".cache"
