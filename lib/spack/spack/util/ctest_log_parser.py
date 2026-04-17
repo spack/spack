@@ -74,7 +74,6 @@ import math
 import re
 import time
 from collections import deque
-from contextlib import contextmanager
 from typing import Dict, List, TextIO, Tuple, Union
 
 _error_matches = [
@@ -281,14 +280,6 @@ def chunks(xs, n):
     return [xs[i : i + chunksize] for i in range(0, len(xs), chunksize)]
 
 
-@contextmanager
-def _time(times, i):
-    start = time.time()
-    yield
-    end = time.time()
-    times[i] += end - start
-
-
 def _optimize_regexes(regex_strings: List[str]) -> List[str]:
     """Groups regexes by their first character and combines each group into a single regex using
     alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
@@ -319,16 +310,20 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
     """
     for i, m in enumerate(matches):
-        with _time(match_times, i):
-            if m.search(line):
-                break
+        start = time.perf_counter()
+        found = m.search(line)
+        match_times[i] += time.perf_counter() - start
+        if found:
+            break
     else:
         return False
 
     for i, m in enumerate(exceptions):
-        with _time(exc_times, i):
-            if m.search(line):
-                return False
+        start = time.perf_counter()
+        found = m.search(line)
+        exc_times[i] += time.perf_counter() - start
+        if found:
+            return False
     else:
         return True
 
