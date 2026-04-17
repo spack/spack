@@ -28,6 +28,18 @@ You can control this in the following ways:
 
 In the absence of any Spack-specific settings, Spack will respect [XDG](https://specifications.freedesktop.org/basedir/latest/) environment variables controlling the home directory for specific types of data.
 
+Spack's older layout, and pulling newer versions of Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack previously stored many important pieces of data in the Spack prefix:
+
+* Installs in ``$spack/opt/spack``
+* Environments in ``$spack/var/spack/environments``
+* GPG keys in ``$spack/opt/spack/gpg``
+
+If Spack detects this old layout in use, it will continue to use it.
+Targeted config settings like ``config:install_tree:root`` will override this, but not other environment variables or general configuration (i.e. anything described below this section).
+
 .. _config-file-data-variables:
 
 Spack-specific variables controlling data location
