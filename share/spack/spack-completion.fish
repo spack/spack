@@ -471,13 +471,9 @@ complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -d 'use 
 complete -c spack -n '__fish_spack_using_command ' -s L -l disable-locks -f -a locks
 complete -c spack -n '__fish_spack_using_command ' -s L -l disable-locks -d 'do not use filesystem locking (unsafe)'
 complete -c spack -n '__fish_spack_using_command ' -s p -l profile -f -a spack_profile
-complete -c spack -n '__fish_spack_using_command ' -s p -l profile -d 'profile execution using cProfile'
 complete -c spack -n '__fish_spack_using_command ' -l profile-file -r -f -a profile_file
-complete -c spack -n '__fish_spack_using_command ' -l profile-file -r -d 'Filename to save profile data to.'
 complete -c spack -n '__fish_spack_using_command ' -l sorted-profile -r -f -a sorted_profile
-complete -c spack -n '__fish_spack_using_command ' -l sorted-profile -r -d 'profile and sort by STAT, which can be: calls, ncalls,'
 complete -c spack -n '__fish_spack_using_command ' -l lines -r -f -a lines
-complete -c spack -n '__fish_spack_using_command ' -l lines -r -d 'lines of profile output or '"'"'all'"'"' (default: 20)'
 
 # spack add
 set -g __fish_spack_optspecs_spack_add h/help l/list-name=
