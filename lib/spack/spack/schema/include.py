@@ -44,6 +44,15 @@ properties: Dict[str, Any] = {
                             "raw form). Supports file, ftp, http, https schemes and "
                             "Spack/environment variables",
                         },
+                        "backwards_compat": {
+                            "type": "object",
+                            "description": "For default scopes, old paths where they may be "
+                            "found, if they have moved",
+                            "properties": {
+                                "from": {"type": "string"},
+                                "to": {"type": "string"},
+                            }
+                        },
                         "sha256": {
                             "type": "string",
                             "description": "Required SHA256 hash for remote URLs to verify "
