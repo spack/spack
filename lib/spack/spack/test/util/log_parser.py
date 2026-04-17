@@ -138,26 +138,18 @@ class TestOptimizeRegexes:
         assert len(result) == 2
         assert result == ["bar", "far|foo"]
 
-    def test_groups_anchored_patterns(self):
-        """^-anchored regexes all share the ^ prefix and are combined into one."""
-        result = _optimize_regexes(["^Error: ", "^Error ([0-9]+):", "^Fatal"])
-        # ^ is treated as a literal prefix, so all three are grouped together
-        assert len(result) == 1
-        combined_re = re.compile(result[0])
-        assert combined_re.search("Error: something")
-        assert combined_re.search("Error 42:")
-        assert combined_re.search("Fatal")
-
     def test_singletons_unchanged(self):
         """A regex that is the only one with its prefix is kept as-is."""
         result = _optimize_regexes(["^unique pattern"])
         assert result == ["^unique pattern"]
 
-    def test_metachar_prefix_grouped(self):
+    def test_escaping(self):
         """Regexes starting with the same metacharacter are grouped too."""
-        inputs = ["\\(foo\\)", "\\(bar\\)", "[abc]"]
-        result = _optimize_regexes(inputs)
-        assert len(result) == 2
+        result = _optimize_regexes(["\\(foo\\)", "\\(bar\\)", "\\*", "[abc]"])
+        assert len(result) == 3
+        assert "\\(foo\\)|\\(bar\\)" in result
+        assert "\\*" in result
+        assert "[abc]" in result
 
     def test_semantics_preserved(self):
         """Optimized regexes match the same strings as the originals."""

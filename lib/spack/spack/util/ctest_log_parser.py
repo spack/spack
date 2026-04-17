@@ -75,8 +75,7 @@ import re
 import time
 from collections import deque
 from contextlib import contextmanager
-from itertools import groupby
-from typing import List, TextIO, Tuple, Union
+from typing import Dict, List, TextIO, Tuple, Union
 
 _error_matches = [
     "^FAIL: ",
@@ -291,17 +290,20 @@ def _time(times, i):
 
 
 def _optimize_regexes(regex_strings: List[str]) -> List[str]:
-    """Combine non-empty regex strings sharing a common first character into grouped alternatives.
-
-    Groups regexes by their first character and combines each group into a single regex using
+    """Groups regexes by their first character and combines each group into a single regex using
     alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
     internally. The result is a shorter list of regexes that all hit a fast path in cpython's regex
     engine for prefix matching."""
-    result: List[str] = []
-    for _, group in groupby(sorted(regex_strings), key=lambda r: r[0]):
-        entries = list(group)
-        result.append(entries[0] if len(entries) == 1 else "|".join(entries))
-    return result
+    groups: Dict[str, List[str]] = {}
+    for regex in sorted(regex_strings):
+        key = regex[:1]  # empty or single character
+        if key == "\\":  # include escaped character
+            key = regex[:2]
+        if key not in groups:
+            groups[key] = [regex]
+        else:
+            groups[key].append(regex)
+    return ["|".join(entries) for entries in groups.values()]
 
 
 def _match(matches, exceptions, line):
