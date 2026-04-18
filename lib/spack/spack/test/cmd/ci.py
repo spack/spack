@@ -333,10 +333,11 @@ spack:
             "git checkout ${SPACK_REF}",
             "popd",
         ]
-        assert ci_obj["script"][1].startswith("cd ")
-        ci_obj["script"][1] = "cd ENV"
+        assert ci_obj["script"][2].startswith("cd ")
+        ci_obj["script"][2] = "cd ENV"
         assert ci_obj["script"] == [
             "spack -d ci rebuild",
+            "spack config add 'config:install_tree:root:$spack/installs'",
             "cd ENV",
             "spack env activate --without-view .",
             "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
