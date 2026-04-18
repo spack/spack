@@ -245,7 +245,9 @@ def test_needs_stage(git):
 
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
-@pytest.mark.parametrize("type_of_test", ["commit", "pure-commit", "tag", "annotated-tag", "branch"])
+@pytest.mark.parametrize(
+    "type_of_test", ["commit", "pure-commit", "tag", "annotated-tag", "branch"]
+)
 def test_get_full_repo(
     get_full_repo,
     type_of_test,
@@ -291,6 +293,57 @@ def test_get_full_repo(
         assert len(history) >= 2
     else:
         assert len(history) == 1
+
+
+@pytest.mark.disable_clean_stage_check
+def test_checkout_error_branch_unreachable(
+    git_version, mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
+):
+    """When a commit is not reachable from the cloned branch, checkout should
+    fail with an error identifying the branch."""
+
+    if git_version < Version(min_opt_string):
+        pytest.skip(f"Not testing for older git {git_version}")
+
+    t = mock_git_repository.checks["branch"]
+    s = default_mock_concretization("git-test")
+
+    args = copy.copy(t.args)
+    args["get_full_repo"] = False
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
+
+    # A nonexistent commit is never reachable from any branch.
+    s.variants["commit"] = SingleValuedVariant("commit", "a" * 40)
+
+    with pytest.raises(spack.error.FetchError, match="branch"):
+        with s.package.stage:
+            with spack.config.override("config:verify_ssl", True):
+                s.package.do_stage()
+
+
+@pytest.mark.disable_clean_stage_check
+def test_checkout_error_tag_mismatch(
+    git_version, mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
+):
+    """When a commit doesn't match a cloned tag, checkout should fail
+    with an error indicating a tag mismatch."""
+
+    if git_version < Version(min_opt_string):
+        pytest.skip(f"Not testing for older git {git_version}")
+
+    t = mock_git_repository.checks["tag"]
+    s = default_mock_concretization("git-test")
+
+    args = copy.copy(t.args)
+    args["get_full_repo"] = False
+    monkeypatch.setitem(s.package.versions, Version("git"), args)
+
+    s.variants["commit"] = SingleValuedVariant("commit", "a" * 40)
+
+    with pytest.raises(spack.error.FetchError, match="mismatch"):
+        with s.package.stage:
+            with spack.config.override("config:verify_ssl", True):
+                s.package.do_stage()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -466,7 +519,6 @@ def test_git_sparse_path_have_unique_mirror_projections(
 def test_commit_variant_clone(
     git, default_mock_concretization, mutable_mock_repo, mock_git_version_info, monkeypatch
 ):
-
     repo_path, filename, commits = mock_git_version_info
     test_commit = commits[-2]
     s = default_mock_concretization("git-test")

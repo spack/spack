@@ -155,7 +155,7 @@ def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_o
 
 def test_git_checkout_error_on_branch(mock_util_executable):
     """When checkout fails from a branch state, the error should indicate
-    the branch may have advanced beyond the commit."""
+    the commit may not be reachable from the branch."""
     _, should_fail, registered_responses = mock_util_executable
     registered_responses["git --version"] = "2.50.0"
     registered_responses["symbolic-ref"] = "refs/heads/main"

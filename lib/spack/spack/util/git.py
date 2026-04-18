@@ -369,7 +369,7 @@ def git_checkout(
 
     Uses ``symbolic-ref HEAD`` before checkout to distinguish branch vs tag/commit state.
     If checkout fails, this provides actionable error messages:
-    - Branch (symbolic HEAD): commit may be unreachable in a shallow clone
+    - Branch (symbolic HEAD): commit may not be reachable from the branch
     - Tag/commit (detached HEAD): commit may not match the cloned tag
     """
     git_exe = git_exe or git(required=True)
@@ -403,7 +403,7 @@ def git_checkout(
         if on_branch:
             raise exe.ProcessError(
                 f"Could not checkout {ref} from branch '{on_branch}'. "
-                f"The branch may have advanced beyond this commit in a shallow clone."
+                f"The commit may not be reachable from this branch."
             )
         raise exe.ProcessError(
             f"Could not checkout {ref}. "
