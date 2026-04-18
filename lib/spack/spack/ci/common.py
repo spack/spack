@@ -579,6 +579,7 @@ class SpackCIConfig:
             {
                 "build-job": {
                     "script": [
+                        "spack config add 'config:install_tree:root:$spack/installs'",
                         "cd {env_dir}",
                         "spack env activate --without-view .",
                         "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
