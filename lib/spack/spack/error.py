@@ -116,6 +116,10 @@ class SpecError(SpackError):
     """Superclass for all errors that occur while constructing specs."""
 
 
+class InvalidVirtualOnEdgeError(SpecError):
+    """Raised when an edge requires a virtual that does not exist in the repository."""
+
+
 class UnsatisfiableSpecError(SpecError):
     """
     Raised when a spec conflicts with package constraints.

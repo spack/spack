@@ -27,7 +27,7 @@ def _mark_str(raw) -> str:
 
 
 def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
-    """Raise SpecError if any edge in *specs* requires a virtual that does not exist."""
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
     errors = []
     for raw, spec in zip(raw_strs, specs):
         for edge in spack.traverse.traverse_edges([spec], root=False):
@@ -39,9 +39,11 @@ def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spe
     if not errors:
         return
     if len(errors) == 1:
-        raise spack.error.SpecError(errors[0])
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
     details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
-    raise spack.error.SpecError(f"unknown virtuals have been detected in requirements:\n{details}")
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been detected in requirements:\n{details}"
+    )
 
 
 def _check_unknown_targets(

@@ -4077,7 +4077,7 @@ class _SkipConcreteVisitor(traverse.BaseVisitor):
 
 
 def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> None:
-    """Raise InvalidVirtualOnEdgeError if any edge in *specs* requires an unknown virtual."""
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
     errors = []
     for root in specs:
         root_edges = traverse.with_artificial_edges([root])
@@ -4089,9 +4089,11 @@ def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> 
     if not errors:
         return
     if len(errors) == 1:
-        raise InvalidVirtualOnEdgeError(errors[0])
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
     details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
-    raise InvalidVirtualOnEdgeError(f"unknown virtuals have been found in input specs:\n{details}")
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been found in input specs:\n{details}"
+    )
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
@@ -4172,7 +4174,3 @@ class InvalidVersionError(spack.error.SpackError):
 
 class InvalidDependencyError(spack.error.SpackError):
     """Raised when an explicit dependency is not a possible dependency."""
-
-
-class InvalidVirtualOnEdgeError(spack.error.SpackError):
-    """Raised when an edge requires a virtual that does not exist in the repository."""
