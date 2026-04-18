@@ -271,9 +271,11 @@ def test_get_full_repo(
 
     # Resolve the commit SHA, dereferencing annotated tags to the underlying commit
     git_exe = mock_git_repository.git_exe
-    expected_commit = git_exe(
-        "-C", mock_git_repository.path, "rev-parse", f"{t.revision}^{{commit}}", output=str
-    ).strip()
+    expected_commit = args.get("commit")
+    if not expected_commit:
+        expected_commit = git_exe(
+            "-C", mock_git_repository.path, "rev-parse", f"{t.revision}^{{commit}}", output=str
+        ).strip()
     s.variants["commit"] = SingleValuedVariant("commit", expected_commit)
 
     if git_version >= Version(min_direct_commit):
