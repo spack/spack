@@ -966,6 +966,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         depth = None if self.get_full_repo else 1
+        # if name isn't defined then this is a resource or something else which is not a "package"
         name = self.package.name if self.package else None
         checkout_ref = self.commit or self.tag or self.branch
         fetch_ref = self.tag or self.branch
@@ -975,7 +976,11 @@ class GitFetchStrategy(VCSFetchStrategy):
         # TODO(psakievich) The use of the minimal clone need clearer justification via package API
         # or something. There is a trade space of storage minimization vs available git information
         # that grows to non-trivial proportions for larger projects
-        minimal_clone = self.commit and name and not self.get_full_repo
+        # for now only use this for clones where a package is only asking for a
+        # commit (no branch or tag)
+        #
+        # distinction of "name" is to indicate this is a package and not a resource
+        minimal_clone = self.commit and name and not (self.get_full_repo or fetch_ref)
 
         with temp_cwd(ignore_cleanup_errors=True):
             if minimal_clone:

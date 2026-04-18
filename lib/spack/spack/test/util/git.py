@@ -151,3 +151,28 @@ def test_git_init_fetch_ommissions(mock_util_executable, git_version, ommitted_o
     spack.util.git.git_init_fetch(url, ref, git_exe=git)
     for opt in ommitted_opts:
         assert all(opt not in call for call in log)
+
+
+def test_git_checkout_error_on_branch(mock_util_executable):
+    """When checkout fails from a branch state, the error should indicate
+    the branch may have advanced beyond the commit."""
+    _, should_fail, registered_responses = mock_util_executable
+    registered_responses["git --version"] = "2.50.0"
+    registered_responses["symbolic-ref"] = "refs/heads/main"
+    should_fail.append("checkout")
+    git = spack.util.git.GitExecutable("git")
+
+    with pytest.raises(exe.ProcessError, match="branch 'main'"):
+        spack.util.git.git_checkout("abc123", git_exe=git)
+
+
+def test_git_checkout_error_on_tag(mock_util_executable):
+    """When checkout fails from a detached state, the error should indicate
+    a mismatch between the expected commit and the cloned tag."""
+    _, should_fail, registered_responses = mock_util_executable
+    registered_responses["git --version"] = "2.50.0"
+    should_fail.extend(["symbolic-ref", "checkout"])
+    git = spack.util.git.GitExecutable("git")
+
+    with pytest.raises(exe.ProcessError, match="mismatch"):
+        spack.util.git.git_checkout("abc123", git_exe=git)
