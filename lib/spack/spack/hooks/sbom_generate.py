@@ -42,11 +42,7 @@ def get_supplier(pkg):
         else:
             path = urllib.parse.urlparse(git_url).path
 
-        repo_path = path.strip("/")
-        if repo_path.endswith(".git"):
-            repo_path = repo_path[:-4]
-
-        parts = [part for part in repo_path.split("/") if part]
+        parts = [part for part in path.split("/") if part]
         if len(parts) >= 2:
             namespace = "/".join(parts[:-1])
             return f"Organization: {namespace}"
@@ -64,9 +60,7 @@ def get_checksums(spec):
 
 
 def get_download_location(spec):
-    pkg = getattr(spec, "package", None)
-    if not pkg:
-        return "NOASSERTION"
+    pkg = spec.package
 
     try:
         return str(pkg.url_for_version(spec.version))
