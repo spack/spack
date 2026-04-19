@@ -335,11 +335,15 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
 def _parse(stream, profile, context):
 
-    error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
-    error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
-    warning_matches = [re.compile(r) for r in _optimize_regexes(_warning_matches)]
-    warning_exceptions = [re.compile(r) for r in _optimize_regexes(_warning_exceptions)]
+    error_matches = [re.compile(r, re.MULTILINE) for r in _optimize_regexes(_error_matches)]
+    error_exceptions = [re.compile(r, re.MULTILINE) for r in _optimize_regexes(_error_exceptions)]
+    warning_matches = [re.compile(r, re.MULTILINE) for r in _optimize_regexes(_warning_matches)]
+    warning_exceptions = [
+        re.compile(r, re.MULTILINE) for r in _optimize_regexes(_warning_exceptions)
+    ]
     file_line_matches = [re.compile(r) for r in _file_line_matches]
+
+    chunk_regexes = error_matches + warning_matches
 
     matcher, _ = _match, []
     timings = []
@@ -359,49 +363,69 @@ def _parse(stream, profile, context):
     # list of (event, remaining_post_context_lines)
     pending_events: List[Tuple[LogEvent, int]] = []
 
-    for i, line in enumerate(stream):
-        rstripped_line = line.rstrip()
+    line_no = 0
 
-        # feed this line into every event still collecting post_context
-        if pending_events:
-            active_events = []
-            for event, remaining in pending_events:
-                event.post_context.append(rstripped_line)
-                if remaining > 1:
-                    active_events.append((event, remaining - 1))
-                elif isinstance(event, BuildError):
-                    errors.append(event)
-                else:
-                    warnings.append(event)
-            pending_events = active_events
+    while True:
+        chunk = stream.read(16384) + stream.readline()
 
-        # use CTest's regular expressions to scrape the log for events
-        if matcher(error_matches, error_exceptions, line, *timings[:2]):
-            event = BuildError(rstripped_line, i + 1)
-        elif matcher(warning_matches, warning_exceptions, line, *timings[2:]):
-            event = BuildWarning(rstripped_line, i + 1)
-        else:
-            pre_context.append(rstripped_line)
+        if not chunk:
+            break
+
+        # If no pending events, try to skip the whole chunk with one regex search.
+        if not pending_events and not any(r.search(chunk) for r in chunk_regexes):
+            chunk_lines = chunk.splitlines()
+            line_no += len(chunk_lines)
+            if context > 0:
+                for line in chunk_lines[-context:]:
+                    pre_context.append(line.rstrip())
             continue
 
-        event.pre_context = list(pre_context)
-        event.post_context = []
+        # MATCH path: split into lines, process per-line
+        for line in chunk.splitlines():
+            rstripped_line = line.rstrip()
 
-        # get file/line number for the event, if possible
-        for flm in file_line_matches:
-            match = flm.search(line)
-            if match:
-                event.source_file, event.source_line_no = match.groups()
-                break
+            # feed this line into every event still collecting post_context
+            if pending_events:
+                active_events = []
+                for event, remaining in pending_events:
+                    event.post_context.append(rstripped_line)
+                    if remaining > 1:
+                        active_events.append((event, remaining - 1))
+                    elif isinstance(event, BuildError):
+                        errors.append(event)
+                    else:
+                        warnings.append(event)
+                pending_events = active_events
 
-        if context > 0:
-            pending_events.append((event, context))
-        elif isinstance(event, BuildError):
-            errors.append(event)
-        else:
-            warnings.append(event)
+            # use CTest's regular expressions to scrape the log for events
+            if matcher(error_matches, error_exceptions, line, *timings[:2]):
+                event = BuildError(rstripped_line, line_no + 1)
+            elif matcher(warning_matches, warning_exceptions, line, *timings[2:]):
+                event = BuildWarning(rstripped_line, line_no + 1)
+            else:
+                pre_context.append(rstripped_line)
+                line_no += 1
+                continue
 
-        pre_context.append(rstripped_line)
+            event.pre_context = list(pre_context)
+            event.post_context = []
+
+            # get file/line number for the event, if possible
+            for flm in file_line_matches:
+                match = flm.search(line)
+                if match:
+                    event.source_file, event.source_line_no = match.groups()
+                    break
+
+            if context > 0:
+                pending_events.append((event, context))
+            elif isinstance(event, BuildError):
+                errors.append(event)
+            else:
+                warnings.append(event)
+
+            pre_context.append(rstripped_line)
+            line_no += 1
 
     # flush events whose post_context window extends past EOF
     for event, _ in pending_events:
