@@ -241,7 +241,7 @@ def test_install_overwrite(
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
-    ignores = [manifest, spec.package.times_log_path, spack.hooks.sbom_generate.sbom_path(spec)]
+    ignores = [manifest, spec.package.times_log_path, spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3")]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -316,7 +316,7 @@ def test_install_overwrite_multiple(
     ld_ignores = [
         ld_manifest,
         libdwarf.package.times_log_path,
-        spack.hooks.sbom_generate.sbom_path(libdwarf),
+        spack.hooks.sbom_generate.sbom_path(libdwarf, "spdx-2.3"),
     ]
 
     assert os.path.exists(libdwarf.prefix)
@@ -331,7 +331,7 @@ def test_install_overwrite_multiple(
     cm_ignores = [
         cm_manifest,
         cmake.package.times_log_path,
-        spack.hooks.sbom_generate.sbom_path(cmake),
+        spack.hooks.sbom_generate.sbom_path(cmake, "spdx-2.3"),
     ]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)

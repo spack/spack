@@ -15,16 +15,16 @@ from spack.store import STORE
 
 def get_license(pkg):
     if not pkg:
-        return "NOASSERTION"
+        return None
 
     license_data = getattr(pkg, "licenses", None)
 
     if not license_data:
-        return "NOASSERTION"
+        return None
 
     licenses = [lic for when, lic in license_data.items() if pkg.spec.satisfies(when)]
 
-    return " OR ".join(licenses) if licenses else "NOASSERTION"
+    return " OR ".join(licenses) if licenses else None
 
 
 def get_supplier(pkg):
@@ -47,7 +47,7 @@ def get_supplier(pkg):
             namespace = "/".join(parts[:-1])
             return f"Organization: {namespace}"
 
-    return "NOASSERTION"
+    return None
 
 
 def get_checksums(spec):
@@ -84,26 +84,36 @@ def get_download_location(spec):
     if git_url and pkg.needs_commit(spec.version):
         return str(git_url)
 
-    return "NOASSERTION"
+    return None
 
 
-def make_package_entry(spec):
+def make_spdx_2_3_package_entry(spec):
     pkg = getattr(spec, "package", None)
     return {
         "SPDXID": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         "name": spec.name,
         "versionInfo": str(spec.version),
-        "supplier": get_supplier(pkg),
-        "downloadLocation": get_download_location(spec),
+        "supplier": get_supplier(pkg) or "NOASSERTION",
+        "downloadLocation": get_download_location(spec) or "NOASSERTION",
         "filesAnalyzed": False,
-        "licenseDeclared": get_license(pkg),
+        "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
         "checksum": get_checksums(spec),
     }
 
 
-def sbom_path(spec):
-    return os.path.join(STORE.layout.metadata_path(spec), "spdx-2.3-sbom.json")
+def sbom_path(spec, sbom_type="spdx-2.3"):
+    """Return the path to an SBOM file for a spec.
+
+    Args:
+        spec: The package spec
+        sbom_type: The type of SBOM (default: spdx-2.3)
+
+    Returns:
+        Path to the SBOM file
+    """
+    sbom_dir = os.path.join(STORE.layout.metadata_path(spec), "sbom")
+    return os.path.join(sbom_dir, f"{sbom_type}.json")
 
 
 # SPDX 2.3 Generation
@@ -117,7 +127,7 @@ def generate_spdx_2_3(spec):
     created_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", t)
 
     # Create path and dir for sbom
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     unique_str = f"{spec.name}-{spec.version}-{spec.dag_hash()}"
@@ -125,7 +135,7 @@ def generate_spdx_2_3(spec):
 
     # Package entry for each installation.
     # Represents the top-level component in the SBOM (the package being installed).
-    pkg_entry = make_package_entry(spec)
+    pkg_entry = make_spdx_2_3_package_entry(spec)
 
     # Package entry for each dependency in the concretized DAG.
     # Each dependency becomes its own entry, linked to the top-level component.
@@ -139,7 +149,7 @@ def generate_spdx_2_3(spec):
     ]
 
     for dep in spec.traverse(root=False, deptype="all"):
-        dep_entry = make_package_entry(dep)
+        dep_entry = make_spdx_2_3_package_entry(dep)
         deps.append(dep_entry)
 
         relationships.append(

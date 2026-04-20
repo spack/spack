@@ -19,7 +19,7 @@ def test_sbom_generated_with_post_install(mock_packages, install_mockery):
 
     post_install(spec)
 
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     assert os.path.isfile(path)
 
     with open(path, encoding="utf-8") as f:
@@ -47,7 +47,7 @@ def test_sbom_contains_dependencies(mock_packages, install_mockery):
 
     generate_spdx_2_3(spec)
 
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     with open(path, encoding="utf-8") as f:
         sbom = json.load(f)
 
@@ -74,7 +74,7 @@ def test_sbom_has_document_namespace(mock_packages, install_mockery):
 
     generate_spdx_2_3(spec)
 
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     with open(path, encoding="utf-8") as f:
         sbom = json.load(f)
 
@@ -94,7 +94,7 @@ def test_sbom_external_package_skipped(mock_packages, install_mockery):
 
     generate_spdx_2_3(spec)
 
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     assert not os.path.exists(path)
 
 
@@ -105,7 +105,7 @@ def test_sbom_license_and_download_defaults(mock_packages, install_mockery):
 
     generate_spdx_2_3(spec)
 
-    path = sbom_path(spec)
+    path = sbom_path(spec, "spdx-2.3")
     with open(path, encoding="utf-8") as f:
         sbom = json.load(f)
 
