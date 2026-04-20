@@ -9,7 +9,6 @@ import pytest
 
 import spack.concretize
 import spack.spec
-import spack.variant
 from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
 
 
@@ -316,23 +315,3 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
     assert dep_entry["versionInfo"] == str(dep.version)
     assert dep_entry["downloadLocation"] == "https://example.com/callpath.tar.gz"
     assert dep_entry["checksum"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]
-
-
-def test_sbom_checksum_includes_git_commit_variant(mock_packages, install_mockery, monkeypatch):
-    """Git-fetched versions should report the resolved commit checksum."""
-
-    spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
-    spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", "a" * 40)
-    monkeypatch.setattr(
-        spec.package, "versions", {spec.version: {"sha256": "b" * 64, "tag": "v1.0"}}, raising=False
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["checksum"] == [
-        {"algorithm": "SHA256", "checksumValue": "b" * 64},
-        {"algorithm": "SHA1", "checksumValue": "a" * 40},
-    ]
