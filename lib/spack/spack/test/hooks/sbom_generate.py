@@ -286,6 +286,94 @@ def test_sbom_download_location_from_package_url_with_different_version(
     )
 
 
+def test_sbom_checksums_include_both_sha256_and_git_commit(
+    mock_packages, install_mockery, monkeypatch
+):
+    """Both SHA256 from version metadata and SHA1 from commit should be included when available."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    version = spec.version
+
+    # Set up version with SHA256
+    monkeypatch.setattr(spec.package, "versions", {version: {"sha256": "a" * 64}}, raising=False)
+
+    # Set up git attributes
+    git_url = "https://github.com/example/repo.git"
+    git_commit = "b" * 40  # Typical SHA1 length
+
+    monkeypatch.setattr(spec.package, "git", git_url, raising=False)
+    monkeypatch.setattr(spec.package, "needs_commit", lambda v: True, raising=False)
+    monkeypatch.setattr(spec.package, "get_commit", lambda v: git_commit, raising=False)
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    pkg = sbom["packages"][0]
+    expected_checksums = [
+        {"algorithm": "SHA256", "checksumValue": "a" * 64},
+        {"algorithm": "SHA1", "checksumValue": "b" * 40},
+    ]
+
+    # Verify both checksums are included
+    assert len(pkg["checksum"]) == 2
+    assert pkg["checksum"] == expected_checksums
+
+
+def test_sbom_checksums_git_commit_only(mock_packages, install_mockery, monkeypatch):
+    """When only git commit is available (no SHA256), it should still be included."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    version = spec.version
+
+    # Set up version without SHA256
+    monkeypatch.setattr(spec.package, "versions", {version: {}}, raising=False)
+
+    # Set up git attributes
+    git_url = "https://github.com/example/repo.git"
+    git_commit = "c" * 40  # Typical SHA1 length
+
+    monkeypatch.setattr(spec.package, "git", git_url, raising=False)
+    monkeypatch.setattr(spec.package, "needs_commit", lambda v: True, raising=False)
+    monkeypatch.setattr(spec.package, "get_commit", lambda v: git_commit, raising=False)
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    pkg = sbom["packages"][0]
+    expected_checksums = [{"algorithm": "SHA1", "checksumValue": "c" * 40}]
+
+    # Verify only git SHA1 is included
+    assert len(pkg["checksum"]) == 1
+    assert pkg["checksum"] == expected_checksums
+
+
+def test_sbom_checksums_none_available(mock_packages, install_mockery, monkeypatch):
+    """When neither SHA256 nor git commit is available, checksum should be empty."""
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    version = spec.version
+
+    # Set up version without SHA256
+    monkeypatch.setattr(spec.package, "versions", {version: {}}, raising=False)
+
+    # Set up package without git URL
+    monkeypatch.setattr(spec.package, "git", None, raising=False)
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    pkg = sbom["packages"][0]
+
+    # Verify no checksums are included
+    assert pkg["checksum"] == []
+
+
 def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
     mock_packages, install_mockery, monkeypatch
 ):

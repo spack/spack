@@ -51,12 +51,25 @@ def get_supplier(pkg):
 
 
 def get_checksums(spec):
+    checksums = []
+
+    # Get SHA256 from version metadata if available
     version_metadata = getattr(spec.package, "versions", {})
     vmeta = version_metadata.get(spec.version) or version_metadata.get(str(spec.version)) or {}
     sha256 = vmeta.get("sha256") if hasattr(vmeta, "get") else getattr(vmeta, "sha256", None)
-    if not sha256:
-        return []
-    return [{"algorithm": "SHA256", "checksumValue": sha256}]
+    if sha256:
+        checksums.append({"algorithm": "SHA256", "checksumValue": sha256})
+
+    # Also include git commit SHA1 when available
+    pkg = spec.package
+    if hasattr(pkg, "git") and pkg.git:
+        # Check if we're using a specific git commit
+        if pkg.needs_commit(spec.version):
+            git_commit = pkg.get_commit(spec.version)
+            if git_commit:
+                checksums.append({"algorithm": "SHA1", "checksumValue": git_commit})
+
+    return checksums
 
 
 def get_download_location(spec):
