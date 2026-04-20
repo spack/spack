@@ -1155,6 +1155,7 @@ class BuildStatus:
         self.log_ends_with_newline = True
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
+        self.blocked: bool = False
 
         self.stdout = stdout
         self.get_terminal_size = get_terminal_size
@@ -1315,6 +1316,13 @@ class BuildStatus:
             except (KeyError, OSError):
                 pass
 
+    def set_blocked(self, blocked: bool) -> None:
+        """Set whether all pending builds are blocked by another Spack process."""
+        if blocked == self.blocked:
+            return
+        self.blocked = blocked
+        self.dirty = True
+
     def set_jobs(self, actual: int, target: int) -> None:
         """Set the actual and target number of jobs to run concurrently."""
         if actual == self.actual_jobs and target == self.target_jobs:
@@ -1462,6 +1470,9 @@ class BuildStatus:
                 )
             else:
                 self._println(buffer, f"{bold}Progress:{reset} {self.completed}/{self.total}")
+
+        if self.blocked and not any(pkg.finished_time is None for pkg in self.builds.values()):
+            self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
             [b for b in self.builds.values() if self._is_displayed(b)]
@@ -2356,6 +2367,7 @@ class PackageInstaller:
             blocked = self._schedule_builds(
                 selector, jobserver, retained_read_locks, database_actions
             )
+            self.build_status.set_blocked(blocked and not self.running_builds)
 
             while self.pending_builds or self.running_builds or database_actions:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
@@ -2465,6 +2477,7 @@ class PackageInstaller:
                     blocked = self._schedule_builds(
                         selector, jobserver, retained_read_locks, database_actions
                     )
+                    self.build_status.set_blocked(blocked and not self.running_builds)
 
                 # Finally update the UI
                 self.build_status.update()
