@@ -43,5 +43,5 @@ spack:
 {% for mirror in bootstrap_mirrors %}
     {{mirror}}:
       url: https://binaries.spack.io/releases/v2026.03/{{mirror}}
-      signed: false
+      signed: true
 {% endfor %}
