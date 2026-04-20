@@ -186,6 +186,19 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
             first_newline = result.index("\n")
             header, rest = result[:first_newline], result[first_newline:]
 
+        if rest:
+            textwrap.wrap(
+                "".join(rest),
+                initial_indent="",
+                subsequent_indent=help_position * " ",
+                width=tty.TerminalWidth.configured(),
+            )
+
+        # FIXME(cosmicexplorer): each time we use an f-string it eagerly generates a robust
+        #                        debuggable log output, only to immediately drop the result.
+        #                        We can create an API that delays serialization until given an
+        #                        output stream.
+        # tty.debug(f'prog {prog!r} removed from help formatter {self!r}')
         return color.colorize(f"@c{{{color.cescape(header)}}}{color.cescape(rest)}")
 
     def add_arguments(self, actions):
