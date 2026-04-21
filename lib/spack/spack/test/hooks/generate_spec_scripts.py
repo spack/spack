@@ -60,7 +60,6 @@ def test_load_unload_scripts_exist(
     install("--fake", spec.name)
 
     for pkg in spec.traverse():
-
         if not pkg.external:
             path_to_load_shell = spec_script.path_to_load_shell_script(pkg, shell)
             path_to_unload_shell = spec_script.path_to_unload_shell_script(pkg, shell)
