@@ -90,7 +90,8 @@ properties: Dict[str, Any] = {
             },
             "develop_stage_link": {
                 "type": "string",
-                "description": "Name for development spec build stage directories",
+                "description": "Name for development spec build stage directories. Setting to "
+                "None will disable develop stage links.",
             },
             "test_stage": {
                 "type": "string",

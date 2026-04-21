@@ -1209,7 +1209,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             link_format = spack.config.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
-            stage_link = self.spec.format_path(link_format)
+            if link_format == "None":
+                stage_link = None
+            else:
+                stage_link = self.spec.format_path(link_format)
             source_stage = stg.DevelopStage(
                 stg.compute_stage_name(self.spec), dev_path, stage_link
             )
