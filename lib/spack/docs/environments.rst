@@ -183,6 +183,93 @@ or the shortcut alias
 
 If the environment was activated with its view, deactivating the environment will remove the view from the user environment.
 
+.. _environment_scripts:
+
+Environment Activation/Deactivation Scripts
+-------------------------------------------
+
+When you create and activate an environment, Spack automatically generates shell scripts to handle the activation
+and deactivation process. These scripts are stored in the ``.spack-env`` directory within your environment
+directory and handle tasks like:
+
+- Setting environment variables (including ``SPACK_ENV``)
+- Managing the prompt to show the active environment
+- Setting up environment variables for views
+
+The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows)
+and are regenerated when needed, such as when the environment's lockfile changes.
+
+Internally, Spack uses these scripts when you run commands like:
+
+.. code-block:: console
+
+   $ spack env activate myenv
+   $ spack env deactivate
+
+You can also use these scripts directly by sourcing them:
+
+.. code-block:: console
+
+   $ source /path/to/environment/.spack-env/activate
+   $ source /path/to/environment/.spack-env/deactivate.sh
+
+The activation scripts are automatically updated when:
+
+1. A new environment is created
+2. An environment view is regenerated
+3. The environment is activated and the lockfile has been modified since the last activation
+
+This ensures that the environment variables and setup always reflect the current state of your environment and its views.
+
+Shell Compatibility
+~~~~~~~~~~~~~~~~~~
+
+Spack supports environment activation in multiple shells:
+
+* **Bash/sh**: The default shell with full support for all features
+* **csh/tcsh**: Command-line support with environment variables and aliases
+* **fish**: Complete support with functions instead of aliases
+* **Windows batch (bat)**: Basic support for Windows command prompt
+* **PowerShell (pwsh)**: Support for Windows PowerShell environments
+
+When activating an environment with ``spack env activate``, Spack detects your current shell and uses the appropriate script. You can also specify which shell script to generate:
+
+.. code-block:: console
+
+   $ spack env activate --sh myenv    # For bash/sh
+   $ spack env activate --csh myenv   # For csh/tcsh
+   $ spack env activate --fish myenv  # For fish
+   $ spack env activate --bat myenv   # For Windows cmd.exe
+   $ spack env activate --pwsh myenv  # For PowerShell
+
+The generated script adds several features to your shell:
+
+1. Sets ``SPACK_ENV`` to point to your environment's location
+2. Updates your prompt to show the active environment (optional with ``--prompt``)
+3. Adds a ``despacktivate`` alias/function to easily deactivate the environment
+4. Sets up view-related environment variables if a view is enabled
+
+Temporary and Default Environments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack also supports creating and activating temporary environments with the ``--temp`` flag:
+
+.. code-block:: console
+
+   $ spack env activate --temp
+   ==> Created and activated temporary environment in /tmp/spack-12345
+
+This creates an environment in a temporary directory that will be automatically cleaned up when your session ends.
+
+If you activate without specifying an environment name, Spack will activate a default environment (creating it if needed):
+
+.. code-block:: console
+
+   $ spack env activate
+   ==> Created and activated default environment in /path/to/spack/var/spack/environments/default
+
+This provides a convenient way to have a persistent environment without needing to specify a name each time.
+
 .. _independent_environments:
 
 Independent Environments
