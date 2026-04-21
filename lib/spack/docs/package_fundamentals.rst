@@ -815,6 +815,36 @@ When you no longer want to use a package, you can type ``spack unload``:
    $ spack unload mpich %gcc@4.4.7
 
 
+Shell Script Generation
+""""""""""""""""""""""
+
+Behind the scenes, when you run ``spack load`` or ``spack unload``, Spack uses shell scripts for each package.
+These scripts are created during package installation or upon first use of ``spack load``. The scripts are stored in
+the ``.spack`` directory within each package's installation prefix:
+
+.. code-block:: spec
+
+   <package-prefix>/.spack/load     # Script to load package
+   <package-prefix>/.spack/unload   # Script to unload package
+
+For Windows systems, additional scripts are generated with platform-specific extensions:
+
+.. code-block:: spec
+
+   <package-prefix>/.spack/load.bat    # Windows batch script
+   <package-prefix>/.spack/load.pwsh   # PowerShell script
+   <package-prefix>/.spack/unload.bat  # Windows batch unload script
+   <package-prefix>/.spack/unload.pwsh # PowerShell unload script
+
+The shell scripts contain all the environment modifications needed for the package, including:
+
+1. Updating PATH to include the package's bin directory
+2. Setting LD_LIBRARY_PATH for shared libraries
+3. Setting MANPATH for man pages
+4. Setting other package-specific environment variables
+5. Tracking which packages are loaded via SPACK_LOADED_HASHES environment variable
+
+
 Ambiguous specs
 """""""""""""""
 
