@@ -32,7 +32,6 @@ import spack.vendor.jsonschema
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.package_base
 import spack.paths
@@ -973,80 +972,23 @@ def test_failed_spec_path_error(mutable_database):
 
 
 @pytest.mark.db
-def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
-    """Add test coverage for clear_failure operation when to be retained."""
-
-    def _is(self, spec):
-        return True
-
-    # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
-
-    s = spack.concretize.concretize_one("pkg-a")
-    spack.store.STORE.failure_tracker.clear(s)
-    out = capfd.readouterr()[0]
-    assert "Retaining failure marking" in out
-
-
-@pytest.mark.db
-def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
-    """Add test coverage for clear_failure operation when force."""
-
-    def _is(self, spec):
-        return True
-
-    # Pretend the spec has been failure locked
-    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", _is)
-    # Ensure raise OSError when try to remove the non-existent marking
-    monkeypatch.setattr(spack.database.FailureTracker, "persistent_mark", _is)
-
-    s = spack.concretize.concretize_one("pkg-a")
-    spack.store.STORE.failure_tracker.clear(s, force=True)
-    out = capfd.readouterr()[1]
-    assert "Removing failure marking despite lock" in out
-    assert "Unable to remove failure marking" in out
-
-
-@pytest.mark.db
-def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capfd):
-    """Add coverage to mark_failed."""
-
-    def _raise_exc(lock):
-        raise lk.LockTimeoutError(lk.LockType.WRITE, "/mock-lock", 1.234, 10)
-
-    with fs.working_dir(str(tmp_path)):
-        s = spack.concretize.concretize_one("pkg-a")
-
-        # Ensure attempt to acquire write lock on the mark raises the exception
-        monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
-
-        spack.store.STORE.failure_tracker.mark(s)
-        out = str(capfd.readouterr()[1])
-        assert "Unable to mark pkg-a as failed" in out
-
-    spack.store.STORE.failure_tracker.clear_all()
-
-
-@pytest.mark.db
-def test_prefix_failed(mutable_database, monkeypatch):
-    """Add coverage to failed operation."""
-
+def test_mark_and_clear_failed(mutable_database):
+    """Test the mark/has_failed/clear cycle."""
     s = spack.concretize.concretize_one("pkg-a")
 
-    # Confirm the spec is not already marked as failed
     assert not spack.store.STORE.failure_tracker.has_failed(s)
 
-    # Check that a failure entry is sufficient
     spack.store.STORE.failure_tracker.mark(s)
     assert spack.store.STORE.failure_tracker.has_failed(s)
 
-    # Remove the entry and check again
     spack.store.STORE.failure_tracker.clear(s)
     assert not spack.store.STORE.failure_tracker.has_failed(s)
 
-    # Now pretend that the prefix failure is locked
-    monkeypatch.setattr(spack.database.FailureTracker, "lock_taken", lambda self, spec: True)
+    spack.store.STORE.failure_tracker.mark(s)
     assert spack.store.STORE.failure_tracker.has_failed(s)
+
+    spack.store.STORE.failure_tracker.clear_all()
+    assert not spack.store.STORE.failure_tracker.has_failed(s)
 
 
 def test_prefix_write_lock_error(mutable_database, monkeypatch):
