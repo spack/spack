@@ -56,7 +56,7 @@ def post_install(spec, explicit=None):
 
     Args:
         spec: The spec the requires the shell scripts
-        explicit: (Optional) Placeholder for future use or additional functionality.
+        explicit: (Optional) is the spec explicitly installed by the user
     """
 
     if spec.external:

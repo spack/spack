@@ -318,90 +318,96 @@ Whenever you add/remove/rename a command or flags for an existing command, make 
 Writing Hooks
 -------------
 
-A hook is a callback that makes it easy to design functions that run for different events.
-We do this by defining hook types and then inserting them at different places in the Spack codebase.
-Whenever a hook type triggers by way of a function call, we find all the hooks of that type and run them.
+Hooks in Spack provide an extension mechanism that allows code to be executed at specific points in the package lifecycle.
+They make it easy to add functionality without modifying core code. This section explains how the Spack hook system works and how to use it effectively.
+When a hook point is reached in the code, the corresponding hook runner finds all hook functions with matching names in registered modules and executes them. This allows multiple modules to respond to the same event.
 
 Spack defines hooks by way of a module in the ``lib/spack/spack/hooks`` directory.
 This module has to be registered in ``lib/spack/spack/hooks/__init__.py`` so that Spack is aware of it.
 This section will cover the basic kind of hooks and how to write them.
 
-Types of Hooks
-^^^^^^^^^^^^^^
+Available Hook Types
+^^^^^^^^^^^^^^^^^^^
 
-The following hooks are currently implemented to make it easy for you, the developer, to add hooks at different stages of a Spack install or similar.
+Spack provides several built-in hook points that you can implement in your own hook modules.
 If there is a hook that you would like and it is missing, you can propose to add a new one.
 
 ``pre_install(spec)``
 """""""""""""""""""""
 
-A ``pre_install`` hook is run within the install subprocess, directly before the installation starts.
-It expects a single argument of a spec.
-
+A ``pre_install`` hook runs within the install subprocess, directly before installation starts.
+It receives the spec as its only argument.
 
 ``post_install(spec, explicit=None)``
 """""""""""""""""""""""""""""""""""""
 
-A ``post_install`` hook is run within the install subprocess, directly after the installation finishes, but before the build stage is removed and the spec is registered in the database.
-It expects two arguments: the spec and an optional boolean indicating whether this spec is being installed explicitly.
+A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
+It receives the spec and an optional boolean indicating whether this spec is being installed explicitly.
 
 ``pre_uninstall(spec)`` and ``post_uninstall(spec)``
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 
-These hooks are currently used for cleaning up module files after uninstall.
-
+These hooks run before and after a package is uninstalled, and are primarily used for cleaning up module files during uninstall operations.
 
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Adding a new hook type is very simple!
-In ``lib/spack/spack/hooks/__init__.py`` you can simply add your new hook to the ``HOOK_ORDER`` list. ..
-For example, let's say you want to add a new hook called ``post_log_write`` to trigger after anything is written to a logger.
-You would add it as follows:
+To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with functions named after the hooks you want to implement:
+
+1. Create a module file (e.g., ``lib/spack/spack/hooks/my_hooks.py``)
+2. Add functions matching the hook names:
+
+.. code-block:: python
+
+    # lib/spack/spack/hooks/my_hooks.py
+
+    def pre_install(spec):
+        """This runs before each package is installed."""
+        print(f"About to install {spec.name}@{spec.version}")
+
+    def post_install(spec, explicit=None):
+        """This runs after each package is installed."""
+        print(f"Finished installing {spec.name}@{spec.version}")
+
+3. Add your module to the ``HOOK_ORDER`` list in ``lib/spack/spack/hooks/__init__.py``:
 
 .. code-block:: python
 
     class _HookRunner:
-   #: Order in which hooks are executed
-    HOOK_ORDER = [
-        "spack.hooks.module_file_generation",
-        "spack.hooks.licensing",
-        "spack.hooks.sbang",
-        "spack.hooks.windows_runtime_linkage",
-        "spack.hooks.post_log_write",  # <- here is my new hook!
-    ]
+        HOOK_ORDER = [
+            "spack.hooks.module_file_generation",
+            "spack.hooks.licensing",
+            # ...
+            "spack.hooks.my_hooks",  # <- Add your module here
+        ]
 
-    # pre/post install and run by the install subprocess
-    pre_install = _HookRunner("pre_install")
-    post_install = _HookRunner("post_install")
-    pre_uninstall = _HookRunner("pre_uninstall")
-    post_uninstall = _HookRunner("post_uninstall")
 
-You then need to decide what arguments your hook would expect.
-Since this is related to logging, let's say that you want a message and level.
-That means that when you add a Python file to the ``lib/spack/spack/hooks`` folder with one or more callbacks intended to be triggered by this hook, you might use your new hook as follows:
+Example: Implementing a Build Notification Hook
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here's a complete example that sends notifications when builds start and finish:
 
 .. code-block:: python
 
-    def post_install(message, level):
-        """Do something custom with the message and level every time we write
-        to the log
-        """
-        print("running post_log_write!")
+    # lib/spack/spack/hooks/build_notifications.py
 
+    from spack.llnl.util import tty
+    import time
 
-To use the hook, we would call it as follows somewhere in the logic to do logging.
-In this example, we use it outside of a logger that is already defined:
+    # Track build start times
+    _build_starts = {}
 
-.. code-block:: python
+    def pre_install(spec):
+        """Record when builds start and notify."""
+        _build_starts[spec.name] = time.time()
+        tty.info(f"Starting build for {spec.name}@{spec.version}")
 
-    import spack.hooks
-
-    # We do something here to generate a logger and message
-    spack.hooks.post_log_write(message, logger.level)
-
-
-This is not to say that this would be the best way to implement an integration with the logger (you would probably want to write a custom logger, or you could have the hook defined within the logger), but it serves as an example of writing a hook.
+    def post_install(spec, explicit):
+        """Notify about build completion with timing info."""
+        if spec.name in _build_starts:
+            duration = time.time() - _build_starts[spec.name]
+            tty.info(f"Build completed for {spec.name}@{spec.version} in {duration:.1f} seconds")
+            del _build_starts[spec.name]
 
 Unit tests
 ----------

@@ -1050,7 +1050,9 @@ class SetupContext:
         The (partial) order imposed on the specs is externals first, then topological
         from leaf to root. That way externals cannot contribute search paths that would shadow
         Spack's prefixes, and dependents override variables set by dependencies.
-        TODO: Add args"""
+
+            Args:
+            cached_repo: Optional, this repo will be used to obtain package objects for"""
         env = EnvironmentModifications()
         for dspec, flag in chain(self.external, self.nonexternal):
             tty.debug(f"Adding env modifications for {dspec.name}")

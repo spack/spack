@@ -97,7 +97,11 @@ def _get_environment_modifications(spec, shell, repo) -> str:
 
 
 def _make_repo_path(root):
-    """Make a RepoPath from the repo subdirectories in an environment."""
+    """Make a RepoPath from the repo subdirectories in an environment.
+
+    Args:
+        root: the root of the environment
+    """
     repos = (
         spack.repo.from_path(os.path.dirname(p))
         for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
