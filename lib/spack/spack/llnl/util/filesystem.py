@@ -45,8 +45,9 @@ if sys.platform != "win32":
     import grp
     import pwd
 else:
-    import win32security
-    from win32file import CreateHardLink
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
 
 
 __all__ = [
@@ -533,6 +534,98 @@ def exploding_archive_handler(tarball_container, stage):
     else:
         shutil.move(tarball_container, stage.source_path)
 
+@system_path_filter
+def get_windows_file_security(path: str) -> str:
+    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+    SE_FILE_OBJECT = 1 
+    OWNER_SECURITY_INFO = 1
+    # Define SD C struct
+    class SECURITY_DESCRIPTOR(ctypes.Structure):
+        _fields_ = [
+            ("Revision", ctypes.c_byte ),
+            ("Sbz1", ctypes.c_byte),
+            ("Control", wintypes.WORD),
+            ("Owner", ctypes.c_void_p),
+            ("Group", ctypes.c_void_p),
+            ("Sacl", wintypes.LPVOID),
+            ("Dacl", wintypes.LPVOID)
+        ]
+
+    # Describe GetSecurityInfo API
+    GetSecurityInfo = advapi.GetSecurityInfo
+    GetSecurityInfo.argtypes = [
+        wintypes.HANDLE,
+        ctypes.c_int,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.LPVOID),
+        ctypes.POINTER(wintypes.LPVOID),
+        ctypes.POINTER(wintypes.LPVOID),
+        ctypes.POINTER(wintypes.LPVOID),
+        ctypes.POINTER(ctypes.POINTER(SECURITY_DESCRIPTOR))
+    ]
+    GetSecurityInfo.restype = wintypes.DWORD
+    # Describe LookupAccountSID API
+    LookupAccountSid = advapi.LookupAccountSidW
+    LookupAccountSid.argtypes = [
+        wintypes.LPCSTR,
+        wintypes.LPVOID,
+        wintypes.LPWSTR,
+        wintypes.LPDWORD,
+        wintypes.LPWSTR,
+        wintypes.LPDWORD,
+        ctypes.POINTER(ctypes.c_int)
+    ]
+    LookupAccountSid.restype = ctypes.c_bool
+
+    # Open file to obtain handle (required for win32api calls)
+    with open(path, "r", encoding="utf-8") as f:
+        # obtain handle
+        fh = msvcrt.get_osfhandle(f.fileno())
+        # Declare var for SID owner return param
+        p_sid_owner = wintypes.LPVOID()
+        sd = SECURITY_DESCRIPTOR()
+        # create pointer to security descritor struct in mem
+        psd = ctypes.pointer(sd)
+        # get sec info
+        if not GetSecurityInfo(fh, SE_FILE_OBJECT, OWNER_SECURITY_INFO, ctypes.byref(p_sid_owner), None, None, None, ctypes.byref(psd)) == 0:
+            err = ctypes.GetLastError()
+            raise ctypes.WinError(err, f"Failed to get security info for {path}")
+        # establish vars for Lookup account sid return params
+        dwacct_name = wintypes.DWORD(1)
+        dw_domain_name = wintypes.DWORD(1)
+        e_use = ctypes.c_int()
+        # first call to lookup account SID to determine 
+        # buffer sizes
+        success = LookupAccountSid(
+            None,
+            p_sid_owner,
+            None,
+            ctypes.byref(dwacct_name),
+            None,
+            ctypes.byref(dw_domain_name),
+            ctypes.byref(e_use)
+        )
+        if not success:
+            raise ctypes.WinError(ctypes.GetLastError(), f"Could not determine file owner for : {path}")
+        # create buffers
+        acct_name_buf = dwacct_name.value * wintypes.WCHAR
+        acct_name = acct_name_buf()
+        domain_name_buf = dw_domain_name.value * wintypes.WCHAR
+        domain_name = domain_name_buf()
+
+        success = LookupAccountSid(
+            None,
+            p_sid_owner,
+            acct_name,
+            ctypes.byref(dwacct_name),
+            domain_name,
+            ctypes.byref(dw_domain_name),
+            ctypes.byref(e_use)
+        )
+        if not success:
+            raise ctypes.WinError(ctypes.GetLastError(), f"Could not determine file owner for : {path}")
+    return acct_name.value
+
 
 @system_path_filter(arg_slice=slice(1))
 def get_owner_uid(path, err_msg=None) -> Union[str, int]:
@@ -560,10 +653,7 @@ def get_owner_uid(path, err_msg=None) -> Union[str, int]:
     if sys.platform != "win32":
         owner_uid = p_stat.st_uid
     else:
-        sid = win32security.GetFileSecurity(
-            path, win32security.OWNER_SECURITY_INFORMATION
-        ).GetSecurityDescriptorOwner()
-        owner_uid = win32security.LookupAccountSid(None, sid)[0]
+        owner_uid = get_windows_file_security(path)
     return owner_uid
 
 
@@ -3106,7 +3196,18 @@ def _windows_create_hard_link(path: str, link: str):
         raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
     else:
         tty.debug(f"Creating hard link {link} pointing to {path}")
-        CreateHardLink(link, path)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        CreateHardLink = k32.CreateHardLinkW
+        CreateHardLink.argtypes = [
+            ctypes.c_wchar_p,
+            ctypes.c_wchar_p,
+            ctypes.c_void_p
+        ]
+        CreateHardLink.restype = ctypes.c_bool
+        success = CreateHardLink(link, path, None)
+        if not success:
+            error_code = ctypes.GetLastError()
+            raise ctypes.WinError(error_code, f"Failed to create hardlink for path {path} and link {link}")
 
 
 def _windows_readlink(path: str, *, dir_fd=None):
