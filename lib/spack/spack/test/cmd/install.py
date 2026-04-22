@@ -241,7 +241,11 @@ def test_install_overwrite(
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
-    ignores = [manifest, spec.package.times_log_path, spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3")]
+    ignores = [
+        manifest,
+        spec.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3"),
+    ]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
