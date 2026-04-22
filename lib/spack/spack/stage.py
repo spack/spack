@@ -114,14 +114,21 @@ def create_stage_root(path: str) -> None:
         user_paths.insert(0, user_node)
 
     for p in user_paths:
-        # Ensure access controls of subdirs from `$user` on down are
-        # restricted to the user.
+        # The user running spack should own these directories
         owner_uid = get_owner_uid(p)
         if user_uid != owner_uid:
-            tty.warn(
-                "Expected user {0} to own {1}, but it is owned by {2}".format(
-                    user_uid, p, owner_uid
-                )
+            raise OSError(
+                errno.EACCES,
+                f"Expected user {user_uid} to own {p}, but it is owned by {owner_uid}",
+            )
+
+        # And only the user should be able to write to them
+        p_stat = os.stat(p)
+        if p_stat.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+            raise OSError(
+                errno.EACCES,
+                f"Cannot create stage root {path}: {p} has group or world write permissions "
+                f"(mode: {oct(p_stat.st_mode)}). Only the owner should have write access.",
             )
 
     spack_src_subdir = os.path.join(path, _source_path_subdir)
