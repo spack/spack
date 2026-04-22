@@ -9,6 +9,7 @@ import pytest
 
 import spack.concretize
 import spack.spec
+import spack.variant
 from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
 
 
@@ -302,8 +303,7 @@ def test_sbom_checksums_include_both_sha256_and_git_commit(
     git_commit = "b" * 40  # Typical SHA1 length
 
     monkeypatch.setattr(spec.package, "git", git_url, raising=False)
-    monkeypatch.setattr(spec.package, "needs_commit", lambda v: True, raising=False)
-    monkeypatch.setattr(spec.package, "get_commit", lambda v: git_commit, raising=False)
+    spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", git_commit)
 
     generate_spdx_2_3(spec)
 
@@ -335,8 +335,7 @@ def test_sbom_checksums_git_commit_only(mock_packages, install_mockery, monkeypa
     git_commit = "c" * 40  # Typical SHA1 length
 
     monkeypatch.setattr(spec.package, "git", git_url, raising=False)
-    monkeypatch.setattr(spec.package, "needs_commit", lambda v: True, raising=False)
-    monkeypatch.setattr(spec.package, "get_commit", lambda v: git_commit, raising=False)
+    spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", git_commit)
 
     generate_spdx_2_3(spec)
 

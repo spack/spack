@@ -61,15 +61,27 @@ def get_checksums(spec):
         checksums.append({"algorithm": "SHA256", "checksumValue": sha256})
 
     # Also include git commit SHA1 when available
-    pkg = spec.package
-    if hasattr(pkg, "git") and pkg.git:
-        # Check if we're using a specific git commit
-        if pkg.needs_commit(spec.version):
-            git_commit = pkg.get_commit(spec.version)
-            if git_commit:
-                checksums.append({"algorithm": "SHA1", "checksumValue": git_commit})
+    git_commit = get_git_commit(spec)
+    if git_commit:
+        checksums.append({"algorithm": "SHA1", "checksumValue": git_commit})
 
     return checksums
+
+
+def get_git_commit(spec):
+    pkg = spec.package
+    if not getattr(pkg, "git", None):
+        return None
+
+    if "commit" in spec.variants:
+        return spec.variants["commit"].value
+
+    if getattr(spec.version, "commit_sha", None):
+        return spec.version.commit_sha
+
+    version_metadata = getattr(pkg, "versions", {})
+    vmeta = version_metadata.get(spec.version) or version_metadata.get(str(spec.version)) or {}
+    return vmeta.get("commit") if hasattr(vmeta, "get") else getattr(vmeta, "commit", None)
 
 
 def get_download_location(spec):
