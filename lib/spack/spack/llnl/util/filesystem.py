@@ -537,6 +537,8 @@ def exploding_archive_handler(tarball_container, stage):
 
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
+    if sys.platform != "win32":
+        raise RuntimeError("cannot determine Windows file security on non Windows")
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     SE_FILE_OBJECT = 1
