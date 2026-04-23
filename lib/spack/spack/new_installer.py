@@ -73,6 +73,7 @@ import spack.llnl.util.tty.color
 import spack.mirrors.mirror
 import spack.paths
 import spack.report
+import spack.sandbox
 import spack.spec
 import spack.stage
 import spack.store
@@ -668,6 +669,31 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         spack.llnl.util.tty.debug(e)
 
 
+def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
+    if not config.get("enable", False):
+        return
+
+    sandbox = spack.sandbox.get_sandbox()
+
+    for dep in spec.traverse(root=False):
+        if not dep.external:
+            sandbox.allow_read(dep.prefix)
+
+    sandbox.allow_write(stage_path)
+    sandbox.allow_write(spec.prefix)
+
+    # Compilers write temporary files
+    sandbox.allow_write(tempfile.gettempdir())
+
+    # User-configured paths
+    for p in config.get("allow_read", []):
+        sandbox.allow_read(p)
+    for p in config.get("allow_write", []):
+        sandbox.allow_write(p)
+
+    sandbox.apply(block_network=not config.get("allow_network", False))
+
+
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -765,6 +791,8 @@ def _install(
             raise spack.error.InstallError(f"'{stop_before}' is not a valid phase for {pkg.name}")
         if stop_at is not None and stop_at not in builder.phases:
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
+
+        _enable_sandbox(spack.config.get("config:sandbox", {}), spec, stage.path)
 
         for phase in builder:
             if stop_before is not None and phase.name == stop_before:
