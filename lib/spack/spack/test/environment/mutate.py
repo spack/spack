@@ -81,6 +81,46 @@ def test_mutate_internals(dep, orig_constraint, mutated_constraint):
     assert root_spec.dag_hash() == new_hash
 
 
+def test_mutate_internals_multiple_mutations():
+    """
+    Check that Environment.mutate correctly applies multiple mutations to different selected Specs.
+    """
+    ev.create("test")
+    env = ev.read("test")
+
+    root_name = "cmake-client"
+    env.add(root_name)
+    env.concretize()
+
+    planned_mutations = [
+        ("cmake", "@3.23.1", "@3.4.3"),
+        ("cmake-client", "+truthy", "~truthy"),
+        ("platform=test", "os=debian6", "os=redhat6"),
+    ]
+
+    orig_hash = next(env.roots()).dag_hash()
+
+    selectors = []
+    mutators = []
+
+    for selector, orig_constraint, mutated_constraint in planned_mutations:
+        selectors.append(spack.spec.Spec(selector))
+        mutators.append(spack.spec.Spec(mutated_constraint))
+        for spec in env.all_specs_generator():
+            if spec.satisfies(selector):
+                assert spec.satisfies(orig_constraint)
+
+    env.mutate(selectors=selectors, mutators=mutators)
+
+    for selector, orig_constraint, mutated_constraint in planned_mutations:
+        for spec in env.all_specs_generator():
+            if spec.satisfies(selector):
+                assert spec.satisfies(mutated_constraint)
+
+    new_hash = next(env.roots()).dag_hash()
+    assert new_hash != orig_hash
+
+
 @pytest.mark.parametrize("constraint", ["foo", "foo.bar", "foo%cmake@1.0", "foo@1.1:", "foo/abc"])
 def test_mutate_spec_invalid(constraint):
     spec = spack.concretize.concretize_one("cmake-client")
