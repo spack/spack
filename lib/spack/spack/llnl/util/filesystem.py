@@ -1325,8 +1325,6 @@ def windows_sfn(path: os.PathLike):
     if sys.platform != "win32":
         return path
     path = str(path)
-    import ctypes
-
     k32 = ctypes.WinDLL("kernel32", use_last_error=True)
     # Method with null values returns size of short path name
     sz = k32.GetShortPathNameW(path, None, 0)
