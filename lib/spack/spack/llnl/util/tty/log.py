@@ -14,27 +14,20 @@ import re
 import select
 import signal
 import sys
+import threading
 import traceback
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
 from threading import Thread
-from typing import IO, Callable, List, Optional, Tuple
+from typing import IO, Callable, Optional, Tuple
 
 import spack.llnl.util.tty as tty
-
-if sys.platform == "win32":
-    import ctypes.wintypes as wintypes
-    import msvcrt
-
-    kernel32 = ctypes.windll.kernel32
 
 try:
     import termios
 except ImportError:
     termios = None  # type: ignore[assignment]
 
-# win32api constants
-DUPLICATE_SAME_ACCESS = 0x00000002
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format
@@ -555,78 +548,67 @@ class StreamWrapper:
     def __init__(self, sys_attr):
         self.sys_attr = sys_attr
         self.saved_stream = None
+        if sys.platform.startswith("win32"):
+            if hasattr(sys, "gettotalrefcount"):  # debug build
+                libc = ctypes.CDLL("ucrtbased")
+            else:
+                libc = ctypes.CDLL("api-ms-win-crt-stdio-l1-1-0")
 
-        kernel32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]  # nStdHandle  # hHandle
+            kernel32 = ctypes.WinDLL("kernel32")
 
-        kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
-        kernel32.GetStdHandle.restype = wintypes.HANDLE
+            # https://docs.microsoft.com/en-us/windows/console/getstdhandle
+            if self.sys_attr == "stdout":
+                STD_HANDLE = -11
+            elif self.sys_attr == "stderr":
+                STD_HANDLE = -12
+            else:
+                raise KeyError(self.sys_attr)
 
-        # https://docs.microsoft.com/en-us/windows/console/getstdhandle
-        if self.sys_attr == "stdout":
-            self.STD_HANDLE = -11
-        elif self.sys_attr == "stderr":
-            self.STD_HANDLE = -12
+            c_stdout = kernel32.GetStdHandle(STD_HANDLE)
+            self.libc = libc
+            self.c_stream = c_stdout
         else:
-            raise KeyError(self.sys_attr)
+            self.libc = ctypes.CDLL(None)
+            self.c_stream = ctypes.c_void_p.in_dll(self.libc, self.sys_attr)
+        self.sys_stream = getattr(sys, self.sys_attr)
+        self.orig_stream_fd = self.sys_stream.fileno()
+        # Save a copy of the original stdout fd in saved_stream
+        self.saved_stream = os.dup(self.orig_stream_fd)
 
-        self.saved_stream = getattr(sys, self.sys_attr)
-        self.std_fd = self.saved_stream.fileno()
-        self.saved_std_handle = kernel32.GetStdHandle(self.STD_HANDLE)
-        self.saved_stream_fd = os.dup(self.std_fd)
-        self.redirect_fd = None
-
-    def redirect_stream(self, write_conn):
+    def redirect_stream(self, to_fd):
         """Redirect stdout to the given file descriptor."""
-        self.flush()
-        # Get fd for new stream
-        redirect_h = write_conn.fileno()
-        dup_redirect_h = dup_fh(redirect_h)
-        os.set_handle_inheritable(redirect_h, True)
-        self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
-        os.dup2(self.redirect_fd, self.std_fd)
-        setattr(
-            sys,
-            self.sys_attr,
-            os.fdopen(
-                self.std_fd,
-                "w",
-                encoding="utf-8",
-                buffering=1,
-                errors="replace",
-                closefd=False,
-                newline="\n",
-            ),
-        )
+        # Flush the C-level buffer stream
+        if sys.platform.startswith("win32"):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        # Flush and close sys_stream - also closes the file descriptor (fd)
+        sys_stream = getattr(sys, self.sys_attr)
+        sys_stream.flush()
+        sys_stream.close()
+        # Make orig_stream_fd point to the same file as to_fd
+        os.dup2(to_fd, self.orig_stream_fd)
+        # Set sys_stream to a new stream that points to the redirected fd
+        new_buffer = open(self.orig_stream_fd, "wb")
+        new_stream = io.TextIOWrapper(new_buffer)
+        setattr(sys, self.sys_attr, new_stream)
+        self.sys_stream = getattr(sys, self.sys_attr)
 
     def flush(self):
-        # get current system stream for the standard fd we're redirecting
-        sys_stream = getattr(sys, self.sys_attr)
-        try:
-            if sys_stream:
-                # Flush the system stream before redirection
-                sys_stream.flush()
-        except BaseException as e:
-            # swallow flush errors
-            tty.debug(f"Encountered error flushing stream: {e}")
-            pass
+        if sys.platform.startswith("win32"):
+            self.libc.fflush(None)
+        else:
+            self.libc.fflush(self.c_stream)
+        self.sys_stream.flush()
 
     def close(self):
         """Redirect back to the original system stream, and close stream"""
         try:
-            self.flush()
-            if self.saved_stream_fd is not None:
-                # restore os handle
-                kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
-                # restore c fd
-                os.dup2(self.saved_stream_fd, self.std_fd)
-                # python level
-                setattr(sys, self.sys_attr, self.saved_stream)
+            if self.saved_stream is not None:
+                self.redirect_stream(self.saved_stream)
         finally:
-            if self.redirect_fd is not None:
-                os.close(self.redirect_fd)
-            if self.saved_stream_fd is not None:
-                os.close(self.saved_stream_fd)
+            if self.saved_stream is not None:
+                os.close(self.saved_stream)
 
 
 class winlog:
@@ -649,37 +631,60 @@ class winlog:
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
         self.append = append
-        self.filter_fn = filter_fn
-        self.read_p, self.write_p = None, None
-        self._thread = None
 
     def __enter__(self):
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
 
-        self.read_p, self.write_p = multiprocessing.Pipe(duplex=False)
+        # Open both write and reading on logfile
+        write_mode = "ab+" if self.append else "wb+"
+        self.writer = open(self.logfile, mode=write_mode)
+        self.reader = open(self.logfile, mode="rb+")
 
         # Dup stdout so we can still write to it after redirection
-        original_stdout_fd = sys.stdout.fileno()
-        echo_writer = os.fdopen(os.dup(original_stdout_fd), "w", encoding="utf-8", newline="\n")
+        self.echo_writer = open(os.dup(sys.stdout.fileno()), "w", encoding=sys.stdout.encoding)
+        # Redirect stdout and stderr to write to logfile
+        self.stderr.redirect_stream(self.writer.fileno())
+        self.stdout.redirect_stream(self.writer.fileno())
+        self._kill = threading.Event()
+
+        def background_reader(reader, echo_writer, _kill):
+            # for each line printed to logfile, read it
+            # if echo: write line to user
+            try:
+                while True:
+                    is_killed = _kill.wait(0.1)
+                    # Flush buffered build output to file
+                    # stdout/err fds refer to log file
+                    self.stderr.flush()
+                    self.stdout.flush()
+
+                    line = reader.readline()
+                    if self.echo and line:
+                        echo_writer.write("{0}".format(line.decode()))
+                        echo_writer.flush()
+
+                    if is_killed:
+                        break
+            finally:
+                reader.close()
 
         self._active = True
         self._thread = Thread(
-            target=self._background_reader,
-            args=(self.read_p, self.logfile, echo_writer, self.append, self.echo, self.filter_fn),
+            target=background_reader, args=(self.reader, self.echo_writer, self._kill)
         )
         self._thread.start()
-        # Redirect stdout and stderr to write to logfile
-        self.stderr.redirect_stream(self.write_p)
-        self.stdout.redirect_stream(self.write_p)
-
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.writer.close()
+        self.echo_writer.flush()
+        self.stdout.flush()
+        self.stderr.flush()
+        self._kill.set()
+        self._thread.join()
         self.stdout.close()
         self.stderr.close()
-        self.write_p.close()
-        self._thread.join()
         self._active = False
 
     @contextmanager
@@ -687,65 +692,7 @@ class winlog:
         """Context manager to force local echo, even if echo is off."""
         if not self._active:
             raise RuntimeError("Can't call force_echo() outside log_output region!")
-        sys.stdout.write(xon)
-        sys.stdout.flush()
-        try:
-            yield
-        finally:
-            sys.stdout.write(xoff)
-            sys.stdout.flush()
-
-    @staticmethod
-    def _background_reader(
-        read,
-        logfile: str,
-        stdout: io.TextIOBase,
-        append: bool,
-        echo: bool,
-        filter_fn: Optional[Callable],
-    ):
-        force_echo = False
-
-        write_mode = "ab" if append else "wb"
-        log_writer = open(logfile, mode=write_mode)
-        try:
-            while True:
-                data = read.recv_bytes(maxlength=4096)
-                if not data:
-                    # the pipe is closed or otherwise inaccesible
-                    return
-                norm_data = data.decode(encoding="utf-8", errors="replace")
-                clean_line, num_controls = control.subn("", norm_data)
-
-                log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
-                log_writer.flush()
-                if echo or force_echo:
-                    output = clean_line
-                    if filter_fn:
-                        output = filter_fn(output)
-                    enc = stdout.encoding
-                    if enc != "utf-8":
-                        output = output.encode(enc, "replace").decode(enc)
-                    stdout.write(output)
-                    stdout.flush()
-                if num_controls > 0:
-                    controls = control.findall(norm_data)
-                    force_echo = force_echo_on(force_echo, controls)
-                if read.closed:
-                    break
-
-        # swallow valid errors
-        except EOFError:
-            pass
-        except OSError:
-            pass
-        except BaseException as e:
-            tty.error(f"Exception in log writer thread! {e}", stream=stdout)
-            traceback.print_exc(file=stdout)
-        finally:
-            read.close()
-            log_writer.close()
-            stdout.close()
+        yield
 
 
 def _writer_daemon(
@@ -889,7 +836,10 @@ def _writer_daemon(
 
                             if num_controls > 0:
                                 controls = control.findall(line)
-                                force_echo = force_echo_on(force_echo, controls)
+                                if xon in controls:
+                                    force_echo = True
+                                if xoff in controls:
+                                    force_echo = False
 
                             if not _input_available(read_file):
                                 break
@@ -911,60 +861,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-
-if sys.platform == "win32":
-    # dont define this outside windows, otherwise mypy complains
-    # or we'd have to # type: ignore on basically every line of
-    # this method
-    def dup_fh(fh: int) -> int:
-        """Windows Only
-        Duplicates Windows file handles. Useful when
-        we need multiple references to a single file handle
-        that all can be closed independently
-
-        uses DuplicateHandle from the win32 api
-
-        Arguments:
-            fh: OS level file handle to be duplicated
-
-        Returns: integer representing the new, identical file handle
-        """
-        # Define function signatures for safety
-        kernel32.DuplicateHandle.argtypes = [
-            wintypes.HANDLE,  # hSourceProcessHandle
-            wintypes.HANDLE,  # hSourceHandle
-            wintypes.HANDLE,  # hTargetProcessHandle
-            ctypes.POINTER(wintypes.HANDLE),  # lpTargetHandle
-            wintypes.DWORD,  # dwDesiredAccess
-            wintypes.BOOL,  # bInheritHandle
-            wintypes.DWORD,  # dwOptions
-        ]
-        current_process = kernel32.GetCurrentProcess()
-        target_handle = wintypes.HANDLE()
-
-        success = kernel32.DuplicateHandle(
-            current_process,
-            wintypes.HANDLE(fh),
-            current_process,
-            ctypes.byref(target_handle),
-            0,
-            True,
-            DUPLICATE_SAME_ACCESS,
-        )
-
-        if not success or not target_handle.value:
-            raise ctypes.WinError()
-
-        return target_handle.value
-
-
-def force_echo_on(force_echo: bool, controls: List[str]):
-    if xon in controls:
-        return True
-    if xoff in controls:
-        return False
-    return force_echo
 
 
 def _input_available(f):
