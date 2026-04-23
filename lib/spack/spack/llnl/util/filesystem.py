@@ -208,7 +208,6 @@ if sys.platform == "win32":
         This is in line with behavior from get_owner_uid which
         always returns the login string on Windows
         """
-        import ctypes
 
         # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -3101,11 +3100,9 @@ def _windows_is_junction(path: str) -> bool:
     if sys.platform != "win32" or os.path.islink(path) or os.path.isfile(path):
         return False
 
-    import ctypes.wintypes
-
     get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
-    get_file_attributes.argtypes = (ctypes.wintypes.LPWSTR,)
-    get_file_attributes.restype = ctypes.wintypes.DWORD
+    get_file_attributes.argtypes = (wintypes.LPWSTR,)
+    get_file_attributes.restype = wintypes.DWORD
 
     invalid_file_attributes = 0xFFFFFFFF
     reparse_point = 0x400
