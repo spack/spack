@@ -437,12 +437,15 @@ def run_mypy(file_list, args, repo: Optional[spack.repo.Repo] = None):
     # always run with config from running spack prefix
     root, working_dir, config = establish_configuration(args, "pyproject.toml", repo=repo)
     common_mypy_args = ["--config-file", config, "--show-error-codes"]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
-    if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
-        mypy_arg_sets.append(
-            common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
-        )
 
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
+    if repo:
+        repo_root = Path(repo.root)
+        spack_repo_index = repo_root.parts.index("spack_repo")
+        root = str(Path(*repo_root.parts[:spack_repo_index + 1]).parent)
+        mypy_arg_sets = [
+            common_mypy_args + ["--package", repo.full_namespace, "--disable-error-code", "no-redef"]
+        ]
     returncode = 0
     for mypy_args in mypy_arg_sets:
         with fsys.working_dir(root):
