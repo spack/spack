@@ -46,8 +46,8 @@ if sys.platform != "win32":
     import pwd
 else:
     import ctypes
-    from ctypes import wintypes
     import msvcrt
+    from ctypes import wintypes
 
 
 __all__ = [
@@ -534,11 +534,12 @@ def exploding_archive_handler(tarball_container, stage):
     else:
         shutil.move(tarball_container, stage.source_path)
 
+
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    SE_FILE_OBJECT = 1 
+    SE_FILE_OBJECT = 1
     OWNER_SECURITY_INFO = 1
 
     # Describe LocalFree API
@@ -555,7 +556,7 @@ def get_windows_file_security(path: str) -> str:
         ctypes.POINTER(wintypes.LPVOID),
         ctypes.POINTER(wintypes.LPVOID),
         ctypes.POINTER(wintypes.LPVOID),
-        ctypes.POINTER(wintypes.LPVOID)
+        ctypes.POINTER(wintypes.LPVOID),
     ]
     GetSecurityInfo.restype = wintypes.DWORD
     # Describe LookupAccountSID API
@@ -567,7 +568,7 @@ def get_windows_file_security(path: str) -> str:
         wintypes.LPDWORD,
         wintypes.LPWSTR,
         wintypes.LPDWORD,
-        ctypes.POINTER(ctypes.c_int)
+        ctypes.POINTER(ctypes.c_int),
     ]
     LookupAccountSid.restype = ctypes.c_bool
 
@@ -580,7 +581,19 @@ def get_windows_file_security(path: str) -> str:
         # create pointer to security descritor struct in mem
         psd = wintypes.LPVOID()
         # get sec info
-        if not GetSecurityInfo(fh, SE_FILE_OBJECT, OWNER_SECURITY_INFO, ctypes.byref(p_sid_owner), None, None, None, ctypes.byref(psd)) == 0:
+        if (
+            not GetSecurityInfo(
+                fh,
+                SE_FILE_OBJECT,
+                OWNER_SECURITY_INFO,
+                ctypes.byref(p_sid_owner),
+                None,
+                None,
+                None,
+                ctypes.byref(psd),
+            )
+            == 0
+        ):
             err = ctypes.GetLastError()
             raise ctypes.WinError(err, f"Failed to get security info for {path}")
         try:
@@ -588,7 +601,7 @@ def get_windows_file_security(path: str) -> str:
             dwacct_name = wintypes.DWORD(1)
             dw_domain_name = wintypes.DWORD(1)
             e_use = ctypes.c_int()
-            # first call to lookup account SID to determine 
+            # first call to lookup account SID to determine
             # buffer sizes
             LookupAccountSid(
                 None,
@@ -597,12 +610,14 @@ def get_windows_file_security(path: str) -> str:
                 ctypes.byref(dwacct_name),
                 None,
                 ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use)
+                ctypes.byref(e_use),
             )
             # 122 is the error for insufficient buffer, which we expect/want
             # since we're using this call to obtain the buffer size
             if ctypes.GetLastError() not in (0, 122):
-                raise ctypes.WinError(ctypes.GetLastError(), f"Unexpected error when obtaining buffer for : {path}")
+                raise ctypes.WinError(
+                    ctypes.GetLastError(), f"Unexpected error when obtaining buffer for : {path}"
+                )
             # create buffers
             acct_name_buf = dwacct_name.value * wintypes.WCHAR
             acct_name = acct_name_buf()
@@ -616,10 +631,12 @@ def get_windows_file_security(path: str) -> str:
                 ctypes.byref(dwacct_name),
                 domain_name,
                 ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use)
+                ctypes.byref(e_use),
             )
             if not success:
-                raise ctypes.WinError(ctypes.GetLastError(), f"Could not determine file owner for : {path}")
+                raise ctypes.WinError(
+                    ctypes.GetLastError(), f"Could not determine file owner for : {path}"
+                )
         finally:
             # Free the security descriptor
             if psd:
@@ -3198,16 +3215,14 @@ def _windows_create_hard_link(path: str, link: str):
         tty.debug(f"Creating hard link {link} pointing to {path}")
         k32 = ctypes.WinDLL("kernel32", use_last_error=True)
         CreateHardLink = k32.CreateHardLinkW
-        CreateHardLink.argtypes = [
-            ctypes.c_wchar_p,
-            ctypes.c_wchar_p,
-            ctypes.c_void_p
-        ]
+        CreateHardLink.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_void_p]
         CreateHardLink.restype = ctypes.c_bool
         success = CreateHardLink(link, path, None)
         if not success:
             error_code = ctypes.GetLastError()
-            raise ctypes.WinError(error_code, f"Failed to create hardlink for path {path} and link {link}")
+            raise ctypes.WinError(
+                error_code, f"Failed to create hardlink for path {path} and link {link}"
+            )
 
 
 def _windows_readlink(path: str, *, dir_fd=None):
