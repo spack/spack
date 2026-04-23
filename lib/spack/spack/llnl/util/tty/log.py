@@ -699,7 +699,7 @@ class winlog:
     def _background_reader(
         read,
         logfile: str,
-        stdout: io.TextIOBase,
+        stdout: io.TextIOWrapper,
         append: bool,
         echo: bool,
         filter_fn: Optional[Callable],
