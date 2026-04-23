@@ -748,6 +748,7 @@ class DependencySpec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
+        usages: Optional["VariantMap"] = None,
     ):
         if direct is False and propagation != PropagationPolicy.NONE:
             raise InvalidEdgeError("only direct dependencies can be propagated")
@@ -759,6 +760,7 @@ class DependencySpec:
         self.direct = direct
         self.propagation = propagation
         self.when = when or EMPTY_SPEC
+        self.usages = usages or VariantMap()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -793,6 +795,7 @@ class DependencySpec:
             propagation=self.propagation,
             direct=self.direct,
             when=self.when,
+            usages=self.usages,
         )
 
     def _constrain(self, other: "DependencySpec") -> bool:
@@ -810,6 +813,7 @@ class DependencySpec:
         changed |= self.spec.constrain(other.spec)
         changed |= self.update_deptypes(other.depflag)
         changed |= self.update_virtuals(other.virtuals)
+        changed |= self.usages.constrain(other.usages)
         if not self.direct and other.direct:
             changed = True
             self.direct = True
