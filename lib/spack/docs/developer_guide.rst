@@ -361,9 +361,11 @@ To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with f
 
     # lib/spack/spack/hooks/my_hooks.py
 
+
     def pre_install(spec):
         """This runs before each package is installed."""
         print(f"About to install {spec.name}@{spec.version}")
+
 
     def post_install(spec, explicit=None):
         """This runs after each package is installed."""
@@ -397,10 +399,12 @@ Here's a complete example that sends notifications when builds start and finish:
     # Track build start times
     _build_starts = {}
 
+
     def pre_install(spec):
         """Record when builds start and notify."""
         _build_starts[spec.name] = time.time()
         tty.info(f"Starting build for {spec.name}@{spec.version}")
+
 
     def post_install(spec, explicit):
         """Notify about build completion with timing info."""

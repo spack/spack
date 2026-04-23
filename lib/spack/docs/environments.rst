@@ -188,16 +188,14 @@ If the environment was activated with its view, deactivating the environment wil
 Environment Activation/Deactivation Scripts
 -------------------------------------------
 
-When you create and activate an environment, Spack automatically generates shell scripts to handle the activation
-and deactivation process. These scripts are stored in the ``.spack-env`` directory within your environment
-directory and handle tasks like:
+When you create and activate an environment, Spack automatically generates shell scripts to handle the activation and deactivation process.
+These scripts are stored in the ``.spack-env`` directory within your environment directory and handle tasks like:
 
 - Setting environment variables (including ``SPACK_ENV``)
 - Managing the prompt to show the active environment
 - Setting up environment variables for views
 
-The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows)
-and are regenerated when needed, such as when the environment's lockfile changes.
+The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows) and are regenerated when needed, such as when the environment's lockfile changes.
 
 Internally, Spack uses these scripts when you run commands like:
 
@@ -232,7 +230,8 @@ Spack supports environment activation in multiple shells:
 * **Windows batch (bat)**: Basic support for Windows command prompt
 * **PowerShell (pwsh)**: Support for Windows PowerShell environments
 
-When activating an environment with ``spack env activate``, Spack detects your current shell and uses the appropriate script. You can also specify which shell script to generate:
+When activating an environment with ``spack env activate``, Spack detects your current shell and uses the appropriate script.
+You can also specify which shell script to generate:
 
 .. code-block:: console
 

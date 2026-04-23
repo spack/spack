@@ -819,8 +819,8 @@ Shell Script Generation
 """"""""""""""""""""""
 
 Behind the scenes, when you run ``spack load`` or ``spack unload``, Spack uses shell scripts for each package.
-These scripts are created during package installation or upon first use of ``spack load``. The scripts are stored in
-the ``.spack`` directory within each package's installation prefix:
+These scripts are created during package installation or upon first use of ``spack load``.
+The scripts are stored in the ``.spack`` directory within each package's installation prefix:
 
 .. code-block:: spec
 
