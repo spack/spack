@@ -131,19 +131,19 @@ def deactivate_commands(shell):
         )
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
-        cmds += "unset SPACK_ENV; export SPACK_ENV;\n"
+        cmds += "_spack_env_unset SPACK_ENV; export SPACK_ENV;\n"
         cmds += "fi;\n"
         cmds += "if [ ! -z ${SPACK_ENV_VIEW+x} ]; then\n"
-        cmds += "unset SPACK_ENV_VIEW; export SPACK_ENV_VIEW;\n"
+        cmds += "_spack_env_unset SPACK_ENV_VIEW; export SPACK_ENV_VIEW;\n"
         cmds += "fi;\n"
         cmds += "alias despacktivate > /dev/null 2>&1 && unalias despacktivate;\n"
         cmds += "if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n"
         cmds += "    if [ \"$SPACK_OLD_PS1\" = '$$$$' ]; then\n"
-        cmds += "        unset PS1; export PS1;\n"
+        cmds += "        _spack_env_unset PS1; export PS1;\n"
         cmds += "    else\n"
         cmds += '        export PS1="$SPACK_OLD_PS1";\n'
         cmds += "    fi;\n"
-        cmds += "    unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n"
+        cmds += "    _spack_env_unset SPACK_OLD_PS1; export SPACK_OLD_PS1;\n"
         cmds += "fi;\n"
 
     return cmds

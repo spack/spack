@@ -773,6 +773,8 @@ def env_rename(args):
             " regenerate view with @c{spack env view regenerate}"
         )
     )
+    generate_script.update_env_activate_script(ev.Environment(to_path), os.environ.get("SPACK_VIEW", "default"))
+    generate_script.write_env_deactivate_script(ev.Environment(to_path), os.environ.get("SPACK_VIEW", "default"))
 
 
 #
