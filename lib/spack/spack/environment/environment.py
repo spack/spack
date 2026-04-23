@@ -13,6 +13,7 @@ import shutil
 import stat
 import warnings
 from collections.abc import KeysView
+from itertools import zip_longest
 from typing import (
     Any,
     Callable,
@@ -26,7 +27,6 @@ from typing import (
     Tuple,
     Union,
 )
-from itertools import zip_longest
 
 import spack
 import spack.config
