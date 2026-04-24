@@ -47,6 +47,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-t",
         "--tail",
+        metavar="LINES",
         action="store",
         type=int,
         default=0,
