@@ -281,7 +281,7 @@ def read_from_url(url, accept_content_type=None):
 
     if url.scheme in ("ssh", "scp"):
         ssh = SSHConnection.from_url(url)
-        return url, {}, ssh.read(url.path)
+        return url.geturl(), {}, ssh.read(url.path)
 
     # Timeout in seconds for web requests
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
