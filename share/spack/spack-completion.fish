@@ -1271,6 +1271,8 @@ complete -c spack -n '__fish_spack_using_command config get' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command config get' -l json -d 'output configuration as JSON'
 complete -c spack -n '__fish_spack_using_command config get' -l group -r -f -a group
 complete -c spack -n '__fish_spack_using_command config get' -l group -r -d 'show configuration as seen by this environment spec group (requires active env)'
+complete -c spack -n '__fish_spack_using_command config get' -l expand-vars -f -a expand_vars
+complete -c spack -n '__fish_spack_using_command config get' -l expand-vars -d 'expand variables in the output'
 
 # spack config blame
 set -g __fish_spack_optspecs_spack_config_blame h/help group= expand-vars
