@@ -2093,7 +2093,9 @@ def test_missing_include_scope_write_directory(mock_missing_dir_include_scopes):
     install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
     spack.config.CONFIG.set("config", install_tree, scope="sub_base")
     assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
-    install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
+    install_root = spack.config.CONFIG.get(
+        "config:install_tree:root", scope="sub_base", expand_vars=False
+    )
     assert install_root == "$spack/tmp/spack"
 
 
@@ -2103,7 +2105,9 @@ def test_missing_include_scope_write_file(mock_missing_file_include_scopes):
     install_tree = syaml.syaml_dict({"install_tree": {"root": "$spack/tmp/spack"}})
     spack.config.CONFIG.set("config", install_tree, scope="sub_base")
     assert os.path.exists(spack.config.CONFIG.scopes["sub_base"].path)
-    install_root = spack.config.CONFIG.get("config:install_tree:root", scope="sub_base")
+    install_root = spack.config.CONFIG.get(
+        "config:install_tree:root", scope="sub_base", expand_vars=False
+    )
     assert install_root == "$spack/tmp/spack"
 
 

@@ -170,7 +170,11 @@ def test_get_config_roundtrip(mutable_config):
     """Test that ``spack config get [--json] <section>`` roundtrips correctly."""
     json_roundtrip = json.loads(config("get", "--json", "config"))
     yaml_roundtrip = syaml.load(config("get", "config"))
-    assert json_roundtrip["config"] == yaml_roundtrip["config"] == mutable_config.get("config")
+    assert (
+        json_roundtrip["config"]
+        == yaml_roundtrip["config"]
+        == mutable_config.get("config", expand_vars=False)
+    )
 
 
 def test_get_all_config_roundtrip(mutable_config):
@@ -179,7 +183,7 @@ def test_get_all_config_roundtrip(mutable_config):
     yaml_roundtrip = syaml.load(config("get"))
     assert json_roundtrip == yaml_roundtrip
     for section in spack.config.SECTION_SCHEMAS:
-        assert json_roundtrip["spack"][section] == mutable_config.get(section)
+        assert json_roundtrip["spack"][section] == mutable_config.get(section, expand_vars=False)
 
 
 def test_get_config_scope_merged(mock_low_high_config):
