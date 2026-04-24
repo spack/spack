@@ -81,7 +81,7 @@ class Mirror:
         if urllib.parse.urlparse(url).scheme not in supported_url_schemes:
             raise ValueError(
                 f'"{url}" is not a valid mirror URL. '
-                f"Scheme must be one of {supported_url_schemes}."
+                f"Scheme must be one of {sorted(supported_url_schemes)}."
             )
         return Mirror(url)
 
