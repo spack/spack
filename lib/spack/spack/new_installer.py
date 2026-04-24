@@ -2543,10 +2543,11 @@ class PackageInstaller:
         except Exception as e:
             spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
 
-        # Clean up temp log files now that reports have consumed them.
+        # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:
-            for log_path in self.log_paths.values():
-                if log_path == os.devnull:
+            failed_hashes = {s.dag_hash() for s in failures}
+            for dag_hash, log_path in self.log_paths.items():
+                if log_path == os.devnull or dag_hash in failed_hashes:
                     continue
                 try:
                     os.unlink(log_path)
