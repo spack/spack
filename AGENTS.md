@@ -3,6 +3,18 @@
 Spack is a command-line tool for installing packages and managing dependencies.
 All commands are subcommands of "spack", like `spack install...`
 
+## Initializing Spack
+
+**IMPORTANT:** Before running any `spack` commands, you must source the setup script:
+- **Bash/sh:** `. share/spack/setup-env.sh`
+- **tcsh/csh:** `source share/spack/setup-env.csh`
+
+This adds the `spack` command to your PATH. Run this from the Spack root directory, or use the full path.
+
+**Finding package definitions:**
+- `spack location -p <package>`: Get the directory containing a package's package.py
+- `spack repo list`: Show all package repositories (look for "builtin" for the main repo)
+
 ## Quick Reference (Common Tasks)
 
 **Environments:**
