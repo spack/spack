@@ -1,11 +1,35 @@
-This is a tool called "Spack"
+# Spack - Package Manager
 
-- Spack is for installing packages and managing dependencies
-- It is a command line tool and all the commands are subcommands of "spack", like "spack install..."
+Spack is a command-line tool for installing packages and managing dependencies.
+All commands are subcommands of "spack", like `spack install...`
 
-General information:
+## Quick Reference (Common Tasks)
 
-- Documentation for spack is in lib/spack/docs/
-- Unit tests for spack are in lib/spack/spack/tests/
-- Spack has a notion of package repositories, there are several test ones, for example in var/spack/test_repos/spack_repo/builtin_mock/
-- The "real" spack packages repository is generally stored outside of spack, but can be found with `spack repo list` (look for "builtin")
+**Environments:**
+- Create: `spack env create <name>`
+- Activate: `spack env activate <name>`
+- Add package: `spack add <spec>`
+- Edit config: `spack config edit` (opens spack.yaml)
+
+**Installing:**
+- Install package: `spack install <spec>`
+- Concretize (solve deps): `spack concretize`
+- View installed: `spack find`
+
+**External packages (use system packages instead of building):**
+- Auto-detect: `spack external find <package>`
+- Manual config: edit spack.yaml or ~/.spack/packages.yaml
+- Add externals section under packages:<package>:externals:
+- Use `buildable: false` to prevent Spack from building its own
+
+**Spec syntax:**
+- Version: `package@version`
+- Variants: `package+feature` or `package~feature`
+- Dependencies: `package ^dependency@version`
+
+## Where to Find More
+
+- Documentation: lib/spack/docs/
+- Unit tests: lib/spack/spack/tests/
+- Package repositories: find with `spack repo list` (look for "builtin")
+- Test package repos: var/spack/test_repos/spack_repo/builtin_mock/
