@@ -27,6 +27,57 @@ All commands are subcommands of "spack", like `spack install...`
 - Variants: `package+feature` or `package~feature`
 - Dependencies: `package ^dependency@version`
 
+## Common Issues & Debugging
+
+**Configuration & Debugging:**
+- `spack config blame <section>`: Show which config file/scope set each value
+- `spack debug report`: Get system info including Spack version, commit
+- `spack spec <package>`: See how a package would be configured before installing
+- Config scope precedence: `spack` > `user` > `site` > `system` > `defaults`
+- Environments have their own config scope that overrides others when active
+
+**Environment Gotchas:**
+- Environments use `spack.lock` to pin exact versions after concretization
+- Concrete specs in lockfiles continue to work even if package definitions change/disappear
+- Re-concretize with `spack concretize -f` to get updates
+- `spack find` behaves differently inside vs. outside environments
+- Use `spack find -x` to exclude already-installed dependencies from output
+- Can reuse/share specs between environments with `concretizer:reuse` config
+
+**Compilers:**
+- Compilers are defined as external packages in packages.yaml (not a separate compilers.yaml)
+- Can add custom flags in the external definition under `extra_attributes:flags:`
+- Use `spack compiler find` or `spack external find <compiler-package>` to auto-detect
+- Target requirements (`packages:all:require: [target=x86_64_v3]`) interact with compiler definitions
+
+**Example compiler with custom flags in packages.yaml:**
+```yaml
+packages:
+  gcc:
+    externals:
+    - spec: gcc@11.2.0
+      prefix: /usr
+      extra_attributes:
+        compilers:
+          c: /usr/bin/gcc
+          cxx: /usr/bin/g++
+        flags:
+          cflags: -Wall
+```
+
+**External Packages:**
+- External packages with modules are loaded in topological order (leaf to root)
+- Only transitive link/run dependencies have their modules loaded during builds
+
+**Parallel Operations:**
+- Multiple `spack install` commands can run simultaneously
+- Spack will detect when another process is installing and wait appropriately
+- Lock files prevent conflicts during concurrent installations
+
+**Views:**
+- Python extensions in views get special handling for shebang rewriting
+- Views don't copy binaries unnecessarily, only scripts with shebangs need patching
+
 ## Where to Find More
 
 - Documentation: lib/spack/docs/
