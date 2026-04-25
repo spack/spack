@@ -2362,10 +2362,11 @@ class PackageInstaller:
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
-            blocked = self._schedule_builds(
-                selector, jobserver, retained_read_locks, database_actions
-            )
-            self.build_status.set_blocked(blocked and not self.running_builds)
+            if self.pending_builds:
+                blocked = self._schedule_builds(
+                    selector, jobserver, retained_read_locks, database_actions
+                )
+                self.build_status.set_blocked(blocked and not self.running_builds)
 
             while self.pending_builds or self.running_builds or database_actions:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
