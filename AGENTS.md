@@ -90,6 +90,58 @@ packages:
 - Python extensions in views get special handling for shebang rewriting
 - Views don't copy binaries unnecessarily, only scripts with shebangs need patching
 
+## Debugging Concretization Issues
+
+**When concretization fails or hangs, use these diagnostic commands:**
+
+- `spack solve <spec>`: Test concretization without installing
+- `spack solve --show=asp <spec>`: Show the ASP program fed to the solver (warning: very large)
+- `spack solve --show=opt <spec>`: Show optimization criteria being used
+- `spack solve --timers <spec>`: Show timing for solve phases
+- `spack solve --stats <spec>`: Show clingo solver statistics
+- `spack spec <spec>`: Dry-run to see what would be built (faster than solve)
+
+**Common concretization problem areas** (based on bug history):
+
+1. **Variants** (most common):
+   - Conditional variants (variants with `when=` clauses) can cause complex chains
+   - Multi-valued variants with non-default values
+   - Variant penalties affecting optimization
+   - Check: Does the package define conditional variants? Are defaults sensible?
+
+2. **When conditions / Conditionals**:
+   - `when=` clauses on dependencies, variants, conflicts
+   - Complex chains of implications can cause solver to hang
+   - Typos in when conditions (e.g., `when="@1.0"` vs `when="@:1.0"`)
+   - Check: Look at the package.py for `when=` parameters
+
+3. **Dependencies**:
+   - Dependency types (build, link, run) must be specified correctly
+   - Virtual dependencies need all providers available
+   - Circular dependencies or missing dependencies
+   - Check: Does `spack spec -t <package>` show expected dependency types?
+
+4. **Virtuals**:
+   - Virtual providers must match what's requested
+   - Provider preferences in packages.yaml affect selection
+   - Check: `spack providers <virtual>` shows what can provide a virtual
+
+5. **Version constraints**:
+   - Conflicting version requirements from different dependencies
+   - Deprecated versions may be excluded
+   - Check: Error messages often show version conflicts with causal chains
+
+**Concretizer performance:**
+- The solver can generate very large ASP files (100K+ lines) even for simple specs
+- Most of this is definitions for packages not in the dependency tree
+- If concretization is slow, check for conditional variant chains or complex when clauses
+
+**Where the solver code lives:**
+- ASP logic programs: lib/spack/spack/solver/*.lp
+- Python interface: lib/spack/spack/solver/asp.py
+- Main logic: lib/spack/spack/solver/concretize.lp
+- Error messages: lib/spack/spack/solver/error_messages.lp
+
 ## Where to Find More
 
 - Documentation: lib/spack/docs/
