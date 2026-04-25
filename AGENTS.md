@@ -142,6 +142,35 @@ packages:
 - Main logic: lib/spack/spack/solver/concretize.lp
 - Error messages: lib/spack/spack/solver/error_messages.lp
 
+## Fetching GitHub Issues
+
+When asked to "look at issue X" or investigate a specific issue number:
+
+**Option 1: Use `gh` CLI (preferred if available):**
+```bash
+gh issue view X --json title,body,labels,state
+gh issue view X --comments  # Get comments too
+```
+
+**Option 2: Use GitHub API with curl (fallback):**
+```bash
+# Get issue details
+curl -s https://api.github.com/repos/spack/spack/issues/X
+
+# Get just the body text
+curl -s https://api.github.com/repos/spack/spack/issues/X | jq -r '.body'
+
+# Get comments
+curl -s https://api.github.com/repos/spack/spack/issues/X/comments | jq -r '.[] | "**\(.user.login):**\n\(.body)\n"'
+
+# Get title, state, labels
+curl -s https://api.github.com/repos/spack/spack/issues/X | jq '{title, state, labels: [.labels[].name]}'
+```
+
+**Pattern:** Replace `X` with the actual issue number. The API works for both issues and pull requests.
+
+**Note:** If `gh` command is not found, fall back to curl. The GitHub API is public and doesn't require authentication for reading.
+
 ## Where to Find More
 
 - Documentation: lib/spack/docs/
