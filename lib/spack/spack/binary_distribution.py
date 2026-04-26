@@ -369,8 +369,7 @@ class BinaryCacheIndex:
                     except FetchIndexError as e:
                         fetch_errors.append(e)
                         self._last_fetch_times[urlAndVersion] = (now, False)
-                    except BuildcacheIndexNotExists as e:
-                        fetch_errors.append(e)
+                    except BuildcacheIndexNotExists:
                         self._last_fetch_times[urlAndVersion] = (now, False)
                         # Binary caches are not required to have an index, don't raise
                         # if it doesn't exist.
@@ -415,8 +414,7 @@ class BinaryCacheIndex:
             except FetchIndexError as e:
                 fetch_errors.append(e)
                 self._last_fetch_times[urlAndVersion] = (now, False)
-            except BuildcacheIndexNotExists as e:
-                fetch_errors.append(e)
+            except BuildcacheIndexNotExists:
                 self._last_fetch_times[urlAndVersion] = (now, False)
                 # Binary caches are not required to have an index, don't raise
                 # if it doesn't exist.
@@ -432,9 +430,9 @@ class BinaryCacheIndex:
         if configured_mirrors and all_methods_failed:
             raise FetchCacheError(fetch_errors)
         if fetch_errors:
-            tty.warn(
-                "The following issues were ignored while updating the indices of binary caches",
-                FetchCacheError(fetch_errors),
+            warnings.warn(
+                "The following issues were ignored while updating the indices of binary caches:\n"
+                + str(FetchCacheError(fetch_errors))
             )
         if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
