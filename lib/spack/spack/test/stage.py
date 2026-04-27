@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+
 import collections
 import errno
 import getpass
@@ -865,6 +866,21 @@ class TestDevelopStage:
 
         stage.destroy()
         assert not os.path.exists(stage.reference_link)
+        # Make sure destroying the stage doesn't change anything
+        # about the path
+        assert not os.path.exists(stage.path)
+        srctree2 = _create_tree_from_dir_recursive(srcdir)
+        assert srctree2 == devtree
+
+    def test_develop_stage_without_reference_link(self, develop_path, tmp_build_stage_dir):
+        """Check that develop stages can be created without creating a reference link"""
+        devtree, srcdir = develop_path
+        stage = DevelopStage("test-stage", srcdir, reference_link=None)
+        stage.create()
+        srctree1 = _create_tree_from_dir_recursive(stage.source_path)
+        assert srctree1 == devtree
+
+        stage.destroy()
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)

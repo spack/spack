@@ -8,6 +8,7 @@ import io
 import os
 import pathlib
 import shutil
+import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
 
@@ -264,7 +265,6 @@ def test_change_match_spec():
 
     e = ev.read("test")
     with e:
-
         add("mpileaks@2.1")
         add("mpileaks@2.2")
 
@@ -552,13 +552,16 @@ def test_env_install_include_concrete_env(
 
     test1_user_spec_hashes = [x.hash for x in test1.concretized_roots]
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
-    combined_included_roots = combined.included_concretized_order
 
     for spec in combined.all_specs():
         assert spec.installed
 
-    assert test1_user_spec_hashes == combined_included_roots[test1.path]
-    assert test2_user_spec_hashes == combined_included_roots[test2.path]
+    assert test1_user_spec_hashes == [
+        x.hash for x in combined.included_concretized_roots[test1.path]
+    ]
+    assert test2_user_spec_hashes == [
+        x.hash for x in combined.included_concretized_roots[test2.path]
+    ]
 
     mpileaks_hash = combined.concretized_roots[0].hash
     mpileaks = combined.specs_by_hash[mpileaks_hash]
@@ -570,7 +573,7 @@ def test_env_install_include_concrete_env(
         assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
-def test_env_roots_marked_explicit(install_mockery, mock_fetch):
+def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_variant):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
 
@@ -1157,9 +1160,7 @@ packages:
     - spec: pkg-a@2.0
       prefix: {a_prefix}
     buildable: false
-""".format(
-            a_prefix=str(fake_prefix)
-        )
+""".format(a_prefix=str(fake_prefix))
     )
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
@@ -1343,9 +1344,7 @@ spack:
   - {0}
   specs:
   - mpileaks
-""".format(
-        include_path
-    )
+""".format(include_path)
 
 
 def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
@@ -2322,12 +2321,14 @@ def test_concretize_include_concrete_env():
 
     # Check the test1 environment includes mpileaks, while the combined environment does not
     assert Spec("mpileaks") in {x.root for x in test1.concretized_roots}
-    assert Spec("mpileaks") not in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") not in {
+        x.root for x in combined.included_concretized_roots[test1.path]
+    }
 
     # If we update the combined environment, it will include mpileaks too
     combined.concretize()
     combined.write()
-    assert Spec("mpileaks") in combined.included_concretized_user_specs[test1.path]
+    assert Spec("mpileaks") in {x.root for x in combined.included_concretized_roots[test1.path]}
 
 
 def test_concretize_nested_include_concrete_envs():
@@ -2357,7 +2358,7 @@ def test_concretize_nested_include_concrete_envs():
         in lockfile_as_dict[ev.lockfile_include_key][test2.path][ev.lockfile_include_key]
     )
 
-    assert Spec("zlib") in test3.included_concretized_user_specs[test1.path]
+    assert Spec("zlib") in {x.root for x in test3.included_concretized_roots[test1.path]}
 
 
 def test_concretize_nested_included_concrete():
@@ -2378,7 +2379,7 @@ def test_concretize_nested_included_concrete():
     test2.concretize()
     test2.write()
 
-    assert Spec("zlib") in test2.included_concretized_user_specs[test1.path]
+    assert Spec("zlib") in {x.root for x in test2.included_concretized_roots[test1.path]}
 
     # Modify/re-concretize test1 to replace zlib with mpileaks
     with test1:
@@ -2395,9 +2396,9 @@ def test_concretize_nested_included_concrete():
     test3.concretize()
     test3.write()
 
-    included_specs = test3.included_concretized_user_specs[test1.path]
-    assert len(included_specs) == 1
-    assert Spec("mpileaks") in included_specs
+    included_roots = test3.included_concretized_roots[test1.path]
+    assert len(included_roots) == 1
+    assert Spec("mpileaks") in {x.root for x in included_roots}
 
     # The last concretization of test4's included environments should have test2
     # with the original concretized test1 spec and test3 with the re-concretized
@@ -3099,7 +3100,7 @@ spack:
         "dtlink2",
         "dtlink3",
         "dtlink4",
-        "dtlink5" "dtbuild1",
+        "dtlink5dtbuild1",
         "dtbuild2",
         "dtbuild3",
     ):
@@ -3775,9 +3776,7 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
+""".format(install_root)
     )
     current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != str(install_root)
@@ -4374,14 +4373,8 @@ def test_unify_when_possible_works_around_conflicts(mutable_config):
         assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
 
 
-# Using mock_include_cache to ensure the "remote" file is cached in a temporary
-# location and not polluting the user cache.
 def test_env_include_packages_url(
-    tmp_path: pathlib.Path,
-    mutable_empty_config,
-    mock_fetch_url_text,
-    mock_curl_configs,
-    mock_include_cache,
+    tmp_path: pathlib.Path, mutable_empty_config, mock_fetch_url_text, mock_curl_configs
 ):
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
@@ -4508,7 +4501,7 @@ view:
         f"""\
 spack:
   include:
-{''.join(includes)}
+{"".join(includes)}
   specs:
   - mpileaks
 """
@@ -4885,7 +4878,9 @@ spack:
         shutil.copy(os.path.join(e.path, ev.manifest_name), lock_in_clone.parent)
 
     # Prevent actual git operations; return the pre-built clone destination.
-    monkeypatch.setattr(spack.config.GitIncludePaths, "_clone", lambda self: str(clone_dest))
+    monkeypatch.setattr(
+        spack.config.GitIncludePaths, "_clone", lambda self, parent_scope: str(clone_dest)
+    )
 
     main_dir = tmp_path / "main_env"
     main_dir.mkdir()
@@ -4904,3 +4899,92 @@ spack:
         e.write()
         assert len(e.user_specs) == 0
         assert [s for s, _ in e.concretized_specs()] == [Spec("libdwarf")]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Target is linux-specific")
+def test_compiler_target_env(mock_packages, environment_from_manifest):
+    """Tests that Spack doesn't drop flag definitions on compilers
+    when a target is required in config.
+    """
+
+    cflags = "-Wall"
+    env = environment_from_manifest(
+        f"""\
+spack:
+  specs:
+  - libdwarf %c=gcc@12.100.100
+  packages:
+    all:
+      require:
+      - "target=x86_64_v3"
+    gcc:
+      externals:
+      - spec: gcc@12.100.100 languages:=c,c++
+        prefix: /fake
+        extra_attributes:
+          compilers:
+            c: /fake/bin/gcc
+            cxx: /fake/bin/g++
+          flags:
+            cflags: {cflags}
+      require: "gcc"
+"""
+    )
+
+    with env:
+        env.concretize()
+        libdwarf = env.concrete_roots()[0]
+        assert libdwarf.satisfies("cflags=-Wall")
+        # Sanity check: make sure the target we expect was applied to the
+        # compiler entry
+        assert libdwarf["c"].satisfies("gcc@12.100.100 languages:=c,c++ target=x86_64_v3")
+
+
+@pytest.mark.regression("52247")
+def test_create_with_orphaned_directory(mutable_mock_env_path: pathlib.Path):
+    """Tests that an orphaned environment directory (directory exists, no spack.yaml) must not
+    prevent 'spack env create' from creating a new environment with that name.
+    """
+    orphaned = mutable_mock_env_path / "test1"
+    orphaned_subdir = orphaned / ".spack-env"
+    orphaned_subdir.mkdir(parents=True)
+
+    # The orphaned directory must not be seen as an existing environment
+    assert not ev.exists("test1")
+
+    # Creating an environment over an orphaned directory must succeed
+    env("create", "test1")
+
+    assert ev.exists("test1")
+    assert "test1" in env("list")
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        # valid environment: spack.yaml is a regular file
+        pytest.param("valid", id="valid"),
+        # orphaned directory: no spack.yaml at all
+        pytest.param("orphaned", id="orphaned"),
+        # broken manifest symlink: spack.yaml points to a non-existent target
+        pytest.param("broken_symlink", id="broken_symlink"),
+    ],
+)
+@pytest.mark.regression("52247")
+def test_exists_consistent_with_all_environment_names(
+    mutable_mock_env_path: pathlib.Path, setup: str
+):
+    """Tests that exists() and all_environment_names() agree on whether an environment exists."""
+    env_dir = mutable_mock_env_path / "myenv"
+    env_dir.mkdir(parents=True)
+    manifest = env_dir / ev.manifest_name
+
+    if setup == "valid":
+        manifest.write_text(ev.default_manifest_yaml())
+    elif setup == "orphaned":
+        pass  # no manifest
+    elif setup == "broken_symlink":
+        manifest.symlink_to("/nonexistent/spack.yaml")
+
+    listed = "myenv" in ev.all_environment_names()
+    assert ev.exists("myenv") == listed

@@ -4,6 +4,7 @@
 """Writers for different kind of recipes and related
 convenience functions.
 """
+
 import copy
 import shlex
 from collections import namedtuple
@@ -85,7 +86,7 @@ def _stage_base_images(images_config):
     # Check the OS is mentioned in the internal data stored in a JSON file
     images_json = data()["images"]
     if not any(os_name == operating_system for os_name in images_json):
-        msg = 'invalid operating system name "{0}". ' "[Allowed values are {1}]"
+        msg = 'invalid operating system name "{0}". [Allowed values are {1}]'
         msg = msg.format(operating_system, ", ".join(data()["images"]))
         raise ValueError(msg)
 

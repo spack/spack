@@ -716,19 +716,9 @@ set -xg _sp_shell "fish"
 
 
 
-if test -z "$SPACK_SKIP_MODULES"
+if test -z "$SPACK_SKIP_MODULES"; and begin; type -q module; or type -q use; end
     #
-    # Check whether we need environment-variables (module) <= `use` is not available
-    #
-    set -l need_module "no"
-    if not functions -q use; and not functions -q module
-        set need_module "yes"
-    end
-
-
-
-    #
-    # Make environment-modules available to shell
+    # Make shell vars available to fish
     #
     function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
 
@@ -740,34 +730,10 @@ if test -z "$SPACK_SKIP_MODULES"
         set -xg $expr_token[1] (string split ":" $expr_token[2])
     end
 
+    set -l sp_shell_vars (command spack --print-shell-vars sh)
 
-    if test "$need_module" = "yes"
-        set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
-
-        for sp_var_expr in $sp_shell_vars
-            sp_apply_shell_vars $sp_var_expr
-        end
-
-        # _sp_module_prefix is set by spack --print-shell-vars
-        if test "$_sp_module_prefix" != "not_installed"
-            set -xg MODULE_PREFIX $_sp_module_prefix
-            spack_pathadd PATH "$MODULE_PREFIX/bin"
-        end
-
-    else
-
-        set -l sp_shell_vars (command spack --print-shell-vars sh)
-
-        for sp_var_expr in $sp_shell_vars
-            sp_apply_shell_vars $sp_var_expr
-        end
-
-    end
-
-    if test "$need_module" = "yes"
-        function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
-            eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
-        end
+    for sp_var_expr in $sp_shell_vars
+        sp_apply_shell_vars $sp_var_expr
     end
 
 

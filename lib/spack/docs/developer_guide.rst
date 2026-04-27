@@ -690,21 +690,12 @@ By running this command before and after the change, you can make sure that your
 Profiling
 ---------
 
-Spack has some limited built-in support for profiling, and can report statistics using standard Python timing tools.
-To use this feature, supply ``--profile`` to Spack on the command line, before any subcommands.
+To profile Spack, use Python's built-in `cProfile <https://docs.python.org/3/library/profile.html#module-cProfile>`_ module directly:
 
-.. _spack-p:
+.. code-block:: console
 
-``spack --profile``
-^^^^^^^^^^^^^^^^^^^
-
-``spack --profile`` output looks like this:
-
-.. command-output:: spack --profile graph hdf5
-   :ellipsis: 25
-
-The bottom of the output shows the most time-consuming functions, slowest on top.
-The profiling support is from Python's built-in tool, `cProfile <https://docs.python.org/3/library/profile.html#module-cProfile>`_.
+   $ python3 -m cProfile -s cumtime bin/spack find
+   $ python3 -m cProfile -o profile.out bin/spack find
 
 .. _releases:
 

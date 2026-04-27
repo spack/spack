@@ -46,6 +46,7 @@ line is a spec for a particular installation of the mpileaks package.
 
 6. The architecture to build with.
 """
+
 import collections
 import collections.abc
 import enum
@@ -100,6 +101,7 @@ import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
 
@@ -121,7 +123,6 @@ __all__ = [
     "InvalidHashError",
     "SpecDeprecatedError",
 ]
-
 
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
@@ -928,7 +929,6 @@ def _shared_subset_pair_iterate(container1, container2):
 
 
 class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
-
     def satisfies(self, other):
         return all(f in self and set(self[f]) >= set(other[f]) for f in other)
 
@@ -1475,6 +1475,83 @@ def _anonymous_star(dep: DependencySpec, dep_format: str) -> str:
         return "*"
 
     return "*" if dep.spec.architecture else ""
+
+
+def _get_satisfying_edge(
+    lhs_node: "Spec", rhs_edge: DependencySpec, *, resolve_virtuals: bool
+) -> Optional[DependencySpec]:
+    """Search for an edge in ``lhs_node`` that satisfies ``rhs_edge``."""
+    # First check direct deps of all types.
+    for lhs_edge in lhs_node.edges_to_dependencies():
+        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
+            return lhs_edge
+
+    # Include the historical compiler node if available as an ad-hoc edge.
+    compiler_spec = lhs_node.annotations.compiler_node_attribute
+    if compiler_spec is not None:
+        compiler_edge = DependencySpec(
+            lhs_node,
+            compiler_spec,
+            depflag=dt.BUILD,
+            virtuals=("c", "cxx", "fortran"),
+            direct=True,
+        )
+        if _satisfies_edge(compiler_edge, rhs_edge, resolve_virtuals):
+            return compiler_edge
+
+    if rhs_edge.direct:
+        return None
+
+    # BFS through link/run transitive deps (skip depth 1, already checked).
+    depflag = dt.LINK | dt.RUN
+    queue = collections.deque(lhs_node.edges_to_dependencies(depflag=depflag))
+    seen = {id(lhs_edge.spec) for lhs_edge in queue}
+    while queue:
+        lhs_edge = queue.popleft()
+
+        if _satisfies_edge(lhs_edge, rhs_edge, resolve_virtuals):
+            return lhs_edge
+
+        for lhs_edge in lhs_edge.spec.edges_to_dependencies(depflag=depflag):
+            if id(lhs_edge.spec) not in seen:
+                seen.add(id(lhs_edge.spec))
+                queue.append(lhs_edge)
+
+    return None
+
+
+def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtuals: bool) -> bool:
+    """Helper function for satisfaction tests, which checks edge attributes and the target node.
+    It skips verification of the parent node."""
+    name_mismatch = rhs.spec.name and lhs.spec.name != rhs.spec.name
+    if name_mismatch and rhs.spec.name not in lhs.virtuals:
+        return False
+
+    if not rhs.when._satisfies(lhs.when, resolve_virtuals=resolve_virtuals):
+        return False
+
+    # Subset semantics for virtuals
+    for v in rhs.virtuals:
+        if v not in lhs.virtuals:
+            return False
+
+    # Subset semantics for dependency types
+    if (lhs.depflag & rhs.depflag) != rhs.depflag:
+        return False
+
+    if not name_mismatch:
+        return lhs.spec._satisfies_node(rhs.spec, resolve_virtuals=resolve_virtuals)
+
+    # Right-hand side is virtual provided by left-hand side. The only node attribute supported is
+    # the version of the virtual. Avoid expensive lookups for provider metadata if there's no
+    # version constraint to check.
+    if rhs.spec.versions == spack.version.any_version:
+        return True
+
+    if not resolve_virtuals:
+        return False
+
+    return lhs.spec._provides_virtual(rhs.spec)
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
@@ -2550,8 +2627,8 @@ class Spec:
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(self.to_dict(hash), stream=stream, default_flow_style=False)
 
-    def to_json(self, stream=None, hash=ht.dag_hash):
-        return sjson.dump(self.to_dict(hash), stream)
+    def to_json(self, stream=None, *, hash=ht.dag_hash, pretty=False):
+        return sjson.dump(self.to_dict(hash), stream=stream, pretty=pretty)
 
     @staticmethod
     def from_specfile(path):
@@ -2832,9 +2909,9 @@ class Spec:
 
         # ensure that patch state is consistent
         patch_variant = self.variants["patches"]
-        assert hasattr(
-            patch_variant, "_patches_in_order_of_appearance"
-        ), "patches should always be assigned with a patch variant."
+        assert hasattr(patch_variant, "_patches_in_order_of_appearance"), (
+            "patches should always be assigned with a patch variant."
+        )
 
         return True
 
@@ -3334,6 +3411,42 @@ class Spec:
         """
         return self._satisfies(other=other, deps=deps, resolve_virtuals=True)
 
+    def _provides_virtual(self, virtual_spec: "Spec") -> bool:
+        """Return True if this spec provides the given virtual spec.
+
+        Args:
+            virtual_spec: abstract virtual spec (e.g. ``"mpi"`` or ``"mpi@3:"``)
+        """
+        if not virtual_spec.name:
+            return False
+
+        # Get the package instance
+        if self.concrete:
+            try:
+                pkg = self.package
+            except spack.repo.UnknownPackageError:
+                return False
+        else:
+            try:
+                pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
+                pkg = pkg_cls(self)
+            except spack.repo.UnknownEntityError:
+                # If we can't get package info on this spec, don't treat
+                # it as a provider of this vdep.
+                return False
+
+        for when_spec, provided in pkg.provided.items():
+            # Don't use satisfies for virtuals, because an abstract vs. abstract spec may use the
+            # repo index
+            if self.satisfies(when_spec, deps=False) and any(
+                provided_virtual.name == virtual_spec.name
+                and provided_virtual.versions.intersects(virtual_spec.versions)
+                for provided_virtual in provided
+            ):
+                return True
+
+        return False
+
     def _satisfies(
         self, other: Union[str, "Spec"], deps: bool = True, resolve_virtuals: bool = True
     ) -> bool:
@@ -3347,13 +3460,52 @@ class Spec:
         """
         if other is EMPTY_SPEC:
             return True
+
         other = self._autospec(other)
 
+        if not self._satisfies_node(other, resolve_virtuals=resolve_virtuals):
+            return False
+
+        # If there are no dependencies on the rhs, or we don't recurse, they are satisfied.
+        if not deps or not other._dependencies:
+            return True
+
+        stack = [(self, other)]
+
+        while stack:
+            lhs, rhs = stack.pop()
+
+            for rhs_edge in rhs.edges_to_dependencies():
+                # Skip rhs edges whose when condition doesn't apply to the lhs node.
+                if rhs_edge.when is not EMPTY_SPEC and not lhs._intersects(
+                    rhs_edge.when, resolve_virtuals=resolve_virtuals
+                ):
+                    continue
+
+                lhs_edge = _get_satisfying_edge(lhs, rhs_edge, resolve_virtuals=resolve_virtuals)
+
+                if not lhs_edge:
+                    return False
+
+                # Recursive case: `^zlib %gcc`
+                if not rhs_edge.spec.concrete and rhs_edge.spec._dependencies:
+                    stack.append((lhs_edge.spec, rhs_edge.spec))
+
+        return True
+
+    def _satisfies_node(self, other: "Spec", resolve_virtuals: bool) -> bool:
+        """Compares self and other without looking at dependencies"""
         if other.concrete:
             # The left-hand side must be the same singleton with identical hash. Notice that
             # package hashes can be different for otherwise indistinguishable concrete Spec
             # objects.
             return self.concrete and self.dag_hash() == other.dag_hash()
+
+        if self.name != other.name and self.name and other.name:
+            # Name mismatch can still be satisfiable if lhs provides the virtual mentioned by rhs.
+            if not resolve_virtuals:
+                return False
+            return self._provides_virtual(other)
 
         # If the right-hand side has an abstract hash, make sure it's a prefix of the
         # left-hand side's (abstract) hash.
@@ -3361,28 +3513,6 @@ class Spec:
             compare_hash = self.dag_hash() if self.concrete else self.abstract_hash
             if not compare_hash or not compare_hash.startswith(other.abstract_hash):
                 return False
-
-        # If the names are different, we need to consider virtuals
-        if self.name != other.name and self.name and other.name and resolve_virtuals:
-            # A concrete provider can satisfy a virtual dependency.
-            if not spack.repo.PATH.is_virtual(self.name) and spack.repo.PATH.is_virtual(
-                other.name
-            ):
-                try:
-                    # Here we might get an abstract spec
-                    pkg_cls = spack.repo.PATH.get_pkg_class(self.fullname)
-                    pkg = pkg_cls(self)
-                except spack.repo.UnknownEntityError:
-                    # If we can't get package info on this spec, don't treat
-                    # it as a provider of this vdep.
-                    return False
-
-                if pkg.provides(other.name):
-                    for when_spec, provided in pkg.provided.items():
-                        if self.satisfies(when_spec, deps=False):
-                            if any(vpkg.intersects(other) for vpkg in provided):
-                                return True
-            return False
 
         # namespaces either match, or other doesn't require one.
         if (
@@ -3406,153 +3536,6 @@ class Spec:
 
         if not self.compiler_flags.satisfies(other.compiler_flags):
             return False
-
-        # If we need to descend into dependencies, do it, otherwise we're done.
-        if not deps:
-            return True
-
-        # If there are no constraints to satisfy, we're done.
-        if not other._dependencies:
-            return True
-
-        # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
-        # all the edges that have an abstract parent, and verify that they match some edge in the
-        # lhs.
-        #
-        # It might happen that the rhs brings in concrete sub-DAGs. For those we don't need to
-        # verify the edge properties, cause everything is encoded in the hash of the nodes that
-        # will be verified later.
-        lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
-        for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # Check satisfaction of the dependency only if its when condition can apply
-            if not rhs_edge.parent.name or rhs_edge.parent.name == self.name:
-                test_spec = self
-            elif rhs_edge.parent.name in self:
-                test_spec = self[rhs_edge.parent.name]
-            else:
-                test_spec = None
-            if test_spec and not test_spec._intersects(
-                rhs_edge.when, resolve_virtuals=resolve_virtuals
-            ):
-                continue
-
-            # If we are checking for ^mpi we need to verify if there is any edge
-            if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
-                # Don't mutate objects in memory that may be referred elsewhere
-                rhs_edge = rhs_edge.copy()
-                rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
-
-            if rhs_edge.direct:
-                # Note: this relies on abstract specs from string not being deeper than 2 levels
-                # e.g. in foo %fee ^bar %baz we cannot go deeper than "baz" and e.g. specify its
-                # dependencies too.
-                #
-                # We also need to account for cases like gcc@<new> %gcc@<old> where the parent
-                # name is the same as the child name
-                #
-                # The same assumptions hold on Spec.constrain, and Spec.intersect
-                current_node = self
-                if rhs_edge.parent.name and rhs_edge.parent.name != rhs_edge.spec.name:
-                    try:
-                        current_node = self[rhs_edge.parent.name]
-                    except KeyError:
-                        return False
-
-                # If the branch is %<virtual> or ^<virtual>, check if we have a corresponding
-                # branch in the lhs
-                candidate_edges = []
-                if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name):
-                    candidate_edges = current_node.edges_to_dependencies(name=rhs_edge.spec.name)
-
-                name = (
-                    None
-                    if resolve_virtuals and spack.repo.PATH.is_virtual(rhs_edge.spec.name)
-                    else rhs_edge.spec.name
-                )
-                candidate_edges.extend(
-                    current_node.edges_to_dependencies(
-                        name=name, virtuals=rhs_edge.virtuals or None
-                    )
-                )
-
-                # Select at least the deptypes on the rhs_edge, and conditional edges that
-                # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
-                candidates = [
-                    lhs_edge.spec
-                    for lhs_edge in candidate_edges
-                    if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
-                    and rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
-                ]
-
-                # For old specs, consider compiler dependencies from annotations
-                if current_node.original_spec_format() < 5:
-                    compiler_spec = current_node.annotations.compiler_node_attribute
-                    if compiler_spec is not None:
-                        candidates.append(compiler_spec)
-
-                if not candidates or not any(
-                    x._satisfies(rhs_edge.spec, resolve_virtuals=resolve_virtuals)
-                    for x in candidates
-                ):
-                    return False
-
-                continue
-
-            # Skip edges from a concrete sub-DAG
-            if rhs_edge.parent.concrete:
-                continue
-
-            if not lhs_edges:
-                # Construct a map of the link/run subDAG + direct "build" edges,
-                # keyed by dependency name
-                for lhs_edge in self.traverse_edges(
-                    root=False, cover="edges", deptype=("link", "run")
-                ):
-                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
-                    for virtual_name in lhs_edge.virtuals:
-                        lhs_edges[virtual_name].add(lhs_edge)
-
-                build_edges = self.edges_to_dependencies(depflag=dt.BUILD)
-                for lhs_edge in build_edges:
-                    lhs_edges[lhs_edge.spec.name].add(lhs_edge)
-                    for virtual_name in lhs_edge.virtuals:
-                        lhs_edges[virtual_name].add(lhs_edge)
-
-            # We don't have edges to this dependency
-            current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name and current_dependency_name not in lhs_edges:
-                return False
-
-            if not current_dependency_name:
-                # Here we have an anonymous spec e.g. ^ dev_path=*
-                candidate_edges = list(itertools.chain(*lhs_edges.values()))
-
-            else:
-                candidate_edges = [
-                    lhs_edge
-                    for lhs_edge in lhs_edges[current_dependency_name]
-                    if rhs_edge.when._satisfies(lhs_edge.when, resolve_virtuals=resolve_virtuals)
-                ]
-
-            if not candidate_edges:
-                return False
-
-            for virtual in rhs_edge.virtuals:
-                # Check the name because ^mpi has the "mpi" virtual
-                has_virtual = any(
-                    virtual in edge.virtuals or virtual == edge.spec.name
-                    for edge in candidate_edges
-                )
-                if not has_virtual:
-                    return False
-
-            for lhs_edge in candidate_edges:
-                if lhs_edge.spec._satisfies(
-                    rhs_edge.spec, deps=False, resolve_virtuals=resolve_virtuals
-                ):
-                    break
-            else:
-                return False
 
         return True
 
@@ -3659,19 +3642,16 @@ class Spec:
 
             # translate patch sha256sums to patch objects by consulting the index
             if self._patches_assigned():
-                for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
-                    index = spack.repo.PATH.patch_index
-                    pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
-                    try:
-                        patch = index.patch_for_package(sha256, pkg_cls)
-                    except spack.error.PatchLookupError as e:
-                        raise spack.error.SpecError(
-                            f"{e}. This usually means the patch was modified or removed. "
-                            "To fix this, either reconcretize or use the original package "
-                            "repository"
-                        ) from e
-
-                    self._patches.append(patch)
+                sha256s = list(self.variants["patches"]._patches_in_order_of_appearance)
+                pkg_cls = spack.repo.PATH.get_pkg_class(self.name)
+                try:
+                    self._patches = spack.repo.PATH.get_patches_for_package(sha256s, pkg_cls)
+                except spack.error.PatchLookupError as e:
+                    raise spack.error.SpecError(
+                        f"{e}. This usually means the patch was modified or removed. "
+                        "To fix this, either reconcretize or use the original package "
+                        "repository"
+                    ) from e
 
         return self._patches
 
@@ -5193,7 +5173,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
         # Raise an error if name and vspec.name don't match
         if name != vspec.name:
             raise KeyError(
-                f'Inconsistent key "{name}", must be "{vspec.name}" to ' "match VariantSpec"
+                f'Inconsistent key "{name}", must be "{vspec.name}" to match VariantSpec'
             )
 
         # Set the item

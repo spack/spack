@@ -127,7 +127,8 @@ def env_create(args):
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
-    env.regenerate_views()
+    if args.envfile:
+        env.regenerate_views()
 
 
 def _env_create(

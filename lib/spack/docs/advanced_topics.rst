@@ -70,6 +70,8 @@ This typically indicates that a package was linked against a system library inst
 
 This verification can also be enabled as a post-install hook by setting ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn`` in :ref:`config.yaml <config-yaml>`.
 
+.. _filesystem-requirements:
+
 Filesystem Requirements
 =======================
 

@@ -17,10 +17,8 @@ dev = [
   "pytest",
   "pytest-xdist",
   "click",
-  "black",
+  "ruff",
   "mypy",
-  "isort",
-  "flake8",
   "vermin",
 ]
 ci = ["pytest-cov", "codecov[toml]"]
@@ -57,19 +55,26 @@ test = "./bin/spack unit-test"
 features = ["dev", "ci"]
 
 [tool.ruff]
+target-version = "py37"
 line-length = 99
 extend-include = ["bin/spack"]
-extend-exclude = [
+exclude = [
+  "var/spack/environments",
   "lib/spack/spack/vendor",
-  "*.pyi",
+  "opt/spack",
 ]
+src = ["lib"]
 
 [tool.ruff.format]
 skip-magic-trailing-comma = true
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
 
 [tool.ruff.lint]
-extend-select = ["I"]
-ignore = ["E731", "E203"]
+select = ["E", "F", "W", "I"]
+ignore = ["E203", "E731", "F811"]
+typing-modules = ["spack.vendor.typing_extensions"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false
@@ -77,40 +82,20 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
+  "vendor",
   "spack",
   "first-party",
   "local-folder",
 ]
 
 [tool.ruff.lint.isort.sections]
+vendor = ["spack.vendor"]
 spack = ["spack"]
 
 [tool.ruff.lint.per-file-ignores]
 "var/spack/*/package.py" = ["F403", "F405", "F811", "F821"]
 "*-ci-package.py" = ["F403", "F405", "F821"]
 
-[tool.black]
-line-length = 99
-include = "(lib/spack|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
-extend-exclude = "lib/spack/spack/vendor"
-skip-magic-trailing-comma = true
-
-[tool.isort]
-line_length = 99
-profile = "black"
-sections = [
-  "FUTURE",
-  "STDLIB",
-  "THIRDPARTY",
-  "VENDOR",
-  "FIRSTPARTY",
-  "LOCALFOLDER",
-]
-known_first_party = "spack"
-known_vendor = ["spack.vendor"]
-skip = ["lib/spack/spack/vendor"]
-src_paths = "lib"
-honor_noqa = true
 
 [tool.mypy]
 files = ["lib/spack/spack/**/*.py"]

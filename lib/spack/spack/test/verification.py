@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for the `spack.verify` module"""
+
 import os
 import pathlib
 import shutil

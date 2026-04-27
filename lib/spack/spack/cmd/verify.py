@@ -93,10 +93,7 @@ def verify_versions(args):
     2. Installed package version not known by the package recipe
     3. Installed package version deprecated in the package recipe
     """
-    if args.specs:
-        specs = args.specs(installed=True)
-    else:
-        specs = spack.store.db.query(installed=True)
+    specs = args.specs(installed=True)
 
     msg_lines = _verify_version(specs)
     if msg_lines:

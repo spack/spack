@@ -26,7 +26,7 @@ import urllib.request
 import warnings
 from collections import defaultdict
 from contextlib import closing
-from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import spack.caches
 import spack.config
@@ -188,13 +188,9 @@ class BinaryCacheIndex:
     def _init_local_index_cache(self):
         if not self._index_file_cache_initialized:
             cache_key = self._index_contents_key
-            self._index_file_cache.init_entry(cache_key)
-
-            cache_path = self._index_file_cache.cache_path(cache_key)
-
             self._local_index_cache = {}
-            if os.path.isfile(cache_path):
-                with self._index_file_cache.read_transaction(cache_key) as cache_file:
+            with self._index_file_cache.read_transaction(cache_key) as cache_file:
+                if cache_file is not None:
                     self._local_index_cache = json.load(cache_file)
 
             self._index_file_cache_initialized = True
@@ -231,18 +227,17 @@ class BinaryCacheIndex:
         with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
-            try:
-                self._index_file_cache.init_entry(cache_key)
-                cache_path = self._index_file_cache.cache_path(cache_key)
-                with self._index_file_cache.read_transaction(cache_key):
-                    db._read_from_file(pathlib.Path(cache_path))
-            except spack.database.InvalidDatabaseVersionError as e:
-                tty.warn(
-                    "you need a newer Spack version to read the buildcache index for the "
-                    f"following v{mirror_metadata.version} mirror: '{mirror_metadata.url}'. "
-                    f"{e.database_version_message}"
-                )
-                return
+            with self._index_file_cache.read_transaction(cache_key) as f:
+                if f is not None:
+                    try:
+                        db._read_from_stream(f)
+                    except spack.database.InvalidDatabaseVersionError as e:
+                        tty.warn(
+                            "you need a newer Spack version to read the buildcache index for the "
+                            f"following v{mirror_metadata.version} mirror: "
+                            f"'{mirror_metadata.url}'. {e.database_version_message}"
+                        )
+                        return
 
             spec_list = [
                 s
@@ -485,7 +480,6 @@ class BinaryCacheIndex:
         # Persist new index.json
         url_hash = compute_hash(str(mirror_metadata))
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        self._index_file_cache.init_entry(cache_key)
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             new.write(result.data)
 
@@ -512,7 +506,7 @@ def binary_index_location():
 
 
 #: Default binary cache index instance
-BINARY_INDEX: BinaryCacheIndex = spack.llnl.util.lang.Singleton(BinaryCacheIndex)  # type: ignore
+BINARY_INDEX = cast(BinaryCacheIndex, spack.llnl.util.lang.Singleton(BinaryCacheIndex))
 
 
 def compute_hash(data):
@@ -2257,17 +2251,22 @@ def get_keys(
     if not mirror_collection:
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
+    fingerprints = []
     for mirror in mirror_collection.values():
         if not mirror.signed:
             # Don't bother fetching keys for unsigned mirrors
             continue
-
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                _get_keys_v2(fetch_url, install, trust, force)
+                mirror_layout_fingerprints = _get_keys_v2(fetch_url, install, trust, force)
             else:
-                _get_keys(fetch_url, layout_version, install, trust, force)
+                mirror_layout_fingerprints = _get_keys(
+                    fetch_url, layout_version, install, trust, force
+                )
+            if mirror_layout_fingerprints:
+                fingerprints.extend(mirror_layout_fingerprints)
+    return fingerprints
 
 
 def _get_keys(
@@ -2276,7 +2275,7 @@ def _get_keys(
     install: bool = False,
     trust: bool = False,
     force: bool = False,
-) -> None:
+) -> Optional[List[str]]:
     cache_class = get_url_buildcache_class(layout_version=layout_version)
 
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
@@ -2293,12 +2292,13 @@ def _get_keys(
     except BuildcacheEntryError as e:
         tty.debug(f"Failed to fetch key index due to: {e}")
         index_entry.destroy()
-        return
+        return None
 
     with open(index_blob_path, encoding="utf-8") as fd:
         json_index = json.load(fd)
     index_entry.destroy()
 
+    saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
         key_entry = cache_class(mirror_url, allow_unsigned=True)
@@ -2315,16 +2315,17 @@ def _get_keys(
             if trust:
                 spack.util.gpg.trust(key_blob_path)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
+                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
-                    "Will not add this key to trusted keys."
-                    "Use -t to install all downloaded keys"
+                    "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
 
         key_entry.destroy()
+    return saved_fingerprints
 
 
-def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
+def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optional[List[str]]:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2344,8 +2345,9 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
                 f" caught exception attempting to read from {url_util.format(keys_index)}."
             )
             tty.error(url_err)
-        return
+        return None
 
+    saved_fingerprints = []
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
@@ -2363,11 +2365,12 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
             if trust:
                 spack.util.gpg.trust(stage.save_filename)
                 tty.debug("Added this key to trusted keys.")
+                saved_fingerprints.append(fingerprint)
             else:
                 tty.debug(
-                    "Will not add this key to trusted keys."
-                    "Use -t to install all downloaded keys"
+                    "Will not add this key to trusted keys.Use -t to install all downloaded keys"
                 )
+    return saved_fingerprints
 
 
 def _url_push_keys(

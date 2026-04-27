@@ -71,7 +71,7 @@ from spack.util.compression import GZipFileType
 from .core import (
     AspFunction,
     AspVar,
-    NodeArgument,
+    NodeId,
     SourceContext,
     clingo,
     extract_args,
@@ -323,8 +323,7 @@ def check_packages_exist(specs):
 class Result:
     """Result of an ASP solve."""
 
-    def __init__(self, specs, asp=None):
-        self.asp = asp
+    def __init__(self, specs):
         self.satisfiable = None
         self.optimal = None
         self.warnings = None
@@ -439,11 +438,10 @@ class Result:
         Does not include anything related to unsatisfiability as we
         are only interested in storing satisfiable results
         """
-        serial_node_arg = (
-            lambda node_dict: f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
+        serial_node_arg = lambda node_dict: (
+            f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
         )
         ret = dict()
-        ret["asp"] = self.asp
         ret["criteria"] = self.criteria
         ret["optimal"] = self.optimal
         ret["warnings"] = self.warnings
@@ -472,7 +470,7 @@ class Result:
         def _dict_to_node_argument(dict):
             id = dict["id"]
             pkg = dict["pkg"]
-            return NodeArgument(id=id, pkg=pkg)
+            return NodeId(id=id, pkg=pkg)
 
         def _str_to_spec(spec_str):
             return spack.spec.Spec(spec_str)
@@ -483,13 +481,12 @@ class Result:
             spack.spec.Spec.ensure_no_deprecated(loaded_spec)
             return loaded_spec
 
-        asp = obj.get("asp")
         spec_list = obj.get("abstract_specs")
         if not spec_list:
             raise RuntimeError("Invalid json for concretization Result object")
         if spec_list:
             spec_list = [_str_to_spec(x) for x in spec_list]
-        result = Result(spec_list, asp)
+        result = Result(spec_list)
 
         criteria = obj.get("criteria")
         result.criteria = (
@@ -518,7 +515,6 @@ class Result:
 
     def __eq__(self, other):
         eq = (
-            self.asp == other.asp,
             self.satisfiable == other.satisfiable,
             self.optimal == other.optimal,
             self.warnings == other.warnings,
@@ -748,10 +744,7 @@ class ConcretizationCache:
 
         # update mod/access time for use w/ LRU cleanup
         os.utime(cache_path)
-        return (
-            self._results_from_cache(cache_content),
-            self._stats_from_cache(cache_content),
-        )  # type: ignore
+        return (self._results_from_cache(cache_content), self._stats_from_cache(cache_content))  # type: ignore
 
 
 def _is_checksummed_git_version(v):
@@ -869,7 +862,7 @@ class ErrorHandler:
         input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
         header = f"failed to concretize {input_specs} for the following reasons:"
         messages = (
-            f"    {idx+1:2}. {self.handle_error(msg, *args)}"
+            f"    {idx + 1:2}. {self.handle_error(msg, *args)}"
             for idx, (_, msg, args) in enumerate(errors)
         )
         return "\n".join((header, *messages))
@@ -1366,7 +1359,7 @@ class SpackSolverSetup:
         self.rejected_compilers: Set[spack.spec.Spec] = set()
         self.possible_oses: Set = set()
         self.variant_values_from_specs: Set = set()
-        self.version_constraints: Set = set()
+        self.version_constraints: Dict[str, Set] = collections.defaultdict(set)
         self.target_constraints: Set = set()
         self.default_targets: List = []
         self.variant_ids_by_def_id: Dict[int, int] = {}
@@ -1410,7 +1403,10 @@ class SpackSolverSetup:
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
         # first version last if deprecated.
-        self.gen.fact(fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions))))
+        if ordered_versions:
+            self.gen.fact(
+                fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
+            )
 
         for weight, declared_version in enumerate(ordered_versions):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
@@ -1443,7 +1439,7 @@ class SpackSolverSetup:
             return []
 
         # record all version constraints for later
-        self.version_constraints.add((name, spec.versions))
+        self.version_constraints[name].add(spec.versions)
         return [fn.attr("node_version_satisfies", name, spec.versions)]
 
     def target_ranges(
@@ -1902,8 +1898,8 @@ class SpackSolverSetup:
         for i, (cond, (spec_to_splice, match_variants)) in enumerate(
             sorted(pkg.splice_specs.items())
         ):
-            self.version_constraints.add((pkg.name, cond.versions))
-            self.version_constraints.add((spec_to_splice.name, spec_to_splice.versions))
+            self.version_constraints[pkg.name].add(cond.versions)
+            self.version_constraints[spec_to_splice.name].add(spec_to_splice.versions)
             hash_var = AspVar("Hash")
             splice_node = fn.node(AspVar("NID"), pkg.name)
             when_spec_attrs = [
@@ -2605,8 +2601,15 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = spack.vendor.archspec.cpu.TARGETS.get(spec.target.name)
+            target_name = spec.target.name
+            target = spack.vendor.archspec.cpu.TARGETS.get(target_name)
             if not target:
+                if spec.architecture.target_concrete:
+                    raise spack.error.SpecError(
+                        f"the target '{target_name}' in '{spec} is not a known target. "
+                        f"Run 'spack arch --known-targets' to see valid targets."
+                    )
+                # range/list constraint (contains ':' or ','): keep existing path
                 self.target_ranges(spec, None)
                 continue
 
@@ -2682,24 +2685,27 @@ class SpackSolverSetup:
             self.gen.newline()
         self.gen.newline()
 
-        for pkg_name, versions in self.version_constraints:
+        for pkg_name, set_of_versions in sorted(self.version_constraints.items()):
             possible_versions = sorted_versions.get(pkg_name)
             if possible_versions is None:
                 continue
-            # Look for contiguous ranges of versions that satisfy the constraint
-            start_idx = None
-            for current_idx, v in enumerate(possible_versions):
-                if v.satisfies(versions):
-                    if start_idx is None:
-                        start_idx = current_idx
-                elif start_idx is not None:
-                    # End of a contiguous satisfying range found
-                    version_range = fn.version_range(versions, start_idx, current_idx - 1)
+            for versions in sorted(set_of_versions):
+                # Look for contiguous ranges of versions that satisfy the constraint
+                start_idx = None
+                for current_idx, v in enumerate(possible_versions):
+                    if v.satisfies(versions):
+                        if start_idx is None:
+                            start_idx = current_idx
+                    elif start_idx is not None:
+                        # End of a contiguous satisfying range found
+                        version_range = fn.version_range(versions, start_idx, current_idx - 1)
+                        self.gen.fact(fn.pkg_fact(pkg_name, version_range))
+                        start_idx = None
+                if start_idx is not None:
+                    version_range = fn.version_range(
+                        versions, start_idx, len(possible_versions) - 1
+                    )
                     self.gen.fact(fn.pkg_fact(pkg_name, version_range))
-                    start_idx = None
-            if start_idx is not None:
-                version_range = fn.version_range(versions, start_idx, len(possible_versions) - 1)
-                self.gen.fact(fn.pkg_fact(pkg_name, version_range))
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -2707,30 +2713,30 @@ class SpackSolverSetup:
 
         Must be called before define_version_constraints().
         """
-        # aggregate constraints into per-virtual sets
-        constraint_map = collections.defaultdict(lambda: set())
-        for pkg_name, versions in self.version_constraints:
-            if not spack.repo.PATH.is_virtual(pkg_name):
-                continue
-            constraint_map[pkg_name].add(versions)
 
         # extract all the real versions mentioned in version ranges
         def versions_for(v):
             if isinstance(v, vn.StandardVersion):
-                return [v]
+                yield v
             elif isinstance(v, vn.ClosedOpenRange):
-                return [v.lo, vn._prev_version(v.hi)]
+                yield v.lo
+                yield vn._prev_version(v.hi)
             elif isinstance(v, vn.VersionList):
-                return sum((versions_for(e) for e in v), [])
+                for e in v:
+                    yield from versions_for(e)
             else:
                 raise TypeError(f"expected version type, found: {type(v)}")
 
-        # define a set of synthetic possible versions for virtuals, so
-        # that `version_satisfies(Package, Constraint, Version)` has the
-        # same semantics for virtuals as for regular packages.
-        for pkg_name, versions in sorted(constraint_map.items()):
-            possible_versions = set(sum([versions_for(v) for v in versions], []))
-            for version in sorted(possible_versions):
+        # Define a set of synthetic possible versions for virtuals that don't define versions in a
+        # package.py file. This ensures that `version_satisfies(Package, Constraint, Version)` has
+        # the same semantics for virtuals as for regular packages.
+        for pkg_name, versions in self.version_constraints.items():
+            # Not a virtual package
+            if pkg_name not in self.possible_virtuals:
+                continue
+
+            possible_versions = {pv for v in versions for pv in versions_for(v)}
+            for version in possible_versions:
                 self.possible_versions[pkg_name][version].append(Provenance.VIRTUAL_CONSTRAINT)
 
     def define_target_constraints(self):
@@ -3434,7 +3440,7 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     return result, rejected
 
 
-FunctionTupleT = Tuple[str, Tuple[Union[str, NodeArgument], ...]]
+FunctionTupleT = Tuple[str, Tuple[Union[str, NodeId], ...]]
 
 
 class SpecBuilder:
@@ -3461,23 +3467,23 @@ class SpecBuilder:
     )
 
     @staticmethod
-    def make_node(*, pkg: str) -> NodeArgument:
+    def make_node(*, pkg: str) -> NodeId:
         """Given a package name, returns the string representation of the "min_dupe_id" node in
         the ASP encoding.
 
         Args:
             pkg: name of a package
         """
-        return NodeArgument(id="0", pkg=pkg)
+        return NodeId(id="0", pkg=pkg)
 
     def __init__(self, specs, hash_lookup=None):
-        self._specs: Dict[NodeArgument, spack.spec.Spec] = {}
+        self._specs: Dict[NodeId, spack.spec.Spec] = {}
 
         # Matches parent nodes to splice node
         self._splices: Dict[spack.spec.Spec, List[spack.solver.splicing.Splice]] = {}
         self._result = None
         self._command_line_specs = specs
-        self._flag_sources: Dict[Tuple[NodeArgument, str], Set[str]] = collections.defaultdict(
+        self._flag_sources: Dict[Tuple[NodeId, str], Set[str]] = collections.defaultdict(
             lambda: set()
         )
 
@@ -3656,15 +3662,11 @@ class SpecBuilder:
 
                 spec.compiler_flags.update({flag_type: ordered_flags})
 
-    def deprecated(self, node: NodeArgument, version: str) -> None:
+    def deprecated(self, node: NodeId, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
     def splice_at_hash(
-        self,
-        parent_node: NodeArgument,
-        splice_node: NodeArgument,
-        child_name: str,
-        child_hash: str,
+        self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
     ):
         parent_spec = self._specs[parent_node]
         splice_spec = self._specs[splice_node]
@@ -3712,7 +3714,7 @@ class SpecBuilder:
             # predicates on virtual packages.
             if name != "error":
                 node = args[0]
-                assert isinstance(node, NodeArgument), (
+                assert isinstance(node, NodeId), (
                     f"internal solver error: expected a node, but got a {type(args[0])}. "
                     "Please report a bug at https://github.com/spack/spack/issues"
                 )
@@ -3820,7 +3822,7 @@ class SpecBuilder:
                     if not replacement.concrete:
                         replacement.replace_hash()
                     current_spec = current_spec.splice(replacement, transitive)
-            new_key = NodeArgument(id=key.id, pkg=current_spec.name)
+            new_key = NodeId(id=key.id, pkg=current_spec.name)
             specs[new_key] = current_spec
 
         return specs
@@ -4084,7 +4086,6 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
 
 
 class OutputDoesNotSatisfyInputError(InternalConcretizerError):
-
     def __init__(
         self, input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]]
     ) -> None:

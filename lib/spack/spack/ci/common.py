@@ -92,7 +92,6 @@ def copy_files_to_artifacts(
         compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-
         if compress_artifacts:
             copy_gzipped(src, artifacts_dir)
         else:
@@ -582,6 +581,7 @@ class SpackCIConfig:
                     "script": [
                         "cd {env_dir}",
                         "spack env activate --without-view .",
+                        "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
                 }

@@ -1200,7 +1200,10 @@ spack:
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
-def test_using_toolchain_as_requirement(unify, tmp_path: pathlib.Path, mutable_config):
+@pytest.mark.parametrize("requirement_type", ["require", "prefer"])
+def test_using_toolchain_as_requirement(
+    unify, requirement_type, tmp_path: pathlib.Path, mutable_config
+):
     """Tests using a toolchain as a default requirement in an environment"""
     spack_yaml = f"""
 spack:
@@ -1212,7 +1215,7 @@ spack:
     {MIXED_TOOLCHAIN}
   packages:
     all:
-      require:
+      {requirement_type}:
       - "%mixed-toolchain"
   concretizer:
     unify: {unify}
@@ -1932,7 +1935,7 @@ spack:
 
             gcc = next(x for _, x in e.concretized_specs_by(group="compiler"))
             assert gcc.satisfies("gcc@14") and not gcc.external
-            assert gcc.satisfies("%c,cxx,fortran=gcc")
+            assert gcc.satisfies("%c,cxx=gcc")
             gcc_hash = gcc.dag_hash()
 
             assert len(list(e.concretized_specs_by(group="scalapacks"))) == 4

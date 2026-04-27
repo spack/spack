@@ -50,7 +50,8 @@ def test_is_externally_detectable(pkg_query, expected):
 
 
 @pytest.mark.parametrize(
-    "pkg_query", ["vtk-m", "gcc"]  # This should ensure --test's c_names processing loop covered
+    "pkg_query",
+    ["vtk-m", "gcc"],  # This should ensure --test's c_names processing loop covered
 )
 @pytest.mark.parametrize("extra_args", [[], ["--by-name"]])
 def test_info_fields(pkg_query, extra_args):

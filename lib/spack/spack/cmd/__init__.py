@@ -486,7 +486,8 @@ def display_specs(specs, args=None, **kwargs):
         if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + vfmt + ffmt
+        hfmt = "{/abstract_hash}"
+        format_string = nfmt + "{@version}" + vfmt + ffmt + hfmt
 
     if specfile_format:
         format_string = "[{specfile_version}] " + format_string

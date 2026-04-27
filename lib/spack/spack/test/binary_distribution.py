@@ -572,7 +572,11 @@ def test_v2_etag_fetching_304():
         if url == f"https://www.example.com/build_cache/{INDEX_JSON_FILE}":
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             raise urllib.error.HTTPError(
-                url, 304, "Not Modified", hdrs={}, fp=None  # type: ignore[arg-type]
+                url,
+                304,
+                "Not Modified",
+                hdrs={},  # type: ignore[arg-type]
+                fp=None,  # type: ignore[arg-type]
             )
         assert False, "Should not fetch {}".format(url)
 
@@ -1255,7 +1259,11 @@ def test_etag_fetching_304():
         if url.endswith(INDEX_MANIFEST_FILE):
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             raise urllib.error.HTTPError(
-                url, 304, "Not Modified", hdrs={}, fp=None  # type: ignore[arg-type]
+                url,
+                304,
+                "Not Modified",
+                hdrs={},  # type: ignore[arg-type]
+                fp=None,  # type: ignore[arg-type]
             )
         assert False, "Unexpected request {}".format(url)
 

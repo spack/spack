@@ -7,7 +7,6 @@
 import base64
 import json
 import re
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -432,21 +431,4 @@ def ensure_status(request: urllib.request.Request, response: HTTPResponse, statu
     )
 
 
-def default_retry(f, retries: int = 5, sleep=None):
-    sleep = sleep or time.sleep
-
-    def wrapper(*args, **kwargs):
-        for i in range(retries):
-            try:
-                return f(*args, **kwargs)
-            except OSError as e:
-                # Retry on internal server errors, rate limits, and timeouts.
-                # Potentially this could take into account the Retry-After header
-                # if registries support it
-                if i + 1 != retries and spack.util.web.is_transient_error(e):
-                    # Exponential backoff
-                    sleep(2**i)
-                    continue
-                raise
-
-    return wrapper
+default_retry = spack.util.web.retry_on_transient_error

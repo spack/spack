@@ -419,8 +419,9 @@ def fixup_macos_rpaths(spec):
 
     if not os.path.exists(prefix):
         raise RuntimeError(
-            "Could not fix up install prefix spec {0} because it does "
-            "not exist: {1!s}".format(prefix, spec.name)
+            "Could not fix up install prefix spec {0} because it does not exist: {1!s}".format(
+                prefix, spec.name
+            )
         )
 
     # Explore the installation prefix of the spec

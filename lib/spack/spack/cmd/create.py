@@ -414,7 +414,7 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
 
         # PyPI URLs containing hash:
-        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file> # noqa: E501
         # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
@@ -491,7 +491,7 @@ class RPackageTemplate(PackageTemplate):
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
+            self.url_line = '    url = "{0}"\n    bioc = "{1}"'.format(url, r_name)
 
         super().__init__(name, url, versions, languages)
 
@@ -1061,8 +1061,9 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
         repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
-                "Can't create package with namespace {0} in repo with "
-                "namespace {1}".format(spec.namespace, repo.namespace)
+                "Can't create package with namespace {0} in repo with namespace {1}".format(
+                    spec.namespace, repo.namespace
+                )
             )
     else:
         if spec.namespace:

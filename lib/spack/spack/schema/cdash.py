@@ -6,6 +6,7 @@
 .. literalinclude:: ../spack/schema/cdash.py
    :lines: 13-
 """
+
 from typing import Any, Dict
 
 #: Properties for inclusion in other schemas

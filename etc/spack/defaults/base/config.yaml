@@ -71,6 +71,9 @@ config:
     - $user_cache_path/stage
   # - $spack/var/spack/stage
 
+  # Naming format for individual stage directories
+  stage_name: "spack-stage-{name}-{version}-{hash}"
+
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
@@ -88,7 +91,6 @@ config:
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
   misc_cache: $user_cache_path/cache
-
 
   # Abort downloads after this many seconds if not data is received.
   # Setting this to 0 will disable the timeout.
@@ -165,8 +167,8 @@ config:
   # Windows.
   concurrent_packages: 0
 
-  # Which installer to use: "old" or "new". The new installer is experimental.
-  installer: old
+  # Which installer to use: "old" or "new".
+  installer: new
 
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false

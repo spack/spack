@@ -5,6 +5,7 @@
 """
 This file contains utilities for managing the installation prefix of a package.
 """
+
 import os
 from typing import Dict
 

@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import pathlib
 import re
 import tempfile
@@ -18,16 +17,9 @@ import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.util.executable import which
 
 from .mirrors.mirror import Mirror
-from .url_buildcache import (
-    CURRENT_BUILD_CACHE_LAYOUT_VERSION,
-    BuildcacheComponent,
-    URLBuildcacheEntry,
-    get_entries_from_cache,
-    get_url_buildcache_class,
-)
+from .url_buildcache import BuildcacheComponent, URLBuildcacheEntry, get_entries_from_cache
 
 
 def _fetch_manifests(
@@ -60,65 +52,20 @@ def _fetch_manifests(
         )
         for blob_name in blobs
     ]
+    tty.debug(f"Found {len(blobs)} blobs")
     return manifest_file_to_mtime_mapping, read_fn, blobs
 
 
-def _delete_manifests_from_cache_aws(
-    url: str, tmpspecsdir: str, urls_to_delete: Set[str]
-) -> Optional[int]:
-    aws = which("aws")
-
-    if not aws:
-        tty.warn("AWS CLI not found, skipping deletion of cache entries.")
-        return None
-
-    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-
-    include_pattern = cache_class.get_buildcache_component_include_pattern(
-        BuildcacheComponent.MANIFEST
-    )
-
-    file_count_before_deletion = len(list(pathlib.Path(tmpspecsdir).rglob(include_pattern)))
-
-    tty.debug(f"Deleting {len(urls_to_delete)} entries from cache at {url}")
-    deleted = _delete_entries_from_cache_manual(tmpspecsdir, urls_to_delete)
-    tty.debug(f"Deleted {deleted} entries from cache at {url}")
-
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--delete",
-        "--exclude",
-        "*",
-        "--include",
-        include_pattern,
-        tmpspecsdir,
-        url,
-    ]
-
-    try:
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        # `aws s3 sync` doesn't return the number of deleted files,
-        # but we can calculate it based on the local file count from
-        # before and after the deletion.
-        return file_count_before_deletion - len(
-            list(pathlib.Path(tmpspecsdir).rglob(include_pattern))
-        )
-    except Exception:
-        tty.warn(
-            "Failed to use aws s3 sync to delete manifests, falling back to parallel deletion."
-        )
-
-    return None
-
-
-def _delete_entries_from_cache_manual(url: str, urls_to_delete: Set[str]) -> int:
+def _delete_entries_from_cache(
+    manifests_to_delete: Set[str], blobs_to_delete: Set[str], dry_run: bool
+) -> int:
+    urls_to_delete = blobs_to_delete.union(manifests_to_delete)
     pruned_objects = 0
     futures: List[Future] = []
 
     with spack.util.parallel.make_concurrent_executor() as executor:
         for url in urls_to_delete:
-            futures.append(executor.submit(_delete_object, url))
+            futures.append(executor.submit(_delete_object, url, dry_run))
 
         for manifest_or_blob_future in as_completed(futures):
             pruned_objects += manifest_or_blob_future.result()
@@ -126,36 +73,13 @@ def _delete_entries_from_cache_manual(url: str, urls_to_delete: Set[str]) -> int
     return pruned_objects
 
 
-def _delete_entries_from_cache(
-    mirror: Mirror, tmpspecsdir: str, manifests_to_delete: Set[str], blobs_to_delete: Set[str]
-) -> int:
-    pruned_manifests: Optional[int] = None
-
-    if mirror.fetch_url.startswith("s3://"):
-        pruned_manifests = _delete_manifests_from_cache_aws(
-            url=mirror.fetch_url, tmpspecsdir=tmpspecsdir, urls_to_delete=manifests_to_delete
-        )
-
-    if pruned_manifests is None:
-        # If the AWS CLI deletion failed, we fall back to deleting both manifests
-        # and blobs with the fallback method.
-        objects_to_delete = blobs_to_delete.union(manifests_to_delete)
-        pruned_objects = 0
-    else:
-        # If the AWS CLI deletion succeeded, we only need to worry about
-        # deleting the blobs, since the manifests have already been deleted.
-        objects_to_delete = blobs_to_delete
-        pruned_objects = pruned_manifests
-
-    return pruned_objects + _delete_entries_from_cache_manual(
-        url=mirror.fetch_url, urls_to_delete=objects_to_delete
-    )
-
-
-def _delete_object(url: str) -> int:
+def _delete_object(url: str, dry_run: bool) -> int:
     try:
-        web_util.remove_url(url=url)
-        tty.info(f"Removed object {url}")
+        if dry_run:
+            tty.info(f"Would have removed object {url}")
+        else:
+            web_util.remove_url(url=url)
+            tty.info(f"Removed object {url}")
         return 1
     except Exception as e:
         tty.warn(f"Unable to remove object {url} due to: {e}")
@@ -171,7 +95,7 @@ def _object_has_prunable_mtime(url: str, pruning_started_at: float) -> Tuple[str
     stat_result = web_util.stat_url(url)
     assert stat_result is not None
     if stat_result[1] > pruning_started_at:
-        tty.verbose(f"Skipping deletion of {url} because it was modified after pruning started")
+        tty.info(f"Skipping deletion of {url} because it was modified after pruning started")
         return url, False
     return url, True
 
@@ -275,24 +199,8 @@ def _prune_orphans(
     if orphaned_manifests:
         tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
 
-    # If dry run, just print the manifests and blobs that would be deleted
-    # and exit early.
-    if dry_run:
-        pruned_object_count = len(orphaned_blobs) + len(orphaned_manifests)
-        for manifest in orphaned_manifests:
-            manifests.remove(manifest)
-            tty.info(f"  Would prune manifest: {manifest}")
-        for blob in orphaned_blobs:
-            blobs.remove(blob)
-            tty.info(f"  Would prune blob: {blob}")
-        return pruned_object_count
-
-    # Otherwise, perform the deletions.
     pruned_object_count = _delete_entries_from_cache(
-        mirror=mirror,
-        tmpspecsdir=tmpspecsdir,
-        manifests_to_delete=orphaned_manifests,
-        blobs_to_delete=orphaned_blobs,
+        manifests_to_delete=orphaned_manifests, blobs_to_delete=orphaned_blobs, dry_run=dry_run
     )
 
     for manifest in orphaned_manifests:
@@ -304,7 +212,14 @@ def _prune_orphans(
 
 
 def prune_direct(
-    mirror: Mirror, keeplist_file: pathlib.Path, pruning_started_at: float, dry_run: bool
+    mirror: Mirror,
+    keeplist_file: pathlib.Path,
+    manifest_to_mtime_mapping: Dict[str, float],
+    read_fn: Callable[[str], URLBuildcacheEntry],
+    blob_list: List[str],
+    tmpspecsdir: str,
+    pruning_started_at: float,
+    dry_run: bool,
 ) -> None:
     """
     Execute direct pruning for a given mirror using a keeplist file.
@@ -335,67 +250,62 @@ def prune_direct(
 
     tty.info(f"Loaded {len(keep_hashes)} hashes to keep from {keeplist_file}")
     total_pruned: Optional[int] = None
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
-        except Exception as e:
-            raise BuildcachePruningException("Error getting entries from buildcache") from e
+    manifests_url = url_util.join(
+        mirror.fetch_url,
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.MANIFEST),
+    )
 
-        # Determine which manifests correspond to specs we want to prune
-        manifests_to_prune: List[str] = []
-        specs_to_prune: List[str] = []
+    # Determine which manifests correspond to specs we want to prune
+    manifests_to_prune: List[str] = []
+    specs_to_prune: List[str] = []
 
-        for manifest in manifest_to_mtime_mapping.keys():
-            if not fnmatch(
-                manifest,
-                URLBuildcacheEntry.get_buildcache_component_include_pattern(
-                    BuildcacheComponent.SPEC
-                ),
-            ):
-                tty.info(f"Found a non-spec manifest at {manifest}, skipping...")
-                continue
+    tty.info(f"Found {len(manifest_to_mtime_mapping)} total manifests in mirror")
 
-            # Attempt to regex match the manifest name in order to extract the name, version,
-            # and hash for the spec.
-            manifest_name = manifest.split("/")[-1]  # strip off parent directories
-            regex_match = re.match(r"([^ ]+)-([^- ]+)[-_]([^-_\. ]+)", manifest_name)
+    for manifest in manifest_to_mtime_mapping.keys():
+        # Convert back from local to remote path.
+        manifest = manifest.replace(tmpspecsdir, manifests_url)
+        if not fnmatch(
+            manifest,
+            URLBuildcacheEntry.get_buildcache_component_include_pattern(BuildcacheComponent.SPEC),
+        ):
+            tty.debug(f"Found a non-spec manifest at {manifest}, skipping...")
+            continue
 
-            if regex_match is None:
-                # This should never happen, unless the buildcache is somehow corrupted
-                # and/or there is a bug.
-                raise BuildcachePruningException(
-                    "Unable to extract spec name, version, and hash from "
-                    f'the manifest named "{manifest_name}"'
-                )
+        # Attempt to regex match the manifest name in order to extract the name, version,
+        # and hash for the spec.
+        manifest_name = manifest.split("/")[-1]  # strip off parent directories
+        # Schema is <package>-<version>-<spec hash>
+        regex_match = re.match(r"([^ ]+)-([^- ]+)[-_]([^-_\. ]+)", manifest_name)
 
-            spec_name, spec_version, spec_hash = regex_match.groups()
-
-            # Chop off any prefix/parent file path to get just the name
-            spec_name = pathlib.Path(spec_name).name
-
-            if spec_hash not in keep_hashes:
-                manifests_to_prune.append(manifest)
-                specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
-
-        if not manifests_to_prune:
-            tty.info("No specs to prune - all specs are in the keeplist")
-            return
-
-        tty.info(f"Found {len(manifests_to_prune)} spec(s) to prune")
-
-        if dry_run:
-            for spec_name in specs_to_prune:
-                tty.info(f"  Would prune: {spec_name}")
-            total_pruned = len(manifests_to_prune)
-        else:
-            manifests_to_delete = set(_filter_new_specs(manifests_to_prune, pruning_started_at))
-
-            total_pruned = _delete_entries_from_cache(
-                mirror=mirror,
-                tmpspecsdir=tmpspecsdir,
-                manifests_to_delete=manifests_to_delete,
-                blobs_to_delete=set(),
+        if regex_match is None:
+            # This should never happen, unless the buildcache is somehow corrupted
+            # and/or there is a bug.
+            raise BuildcachePruningException(
+                "Unable to extract spec name, version, and hash from "
+                f'the manifest named "{manifest_name}"'
             )
+
+        spec_name, spec_version, spec_hash = regex_match.groups()
+
+        if spec_hash not in keep_hashes:
+            manifests_to_prune.append(manifest)
+            specs_to_prune.append(f"{spec_name}/{spec_hash[:7]}")
+
+    if not manifests_to_prune:
+        tty.info("No specs to prune - all specs are in the keeplist")
+        return
+
+    manifests_to_delete = set(_filter_new_specs(manifests_to_prune, pruning_started_at))
+
+    tty.info(f"Found {len(manifests_to_delete)} spec(s) to prune")
+
+    total_pruned = _delete_entries_from_cache(
+        manifests_to_delete=manifests_to_delete, blobs_to_delete=set(), dry_run=dry_run
+    )
+
+    # Remove pruned specs from manifest_to_mtime_mapping.
+    for manifest in manifests_to_delete:
+        manifest_to_mtime_mapping.pop(manifest, None)
 
     if dry_run:
         tty.info(f"Would have pruned {total_pruned} objects from mirror: {mirror.fetch_url}")
@@ -408,7 +318,15 @@ def prune_direct(
             tty.info("Run `spack buildcache update-index` to update the index for this mirror.")
 
 
-def prune_orphan(mirror: Mirror, pruning_started_at: float, dry_run: bool) -> None:
+def prune_orphan(
+    mirror: Mirror,
+    manifest_to_mtime_mapping: Dict[str, float],
+    read_fn: Callable[[str], URLBuildcacheEntry],
+    blob_list: List[str],
+    tmpspecsdir: str,
+    pruning_started_at: float,
+    dry_run: bool,
+) -> None:
     """
     Execute the pruning process for a given mirror.
 
@@ -418,43 +336,36 @@ def prune_orphan(mirror: Mirror, pruning_started_at: float, dry_run: bool) -> No
     tty.debug(f"Pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
     total_pruned = 0
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
-            manifests = list(manifest_to_mtime_mapping.keys())
-        except Exception as e:
-            raise BuildcachePruningException("Error getting entries from buildcache") from e
-        while True:
-            # Continue pruning until no more orphaned objects are found
-            pruned = _prune_orphans(
-                mirror=mirror,
-                manifests=manifests,
-                read_fn=read_fn,
-                blobs=blob_list,
-                pruning_started_at=pruning_started_at,
-                tmpspecsdir=tmpspecsdir,
-                dry_run=dry_run,
-            )
-            if pruned == 0:
-                break
-            total_pruned += pruned
+    manifests = list(manifest_to_mtime_mapping.keys())
 
-        if dry_run:
+    while True:
+        # Continue pruning until no more orphaned objects are found
+        pruned = _prune_orphans(
+            mirror=mirror,
+            manifests=manifests,
+            read_fn=read_fn,
+            blobs=blob_list,
+            pruning_started_at=pruning_started_at,
+            tmpspecsdir=tmpspecsdir,
+            dry_run=dry_run,
+        )
+        if pruned == 0:
+            break
+        total_pruned += pruned
+
+    if dry_run:
+        tty.info(
+            f"Would have pruned {total_pruned} orphaned objects from mirror: " + mirror.fetch_url
+        )
+    else:
+        tty.info(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
+        if total_pruned > 0:
+            # If we pruned any objects, the buildcache index is likely out of date.
+            # Inform the user about this.
             tty.info(
-                f"Would have pruned {total_pruned} orphaned objects from mirror: "
-                + mirror.fetch_url
+                "As a consequence of pruning, the buildcache index is now likely out of date."
             )
-        else:
-            tty.info(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
-            if total_pruned > 0:
-                # If we pruned any objects, the buildcache index is likely out of date.
-                # Inform the user about this.
-                tty.info(
-                    "As a consequence of pruning, the buildcache index is now likely out of date."
-                )
-                tty.info(
-                    "Run `spack buildcache update-index` to update the index for this mirror."
-                )
+            tty.info("Run `spack buildcache update-index` to update the index for this mirror.")
 
 
 def get_buildcache_normalized_time(mirror: Mirror) -> float:
@@ -504,10 +415,27 @@ def prune_buildcache(mirror: Mirror, keeplist: Optional[str] = None, dry_run: bo
     else:
         started_at = get_buildcache_normalized_time(mirror)
 
-    if keeplist:
-        prune_direct(mirror, pathlib.Path(keeplist), started_at, dry_run)
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        try:
+            manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
+        except Exception as e:
+            raise BuildcachePruningException("Error getting entries from buildcache") from e
 
-    prune_orphan(mirror, started_at, dry_run)
+        if keeplist:
+            prune_direct(
+                mirror,
+                pathlib.Path(keeplist),
+                manifest_to_mtime_mapping,
+                read_fn,
+                blob_list,
+                tmpspecsdir,
+                started_at,
+                dry_run,
+            )
+
+        prune_orphan(
+            mirror, manifest_to_mtime_mapping, read_fn, blob_list, tmpspecsdir, started_at, dry_run
+        )
 
 
 class BuildcachePruningException(spack.error.SpackError):

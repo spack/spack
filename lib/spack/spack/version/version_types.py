@@ -595,7 +595,7 @@ class GitVersion(ConcreteVersion):
 
         if self.ref_lookup is None:
             raise VersionLookupError(
-                f"git ref '{self.ref}' cannot be looked up: " "call attach_lookup first"
+                f"git ref '{self.ref}' cannot be looked up: call attach_lookup first"
             )
 
         version_string, distance = self.ref_lookup.get(self.ref)

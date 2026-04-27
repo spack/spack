@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Wrapper for ``spack.llnl.util.lock`` allows locking to be enabled/disabled."""
+
 import os
 import stat
 import sys
@@ -56,6 +57,11 @@ class Lock(Llnl_lock):
         if self._enable:
             return super()._lock(op, timeout)
         return 0.0, 0
+
+    def _poll_lock(self, op: int) -> bool:
+        if self._enable:
+            return super()._poll_lock(op)
+        return True
 
     def _unlock(self) -> None:
         """Unlock call that always succeeds."""

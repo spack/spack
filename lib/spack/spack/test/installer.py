@@ -19,6 +19,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.installer as inst
+import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as ulk
 import spack.llnl.util.tty as tty
@@ -1083,9 +1084,9 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capfd):
 
     assert b_id in installer.failed, "Expected b to be marked as failed"
     assert c_id in installer.failed, "Expected c to be marked as failed"
-    assert (
-        a_id not in installer.installed
-    ), "Package a cannot install due to its dependencies failing"
+    assert a_id not in installer.installed, (
+        "Package a cannot install due to its dependencies failing"
+    )
     # check that b's active process got killed when c failed
 
     assert f"{b_id} failed to install" in capfd.readouterr().err
@@ -1389,3 +1390,24 @@ def test_print_install_test_log_failures(
     inst.print_install_test_log(pkg)
     out = capfd.readouterr()[0]
     assert "See test results at" in out
+
+
+def test_fallback_to_old_installer_for_splicing(monkeypatch, mock_packages, mutable_config):
+    """Test that the old installer is used for spliced specs (unsupported in the new installer)"""
+    mutable_config.set("config:installer", "new")
+    spec = spack.concretize.concretize_one("splice-t")
+    dep = spack.concretize.concretize_one("splice-h+foo")
+    out = spec.splice(dep)
+    assert isinstance(
+        spack.installer_dispatch.create_installer([out.package]), inst.PackageInstaller
+    )
+
+
+@pytest.mark.disable_clean_stage_check
+def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_variant):
+    """Test that the log file is preserved when an install error occurs."""
+    pkg = spack.concretize.concretize_one("build-error").package
+    installer = spack.installer_dispatch.create_installer([pkg])
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert os.path.exists(pkg.log_path)

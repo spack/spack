@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Create and run mock e2e tests for package detection."""
+
 import collections
 import contextlib
 import pathlib

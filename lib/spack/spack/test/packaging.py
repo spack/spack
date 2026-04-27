@@ -5,6 +5,7 @@
 """
 This test checks the binary packaging infrastructure
 """
+
 import argparse
 import os
 import pathlib

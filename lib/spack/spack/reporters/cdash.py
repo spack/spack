@@ -203,7 +203,7 @@ class CDash(Reporter):
         for phase in phases_encountered:
             report_data[phase]["endtime"] = self.endtime
             report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
+            errors, warnings, _ = parse_log_events(report_data[phase]["loglines"])
 
             # Convert errors to warnings if the package reported success.
             if package["result"] == "success":

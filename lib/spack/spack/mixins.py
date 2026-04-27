@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """This module contains additional behavior that can be attached to any given package."""
+
 import os
 from typing import Optional
 

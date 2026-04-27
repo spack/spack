@@ -12,6 +12,7 @@ import spack.directives
 import spack.llnl.util.lang
 import spack.package_base
 import spack.paths
+import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
@@ -622,6 +623,84 @@ class TestSpecSemantics:
         assert concrete.satisfies("^[when='^notapackage'] zmpi")
         assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
+    def test_concrete_satisfies_does_not_consult_repo(
+        self, default_mock_concretization, monkeypatch
+    ):
+        """Tests that `satisfies()` on a concrete lhs doesn't need the provider index, when the rhs
+        contains a virtual name.
+        """
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # Reset the index, will raise if the `_provider_index` is ever removed as an attribute
+        monkeypatch.setattr(spack.repo.PATH, "_provider_index", None)
+
+        # Basic match and mismatch cases.
+        assert concrete.satisfies("mpileaks")
+        assert not concrete.satisfies("zlib")
+
+        # Virtuals on a direct edge
+        assert concrete.satisfies("%mpi")
+        assert concrete.satisfies("%mpi@3")
+        assert not concrete.satisfies("%mpi@5")
+        assert concrete.satisfies("%mpi=mpich")
+        assert not concrete.satisfies("%lapack")
+
+        # Virtuals on a transitive edge
+        assert concrete.satisfies("^mpi")
+        assert concrete.satisfies("^mpi=mpich")
+        assert not concrete.satisfies("^lapack")
+
+        # Concrete spec asking about one of its concrete deps.
+        mpich = concrete["mpich"]
+        assert mpich.satisfies("mpich")
+        assert mpich.satisfies("mpi")
+
+        # We should not create again the index
+        assert spack.repo.PATH._provider_index is None
+
+    def test_concrete_contains_does_not_consult_repo(
+        self, default_mock_concretization, monkeypatch
+    ):
+        """Tests that `foo in spec` on a concrete spec doesn't need the provider index, when the
+        item contains a virtual name.
+        """
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # Reset the index, will raise if the `_provider_index` is ever removed as an attribute
+        monkeypatch.setattr(spack.repo.PATH, "_provider_index", None)
+
+        assert "mpi" in concrete
+        assert "c" in concrete
+
+        # We should not create again the index
+        assert spack.repo.PATH._provider_index is None
+
+    def test_abstract_satisfies_with_lhs_provider_rhs_virtual(self):
+        """If the left-hand side mentions a provider among dependencies and the right-hand side
+        mentions a virtual among its deps, we only have satisfaction if the edge attribute
+        specifies this virtual is provided."""
+        assert not Spec("mpileaks ^mpich").satisfies("mpileaks ^mpi")
+        assert not Spec("mpileaks %mpich").satisfies("mpileaks %mpi")
+        assert Spec("mpileaks ^[virtuals=mpi] mpich").satisfies("mpileaks ^mpi")
+        assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks ^mpi")
+        assert Spec("mpileaks %[virtuals=mpi] mpich").satisfies("mpileaks %mpi")
+
+    def test_concrete_checks_on_virtual_names_dont_need_repo(
+        self, default_mock_concretization, monkeypatch
+    ):
+        """Tests that ``%mpi`` or similar on a concrete spec doesn't need the repo"""
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # We don't need the repo
+        monkeypatch.setattr(spack.repo, "PATH", None)
+
+        assert concrete.satisfies("%mpi")
+        assert concrete.satisfies("%c")
+        assert concrete.satisfies("%c=gcc")
+        assert concrete.satisfies("%mpi=mpich")
+
+        assert not concrete.satisfies("%c,mpi=mpich")
+
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
         https://github.com/spack/spack/pull/2386#issuecomment-282147639
@@ -1047,7 +1126,7 @@ class TestSpecSemantics:
         fn = variant("foo", values=spack.variant.any_combination_of("fee", "foom"), default="bar")
         with pytest.raises(spack.directives.DirectiveError) as exc_info:
             fn(Pkg())
-        assert " it is handled by an attribute of the 'values' " "argument" in str(exc_info.value)
+        assert " it is handled by an attribute of the 'values' argument" in str(exc_info.value)
 
         # We can't leave None as a default value
         fn = variant("foo", default=None)
@@ -2056,7 +2135,9 @@ def test_virtual_queries_work_for_strings_and_lists():
     """Ensure that ``dependencies()`` works with both virtuals=str and virtuals=[str, ...]."""
     parent, child = Spec("parent"), Spec("child")
     parent._add_dependency(
-        child, depflag=dt.BUILD, virtuals=("cxx", "fortran")  # multi-char dep names
+        child,
+        depflag=dt.BUILD,
+        virtuals=("cxx", "fortran"),  # multi-char dep names
     )
 
     assert not parent.dependencies(virtuals="c")  # not in virtuals but shares a char with cxx

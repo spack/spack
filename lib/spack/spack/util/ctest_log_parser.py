@@ -68,15 +68,13 @@ algorithms that duplicate the way CTest scrapes log files.  To keep this
 up to date with CTest, just make sure the ``*_matches`` and
 ``*_exceptions`` lists are kept up to date with CTest's build handler.
 """
+
 import io
 import math
-import multiprocessing
 import re
-import sys
-import threading
 import time
-from contextlib import contextmanager
-from typing import List, Optional, TextIO, Tuple, Union
+from collections import deque
+from typing import Dict, List, Optional, TextIO, Tuple, Union
 
 _error_matches = [
     "^FAIL: ",
@@ -87,21 +85,22 @@ _error_matches = [
     "^[Bb]us [Ee]rror",
     "^[Ss]egmentation [Vv]iolation",
     "^[Ss]egmentation [Ff]ault",
-    ":.*[Pp]ermission [Dd]enied",
-    "[^ :]:[0-9]+: [^ \\t]",
-    "[^:]: error[ \\t]*[0-9]+[ \\t]*:",
+    "Permission [Dd]enied",
+    "permission [Dd]enied",
+    ":[0-9]+: [^ \\t]",
+    ": error[ \\t]*[0-9]+[ \\t]*:",
     "^Error ([0-9]+):",
     "^Fatal",
     "^[Ee]rror: ",
     "^Error ",
-    "[0-9] ERROR: ",
+    " ERROR: ",
     '^"[^"]+", line [0-9]+: [^Ww]',
     "^cc[^C]*CC: ERROR File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*ERROR([^:])*:",
     "^ild:([ \\t])*\\(undefined symbol\\)",
-    "[^ :] : (error|fatal error|catastrophic error)",
-    "[^:]: (Error:|error|undefined reference|multiply defined)",
-    "[^:]\\([^\\)]+\\) ?: (error|fatal error|catastrophic error)",
+    ": (error|fatal error|catastrophic error)",
+    ": (Error:|error|undefined reference|multiply defined)",
+    "\\([^\\)]+\\) ?: (error|fatal error|catastrophic error)",
     "^fatal error C[0-9]+:",
     ": syntax error ",
     "^collect2: ld returned 1 exit status",
@@ -152,28 +151,27 @@ _error_exceptions = [
     "    ok",
     "Note:",
     ":[ \\t]+Where:",
-    "[^ :]:[0-9]+: Warning",
+    ":[0-9]+: Warning",
     "------ Build started: .* ------",
 ]
 
 #: Regexes to match file/line numbers in error/warning messages
 _warning_matches = [
-    "[^ :]:[0-9]+: warning:",
-    "[^ :]:[0-9]+: note:",
+    ":[0-9]+: warning:",
+    ":[0-9]+: note:",
     "^cc[^C]*CC: WARNING File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*WARNING([^:])*:",
-    "[^:]: warning [0-9]+:",
+    ": warning [0-9]+:",
     '^"[^"]+", line [0-9]+: [Ww](arning|arnung)',
-    "[^:]: warning[ \\t]*[0-9]+[ \\t]*:",
+    ": warning[ \\t]*[0-9]+[ \\t]*:",
     "^(Warning|Warnung) ([0-9]+):",
     "^(Warning|Warnung)[ :]",
     "WARNING: ",
-    "[^ :] : warning",
-    "[^:]: warning",
+    ": warning",
     '", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([WI]\\)',
     "^cxx: Warning:",
     "file: .* has no symbols",
-    "[^ :]:[0-9]+: (Warning|Warnung)",
+    ":[0-9]+: (Warning|Warnung)",
     "\\([0-9]*\\): remark #[0-9]*",
     '".*", line [0-9]+: remark\\([0-9]*\\):',
     "cc-[0-9]* CC: REMARK File = .*, Line = [0-9]*",
@@ -213,6 +211,9 @@ _file_line_matches = [
 
 class LogEvent:
     """Class representing interesting events (e.g., errors) in a build log."""
+
+    #: color name when rendering in the terminal
+    color = ""
 
     def __init__(
         self,
@@ -264,9 +265,13 @@ class LogEvent:
 class BuildError(LogEvent):
     """LogEvent subclass for build errors."""
 
+    color = "R"
+
 
 class BuildWarning(LogEvent):
     """LogEvent subclass for build warnings."""
+
+    color = "Y"
 
 
 def chunks(xs, n):
@@ -275,12 +280,21 @@ def chunks(xs, n):
     return [xs[i : i + chunksize] for i in range(0, len(xs), chunksize)]
 
 
-@contextmanager
-def _time(times, i):
-    start = time.time()
-    yield
-    end = time.time()
-    times[i] += end - start
+def _optimize_regexes(regex_strings: List[str]) -> List[str]:
+    """Groups regexes by their first character and combines each group into a single regex using
+    alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
+    internally. The result is a shorter list of regexes that all hit a fast path in cpython's regex
+    engine for prefix matching."""
+    groups: Dict[str, List[str]] = {}
+    for regex in sorted(regex_strings):
+        key = regex[:1]  # empty or single character
+        if key == "\\":  # include escaped character
+            key = regex[:2]
+        if key not in groups:
+            groups[key] = [regex]
+        else:
+            groups[key].append(regex)
+    return ["|".join(entries) for entries in groups.values()]
 
 
 def _match(matches, exceptions, line):
@@ -296,29 +310,31 @@ def _profile_match(matches, exceptions, line, match_times, exc_times):
 
     """
     for i, m in enumerate(matches):
-        with _time(match_times, i):
-            if m.search(line):
-                break
+        start = time.perf_counter()
+        found = m.search(line)
+        match_times[i] += time.perf_counter() - start
+        if found:
+            break
     else:
         return False
 
     for i, m in enumerate(exceptions):
-        with _time(exc_times, i):
-            if m.search(line):
-                return False
+        start = time.perf_counter()
+        found = m.search(line)
+        exc_times[i] += time.perf_counter() - start
+        if found:
+            return False
     else:
         return True
 
 
-def _parse(lines, offset, profile):
-    def compile(regex_array):
-        return [re.compile(regex) for regex in regex_array]
+def _parse(stream, profile, context, tail=0):
 
-    error_matches = compile(_error_matches)
-    error_exceptions = compile(_error_exceptions)
-    warning_matches = compile(_warning_matches)
-    warning_exceptions = compile(_warning_exceptions)
-    file_line_matches = compile(_file_line_matches)
+    error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
+    error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
+    warning_matches = [re.compile(r) for r in _optimize_regexes(_warning_matches)]
+    warning_exceptions = [re.compile(r) for r in _optimize_regexes(_warning_exceptions)]
+    file_line_matches = [re.compile(r) for r in _file_line_matches]
 
     matcher, _ = _match, []
     timings = []
@@ -333,28 +349,72 @@ def _parse(lines, offset, profile):
 
     errors = []
     warnings = []
-    for i, line in enumerate(lines):
+    # rolling window of recent lines
+    pre_context = deque(maxlen=max(context, tail))
+    # list of (event, remaining_post_context_lines)
+    pending_events: List[Tuple[LogEvent, int]] = []
+
+    last_line_no = 0
+    for i, line in enumerate(stream):
+        rstripped_line = line.rstrip()
+        last_line_no = i + 1
+
+        # feed this line into every event still collecting post_context
+        if pending_events:
+            active_events = []
+            for event, remaining in pending_events:
+                event.post_context.append(rstripped_line)
+                if remaining > 1:
+                    active_events.append((event, remaining - 1))
+                elif isinstance(event, BuildError):
+                    errors.append(event)
+                else:
+                    warnings.append(event)
+            pending_events = active_events
+
         # use CTest's regular expressions to scrape the log for events
         if matcher(error_matches, error_exceptions, line, *timings[:2]):
-            event = BuildError(line.strip(), offset + i + 1)
-            errors.append(event)
+            event = BuildError(rstripped_line, i + 1)
         elif matcher(warning_matches, warning_exceptions, line, *timings[2:]):
-            event = BuildWarning(line.strip(), offset + i + 1)
-            warnings.append(event)
+            event = BuildWarning(rstripped_line, i + 1)
         else:
+            pre_context.append(rstripped_line)
             continue
 
-        # get file/line number for each event, if possible
+        event.pre_context = list(pre_context)[-context:] if context else []
+        event.post_context = []
+
+        # get file/line number for the event, if possible
         for flm in file_line_matches:
             match = flm.search(line)
             if match:
                 event.source_file, event.source_line_no = match.groups()
+                break
 
-    return errors, warnings, timings
+        if context > 0:
+            pending_events.append((event, context))
+        elif isinstance(event, BuildError):
+            errors.append(event)
+        else:
+            warnings.append(event)
 
+        pre_context.append(rstripped_line)
 
-def _parse_unpack(args):
-    return _parse(*args)
+    # flush events whose post_context window extends past EOF
+    for event, _ in pending_events:
+        if isinstance(event, BuildError):
+            errors.append(event)
+        else:
+            warnings.append(event)
+
+    # build tail section from the last N lines of the log, if requested
+    if tail > 0 and last_line_no > 0:
+        lines = list(pre_context)[-tail:]
+        tail_event = LogEvent(text=lines[-1], line_no=last_line_no, pre_context=lines[:-1])
+    else:
+        tail_event = None
+
+    return errors, warnings, tail_event, timings
 
 
 class CTestLogParser:
@@ -373,12 +433,11 @@ class CTestLogParser:
 
         index = 0
         for name, arr in [
-            ("error_matches", _error_matches),
-            ("error_exceptions", _error_exceptions),
-            ("warning_matches", _warning_matches),
-            ("warning_exceptions", _warning_exceptions),
+            ("error_matches", _optimize_regexes(_error_matches)),
+            ("error_exceptions", _optimize_regexes(_error_exceptions)),
+            ("warning_matches", _optimize_regexes(_warning_matches)),
+            ("warning_exceptions", _optimize_regexes(_warning_exceptions)),
         ]:
-
             print()
             print(name)
             for i, elt in enumerate(arr):
@@ -386,63 +445,22 @@ class CTestLogParser:
             index += 1
 
     def parse(
-        self, stream: Union[str, TextIO], context: int = 6, jobs: Optional[int] = None
-    ) -> Tuple[List[BuildError], List[BuildWarning]]:
+        self, stream: Union[str, TextIO], context: int = 6, tail: int = 0
+    ) -> Tuple[List[BuildError], List[BuildWarning], Optional[LogEvent]]:
         """Parse a log file by searching each line for errors and warnings.
 
         Args:
             stream: filename or stream to read from
             context: lines of context to extract around each log event
+            tail: if > 0, also return a :class:`LogEvent` with the last ``tail`` lines
 
         Returns:
-            two lists containing :class:`BuildError` and :class:`BuildWarning` objects.
+            two lists containing :class:`BuildError` and :class:`BuildWarning` objects,
+            plus an optional :class:`LogEvent` for the tail (None when ``tail=0``).
         """
         if isinstance(stream, str):
-            with open(stream) as f:
-                return self.parse(f, context, jobs)
+            with open(stream, encoding="utf-8", errors="replace") as f:
+                return self.parse(f, context, tail)
 
-        lines = [line for line in stream]
-
-        if jobs is None:
-            jobs = multiprocessing.cpu_count()
-
-        # single-thread small logs
-        if len(lines) < 10 * jobs:
-            errors, warnings, self.timings = _parse(lines, 0, self.profile)
-
-        else:
-            # Build arguments for parallel jobs
-            args = []
-            offset = 0
-            for chunk in chunks(lines, jobs):
-                args.append((chunk, offset, self.profile))
-                offset += len(chunk)
-
-            # create a pool and farm out the matching job
-            pool = multiprocessing.Pool(jobs)
-            try:
-                # this is a workaround for a Python bug in Pool with ctrl-C
-                if sys.version_info >= (3, 2):
-                    max_timeout = threading.TIMEOUT_MAX
-                else:
-                    max_timeout = 9999999
-                results = pool.map_async(_parse_unpack, args, 1).get(max_timeout)
-
-                errors, warnings, timings = zip(*results)
-            finally:
-                pool.terminate()
-
-            # merge results
-            errors = sum(errors, [])
-            warnings = sum(warnings, [])
-
-            if self.profile:
-                self.timings = [[sum(i) for i in zip(*t)] for t in zip(*timings)]
-
-        # add log context to all events
-        for event in errors + warnings:
-            i = event.line_no - 1
-            event.pre_context = [x.rstrip() for x in lines[i - context : i]]
-            event.post_context = [x.rstrip() for x in lines[i + 1 : i + context + 1]]
-
-        return errors, warnings
+        errors, warnings, tail_event, self.timings = _parse(stream, self.profile, context, tail)
+        return errors, warnings, tail_event

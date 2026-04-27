@@ -25,6 +25,7 @@ in order to build it.  They need to define the following methods:
 ``archive()``
     Archive a source directory, e.g. for creating a mirror.
 """
+
 import copy
 import functools
 import hashlib
@@ -458,7 +459,7 @@ class URLFetchStrategy(FetchStrategy):
                     response_headers_str = str(response.headers)
                 os.replace(part_file, save_file)
                 break  # success: exit retry loop
-            except OSError as e:
+            except Exception as e:
                 # clean up archive on failure.
                 if self.archive_file:
                     os.remove(self.archive_file)

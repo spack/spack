@@ -4,6 +4,7 @@
 """Service functions and classes to implement the hooks
 for Spack's command extensions.
 """
+
 import glob
 import importlib
 import os

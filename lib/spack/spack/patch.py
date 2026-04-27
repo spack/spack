@@ -420,7 +420,9 @@ class PatchCache:
         """
         sjson.dump({"patches": self.index}, stream)
 
-    def patch_for_package(self, sha256: str, pkg: "spack.package_base.PackageBase") -> Patch:
+    def patch_for_package(
+        self, sha256: str, pkg: Type["spack.package_base.PackageBase"], *, validate: bool = False
+    ) -> Patch:
         """Look up a patch in the index and build a patch object for it.
 
         We build patch objects lazily because building them requires that
@@ -428,7 +430,9 @@ class PatchCache:
 
         Args:
             sha256: sha256 hash to look up
-            pkg: Package object to get patch for.
+            pkg: Package class to get patch for.
+            validate: if True, validate the cached entry against the owner's current package
+                class and raise ``PatchLookupError`` if the entry is missing or stale.
 
         Returns:
             The patch object.
@@ -448,6 +452,26 @@ class PatchCache:
             raise spack.error.PatchLookupError(
                 f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
+
+        if validate:
+            # Validate the cached entry against the owner's current package class
+            owner = patch_dict.get("owner")
+            if not owner:
+                raise spack.error.PatchLookupError(
+                    f"Patch for {pkg.fullname} with sha256 {sha256} has no owner in cache"
+                )
+            try:
+                owner_pkg_cls = self.repository.get_pkg_class(owner)
+                current_index = PatchCache._index_patches(owner_pkg_cls, self.repository)
+            except Exception as e:
+                raise spack.error.PatchLookupError(
+                    f"Could not validate patch cache for {pkg.fullname}: {e}"
+                ) from e
+            current_sha_index = current_index.get(sha256)
+            if not current_sha_index or current_sha_index.get(fullname) != patch_dict:
+                raise spack.error.PatchLookupError(
+                    f"Stale patch cache entry for {pkg.fullname} with sha256: {sha256}"
+                )
 
         # add the sha256 back (we take it out on write to save space,
         # because it's the index key)

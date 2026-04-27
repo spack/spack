@@ -44,7 +44,7 @@ def test_dev_build_basics(tmp_path: pathlib.Path, install_mockery):
     assert os.path.exists(str(tmp_path))
 
 
-def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -62,7 +62,8 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery):
     assert not os.path.exists(spec.prefix)
 
 
-def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
+@pytest.mark.parametrize("last_phase", ["edit", "install"])
+def test_dev_build_until(tmp_path: pathlib.Path, install_mockery, last_phase, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -71,7 +72,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
         with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
             f.write(spec.package.original_string)  # type: ignore
 
-        dev_build("-u", "edit", "dev-build-test-install@0.0.0")
+        dev_build("--until", last_phase, "dev-build-test-install@0.0.0")
 
         assert spec.package.filename in os.listdir(os.getcwd())  # type: ignore
         with open(spec.package.filename, "r", encoding="utf-8") as f:  # type: ignore
@@ -81,28 +82,7 @@ def test_dev_build_until(tmp_path: pathlib.Path, install_mockery):
     assert not spack.store.STORE.db.query(spec, installed=True)
 
 
-def test_dev_build_until_last_phase(tmp_path: pathlib.Path, install_mockery):
-    # Test that we ignore the last_phase argument if it is already last
-    spec = spack.concretize.concretize_one(
-        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
-    )
-
-    with fs.working_dir(str(tmp_path)):
-        with open(spec.package.filename, "w", encoding="utf-8") as f:
-            f.write(spec.package.original_string)
-
-        dev_build("-u", "install", "dev-build-test-install@0.0.0")
-
-        assert spec.package.filename in os.listdir(os.getcwd())
-        with open(spec.package.filename, "r", encoding="utf-8") as f:
-            assert f.read() == spec.package.replacement_string
-
-    assert os.path.exists(spec.prefix)
-    assert spack.store.STORE.db.query(spec, installed=True)
-    assert os.path.exists(str(tmp_path))
-
-
-def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
+def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery, installer_variant):
     spec = spack.concretize.concretize_one(
         spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={tmp_path}")
     )
@@ -120,12 +100,14 @@ def test_dev_build_before_until(tmp_path: pathlib.Path, install_mockery):
         out = dev_build("-u", bad_phase, "dev-build-test-install@0.0.0", fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
-        assert not_installed in out
+        if installer_variant == "old":
+            assert not_installed in out
 
         out = dev_build("-b", bad_phase, "dev-build-test-install@0.0.0", fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
-        assert not_installed in out
+        if installer_variant == "old":
+            assert not_installed in out
 
 
 def _print_spack_short_spec(*args):

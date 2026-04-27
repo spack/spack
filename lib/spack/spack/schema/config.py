@@ -6,6 +6,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 17-
 """
+
 from typing import Any, Dict
 
 import spack.schema
@@ -71,7 +72,7 @@ properties: Dict[str, Any] = {
                         "relocation of binaries (true for max length, integer for specific "
                         "length)",
                     },
-                    **spack.schema.projections.properties,
+                    **spack.schema.projections.ref_properties,
                 },
             },
             "install_hash_length": {
@@ -89,7 +90,8 @@ properties: Dict[str, Any] = {
             },
             "develop_stage_link": {
                 "type": "string",
-                "description": "Name for development spec build stage directories",
+                "description": "Name for development spec build stage directories. Setting to "
+                "None will disable develop stage links.",
             },
             "test_stage": {
                 "type": "string",
@@ -243,6 +245,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"projections": spack.schema.projections.projections},
 }
 
 

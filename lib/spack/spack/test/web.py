@@ -450,3 +450,64 @@ def test_ssl_curl_cert_file(
             assert dump_env["CURL_CA_BUNDLE"] == mock_cert
         else:
             assert "CURL_CA_BUNDLE" not in dump_env
+
+
+@pytest.mark.parametrize(
+    "error_code,num_errors,max_retries,expect_failure",
+    [
+        (500, 2, 5, False),  # transient, enough retries
+        (500, 2, 2, True),  # transient, not enough retries
+        (429, 2, 5, False),  # rate limit, enough retries
+        (404, 1, 5, True),  # not transient, never retried
+    ],
+)
+def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_failure):
+    import urllib.error
+
+    call_count = 0
+    sleep_times = []
+
+    def flaky_func():
+        nonlocal call_count
+        call_count += 1
+        if call_count <= num_errors:
+            raise urllib.error.HTTPError(
+                url="https://example.com", code=error_code, msg="err", hdrs={}, fp=None
+            )
+        return "ok"
+
+    retrying = spack.util.web.retry_on_transient_error(
+        flaky_func, retries=max_retries, sleep=sleep_times.append
+    )
+
+    if expect_failure:
+        with pytest.raises(urllib.error.HTTPError):
+            retrying()
+    else:
+        assert retrying() == "ok"
+        assert sleep_times == [2**i for i in range(num_errors)]
+
+
+def test_retry_on_transient_error_non_oserror():
+    """Non-OSError exceptions with transient names (e.g. botocore) should be retried."""
+
+    class ResponseStreamingError(Exception):
+        pass
+
+    call_count = 0
+    sleep_times = []
+
+    def flaky_func():
+        nonlocal call_count
+        call_count += 1
+        if call_count <= 2:
+            raise ResponseStreamingError("IncompleteRead")
+        return "ok"
+
+    retrying = spack.util.web.retry_on_transient_error(
+        flaky_func, retries=5, sleep=sleep_times.append
+    )
+
+    assert retrying() == "ok"
+    assert call_count == 3
+    assert sleep_times == [1, 2]
