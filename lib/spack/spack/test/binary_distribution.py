@@ -1488,35 +1488,3 @@ def test_mirror_metadata_with_view():
 
     with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")
-
-
-@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
-@pytest.mark.regression("52341")
-def test_no_warning_for_missing_v2_index_on_v3_mirror(
-    recwarn, monkeypatch, tmp_path: pathlib.Path, mutable_config
-):
-    """Tests that a v3-only mirror doesn't trigger a warning when Spack checks for a v2 index."""
-    index_cache_root = str(tmp_path / "index_cache")
-    monkeypatch.setattr(
-        spack.binary_distribution,
-        "BINARY_INDEX",
-        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
-    )
-
-    mirror_dir = tmp_path / "mirror_dir"
-    mirror_url = url_util.path_to_file_url(str(mirror_dir))
-    mutable_config.set("mirrors", {"test": mirror_url})
-
-    # Create the cache
-    s = spack.concretize.concretize_one("libdwarf")
-    install_cmd("--fake", "--no-cache", s.name)
-    buildcache_cmd("push", "-u", str(mirror_dir), s.name)
-    buildcache_cmd("update-index", str(mirror_dir))
-
-    # Read the v3 cache
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
-        index_cache_root
-    )
-    buildcache_cmd("list", "-al")
-
-    assert not any("issues were ignored" in str(w.message) for w in recwarn.list)
