@@ -113,9 +113,12 @@ def create_stage_root(path: str) -> None:
     if user_node:
         user_paths.insert(0, user_node)
 
-    if user_paths:
-        mkdirp(user_paths[-1], mode=stat.S_IRWXU)
     for p in user_paths:
+        try:
+            os.mkdir(p, 0o700)
+        except FileExistsError:
+            pass
+
         if not sys.platform == "win32":
             # Ensure access controls of subdirs from `$user` on down are
             # restricted to the user.
