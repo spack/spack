@@ -458,15 +458,6 @@ class MirrorCollection(Mapping[str, Mirror]):
         sjson.dump(self.to_dict(True), stream)
         return None
 
-    def to_yaml(self, stream: Optional[IO[str]] = None) -> Optional[str]:
-        return syaml.dump(self.to_dict(True), stream)
-
-    # TODO: this isn't called anywhere
-    @staticmethod
-    def from_yaml(stream: Union[str, IO[str]], name: Optional[str] = None) -> "MirrorCollection":
-        data = syaml.load(stream)
-        return MirrorCollection(data)
-
     @staticmethod
     def from_json(stream: IO, name: Optional[str] = None) -> "MirrorCollection":
         try:

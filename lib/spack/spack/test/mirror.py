@@ -181,25 +181,11 @@ def test_invalid_json_mirror(invalid_json, error_message):
     ],
 )
 def test_roundtrip_mirror_collection(mirror_collection):
-    mirror_collection_yaml = mirror_collection.to_yaml()
-    assert (
-        spack.mirrors.mirror.MirrorCollection.from_yaml(mirror_collection_yaml)
-        == mirror_collection
-    )
     mirror_collection_json = mirror_collection.to_json()
     assert (
         spack.mirrors.mirror.MirrorCollection.from_json(mirror_collection_json)
         == mirror_collection
     )
-
-
-@pytest.mark.parametrize(
-    "invalid_yaml", ["playing_playlist: {{ action }} playlist {{ playlist_name }}"]
-)
-def test_invalid_yaml_mirror_collection(invalid_yaml):
-    with pytest.raises(SpackYAMLError, match="error parsing YAML") as e:
-        spack.mirrors.mirror.MirrorCollection.from_yaml(invalid_yaml)
-    assert invalid_yaml in str(e.value)
 
 
 @pytest.mark.parametrize("invalid_json, error_message", [("{13:", "Expecting property name")])
