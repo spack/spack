@@ -417,7 +417,7 @@ class BinaryCacheIndex:
     ) -> Tuple[bool, bool]:
         items_to_remove = []
         clear, regenerate = False, not self._mirrors_for_spec
-        for cache_key in list(self._local_index_cache.keys()):
+        for cache_key in self._local_index_cache:
             meta = MirrorMetadata.from_string(cache_key)
             if meta.version not in supported_mirror_versions.get((meta.url, meta.view), ()):
                 items_to_remove.append(
