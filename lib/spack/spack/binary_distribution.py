@@ -165,6 +165,11 @@ class _MirrorIndexResult(NamedTuple):
     error: Optional[Exception]
 
 
+class _LastFetch(NamedTuple):
+    time: float
+    succeeded: bool
+
+
 class BinaryCacheIndex:
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
@@ -199,7 +204,7 @@ class BinaryCacheIndex:
 
         # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
         # whether the fetch succeeded or not.
-        self._last_fetch_times: Dict[MirrorMetadata, Tuple[float, bool]] = {}
+        self._last_fetch_times: Dict[MirrorMetadata, _LastFetch] = {}
 
         #: Dictionary mapping DAG hashes of specs to Spec objects
         self._known_specs: Dict[str, spack.spec.Spec] = {}
@@ -376,10 +381,10 @@ class BinaryCacheIndex:
                 cooldown
                 and ttl > 0
                 and meta in self._last_fetch_times
-                and now - self._last_fetch_times[meta][0] < ttl
+                and now - self._last_fetch_times[meta].time < ttl
             ):
                 return _MirrorIndexResult(
-                    succeeded=self._last_fetch_times[meta][1],
+                    succeeded=self._last_fetch_times[meta].succeeded,
                     regenerate=False,
                     had_cache_entry=True,
                     error=None,
@@ -387,7 +392,7 @@ class BinaryCacheIndex:
 
             try:
                 regenerate = self._fetch_and_cache_index(meta, cache_entry=cache_entry or {})
-                self._last_fetch_times[meta] = (now, True)
+                self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=True)
                 return _MirrorIndexResult(
                     succeeded=True,
                     regenerate=regenerate,
@@ -395,7 +400,7 @@ class BinaryCacheIndex:
                     error=None,
                 )
             except FetchIndexError as e:
-                self._last_fetch_times[meta] = (now, False)
+                self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=False)
                 return _MirrorIndexResult(
                     succeeded=False,
                     regenerate=False,
@@ -404,7 +409,7 @@ class BinaryCacheIndex:
                 )
             except BuildcacheIndexNotExists:
                 # Try next lower layout version
-                self._last_fetch_times[meta] = (now, False)
+                self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=False)
                 continue
 
         # All versions reported no index found. This is not a failure
