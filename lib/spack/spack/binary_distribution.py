@@ -177,9 +177,9 @@ class _LocalIndexCache(TypedDict, total=False):
     etag: str
 
 
-class BinaryCacheIndex:
+class BinaryIndexCache:
     """
-    The BinaryCacheIndex tracks what specs are available on (usually remote)
+    The BinaryIndexCache tracks what specs are available on (usually remote)
     binary caches.
 
     This index is "best effort", in the sense that whenever we don't find
@@ -506,13 +506,13 @@ class BinaryCacheIndex:
 
 
 def binary_index_location():
-    """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
+    """Set up a BinaryIndexCache for remote buildcache dbs in the user's homedir."""
     cache_root = os.path.join(spack.caches.misc_cache_location(), "indices")
     return spack.util.path.canonicalize_path(cache_root)
 
 
 #: Default binary cache index instance
-BINARY_INDEX = cast(BinaryCacheIndex, spack.llnl.util.lang.Singleton(BinaryCacheIndex))
+BINARY_INDEX = cast(BinaryIndexCache, spack.llnl.util.lang.Singleton(BinaryIndexCache))
 
 
 def compute_hash(data):
