@@ -26,7 +26,20 @@ import urllib.request
 import warnings
 from collections import defaultdict
 from contextlib import closing
-from typing import IO, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
+from typing import (
+    IO,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
 import spack.caches
 import spack.config
@@ -302,140 +315,92 @@ class BinaryCacheIndex:
         from each configured mirror and stored locally (both in memory and
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
-        configured_mirrors = [
-            MirrorMetadata(m.fetch_url, layout_version, m.fetch_view)
+
+        supported_mirror_versions = {
+            (m.fetch_url, m.fetch_view): m.supported_layout_versions
             for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
-            for layout_version in m.supported_layout_versions
-        ]
-        items_to_remove = []
-        spec_cache_clear_needed = False
-        spec_cache_regenerate_needed = not self._mirrors_for_spec
+        }
 
-        # First compare the mirror urls currently present in the cache to the
-        # configured mirrors.  If we have a cached index for a mirror which is
-        # no longer configured, we should remove it from the cache.  For any
-        # cached indices corresponding to currently configured mirrors, we need
-        # to check if the cache is still good, or needs to be updated.
-        # Finally, if there are configured mirrors for which we don't have a
-        # cache entry, we need to fetch and cache the indices from those
-        # mirrors.
+        # If we have a cached index for a mirror which is no longer configured, remove it
+        clear_cache, regenerate_cache = self._remove_stale_cache_entries(supported_mirror_versions)
 
-        # If, during this process, we find that any mirrors for which we
-        # already have entries have either been removed, or their index
-        # hash has changed, then our concrete spec cache (_mirrors_for_spec)
-        # likely has entries that need to be removed, so we will clear it
-        # and regenerate that data structure.
-
-        # If, during this process, we find that there are new mirrors for
-        # which do not yet have an entry in our index cache, then we simply
-        # need to regenerate the concrete spec cache, but do not need to
-        # clear it first.
-
-        # Otherwise the concrete spec cache should not need to be updated at
-        # all.
-
+        ttl = spack.config.CONFIG.get("config:binary_index_ttl", 600)
         fetch_errors: List[Exception] = []
         all_methods_failed = True
-        ttl = spack.config.get("config:binary_index_ttl", 600)
         now = time.time()
 
-        for local_index_cache_key in self._local_index_cache:
-            urlAndVersion = MirrorMetadata.from_string(local_index_cache_key)
-            cached_mirror_url = urlAndVersion.url
-            cache_entry = self._local_index_cache[local_index_cache_key]
-            cached_index_path = cache_entry["index_path"]
-            if urlAndVersion in configured_mirrors:
-                # Only do a fetch if the last fetch was longer than TTL ago
-                if (
-                    with_cooldown
-                    and ttl > 0
-                    and cached_mirror_url in self._last_fetch_times
-                    and now - self._last_fetch_times[urlAndVersion][0] < ttl
-                ):
-                    # We're in the cooldown period, don't try to fetch again
-                    # If the fetch succeeded last time, consider this update a success, otherwise
-                    # re-report the error here
-                    if self._last_fetch_times[urlAndVersion][1]:
-                        all_methods_failed = False
-                else:
-                    # May need to fetch the index and update the local caches
-                    needs_regen = False
-                    try:
-                        needs_regen = self._fetch_and_cache_index(
-                            urlAndVersion, cache_entry=cache_entry
-                        )
-                        self._last_fetch_times[urlAndVersion] = (now, True)
-                        all_methods_failed = False
-                    except FetchIndexError as e:
-                        fetch_errors.append(e)
-                        self._last_fetch_times[urlAndVersion] = (now, False)
-                    except BuildcacheIndexNotExists:
-                        self._last_fetch_times[urlAndVersion] = (now, False)
-                        # Binary caches are not required to have an index, don't raise
-                        # if it doesn't exist.
-                        all_methods_failed = False
+        for (url, view), versions in supported_mirror_versions.items():
+            for version in versions:
+                meta = MirrorMetadata(url, version, view)
+                cache_entry = self._local_index_cache.get(str(meta))
 
-                    # The need to regenerate implies a need to clear as well.
-                    spec_cache_clear_needed |= needs_regen
-                    spec_cache_regenerate_needed |= needs_regen
-            else:
-                # No longer have this mirror, cached index should be removed
-                items_to_remove.append(
-                    {
-                        "url": local_index_cache_key,
-                        "cache_key": os.path.join(self._index_cache_root, cached_index_path),
-                    }
-                )
-                if urlAndVersion in self._last_fetch_times:
-                    del self._last_fetch_times[urlAndVersion]
-                spec_cache_clear_needed = True
-                spec_cache_regenerate_needed = True
+                if cache_entry is not None:
+                    in_cooldown = (
+                        with_cooldown
+                        and ttl > 0
+                        and meta in self._last_fetch_times
+                        and now - self._last_fetch_times[meta][0] < ttl
+                    )
+                    if in_cooldown:
+                        if self._last_fetch_times[meta][1]:
+                            all_methods_failed = False
+                        break
 
-        # Clean up items to be removed, identified above
-        for item in items_to_remove:
-            url = item["url"]
-            cache_key = item["cache_key"]
-            self._index_file_cache.remove(cache_key)
-            del self._local_index_cache[url]
+                try:
+                    needs_regen = self._fetch_and_cache_index(meta, cache_entry=cache_entry or {})
+                    self._last_fetch_times[meta] = (now, True)
+                    all_methods_failed = False
+                except FetchIndexError as e:
+                    fetch_errors.append(e)
+                    self._last_fetch_times[meta] = (now, False)
+                    break
+                except BuildcacheIndexNotExists:
+                    self._last_fetch_times[meta] = (now, False)
+                    # Binary caches are not required to have an index
+                    all_methods_failed = False
+                    continue
 
-        # Iterate the configured mirrors now.  Any mirror urls we do not
-        # already have in our cache must be fetched, stored, and represented
-        # locally.
-        for urlAndVersion in configured_mirrors:
-            if str(urlAndVersion) in self._local_index_cache:
-                continue
-
-            # Need to fetch the index and update the local caches
-            needs_regen = False
-            try:
-                needs_regen = self._fetch_and_cache_index(urlAndVersion)
-                self._last_fetch_times[urlAndVersion] = (now, True)
-                all_methods_failed = False
-            except FetchIndexError as e:
-                fetch_errors.append(e)
-                self._last_fetch_times[urlAndVersion] = (now, False)
-            except BuildcacheIndexNotExists:
-                self._last_fetch_times[urlAndVersion] = (now, False)
-                # Binary caches are not required to have an index, don't raise
-                # if it doesn't exist.
-                all_methods_failed = False
-
-            # Generally speaking, a new mirror wouldn't imply the need to
-            # clear the spec cache, so leave it as is.
-            if needs_regen:
-                spec_cache_regenerate_needed = True
+                regenerate_cache |= needs_regen
+                # A new mirror only needs regeneration, not clearing of existing entries.
+                clear_cache |= needs_regen and cache_entry is not None
+                break
 
         self._write_local_index_cache()
 
-        if configured_mirrors and all_methods_failed:
+        if supported_mirror_versions and all_methods_failed:
             raise FetchCacheError(fetch_errors)
+
         if fetch_errors:
             warnings.warn(
                 "The following issues were ignored while updating the indices of binary caches:\n"
                 + str(FetchCacheError(fetch_errors))
             )
-        if spec_cache_regenerate_needed:
-            self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
+
+        if regenerate_cache:
+            self.regenerate_spec_cache(clear_existing=clear_cache)
+
+    def _remove_stale_cache_entries(
+        self, supported_mirror_versions: Dict[Tuple[str, Any], List[int]]
+    ) -> Tuple[bool, bool]:
+        items_to_remove = []
+        clear, regenerate = False, not self._mirrors_for_spec
+        for cache_key in list(self._local_index_cache.keys()):
+            meta = MirrorMetadata.from_string(cache_key)
+            if meta.version not in supported_mirror_versions.get((meta.url, meta.view), ()):
+                items_to_remove.append(
+                    {
+                        "url": cache_key,
+                        "cache_key": self._local_index_cache[cache_key]["index_path"],
+                    }
+                )
+                if meta in self._last_fetch_times:
+                    del self._last_fetch_times[meta]
+                clear, regenerate = True, True
+
+        for item in items_to_remove:
+            self._index_file_cache.remove(item["cache_key"])
+            del self._local_index_cache[item["url"]]
+        return clear, regenerate
 
     def _fetch_and_cache_index(self, mirror_metadata: MirrorMetadata, cache_entry={}):
         """Fetch a buildcache index file from a remote mirror and cache it.
