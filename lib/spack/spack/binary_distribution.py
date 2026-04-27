@@ -111,6 +111,7 @@ from .url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
+from .vendor.typing_extensions import TypedDict
 
 
 class BuildCacheDatabase(spack.database.Database):
@@ -170,6 +171,12 @@ class _LastFetch(NamedTuple):
     succeeded: bool
 
 
+class _LocalIndexCache(TypedDict, total=False):
+    index_hash: str
+    index_path: str
+    etag: str
+
+
 class BinaryCacheIndex:
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
@@ -196,7 +203,7 @@ class BinaryCacheIndex:
         self._index_file_cache_initialized = False
 
         # stores a map of mirror URL and version layout to index hash and cache key (index path)
-        self._local_index_cache: dict[str, dict] = {}
+        self._local_index_cache: dict[str, _LocalIndexCache] = {}
 
         # hashes of remote indices already ingested into the concrete spec
         # cache (_mirrors_for_spec)

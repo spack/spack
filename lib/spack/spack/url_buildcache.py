@@ -1380,7 +1380,7 @@ class MirrorMetadata:
         return hash((self.url, self.version, self.view))
 
     @classmethod
-    def from_string(cls, s: str):
+    def from_string(cls, s: str) -> "MirrorMetadata":
         m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
         if not m:
             raise MirrorMetadataError(f"Malformed string {s}")
