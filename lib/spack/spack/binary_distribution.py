@@ -432,8 +432,7 @@ class BinaryCacheIndex:
                 clear, regenerate = True, True
 
         for local_index_key, index_file_key, meta in items_to_remove:
-            if meta in self._last_fetch_times:
-                del self._last_fetch_times[meta]
+            self._last_fetch_times.pop(meta, None)
             self._index_file_cache.remove(index_file_key)
             del self._local_index_cache[local_index_key]
 
