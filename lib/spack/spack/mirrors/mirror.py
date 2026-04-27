@@ -480,6 +480,8 @@ class MirrorCollection(Mapping[str, Mirror]):
         return self._mirrors[item]
 
     def display(self) -> None:
+        if not self._mirrors:
+            return
         max_len = max(len(mirror.name) for mirror in self._mirrors.values())
         for mirror in self._mirrors.values():
             mirror.display(max_len)
