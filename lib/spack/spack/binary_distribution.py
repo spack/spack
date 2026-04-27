@@ -413,6 +413,7 @@ class BinaryCacheIndex:
                 continue
 
         # All versions reported no index found. This is not a failure
+        warnings.warn(f"the mirror at {url} cannot be used in concretization (no index found)")
         return _MirrorIndexResult(
             succeeded=True, regenerate=False, had_cache_entry=False, error=None
         )
