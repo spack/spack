@@ -476,7 +476,7 @@ class BinaryIndexCache:
             if not web_util.url_exists(index_url):
                 raise BuildcacheIndexNotExists(f"Index not found in cache {index_url}")
 
-        fetcher: IndexFetcher = get_index_fetcher(scheme, mirror_metadata, cache_entry)
+        fetcher: IndexHandler = get_index_fetcher(scheme, mirror_metadata, cache_entry)
         result = fetcher.conditional_fetch()
 
         # Nothing to do
@@ -2570,7 +2570,7 @@ class BuildcacheIndexNotExists(Exception):
 FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fresh")
 
 
-class IndexFetcher:
+class IndexHandler:
     def conditional_fetch(self) -> FetchIndexResult:
         raise NotImplementedError(f"{self.__class__.__name__} is abstract")
 
@@ -2616,11 +2616,11 @@ class IndexFetcher:
         return (computed_hash, blob_result)
 
 
-class DefaultIndexFetcherV2(IndexFetcher):
+class DefaultIndexHandlerV2(IndexHandler):
     """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
 
-    def __init__(self, url, local_hash, urlopen=web_util.urlopen):
-        self.url = url
+    def __init__(self, mirror_metadata, local_hash, urlopen=web_util.urlopen):
+        self.url = mirror_metadata.url
         self.local_hash = local_hash
         self.urlopen = urlopen
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
@@ -2687,11 +2687,11 @@ class DefaultIndexFetcherV2(IndexFetcher):
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
-class EtagIndexFetcherV2(IndexFetcher):
+class EtagIndexHandlerV2(IndexHandler):
     """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
 
-    def __init__(self, url, etag, urlopen=web_util.urlopen):
-        self.url = url
+    def __init__(self, mirror_metadata, etag, urlopen=web_util.urlopen):
+        self.url = mirror_metadata.url
         self.etag = etag
         self.urlopen = urlopen
 
@@ -2730,7 +2730,7 @@ class EtagIndexFetcherV2(IndexFetcher):
         )
 
 
-class OCIIndexFetcher(IndexFetcher):
+class OCIIndexHandler(IndexHandler):
     def __init__(self, mirror_metadata: MirrorMetadata, local_hash, urlopen=None) -> None:
         self.local_hash = local_hash
         self.ref = spack.oci.image.ImageReference.from_url(mirror_metadata.url)
@@ -2784,7 +2784,7 @@ class OCIIndexFetcher(IndexFetcher):
         return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
 
 
-class DefaultIndexFetcher(IndexFetcher):
+class DefaultIndexHandler(IndexHandler):
     """Fetcher for buildcache index, cache invalidation via manifest contents"""
 
     def __init__(self, mirror_metadata: MirrorMetadata, local_hash, urlopen=web_util.urlopen):
@@ -2832,10 +2832,10 @@ class DefaultIndexFetcher(IndexFetcher):
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
-class EtagIndexFetcher(IndexFetcher):
+class EtagIndexHandler(IndexHandler):
     """Fetcher for buildcache index, cache invalidation via ETags headers
 
-    This class differs from the :class:`DefaultIndexFetcher` in the following ways:
+    This class differs from the :class:`DefaultIndexHandler` in the following ways:
 
     1. It is provided with an etag value on creation, rather than an index checksum value. Note
     that since we never start out with an etag, the default fetcher must have been used initially
@@ -2892,23 +2892,23 @@ class EtagIndexFetcher(IndexFetcher):
 
 def get_index_fetcher(
     scheme: str, mirror_metadata: MirrorMetadata, cache_entry: Dict[str, str]
-) -> IndexFetcher:
+) -> IndexHandler:
     if scheme == "oci":
         # TODO: Actually etag and OCI are not mutually exclusive...
-        return OCIIndexFetcher(mirror_metadata, cache_entry.get("index_hash", None))
+        return OCIIndexHandler(mirror_metadata, cache_entry.get("index_hash", None))
     elif cache_entry.get("etag"):
         if mirror_metadata.version < 3:
-            return EtagIndexFetcherV2(mirror_metadata.url, cache_entry["etag"])
+            return EtagIndexHandlerV2(mirror_metadata, cache_entry["etag"])
         else:
-            return EtagIndexFetcher(mirror_metadata, cache_entry["etag"])
+            return EtagIndexHandler(mirror_metadata, cache_entry["etag"])
 
     else:
         if mirror_metadata.version < 3:
-            return DefaultIndexFetcherV2(
-                mirror_metadata.url, local_hash=cache_entry.get("index_hash", None)
+            return DefaultIndexHandlerV2(
+                mirror_metadata, local_hash=cache_entry.get("index_hash", None)
             )
         else:
-            return DefaultIndexFetcher(
+            return DefaultIndexHandler(
                 mirror_metadata, local_hash=cache_entry.get("index_hash", None)
             )
 

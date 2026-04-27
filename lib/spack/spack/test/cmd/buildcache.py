@@ -1026,7 +1026,7 @@ def read_specs_in_index(mirror_directory, view):
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
+    fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return set([h for h in db_dict["database"]["installs"]])
