@@ -735,7 +735,7 @@ class TestStage:
         assert spack.stage._resolve_paths([path_with_user]) == [path_with_user]
 
         canonicalized_tempdir = canonicalize_path("$tempdir")
-        temp_has_user = user in canonicalized_tempdir.split(os.sep)
+        temp_has_user = any(user in part for part in pathlib.Path(canonicalized_tempdir).parts)
         paths = [
             os.path.join("$tempdir", "stage"),
             os.path.join("$tempdir", "$user"),

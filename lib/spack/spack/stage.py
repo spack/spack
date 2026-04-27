@@ -7,6 +7,7 @@ import glob
 import hashlib
 import io
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -174,7 +175,7 @@ def _resolve_paths(candidates):
     """
     temp_path = sup.canonicalize_path("$tempdir")
     user = sup.get_user()
-    tmp_has_usr = user in temp_path.split(os.path.sep)
+    tmp_has_usr = any(user in part for part in pathlib.Path(temp_path).parts)
 
     paths = []
     for path in candidates:

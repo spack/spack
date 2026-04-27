@@ -12,6 +12,7 @@ import getpass
 import os
 import pathlib
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -49,6 +50,55 @@ def get_user():
         return getpass.getuser()
 
 
+def get_tempdir():
+    """Get or create a per-user temporary directory for Spack.
+
+    We expect to be able to create a directory called ``spack-$user``
+    within the system-provided temporary directory that is owned
+    just by the user, and raise an error if we can't.
+
+    Returns:
+        str: Path to a secure temporary directory
+    """
+    system_tmp = tempfile.gettempdir()
+    if sys.platform == "win32":
+        return system_tmp
+
+    username = get_user()
+    system_tmp = pathlib.Path(system_tmp)
+    candidates = []
+    if username in system_tmp.parts:
+        candidates.append(os.path.join(system_tmp, "spack"))
+    candidates.append(os.path.join(system_tmp, f"spack-{username}"))
+    user_uid = os.getuid()
+
+    def make(path):
+        try:
+            os.mkdir(path, 0o700)
+        except FileExistsError:
+            stat_info = os.lstat(path)
+            if stat_info.st_uid != user_uid:
+                raise OSError(f"Intended Spack tempdir {path} not owned by {user_uid}")
+            if not stat.S_ISDIR(stat_info.st_mode):
+                raise OSError(f"{path} is not a directory")
+            if (stat_info.st_mode & 0o777) != 0o700:
+                raise OSError(
+                    f"Intended Spack tempdir {path} does not "
+                    f"have desired permissions {oct(stat_info.st_mode)}"
+                )
+
+        return path
+
+    for x in candidates[:-1]:
+        try:
+            return make(x)
+        except OSError as e:
+            tty.debug(f"tempdir candidate creation failed: {x}\n{str(e)}")
+            pass
+
+    return make(candidates[-1])
+
+
 # return value for replacements with no match
 NOMATCH = object()
 
@@ -65,7 +115,7 @@ def replacements():
     return {
         "spack": lambda: spack.paths.prefix,
         "user": lambda: get_user(),
-        "tempdir": lambda: tempfile.gettempdir(),
+        "tempdir": lambda: get_tempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
         "architecture": lambda: arch,

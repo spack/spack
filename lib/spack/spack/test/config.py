@@ -456,7 +456,10 @@ def test_substitute_user_cache(mock_low_high_config):
 
 
 def test_substitute_tempdir(mock_low_high_config):
-    tempdir = tempfile.gettempdir()
+    if sys.platform == "win32":
+        tempdir = tempfile.gettempdir()
+    else:
+        tempdir = str(pathlib.Path(tempfile.gettempdir()) / f"spack-{spack_path.get_user()}")
     assert tempdir == spack_path.canonicalize_path("$tempdir")
     assert os.path.join(tempdir, "foo", "bar", "baz") == spack_path.canonicalize_path(
         os.path.join("$tempdir", "foo", "bar", "baz")
