@@ -13,6 +13,7 @@ import spack.database as spack_db
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -74,7 +75,7 @@ class MigrationException(spack.error.SpackError):
 
 
 def _migrate_spec(
-    s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bool = False, signing_key: str = ""
+    s: spack.spec.Spec, mirror_url: str, tmpdir: str, notary: Optional[Notary] = None
 ) -> MigrateSpecResult:
     """Parallelizable function to migrate a single spec"""
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
@@ -82,7 +83,7 @@ def _migrate_spec(
     # Check if the spec file exists in the new location and exit early if so
 
     v3_cache_class = get_url_buildcache_class(layout_version=3)
-    v3_cache_entry = v3_cache_class(mirror_url, s, allow_unsigned=unsigned)
+    v3_cache_entry = v3_cache_class(mirror_url, s, notary=notary)
     exists = v3_cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     v3_cache_entry.destroy()
 
@@ -95,7 +96,7 @@ def _migrate_spec(
         url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig"))
     ]
 
-    if unsigned:
+    if notary:
         v2_metadata_urls.append(
             url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json"))
         )
@@ -115,7 +116,7 @@ def _migrate_spec(
 
     spec_dict = {}
 
-    if unsigned:
+    if notary:
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if v2_spec_url.endswith(".sig"):
@@ -229,14 +230,19 @@ def _migrate_spec(
         # line length.
 
     # Possibly sign the manifest
-    if not unsigned:
-        manifest_path = sign_file(signing_key, manifest_path)
+    if notary:
+        signature_path, manifest_path = notary.sign(manifest_path)
 
     v3_manifest_url = v3_cache_class.get_manifest_url(s, mirror_url)
 
     # Push the manifest
     try:
-        web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True)
+        if signature_path == manifest_path:
+            web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True)
+        else:
+            # Don't handle detached signature migration right now
+            raise Exception
+
     except Exception:
         return MigrateSpecResult(False, f"Failed to push manifest for {print_spec}")
 
@@ -253,10 +259,10 @@ def migrate(
     will attempt to verify signatures and re-sign specs, and will fail if not
     able to do so.  If delete_existing is True, spack will delete the original
     contents of the mirror once the migration is complete."""
-    signing_key = ""
+    notary = None
     if not unsigned:
         try:
-            signing_key = spack.binary_distribution.select_signing_key()
+            notary = spack.notary.select_notary(mirror)
         except (
             spack.binary_distribution.NoKeyException,
             spack.binary_distribution.PickKeyException,
@@ -300,7 +306,7 @@ def migrate(
         # Run the tasks in parallel if possible
         executor = spack.util.parallel.make_concurrent_executor()
         migrate_futures = [
-            executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key)
+            executor.submit(_migrate_spec, spec, mirror_url, tmpdir, notary)
             for spec in specs_to_migrate
         ]
 
@@ -334,11 +340,11 @@ def migrate(
             spack.binary_distribution._push_index(db, index_tmpdir, mirror_url)
 
             # Push the public part of the signing key
-            if not unsigned:
+            if notary:
                 keys_tmpdir = os.path.join(tmpdir, "keys")
                 os.mkdir(keys_tmpdir)
                 spack.binary_distribution._url_push_keys(
-                    mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir
+                    mirror_url, keys=notary.get_keys(), update_index=True, tmpdir=keys_tmpdir
                 )
         else:
             tty.warn("No specs migrated, did you mean to perform an unsigned migration instead?")

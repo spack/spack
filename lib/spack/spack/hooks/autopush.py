@@ -5,6 +5,7 @@
 import spack.binary_distribution
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 
 
 def post_install(spec, explicit):
@@ -21,9 +22,9 @@ def post_install(spec, explicit):
 
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
-        signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
+        notary = spack.notary.select_notary(mirror) if mirror.signed else None
         with spack.binary_distribution.make_uploader(
-            mirror=mirror, force=True, signing_key=signing_key
+            mirror=mirror, force=True, notary=notary
         ) as uploader:
             uploader.push_or_raise([spec])
         tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")

@@ -19,6 +19,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.oci.image
 import spack.oci.oci
 import spack.spec
@@ -499,9 +500,7 @@ def push_fn(args):
         unsigned = True
 
     # Select a signing key, or None if unsigned.
-    signing_key = (
-        None if unsigned else (args.key or spack.binary_distribution.select_signing_key())
-    )
+    signing_key = None if unsigned else spack.notary.select_notary(mirror, args.key)
 
     specs = _specs_to_be_packaged(
         roots,

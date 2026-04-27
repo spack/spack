@@ -8,6 +8,7 @@ from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Unio
 
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.util.gpg
 import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -390,6 +391,9 @@ class Mirror:
 
     def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
+
+    def get_signing_type(self, direction: str) -> spack.util.gpg.Signature:
+        return self._get_value("signing_type", direction)
 
 
 class MirrorCollection(Mapping[str, Mirror]):

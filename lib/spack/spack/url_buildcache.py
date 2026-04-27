@@ -32,6 +32,7 @@ import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.notary import Notary
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
@@ -208,12 +209,15 @@ class URLBuildcacheEntry:
     }
 
     def __init__(
-        self, mirror_url: str, spec: Optional[spack.spec.Spec] = None, allow_unsigned: bool = False
+        self,
+        mirror_url: str,
+        spec: Optional[spack.spec.Spec] = None,
+        notary: Optional[Notary] = None,
     ):
         """Lazily initialize the object"""
         self.mirror_url: str = mirror_url
         self.spec: Optional[spack.spec.Spec] = spec
-        self.allow_unsigned: bool = allow_unsigned
+        self.notary = notary
         self.manifest: Optional[BuildcacheManifest] = None
         self.remote_manifest_url: str = ""
         self.stages: Dict[BlobRecord, spack.stage.Stage] = {}
@@ -455,7 +459,7 @@ class URLBuildcacheEntry:
         )
         # Read the signature (signatures are never signed)
         manifest = URLBuildcacheEntry.read_manifest_from_url(
-            sig_manifest_url, mirror_url, verify=False
+            sig_manifest_url, mirror_url, notary=None
         )
         sigs = manifest.get_blob_records(cls.component_to_media_type(BuildcacheComponent.SIG))
 
@@ -468,7 +472,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def read_manifest_from_url(
-        cls, manifest_url: str, mirror_url: str, verify: bool = True
+        cls, manifest_url: str, mirror_url: str, notary: Optional[Notary] = None
     ) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest."""
         manifest = None
@@ -483,14 +487,14 @@ class URLBuildcacheEntry:
         if not manifest_contents:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
 
-        if verify:
+        if notary:
             # If the manifest isn't cleartext signed, look for detached signatures
             signature = None
             if not spack.util.gpg.is_clearsig(manifest_contents):
                 signature = cls._fetch_detached_sig(manifest_contents, mirror_url)
 
             # Try to verify and raise if we fail
-            if not try_verify(manifest_contents, signature):
+            if not try_verify(notary, manifest_contents, signature):
                 raise NoVerifyException("Signature could not be verified")
 
         # Extract the contents of the manifest
@@ -526,7 +530,7 @@ class URLBuildcacheEntry:
 
         self.remote_manifest_url = manifest_url
         self.manifest = self.read_manifest_from_url(
-            manifest_url, self.mirror_url, verify=not self.allow_unsigned
+            manifest_url, self.mirror_url, notary=self.notary
         )
         return self.manifest
 
@@ -622,13 +626,16 @@ class URLBuildcacheEntry:
             # line length.
 
         if signing_key:
-            manifest_path = sign_file(signing_key, manifest_path)
+            manifest_path, signature_path = sign_file(
+                signing_key, manifest_path, sigtype=self.sigtype
+            )
 
         manifest_destination_url = url_util.join(
             mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
         )
 
         web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
+        web_util.push_to_url()
 
     @classmethod
     def push_local_file_as_blob(
@@ -678,7 +685,7 @@ class URLBuildcacheEntry:
         checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        signing_key: Optional[str],
+        signing_key: Optional[Notary],
     ) -> None:
         """Convenience method to push tarball, specfile, and manifest to the remote mirror
 
@@ -768,12 +775,17 @@ class URLBuildcacheEntry:
 
         # possibly sign the manifest
         if signing_key:
-            manifest_path = sign_file(signing_key, manifest_path)
+            signature_path, manifest_path = signing_key.sign(manifest_path)
 
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
         # even if we deleted the pre-existing one.
-        web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=False)
+        web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=Falseb)
+        if signature_path != manifest_path:
+            # This is a detached style signature, upload as a sig
+            web_util.push_to_url(
+                signature_path, self.signature_url_from_path(manifest_path), keeep_original=False
+            )
 
     def destroy(self):
         """Destroy any existing stages"""
@@ -810,12 +822,12 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         self,
         push_url_base: str,
         spec: Optional[spack.spec.Spec] = None,
-        allow_unsigned: bool = False,
+        notary: Optional[Notary] = None,
     ):
         """Lazily initialize the object"""
         self.mirror_url: str = push_url_base
         self.spec: Optional[spack.spec.Spec] = spec
-        self.allow_unsigned: bool = allow_unsigned
+        self.notary: bool = notary
 
         self.has_metadata: bool = False
         self.has_tarball: bool = False
@@ -917,7 +929,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         if not self.remote_spec_url:
             raise BuildcacheEntryError(f"Mirror {self.mirror_url} does not have metadata for spec")
 
-        if not self.allow_unsigned and self.has_unsigned:
+        if not self.notary and self.has_unsigned:
             raise BuildcacheEntryError(
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
@@ -936,7 +948,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.local_specfile_path = self.spec_stage.save_filename
 
-        if not self.allow_unsigned and not try_verify(self.local_specfile_path):
+        if not self.notary and not try_verify(self.notary, self.local_specfile_path):
             raise NoVerifyException(f"Signature on {self.remote_spec_url} could not be verified")
 
         # Check spec file for validity and read it, or else cleanup and exit early
@@ -1146,7 +1158,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, notary=None)
         cache_entry.read_manifest(manifest_url=manifest_path)
         return cache_entry
 
@@ -1223,7 +1235,7 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Bui
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
     def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, notary=None)
         cache_entry.read_manifest(manifest_url)
         return cache_entry
 
@@ -1368,16 +1380,9 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     return spec_dict, layout_version
 
 
-def sign_file(key: str, file_path: str) -> str:
-    """sign and return the path to the signed file"""
-    signed_file_path = f"{file_path}.sig"
-    spack.util.gpg.sign(key, file_path, signed_file_path, clearsign=True)
-    return signed_file_path
-
-
-def try_verify(data: str, sig: Optional[str] = None):
-    """Utility function to attempt to verify a local file.  Assumes the
-    file is a clearsigned signature file.
+def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
+    """Utility function to attempt to verify a local file. Handles translating
+    in memory data to on disc layout needed by the notary
 
     Args:
         specfile_path (str): Path to file to be verified.
@@ -1405,9 +1410,11 @@ def try_verify(data: str, sig: Optional[str] = None):
             else:
                 sig_path = sig
 
-            spack.util.gpg.verify(sig_path, file=data_path, suppress_warnings=suppress)
+            valid, _ = notary.verify(sig_path, file=data_path, suppress_warnings=suppress)
         else:
-            spack.util.gpg.verify(data_path, suppress_warnings=suppress)
+            valid, _ = notary.verify(data_path, suppress_warnings=suppress)
+
+        return valid
     except Exception:
         return False
     finally:

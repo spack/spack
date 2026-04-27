@@ -77,6 +77,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.filesystem import mkdirp
+from spack.notary import Notary
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -637,20 +638,6 @@ def warn_v2_layout(mirror_url: str, action: str) -> bool:
     return True
 
 
-def select_signing_key() -> str:
-    keys = spack.util.gpg.signing_keys()
-    num = len(keys)
-    if num > 1:
-        raise PickKeyException(str(keys))
-    elif num == 0:
-        raise NoKeyException(
-            "No default key available for signing.\n"
-            "Use spack gpg init and spack gpg create"
-            " to create a default key."
-        )
-    return keys[0]
-
-
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: str = ""):
     """Generate the index, compute its hash, and push the files to the mirror"""
     index_json_path = os.path.join(temp_dir, spack.database.INDEX_JSON_FILE)
@@ -976,12 +963,12 @@ def prefixes_to_relocate(spec):
 
 
 def _url_upload_tarball_and_specfile(
-    spec: spack.spec.Spec, tmpdir: str, cache_entry: URLBuildcacheEntry, signing_key: Optional[str]
+    spec: spack.spec.Spec, tmpdir: str, cache_entry: URLBuildcacheEntry, notary: Optional[Notary]
 ):
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
 
-    cache_entry.push_binary_package(spec, tarball, "sha256", checksum, tmpdir, signing_key)
+    cache_entry.push_binary_package(spec, tarball, "sha256", checksum, tmpdir, notary)
 
 
 class Uploader:
@@ -1087,11 +1074,11 @@ class URLUploader(Uploader):
         mirror: spack.mirrors.mirror.Mirror,
         force: bool,
         update_index: bool,
-        signing_key: Optional[str],
+        notary: Optional[Notary],
     ) -> None:
         super().__init__(mirror, force, update_index)
         self.url = mirror.push_url
-        self.signing_key = signing_key
+        self.notary = notary
 
     def push(
         self, specs: List[spack.spec.Spec]
@@ -1101,7 +1088,7 @@ class URLUploader(Uploader):
             out_url=self.url,
             force=self.force,
             update_index=self.update_index,
-            signing_key=self.signing_key,
+            notary=self.notary,
             tmpdir=self.tmpdir,
             executor=self.executor,
         )
@@ -1111,7 +1098,7 @@ def make_uploader(
     mirror: spack.mirrors.mirror.Mirror,
     force: bool = False,
     update_index: bool = False,
-    signing_key: Optional[str] = None,
+    notary: Optional[Notary] = None,
     base_image: Optional[str] = None,
 ) -> Uploader:
     """Builder for the appropriate uploader based on the mirror type"""
@@ -1120,9 +1107,7 @@ def make_uploader(
             mirror=mirror, force=force, update_index=update_index, base_image=base_image
         )
     else:
-        return URLUploader(
-            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key
-        )
+        return URLUploader(mirror=mirror, force=force, update_index=update_index, notary=notary)
 
 
 def _format_spec(spec: spack.spec.Spec) -> str:
@@ -1169,7 +1154,7 @@ class FancyProgress:
 def _url_push(
     specs: List[spack.spec.Spec],
     out_url: str,
-    signing_key: Optional[str],
+    notary: Optional[Notary],
     force: bool,
     update_index: bool,
     tmpdir: str,
@@ -1182,7 +1167,7 @@ def _url_push(
 
     exists_futures = [
         executor.submit(
-            _exists_in_buildcache, spec, out_url, allow_unsigned=False if signing_key else True
+            _exists_in_buildcache, spec, out_url, allow_unsigned=False if notary else True
         )
         for spec in specs
     ]
@@ -1215,11 +1200,7 @@ def _url_push(
 
     upload_futures = [
         executor.submit(
-            _url_upload_tarball_and_specfile,
-            spec,
-            tmpdir,
-            cache_entries[spec.dag_hash()],
-            signing_key,
+            _url_upload_tarball_and_specfile, spec, tmpdir, cache_entries[spec.dag_hash()], notary
         )
         for spec in specs_to_upload
     ]
@@ -1245,10 +1226,12 @@ def _url_push(
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_class.maybe_push_layout_json(out_url)
 
-    if signing_key:
+    if notary:
         keys_tmpdir = os.path.join(tmpdir, "keys")
         os.mkdir(keys_tmpdir)
-        _url_push_keys(out_url, keys=[signing_key], update_index=update_index, tmpdir=keys_tmpdir)
+        _url_push_keys(
+            out_url, keys=notary.get_keys(), update_index=update_index, tmpdir=keys_tmpdir
+        )
 
     if update_index:
         index_tmpdir = os.path.join(tmpdir, "index")
@@ -2387,17 +2370,11 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
 
 def _url_push_keys(
     *mirrors: Union[spack.mirrors.mirror.Mirror, str],
-    keys: List[str],
+    keys: List[Tuple[str, pathlib.Path]],
     tmpdir: str,
     update_index: bool = False,
 ):
     """Upload pgp public keys to the given mirrors"""
-    keys = spack.util.gpg.public_keys(*(keys or ()))
-    files = [os.path.join(tmpdir, f"{key}.pub") for key in keys]
-
-    for key, file in zip(keys, files):
-        spack.util.gpg.export_keys(file, [key])
-
     cache_class = get_url_buildcache_class()
 
     for mirror in mirrors:
@@ -2406,7 +2383,7 @@ def _url_push_keys(
         tty.debug(f"Pushing public keys to {url_util.format(push_url)}")
         pushed_a_key = False
 
-        for key, file in zip(keys, files):
+        for key, file in keys:
             cache_class.push_local_file_as_blob(
                 local_file_path=file,
                 mirror_url=push_url,
@@ -2933,26 +2910,6 @@ class NoGpgException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
-
-
-class NoKeyException(spack.error.SpackError):
-    """
-    Raised when gpg has no default key added.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class PickKeyException(spack.error.SpackError):
-    """
-    Raised when multiple keys can be used to sign.
-    """
-
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
-        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super().__init__(err_msg)
 
 
 class NewLayoutException(spack.error.SpackError):
