@@ -34,6 +34,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -155,6 +156,13 @@ class FetchCacheError(Exception):
             err = errors[0]
             self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
         super().__init__(self.message)
+
+
+class _MirrorIndexResult(NamedTuple):
+    succeeded: bool
+    regenerate: bool
+    had_cache_entry: bool
+    error: Optional[Exception]
 
 
 class BinaryCacheIndex:
@@ -324,60 +332,85 @@ class BinaryCacheIndex:
         # If we have a cached index for a mirror which is no longer configured, remove it
         clear_cache, regenerate_cache = self._remove_stale_cache_entries(supported_mirror_versions)
 
-        ttl = spack.config.CONFIG.get("config:binary_index_ttl", 600)
-        fetch_errors: List[Exception] = []
-        all_methods_failed = True
-        now = time.time()
-
+        # Fetch or update the other indexes
+        errors, all_failed = [], True
         for (url, view), versions in supported_mirror_versions.items():
-            for version in versions:
-                meta = MirrorMetadata(url, version, view)
-                cache_entry = self._local_index_cache.get(str(meta))
+            result = self._fetch_mirror_index(url, view, versions=versions, cooldown=with_cooldown)
+            if result.error:
+                errors.append(result.error)
 
-                if cache_entry is not None:
-                    in_cooldown = (
-                        with_cooldown
-                        and ttl > 0
-                        and meta in self._last_fetch_times
-                        and now - self._last_fetch_times[meta][0] < ttl
-                    )
-                    if in_cooldown:
-                        if self._last_fetch_times[meta][1]:
-                            all_methods_failed = False
-                        break
+            if result.succeeded:
+                all_failed = False
 
-                try:
-                    needs_regen = self._fetch_and_cache_index(meta, cache_entry=cache_entry or {})
-                    self._last_fetch_times[meta] = (now, True)
-                    all_methods_failed = False
-                except FetchIndexError as e:
-                    fetch_errors.append(e)
-                    self._last_fetch_times[meta] = (now, False)
-                    break
-                except BuildcacheIndexNotExists:
-                    self._last_fetch_times[meta] = (now, False)
-                    # Binary caches are not required to have an index
-                    all_methods_failed = False
-                    continue
-
-                regenerate_cache |= needs_regen
-                # A new mirror only needs regeneration, not clearing of existing entries.
-                clear_cache |= needs_regen and cache_entry is not None
-                break
+            regenerate_cache |= result.regenerate
+            clear_cache |= result.regenerate and result.had_cache_entry
 
         self._write_local_index_cache()
 
-        if supported_mirror_versions and all_methods_failed:
-            raise FetchCacheError(fetch_errors)
+        if supported_mirror_versions and all_failed:
+            raise FetchCacheError(errors)
 
-        if fetch_errors:
+        if errors:
             warnings.warn(
                 "The following issues were ignored while updating the indices of binary caches:\n"
-                + str(FetchCacheError(fetch_errors))
+                + str(FetchCacheError(errors))
             )
 
         if regenerate_cache:
             self.regenerate_spec_cache(clear_existing=clear_cache)
+
+    def _fetch_mirror_index(
+        self, url: str, view: str, *, versions: List[int], cooldown: bool
+    ) -> _MirrorIndexResult:
+        """Fetches the index of a mirror, using a highest-version first approach, and returning
+        after the first success.
+        """
+        now = time.time()
+        ttl = spack.config.CONFIG.get_config("config").get("binary_index_ttl", 600)
+        for version in versions:
+            meta = MirrorMetadata(url, version, view)
+            cache_entry = self._local_index_cache.get(str(meta))
+
+            if cache_entry is not None and (
+                # Cache entry in cooldown
+                cooldown
+                and ttl > 0
+                and meta in self._last_fetch_times
+                and now - self._last_fetch_times[meta][0] < ttl
+            ):
+                return _MirrorIndexResult(
+                    succeeded=self._last_fetch_times[meta][1],
+                    regenerate=False,
+                    had_cache_entry=True,
+                    error=None,
+                )
+
+            try:
+                regenerate = self._fetch_and_cache_index(meta, cache_entry=cache_entry or {})
+                self._last_fetch_times[meta] = (now, True)
+                return _MirrorIndexResult(
+                    succeeded=True,
+                    regenerate=regenerate,
+                    had_cache_entry=cache_entry is not None,
+                    error=None,
+                )
+            except FetchIndexError as e:
+                self._last_fetch_times[meta] = (now, False)
+                return _MirrorIndexResult(
+                    succeeded=False,
+                    regenerate=False,
+                    had_cache_entry=cache_entry is not None,
+                    error=e,
+                )
+            except BuildcacheIndexNotExists:
+                # Try next lower layout version
+                self._last_fetch_times[meta] = (now, False)
+                continue
+
+        # All versions reported no index found. This is not a failure
+        return _MirrorIndexResult(
+            succeeded=True, regenerate=False, had_cache_entry=False, error=None
+        )
 
     def _remove_stale_cache_entries(
         self, supported_mirror_versions: Dict[Tuple[str, Any], List[int]]
