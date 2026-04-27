@@ -417,22 +417,20 @@ class BinaryCacheIndex:
     ) -> Tuple[bool, bool]:
         items_to_remove = []
         clear, regenerate = False, not self._mirrors_for_spec
-        for cache_key in self._local_index_cache:
-            meta = MirrorMetadata.from_string(cache_key)
+
+        for local_index_key in self._local_index_cache:
+            meta = MirrorMetadata.from_string(local_index_key)
             if meta.version not in supported_mirror_versions.get((meta.url, meta.view), ()):
-                items_to_remove.append(
-                    {
-                        "url": cache_key,
-                        "cache_key": self._local_index_cache[cache_key]["index_path"],
-                    }
-                )
-                if meta in self._last_fetch_times:
-                    del self._last_fetch_times[meta]
+                index_file_key = self._local_index_cache[local_index_key]["index_path"]
+                items_to_remove.append((local_index_key, index_file_key, meta))
                 clear, regenerate = True, True
 
-        for item in items_to_remove:
-            self._index_file_cache.remove(item["cache_key"])
-            del self._local_index_cache[item["url"]]
+        for local_index_key, index_file_key, meta in items_to_remove:
+            if meta in self._last_fetch_times:
+                del self._last_fetch_times[meta]
+            self._index_file_cache.remove(index_file_key)
+            del self._local_index_cache[local_index_key]
+
         return clear, regenerate
 
     def _fetch_and_cache_index(self, mirror_metadata: MirrorMetadata, cache_entry={}):
