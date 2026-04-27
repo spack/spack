@@ -382,9 +382,7 @@ class Mirror:
         tok = self._get_value("access_token_variable", direction)
         if tok:
             return os.environ.get(tok)
-        else:
-            return self._get_value("access_token", direction)
-        return None
+        return self._get_value("access_token", direction)
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
         pair = self._get_value("access_pair", direction)
