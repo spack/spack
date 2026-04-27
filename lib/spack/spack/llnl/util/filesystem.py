@@ -542,9 +542,6 @@ def get_owner_uid(path, err_msg=None) -> Union[str, int]:
      owning user.
 
     """
-    if not os.path.exists(path):
-        mkdirp(path, mode=stat.S_IRWXU)
-
     if sys.platform != "win32":
         p_stat = os.lstat(path)
         owner_uid = p_stat.st_uid
