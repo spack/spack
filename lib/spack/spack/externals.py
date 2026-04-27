@@ -16,11 +16,15 @@ into the intermediate representation.
 """
 
 import re
+import sys
 import uuid
 import warnings
 from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Union
 
-from spack.vendor.typing_extensions import TypedDict
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from spack.vendor.typing_extensions import TypedDict
 
 import spack.archspec
 import spack.deptypes

@@ -5,7 +5,10 @@
 import sys
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.traverse

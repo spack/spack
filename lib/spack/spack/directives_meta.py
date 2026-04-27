@@ -4,9 +4,13 @@
 
 import collections
 import functools
+import sys
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, TypeVar, Union
 
-from spack.vendor.typing_extensions import ParamSpec
+if sys.version_info >= (3, 10):
+    from typing import ParamSpec
+else:
+    from spack.vendor.typing_extensions import ParamSpec
 
 import spack.error
 import spack.repo

@@ -11,7 +11,10 @@ import sys
 from pathlib import Path, PurePath
 from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.error
 import spack.llnl.util.tty as tty

@@ -9,7 +9,10 @@ import shutil
 import sys
 from typing import List, Optional, overload
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang

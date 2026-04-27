@@ -57,7 +57,10 @@ from typing import (
     Union,
 )
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.binary_distribution
 import spack.build_environment

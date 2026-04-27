@@ -12,7 +12,10 @@ import sys
 import tempfile
 from typing import Callable, Dict, List, Optional
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.config
 import spack.directory_layout

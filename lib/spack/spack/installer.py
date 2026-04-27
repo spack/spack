@@ -40,7 +40,10 @@ from collections import defaultdict
 from gzip import GzipFile
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Union
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment

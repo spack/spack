@@ -3,9 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's edge types."""
 
+import sys
 from typing import Iterable, List, Tuple, Union
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 #: Type hint for the low-level dependency input (enum.Flag is too slow)
 DepFlag = int

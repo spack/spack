@@ -24,7 +24,10 @@ from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, Typ
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
 
-from spack.vendor.typing_extensions import ParamSpec
+if sys.version_info >= (3, 10):
+    from typing import ParamSpec
+else:
+    from spack.vendor.typing_extensions import ParamSpec
 
 import spack
 import spack.config

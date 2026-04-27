@@ -11,9 +11,13 @@ calls can be very expensive.
 
 """
 
+import sys
 from typing import TYPE_CHECKING, Any
 
-from spack.vendor.typing_extensions import Protocol
+if sys.version_info >= (3, 8):
+    from typing import Protocol
+else:
+    from spack.vendor.typing_extensions import Protocol
 
 if TYPE_CHECKING:
 

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 from collections import defaultdict, deque
 from typing import (
     TYPE_CHECKING,
@@ -18,7 +19,10 @@ from typing import (
     overload,
 )
 
-from spack.vendor.typing_extensions import Literal
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack.deptypes as dt
 

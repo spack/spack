@@ -14,7 +14,11 @@ import warnings
 from typing import Optional, Sequence, Union
 
 import spack.vendor.archspec.cpu
-from spack.vendor.typing_extensions import TypedDict
+
+if sys.version_info >= (3, 8):
+    from typing import TypedDict
+else:
+    from spack.vendor.typing_extensions import TypedDict
 
 import spack.llnl.util.filesystem as fs
 import spack.platforms

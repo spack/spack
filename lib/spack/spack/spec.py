@@ -58,6 +58,7 @@ import pathlib
 import platform
 import re
 import socket
+import sys
 import warnings
 from typing import (
     Any,
@@ -75,7 +76,11 @@ from typing import (
 )
 
 import spack.vendor.archspec.cpu
-from spack.vendor.typing_extensions import Literal
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from spack.vendor.typing_extensions import Literal
 
 import spack
 import spack.aliases
