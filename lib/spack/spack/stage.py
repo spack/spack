@@ -124,9 +124,9 @@ def create_stage_root(path: str) -> None:
                     f"Expected user {user_uid} to own {p}, but it is owned by {owner_uid}",
                 )
 
-            # And only the user should be able to write to them
-            p_stat = os.stat(p)
-            if (p_stat.st_mode & stat.S_IRWXU) != stat.S_IRWXU:
+            # And only the user should be able to write or read it
+            p_stat = os.lstat(p)
+            if (p_stat.st_mode & 0o777) != 0o700:
                 raise OSError(
                     errno.EACCES,
                     f"Cannot create stage root {path}: {p} does not have {oct(stat.S_IRWXU)}",
