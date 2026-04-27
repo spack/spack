@@ -4,7 +4,7 @@
 import operator
 import os
 import urllib.parse
-from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -457,7 +457,7 @@ class MirrorCollection(Mapping[str, Mirror]):
         return None
 
     @staticmethod
-    def from_json(stream: IO, name: Optional[str] = None) -> "MirrorCollection":
+    def from_json(stream) -> "MirrorCollection":
         try:
             d = sjson.load(stream)
             return MirrorCollection(d)
