@@ -791,7 +791,7 @@ class ViewDescriptor:
                 ("specs", [(spec.dag_hash(), spec.prefix) for spec in sorted(specs)]),
             ]
         )
-        contents = sjson.dump(d)
+        contents = sjson.dumps(d)
         return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):

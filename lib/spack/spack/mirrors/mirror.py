@@ -85,7 +85,10 @@ class Mirror:
         return f"Mirror(name={self._name!r}, data={self._data!r})"
 
     def to_json(self, stream=None):
-        return sjson.dump(self.to_dict(), stream)
+        if stream is None:
+            return sjson.dumps(self.to_dict())
+        sjson.dump(self.to_dict(), stream)
+        return None
 
     def to_yaml(self, stream=None):
         return syaml.dump(self.to_dict(), stream)
@@ -448,7 +451,10 @@ class MirrorCollection(Mapping[str, Mirror]):
         return self._mirrors == other._mirrors
 
     def to_json(self, stream=None):
-        return sjson.dump(self.to_dict(True), stream)
+        if stream is None:
+            return sjson.dumps(self.to_dict(True))
+        sjson.dump(self.to_dict(True), stream)
+        return None
 
     def to_yaml(self, stream=None):
         return syaml.dump(self.to_dict(True), stream)

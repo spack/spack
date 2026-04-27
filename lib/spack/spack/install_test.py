@@ -858,8 +858,7 @@ class TestSuite:
     def content_hash(self) -> str:
         """The hash used to uniquely identify the test suite."""
         if not self._hash:
-            json_text = sjson.dump(self.to_dict())
-            assert json_text is not None, f"{__name__} unexpected value for 'json_text'"
+            json_text = sjson.dumps(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
             b32_hash = b32_hash.decode("utf-8")

@@ -5,11 +5,11 @@
 """Simple wrapper around JSON to guarantee consistent use of load/dump."""
 
 import json
-from typing import Any, Dict, Optional
+from typing import IO, Any, Dict  # noqa: F401
 
 import spack.error
 
-__all__ = ["load", "dump", "SpackJSONError"]
+__all__ = ["load", "dump", "dumps", "SpackJSONError"]
 
 _json_dump_args = {"indent": None, "separators": (",", ":")}
 _pretty_dump_args = {"indent": "  ", "separators": (", ", ": ")}
@@ -22,13 +22,16 @@ def load(stream: Any) -> Dict:
     return json.load(stream)
 
 
-def dump(data: Dict, stream: Optional[Any] = None, pretty: bool = False) -> Optional[str]:
-    """Dump JSON with a reasonable amount of indentation and separation."""
+def dump(data: Dict, stream: IO, pretty: bool = False) -> None:
+    """Wrapper around json.dump with different default arguments"""
     dump_args = _pretty_dump_args if pretty else _json_dump_args
-    if stream is None:
-        return json.dumps(data, **dump_args)  # type: ignore[arg-type]
-    json.dump(data, stream, **dump_args)  # type: ignore[arg-type]
-    return None
+    json.dump(data, stream, **dump_args)
+
+
+def dumps(data: Dict, pretty: bool = False) -> str:
+    """Wrapper around json.dumps with different default arguments"""
+    dump_args = _pretty_dump_args if pretty else _json_dump_args
+    return json.dumps(data, **dump_args)
 
 
 class SpackJSONError(spack.error.SpackError):

@@ -193,7 +193,7 @@ class VerificationResults:
         return bool(self.errors)
 
     def json_string(self):
-        return sjson.dump(self.errors)
+        return sjson.dumps(self.errors)
 
     def __str__(self):
         res = ""
