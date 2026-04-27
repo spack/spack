@@ -128,10 +128,16 @@ def create_stage_root(path: str) -> None:
         if not sys.platform == "win32":
             # And only the user should be able to write or read it
             p_stat = os.lstat(p)
+            err_prefix = f"Cannot create stage root {path}:"
+            if not stat.S_ISDIR(p_stat.st_mode):
+                raise OSError(
+                    errno.EACCES,
+                    f"{err_prefix} {p} is not a directory",
+                )
             if (p_stat.st_mode & 0o777) != 0o700:
                 raise OSError(
                     errno.EACCES,
-                    f"Cannot create stage root {path}: {p} does not have {oct(stat.S_IRWXU)}",
+                    f"{err_prefix} {p} does not have {oct(0o700)} permissions",
                 )
 
     spack_src_subdir = os.path.join(path, _source_path_subdir)
