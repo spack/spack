@@ -57,7 +57,7 @@ class Mirror:
         try:
             return Mirror(sjson.load(stream), name)
         except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror:", str(e)) from e
+            raise sjson.SpackJSONError("error parsing JSON mirror:", e) from e
 
     @staticmethod
     def from_local_path(path: str):
@@ -465,7 +465,7 @@ class MirrorCollection(Mapping[str, Mirror]):
             d = sjson.load(stream)
             return MirrorCollection(d)
         except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror collection:", str(e)) from e
+            raise sjson.SpackJSONError("error parsing JSON mirror collection:", e) from e
 
     def to_dict(self, recursive=False):
         return syaml.syaml_dict(
