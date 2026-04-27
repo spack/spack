@@ -100,11 +100,15 @@ class OutputConfiguration(NamedTuple):
     out: Optional[io.IOBase]
     #: If True, stop after setup and don't solve
     setup_only: bool
+    #: If True, write the problem instance (facts) to out
+    facts: bool = True
+    #: If True, write the contents of the .lp rule files to out
+    rules: bool = False
 
 
 #: Default output configuration for a solve
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
-    timers=False, stats=False, out=None, setup_only=False
+    timers=False, stats=False, out=None, setup_only=False, facts=True, rules=False
 )
 
 
@@ -1106,16 +1110,11 @@ class PyclingoDriver:
         timer.stop("setup")
 
         timer.start("ordering")
-        # print the output with comments, etc. if the user asked
-        problem = problem_builder.asp_problem
-        if output.out is not None:
-            output.out.write("\n".join(problem))
+        # load control files to add to the input representation
+        control_file_paths = self._control_file_paths(control_files)
 
-        if output.setup_only:
-            return Result(specs), None, None
-
-        # strip the problem of comments and empty lines
-        problem = strip_asp_problem(problem)
+        # strip and order the problem so the output matches exactly what clingo receives
+        problem = strip_asp_problem(problem_builder.asp_problem)
         randomize = "SPACK_SOLVER_RANDOMIZATION" in os.environ
         if randomize:
             # create a shuffled copy -- useful for understanding performance variation
@@ -1123,11 +1122,23 @@ class PyclingoDriver:
         else:
             problem.sort()  # sort for deterministic output
 
+        if output.facts and output.out is not None:
+            if randomize:
+                output.out.write("\n".join(problem))
+            else:
+                output.out.write("\n".join(problem_builder.asp_problem))
+        if output.rules and output.out is not None:
+            for path in control_file_paths:
+                output.out.write(f"\n% ===== {os.path.basename(path)} =====\n")
+                with open(path, encoding="utf-8") as f:
+                    output.out.write(f.read())
+
+        if output.setup_only:
+            return Result(specs), None, None
+
         timer.stop("ordering")
 
         timer.start("cache-check")
-        # load control files to add to the input representation
-        control_file_paths = self._control_file_paths(control_files)
         cache_key = self._make_cache_key(problem, control_file_paths)
 
         result, concretization_stats = None, None
@@ -3961,6 +3972,8 @@ class Solver:
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
+        facts: bool = True,
+        rules: bool = False,
         allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """
@@ -3981,7 +3994,9 @@ class Solver:
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
+        output = OutputConfiguration(
+            timers=timers, stats=stats, out=out, setup_only=setup_only, facts=facts, rules=rules
+        )
 
         result = self.driver.solve(
             setup,
@@ -4010,6 +4025,8 @@ class Solver:
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
+        facts: bool = True,
+        rules: bool = False,
         allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
@@ -4037,7 +4054,9 @@ class Solver:
         setup.concretize_everything = False
 
         input_specs = specs
-        output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
+        output = OutputConfiguration(
+            timers=timers, stats=stats, out=out, setup_only=False, facts=facts, rules=rules
+        )
         while True:
             result, _, _ = self.driver.solve(
                 setup,
