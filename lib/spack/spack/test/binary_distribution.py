@@ -1488,3 +1488,20 @@ def test_mirror_metadata_with_view():
 
     with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")
+
+
+def test_update_warns_on_mirror_with_no_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
+    """Tests that BinaryCacheIndex.update() warns when a mirror has no index for any supported
+    layout version.
+    """
+    mirror_url = url_util.path_to_file_url(str(tmp_path / "mirror_dir"))
+    spack.config.set("mirrors", {"test": mirror_url})
+
+    def no_index(*args, **kwargs):
+        raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
+
+    binary_index = spack.binary_distribution.BinaryCacheIndex(str(tmp_path / "index_cache"))
+    monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
+
+    with pytest.warns(UserWarning, match="cannot be used in concretization"):
+        binary_index.update()
