@@ -229,9 +229,7 @@ class CDash(Reporter):
                     event["post_context"] = xml.sax.saxutils.escape(
                         "\n".join(event["post_context"])
                     )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
+                    if event["source_file"] is None:
                         event["source_file"] = ""
                         event["source_line_no"] = ""
                     else:

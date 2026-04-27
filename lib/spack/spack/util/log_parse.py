@@ -3,12 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import io
-from typing import List, TextIO, Tuple, Union
+from typing import List, Optional, TextIO, Tuple, Union
 
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.ctest_log_parser import BuildError, BuildWarning, CTestLogParser, LogEvent
 
 __all__ = ["parse_log_events", "make_log_context"]
+
+
+_PARSER: Optional[CTestLogParser] = None
 
 
 def parse_log_events(
@@ -26,24 +29,18 @@ def parse_log_events(
         two lists containing :class:`~spack.util.ctest_log_parser.BuildError` and
         :class:`~spack.util.ctest_log_parser.BuildWarning` objects, plus an optional
         :class:`~spack.util.ctest_log_parser.LogEvent` for the tail (None when ``tail=0``).
-
-    This is a wrapper around :class:`~spack.util.ctest_log_parser.CTestLogParser` that
-    lazily constructs a single ``CTestLogParser`` object.  This ensures
-    that all the regex compilation is only done once.
     """
-    parser = getattr(parse_log_events, "ctest_parser", None)
-    if parser is None:
-        parser = CTestLogParser(profile=profile)
-        setattr(parse_log_events, "ctest_parser", parser)
-
+    global _PARSER
+    if profile:
+        parser = CTestLogParser(profile=True)
+    elif _PARSER is None:
+        _PARSER = parser = CTestLogParser()
+    else:
+        parser = _PARSER
     result = parser.parse(stream, context, tail)
     if profile:
         parser.print_timings()
     return result
-
-
-#: lazily constructed CTest log parser
-parse_log_events.ctest_parser = None  # type: ignore[attr-defined]
 
 
 def make_log_context(log_events: List[LogEvent]) -> str:
