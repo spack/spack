@@ -542,22 +542,8 @@ def get_owner_uid(path, err_msg=None) -> Union[str, int]:
      owning user.
 
     """
-    if not os.path.exists(path):
-        mkdirp(path, mode=stat.S_IRWXU)
-
-        p_stat = os.stat(path)
-        if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
-            tty.error(
-                "Expected {0} to support mode {1}, but it is {2}".format(
-                    path, stat.S_IRWXU, p_stat.st_mode
-                )
-            )
-
-            raise OSError(errno.EACCES, err_msg.format(path, path) if err_msg else "")
-    else:
-        p_stat = os.stat(path)
-
     if sys.platform != "win32":
+        p_stat = os.lstat(path)
         owner_uid = p_stat.st_uid
     else:
         sid = win32security.GetFileSecurity(

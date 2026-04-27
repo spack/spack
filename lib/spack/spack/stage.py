@@ -113,16 +113,28 @@ def create_stage_root(path: str) -> None:
     if user_node:
         user_paths.insert(0, user_node)
 
+    if user_paths:
+        mkdirp(user_paths[-1], mode=stat.S_IRWXU)
     for p in user_paths:
-        # Ensure access controls of subdirs from `$user` on down are
-        # restricted to the user.
-        owner_uid = get_owner_uid(p)
-        if user_uid != owner_uid:
-            tty.warn(
-                "Expected user {0} to own {1}, but it is owned by {2}".format(
-                    user_uid, p, owner_uid
+        if not sys.platform == "win32":
+            # Ensure access controls of subdirs from `$user` on down are
+            # restricted to the user.
+            owner_uid = get_owner_uid(p)
+            if user_uid != owner_uid:
+                raise OSError(
+                    errno.EACCES,
+                    f"Expected user {user_uid} to own {p}, but it is owned by {owner_uid}",
                 )
-            )
+
+            # And only the user should be able to write or read it
+            p_stat = os.lstat(p)
+            err_prefix = f"Cannot create stage root {path}:"
+            if not stat.S_ISDIR(p_stat.st_mode):
+                raise OSError(errno.ENOTDIR, f"{err_prefix} {p} is not a directory")
+            if (p_stat.st_mode & 0o777) != 0o700:
+                raise OSError(
+                    errno.EACCES, f"{err_prefix} {p} does not have {oct(0o700)} permissions"
+                )
 
     spack_src_subdir = os.path.join(path, _source_path_subdir)
     # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
