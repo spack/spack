@@ -88,31 +88,23 @@ def test_mutate_internals_multiple_mutations():
     ev.create("test")
     env = ev.read("test")
 
-    root_name = "cmake-client"
+    root = "cmake-client+truthy os=debian6 %cmake@3.23.1 os=debian6"
     env.add(root_name)
     env.concretize()
 
     planned_mutations = [
-        ("cmake", "@3.23.1", "@3.4.3"),
-        ("cmake-client", "+truthy", "~truthy"),
-        ("platform=test", "os=debian6", "os=redhat6"),
+        ("cmake", "@3.4.3"),
+        ("cmake-client", "~truthy"),
+        ("platform=test", "os=redhat6"),
     ]
 
     orig_hash = next(env.roots()).dag_hash()
 
-    selectors = []
-    mutators = []
-
-    for selector, orig_constraint, mutated_constraint in planned_mutations:
-        selectors.append(spack.spec.Spec(selector))
-        mutators.append(spack.spec.Spec(mutated_constraint))
-        for spec in env.all_specs_generator():
-            if spec.satisfies(selector):
-                assert spec.satisfies(orig_constraint)
+    selectors, mutators = zip(*planned_mutations) 
 
     env.mutate(selectors=selectors, mutators=mutators)
 
-    for selector, orig_constraint, mutated_constraint in planned_mutations:
+    for selector, mutated_constraint in planned_mutations:
         for spec in env.all_specs_generator():
             if spec.satisfies(selector):
                 assert spec.satisfies(mutated_constraint)
