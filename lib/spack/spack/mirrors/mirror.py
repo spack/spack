@@ -9,7 +9,6 @@ from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Unio
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.util.path
-import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
@@ -53,13 +52,6 @@ class Mirror:
         return Mirror(syaml.load(stream), name)
 
     @staticmethod
-    def from_json(stream: Union[str, IO[str]], name: Optional[str] = None) -> "Mirror":
-        try:
-            return Mirror(sjson.load(stream), name)
-        except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror:", e) from e
-
-    @staticmethod
     def from_local_path(path: str) -> "Mirror":
         return Mirror(url_util.path_to_file_url(path))
 
@@ -83,18 +75,6 @@ class Mirror:
 
     def __repr__(self) -> str:
         return f"Mirror(name={self._name!r}, data={self._data!r})"
-
-    @overload
-    def to_json(self, stream: None = ...) -> str: ...
-
-    @overload
-    def to_json(self, stream: IO[str]) -> None: ...
-
-    def to_json(self, stream: Optional[IO[str]] = None) -> Optional[str]:
-        if stream is None:
-            return sjson.dumps(self.to_dict())
-        sjson.dump(self.to_dict(), stream)
-        return None
 
     @overload
     def to_yaml(self, stream: None = ...) -> str: ...
@@ -462,26 +442,6 @@ class MirrorCollection(Mapping[str, Mirror]):
         if not isinstance(other, MirrorCollection):
             return NotImplemented
         return self._mirrors == other._mirrors
-
-    @overload
-    def to_json(self, stream: None = ...) -> str: ...
-
-    @overload
-    def to_json(self, stream: IO[str]) -> None: ...
-
-    def to_json(self, stream: Optional[IO[str]] = None) -> Optional[str]:
-        if stream is None:
-            return sjson.dumps(self.to_dict(True))
-        sjson.dump(self.to_dict(True), stream)
-        return None
-
-    @staticmethod
-    def from_json(stream: Union[str, IO[str]]) -> "MirrorCollection":
-        try:
-            d = sjson.load(stream)
-            return MirrorCollection(d)
-        except Exception as e:
-            raise sjson.SpackJSONError("error parsing JSON mirror collection:", e) from e
 
     def to_dict(self, recursive: bool = False) -> Dict[str, Any]:
         return syaml.syaml_dict(
