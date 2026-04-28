@@ -189,10 +189,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def query_arguments(args):
     if args.only_missing and (args.deprecated or args.missing):
-        raise RuntimeError("cannot use --only-missing with --deprecated, or --missing")
+        args.subparser.error("cannot use --only-missing with --deprecated, or --missing")
 
     if args.only_deprecated and (args.deprecated or args.missing):
-        raise RuntimeError("cannot use --only-deprecated with --deprecated, or --missing")
+        args.subparser.error("cannot use --only-deprecated with --deprecated, or --missing")
 
     installed = InstallRecordStatus.INSTALLED
     if args.only_missing:

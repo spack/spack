@@ -66,7 +66,7 @@ def extensions(parser, args):
     # Checks
     spec = cmd.parse_specs(args.spec)
     if len(spec) > 1:
-        tty.die("Can only list extensions for one package.")
+        args.subparser.error("can only list extensions for one package")
 
     env = ev.active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)

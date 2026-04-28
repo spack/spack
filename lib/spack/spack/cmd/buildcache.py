@@ -456,7 +456,7 @@ def _specs_to_be_packaged(
 def push_fn(args):
     """create a binary package and push it to a mirror"""
     if args.specs and args.groups:
-        tty.die("--group and explicit specs are mutually exclusive")
+        args.subparser.error("--group and explicit specs are mutually exclusive")
 
     if args.groups:
         env = spack.cmd.require_active_env(args.subparser)
@@ -577,7 +577,7 @@ def push_fn(args):
 def install_fn(args):
     """install from a binary package"""
     if not args.specs:
-        tty.die("a spec argument is required to install from a buildcache")
+        args.subparser.error("a spec argument is required to install from a buildcache")
 
     query = spack.binary_distribution.BinaryCacheQuery(all_architectures=args.otherarch)
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
@@ -786,7 +786,7 @@ def sync_fn(args):
         return 0
 
     if args.src_mirror is None or args.dest_mirror is None:
-        tty.die("Provide mirrors to sync from and to.")
+        args.subparser.error("provide mirrors to sync from and to")
 
     src_mirror = args.src_mirror
     dest_mirror = args.dest_mirror

@@ -57,10 +57,10 @@ in the lockfile.
 def graph(parser, args):
     env = ev.active_environment()
     if args.installed and env:
-        tty.die("cannot use --installed with an active environment")
+        args.subparser.error("cannot use --installed with an active environment")
 
     if args.color and not args.dot:
-        tty.die("the --color option can be used only with --dot")
+        args.subparser.error("the --color option can be used only with --dot")
 
     if args.installed:
         if not args.specs:

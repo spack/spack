@@ -209,7 +209,7 @@ def diff(parser, args):
     env = ev.active_environment()
 
     if len(args.specs) != 2:
-        tty.die("You must provide two specs to diff.")
+        args.subparser.error("you must provide two specs to diff")
 
     specs = []
     for spec in spack.cmd.parse_specs(args.specs):
