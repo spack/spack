@@ -1510,7 +1510,7 @@ def test_update_warns_on_mirror_with_no_index(monkeypatch, tmp_path: pathlib.Pat
     def no_index(*args, **kwargs):
         raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
 
-    binary_index = spack.binary_distribution.BinaryCacheIndex(str(tmp_path / "index_cache"))
+    binary_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "index_cache"))
     monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
