@@ -176,4 +176,4 @@ For a deeper investigation of solver internals, see :ref:`debugging-concretizati
 
 .. rubric:: Footnotes
 
-.. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command.
+.. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command, see :ref:`faq-concretization-errors` for more information.
