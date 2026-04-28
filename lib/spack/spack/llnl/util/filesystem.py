@@ -536,112 +536,115 @@ def exploding_archive_handler(tarball_container, stage):
 
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
-    assert sys.platform == "win32", "cannot determine Windows file security on non Windows"
-    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    SE_FILE_OBJECT = 1
-    OWNER_SECURITY_INFO = 1
+    if sys.platform == "win32":
+        advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        SE_FILE_OBJECT = 1
+        OWNER_SECURITY_INFO = 1
 
-    # Describe LocalFree API
-    LocalFree = kernel32.LocalFree
-    LocalFree.argtypes = [wintypes.HLOCAL]
-    LocalFree.restype = wintypes.HLOCAL
-    # Describe GetSecurityInfo API
-    GetSecurityInfo = advapi.GetSecurityInfo
-    GetSecurityInfo.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,
-        wintypes.DWORD,
-        ctypes.POINTER(wintypes.LPVOID),
-        ctypes.POINTER(wintypes.LPVOID),
-        ctypes.POINTER(wintypes.LPVOID),
-        ctypes.POINTER(wintypes.LPVOID),
-        ctypes.POINTER(wintypes.LPVOID),
-    ]
-    GetSecurityInfo.restype = wintypes.DWORD
-    # Describe LookupAccountSID API
-    LookupAccountSid = advapi.LookupAccountSidW
-    LookupAccountSid.argtypes = [
-        wintypes.LPCWSTR,
-        wintypes.LPVOID,
-        wintypes.LPWSTR,
-        wintypes.LPDWORD,
-        wintypes.LPWSTR,
-        wintypes.LPDWORD,
-        ctypes.POINTER(ctypes.c_int),
-    ]
-    LookupAccountSid.restype = ctypes.c_bool
+        # Describe LocalFree API
+        LocalFree = kernel32.LocalFree
+        LocalFree.argtypes = [wintypes.HLOCAL]
+        LocalFree.restype = wintypes.HLOCAL
+        # Describe GetSecurityInfo API
+        GetSecurityInfo = advapi.GetSecurityInfo
+        GetSecurityInfo.argtypes = [
+            wintypes.HANDLE,
+            ctypes.c_int,
+            wintypes.DWORD,
+            ctypes.POINTER(wintypes.LPVOID),
+            ctypes.POINTER(wintypes.LPVOID),
+            ctypes.POINTER(wintypes.LPVOID),
+            ctypes.POINTER(wintypes.LPVOID),
+            ctypes.POINTER(wintypes.LPVOID),
+        ]
+        GetSecurityInfo.restype = wintypes.DWORD
+        # Describe LookupAccountSID API
+        LookupAccountSid = advapi.LookupAccountSidW
+        LookupAccountSid.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.LPVOID,
+            wintypes.LPWSTR,
+            wintypes.LPDWORD,
+            wintypes.LPWSTR,
+            wintypes.LPDWORD,
+            ctypes.POINTER(ctypes.c_int),
+        ]
+        LookupAccountSid.restype = ctypes.c_bool
 
-    # Open file to obtain handle (required for win32api calls)
-    with open(path, "r", encoding="utf-8") as f:
-        # obtain handle
-        fh = msvcrt.get_osfhandle(f.fileno())
-        # Declare var for SID owner return param
-        p_sid_owner = wintypes.LPVOID()
-        # create pointer to security descritor struct in mem
-        psd = wintypes.LPVOID()
-        # get sec info
-        if (
-            not GetSecurityInfo(
-                fh,
-                SE_FILE_OBJECT,
-                OWNER_SECURITY_INFO,
-                ctypes.byref(p_sid_owner),
-                None,
-                None,
-                None,
-                ctypes.byref(psd),
-            )
-            == 0
-        ):
-            err = ctypes.GetLastError()
-            raise ctypes.WinError(err, f"Failed to get security info for {path}")
-        try:
-            # establish vars for Lookup account sid return params
-            dwacct_name = wintypes.DWORD(1)
-            dw_domain_name = wintypes.DWORD(1)
-            e_use = ctypes.c_int()
-            # first call to lookup account SID to determine
-            # buffer sizes
-            LookupAccountSid(
-                None,
-                p_sid_owner,
-                None,
-                ctypes.byref(dwacct_name),
-                None,
-                ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use),
-            )
-            # 122 is the error for insufficient buffer, which we expect/want
-            # since we're using this call to obtain the buffer size
-            if ctypes.GetLastError() not in (0, 122):
-                raise ctypes.WinError(
-                    ctypes.GetLastError(), f"Unexpected error when obtaining buffer for : {path}"
+        # Open file to obtain handle (required for win32api calls)
+        with open(path, "r", encoding="utf-8") as f:
+            # obtain handle
+            fh = msvcrt.get_osfhandle(f.fileno())
+            # Declare var for SID owner return param
+            p_sid_owner = wintypes.LPVOID()
+            # create pointer to security descritor struct in mem
+            psd = wintypes.LPVOID()
+            # get sec info
+            if (
+                not GetSecurityInfo(
+                    fh,
+                    SE_FILE_OBJECT,
+                    OWNER_SECURITY_INFO,
+                    ctypes.byref(p_sid_owner),
+                    None,
+                    None,
+                    None,
+                    ctypes.byref(psd),
                 )
-            # create buffers
-            acct_name_buf = dwacct_name.value * wintypes.WCHAR
-            acct_name = acct_name_buf()
-            domain_name_buf = dw_domain_name.value * wintypes.WCHAR
-            domain_name = domain_name_buf()
-
-            success = LookupAccountSid(
-                None,
-                p_sid_owner,
-                acct_name,
-                ctypes.byref(dwacct_name),
-                domain_name,
-                ctypes.byref(dw_domain_name),
-                ctypes.byref(e_use),
-            )
-            if not success:
-                raise ctypes.WinError(
-                    ctypes.GetLastError(), f"Could not determine file owner for : {path}"
+                == 0
+            ):
+                err = ctypes.GetLastError()
+                raise ctypes.WinError(err, f"Failed to get security info for {path}")
+            try:
+                # establish vars for Lookup account sid return params
+                dwacct_name = wintypes.DWORD(1)
+                dw_domain_name = wintypes.DWORD(1)
+                e_use = ctypes.c_int()
+                # first call to lookup account SID to determine
+                # buffer sizes
+                LookupAccountSid(
+                    None,
+                    p_sid_owner,
+                    None,
+                    ctypes.byref(dwacct_name),
+                    None,
+                    ctypes.byref(dw_domain_name),
+                    ctypes.byref(e_use),
                 )
-        finally:
-            # Free the security descriptor
-            if psd:
-                LocalFree(psd)
-    return acct_name.value
+                # 122 is the error for insufficient buffer, which we expect/want
+                # since we're using this call to obtain the buffer size
+                if ctypes.GetLastError() not in (0, 122):
+                    raise ctypes.WinError(
+                        ctypes.GetLastError(),
+                        f"Unexpected error when obtaining buffer for : {path}",
+                    )
+                # create buffers
+                acct_name_buf = dwacct_name.value * wintypes.WCHAR
+                acct_name = acct_name_buf()
+                domain_name_buf = dw_domain_name.value * wintypes.WCHAR
+                domain_name = domain_name_buf()
+
+                success = LookupAccountSid(
+                    None,
+                    p_sid_owner,
+                    acct_name,
+                    ctypes.byref(dwacct_name),
+                    domain_name,
+                    ctypes.byref(dw_domain_name),
+                    ctypes.byref(e_use),
+                )
+                if not success:
+                    raise ctypes.WinError(
+                        ctypes.GetLastError(), f"Could not determine file owner for : {path}"
+                    )
+            finally:
+                # Free the security descriptor
+                if psd:
+                    LocalFree(psd)
+        return acct_name.value
+    else:
+        raise RuntimeError("cannot determine Windows file security on non Windows")
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -3096,21 +3099,23 @@ def _windows_is_junction(path: str) -> bool:
     Returns:
         bool - whether the path is a junction or not.
     """
-    if sys.platform != "win32" or os.path.islink(path) or os.path.isfile(path):
-        return False
+    if sys.platform == "win32":
+        if os.path.islink(path) or os.path.isfile(path):
+            return False
 
-    get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
-    get_file_attributes.argtypes = (wintypes.LPWSTR,)
-    get_file_attributes.restype = wintypes.DWORD
+        get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
+        get_file_attributes.argtypes = (wintypes.LPWSTR,)
+        get_file_attributes.restype = wintypes.DWORD
 
-    invalid_file_attributes = 0xFFFFFFFF
-    reparse_point = 0x400
-    file_attr = get_file_attributes(str(path))
+        invalid_file_attributes = 0xFFFFFFFF
+        reparse_point = 0x400
+        file_attr = get_file_attributes(str(path))
 
-    if file_attr == invalid_file_attributes:
-        return False
+        if file_attr == invalid_file_attributes:
+            return False
 
-    return file_attr & reparse_point > 0
+        return file_attr & reparse_point > 0
+    return False
 
 
 @lang.memoized
