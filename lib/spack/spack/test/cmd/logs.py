@@ -56,7 +56,7 @@ def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_package
 
     with pytest.raises(spack.main.SpackCommandError) as e:
         logs("pkg-c mpi")
-    assert e.value.code != 0
+    assert e.value.code == 2
 
     install("pkg-c")
     os.remove(spec.package.install_log_path)

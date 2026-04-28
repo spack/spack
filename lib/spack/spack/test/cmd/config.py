@@ -755,7 +755,7 @@ def test_config_with_group_shows_override_packages(cmd_str, tmp_path, mutable_co
 def test_config_with_group_requires_active_environment(cmd_str, mutable_config):
     """Tests that using groups outside an environment should give a clear error."""
     output = config(cmd_str, "--group=mygroup", "packages", fail_on_error=False)
-    assert config.returncode != 0
+    assert config.returncode == 2
     assert "--group requires an active environment" in output
 
 
@@ -765,5 +765,5 @@ def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_
     (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - zlib\n")
     with ev.Environment(str(tmp_path)):
         output = config(cmd_str, "--group=nonexistent", "packages", fail_on_error=False)
-    assert config.returncode != 0
+    assert config.returncode == 1
     assert "'nonexistent' not found in" in output

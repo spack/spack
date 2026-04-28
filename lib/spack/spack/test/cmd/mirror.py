@@ -532,7 +532,7 @@ class TestMirrorCreate:
     def test_error_conditions(self, cli_args, error_str):
         output = mirror(*cli_args, fail_on_error=False)
         assert error_str in output
-        assert mirror.returncode != 0
+        assert mirror.returncode == 2
 
     @pytest.mark.parametrize(
         "cli_args,not_expected",
