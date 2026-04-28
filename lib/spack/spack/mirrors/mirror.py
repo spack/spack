@@ -137,12 +137,12 @@ class Mirror:
     @property
     def fetch_view(self) -> Optional[str]:
         """Get the fetch view"""
-        return self.get_view("fetch")
+        return self._get_value("view", direction="fetch")
 
     @property
     def push_view(self) -> Optional[str]:
         """Get the push view"""
-        return self.get_view("push")
+        return self._get_value("view", direction="push")
 
     def ensure_mirror_usable(self, direction: str = "push") -> None:
         access_pair = self._get_value("access_pair", direction)
@@ -337,9 +337,6 @@ class Mirror:
             raise ValueError(f"Mirror {self.name} has no URL configured")
 
         return _url_or_path_to_url(url)
-
-    def get_view(self, direction: str) -> Optional[str]:
-        return self._get_value("view", direction)
 
     def get_credentials(self, direction: str) -> Dict[str, Any]:
         """Get the mirror credentials from the mirror config
