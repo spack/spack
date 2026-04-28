@@ -13,6 +13,7 @@ __all__ = ["load", "dump", "dumps", "SpackJSONError"]
 
 _DEFAULT_SEPARATORS = (",", ":")
 _DEFAULT_INDENT = None
+_PRETTY_SEPARATORS = (", ", ": ")
 _PRETTY_INDENT = "  "
 
 
@@ -26,13 +27,15 @@ def load(stream: Any) -> Dict:
 def dump(data: Any, stream: IO[str], pretty: bool = False) -> None:
     """Wrapper around json.dump with different default arguments"""
     indent = _PRETTY_INDENT if pretty else _DEFAULT_INDENT
-    json.dump(data, stream, separators=_DEFAULT_SEPARATORS, indent=indent)
+    separators = _PRETTY_SEPARATORS if pretty else _DEFAULT_SEPARATORS
+    json.dump(data, stream, separators=separators, indent=indent)
 
 
 def dumps(data: Any, pretty: bool = False) -> str:
     """Wrapper around json.dumps with different default arguments"""
     indent = _PRETTY_INDENT if pretty else _DEFAULT_INDENT
-    return json.dumps(data, separators=_DEFAULT_SEPARATORS, indent=indent)
+    separators = _PRETTY_SEPARATORS if pretty else _DEFAULT_SEPARATORS
+    return json.dumps(data, separators=separators, indent=indent)
 
 
 class SpackJSONError(spack.error.SpackError):
