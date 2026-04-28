@@ -1623,9 +1623,21 @@ class Environment:
         # Find all specs that this mutation applies to
         modify_specs = []
         modified_specs = []
-        assert len(selectors) == len(mutators)
-        assert not validators or len(validators) == len(selectors)
-        assert not msgs or len(msgs) == len(selectors)
+        if len(selectors) != len(mutators):
+            raise ValueError(
+                f"Length mismatch: selectors ({len(selectors)}) != mutators ({len(mutators)})"
+            )
+
+        if validators and len(validators) != len(selectors):
+            raise ValueError(
+                f"Length mismatch: validators ({len(validators)}) != selectors ({len(selectors)})"
+            )
+
+        if msgs and len(msgs) != len(selectors):
+            raise ValueError(
+                f"Length mismatch: msgs ({len(msgs)}) != selectors ({len(selectors)})"
+            )
+
         for dep in self.all_specs_generator():
             for selector, mutator, validator, msg in zip_longest(
                 selectors, mutators, validators or [], msgs or [], fillvalue=None

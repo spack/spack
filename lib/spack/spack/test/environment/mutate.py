@@ -89,7 +89,7 @@ def test_mutate_internals_multiple_mutations():
     env = ev.read("test")
 
     root = "cmake-client+truthy os=debian6 %cmake@3.23.1 os=debian6"
-    env.add(root_name)
+    env.add(root)
     env.concretize()
 
     planned_mutations = [
@@ -100,7 +100,18 @@ def test_mutate_internals_multiple_mutations():
 
     orig_hash = next(env.roots()).dag_hash()
 
-    selectors, mutators = zip(*planned_mutations) 
+    selectors, mutators = zip(
+        *[(spack.spec.Spec(s), spack.spec.Spec(m)) for s, m in planned_mutations]
+    )
+
+    with pytest.raises(ValueError, match="Length mismatch: selectors"):
+        env.mutate(selectors=[], mutators=mutators)
+
+    with pytest.raises(ValueError, match="Length mismatch: validators"):
+        env.mutate(selectors=selectors, mutators=mutators, validators=["cmake@3.4.3"])
+
+    with pytest.raises(ValueError, match="Length mismatch: msgs"):
+        env.mutate(selectors=selectors, mutators=mutators, msgs=["A message"])
 
     env.mutate(selectors=selectors, mutators=mutators)
 
