@@ -41,13 +41,13 @@ from spack.llnl.path import path_to_os_path, sanitize_win_longpath, system_path_
 from spack.llnl.util import lang, tty
 from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
 
-if sys.platform != "win32":
-    import grp
-    import pwd
-else:
+if sys.platform == "win32":
     import ctypes
     import msvcrt
     from ctypes import wintypes
+else:
+    import grp
+    import pwd
 
 
 __all__ = [
