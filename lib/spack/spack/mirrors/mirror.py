@@ -105,7 +105,8 @@ class Mirror:
     def to_yaml(self, stream: Optional[IO[str]] = None) -> Optional[str]:
         return syaml.dump(self.to_dict(), stream)
 
-    def to_dict(self):
+    def to_dict(self) -> Union[str, dict]:
+        # Mirrors configured as a plain URL are stored as a string in the config schema
         return self._data
 
     def display(self, max_len: int = 0) -> None:
@@ -419,8 +420,8 @@ class MirrorCollection(Mapping[str, Mirror]):
 
     def __init__(
         self,
-        mirrors=None,
-        scope=None,
+        mirrors: Optional[Mapping[str, Any]] = None,
+        scope: Optional[str] = None,
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
@@ -482,7 +483,7 @@ class MirrorCollection(Mapping[str, Mirror]):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON mirror collection:", e) from e
 
-    def to_dict(self, recursive=False):
+    def to_dict(self, recursive: bool = False) -> Dict[str, Any]:
         return syaml.syaml_dict(
             sorted(
                 ((k, (v.to_dict() if recursive else v)) for (k, v) in self._mirrors.items()),
@@ -491,7 +492,7 @@ class MirrorCollection(Mapping[str, Mirror]):
         )
 
     @staticmethod
-    def from_dict(d):
+    def from_dict(d: Mapping[str, Any]) -> "MirrorCollection":
         return MirrorCollection(d)
 
     def __getitem__(self, item: str) -> Mirror:
