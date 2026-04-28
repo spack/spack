@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
+import ctypes
 import errno
 import fnmatch
 import glob
@@ -42,7 +43,6 @@ from spack.llnl.util import lang, tty
 from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
 
 if sys.platform == "win32":
-    import ctypes
     import msvcrt
     from ctypes import wintypes
 else:
@@ -536,8 +536,7 @@ def exploding_archive_handler(tarball_container, stage):
 
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
-    if sys.platform != "win32":
-        raise RuntimeError("cannot determine Windows file security on non Windows")
+    assert sys.platform == "win32", "cannot determine Windows file security on non Windows"
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     SE_FILE_OBJECT = 1
@@ -1321,17 +1320,17 @@ def windows_sfn(path: os.PathLike):
         path: Path to be transformed into SFN (8.3 filename) format
     """
     # This should not be run-able on linux/macos
-    if sys.platform != "win32":
-        return path
-    path = str(path)
-    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    # Method with null values returns size of short path name
-    sz = k32.GetShortPathNameW(path, None, 0)
-    # stub Windows types TCHAR[LENGTH]
-    TCHAR_arr = ctypes.c_wchar * sz
-    ret_str = TCHAR_arr()
-    k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
-    return ret_str.value
+    if sys.platform == "win32":
+        path = str(path)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        # Method with null values returns size of short path name
+        sz = k32.GetShortPathNameW(path, None, 0)
+        # stub Windows types TCHAR[LENGTH]
+        TCHAR_arr = ctypes.c_wchar * sz
+        ret_str = TCHAR_arr()
+        k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
+        return ret_str.value
+    return path
 
 
 @contextmanager
