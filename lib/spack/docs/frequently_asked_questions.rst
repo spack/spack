@@ -158,11 +158,11 @@ How do I debug a concretization error?
 
 ``spack install`` and ``spack concretize`` may fail with a concretization error when the solver cannot find a package configuration that satisfies all constraints.
 
-Most of the times, the error message is structured and contains information about which requirements could not be met.
-Read it carefully: it typically identifies the conflicting constraints and the files where they are defined (e.g., a ``packages.yaml`` entry or a ``conflicts()`` directive in a ``package.py``).
+Most of the time, the error message is structured and contains information about which requirements could not be met.
+It typically identifies the conflicting constraints and the files where they are defined (e.g., a ``packages.yaml`` entry or a ``conflicts()`` directive in a ``package.py``).
 If the cause is clear from the error, you can fix the offending entry directly.
 
-If it is not obvious *why* the solver made a particular decision — for example, why it chose a specific version or variant — run :ref:`spack-solve` to see the full optimization breakdown:
+If it is not obvious *why* the solver made a particular decision -- for example, why it chose a specific version or variant -- run :ref:`spack-solve` to see the full optimization breakdown:
 
 .. code-block:: console
 
