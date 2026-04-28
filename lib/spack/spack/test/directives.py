@@ -9,6 +9,7 @@ import spack.concretize
 import spack.directives
 import spack.repo
 import spack.spec
+import spack.variant
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
@@ -298,7 +299,7 @@ def test_patched_dependencies_sets_class_attribute():
 
 
 def _fake_pkg():
-    return type("FakePkg", (), {"name": "fake", "deprecated_variants": {}})()
+    return type("FakePkg", (), {"name": "fake", "deprecated_variants": {}, "variants": {}})()
 
 
 def test_substitutions_without_deprecated_raises():
@@ -338,4 +339,36 @@ def test_deprecated_substitutions_invalid_types_raises():
             sticky=False,
             deprecated=True,
             substitutions={"+bad": 42},  # type: ignore[dict-item]
+        )
+
+
+def test_deprecated_variant_conflicts_with_normal_raises():
+    """Tests that deprecating a variant already defined as non-deprecated raises an error."""
+    fake = _fake_pkg()
+    # Simulate a normal variant already present for "shared"
+    fake.variants["always"] = {"shared": object()}
+    with pytest.raises(spack.directives.DirectiveError, match="cannot deprecate a variant"):
+        spack.directives._handle_deprecated_variant(fake, name="shared")
+
+
+def test_normal_variant_conflicts_with_deprecated_raises():
+    """Tests that defining a non-deprecated variant with the same name as a deprecated one raises
+    an error.
+    """
+    fake = _fake_pkg()
+    # Simulate a deprecated variant already present for "shared"
+    fake.deprecated_variants["shared"] = spack.variant.DeprecatedVariant("shared")
+    with pytest.raises(
+        spack.directives.DirectiveError, match="cannot define a non-deprecated variant"
+    ):
+        spack.directives._execute_variant(
+            fake,
+            name="shared",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
         )

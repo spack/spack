@@ -733,6 +733,12 @@ def _execute_variant(
         _handle_deprecated_variant(pkg, name=name, substitutions=substitutions)
         return
 
+    if name in pkg.deprecated_variants:
+        raise DirectiveError(
+            f"variant '{name}' in {pkg.name}: cannot define a non-deprecated variant "
+            "with the same name as a deprecated variant"
+        )
+
     # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
     # For now it's a warning to let people migrate faster.
     if not (
@@ -828,6 +834,11 @@ def _execute_variant(
 def _handle_deprecated_variant(
     pkg: "Type[PackageBase]", *, name: str, substitutions: Optional[Dict[str, str]] = None
 ) -> None:
+    if any(name in d for d in pkg.variants.values()):
+        raise DirectiveError(
+            f"variant '{name}' in {pkg.name}: cannot deprecate a variant "
+            "that is also defined as non-deprecated"
+        )
     if substitutions is None:
         pkg.deprecated_variants[name] = spack.variant.DeprecatedVariant(name)
     else:

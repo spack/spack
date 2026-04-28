@@ -1115,6 +1115,8 @@ class TestSpecSemantics:
 
         class Pkg:
             name = "PKG"
+            deprecated_variants: dict = {}
+            variants: dict = {}
 
         # We can't use names that are reserved by Spack
         fn = variant("patches")
