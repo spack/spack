@@ -372,7 +372,7 @@ class BinaryCacheIndex:
             self.regenerate_spec_cache(clear_existing=clear_cache)
 
     def _fetch_mirror_index(
-        self, url: str, view: str, *, versions: List[int], cooldown: bool
+        self, url: str, view: Optional[str], *, versions: List[int], cooldown: bool
     ) -> _MirrorIndexResult:
         """Fetches the index of a mirror, using a highest-version first approach, and returning
         after the first success.

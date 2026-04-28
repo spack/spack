@@ -4,7 +4,7 @@
 import operator
 import os
 import urllib.parse
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
+from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union, overload
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -49,11 +49,11 @@ class Mirror:
         self._name = name
 
     @staticmethod
-    def from_yaml(stream, name=None):
+    def from_yaml(stream: Union[str, IO[str]], name: Optional[str] = None) -> "Mirror":
         return Mirror(syaml.load(stream), name)
 
     @staticmethod
-    def from_json(stream, name=None):
+    def from_json(stream: Union[str, IO[str]], name: Optional[str] = None) -> "Mirror":
         try:
             return Mirror(sjson.load(stream), name)
         except Exception as e:
@@ -84,13 +84,25 @@ class Mirror:
     def __repr__(self) -> str:
         return f"Mirror(name={self._name!r}, data={self._data!r})"
 
-    def to_json(self, stream=None):
+    @overload
+    def to_json(self, stream: None = ...) -> str: ...
+
+    @overload
+    def to_json(self, stream: IO[str]) -> None: ...
+
+    def to_json(self, stream: Optional[IO[str]] = None) -> Optional[str]:
         if stream is None:
             return sjson.dumps(self.to_dict())
         sjson.dump(self.to_dict(), stream)
         return None
 
-    def to_yaml(self, stream=None):
+    @overload
+    def to_yaml(self, stream: None = ...) -> str: ...
+
+    @overload
+    def to_yaml(self, stream: IO[str]) -> None: ...
+
+    def to_yaml(self, stream: Optional[IO[str]] = None) -> Optional[str]:
         return syaml.dump(self.to_dict(), stream)
 
     def to_dict(self):
@@ -450,14 +462,20 @@ class MirrorCollection(Mapping[str, Mirror]):
             return NotImplemented
         return self._mirrors == other._mirrors
 
-    def to_json(self, stream=None):
+    @overload
+    def to_json(self, stream: None = ...) -> str: ...
+
+    @overload
+    def to_json(self, stream: IO[str]) -> None: ...
+
+    def to_json(self, stream: Optional[IO[str]] = None) -> Optional[str]:
         if stream is None:
             return sjson.dumps(self.to_dict(True))
         sjson.dump(self.to_dict(True), stream)
         return None
 
     @staticmethod
-    def from_json(stream) -> "MirrorCollection":
+    def from_json(stream: Union[str, IO[str]]) -> "MirrorCollection":
         try:
             d = sjson.load(stream)
             return MirrorCollection(d)
