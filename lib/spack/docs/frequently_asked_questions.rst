@@ -24,7 +24,7 @@ This question comes up in a variety of forms:
 1. Why does Spack seem to ignore my package preferences from ``packages.yaml`` configuration?
 2. Why does Spack toggle a variant instead of using the default from the ``package.py`` file?
 
-The short answer is that Spack always picks an optimal configuration based on a complex set of criteria\ [#f1]_.
+The short answer is that Spack always picks an optimal configuration based on a complex set of criteria.
 These criteria are more nuanced than always choosing the latest versions or default variants.
 
 .. note::
@@ -75,6 +75,16 @@ The following set of criteria (from lowest to highest precedence) explains commo
           - "@1.4"
 
 Requirements and constraints restrict the set of possible solutions, while reuse behavior and preferences influence what an optimal solution looks like.
+
+If it is still not obvious *why* the solver made a particular decision -- for example, why it chose a specific version or variant -- run :ref:`spack-solve` to see the full optimization breakdown:
+
+.. code-block:: console
+
+   $ spack solve <spec>
+
+The output shows the optimization criteria and the weights assigned to each choice.
+This makes it possible to trace which preference or requirement is driving an unexpected result.
+
 
 How do I use a specific compiler?
 ---------------------------------
@@ -162,18 +172,4 @@ Most of the time, the error message is structured and contains information about
 It typically identifies the conflicting constraints and the files where they are defined (e.g., a ``packages.yaml`` entry or a ``conflicts()`` directive in a ``package.py``).
 If the cause is clear from the error, you can fix the offending entry directly.
 
-If it is not obvious *why* the solver made a particular decision -- for example, why it chose a specific version or variant -- run :ref:`spack-solve` to see the full optimization breakdown:
-
-.. code-block:: console
-
-   $ spack solve <spec>
-
-The output shows the optimization criteria and the weights assigned to each choice.
-This makes it possible to trace which preference or requirement is driving an unexpected result.
-See also :ref:`faq-concretizer-precedence` for an overview of how criteria are prioritized.
-
 For a deeper investigation of solver internals, see :ref:`debugging-concretization` in the developer guide.
-
-.. rubric:: Footnotes
-
-.. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command, see :ref:`faq-concretization-errors` for more information.
