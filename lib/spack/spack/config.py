@@ -1178,6 +1178,9 @@ class OptionalInclude:
                 f"File-based scope does not exist yet: path ({path}) should have a .yaml/.yml extension \
 for file scopes, or no extension for directory scopes"
             )
+        elif ext:
+            tty.warn(
+                    f"Assuming a nonexistent path ({path}) with a dot in the filename is a directory")
 
         # directories are treated as regular ConfigScopes
         # assign by "default"
