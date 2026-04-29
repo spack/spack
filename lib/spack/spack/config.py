@@ -1175,7 +1175,7 @@ class OptionalInclude:
             )
         elif is_file and ext:
             raise ValueError(
-                f"File-based scope does not exist yet: path ({path}) should have a .yaml/.yml extension \
+                f"File-based scope is not implemented: path ({path}) should have a .yaml/.yml extension \
 for file scopes, or no extension for directory scopes"
             )
         elif ext:
