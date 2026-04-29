@@ -1157,14 +1157,14 @@ class OptionalInclude:
 
         _, ext = os.path.splitext(config_path)
         ext_is_yaml = ext == ".yaml" or ext == ".yml"
-        is_dir = os.path.isdir(config_path)
         exists = os.path.exists(config_path)
+        is_file = exists and not os.path.isdir(config_path)
 
         if not exists and not self.optional:
             dest = f" at ({config_path})" if config_path != os.path.normpath(path) else ""
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
-        if (exists and not is_dir) or ext_is_yaml:
+        if is_file or ext_is_yaml:
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
                 config_name,
@@ -1173,11 +1173,10 @@ class OptionalInclude:
                 prefer_modify=self.prefer_modify,
                 included=True,
             )
-
-        if ext and not is_dir:
+        elif is_file and ext:
             raise ValueError(
-                f"File-based scope does not exist yet: should have a .yaml/.yml extension \
-for file scopes, or no extension for directory scopes (currently {ext})"
+                f"File-based scope does not exist yet: path ({path}) should have a .yaml/.yml extension \
+for file scopes, or no extension for directory scopes"
             )
 
         # directories are treated as regular ConfigScopes
