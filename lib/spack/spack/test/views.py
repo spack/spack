@@ -12,6 +12,7 @@ from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
 from spack.installer import PackageInstaller
 from spack.spec import Spec
+from spack.test.conftest import FsTree
 
 
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmp_path: pathlib.Path):
@@ -84,32 +85,22 @@ def test_view_unique_subdir_becomes_dir_symlink(mock_packages, tmp_path: pathlib
     a._mark_concrete()
     b._mark_concrete()
 
-    # Create directory structures with .spack metadata
-    os.makedirs(os.path.join(a.prefix, ".spack"))
-    os.makedirs(os.path.join(b.prefix, ".spack"))
-
-    # Shared dir: lib (in both)
-    os.makedirs(os.path.join(a.prefix, "lib"))
-    os.makedirs(os.path.join(b.prefix, "lib"))
-    with open(os.path.join(a.prefix, "lib", "liba.so"), "w", encoding="utf-8") as f:
-        f.write("a")
-    with open(os.path.join(b.prefix, "lib", "libb.so"), "w", encoding="utf-8") as f:
-        f.write("b")
-
-    # Unique dir: include (only in a) with nested content
-    os.makedirs(os.path.join(a.prefix, "include", "a"))
-    with open(os.path.join(a.prefix, "include", "a", "a.h"), "w", encoding="utf-8") as f:
-        f.write("header_a")
-
-    # Unique dir but at depth 0, not deep enough to be symlinked.
-    os.makedirs(os.path.join(a.prefix, "bin"))
-    with open(os.path.join(a.prefix, "bin", "a"), "w", encoding="utf-8") as f:
-        f.write("binary_a")
-
-    # Unique dir: bin (only in b)
-    os.makedirs(os.path.join(b.prefix, "include", "b"))
-    with open(os.path.join(b.prefix, "include", "b", "b.h"), "w", encoding="utf-8") as f:
-        f.write("header_b")
+    FsTree(
+        tmp_path,
+        {
+            # metadata dirs for both
+            "a/.spack": FsTree.dir(),
+            "b/.spack": FsTree.dir(),
+            # shared dir "lib" with different files in each
+            "a/lib/liba.so": FsTree.file(),
+            "b/lib/libb.so": FsTree.file(),
+            # unique dir "include/a" and "include/b" with nested content
+            "a/include/a/a.h": FsTree.file(),
+            "b/include/b/b.h": FsTree.file(),
+            # unique dir "bin" but at depth 0, so not deep enough to be symlinked
+            "a/bin/a": FsTree.file(),
+        },
+    )
 
     view.add_specs(a, b)
 
@@ -149,10 +140,7 @@ def test_view_no_dir_symlinks(mock_packages, tmp_path: pathlib.Path):
     a.set_prefix(str(tmp_path / "a"))
     a._mark_concrete()
 
-    os.makedirs(os.path.join(a.prefix, ".spack"))
-    os.makedirs(os.path.join(a.prefix, "include", "a"))
-    with open(os.path.join(a.prefix, "include", "a", "a.h"), "w", encoding="utf-8") as f:
-        f.write("header")
+    FsTree(tmp_path, {"a/.spack": FsTree.dir(), "a/include/a/a.h": FsTree.file("header")})
 
     view.add_specs(a)
 

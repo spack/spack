@@ -20,6 +20,7 @@ from spack.llnl.util.filesystem import (
     working_dir,
 )
 from spack.llnl.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
+from spack.test.conftest import FsTree
 
 
 @pytest.fixture
@@ -535,30 +536,23 @@ def test_unique_subdir_optimization(tmp_path: pathlib.Path):
     src_a = tmp_path / "a"
     src_b = tmp_path / "b"
 
-    # shared dir: lib (exists in both) -- depth 0, shared
-    (src_a / "lib").mkdir(parents=True)
-    (src_a / "lib" / "liba.so").write_bytes(b"a")
-    (src_b / "lib").mkdir(parents=True)
-    (src_b / "lib" / "libb.so").write_bytes(b"b")
-
-    # shared dir: share (exists in both) -- depth 0, shared
-    # but unique subdirs at depth 1
-    (src_a / "share").mkdir()
-    (src_a / "share" / "app_a").mkdir()
-    (src_a / "share" / "app_a" / "data.txt").write_bytes(b"a")
-    (src_a / "share" / "app_a" / "sub").mkdir()
-    (src_a / "share" / "app_a" / "sub" / "deep.txt").write_bytes(b"deep")
-    (src_b / "share").mkdir()
-    (src_b / "share" / "app_b").mkdir()
-    (src_b / "share" / "app_b" / "info.txt").write_bytes(b"b")
-
-    # unique dir: include (only in a) -- depth 0, unique but NOT collapsed
-    (src_a / "include").mkdir()
-    (src_a / "include" / "a.h").write_bytes(b"a")
-
-    # unique dir: bin (only in b) -- depth 0, unique but NOT collapsed
-    (src_b / "bin").mkdir()
-    (src_b / "bin" / "prog").write_bytes(b"p")
+    FsTree(
+        tmp_path,
+        {
+            # shared dir: lib (exists in both) -- depth 0, shared
+            "a/lib/liba.so": FsTree.file(b"a"),
+            "b/lib/libb.so": FsTree.file(b"b"),
+            # shared dir: share (exists in both) -- depth 0, shared
+            # but unique subdirs at depth 1
+            "a/share/app_a/data.txt": FsTree.file(b"a"),
+            "a/share/app_a/sub/deep.txt": FsTree.file(b"deep"),
+            "b/share/app_b/info.txt": FsTree.file(b"b"),
+            # unique dir: include (only in a) -- depth 0, unique but NOT collapsed
+            "a/include/a.h": FsTree.file(b"a"),
+            # unique dir: bin (only in b) -- depth 0, unique but NOT collapsed
+            "b/bin/prog": FsTree.file(b"p"),
+        },
+    )
 
     visitor = MultiPrefixMerger(
         sources=[(str(src_a), ""), (str(src_b), "")], dir_symlink_optimization=True
@@ -605,10 +599,7 @@ def test_unique_subdir_optimization_disabled(tmp_path: pathlib.Path):
     src_a = tmp_path / "a"
     src_b = tmp_path / "b"
 
-    (src_a / "lib" / "a").mkdir(parents=True)
-    (src_a / "lib" / "a" / "liba.so").write_bytes(b"a")
-    (src_b / "lib" / "b").mkdir(parents=True)
-    (src_b / "lib" / "b" / "libb.so").write_bytes(b"b")
+    FsTree(tmp_path, {"a/lib/a/liba.so": FsTree.file(b"a"), "b/lib/b/libb.so": FsTree.file(b"b")})
 
     visitor = MultiPrefixMerger(
         sources=[(str(src_a), ""), (str(src_b), "")], dir_symlink_optimization=False
@@ -632,8 +623,8 @@ def test_unique_subdir_optimization_disabled(tmp_path: pathlib.Path):
 def test_projection_dirs_created(tmp_path: pathlib.Path):
     """Projection directories should be registered."""
     src_a = tmp_path / "a"
-    (src_a).mkdir()
-    (src_a / "file.txt").write_bytes(b"a")
+
+    FsTree(tmp_path, {"a/file.txt": FsTree.file(b"a")})
 
     visitor = MultiPrefixMerger(sources=[(str(src_a), "proj/sub")], dir_symlink_optimization=True)
 
