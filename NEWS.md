@@ -1,5 +1,6 @@
 ## Package API v2.5
-- `spack.package.variant` directive: added `deprecated=` parameter.
+- `spack.package.variant` directive: added `deprecated=` and `substitutions=` parameters.
+- Added `hip-lang` and `cuda-lang` as valid languages for the concretizer
 
 ## Package API v2.4
 - Added the `%%` sigil to spec syntax, to propagate compiler preferences.
