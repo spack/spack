@@ -220,7 +220,7 @@ def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmp_path: 
         with open(j("a", "b", "c", "d", "file"), "wb"):
             pass
 
-    visitor = MultiPrefixMerger([(str(tmp_path), "")])
+    visitor = MultiPrefixMerger([tmp_path])
     assert [p for p in visitor.files.keys()] == [
         j("a", "b", "c", "d", "file"),
         j("a", "b", "c", "symlink_d"),  # treated as a file, not expanded
@@ -263,7 +263,7 @@ def test_source_merge_visitor_cant_be_cyclical(tmp_path: pathlib.Path):
         symlink(j("symlink_b"), j("a", "symlink_b_b"))
         symlink(j("..", "a"), j("b", "symlink_a"))
 
-    visitor = MultiPrefixMerger([(str(tmp_path), "")])
+    visitor = MultiPrefixMerger([tmp_path])
     assert [p for p in visitor.files.keys()] == [
         j("a", "symlink_b"),
         j("a", "symlink_b_b"),
@@ -296,7 +296,7 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmp_path: pat
             pass
         os.symlink("..", "example_b")
 
-    visitor = MultiPrefixMerger([(str(src_path), "")])
+    visitor = MultiPrefixMerger([src_path])
     visit_directory_tree(str(dst_path), DestinationMergeVisitor(visitor))
 
     assert visitor.fatal_conflicts
@@ -319,12 +319,12 @@ def test_destination_merge_visitor_file_dir_clashes(tmp_path: pathlib.Path):
         with open("example", "wb"):
             pass
 
-    a_to_b = MultiPrefixMerger([(str(a_path), "")])
+    a_to_b = MultiPrefixMerger([a_path])
     visit_directory_tree(str(b_path), DestinationMergeVisitor(a_to_b))
     assert a_to_b.fatal_conflicts
     assert a_to_b.fatal_conflicts[0].dst == "example"
 
-    b_to_a = MultiPrefixMerger([(str(b_path), "")])
+    b_to_a = MultiPrefixMerger([b_path])
     visit_directory_tree(str(a_path), DestinationMergeVisitor(b_to_a))
     assert b_to_a.fatal_conflicts
     assert b_to_a.fatal_conflicts[0].dst == "example"
@@ -352,18 +352,12 @@ def test_source_merge_visitor_handles_same_file_gracefully(
     (tmp_path / "b" / "bar").write_bytes(b"hello")
 
     visitor_1 = MultiPrefixMerger(
-        [
-            (str(tmp_path / "a"), str(tmp_path / "view")),
-            (str(tmp_path / "b"), str(tmp_path / "view")),
-        ],
+        [(tmp_path / "a", tmp_path / "view"), (tmp_path / "b", tmp_path / "view")],
         normalize_paths=normalize,
     )
 
     visitor_2 = MultiPrefixMerger(
-        [
-            (str(tmp_path / "b"), str(tmp_path / "view")),
-            (str(tmp_path / "a"), str(tmp_path / "view")),
-        ],
+        [(tmp_path / "b", tmp_path / "view"), (tmp_path / "a", tmp_path / "view")],
         normalize_paths=normalize,
     )
 
@@ -391,10 +385,7 @@ def test_source_merge_visitor_deals_with_dangling_symlinks(tmp_path: pathlib.Pat
     (tmp_path / "dir_b" / "file").write_bytes(b"data")
 
     visitor = MultiPrefixMerger(
-        [
-            (str(tmp_path / "dir_a"), str(tmp_path / "view")),
-            (str(tmp_path / "dir_b"), str(tmp_path / "view")),
-        ]
+        [(tmp_path / "dir_a", tmp_path / "view"), (tmp_path / "dir_b", tmp_path / "view")]
     )
 
     # Check that a conflict was registered.
@@ -415,9 +406,7 @@ def test_source_visitor_file_file(tmp_path: pathlib.Path, normalize: bool):
     (tmp_path / "a" / "file").write_bytes(b"")
     (tmp_path / "b" / "FILE").write_bytes(b"")
 
-    v = MultiPrefixMerger(
-        [(str(tmp_path / "a"), ""), (str(tmp_path / "b"), "")], normalize_paths=normalize
-    )
+    v = MultiPrefixMerger([tmp_path / "a", tmp_path / "b"], normalize_paths=normalize)
 
     if normalize:
         assert len(v.files) == 1
@@ -438,12 +427,8 @@ def test_source_visitor_file_dir(tmp_path: pathlib.Path, normalize: bool):
     (tmp_path / "a" / "file").write_bytes(b"")
     (tmp_path / "b").mkdir()
     (tmp_path / "b" / "FILE").mkdir()
-    v1 = MultiPrefixMerger(
-        [(str(tmp_path / "a"), ""), (str(tmp_path / "b"), "")], normalize_paths=normalize
-    )
-    v2 = MultiPrefixMerger(
-        [(str(tmp_path / "b"), ""), (str(tmp_path / "a"), "")], normalize_paths=normalize
-    )
+    v1 = MultiPrefixMerger([tmp_path / "a", tmp_path / "b"], normalize_paths=normalize)
+    v2 = MultiPrefixMerger([tmp_path / "b", tmp_path / "a"], normalize_paths=normalize)
 
     assert not v1.file_conflicts and not v2.file_conflicts
 
@@ -463,9 +448,7 @@ def test_source_visitor_dir_dir(tmp_path: pathlib.Path, normalize: bool):
     (tmp_path / "a" / "dir").mkdir()
     (tmp_path / "b").mkdir()
     (tmp_path / "b" / "DIR").mkdir()
-    v = MultiPrefixMerger(
-        [(str(tmp_path / "a"), ""), (str(tmp_path / "b"), "")], normalize_paths=normalize
-    )
+    v = MultiPrefixMerger([tmp_path / "a", tmp_path / "b"], normalize_paths=normalize)
 
     assert not v.files
     assert not v.fatal_conflicts
@@ -486,7 +469,7 @@ def test_dst_visitor_file_file(tmp_path: pathlib.Path, normalize: bool):
     (tmp_path / "a" / "file").write_bytes(b"")
     (tmp_path / "b" / "FILE").write_bytes(b"")
 
-    src = MultiPrefixMerger([(str(tmp_path / "a"), "")], normalize_paths=normalize)
+    src = MultiPrefixMerger([tmp_path / "a"], normalize_paths=normalize)
     visit_directory_tree(str(tmp_path / "b"), DestinationMergeVisitor(src))
 
     assert len(src.files) == 1
@@ -507,9 +490,9 @@ def test_dst_visitor_file_dir(tmp_path: pathlib.Path, normalize: bool):
     (tmp_path / "a" / "file").write_bytes(b"")
     (tmp_path / "b").mkdir()
     (tmp_path / "b" / "FILE").mkdir()
-    src1 = MultiPrefixMerger([(str(tmp_path / "a"), "")], normalize_paths=normalize)
+    src1 = MultiPrefixMerger([tmp_path / "a"], normalize_paths=normalize)
     visit_directory_tree(str(tmp_path / "b"), DestinationMergeVisitor(src1))
-    src2 = MultiPrefixMerger([(str(tmp_path / "b"), "")], normalize_paths=normalize)
+    src2 = MultiPrefixMerger([tmp_path / "b"], normalize_paths=normalize)
     visit_directory_tree(str(tmp_path / "a"), DestinationMergeVisitor(src2))
 
     assert len(src1.files) == 1
@@ -554,9 +537,7 @@ def test_unique_subdir_optimization(tmp_path: pathlib.Path):
         },
     )
 
-    visitor = MultiPrefixMerger(
-        sources=[(str(src_a), ""), (str(src_b), "")], dir_symlink_optimization=True
-    )
+    visitor = MultiPrefixMerger(sources=[src_a, src_b], dir_symlink_optimization=True)
 
     assert not visitor.fatal_conflicts
     assert not visitor.file_conflicts
@@ -601,9 +582,7 @@ def test_unique_subdir_optimization_disabled(tmp_path: pathlib.Path):
 
     FsTree(tmp_path, {"a/lib/a/liba.so": FsTree.file(b"a"), "b/lib/b/libb.so": FsTree.file(b"b")})
 
-    visitor = MultiPrefixMerger(
-        sources=[(str(src_a), ""), (str(src_b), "")], dir_symlink_optimization=False
-    )
+    visitor = MultiPrefixMerger(sources=[src_a, src_b], dir_symlink_optimization=False)
 
     assert not visitor.fatal_conflicts
     assert not visitor.file_conflicts
@@ -626,7 +605,7 @@ def test_projection_dirs_created(tmp_path: pathlib.Path):
 
     FsTree(tmp_path, {"a/file.txt": FsTree.file(b"a")})
 
-    visitor = MultiPrefixMerger(sources=[(str(src_a), "proj/sub")], dir_symlink_optimization=True)
+    visitor = MultiPrefixMerger(sources=[(src_a, "proj/sub")], dir_symlink_optimization=True)
 
     assert "proj" in visitor.directories
     assert os.path.join("proj", "sub") in visitor.directories

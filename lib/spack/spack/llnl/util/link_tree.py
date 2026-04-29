@@ -7,7 +7,8 @@
 import filecmp
 import os
 import shutil
-from typing import Callable, Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
@@ -57,7 +58,7 @@ FileEntry = Tuple[int, str, str, bool]
 #: (index, src_root, rel_path)
 DirEntry = Tuple[int, str, str]
 
-PrefixAndProjection = Tuple[str, str]
+PrefixAndProjection = Union[Union[str, Path], Tuple[Union[str, Path], Union[str, Path]]]
 
 
 class MultiPrefixMerger:
@@ -66,14 +67,14 @@ class MultiPrefixMerger:
 
     def __init__(
         self,
-        sources: List[PrefixAndProjection],
+        sources: Sequence[PrefixAndProjection],
         ignore: Optional[Callable[[str], bool]] = None,
         normalize_paths: bool = False,
         dir_symlink_optimization: bool = False,
     ):
         """
         Args:
-            sources: list of (src_root, projection) pairs
+            sources: list of source directories, or tuples of (source directory, projection) pairs
             ignore: optional callable(rel_path) -> bool to skip entries
             normalize_paths: whether to normalize paths for case-insensitive filesystems
             dir_symlink_optimization: whether to enable directory-level symlink optimization
@@ -118,8 +119,12 @@ class MultiPrefixMerger:
 
         # Group sources by projection
         projection_groups: Dict[str, List[str]] = {}
-        for src_root, projection in sources:
-            projection_groups.setdefault(projection, []).append(src_root)
+        for src in sources:
+            if isinstance(src, tuple):
+                src_root, projection = src
+            else:
+                src_root, projection = src, ""
+            projection_groups.setdefault(str(projection), []).append(str(src_root))
 
         # Process each projection group
         for projection, roots in projection_groups.items():
