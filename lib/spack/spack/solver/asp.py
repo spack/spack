@@ -4082,7 +4082,7 @@ def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> 
     for root in specs:
         root_edges = traverse.with_artificial_edges([root])
         visitor = traverse.CoverNodesVisitor(_SkipConcreteVisitor())
-        for edge in traverse.traverse_depth_first_edges_generator(root_edges, visitor):
+        for edge in traverse.traverse_breadth_first_edges_generator(root_edges, visitor):
             for virtual in edge.virtuals:
                 if not spack.repo.PATH.is_virtual(virtual):
                     errors.append(f"'{virtual}' in '{root}' is not a known virtual package")
