@@ -115,15 +115,14 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 #: Suffix for temporary cleanup during failed install
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
-#: Exit code used by the child process to signal that the build was stopped at a phase boundary
-EXIT_STOPPED_AT_PHASE = 3
 
-#: Exit code used by the child process to signal a binary cache miss (no source fallback)
-EXIT_BUILD_CACHE_MISS = 4
-
-
-class BinaryCacheMiss(spack.error.SpackError):
-    pass
+class ExitCode:
+    SUCCESS = 0
+    BUILD_ERROR = 1
+    #: Exit code used by the child process to signal that the build was stopped at a phase boundary
+    STOPPED_AT_PHASE = 3
+    #: Exit code used by the child process to signal a binary cache miss (no source fallback)
+    BUILD_CACHE_MISS = 4
 
 
 class DatabaseAction:
@@ -546,7 +545,7 @@ def worker_function(
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
-    exit_code = 0
+    exit_code = ExitCode.SUCCESS
 
     try:
         with PrefixPivoter(spec.prefix, keep_prefix):
@@ -570,20 +569,20 @@ def worker_function(
                 stop_at,
             )
     except spack.error.StopPhase:
-        exit_code = EXIT_STOPPED_AT_PHASE
+        exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
         print(e, file=sys.stderr)
-        exit_code = 1
+        exit_code = ExitCode.BUILD_ERROR
     except BinaryCacheMiss:
-        exit_code = EXIT_BUILD_CACHE_MISS
+        exit_code = ExitCode.BUILD_CACHE_MISS
     except BaseException:
         traceback.print_exc(limit=-4)
-        exit_code = 1
+        exit_code = ExitCode.BUILD_ERROR
     finally:
         tee.close()
         state_stream.close()
 
-    if exit_code == 0:
+    if exit_code == ExitCode.SUCCESS:
         # Try to install the compressed log file
         if not os.path.lexists(spec.package.install_log_path):
             try:
@@ -2726,7 +2725,7 @@ class PackageInstaller:
         is_root = dag_hash in self.build_graph.roots
         user_policy = self.root_policy if is_root else self.dependencies_policy
 
-        if exitcode == EXIT_BUILD_CACHE_MISS and user_policy == "auto":
+        if exitcode == ExitCode.BUILD_CACHE_MISS and user_policy == "auto":
             # Check if we can reschedule this as a source build after a build cache miss. If so,
             # return early without recording a failure.
             self.build_graph.force_source.add(dag_hash)
@@ -2735,7 +2734,7 @@ class PackageInstaller:
                 self.pending_expansions.append(dag_hash)
             else:
                 self.pending_builds.append(dag_hash)
-        elif exitcode == EXIT_STOPPED_AT_PHASE:
+        elif exitcode == ExitCode.STOPPED_AT_PHASE:
             pass  # the user requested early stopping; don't treat as failure
         elif not failures or not self.fail_fast:
             # Record a failure. In fail-fast mode, only record the first failure; subsequent
@@ -2988,3 +2987,7 @@ class PackageInstaller:
                 )
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+
+
+class BinaryCacheMiss(spack.error.SpackError):
+    pass
