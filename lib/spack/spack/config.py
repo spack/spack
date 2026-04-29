@@ -1155,16 +1155,28 @@ class OptionalInclude:
 
             config_name = f"{config_name}:{included_name}"
 
-        _, ext = os.path.splitext(config_path)
-        ext_is_yaml = ext == ".yaml" or ext == ".yml"
-        exists = os.path.exists(config_path)
-        is_file = exists and not os.path.isdir(config_path)
+        # Type      | Extension | RESULT
+        # --------  | --------- | ---------
+        # missing   | none      | Directory
+        # missing   | yaml      | File
+        # missing   | other     | No scope
+        # directory | none/any  | Directory
+        # file      | yaml      | File
+        # file      | other     | Error
 
-        if not exists and not self.optional:
+        exists = os.path.exists(config_path)
+        if not exists and not self.optional
             dest = f" at ({config_path})" if config_path != os.path.normpath(path) else ""
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
-        if is_file or ext_is_yaml:
+        if os.path.isdir(config_path) or not ext:
+            # directories are treated as regular ConfigScopes
+            tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
+            return DirectoryConfigScope(
+                config_name, config_path,
+                prefer_modify=self.prefer_modify, included=True
+            )
+        elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(
                 config_name,
@@ -1173,21 +1185,16 @@ class OptionalInclude:
                 prefer_modify=self.prefer_modify,
                 included=True,
             )
-        elif is_file and ext:
+        elif exists:
             raise ValueError(
-                f"File-based scope is not implemented: path ({path}) should have a .yaml/.yml extension \
-for file scopes, or no extension for directory scopes"
+                f"Unsupported file-based scope: path ({path}) should have "
+                "a .yaml/.yml extension for file scopes, "
+                "or no extension for directory scopes"
             )
-        elif ext:
-            tty.warn(
-                    f"Assuming a nonexistent path ({path}) with a dot in the filename is a directory")
 
-        # directories are treated as regular ConfigScopes
-        # assign by "default"
-        tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
-        return DirectoryConfigScope(
-            config_name, config_path, prefer_modify=self.prefer_modify, included=True
-        )
+        # Nonexistent files without yaml extension are ignored
+        tty.debug(f"Ignoring missing config path ({path})")
+        return None
 
     def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
