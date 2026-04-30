@@ -892,7 +892,7 @@ def update_view(
     name: Optional[str] = None,
     update_keys: bool = False,
     yes_to_all: bool = False,
-    parser=None,
+    parser,
 ):
     """update a buildcache view index"""
     # OCI images do not support views.

@@ -57,7 +57,7 @@ def fetch(parser, args):
                     "no uninstalled specs in environment. Did you run `spack concretize` yet?"
                 )
         else:
-            args.subparser.error("fetch requires at least one spec argument")
+            args.subparser.error("requires at least one spec argument")
 
     if args.dependencies or args.missing:
         to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)

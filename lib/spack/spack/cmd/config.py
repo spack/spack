@@ -201,9 +201,9 @@ def _get_scope_and_section(args):
 
 def print_configuration(args, *, blame: bool) -> None:
     if args.scope and args.scope not in spack.config.existing_scope_names():
-        args.subparser.error(f"the argument --scope={args.scope} must refer to an existing scope.")
+        args.subparser.error(f"the argument --scope={args.scope} must refer to an existing scope")
     if args.scope and args.section is None:
-        args.subparser.error(f"the argument --scope={args.scope} requires specifying a section.")
+        args.subparser.error(f"the argument --scope={args.scope} requires specifying a section")
 
     group = getattr(args, "group", None)
     if group is not None:
