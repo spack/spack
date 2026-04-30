@@ -2725,7 +2725,9 @@ class PackageInstaller:
         is_root = dag_hash in self.build_graph.roots
         user_policy = self.root_policy if is_root else self.dependencies_policy
 
-        if exitcode == ExitCode.BUILD_CACHE_MISS and user_policy == "auto":
+        if exitcode == ExitCode.STOPPED_AT_PHASE:
+            return  # the user requested early stopping; don't treat as failure
+        elif exitcode == ExitCode.BUILD_CACHE_MISS and user_policy == "auto":
             # Check if we can reschedule this as a source build after a build cache miss. If so,
             # return early without recording a failure.
             self.build_graph.force_source.add(dag_hash)
@@ -2734,8 +2736,6 @@ class PackageInstaller:
                 self.pending_expansions.append(dag_hash)
             else:
                 self.pending_builds.append(dag_hash)
-        elif exitcode == ExitCode.STOPPED_AT_PHASE:
-            pass  # the user requested early stopping; don't treat as failure
         elif not failures or not self.fail_fast:
             # Record a failure. In fail-fast mode, only record the first failure; subsequent
             # failures may be a consequence of us terminating other builds.
