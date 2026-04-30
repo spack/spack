@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 
 import spack.spec
 import spack.store
+from spack.util import tty
 from spack.variant import VariantType, VariantValue
 
 from .common import BaseConfiguration, BaseModuleFileWriter
@@ -181,6 +182,8 @@ class TclConfiguration(BaseConfiguration):
         install_specs = self._specs_sharing_modulefile()
         total_installs = len(install_specs)
         variants_mode = self.variants_mode
+        variant_defaults = self.variant_defaults
+        name_version_spec = self.spec.format("{name}{@version}")
 
         specs_need_hash = set(self._specs_need_hash_variant())
         install_variant_dicts = [
@@ -209,6 +212,23 @@ class TclConfiguration(BaseConfiguration):
             # Set a default if single value
             elif len(aggregated[name]["values"]) == 1:
                 aggregated[name]["default"] = list(aggregated[name]["values"])[0]
+
+            # Set default value for variant as defined in configuration if this value exists
+            # among installations and variant is not conditional
+            if name in variant_defaults:
+                default = str(variant_defaults[name])
+                if default not in aggregated[name]["values"]:
+                    tty.debug(
+                        f"\tConfigured default value for variant {name} is not part of "
+                        f"existing {name_version_spec} installations"
+                    )
+                elif aggregated[name]["conditional"]:
+                    tty.warn(
+                        f"Configured default value cannot be set on {name_version_spec} "
+                        f"conditional variant {name}"
+                    )
+                else:
+                    aggregated[name]["default"] = default
 
         if variants_mode == "varying":
             # filter out variants whose value does not vary across installations

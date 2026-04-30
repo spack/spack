@@ -1671,3 +1671,442 @@ class TestTcl:
             content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
         assert len([x for x in content if "variant " in x]) == 2
         assert len([x for x in content if "variant hash " in x]) == 1
+
+    def test_variant_defaults_none(self, modulefile_content, module_configuration):
+        """Tests variant defaults when variants mode is ``"none"``."""
+        module_configuration("variant_defaults_none")
+
+        content = modulefile_content("mpileaks@2.3")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("mpileaks@2.3 +debug ~shared +opt ~fortran")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("mpileaks@2.3 ~debug +shared ~opt +fortran")
+        assert content and len([x for x in content if "variant " in x]) == 0
+
+        content = modulefile_content("mpileaks@2.2")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("mpileaks@2.2 ~fortran")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("mpileaks@2.2 +fortran")
+        assert content and len([x for x in content if "variant " in x]) == 0
+
+        content = modulefile_content("mpich@3.0.4")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("mpich@3.0.4 +debug")
+        assert content and len([x for x in content if "variant " in x]) == 0
+
+        content = modulefile_content("manyvariants@1.0.1")
+        assert content and len([x for x in content if "variant " in x]) == 0
+        content = modulefile_content("manyvariants@1.0.1 ~a +b c=v2 d=v3")
+        assert content and len([x for x in content if "variant " in x]) == 0
+
+    def test_variant_defaults_all(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Tests variant defaults when installations are folded and variants mode is ``"all"``."""
+        module_configuration("variant_defaults_all")
+
+        spec_a = "mpileaks@2.3"
+        spec_b = "mpileaks@2.3 +debug ~shared +opt ~fortran"
+        spec_c = "mpileaks@2.3 ~debug +shared ~opt +fortran"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        uninstall("-y", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+
+        spec_a = "mpileaks@2.2"
+        spec_b = "mpileaks@2.2 +fortran"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+
+        spec_a = "mpich@3.0.4"
+        spec_b = "mpich@3.0.4 +debug"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean debug" in x]) == 1
+
+        spec_a = "manyvariants@1.0.1"
+        spec_b = "manyvariants@1.0.1 ~a +b c=v2 d=v3"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default True a" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False b" in x]) == 1
+        assert len([x for x in content if "variant --default v1 c v1" in x]) == 1
+        assert len([x for x in content if "variant --default v1 d v1" in x]) == 1
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default True a" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False b" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "variant --default v1 c v1 v2" in x or "variant --default v1 c v2 v1" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "variant d v1 v3" in x or "variant d v3 v1" in x]) == 1
+
+        spec_a = "conditional-variant-pkg@1.0"
+        spec_b = "conditional-variant-pkg@1.0 +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 3
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default True two_whens" in x]) == 1
+
+        spec_a = "conditional-variant-pkg@2.0 ~version_based"
+        spec_b = "conditional-variant-pkg@2.0 +version_based ~variant_based"
+        spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content if "variant --boolean --default False version_based" in x])
+            == 1
+        )
+        assert len([x for x in content if "variant " in x]) == 3
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert (
+            len([x for x in content if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert len([x for x in content if "variant " in x]) == 4
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert (
+            len([x for x in content if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 5
+        uninstall("-y", spec_a)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content if "variant --boolean --default True version_based" in x]) == 1
+        )
+        assert (
+            len([x for x in content if "variant --boolean --default True variant_based" in x]) == 1
+        )
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 5
+
+    def test_variant_defaults_all_exclude(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Tests variant defaults when installations are folded, variants mode is ``"all"``
+        and some variants are excluded."""
+        module_configuration("variant_defaults_all_exclude")
+
+        spec_a = "mpileaks@2.3"
+        spec_b = "mpileaks@2.3 +debug ~shared +opt ~fortran"
+        spec_c = "mpileaks@2.3 ~debug +shared ~opt +fortran"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 5
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        uninstall("-y", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+
+        spec_a = "mpich@3.0.4"
+        spec_b = "mpich@3.0.4 +debug"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean " in x]) == 0
+        assert len([x for x in content if "variant " in x]) == 2
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean " in x]) == 0
+        assert len([x for x in content if "variant " in x]) == 3
+
+        spec_a = "manyvariants@1.0.1"
+        spec_b = "manyvariants@1.0.1 ~a +b c=v2 d=v3"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False b" in x]) == 1
+        assert len([x for x in content if "variant --default v1 c v1" in x]) == 1
+        assert len([x for x in content if "variant --default v1 d v1" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 5
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean --default False b" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "variant --default v1 c v1 v2" in x or "variant --default v1 c v2 v1" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "variant d v1 v3" in x or "variant d v3 v1" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 5
+
+        spec_a = "conditional-variant-pkg@1.0"
+        spec_b = "conditional-variant-pkg@1.0 +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean " in x]) == 0
+        assert len([x for x in content if "variant " in x]) == 2
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean " in x]) == 0
+        assert len([x for x in content if "variant " in x]) == 3
+
+        spec_a = "conditional-variant-pkg@2.0 ~version_based"
+        spec_b = "conditional-variant-pkg@2.0 +version_based ~variant_based"
+        spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content if "variant --boolean --default False version_based" in x])
+            == 1
+        )
+        assert len([x for x in content if "variant " in x]) == 3
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert len([x for x in content if "variant --boolean " in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 3
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant --boolean " in x]) == 2
+        assert len([x for x in content if "variant " in x]) == 4
+        uninstall("-y", spec_a)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content if "variant --boolean --default True version_based" in x]) == 1
+        )
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant --boolean " in x]) == 2
+        assert len([x for x in content if "variant " in x]) == 4
+
+    def test_variant_defaults_varying(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Tests variant defaults when installations are folded and variants mode is
+        ``"varying"``."""
+        module_configuration("variant_defaults_varying")
+
+        spec_a = "mpileaks@2.3"
+        spec_b = "mpileaks@2.3 +debug ~shared +opt ~fortran"
+        spec_c = "mpileaks@2.3 ~debug +shared ~opt +fortran"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 4
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 5
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True fortran" in x]) == 1
+        uninstall("-y", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 4
+        assert len([x for x in content if "variant --boolean --default False debug" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean opt" in x]) == 1
+
+        spec_a = "mpileaks@2.2"
+        spec_b = "mpileaks@2.2 +fortran"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
+
+        spec_a = "mpich@3.0.4"
+        spec_b = "mpich@3.0.4 +debug"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "variant --boolean debug" in x]) == 1
+
+        spec_a = "manyvariants@1.0.1"
+        spec_b = "manyvariants@1.0.1 ~a +b c=v2 d=v3"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 5
+        assert len([x for x in content if "variant --boolean --default True a" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False b" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "variant --default v1 c v1 v2" in x or "variant --default v1 c v2 v1" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "variant d v1 v3" in x or "variant d v3 v1" in x]) == 1
+
+        spec_a = "conditional-variant-pkg@1.0"
+        spec_b = "conditional-variant-pkg@1.0 +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "variant --boolean --default True two_whens" in x]) == 1
+
+        spec_a = "conditional-variant-pkg@2.0 ~version_based"
+        spec_b = "conditional-variant-pkg@2.0 +version_based ~variant_based"
+        spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based +two_whens"
+        install("--fake", "--add", spec_a)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant " in x]) == 0
+        install("--fake", "--add", spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 2
+        install("--fake", "--add", spec_c)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert len([x for x in content if "variant --boolean version_based" in x]) == 1
+        assert (
+            len([x for x in content if "variant --boolean --default False variant_based" in x])
+            == 1
+        )
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 4
+        uninstall("-y", spec_a)
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len([x for x in content if "variant --boolean --default True variant_based" in x]) == 1
+        )
+        assert len([x for x in content if "variant --boolean --default False two_whens" in x]) == 1
+        assert len([x for x in content if "variant " in x]) == 3

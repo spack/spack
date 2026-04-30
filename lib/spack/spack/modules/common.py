@@ -612,6 +612,11 @@ class BaseConfiguration:
         filter_subsection = self.conf.get("filter", {})
         return filter_subsection.get("exclude_variants", [])
 
+    @property
+    def variant_defaults(self) -> Dict[str, Union[str, bool]]:
+        """Dictionary of default values defined for variants."""
+        return self.conf.get("variant_defaults", {})
+
     def _create_list_for(self, what: str) -> List[spack.spec.Spec]:
         return [
             item

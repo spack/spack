@@ -375,6 +375,36 @@ If two installations folded in the same module file cannot be distinguished by t
    This changes the module designation of previously installed variants and also affects module dependency load commands.
    In this case it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>`.
 
+Defining default values for module variants
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When variants are defined with multiple possible values in module files, users may need to specify a full variant combination to select the desired installation.
+
+To simplify module usage, Spack can define default values for selected variants in generated module files using the ``variant_defaults`` configuration option.
+When a default value is set for a variant, the corresponding variant specification can be omitted when evaluating the module file.
+
+The ``variant_defaults`` option takes a mapping from variant names to their default values:
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       tcl:
+         variants: all
+         hash_length: 0
+         all:
+           variant_defaults:
+             debug: false
+             shared: true
+         python:
+           variant_defaults:
+             tkinter: false
+
+A configured default value for a variant is registered in the module file only if, among the specifications of the installed packages folded into the module file:
+
+* the configured value exists
+* the variant is not conditional (i.e., it is defined on all installations included in the generated module file)
+
 Filtering defined variants
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
