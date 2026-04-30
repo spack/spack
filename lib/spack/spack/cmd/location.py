@@ -79,6 +79,16 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="location of the named or current environment",
     )
+    directories.add_argument(
+        "-v",
+        "--view",
+        action="store",
+        nargs="?",
+        metavar="name",
+        dest="location_view",
+        default=False,
+        help="location of the named or active environment view",
+    )
 
     subparser.add_argument(
         "--first",
@@ -112,6 +122,22 @@ def location(parser, args):
                 tty.die("no such environment: '%s'" % args.location_env)
             path = ev.root(args.location_env)
         print(path)
+        return
+
+    # no -v corresponds to False, -v without arg to None, -v name to the string name.
+    if args.location_view is not False:
+        env = spack.cmd.require_active_env("location -v")
+        view_name = args.location_view
+        if view_name is None:
+            # get active view name
+            view_name = os.getenv(ev.spack_env_view_var)
+            if view_name is None:
+                tty.die("no active view in the current environment")
+        # print the view location
+        if env.has_view(view_name):
+            print(f"{env.views[view_name].root}\n")
+        else:
+            tty.die("no such view in the current environment: '%s'" % view_name)
         return
 
     if args.repo is not False:

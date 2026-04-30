@@ -104,6 +104,80 @@ def test_location_env_missing():
     assert out == error
 
 
+def test_location_active_view(mutable_mock_env_path, monkeypatch):
+    """Tests spack location --view for the active view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    monkeypatch.setenv(ev.spack_env_view_var, "viewname")
+    with e:
+        assert location("--view").strip() == view_path
+
+
+def test_location_no_active_view(mutable_mock_env_path):
+    """Tests spack location --env without active view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    error = "==> Error: no active view in the current environment"
+    with e:
+        out = location("--view", fail_on_error=False).strip()
+        assert out == error
+
+
+def test_location_view_exists(mutable_mock_env_path):
+    """Tests spack location --view <name> for an existing view."""
+    mutable_mock_env_path.mkdir()
+    view_path = os.path.abspath(mutable_mock_env_path / "path" / "to" / "view")
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        f"""spack:
+      specs: []
+      view:
+        viewname:
+          root: {view_path}
+      concretizer:
+        unify: True
+    """
+    )
+    e = ev.Environment(mutable_mock_env_path)
+    with e:
+        assert location("--view", "viewname").strip() == view_path
+
+
+def test_location_view_missing(mutable_mock_env_path):
+    """Tests spack location --env <view> with missing view."""
+    e = ev.create("example", with_view=True)
+    e.write()
+    missing_view_name = "missing-view"
+    error = "==> Error: no such view in the current environment: '%s'" % missing_view_name
+    with e:
+        out = location("--view", missing_view_name, fail_on_error=False).strip()
+        assert out == error
+
+
 @pytest.mark.db
 @pytest.mark.not_on_windows("Broken on Windows")
 def test_location_install_dir(mock_spec):
