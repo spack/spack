@@ -1165,10 +1165,11 @@ class OptionalInclude:
         # file      | other     | Error
 
         exists = os.path.exists(config_path)
-        if not exists and not self.optional
+        if not exists and not self.optional:
             dest = f" at ({config_path})" if config_path != os.path.normpath(path) else ""
             raise ValueError(f"Required path ({path}) does not exist{dest}")
 
+        _, ext = os.path.splitext(config_path)
         if os.path.isdir(config_path) or not ext:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
