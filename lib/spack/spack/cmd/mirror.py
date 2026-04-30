@@ -621,15 +621,15 @@ def mirror_create(args):
 
     if not args.specs and not args.file and not args.all:
         args.subparser.error(
-            "no packages were specified."
-            " To mirror all packages, use the '--all' option"
-            " (this will require significant time and space)."
+            "no packages were specified\n"
+            "  to mirror all packages, use the '--all' option"
+            " (this will require significant time and space)"
         )
 
     if args.versions_per_spec and args.all:
         args.subparser.error(
-            "cannot specify '--versions_per-spec' and '--all' together."
-            " The option '--all' already implies mirroring all versions for each package."
+            "cannot specify '--versions_per-spec' and '--all' together\n"
+            "  '--all' already implies mirroring all versions for each package"
         )
 
     # When no directory is provided, the source dir is used

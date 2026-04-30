@@ -147,7 +147,7 @@ def pkg_source(args):
     """dump source code for a package"""
     specs = spack.cmd.parse_specs(args.spec, concretize=False)
     if len(specs) != 1:
-        tty.die("spack pkg source requires exactly one spec")
+        args.subparser.error("requires exactly one spec")
 
     spec = specs[0]
     filename = spack.repo.PATH.filename_for_package_name(spec.name)

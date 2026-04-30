@@ -93,8 +93,8 @@ def deconcretize_specs(args, specs):
 def deconcretize(parser, args):
     if not args.specs and not args.all:
         args.subparser.error(
-            "deconcretize requires at least one spec argument."
-            " Use `spack deconcretize --all` to deconcretize ALL specs."
+            "requires at least one spec argument\n"
+            "  use `spack deconcretize --all` to deconcretize ALL specs"
         )
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]

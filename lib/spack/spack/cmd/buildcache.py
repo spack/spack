@@ -665,7 +665,7 @@ def download_fn(args):
     specs = _matching_specs(spack.cmd.parse_specs(args.spec))
 
     if len(specs) != 1:
-        tty.die("a single spec argument is required to download from a buildcache")
+        args.subparser.error("requires a single spec argument")
 
     spack.binary_distribution.download_single_spec(specs[0], args.path)
 
@@ -680,7 +680,7 @@ def save_specfile_fn(args):
     specs = spack.cmd.parse_specs(args.root_spec)
 
     if len(specs) != 1:
-        tty.die("a single spec argument is required to save specfile")
+        args.subparser.error("requires a single spec argument")
 
     root = specs[0]
 

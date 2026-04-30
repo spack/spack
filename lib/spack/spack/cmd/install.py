@@ -288,7 +288,7 @@ def _dump_log_on_error(e: InstallError):
 
 
 def _die_require_env(parser):
-    msg = "install requires a package argument or active environment"
+    msg = "requires a package argument or active environment"
     if "spack.yaml" in os.listdir(os.getcwd()):
         # There's a spack.yaml file in the working dir, the user may
         # have intended to use that
@@ -431,7 +431,7 @@ def install_without_active_env(args, install_kwargs, reporter):
     concrete_specs = concrete_specs_from_cli(args, install_kwargs)
 
     if len(concrete_specs) == 0:
-        tty.die("The `spack install` command requires a spec to install.")
+        args.subparser.error("requires a spec")
 
     if args.overwrite:
         require_user_confirmation_for_overwrite(concrete_specs, args)

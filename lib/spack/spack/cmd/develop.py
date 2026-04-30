@@ -228,8 +228,7 @@ def _dev_spec_generator(args, env):
         specs = spack.cmd.parse_specs(args.spec)
         if (args.path or args.build_directory) and len(specs) > 1:
             args.subparser.error(
-                "spack develop requires at most one named spec when using the --path or"
-                " --build-directory arguments"
+                "requires at most one named spec when using the --path or --build-directory arguments"
             )
 
         for spec in specs:
