@@ -74,6 +74,11 @@ module_file_configuration = {
             "additionalProperties": {"type": "string"},  # key
         },
         "environment": spack.schema.environment.ref_env_modifications,
+        "variant_defaults": {
+            "type": "object",
+            "description": "Define default value for module variants",
+            "additionalProperties": {"anyOf": [{"type": "string"}, {"type": "boolean"}]},
+        },
     },
 }
 

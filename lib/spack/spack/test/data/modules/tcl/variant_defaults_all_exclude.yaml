@@ -1,0 +1,60 @@
+enable:
+  - tcl
+tcl:
+  variants: all
+  hash_length: 0
+  all:
+    autoload: direct
+    variant_defaults:
+      invalid: value
+      bool_invalid: true
+      debug: true
+      build_system: foo
+      shared: bad
+      fortran: false
+    filter:
+      exclude_variants:
+        - debug
+        - opt
+
+  mpileaks@2.3:
+    variant_defaults:
+      unk: false
+      bool_invalid: false
+      debug: false
+      shared: false
+      fortran: true
+      opt: bad
+    filter:
+      exclude_variants:
+        - unk
+
+  mpich:
+    variant_defaults:
+      debug: bad
+
+  manyvariants:
+    variant_defaults:
+      a: true
+      b: false
+      c: v1
+      d: v2
+    filter:
+      exclude_variants:
+        - a
+
+  conditional-variant-pkg@1.0:
+    variant_defaults:
+      two_whens: true
+      version_based: false
+    filter:
+      exclude_variants:
+        - two_whens
+
+  conditional-variant-pkg@2.0:
+    variant_defaults:
+      two_whens: false
+      variant_based: true
+    filter:
+      exclude_variants:
+        - variant_based
