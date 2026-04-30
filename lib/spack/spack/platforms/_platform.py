@@ -118,3 +118,53 @@ class Platform:
                 yield o._cmp_iter
 
         yield oses
+
+    def to_json(self):
+        """Serialize platform to JSON-compatible dict."""
+        return {
+            "name": self.name,
+            "default": self.default,
+            "default_os": self.default_os,
+            "operating_sys": {name: os.to_dict() for name, os in self.operating_sys.items()},
+        }
+
+    @classmethod
+    def from_json_base(cls, platform_cls, data):
+        """Create a platform from JSON data without platform-specific initialization.
+
+        This method bypasses the normal __init__ to avoid platform-specific code that
+        may not work on the current host (e.g., instantiating LinuxDistro on macOS).
+
+        Args:
+            platform_cls: The platform class to instantiate (e.g., Linux, Darwin)
+            data: dict with keys:
+                - 'name': platform name (string)
+                - 'default': default target name (string)
+                - 'default_os': default OS name (string)
+                - 'operating_sys': dict mapping OS names to dicts with 'name' and 'version'
+
+        Returns:
+            Platform instance populated from the provided data
+        """
+        from spack.operating_systems import OperatingSystem
+
+        # Create instance without calling __init__
+        instance = platform_cls.__new__(platform_cls)
+
+        # Manually initialize base attributes
+        instance.name = data["name"]
+        instance.default = data["default"]
+        instance.default_os = data["default_os"]
+        instance.targets = {}
+        instance.operating_sys = {}
+
+        # Initialize targets (reusing the normal method but don't auto-detect default)
+        for name, microarchitecture in spack.vendor.archspec.cpu.TARGETS.items():
+            instance.add_target(name, microarchitecture)
+
+        # Recreate operating systems from JSON data
+        for os_name, os_data in data.get("operating_sys", {}).items():
+            os_instance = OperatingSystem.from_json(os_data)
+            instance.operating_sys[os_name] = os_instance
+
+        return instance

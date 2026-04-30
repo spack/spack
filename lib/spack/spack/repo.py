@@ -2104,6 +2104,90 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 PATH = cast(RepoPath, Singleton(lambda: create_and_enable(spack.config.CONFIG)))
 
 
+class _SimulatedSysModule:
+    """Wrapper that makes sys.platform writable for simulation.
+
+    Delegates all attribute access to the real sys module except for platform,
+    which returns the simulated value if set.
+    """
+
+    def __init__(self, real_sys, simulated_platform):
+        object.__setattr__(self, "_real_sys", real_sys)
+        object.__setattr__(self, "_simulated_platform", simulated_platform)
+
+    def __getattr__(self, name):
+        if name == "platform":
+            return self._simulated_platform
+        return getattr(self._real_sys, name)
+
+    def __setattr__(self, name, value):
+        setattr(self._real_sys, name, value)
+
+    def __dir__(self):
+        return dir(self._real_sys)
+
+
+# Define an alternative exec_module that simulates being on a different platform
+_original_exec_module = importlib.machinery.SourceFileLoader.exec_module
+
+
+_spack_simulated_platform = None
+
+
+_spack_simulated_machine = None
+
+
+def _is_package_module(module):
+    name = module.__name__
+    return name.startswith("spack.pkg.") or (
+        name.startswith("spack_repo.") and ".packages." in name
+    )
+
+
+def _simulated_platform_exec_module(self, module):
+    """Patched exec_module that applies sys.platform simulation for package modules."""
+    if not _spack_simulated_platform or not _is_package_module(module):
+        _original_exec_module(self, module)
+        return
+
+    # If we got here, we are in platform simulation mode and we are loading
+    # a package.py file
+    simulated_platform = _spack_simulated_platform
+    simulated_machine = _spack_simulated_machine
+    import platform as platform_module
+
+    # Create simulated modules
+    simulated_sys = _SimulatedSysModule(sys, simulated_platform)
+
+    class _SimulatedPlatformModule:
+        def __getattr__(self, name):
+            if name == "system":
+                return lambda: simulated_platform
+            elif name == "machine" and simulated_machine:
+                return lambda: simulated_machine
+            return getattr(platform_module, name)
+
+    simulated_platform_mod = _SimulatedPlatformModule()
+
+    # Save originals
+    original_sys_module = sys.modules["sys"]
+    original_platform_module = sys.modules["platform"]
+
+    try:
+        # Replace in sys.modules
+        sys.modules["sys"] = simulated_sys
+        sys.modules["platform"] = simulated_platform_mod
+
+        # Execute with patched environment
+        _original_exec_module(self, module)
+    finally:
+        # Restore
+        sys.modules["sys"] = original_sys_module
+        sys.modules["platform"] = original_platform_module
+
+
+importlib.machinery.SourceFileLoader.exec_module = _simulated_platform_exec_module  # type: ignore[method-assign]
+
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)

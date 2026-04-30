@@ -22,3 +22,8 @@ class Windows(Platform):
     def detect(cls):
         plat = platform.system().lower()
         return "cygwin" in plat or "win32" in plat or "windows" in plat
+
+    @classmethod
+    def from_json(cls, data):
+        """Instantiate from serialized data generated with ``Platform.to_json``"""
+        return Platform.from_json_base(cls, data)

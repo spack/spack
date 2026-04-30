@@ -20,3 +20,8 @@ class Linux(Platform):
     @classmethod
     def detect(cls):
         return "linux" in platform.system().lower()
+
+    @classmethod
+    def from_json(cls, data):
+        """Instantiate from serialized data generated with ``Platform.to_json``"""
+        return Platform.from_json_base(cls, data)
