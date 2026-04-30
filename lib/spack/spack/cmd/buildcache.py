@@ -521,7 +521,7 @@ def push_fn(args):
     with spack.store.STORE.db.read_transaction():
         if any(not s.installed for s in specs):
             specs, not_installed = stable_partition(specs, lambda s: s.installed)
-            if args.fail_fast:
+            if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
             elif args.allow_missing:
                 tty.warn(
