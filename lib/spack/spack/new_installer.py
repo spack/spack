@@ -2067,7 +2067,7 @@ class ReportData:
         record = self.build_records.get(spec.dag_hash())
         if record is None or spec.external:
             return
-        if exitcode == 0:
+        if exitcode == ExitCode.SUCCESS:
             record.succeed(log_path)
         else:
             record.fail(
@@ -2710,7 +2710,7 @@ class PackageInstaller:
         assert exitcode is not None, "Finished build should have exit code set"
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
-        if exitcode == 0:
+        if exitcode == ExitCode.SUCCESS:
             # Schedule successful builds for batched database insertion. We don't release the
             # prefix lock here; that strictly happens after a successful db write.
             database_actions.append(build)
