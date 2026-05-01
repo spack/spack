@@ -37,6 +37,7 @@ import re
 import shutil
 import sys
 import tempfile
+import warnings
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
@@ -164,7 +165,7 @@ class ConfigScope:
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
                     if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
                     if included_scope not in self._included_scopes:
@@ -1292,12 +1293,12 @@ class IncludePath(OptionalInclude):
         try:
             config_path = rfc_util.local_path(self.path, self.sha256, base)
         except spack.error.FetchError as e:
-            tty.debug(f"Failed to fetch include at {self.path}: {e}")
+            warnings.warn(f"Failed to fetch include at {self.path}: {e}")
             if self.optional:
                 return []
 
             # If this is not an optional include, fail early for this error
-            raise spack.error.ConfigFileError("Failed to include non-optional config") from e
+            raise ConfigFileError("Failed to include non-optional config") from e
 
         self.destination = config_path
 
@@ -1366,6 +1367,9 @@ class GitIncludePaths(OptionalInclude):
             parent_scope: enclosing scope
 
         Returns: destination path if cloned or ``None``
+
+        Raises:
+            ConfigError: unable to create or clone the git repo
         """
         if self.fetched():
             tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
@@ -1384,7 +1388,7 @@ class GitIncludePaths(OptionalInclude):
                 except spack.util.executable.ProcessError as e:
                     msg = f"Unable to initialize repository ({self.git}) under {destination}: {e}"
                     if self.optional:
-                        tty.warn(msg)
+                        warnings.warn(msg)
                     else:
                         raise spack.error.ConfigError(msg)
 
@@ -1412,7 +1416,7 @@ class GitIncludePaths(OptionalInclude):
             except spack.util.executable.ProcessError as e:
                 msg = f"Unable to check out repository ({self}) in {destination}: {e}"
                 if self.optional:
-                    tty.warn(msg)
+                    warnings.warn(msg)
                 else:
                     raise spack.error.ConfigError(msg)
                 # Cleanup the destination if it exists
