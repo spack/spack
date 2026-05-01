@@ -704,6 +704,31 @@ Any preference can be overwritten on the command line if explicitly requested.
 Preferences cannot overcome explicit constraints, as they only set a preferred ordering among homogeneous attribute values.
 Going back to the example, if ``gperftools@2.3:`` was requested, then Spack will install version 2.4 since the most preferred version 2.2 is prohibited by the version constraint.
 
+.. _package-deprecations-config:
+
+Allowing Deprecated Versions
+----------------------------
+
+When a package uses the ``deprecated()`` directive (see :ref:`packaging_deprecations`), the concretizer checks the selected deprecation severity against a per-package threshold.
+Deprecations whose severity *exceeds* the threshold cause a concretization error.
+Those at or below it emit a warning and allow concretization to proceed.
+
+The threshold is set with ``allowed_deprecation_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
+The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
+
+The setting can be applied globally under ``all:`` or overridden for a specific package:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       allowed_deprecation_severity: low
+     openssl:
+       allowed_deprecation_severity: none
+
+In this example, ``low``-severity deprecations on any package are allowed through with a warning, while ``medium`` and above remain errors.
+The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
+
 .. _package_permissions:
 
 Package Permissions

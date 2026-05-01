@@ -42,6 +42,7 @@ from spack.directives import (
     conditional,
     conflicts,
     depends_on,
+    deprecated,
     extends,
     license,
     maintainers,
@@ -433,6 +434,7 @@ api: Dict[str, Tuple[str, ...]] = {
         "substitute_version_in_url",
         "windows_sfn",
     ),
+    "v2.6": ("deprecated",),
 }
 
 # Splatting does not work for static analysis tools.
@@ -602,6 +604,7 @@ __all__ = [
     "static_library_suffix",
     "substitute_version_in_url",
     "windows_sfn",
+    "deprecated",
 ]
 
 # These are just here for editor support; they may be set when the build env is set up.

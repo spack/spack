@@ -122,6 +122,14 @@ package_attributes = {
     "patternProperties": {r"^[a-zA-Z_]\w*$": {}},
 }
 
+allowed_deprecation = {
+    "type": "string",
+    "description": "Maximum allowed deprecation severity. Specs with higher "
+    "severity cause a concretization error.",
+    "enum": ["none", "low", "medium", "high", "critical"],
+    "default": "none",
+}
+
 REQUIREMENT_URL = "https://spack.readthedocs.io/en/latest/packages_yaml.html#package-requirements"
 
 #: Properties for inclusion in other schemas
@@ -189,6 +197,7 @@ properties: Dict[str, Any] = {
                         },
                     },
                     "variants": variants,
+                    "allowed_deprecation_severity": allowed_deprecation,
                 },
                 "deprecatedProperties": [
                     {
@@ -237,6 +246,7 @@ properties: Dict[str, Any] = {
                 # attribute, it could be useful to set it here
                 "package_attributes": package_attributes,
                 "variants": variants,
+                "allowed_deprecation_severity": allowed_deprecation,
                 "externals": {
                     "type": "array",
                     "description": "List of external, system-installed instances of this package",

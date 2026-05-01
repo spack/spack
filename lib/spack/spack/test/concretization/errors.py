@@ -75,7 +75,7 @@ def test_error_messages(
     "spec", ["deprecated-versions@1.1.0", "deprecated-client ^deprecated-versions@1.1.0"]
 )
 def test_deprecated_version_error(spec, mock_packages, mutable_config: Configuration):
-    with pytest.raises(spack.solver.asp.DeprecatedVersionError, match="deprecated-versions@1.1.0"):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="deprecated"):
         _ = spack.concretize.concretize_one(spec)
 
     mutable_config.set("config:deprecated", True)
