@@ -59,6 +59,7 @@ import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
+from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -69,6 +70,7 @@ __all__ = [
     "conditional",
     "conflicts",
     "depends_on",
+    "deprecated",
     "extends",
     "maintainers",
     "license",
@@ -154,7 +156,7 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive("versions", supports_when=False)
+@directive(("versions", "deprecations"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -261,6 +263,9 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs
 
+    if kwargs.get("deprecated", False):
+        _execute_deprecated(pkg, spec=f"@{version}", reason="maintenance", severity="critical")
+
 
 @directive("conflicts")
 def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
@@ -293,6 +298,28 @@ def _execute_conflicts(pkg: PackageType, conflict_spec, when, msg):
     conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
     msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
     conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
+
+
+@directive("deprecations", supports_when=False)
+def deprecated(spec: Optional[SpecType] = None, *, reason: str, severity: str = "low"):
+    """Mark a spec constraint as deprecated.
+
+    Args:
+        spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
+            is deprecated.
+        reason: why this spec is deprecated.  One of ``"cve"``, ``"rename"``,
+            ``"unavailable"``, ``"maintenance"``.
+        severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
+            ``"high"``, ``"critical"``.
+    """
+    return partial(_execute_deprecated, spec=spec, reason=reason, severity=severity)
+
+
+def _execute_deprecated(pkg: PackageType, spec: Optional[str], reason: str, severity: str):
+    sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
+    rsn = DeprecationReason(reason)
+    constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
+    pkg.deprecations.setdefault(constraint, []).append((rsn, sev))
 
 
 @directive("dependencies", can_patch_dependencies=True)

@@ -51,6 +51,7 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
+from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.llnl.util.filesystem import (
@@ -575,6 +576,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     splice_specs: Dict[spack.spec.Spec, Tuple[spack.spec.Spec, Union[None, str, List[str]]]]
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
+    #: Class level dictionary populated by :func:`~spack.directives.deprecated` directives
+    deprecations: Dict[spack.spec.Spec, List[Tuple[DeprecationReason, DeprecationSeverity]]]
 
     #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str

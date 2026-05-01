@@ -2142,6 +2142,36 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
    See :ref:`sec-specs` for more information.
 
 
+.. _packaging_deprecations:
+
+Deprecations
+------------
+
+The ``deprecated()`` directive marks certain configurations, or an entire package, as deprecated.
+For example, to flag a version that has a known CVE:
+
+.. code-block:: python
+
+   class Openssl(Package):
+       version("3.0.7", sha256="...")
+       version("1.1.1t", sha256="...")
+
+       deprecated("@1.1.1t", reason="cve", severity="high")
+
+The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
+The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
+The optional ``severity`` keyword ranks the urgency: ``"low"``, ``"medium"``, ``"high"``, or ``"critical"`` in increasing order, defaulting to ``"low"``.
+
+Depending on the user's configuration, selecting a deprecated configuration may result in a warning only, or in a hard concretization error.
+In either case, non-deprecated versions are preferred over deprecated ones, and lower-severity deprecated versions over higher-severity ones.
+See :ref:`package-deprecations-config` for how to configure the threshold.
+
+The older ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
+
+.. code-block:: python
+
+   deprecated("@X.Y", reason="maintenance", severity="critical")
+
 .. _packaging_requires:
 
 Requires

@@ -32,3 +32,25 @@ class PropagationPolicy(enum.Enum):
 
     NONE = enum.auto()
     PREFERENCE = enum.auto()
+
+
+class DeprecationSeverity(enum.IntEnum):
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+
+    @classmethod
+    def _missing_(cls, value):
+        severity = {"none": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+        if not isinstance(value, str) or value not in severity:
+            raise ValueError(f"{value!r} is not a valid DeprecationSeverity")
+        return cls(severity[value])
+
+
+class DeprecationReason(enum.Enum):
+    CVE = "cve"
+    RENAME = "rename"
+    UNAVAILABLE = "unavailable"
+    MAINTENANCE = "maintenance"
