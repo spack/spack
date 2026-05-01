@@ -4,12 +4,13 @@
 """Used to mark all specs in the currently active environment as develop
 Used by the integration test CI job
 """
+
 import pathlib
 import sys
 
+import spack.environment as senv
 import spack.main
 import spack.repo as sr
-import spack.environment as senv
 
 
 def main(repo_name):
