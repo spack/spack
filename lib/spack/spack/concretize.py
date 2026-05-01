@@ -45,10 +45,7 @@ def _concretize_specs_together(
     """
     from spack.solver.asp import Solver
 
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        abstract_specs, tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = Solver(specs_factory=factory).solve(abstract_specs, tests=tests)
     return [s.copy() for s in result.specs]
 
 
@@ -117,15 +114,12 @@ def concretize_together_when_possible(
     }
 
     result_by_user_spec: Dict[Spec, Spec] = {}
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
     ui.on_concretization_started(
         kind=SolveKind.WHEN_POSSIBLE, total=len(to_concretize), processes=1
     )
     start = time.monotonic()
-    for result in Solver(specs_factory=factory).solve_in_rounds(
-        to_concretize, tests=tests, allow_deprecated=allow_deprecated
-    ):
+    for result in Solver(specs_factory=factory).solve_in_rounds(to_concretize, tests=tests):
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
@@ -269,10 +263,7 @@ def concretize_one(
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        [spec], tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = Solver(specs_factory=factory).solve([spec], tests=tests)
 
     # take the best answer
     opt, i, answer = min(result.answers)

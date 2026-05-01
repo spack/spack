@@ -69,6 +69,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.enums import DeprecationSeverity
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
@@ -771,6 +772,12 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
+    def deprecated_error(self, pkg, reason: str, severity: str, allowed: str) -> str:
+        return (
+            f"'{pkg}': deprecated spec (reason: {reason}, severity: {_severity_to_str(severity)})"
+            f" exceeds allowed severity '{_severity_to_str(allowed)}'"
+        )
+
     def _get_cause_tree(
         self,
         cause: Tuple[str, str],
@@ -820,6 +827,9 @@ class ErrorHandler:
 
         if msg == "no_value_error":
             return self.no_value_error(*args)
+
+        if msg == "deprecated_error":
+            return self.deprecated_error(*args)
 
         try:
             idx = args.index("startcauses")
@@ -1068,7 +1078,6 @@ class PyclingoDriver:
         packages_with_externals=None,
         output: Optional[OutputConfiguration] = None,
         control: Optional[Any] = None,  # TODO: figure out how to annotate clingo.Control
-        allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """Set up the input and solve for dependencies of ``specs``.
 
@@ -1078,7 +1087,6 @@ class PyclingoDriver:
             reuse: list of concrete specs that can be reused
             output: configuration object to set the output of this solve.
             control: configuration for the solver. If None, default values will be used
-            allow_deprecated: if True, allow deprecated versions in the solve
 
         Return:
             A tuple of the solve result, the timer for the different phases of the
@@ -1109,10 +1117,7 @@ class PyclingoDriver:
 
         timer.start("setup")
         problem_builder = setup.setup(
-            specs,
-            reuse=reuse,
-            packages_with_externals=packages_with_externals,
-            allow_deprecated=allow_deprecated,
+            specs, reuse=reuse, packages_with_externals=packages_with_externals
         )
         timer.stop("setup")
 
@@ -1368,6 +1373,24 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
+def _compute_default_deprecation_severity() -> str:
+    packages_yaml = spack.config.CONFIG.get_config("packages")
+    severity_str = packages_yaml.get("all", {}).get("allowed_deprecation_severity")
+    if severity_str is not None:
+        return severity_str
+
+    if spack.config.CONFIG.get("config:deprecated", False):
+        warnings.warn(
+            "config:deprecated is deprecated. "
+            "Use 'packages:all:allowed_deprecation_severity:critical' instead",
+            UserWarning,
+            stacklevel=2,
+        )
+        return "critical"
+
+    return "none"
+
+
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1376,6 +1399,7 @@ class SpackSolverSetup:
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
     def __init__(self, tests: spack.concretize.TestsType = False):
+        self._deprecation_default = ""
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
@@ -1388,10 +1412,6 @@ class SpackSolverSetup:
         self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
             collections.defaultdict(dict)
         )
-        self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
-            set
-        )
-
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
         self.possible_oses: Set = set()
@@ -1433,15 +1453,10 @@ class SpackSolverSetup:
                 spack.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
 
-        # Set the deprecation penalty, according to the package. This should be enough to move the
-        # first version last if deprecated.
-        if ordered_versions:
-            self.gen.fact(
-                fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
-            )
-
         for weight, declared_version in enumerate(ordered_versions):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
+
+        for declared_version in ordered_versions:
             for origin in version_provenance[declared_version]:
                 self.gen.fact(
                     fn.pkg_fact(pkg.name, fn.version_origin(declared_version, str(origin)))
@@ -1451,11 +1466,6 @@ class SpackSolverSetup:
             if pkg.needs_commit(v):
                 commit = pkg.version_or_package_attr("commit", v, "")
                 self.git_commit_versions[pkg.name][v] = commit
-
-        # Declare deprecated versions for this package, if any
-        deprecated = self.deprecated_versions[pkg.name]
-        for v in sorted(deprecated):
-            self.gen.fact(fn.pkg_fact(pkg.name, fn.deprecated_version(v)))
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
@@ -1489,6 +1499,28 @@ class SpackSolverSetup:
                 )
                 self.gen.newline()
 
+    def deprecation_rules(self, pkg):
+        """Emit facts for deprecated() directives on pkg."""
+        for constraint_spec, entries in pkg.deprecations.items():
+            msg = f"deprecated constraint {constraint_spec or pkg.name}"
+            condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
+            for reason, severity in entries:
+                self.gen.fact(
+                    fn.pkg_fact(
+                        pkg.name,
+                        fn.deprecation_directive(condition_id, reason.value, severity.value),
+                    )
+                )
+            self.gen.newline()
+
+        pkg_cfg = spack.config.CONFIG.get_config("packages").get(pkg.name, {})
+        allowed = pkg_cfg.get("allowed_deprecation_severity", self._deprecation_default)
+        self.gen.fact(
+            fn.pkg_fact(
+                pkg.name, fn.allowed_deprecation_severity(DeprecationSeverity(allowed).value)
+            )
+        )
+
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
         self.gen.h2("Compatible OS from concretizer config file")
@@ -1516,6 +1548,9 @@ class SpackSolverSetup:
 
         # conflicts
         self.conflict_rules(pkg)
+
+        # deprecated() directives
+        self.deprecation_rules(pkg)
 
         # virtuals
         self.package_provider_rules(pkg)
@@ -2152,7 +2187,7 @@ class SpackSolverSetup:
             self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))
 
     def define_package_versions_and_validate_preferences(
-        self, possible_pkgs: Set[str], *, require_checksum: bool, allow_deprecated: bool
+        self, possible_pkgs: Set[str], *, require_checksum: bool
     ):
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.CONFIG.get_config("packages")
@@ -2168,11 +2203,6 @@ class SpackSolverSetup:
                 from_package_py = [x for x in from_package_py if _is_checksummed_version(x)]
 
             for v, version_info in from_package_py:
-                if version_info.get("deprecated", False):
-                    self.deprecated_versions[pkg_name].add(v)
-                    if not allow_deprecated:
-                        continue
-
                 self.possible_versions[pkg_name][v].append(Provenance.PACKAGE_PY)
 
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
@@ -2206,9 +2236,7 @@ class SpackSolverSetup:
                 self.possible_versions[pkg_name][v].append(provenance)
             self.versions_from_yaml[pkg_name] = from_packages_yaml
 
-    def define_ad_hoc_versions_from_specs(
-        self, specs, origin, *, allow_deprecated: bool, require_checksum: bool
-    ):
+    def define_ad_hoc_versions_from_specs(self, specs, origin, *, require_checksum: bool):
         """Add concrete versions to possible versions from lists of CLI/dev specs."""
         for s in traverse.traverse_nodes(specs):
             # If there is a concrete version on the CLI *that we know nothing
@@ -2222,9 +2250,6 @@ class SpackSolverSetup:
                 raise UnsatisfiableSpecError(
                     s.format("No matching version for constraint {name}{@versions}")
                 )
-
-            if not allow_deprecated and version in self.deprecated_versions[s.name]:
-                continue
 
             self.possible_versions[s.name][version].append(origin)
 
@@ -2559,9 +2584,8 @@ class SpackSolverSetup:
                     f"'{edge.spec.name}' is not a possible dependency of any root spec"
                 )
 
-    def input_spec_version_check(self, specs, allow_deprecated: bool) -> None:
-        """Raise an error early if no versions available in the solve can satisfy the inputs."""
-        only_deprecated = []
+    def input_spec_version_check(self, specs) -> None:
+        """Raise an error early if no versions exist that can satisfy the inputs."""
         impossible = []
 
         for spec in traverse.traverse_nodes(specs):
@@ -2570,26 +2594,11 @@ class SpackSolverSetup:
             if spec.name not in self.pkgs:
                 continue  # conditional dependency that won't be satisfied
 
-            deprecated = self.deprecated_versions.get(spec.name, set())
-            sat_deprecated = [v for v in deprecated if deprecated and v.satisfies(spec.versions)]
-
             possible: Iterable = self.possible_versions.get(spec.name, set())
             sat_possible = [v for v in possible if possible and v.satisfies(spec.versions)]
 
-            if sat_deprecated and not sat_possible:
-                only_deprecated.append(spec)
-
-            if not sat_deprecated and not sat_possible:
+            if not sat_possible:
                 impossible.append(spec)
-
-        if not allow_deprecated and only_deprecated:
-            raise DeprecatedVersionError(
-                "The following input specs can only be satisfied by deprecated versions:",
-                "    "
-                + ", ".join(str(spec) for spec in only_deprecated)
-                + "\n"
-                + "Run with --deprecated to allow Spack to use these versions.",
-            )
 
         if impossible:
             raise InvalidVersionError(
@@ -2653,7 +2662,6 @@ class SpackSolverSetup:
         *,
         reuse: Optional[List[spack.spec.Spec]] = None,
         packages_with_externals=None,
-        allow_deprecated: bool = False,
     ) -> "ProblemInstanceBuilder":
         """Generate an ASP program with relevant constraints for specs.
 
@@ -2665,7 +2673,6 @@ class SpackSolverSetup:
             specs: list of Specs to solve
             reuse: list of concrete specs that can be reused
             packages_with_externals: precomputed packages config with implicit externals
-            allow_deprecated: if True adds deprecated versions into the solve
 
         Return:
             A ProblemInstanceBuilder populated with facts and rules for an ASP solve.
@@ -2733,9 +2740,6 @@ class SpackSolverSetup:
             for libc in self.clauses.libcs:
                 self.gen.fact(fn.host_libc(libc.name, libc.version))
 
-        if not allow_deprecated:
-            self.gen.fact(fn.deprecated_versions_not_allowed())
-
         self.gen.newline()
         for pkg_name in spack.compilers.config.supported_compilers():
             self.gen.fact(fn.compiler_package(pkg_name))
@@ -2790,20 +2794,17 @@ class SpackSolverSetup:
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
         self.define_package_versions_and_validate_preferences(
-            self.pkgs, allow_deprecated=allow_deprecated, require_checksum=checksummed
+            self.pkgs, require_checksum=checksummed
         )
         self.define_ad_hoc_versions_from_specs(
-            specs, Provenance.SPEC, allow_deprecated=allow_deprecated, require_checksum=checksummed
+            specs, Provenance.SPEC, require_checksum=checksummed
         )
         self.define_ad_hoc_versions_from_specs(
-            dev_specs,
-            Provenance.DEV_SPEC,
-            allow_deprecated=allow_deprecated,
-            require_checksum=checksummed,
+            dev_specs, Provenance.DEV_SPEC, require_checksum=checksummed
         )
-        self.validate_and_define_versions_from_requirements(
-            allow_deprecated=allow_deprecated, require_checksum=checksummed
-        )
+        self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
+
+        self._deprecation_default = _compute_default_deprecation_severity()
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
@@ -2846,7 +2847,7 @@ class SpackSolverSetup:
         # as they come from reusable specs
         abstract_specs = [s for s in specs if not s.concrete]
         self.impossible_dependencies_check(abstract_specs)
-        self.input_spec_version_check(abstract_specs, allow_deprecated)
+        self.input_spec_version_check(abstract_specs)
 
         return self.gen
 
@@ -3018,9 +3019,7 @@ class SpackSolverSetup:
                 # A variant in the 'when=' condition can't apply to the parent of the edge
                 tty.debug(f"[{__name__}] cannot emit subcondition for {dspec.format()}: {e}")
 
-    def validate_and_define_versions_from_requirements(
-        self, *, allow_deprecated: bool, require_checksum: bool
-    ):
+    def validate_and_define_versions_from_requirements(self, *, require_checksum: bool):
         """If package requirements mention concrete versions that are not mentioned
         elsewhere, then we need to collect those to mark them as possible
         versions. If they are abstract and statically have no match, then we
@@ -3051,9 +3050,6 @@ class SpackSolverSetup:
                     continue
 
                 if v in self.possible_versions[name]:
-                    continue
-
-                if not allow_deprecated and v in self.deprecated_versions[name]:
                     continue
 
                 # If concrete an not yet defined, conditionally define it, like we do for specs
@@ -3172,6 +3168,10 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
 FunctionTupleT = Tuple[str, Tuple[Union[str, NodeId], ...]]
 
 
+def _severity_to_str(severity: Union[int, str]) -> str:
+    return DeprecationSeverity(int(severity)).name.lower()
+
+
 class SpecBuilder:
     """Class with actions to rebuild a spec from ASP results."""
 
@@ -3276,8 +3276,13 @@ class SpecBuilder:
         assert len(dependencies) == 1, f"{virtual}: {provider_node.pkg}"
         dependencies[0].update_virtuals(virtual)
 
-    def deprecated(self, node: NodeId, version: str) -> None:
-        tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
+    def deprecated_with_reason(self, node: NodeId, reason: str, severity: str) -> None:
+        warnings.warn(
+            f'"{node.pkg}" matches a deprecated spec '
+            f"(reason: {reason}, severity: {_severity_to_str(severity)})",
+            UserWarning,
+            stacklevel=2,
+        )
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
@@ -3712,7 +3717,6 @@ class Solver:
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
         setup_only: bool = False,
-        allow_deprecated: bool = False,
     ) -> Tuple[Result, Optional[spack.util.timer.Timer], Optional[Dict]]:
         """
         Concretize a set of specs and track the timing and statistics for the solve
@@ -3726,7 +3730,6 @@ class Solver:
             If a tuple of package names, concretize test dependencies for named
             packages (defaults to False: do not concretize test dependencies).
           setup_only: if True, stop after setup and don't solve (default False).
-          allow_deprecated: allow deprecated version in the solve
         """
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
@@ -3740,7 +3743,6 @@ class Solver:
             reuse=reusable_specs,
             packages_with_externals=self.packages_with_externals,
             output=output,
-            allow_deprecated=allow_deprecated,
         )
         return result
 
@@ -3760,7 +3762,6 @@ class Solver:
         timers: bool = False,
         stats: bool = False,
         tests: spack.concretize.TestsType = False,
-        allow_deprecated: bool = False,
     ) -> Generator[Result, None, None]:
         """Solve for a stable model of specs in multiple rounds.
 
@@ -3776,7 +3777,6 @@ class Solver:
             timers (bool): print timing if set to True
             stats (bool): print internal statistics if set to True
             tests (bool): add test dependencies to the solve
-            allow_deprecated (bool): allow deprecated version in the solve
         """
         # "when_possible" requires at least one literal to be solved, so an empty input is unsat
         if not specs:
@@ -3799,7 +3799,6 @@ class Solver:
                 reuse=reusable_specs,
                 packages_with_externals=self.packages_with_externals,
                 output=output,
-                allow_deprecated=allow_deprecated,
             )
             yield result
 
