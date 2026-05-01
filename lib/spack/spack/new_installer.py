@@ -674,9 +674,12 @@ def _install(
         spack.hooks.post_install(spec, explicit)
         return
 
+    if spec.is_develop:
+        install_policy = "source_only"
+
     # Try to install from buildcache, unless user asked for source only
     # or this is a develop spec (which should always be built from source)
-    if install_policy != "source_only" and not spec.is_develop:
+    if install_policy != "source_only":
         if install_from_buildcache(mirrors, spec, unsigned, state_stream):
             spack.hooks.post_install(spec, explicit)
             return
