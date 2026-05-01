@@ -20,9 +20,9 @@ jobs:
       matrix:
         sys:
         - { os: windows-latest, shell: 'powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}' }
-        - { os: ubuntu-latest, shell: 'bash -c "source ${{ github.workspace }}/share/spack/setup-env.sh && source {0}"' }
-        - { os: macos-latest, shell: 'bash -c "source ${{ github.workspace }}/share/spack/setup-env.sh && source {0}"' }
-        - { os: macos-15-intel, shell: 'bash -c "source ${{ github.workspace }}/share/spack/setup-env.sh && source {0}"' }
+        - { os: ubuntu-latest, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
+        - { os: macos-latest, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
+        - { os: macos-15-intel, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
       fail-fast: true
     defaults:
       run:
