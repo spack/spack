@@ -1380,20 +1380,12 @@ class GitIncludePaths(OptionalInclude):
         assert destination, f"{self} requires a local cache directory"
         tty.debug(f"Cloning {self.git} into {destination}")
 
-        with filesystem.working_dir(destination, create=True):
-            if not os.path.exists(".git"):
-                try:
+        try:
+            with filesystem.working_dir(destination, create=True):
+                if not os.path.exists(".git"):
                     tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
-                except spack.util.executable.ProcessError as e:
-                    msg = f"Unable to initialize repository ({self.git}) under {destination}: {e}"
-                    if self.optional:
-                        warnings.warn(msg)
-                        return None
-                    else:
-                        raise spack.error.ConfigError(msg)
 
-            try:
                 if self.commit:
                     tty.debug(f"Pulling commit {self.commit}")
                     spack.util.git.pull_checkout_commit(self.commit)
@@ -1414,21 +1406,20 @@ class GitIncludePaths(OptionalInclude):
                 else:
                     raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
 
-            except spack.util.executable.ProcessError as e:
-                # Cleanup the destination if it exists
-                if os.path.exists(destination):
-                    shutil.rmtree(destination)
+        except spack.util.executable.ProcessError as e:
+            # Cleanup the destination if it exists
+            shutil.rmtree(destination, ignore_errors=True)
 
-                msg = f"Unable to check out repository ({self}) in {destination}: {e}"
-                if self.optional:
-                    warnings.warn(msg)
-                    return None
-                else:
-                    raise spack.error.ConfigError(msg)
+            msg = f"Unable to check out repository ({self}) in {destination}: {e}"
+            if self.optional:
+                warnings.warn(msg)
+                return None
+            else:
+                raise spack.error.ConfigError(msg)
 
-            # only set the destination on successful clone/checkout
-            self.destination = destination
-            return self.destination
+        # only set the destination on successful clone/checkout
+        self.destination = destination
+        return self.destination
 
     def fetched(self) -> bool:
         return bool(self.destination) and os.path.exists(
