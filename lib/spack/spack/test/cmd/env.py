@@ -209,7 +209,7 @@ def test_env_missing_deactivate_script(shell):
     (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_scripts_path_after_relocation(shell):
-    """Test that paths in activation/deactivation scripts are updated after environment relocation."""
+    """Test that paths in activation/deactivation scripts are updated after relocation."""
 
     env("create", "orig")
     orig_env = ev.read("orig")
@@ -3482,9 +3482,7 @@ def test_env_activate_fish_script_output():
     out = env("activate", "--fish", "test")
 
     environ = ev.environment_from_name_or_dir("test")
-    env_activate_script = env_script.path_to_env_activate_shell_script(
-        environ, shell="csh"
-    )
+    env_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="fish")
 
     with open(env_activate_script, "r", encoding="utf-8") as f:
         script = f.read()
@@ -4011,9 +4009,7 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
 
         environ = ev.read("foo")
 
-        path_to_activate_script = env_script.path_to_env_activate_shell_script(
-            environ, shell="sh"
-        )
+        path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
         with open(path_to_activate_script, "r", encoding="utf-8") as f:
             shell_output = f.read()
 
@@ -4033,9 +4029,7 @@ def test_create_and_activate_independent(tmp_path: pathlib.Path):
 
         environ = ev.environment_from_name_or_dir(env_dir)
 
-        path_to_activate_script = env_script.path_to_env_activate_shell_script(
-            environ, shell="sh"
-        )
+        path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell="sh")
         with open(path_to_activate_script, "r", encoding="utf-8") as f:
             shell_output = f.read()
 
