@@ -43,7 +43,7 @@ jobs:
           spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
       - name: "Add Integration test repo"
         run: |
-          spack repo add -n integration_test ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
+          spack repo add --name integration_test ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
       - name: "Install Clingo Win"
         if: ${{ matrix.sys.os == 'windows-latest' }} 
         run: |
