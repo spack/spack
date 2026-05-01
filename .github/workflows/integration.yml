@@ -43,7 +43,7 @@ jobs:
           spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
       - name: "Add Integration test repo"
         run: |
-          spack repo add ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
+          spack repo add -n integration_test ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
       - name: "Install Clingo Win"
         if: ${{ matrix.sys.os == 'windows-latest' }} 
         run: |
@@ -52,7 +52,7 @@ jobs:
         id: install
         run: |
           spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
-          spack develop -p $(spack location -p smoke1)/smoke1-src smoke1
+          spack python share/spack/qa/develop_env_specs.py integration_test
           spack compiler find
           spack external find cmake ninja
           spack concretize -U
