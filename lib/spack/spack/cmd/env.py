@@ -443,7 +443,22 @@ def env_deactivate(args):
         tty.die("Calling spack env deactivate with --env, --env-dir and --no-env is ambiguous")
 
     if ev.active_environment() is None:
-        tty.die("No environment is currently active.")
+        # If there is a vestigial active environment, a partial error message is printed in main
+        # Here we clean up the detritus and explain what we're doing
+        if ev.spack_env_var in os.environ or ev.spack_env_view_var in os.environ:
+            env_mods = spack.util.environment.EnvironmentModifications()
+            env_mods.unset(ev.spack_env_var)
+            env_mods.unset(ev.spack_env_view_var)
+            sys.stdout.write(env_mods.shell_modifications(args.shell))
+            msg = (
+                "Cleaning up environment variables related to a nonexistent environment\n"
+                f"    Unsetting {ev.spack_env_var}\n"
+                f"    Unsetting {ev.spack_env_view_var}\n"
+            )
+            sys.stderr.write(msg)
+            return 2
+        else:
+            tty.die("No environment is currently active")
 
     cmds = spack.environment.shell.deactivate_header(args.shell)
     env_mods = spack.environment.shell.deactivate()

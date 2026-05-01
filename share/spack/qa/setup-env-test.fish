@@ -399,6 +399,13 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 
+echo "Testing 'despacktivate' with nonexistent environment"
+set -x SPACK_ENV foo
+contains "Unsetting SPACK_ENV" despacktivate
+is_not_set SPACK_ENV
+
+
+
 echo "Testing 'spack env activate --temp'"
 spt_succeeds spack env activate --temp
 spack env activate --temp

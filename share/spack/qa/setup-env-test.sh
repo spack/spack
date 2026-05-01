@@ -198,6 +198,11 @@ despacktivate
 is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
 
+echo "Testing 'despacktivate' with nonexistent environment"
+export SPACK_ENV=foo
+contains "Unsetting SPACK_ENV" despacktivate
+is_not_set SPACK_ENV
+
 echo "Testing 'spack env activate --temp'"
 succeeds spack env activate --temp
 spack env activate --temp
