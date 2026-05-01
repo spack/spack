@@ -52,6 +52,7 @@ jobs:
         id: install
         run: |
           spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
+          spack develop smoke1 $(spack location -p smoke1)/smoke1-src
           spack compiler find
           spack external find cmake ninja
           spack concretize -U
