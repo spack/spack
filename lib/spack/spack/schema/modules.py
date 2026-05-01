@@ -127,7 +127,6 @@ common_props = {
     "all": ref_module_file_configuration,
     "hierarchical": {
         "type": "boolean",
-        "default": False,
         "description": "Organize module files in a hierarchical way",
     },
     "core_compilers": {
@@ -169,14 +168,7 @@ lmod_configuration = {
     "default": {},
     "description": "Configuration for Lua module files compatible with Lmod system",
     "additionalKeysAreSpecs": True,
-    "properties": {
-        **common_props,
-        "hierarchical": {
-            "type": "boolean",
-            "default": True,
-            "description": "Organize module files in a hierarchical way",
-        },
-    },
+    "properties": {**common_props},
     "additionalProperties": ref_module_file_configuration,
 }
 

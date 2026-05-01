@@ -149,16 +149,15 @@ def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec
     raise ValueError(f'request "{request}" is not one of "none", "direct", "run", "all"')
 
 
-def guess_core_compilers(name, module_system, store=False) -> List[spack.spec.Spec]:
-    """Guesses the list of core compilers installed in the system.
+def _guess_core_compilers(
+    name: str, module_system: str, store: bool = False
+) -> List[spack.spec.Spec]:
+    """Guesses and returns the list of core compilers installed in the system.
 
     Args:
-        module_system (str): module system in use ("tcl" or "lmod")
-        store (bool): if True writes the core compilers to the
+        module_system: module system in use ("tcl" or "lmod")
+        store: if True writes the core compilers to the
             modules.yaml configuration file
-
-    Returns:
-        List of found core compilers
     """
     core_compilers = []
     for compiler in spack.compilers.config.all_compilers(init_config=False):
@@ -604,7 +603,7 @@ class BaseConfiguration:
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
-            compilers = guess_core_compilers(self.name, self.module_system, store=True)
+            compilers = _guess_core_compilers(self.name, self.module_system, store=True)
 
         if not compilers:
             msg = 'the key "core_compilers" must be set in modules.yaml'
@@ -628,19 +627,12 @@ class BaseConfiguration:
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        tokens = self.module.configuration(self.name).get("hierarchy", [])
-
-        # Append 'compiler' which is always implied
-        tokens.append("compiler")
-
-        # Deduplicate tokens in case duplicates have been coded
-        tokens = list(dedupe(tokens))
-
-        return tokens
+        configured = self.module.configuration(self.name).get("hierarchy", [])
+        return list(dedupe(itertools.chain(configured, ["compiler"])))
 
     @property
     @memoized
-    def requires(self):
+    def requires(self) -> Dict[str, spack.spec.Spec]:
         """Returns a dictionary mapping all the requirements of this spec to the actual provider.
 
         The ``compiler`` key is always present among the requirements.
@@ -676,7 +668,7 @@ class BaseConfiguration:
         return requirements
 
     @property
-    def provides(self):
+    def provides(self) -> Dict[str, spack.spec.Spec]:
         """Returns a dictionary mapping all the services provided by this
         spec to the spec itself.
 
@@ -802,7 +794,7 @@ class BaseFileLayout:
         # Return the absolute path
         return os.path.join(self.arch_dirname, filename)
 
-    def token_to_path(self, name, value):
+    def token_to_path(self, name: str, value: spack.spec.Spec) -> str:
         """Transforms a hierarchy token into the corresponding path part.
 
         Args:
@@ -814,12 +806,12 @@ class BaseFileLayout:
         """
 
         # General format for the path part
-        def path_part_fmt(token):
+        def path_part_fmt(token: spack.spec.Spec) -> str:
             return fs.polite_path([f"{token.name}", f"{token.version}"])
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
-        if name == "compiler" and any(spack.spec.Spec(value).satisfies(c) for c in core_compilers):
+        if name == "compiler" and any(value.satisfies(c) for c in core_compilers):
             return "Core"
 
         # Spec does not have a hash, as we are not allowed to

@@ -62,19 +62,21 @@ class TclContext(BaseContext):
         layout = make_layout(self.spec, self.conf.name)
         value = []
         conditional_paths = layout.unlocked_paths
-        conditional_paths.pop(None)
+
+        def manipulate_path(token):
+            if token in self.conf.hierarchy_tokens:
+                return "{0}_name, {0}_version".format(token)
+            return '"' + token + '"'
+
         for services_needed, list_of_path_parts in conditional_paths.items():
+            if services_needed is None:
+                continue
+
             condition = " && ".join(["[string length $" + x + "_name]" for x in services_needed])
             for parts in list_of_path_parts:
-
-                def manipulate_path(token):
-                    if token in self.conf.hierarchy_tokens:
-                        return "{0}_name, {0}_version".format(token)
-                    return '"' + token + '"'
-
                 path = " ".join([manipulate_path(x) for x in parts])
-
                 value.append((condition, path))
+
         return value
 
 
