@@ -1389,6 +1389,7 @@ class GitIncludePaths(OptionalInclude):
                     msg = f"Unable to initialize repository ({self.git}) under {destination}: {e}"
                     if self.optional:
                         warnings.warn(msg)
+                        return None
                     else:
                         raise spack.error.ConfigError(msg)
 
@@ -1414,13 +1415,16 @@ class GitIncludePaths(OptionalInclude):
                     raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
 
             except spack.util.executable.ProcessError as e:
+                # Cleanup the destination if it exists
+                if os.path.exists(destination):
+                    shutil.rmtree(destination)
+
                 msg = f"Unable to check out repository ({self}) in {destination}: {e}"
                 if self.optional:
                     warnings.warn(msg)
+                    return None
                 else:
                     raise spack.error.ConfigError(msg)
-                # Cleanup the destination if it exists
-                shutil.rmtree(destination)
 
             # only set the destination on successful clone/checkout
             self.destination = destination
@@ -1455,6 +1459,8 @@ class GitIncludePaths(OptionalInclude):
 
         destination = self._clone(parent_scope)
         if not destination:
+            if self.optional:
+                return []
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
         scopes: List[ConfigScope] = []

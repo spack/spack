@@ -2040,8 +2040,7 @@ def test_included_path_git_optional_quiet_errs(
 
     # No error
     scopes = include.scopes(parent_scope)
-    assert len(scopes) == len(paths)
-    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+    assert len(scopes) == 0
 
     # fail in git config (so use default remote) *and* git checkout
     def _init_repo(*args, **kwargs):
@@ -2058,15 +2057,12 @@ def test_included_path_git_optional_quiet_errs(
     monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
 
     scopes = include.scopes(parent_scope)
-    assert len(scopes) == len(paths)
-    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+    assert len(scopes) == 0
 
     # set up invalid option failure
     include.branch = ""  # type: ignore[union-attr]
-
-    scopes = include.scopes(parent_scope)
-    assert len(scopes) == len(paths)
-    assert all(s.name == "low:" + p for s, p in zip(scopes, paths))
+    with pytest.raises(spack.error.ConfigError):
+        _ = include.scopes(parent_scope)
 
 
 def test_missing_include_scope_list(mock_missing_dir_include_scopes):
