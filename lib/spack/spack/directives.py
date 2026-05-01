@@ -63,6 +63,7 @@ import spack.util.tty.color
 import spack.variant
 from spack.dependency import Dependency, intern_dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
+from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -73,6 +74,7 @@ __all__ = [
     "conditional",
     "conflicts",
     "depends_on",
+    "deprecated",
     "extends",
     "maintainers",
     "license",
@@ -166,7 +168,7 @@ _WHEN_STACK_CACHE: Dict[Tuple[str, ...], spack.spec.Spec] = {}
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive("versions", supports_when=False)
+@directive(("versions", "deprecations"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -278,6 +280,9 @@ class _Version(NamedTuple):
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[version] = kwargs
 
+        if kwargs.get("deprecated", False):
+            _Deprecated(f"@{version}", "maintenance", "critical")(pkg)
+
 
 @directive("conflicts")
 def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
@@ -316,6 +321,34 @@ class _Conflicts(NamedTuple):
         conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
         msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
         conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
+
+
+@directive("deprecations", supports_when=False)
+def deprecated(spec: Optional[SpecType] = None, *, reason: str, severity: str = "low"):
+    """Mark a spec constraint as deprecated.
+
+    Args:
+        spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
+            is deprecated.
+        reason: why this spec is deprecated.  One of ``"cve"``, ``"rename"``,
+            ``"unavailable"``, ``"maintenance"``.
+        severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
+            ``"high"``, ``"critical"``.
+    """
+    return _Deprecated(spec, reason, severity)
+
+
+class _Deprecated(NamedTuple):
+    spec: Optional[SpecType]
+    reason: str
+    severity: str
+
+    def __call__(self, pkg: PackageType) -> None:
+        spec, reason, severity = self
+        sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
+        rsn = DeprecationReason(reason)
+        constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
+        pkg.deprecations.setdefault(constraint, []).append((rsn, sev))
 
 
 @directive("dependencies", can_patch_dependencies=True)

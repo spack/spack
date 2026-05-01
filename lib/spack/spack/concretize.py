@@ -90,10 +90,7 @@ def _concretize_specs_together(
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
     """
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = _solver(factory=factory).solve(
-        abstract_specs, tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = _solver(factory=factory).solve(abstract_specs, tests=tests)
     return [s.copy() for s in result.specs]
 
 
@@ -163,12 +160,9 @@ def _concretize_together_when_possible(
     }
 
     result_by_user_spec: Dict[Spec, Spec] = {}
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
     start = time.monotonic()
-    for result in _solver(factory=factory).solve_in_rounds(
-        to_concretize, tests=tests, allow_deprecated=allow_deprecated
-    ):
+    for result in _solver(factory=factory).solve_in_rounds(to_concretize, tests=tests):
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
@@ -331,8 +325,7 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = _solver(factory=factory).solve([spec], tests=tests, allow_deprecated=allow_deprecated)
+    result = _solver(factory=factory).solve([spec], tests=tests)
 
     # take the best answer
     opt, i, answer = min(result.answers)
