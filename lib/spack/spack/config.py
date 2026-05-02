@@ -1293,7 +1293,7 @@ class IncludePath(OptionalInclude):
         try:
             config_path = rfc_util.local_path(self.path, self.sha256, base)
         except spack.error.FetchError as e:
-            warnings.warn(f"Failed to fetch include at {self.path}: {e}")
+            tty.debug(f"Failed to fetch include at {self.path}: {e}")
             if self.optional:
                 return []
 
@@ -1412,7 +1412,7 @@ class GitIncludePaths(OptionalInclude):
 
             msg = f"Unable to check out repository ({self}) in {destination}: {e}"
             if self.optional:
-                warnings.warn(msg)
+                tty.debug(msg)
                 return None
             else:
                 raise spack.error.ConfigError(msg)
