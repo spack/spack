@@ -6,6 +6,7 @@ spack:
   # add package specs to the `specs` list
   specs:
   - smoke1
+  - simple-download
   view: false
   concretizer:
     unify: false
