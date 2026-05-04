@@ -228,7 +228,7 @@ def diff(parser, args):
     attributes = args.attribute or ["all"]
 
     if args.dump_json:
-        print(sjson.dump(c))
+        print(sjson.dumps(c))
     else:
         tty.warn("This interface is subject to change.\n")
         print_difference(c, attributes)

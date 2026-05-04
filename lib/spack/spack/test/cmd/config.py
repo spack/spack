@@ -6,9 +6,11 @@ import json
 import os
 import pathlib
 import re
+import shutil
 
 import pytest
 
+import spack.cmd.config as config_cmd
 import spack.concretize
 import spack.config
 import spack.database
@@ -767,3 +769,25 @@ def test_config_with_unknown_group_gives_clear_error(cmd_str, tmp_path, mutable_
         output = config(cmd_str, "--group=nonexistent", "packages", fail_on_error=False)
     assert config.returncode != 0
     assert "'nonexistent' not found in" in output
+
+
+@pytest.mark.regression("52152")
+def test_config_edit_creates_scope_dir(mutable_config, working_env, monkeypatch):
+    """Tests that `spack config edit` can create the scope directory if it does not exist."""
+    scope_name = spack.config.default_modify_scope("config")
+    scope_dir = pathlib.Path(mutable_config.scopes[scope_name].path)
+
+    # Remove the scope directory to simulate a "fresh start" with no ~/.spack
+    shutil.rmtree(scope_dir)
+    assert not scope_dir.exists()
+
+    editor_called = []
+
+    def fake_editor(*args, **kwargs):
+        editor_called.extend(args)
+
+    monkeypatch.setattr(config_cmd, "editor", fake_editor)
+    config("edit", "config")
+
+    assert scope_dir.exists(), "scope directory should be created before invoking the editor"
+    assert editor_called, "editor should have been called"

@@ -1354,7 +1354,7 @@ def try_verify(specfile_path):
 class MirrorMetadata:
     """Simple class to hold a mirror url and a buildcache layout version
 
-    This class is used by BinaryCacheIndex to produce a key used to keep
+    This class is used by BinaryIndexCache to produce a key used to keep
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
@@ -1380,7 +1380,7 @@ class MirrorMetadata:
         return hash((self.url, self.version, self.view))
 
     @classmethod
-    def from_string(cls, s: str):
+    def from_string(cls, s: str) -> "MirrorMetadata":
         m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
         if not m:
             raise MirrorMetadataError(f"Malformed string {s}")

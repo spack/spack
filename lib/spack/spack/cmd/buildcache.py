@@ -120,6 +120,12 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="stop pushing on first failure (default is best effort)",
     )
     push.add_argument(
+        "--allow-missing",
+        action="store_true",
+        help="allow not installed specs to continue without failure (default fails on missing "
+        "specs)",
+    )
+    push.add_argument(
         "--base-image", default=None, help="specify the base image for the buildcache"
     )
     push.add_argument(
@@ -515,8 +521,14 @@ def push_fn(args):
     with spack.store.STORE.db.read_transaction():
         if any(not s.installed for s in specs):
             specs, not_installed = stable_partition(specs, lambda s: s.installed)
-            if args.fail_fast:
+            if args.fail_fast and not args.allow_missing:
                 raise PackagesAreNotInstalledError(not_installed)
+            elif args.allow_missing:
+                tty.warn(
+                    f"The following {len(not_installed)} specs are not installed and will be "
+                    "skipped: \n"
+                    + "\n".join(elide_list([f"    {_format_spec(s)}" for s in not_installed], 5))
+                )
             else:
                 failed.extend(
                     (s, PackageNotInstalledError("package not installed")) for s in not_installed

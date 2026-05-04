@@ -70,11 +70,12 @@ up to date with CTest, just make sure the ``*_matches`` and
 """
 
 import io
-import math
 import re
 import time
 from collections import deque
-from typing import Dict, List, Optional, TextIO, Tuple, Union
+from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
+
+from spack.llnl.util.lang import PatternStr
 
 _error_matches = [
     "^FAIL: ",
@@ -217,41 +218,41 @@ class LogEvent:
 
     def __init__(
         self,
-        text,
-        line_no,
-        source_file=None,
-        source_line_no=None,
-        pre_context=None,
-        post_context=None,
-    ):
+        text: str,
+        line_no: int,
+        source_file: Optional[str] = None,
+        source_line_no: Optional[str] = None,
+        pre_context: Optional[List[str]] = None,
+        post_context: Optional[List[str]] = None,
+    ) -> None:
         self.text = text
         self.line_no = line_no
-        self.source_file = (source_file,)
-        self.source_line_no = (source_line_no,)
+        self.source_file = source_file
+        self.source_line_no = source_line_no
         self.pre_context = pre_context if pre_context is not None else []
         self.post_context = post_context if post_context is not None else []
         self.repeat_count = 0
 
     @property
-    def start(self):
+    def start(self) -> int:
         """First line in the log with text for the event or its context."""
         return self.line_no - len(self.pre_context)
 
     @property
-    def end(self):
+    def end(self) -> int:
         """Last line in the log with text for event or its context."""
         return self.line_no + len(self.post_context) + 1
 
-    def __getitem__(self, line_no):
+    def __getitem__(self, line_no: int) -> str:
         """Index event text and context by actual line number in file."""
         if line_no == self.line_no:
             return self.text
         elif line_no < self.line_no:
             return self.pre_context[line_no - self.line_no]
-        elif line_no > self.line_no:
+        else:
             return self.post_context[line_no - self.line_no - 1]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns event lines and context."""
         out = io.StringIO()
         for i in range(self.start, self.end):
@@ -274,12 +275,6 @@ class BuildWarning(LogEvent):
     color = "Y"
 
 
-def chunks(xs, n):
-    """Divide xs into n approximately-even chunks."""
-    chunksize = int(math.ceil(len(xs) / n))
-    return [xs[i : i + chunksize] for i in range(0, len(xs), chunksize)]
-
-
 def _optimize_regexes(regex_strings: List[str]) -> List[str]:
     """Groups regexes by their first character and combines each group into a single regex using
     alternation. Python's regex compiler optimizes the combined pattern to share common prefixes
@@ -297,62 +292,78 @@ def _optimize_regexes(regex_strings: List[str]) -> List[str]:
     return ["|".join(entries) for entries in groups.values()]
 
 
-def _match(matches, exceptions, line):
-    """True if line matches a regex in matches and none in exceptions."""
-    return any(m.search(line) for m in matches) and not any(e.search(line) for e in exceptions)
+class _Matcher:
+    """Tests a log line against match/exception regex lists."""
 
+    def __init__(self, matches: List[PatternStr], exceptions: List[PatternStr]) -> None:
+        self.matches = matches
+        self.exceptions = exceptions
 
-def _profile_match(matches, exceptions, line, match_times, exc_times):
-    """Profiled version of match().
-
-    Timing is expensive so we have two whole functions.  This is much
-    longer because we have to break up the ``any()`` calls.
-
-    """
-    for i, m in enumerate(matches):
-        start = time.perf_counter()
-        found = m.search(line)
-        match_times[i] += time.perf_counter() - start
-        if found:
-            break
-    else:
-        return False
-
-    for i, m in enumerate(exceptions):
-        start = time.perf_counter()
-        found = m.search(line)
-        exc_times[i] += time.perf_counter() - start
-        if found:
+    def __call__(self, line: str) -> bool:
+        """Returns True if line matches any regex in self.matches and none in self.exceptions."""
+        for match in self.matches:
+            if match.search(line):
+                break
+        else:
             return False
-    else:
+        for exc in self.exceptions:
+            if exc.search(line):
+                return False
         return True
 
 
-def _parse(stream, profile, context, tail=0):
+class _ProfileMatcher(_Matcher):
+    """Variant of _Matcher that records time spent in each regex."""
 
-    error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
-    error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
-    warning_matches = [re.compile(r) for r in _optimize_regexes(_warning_matches)]
-    warning_exceptions = [re.compile(r) for r in _optimize_regexes(_warning_exceptions)]
-    file_line_matches = [re.compile(r) for r in _file_line_matches]
+    def __init__(self, matches: List[PatternStr], exceptions: List[PatternStr]) -> None:
+        super().__init__(matches, exceptions)
+        self.match_times = [0.0] * len(matches)
+        self.exc_times = [0.0] * len(exceptions)
 
-    matcher, _ = _match, []
-    timings = []
-    if profile:
-        matcher = _profile_match
-        timings = [
-            [0.0] * len(error_matches),
-            [0.0] * len(error_exceptions),
-            [0.0] * len(warning_matches),
-            [0.0] * len(warning_exceptions),
-        ]
+    def __call__(self, line: str) -> bool:
+        for i, m in enumerate(self.matches):
+            start = time.perf_counter()
+            found = m.search(line)
+            self.match_times[i] += time.perf_counter() - start
+            if found:
+                break
+        else:
+            return False
 
-    errors = []
-    warnings = []
+        for i, m in enumerate(self.exceptions):
+            start = time.perf_counter()
+            found = m.search(line)
+            self.exc_times[i] += time.perf_counter() - start
+            if found:
+                return False
+        return True
+
+    def print_timings(self, kind: str) -> None:
+        print()
+        print(f"{kind}_matches")
+        for pattern, t in zip(self.matches, self.match_times):
+            print("%16.2f        %s" % (t * 1e6, pattern.pattern))
+        print()
+        print(f"{kind}_exceptions")
+        for pattern, t in zip(self.exceptions, self.exc_times):
+            print("%16.2f        %s" % (t * 1e6, pattern.pattern))
+
+
+def _parse(
+    stream: Iterable[str],
+    error_matcher: _Matcher,
+    warning_matcher: _Matcher,
+    file_line_matches: List[PatternStr],
+    context: int,
+    tail: int = 0,
+) -> Tuple[List[BuildError], List[BuildWarning], Optional[LogEvent]]:
+
+    errors: List[BuildError] = []
+    warnings: List[BuildWarning] = []
     # rolling window of recent lines
-    pre_context = deque(maxlen=max(context, tail))
+    pre_context: deque[str] = deque(maxlen=max(context, tail))
     # list of (event, remaining_post_context_lines)
-    pending_events: List[Tuple[LogEvent, int]] = []
+    pending_events: List[Tuple[Union[BuildError, BuildWarning], int]] = []
 
     last_line_no = 0
     for i, line in enumerate(stream):
@@ -373,9 +384,9 @@ def _parse(stream, profile, context, tail=0):
             pending_events = active_events
 
         # use CTest's regular expressions to scrape the log for events
-        if matcher(error_matches, error_exceptions, line, *timings[:2]):
+        if error_matcher(line):
             event = BuildError(rstripped_line, i + 1)
-        elif matcher(warning_matches, warning_exceptions, line, *timings[2:]):
+        elif warning_matcher(line):
             event = BuildWarning(rstripped_line, i + 1)
         else:
             pre_context.append(rstripped_line)
@@ -414,38 +425,32 @@ def _parse(stream, profile, context, tail=0):
     else:
         tail_event = None
 
-    return errors, warnings, tail_event, timings
+    return errors, warnings, tail_event
 
 
 class CTestLogParser:
     """Log file parser that extracts errors and warnings."""
 
-    def __init__(self, profile=False):
-        # whether to record timing information
-        self.timings = []
-        self.profile = profile
+    def __init__(self, profile: bool = False) -> None:
+        error_matches = [re.compile(r) for r in _optimize_regexes(_error_matches)]
+        error_exceptions = [re.compile(r) for r in _optimize_regexes(_error_exceptions)]
+        warning_matches = [re.compile(r) for r in _optimize_regexes(_warning_matches)]
+        warning_exceptions = [re.compile(r) for r in _optimize_regexes(_warning_exceptions)]
 
-    def print_timings(self):
+        cls = _ProfileMatcher if profile else _Matcher
+        self._error_matcher = cls(error_matches, error_exceptions)
+        self._warning_matcher = cls(warning_matches, warning_exceptions)
+        self._file_line_matches = [re.compile(r) for r in _file_line_matches]
+
+    def print_timings(self) -> None:
         """Print out profile of time spent in different regular expressions."""
-
-        def stringify(elt):
-            return elt if isinstance(elt, str) else elt.pattern
-
-        index = 0
-        for name, arr in [
-            ("error_matches", _optimize_regexes(_error_matches)),
-            ("error_exceptions", _optimize_regexes(_error_exceptions)),
-            ("warning_matches", _optimize_regexes(_warning_matches)),
-            ("warning_exceptions", _optimize_regexes(_warning_exceptions)),
-        ]:
-            print()
-            print(name)
-            for i, elt in enumerate(arr):
-                print("%16.2f        %s" % (self.timings[index][i] * 1e6, stringify(elt)))
-            index += 1
+        assert isinstance(self._error_matcher, _ProfileMatcher)
+        assert isinstance(self._warning_matcher, _ProfileMatcher)
+        self._error_matcher.print_timings("error")
+        self._warning_matcher.print_timings("warning")
 
     def parse(
-        self, stream: Union[str, TextIO], context: int = 6, tail: int = 0
+        self, stream: Union[str, TextIO, List[str]], context: int = 6, tail: int = 0
     ) -> Tuple[List[BuildError], List[BuildWarning], Optional[LogEvent]]:
         """Parse a log file by searching each line for errors and warnings.
 
@@ -462,5 +467,11 @@ class CTestLogParser:
             with open(stream, encoding="utf-8", errors="replace") as f:
                 return self.parse(f, context, tail)
 
-        errors, warnings, tail_event, self.timings = _parse(stream, self.profile, context, tail)
-        return errors, warnings, tail_event
+        return _parse(
+            stream,
+            self._error_matcher,
+            self._warning_matcher,
+            self._file_line_matches,
+            context,
+            tail,
+        )

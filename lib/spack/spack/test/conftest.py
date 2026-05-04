@@ -21,7 +21,7 @@ import tempfile
 import textwrap
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import pytest
 
@@ -632,7 +632,7 @@ def mock_binary_index(monkeypatch, tmp_path_factory: pytest.TempPathFactory):
     """
     tmpdir = tmp_path_factory.mktemp("mock_binary_index")
     index_path = tmpdir / "binary_index"
-    mock_index = spack.binary_distribution.BinaryCacheIndex(str(index_path))
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(index_path))
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
@@ -2093,7 +2093,7 @@ def inode_cache():
 def brand_new_binary_cache():
     yield
     spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
-        spack.binary_distribution.BinaryCacheIndex
+        spack.binary_distribution.BinaryIndexCache
     )
 
 
@@ -2580,3 +2580,34 @@ def installer_variant(request):
         pytest.skip("New installer not supported on Windows")
     with spack.config.override("config:installer", request.param):
         yield request.param
+
+
+class FsTree:
+    class symlink:
+        def __init__(self, target):
+            self.target = target
+
+    class file:
+        def __init__(self, content: Union[bytes, str] = b""):
+            self.content = content
+
+    class dir:
+        pass
+
+    def __init__(self, base_path: Path, layout: dict):
+        for rel_path, content in layout.items():
+            p = base_path / rel_path
+            p.parent.mkdir(parents=True, exist_ok=True)
+
+            assert isinstance(content, (self.symlink, self.file, self.dir))
+
+            if isinstance(content, self.dir):
+                p.mkdir(exist_ok=True)
+            elif isinstance(content, self.symlink):
+                p.symlink_to(content.target)
+            elif isinstance(content, self.file):
+                assert isinstance(content.content, (bytes, str))
+                if isinstance(content.content, bytes):
+                    p.write_bytes(content.content)
+                elif isinstance(content.content, str):
+                    p.write_text(content.content, encoding="utf-8")
