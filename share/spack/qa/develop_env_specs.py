@@ -20,9 +20,13 @@ def main(repo_name):
         raise RuntimeError("requires active environment")
     develop = spack.main.SpackCommand("develop")
     for spec in env.user_specs:
-        pkg_path = pathlib.Path(repo.package_path(spec.name))
-        source_path = pkg_path.parent / f"{spec.name}-src"
-        develop("-p", str(source_path), spec.name, capture=False)
+        pkg_class = repo.get_pkg_class(spec.name)
+        try:
+            pkg_class.url
+        except AttributeError:
+            pkg_path = pathlib.Path(repo.package_path(spec.name))
+            source_path = pkg_path.parent / f"{spec.name}-src"
+            develop("-p", str(source_path), spec.name, capture=False)
 
 
 if __name__ == "__main__":
