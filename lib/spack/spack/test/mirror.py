@@ -218,6 +218,27 @@ class MockFetcher:
             pass
 
 
+def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
+    """A failed archive() must not leave a partial file at the final destination."""
+
+    class FailingFetcher:
+        cachable = True
+
+        @staticmethod
+        def archive(dst):
+            with open(dst, "wb") as f:
+                f.write(b"partial")
+            raise RuntimeError("simulated failure mid-archive")
+
+    for cache in [
+        spack.caches.MirrorCache(root=str(tmp_path), skip_unstable_versions=False),
+        spack.fetch_strategy.FsCache(str(tmp_path)),
+    ]:
+        with pytest.raises(RuntimeError, match="simulated failure"):
+            cache.store(FailingFetcher(), "pkg/pkg-1.0.tar.gz")
+        assert not (tmp_path / "pkg" / "pkg-1.0.tar.gz").exists()
+
+
 @pytest.mark.regression("14067")
 def test_mirror_layout_make_alias(tmp_path: pathlib.Path):
     """Confirm that the cosmetic symlink created in the mirror cache (which may
