@@ -1761,7 +1761,7 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class _FilesystemCache:
+class FsCacheBase:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
@@ -1783,7 +1783,7 @@ class _FilesystemCache:
             raise
 
 
-class FsCache(_FilesystemCache):
+class FsCache(FsCacheBase):
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:

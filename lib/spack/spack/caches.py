@@ -51,7 +51,7 @@ def _fetch_cache():
     return spack.fetch_strategy.FsCache(path)
 
 
-class MirrorCache(spack.fetch_strategy._FilesystemCache):
+class MirrorCache(spack.fetch_strategy.FsCacheBase):
     def __init__(self, root, skip_unstable_versions):
         super().__init__(root)
         self.skip_unstable_versions = skip_unstable_versions
