@@ -106,7 +106,7 @@ jobs:
     secrets: inherit
 
   all:
-    needs: [ unit-tests, coverage, bootstrap ]
+    needs: [ unit-tests, coverage, bootstrap, integration-tests ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     # See https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#needs-context
