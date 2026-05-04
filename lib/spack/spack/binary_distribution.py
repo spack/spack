@@ -2898,16 +2898,21 @@ class SCPIndexFetcher(IndexFetcher):
         url_index_manifest = urllib.parse.urlparse(cache_class.get_index_url(self.url, self.view))
 
         try:
-            with tempfile.NamedTemporaryFile("rb", dir=spack.stage.get_stage_root()) as tmp:
-                from spack.util.ssh import SSHConnection
+            from spack.util.ssh import SSHConnection
 
-                ssh = SSHConnection.from_url(url_index_manifest)
-                ssh.fetch(url_index_manifest.path, tmp.name)
+            f, tmp_path = tempfile.mkstemp(dir=spack.stage.get_stage_root())
+            f.close()
+
+            ssh = SSHConnection.from_url(url_index_manifest)
+            ssh.fetch(url_index_manifest.path, tmp_path)
+            with open(tmp_path, "rb") as tmp:
                 response = io.BytesIO(tmp.read())
         except Exception as e:
             raise FetchIndexError(
                 f"Could not read index manifest from {url_index_manifest.geturl()}"
             ) from e
+        finally:
+            os.remove(tmp_path)
 
         index_blob_record = self.get_index_manifest(response)
 

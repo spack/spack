@@ -22,36 +22,44 @@ class SSHConnection(object):
         if isinstance(url, str):
             url = urllib.parse.urlparse(url)
         if url.netloc not in cls._connections:
-            cls._connections[url.netloc] = SSHConnection(url.netloc)
-        return cls._connections[url.netloc]
+            cls._connections[url.netloc]
 
-    def __init__(self, netloc):
+    def __init__(self, url):
         SSH_DEFAULT_ARGS = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
         self.ssh = which("ssh", required=True).with_default_args(*SSH_DEFAULT_ARGS)
         self.scp = which("scp", required=True).with_default_args(*SSH_DEFAULT_ARGS)
-        self.netloc = netloc
+        if url.username:
+            self.ssh.add_default_arg("-l", url.username)
+            self.scp.add_default_arg("-l", url.username)
+        if url.port:
+            self.ssh.add_default_arg("-p", url.port)
+            self.scp.add_default_arg("-p", url.port)
+        self.url = url
 
         has_control_master = False
-        for config_line in self.ssh("-G", netloc, fail_on_error=True, output=str).splitlines():
+        for config_line in self.ssh(
+            "-G", self.url.hostname, fail_on_error=True, output=str
+        ).splitlines():
             if config_line == "controlmaster true" or config_line == "controlmaster auto":
                 has_control_master = True
                 break
 
         if not has_control_master:
             warnings.warn(
-                f"Minimize SSH connections to {netloc} via 'ControlMaster' in your SSH config!"
+                f"Minimize SSH connections to {self.url.netloc} via "
+                f"'ControlMaster' in your SSH config!"
             )
 
     def exists(self, path):
-        self.ssh(self.netloc, f"test -e {shlex.quote(path)}", fail_on_error=False)
+        self.ssh(self.url.hostname, f"test -e {shlex.quote(path)}", fail_on_error=False)
         return self.ssh.returncode == 0
 
     def list_path(self, path, recursive=False):
         if recursive:
-            output = self.ssh(self.netloc, f"find {shlex.quote(path)} -type f", output=str)
+            output = self.ssh(self.url.hostname, f"find {shlex.quote(path)} -type f", output=str)
         else:
             output = self.ssh(
-                self.netloc, f"find {shlex.quote(path)} -maxdepth 1 -type f", output=str
+                self.url.hostname, f"find {shlex.quote(path)} -maxdepth 1 -type f", output=str
             )
         return (
             [str(Path(p.strip()).relative_to(path)) for p in output.splitlines()] if output else []
@@ -60,10 +68,11 @@ class SSHConnection(object):
     def stat_path(self, path):
         output = (
             self.ssh(
-                self.netloc,
+                self.url.hostname,
                 f'stat -c "%s %Y" {shlex.quote(path)} 2>/dev/null || '  # Linux
                 f'stat -f "%z %m" {shlex.quote(path)} 2>/dev/null',  # MacOS / BSD
                 output=str,
+                fail_on_error=False,
             )
             .strip()
             .split()
@@ -75,14 +84,14 @@ class SSHConnection(object):
         return size, mtime
 
     def fetch(self, remote_path, dest):
-        self.scp(shlex.quote(f"{self.netloc}:{remote_path}"), dest, fail_on_error=True)
+        self.scp(f"{self.url.hostname}:{remote_path}", dest, fail_on_error=True)
 
     def push(self, local_path, remote_path, keep_original=True):
         self.ssh(
-            self.netloc,
+            self.url.hostname,
             f"mkdir -p {shlex.quote(os.path.dirname(remote_path))}",
             fail_on_error=True,
         )
-        self.scp(local_path, shlex.quote(f"{self.netloc}:{remote_path}"), fail_on_error=True)
+        self.scp(local_path, f"{self.url.hostname}:{remote_path}", fail_on_error=True)
         if not keep_original:
             os.remove(local_path)
