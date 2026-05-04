@@ -28,7 +28,24 @@ Compiler and Package detection
   * Run them to verify a correct installation
 
 Each of these higher level tasks exercises many more atomic sections of Spack that are well covered by our unit tests.
-The purpose served by these tests is to validate the integration and compatibility of each of these more atomic components (hence, integration testing :) )
+The purpose served by these tests is to validate the integration and compatibility of each of these more atomic components
+
+## Adding More Integration Tests
+
+Current approach for adding a new integration test:
+
+* Define a new package in `var/spack/test_repos/spack_repo/integration_test/x`
+* Define the source code for `x` in `var/spack/test_repos/spack_repo/integration_test/x/x-src` (place makefile, configure script, etc. here)
+* A single version declaration like `version("0.1")` (no hash) is recommended
+* Add `x` as a root spec to `var/spack/test_repos/spack_repo/integration_test/integration_env/spack.yaml`
+
+That's all you should need to do. Other notes about the process:
+
+* The script `develop_env_specs.py` uses `spack develop` on `x` with `x-src`
+  * This setup makes it easy to change source files inside `x-src` without updating any hashes
+  * At the moment it would be awkward to maintain multiple versions of the source (although `develop_env_specs` could be updated to use different source directories depending on the version of the package)
+  * Generally speaking the focus on this repo is not on modeling variants/versions (concretization unit tests already do a good job of that)
+* Note that packages in `integration_test` repo make use of packages in the builtin repo, e.g. using the builtin CMake build-system definition. For build systems `spack external add` is used in the CI script (but if you add a package that depends on a new build system, you'll have to check the CI script for this).
 
 ### Roadmap for future Tests
 
