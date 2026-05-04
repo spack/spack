@@ -984,7 +984,7 @@ def _main(argv=None):
         except (
             spack.config.ConfigFormatError,
             ev.SpackEnvironmentConfigError,
-            ev.SpackEnvironmentError
+            ev.SpackEnvironmentError,
         ) as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
