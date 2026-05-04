@@ -34,9 +34,11 @@ The purpose served by these tests is to validate the integration and compatibili
 
 Current approach for adding a new integration test:
 
+* Determine a subset of Spack functionality to target with an integration test (i.e. a fetcher - stage operation)
 * Define a new package in `var/spack/test_repos/spack_repo/integration_test/x`
 * Define the source code for `x` in `var/spack/test_repos/spack_repo/integration_test/x/x-src` (place makefile, configure script, etc. here)
 * A single version declaration like `version("0.1")` (no hash) is recommended
+* Add a test method to package `x` validating the package was properly installed/whatever other behavior needs confirmation
 * Add `x` as a root spec to `var/spack/test_repos/spack_repo/integration_test/integration_env/spack.yaml`
 
 That's all you should need to do. Other notes about the process:
