@@ -446,7 +446,7 @@ def env_deactivate(args):
         # If there is a vestigial active environment, a partial error message is printed in main
         # Here we clean up the detritus and explain what we're doing
         if ev.spack_env_var in os.environ or ev.spack_env_view_var in os.environ:
-            env_mods = spack.util.environment.EnvironmentModifications()
+            env_mods = EnvironmentModifications()
             env_mods.unset(ev.spack_env_var)
             env_mods.unset(ev.spack_env_view_var)
             sys.stdout.write(env_mods.shell_modifications(args.shell))
