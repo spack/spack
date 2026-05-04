@@ -80,6 +80,8 @@ class BootstrapEnvironment(spack.environment.Environment):
     def trust_bootstrap_mirror_keys(self):
         with spack.util.gpg.gnupghome_override(os.path.join(root_path(), ".bootstrap-gpg")):
             spack.binary_distribution.get_keys(install=True, trust=True)
+            # ensure the trust db is valid
+            spack.util.gpg.GPG("--check-trustdb")
             yield
 
     def update_installations(self) -> None:
