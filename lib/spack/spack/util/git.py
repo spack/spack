@@ -379,7 +379,9 @@ def git_checkout(
         symbolic = git_exe(
             *_dest_args(dest), "symbolic-ref", "HEAD", output=str, error=os.devnull
         ).strip()
-        on_branch = symbolic.removeprefix("refs/heads/")
+        prefix = "refs/heads/"
+        if symbolic.startswith(prefix):
+            on_branch = symbolic[len(prefix) :]
     except exe.ProcessError:
         pass
 
