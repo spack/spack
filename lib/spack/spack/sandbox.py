@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Implements a sandboxing mechanism for build processes using Linux Landlock or macOS Seatbelt."""
+"""Implements a sandboxing mechanism for build processes using Linux Landlock."""
 
 import ctypes
 import enum
@@ -11,7 +11,7 @@ import platform
 import stat
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Set, Union
+from typing import Dict, Union
 
 # Linux landlock syscalls
 SYSCALL_LANDLOCK_CREATE_RULESET = 444
@@ -217,84 +217,6 @@ class LandlockSandbox(Sandbox):
             os.close(ruleset_fd)
 
 
-class SeatbeltBuildSandbox(Sandbox):
-    def __init__(self):
-        self.libc = ctypes.CDLL("libc.dylib", use_errno=True)
-        self.sandbox_init = self.libc.sandbox_init
-        self.sandbox_init.argtypes = [
-            ctypes.c_char_p,
-            ctypes.c_uint64,
-            ctypes.POINTER(ctypes.c_char_p),
-        ]
-        self.sandbox_init.restype = ctypes.c_int
-
-        self.sandbox_free_error = self.libc.sandbox_free_error
-        self.sandbox_free_error.argtypes = [ctypes.c_char_p]
-
-        self.read_paths: Set[Path] = set()
-        self.write_paths: Set[Path] = set()
-
-    def _allow_read(self, original: Path, resolved: Path):
-        self.read_paths.add(original)
-        self.read_paths.add(resolved)
-
-    def _allow_write(self, original: Path, resolved: Path):
-        self.write_paths.add(original)
-        self.write_paths.add(resolved)
-        self.read_paths.add(original)
-        self.read_paths.add(resolved)
-
-    def _make_rule(self, path: Path) -> str:
-        """Formats a path into the correct Scheme syntax based on its type."""
-        # Seatbelt requires literal for exact files, subpath for directories
-        escaped_path = str(path).replace("\\", "\\\\").replace('"', '\\"')
-        if path.is_dir():
-            return f'    (subpath "{escaped_path}")'
-        return f'    (literal "{escaped_path}")'
-
-    def apply(self, block_network: bool = False):
-        # Allow process execution/IPC by default, but globally deny File I/O
-        profile_lines = [
-            "(version 1)",
-            "(allow default)",
-            "(deny file-read*)",
-            "(deny file-write*)",
-            # Allow dyld to map binaries and shared libraries into memory
-            "(allow file-map-executable)",
-            # Allow dyld to read the root directory to traverse absolute paths
-            '(allow file-read* (literal "/"))',
-            # Allow stat() globally so scripts don't crash when checking if files exist
-            "(allow file-read-metadata)",
-        ]
-
-        if block_network:
-            profile_lines.append("(deny network*)")
-
-        # Add explicit Read Whitelist
-        if self.read_paths:
-            profile_lines.append("(allow file-read*")
-            for p in self.read_paths:
-                profile_lines.append(self._make_rule(p))
-            profile_lines.append(")")
-
-        # Add explicit Write Whitelist
-        if self.write_paths:
-            profile_lines.append("(allow file-write*")
-            for p in self.write_paths:
-                profile_lines.append(self._make_rule(p))
-            profile_lines.append(")")
-
-        profile = "\n".join(profile_lines)
-        profile_bytes = profile.encode("utf-8")
-        error_ptr = ctypes.c_char_p()
-        result = self.sandbox_init(profile_bytes, 0, ctypes.byref(error_ptr))
-
-        if result != 0:
-            error_msg = error_ptr.value.decode("utf-8") if error_ptr.value else "Unknown error"
-            self.sandbox_free_error(error_ptr)
-            raise RuntimeError(f"Seatbelt sandbox_init failed: {error_msg}\nProfile:\n{profile}")
-
-
 class NoSandbox(Sandbox):
     """No-op sandbox for unsupported platforms."""
 
@@ -308,43 +230,5 @@ class NoSandbox(Sandbox):
 def get_sandbox() -> Sandbox:
     if platform.system() == "Linux":
         return LandlockSandbox()
-    elif platform.system() == "Darwin":
-        return SeatbeltBuildSandbox()
     else:
         return NoSandbox()
-
-
-if __name__ == "__main__":
-    import subprocess
-
-    sandbox = get_sandbox()
-
-    root_dirs = [
-        "/bin",
-        "/sbin",
-        "/usr",
-        "/lib",
-        "/lib32",
-        "/lib64",
-        "/etc",
-        "/opt",
-        "/var",
-        "/tmp",
-        "/dev",
-        "/proc",
-        "/sys",
-        "/System",
-        "/Library",
-        "/private",
-    ]
-    for path in root_dirs:
-        sandbox.allow_read(os.path.join("/", path))
-
-    sandbox.allow_write("/tmp")
-    sandbox.allow_write("/dev/null")
-    sandbox.allow_write("/dev/zero")
-    sandbox.allow_write("/dev/tty")
-    sandbox.apply(block_network=True)
-
-    x = subprocess.run(["/bin/sh"])
-    print(f"Sandboxed process exited with code {x.returncode}")
