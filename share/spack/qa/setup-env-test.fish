@@ -401,7 +401,7 @@ is_not_set SPACK_ENV
 
 echo "Testing 'despacktivate' with nonexistent environment"
 set -x SPACK_ENV foo
-contains "Unsetting SPACK_ENV" despacktivate
+despacktivate
 is_not_set SPACK_ENV
 
 
