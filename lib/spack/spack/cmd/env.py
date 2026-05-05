@@ -455,7 +455,7 @@ def env_deactivate(args):
                 f"    Unsetting {ev.spack_env_var}\n"
                 f"    Unsetting {ev.spack_env_view_var}\n"
             )
-            sys.stderr.write(msg)
+            tty.debug(msg)
             return 2
         else:
             tty.die("No environment is currently active")
