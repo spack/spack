@@ -151,8 +151,8 @@ See :ref:`spack install <spack-install>` for the full set of flags related to de
 Build isolation and sandboxing (Linux)
 --------------------------------------
 
-Spack can optionally sandbox builds to restrict filesystem and network access.
-This feature requires a Linux kernel with Landlock support and the new installer.
+You can optionally restrict a build's filesystem and network access without needing elevated privileges.
+This sandboxing relies on the new Spack installer and a Linux kernel with `Landlock <https://landlock.io/>`_ support.
 
 When enabled, the stage directory, install prefix, and system temp directory are implicitly writable.
 Spack-installed dependencies (excluding externals) are readable.
