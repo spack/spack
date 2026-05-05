@@ -127,7 +127,14 @@ class WindowsRPath:
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
         if sys.platform == "win32" and self.spec.satisfies("%compiler-wrapper"):
-            fsys.relocate_win_rpath(self)
+            cw = self.spec["compiler-wrapper"]
+            if cw.package.has_code:
+                fsys.relocate_win_rpath(self)
+            else:
+                win_rpath = WindowsSimulatedRPath(self)
+                win_rpath.add_library_dependent(*self.win_add_library_dependent())
+                win_rpath.add_rpath(*self.win_add_rpath())
+                win_rpath.establish_link()
 
 
 #: Registers which are the detectable packages, by repo and package name

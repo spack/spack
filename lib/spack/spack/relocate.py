@@ -19,7 +19,7 @@ import spack.util.filesystem as sfs
 import spack.util.lang
 from spack.util import elf, executable, tty
 from spack.util.environment import EnvironmentModifications
-from spack.util.filesystem import readlink, symlink
+from spack.util.filesystem import _windows_is_junction, readlink, symlink
 from spack.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
@@ -56,11 +56,10 @@ def _decode_macho_data(bytestring):
 
 
 def relocate_msvc_pe_files(targets, prefixes: dict):
-
     dirs_to_relocate = list(prefixes.values())
     for search_dir in dirs_to_relocate:
         for entry in os.scandir(search_dir):
-            if not (entry.is_symlink() or entry.is_junction()) and entry.is_dir():
+            if not (entry.is_symlink() or _windows_is_junction(entry.path)) and entry.is_dir():
                 dirs_to_relocate.append(entry.path)
 
     ev = EnvironmentModifications()

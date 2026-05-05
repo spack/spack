@@ -472,6 +472,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         args: (spack.main.SpackArgumentParser): Parsed arguments from the command
             line.
     """
+    cfg.set("concretizer:reuse", False, scope="command_line")
     with env.write_transaction():
         env.concretize()
         env.write()

@@ -3367,6 +3367,7 @@ class SymlinkError(OSError):
 class AlreadyExistsError(SymlinkError):
     """Link path already exists."""
 
+
 if sys.platform == "win32":
     import ctypes.wintypes
 

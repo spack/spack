@@ -496,7 +496,7 @@ def ensure_gpg_in_path_or_raise() -> None:
 
 def msvc_compiler_wrapper_root_spec() -> str:
     """Return the root spec for the MSVC compiler wrapper package"""
-    return _root_spec("compiler-wrapper@0.1.0")
+    return _root_spec("compiler-wrapper@1.0")
 
 
 def ensure_msvc_compiler_wrappers_or_raise() -> None:
