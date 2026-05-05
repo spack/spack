@@ -1133,6 +1133,7 @@ The root specs with their (transitive) link and run type dependencies will be pu
            all: "{name}/{version}-{compiler.name}"
          link: all
          link_type: symlink
+         link_dirs: true
 
 The default for the ``select`` and ``exclude`` values is to select everything and exclude nothing.
 The default projection is the default view projection (``{}``).
@@ -1143,6 +1144,13 @@ The ``link`` attribute allows the following values:
 #. ``link: roots`` include root specs without their dependencies.
 
 The ``link_type`` defaults to ``symlink`` but can also take the value of ``hardlink`` or ``copy``.
+
+.. versionadded:: 1.2
+
+   The ``link_dirs`` option controls whether directories are symlinked. This is the default
+   behavior in Spack v1.2 and later. This is an optimization that significantly reduces the time
+   to create views, and reduces the inode usage of the view. It only applies when ``link_type``
+   is set to ``symlink``. If you want to link only non-directory files, set ``link_dirs: false``.
 
 .. tip::
 

@@ -288,6 +288,7 @@ def config_edit(args):
     if args.print_file:
         print(config_file)
     else:
+        fs.mkdirp(os.path.dirname(config_file))
         editor(config_file)
 
 

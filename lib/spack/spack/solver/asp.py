@@ -3917,6 +3917,8 @@ class Solver:
     def _check_input_and_extract_concrete_specs(
         specs: Sequence[spack.spec.Spec],
     ) -> List[spack.spec.Spec]:
+        _check_unknown_virtuals_in_input_specs(specs)
+
         reusable: List[spack.spec.Spec] = []
         analyzer = create_graph_analyzer()
         for root in specs:
@@ -4063,6 +4065,35 @@ class Solver:
                 reusable_specs.extend(spec.traverse())
 
         self._conc_cache.cleanup()
+
+
+class _SkipConcreteVisitor(traverse.BaseVisitor):
+    """Visitor that trims edges between two concrete nodes."""
+
+    def neighbors(self, item):
+        if item.edge.spec.concrete:
+            return []
+        return super().neighbors(item)
+
+
+def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> None:
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
+    errors = []
+    for root in specs:
+        root_edges = traverse.with_artificial_edges([root])
+        visitor = traverse.CoverNodesVisitor(_SkipConcreteVisitor())
+        for edge in traverse.traverse_breadth_first_edges_generator(root_edges, visitor):
+            for virtual in edge.virtuals:
+                if not spack.repo.PATH.is_virtual(virtual):
+                    errors.append(f"'{virtual}' in '{root}' is not a known virtual package")
+    if not errors:
+        return
+    if len(errors) == 1:
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
+    details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been found in input specs:\n{details}"
+    )
 
 
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):

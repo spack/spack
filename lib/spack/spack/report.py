@@ -8,6 +8,7 @@ import gzip
 import os
 import time
 import traceback
+from typing import Optional
 
 import spack.error
 
@@ -99,7 +100,11 @@ class SpecRecord(Record):
         self.elapsed_time = 0.0
         self.message = msg
 
-    def fail(self, exc):
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
+        """Fetch the log for this spec record. Subclasses should override."""
+        return ""
+
+    def fail(self, exc, log_path: Optional[str] = None):
         """Record failure based on exception type
 
         Errors wrapped by spack.error.InstallError are "failures"
@@ -113,14 +118,14 @@ class SpecRecord(Record):
             self.result = "error"
             self.message = str(exc) or "Unknown error"
             self.exception = traceback.format_exc()
-        self.stdout = self.fetch_log() + self.message
+        self.stdout = self.fetch_log(log_path) + self.message
         assert self._start_time, "Start time is None"
         self.elapsed_time = time.time() - self._start_time
 
-    def succeed(self):
+    def succeed(self, log_path: Optional[str] = None):
         """Record success for this spec"""
         self.result = "success"
-        self.stdout = self.fetch_log()
+        self.stdout = self.fetch_log(log_path)
         assert self._start_time, "Start time is None"
         self.elapsed_time = time.time() - self._start_time
 
@@ -132,10 +137,12 @@ class InstallRecord(SpecRecord):
         super().__init__(spec)
         self.installed_from_binary_cache = None
 
-    def fetch_log(self):
-        """Install log comes from install prefix on success, or stage dir on failure."""
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
+        """Install log comes from log_path if provided, install prefix, or stage dir."""
         try:
-            if os.path.exists(self._package.install_log_path):
+            if log_path and os.path.exists(log_path):
+                stream = open(log_path, encoding="utf-8", errors="replace")
+            elif os.path.exists(self._package.install_log_path):
                 stream = gzip.open(
                     self._package.install_log_path, "rt", encoding="utf-8", errors="replace"
                 )
@@ -146,8 +153,8 @@ class InstallRecord(SpecRecord):
         except OSError:
             return f"Cannot open log for {self._spec.cshort_spec}"
 
-    def succeed(self):
-        super().succeed()
+    def succeed(self, log_path: Optional[str] = None):
+        super().succeed(log_path)
         self.installed_from_binary_cache = self._package.installed_from_binary_cache
 
 
@@ -159,10 +166,10 @@ class NullInstallRecord(InstallRecord):
     def start(self) -> None:
         pass
 
-    def succeed(self) -> None:
+    def succeed(self, log_path: Optional[str] = None) -> None:
         pass
 
-    def fail(self, exc) -> None:
+    def fail(self, exc, log_path: Optional[str] = None) -> None:
         pass
 
     def skip(self, msg: str = "") -> None:
@@ -194,7 +201,7 @@ class TestRecord(SpecRecord):
         super().__init__(spec)
         self.directory = directory
 
-    def fetch_log(self):
+    def fetch_log(self, log_path: Optional[str] = None) -> str:
         """Get output from test log"""
         log_file = os.path.join(self.directory, self._package.test_suite.test_log_name(self._spec))
         try:

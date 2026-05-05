@@ -44,6 +44,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-j", "--jobs", action="store", type=int, default=None, help=argparse.SUPPRESS
     )
+    subparser.add_argument(
+        "-t",
+        "--tail",
+        metavar="LINES",
+        action="store",
+        type=int,
+        default=0,
+        help="number of trailing log lines to show (0 to disable)",
+    )
 
     subparser.add_argument("file", help="a log file containing build output, or - for stdin")
 
@@ -60,7 +69,9 @@ def log_parse(parser, args):
     if args.jobs is not None:
         warnings.warn("The --jobs option is deprecated and will be removed in Spack v1.3")
 
-    log_errors, log_warnings = parse_log_events(input, args.context, args.profile)
+    log_errors, log_warnings, tail = parse_log_events(
+        input, args.context, args.profile, tail=args.tail
+    )
     if args.profile:
         return
 
@@ -76,5 +87,8 @@ def log_parse(parser, args):
     if "warnings" in types:
         events.extend(log_warnings)
         print("%d warnings" % len(log_warnings))
+
+    if tail:
+        events.append(tail)
 
     print(make_log_context(events), end="")

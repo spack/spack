@@ -291,7 +291,12 @@ spack:
       link_type: symlink
 """,
             "./another-view",
-            {"root": "./another-view", "select": ["%gcc"], "link_type": "symlink"},
+            {
+                "root": "./another-view",
+                "select": ["%gcc"],
+                "link_type": "symlink",
+                "link_dirs": True,
+            },
         ),
         (
             """
@@ -305,7 +310,7 @@ spack:
       link_type: symlink
 """,
             True,
-            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink"},
+            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink", "link_dirs": True},
         ),
     ],
 )

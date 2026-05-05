@@ -183,7 +183,7 @@ def update_env(
 
         # If we are automatically mutating the concrete specs for dev provenance, do so
         if apply_changes:
-            env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
+            env.apply_develop([spec], [_abs_code_path(env, spec, specified_path)])
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):

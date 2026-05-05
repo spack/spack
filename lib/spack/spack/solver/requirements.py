@@ -26,6 +26,26 @@ def _mark_str(raw) -> str:
     return f"{mark.name}:{mark.line + 1}: " if mark else ""
 
 
+def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
+    errors = []
+    for raw, spec in zip(raw_strs, specs):
+        for edge in spack.traverse.traverse_edges([spec], root=False):
+            for virtual in edge.virtuals:
+                if not spack.repo.PATH.is_virtual(virtual):
+                    errors.append(
+                        f"{_mark_str(raw)}'{virtual}' in '{raw}' is not a known virtual package"
+                    )
+    if not errors:
+        return
+    if len(errors) == 1:
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
+    details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been detected in requirements:\n{details}"
+    )
+
+
 def _check_unknown_targets(
     raw_strs: List[str], specs: List["spack.spec.Spec"], *, always_warn: bool = False
 ) -> None:
@@ -316,6 +336,7 @@ class RequirementParser:
                     for constraint in raw_strs
                 ]
                 _check_unknown_targets(raw_strs, constraints)
+                _check_unknown_virtuals_on_edges(raw_strs, constraints)
                 when_str = requirement.get("when")
                 when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
 
