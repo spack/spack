@@ -282,9 +282,9 @@ end
 
 
 
-function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, --fish, --bat, or --pwsh"
+function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, --fish, or --pwsh"
     #
-    # Check if inputs contain -h/--help, --sh, --csh, --fish, --bat, or --pwsh
+    # Check if inputs contain -h/--help, --sh, --csh, --fish, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -319,11 +319,6 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
             return 0
         end
 
-        # looks for a single `--bat`
-        if match_flag $_a "--bat"
-            return 0
-        end
-
         # looks for a single `--pwsh`
         if match_flag $_a "--pwsh"
             return 0
@@ -340,9 +335,9 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 end
 
 
-function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, --fish, --bat, or --pwsh"
+function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, --fish, or --pwsh"
     #
-    # Check if inputs contain --sh, --csh, --fish, --bat, or --pwsh
+    # Check if inputs contain --sh, --csh, --fish, or --pwsh
     #
 
     # combine argument array into single string (space separated), to be passed
@@ -364,11 +359,6 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
 
         # looks for a single `--fish`
         if match_flag $_a "--fish"
-            return 0
-        end
-
-        # looks for a single `--bat`
-        if match_flag $_a "--bat"
             return 0
         end
 

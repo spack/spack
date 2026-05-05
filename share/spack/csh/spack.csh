@@ -101,7 +101,6 @@ case env:
                      "$_sp_args" =~ "* --sh*" || \
                      "$_sp_args" =~ "* --csh*" || \
                      "$_sp_args" =~ "* --fish*" || \
-                     "$_sp_args" =~ "* --bat*" || \
                      "$_sp_args" =~ "* --pwsh*" || \
                      "$_sp_args" =~ "* -h*" || \
                      "$_sp_args" =~ "* --help*" ) then
@@ -124,7 +123,6 @@ case env:
                 if ( "$_sp_args" =~ "* --sh*" || \
                      "$_sp_args" =~ "* --csh*" || \
                      "$_sp_args" =~ "* --fish*" || \
-                     "$_sp_args" =~ "* --bat*" || \
                      "$_sp_args" =~ "* --pwsh*" ) then
                     # Args contain shell name: just execute.
                     \spack $_sp_flags env $_sp_args
@@ -145,13 +143,12 @@ case env:
 
 case load:
 case unload:
-    # Get --sh, --csh, --fish, --bat, --pwsh, -h, or --help arguments.
+    # Get --sh, --csh, --fish, --pwsh, -h, or --help arguments.
     # Space needed here to differentiate between `-h`
     # argument and specs with "-h" in the name.
     if ( " $_sp_spec" =~ "* --sh*" || \
          " $_sp_spec" =~ "* --csh*" || \
          " $_sp_spec" =~ "* --fish*" || \
-         " $_sp_spec" =~ "* --bat*" || \
          " $_sp_spec" =~ "* --pwsh*" || \
          " $_sp_spec" =~ "* --list*" || \
          " $_sp_spec" =~ "* -h*" || \
