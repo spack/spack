@@ -826,13 +826,14 @@ NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
 
 def file_type(f: IO[bytes]) -> int:
     try:
-        # first check if this is an ELF or mach-o binary.
-        magic = f.read(64)
+        read_size = 8 if not sys.platform == "win32" else 64
+        # first check if this is an ELF, MSVC, or mach-o binary.
+        magic = f.read(read_size)
         if len(magic) < 8:
             return FileTypes.UNKNOWN
         elif (
-            relocate.is_elf_magic(magic[:8])
-            or relocate.is_macho_magic(magic[:8])
+            relocate.is_elf_magic(magic)
+            or relocate.is_macho_magic(magic)
             or relocate.is_msvc_magic(magic)
         ):
             return FileTypes.BINARY
