@@ -14,8 +14,9 @@ import spack.llnl.util.tty as tty
 import spack.store
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
-#: Different Linux distributions have different limits, but 127 is the
-#: smallest among all modern versions.
+#: Linux 5.1 and later set BINPRM_BUF_SIZE to 256, before that, it was 128.
+system_shebang_limit: int
+
 if sys.platform == "darwin":
     system_shebang_limit = 511
 elif sys.platform == "linux":
