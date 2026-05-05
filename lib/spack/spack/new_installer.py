@@ -2445,6 +2445,7 @@ class PackageInstaller:
         self._installer()
 
     def _installer(self) -> None:
+        spack.store.STORE.install_sbang()
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
 

@@ -17,9 +17,13 @@ debugging easier.
 """
 
 import contextlib
+import filecmp
 import os
 import pathlib
 import re
+import secrets
+import shutil
+import sys
 import uuid
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
@@ -28,9 +32,11 @@ import spack.database
 import spack.directory_layout
 import spack.error
 import spack.llnl.util.lang
+import spack.package_prefs
 import spack.paths
 import spack.spec
 import spack.util.path
+from spack.llnl.util import filesystem as fs
 from spack.llnl.util import tty
 
 #: default installation root, relative to the Spack install path
@@ -193,6 +199,58 @@ class Store:
     def reindex(self) -> None:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()
+
+    def install_sbang(self) -> None:
+        """Install the sbang script in this store's bin directory.
+
+        sbang is a short shell script that Spack prepends to scripts with shebangs that are too
+        long for the OS. It must live in the store so its path is short enough to fit on a
+        shebang line.
+        """
+
+        if sys.platform == "win32":
+            return
+
+        import grp  # unix only, hence the import here
+
+        sbang_path = os.path.join(self.unpadded_root, "bin", "sbang")
+        try:
+            if filecmp.cmp(sbang_path, spack.paths.sbang_script):
+                return  # installed and up to date
+        except FileNotFoundError:
+            pass
+
+        bin_dir = os.path.dirname(sbang_path)
+        os.makedirs(bin_dir, exist_ok=True)
+
+        all_spec = spack.spec.Spec("all")
+        group_name = spack.package_prefs.get_package_group(all_spec)
+        config_mode = spack.package_prefs.get_package_dir_permissions(all_spec)
+        gid = grp.getgrnam(group_name).gr_gid if group_name else -1
+
+        if group_name:
+            os.chmod(bin_dir, config_mode)
+            os.chown(bin_dir, -1, gid)
+        else:
+            fs.set_install_permissions(bin_dir)
+
+        sbang_tmp_path = os.path.join(bin_dir, f".sbang.{secrets.token_hex(8)}.tmp")
+        # Open a randomized temporary file with O_EXCL to error on races. Outside the try-except
+        # to ensure we don't delete a file created by another process in the except block.
+        sbang_tmp_file = open(sbang_tmp_path, "xb")
+        try:
+            with open(spack.paths.sbang_script, "rb") as src, sbang_tmp_file as dst:
+                shutil.copyfileobj(src, dst)
+                os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
+                if group_name:
+                    os.fchown(dst.fileno(), -1, gid)
+            os.rename(sbang_tmp_path, sbang_path)
+        except BaseException:
+            try:
+                os.unlink(sbang_tmp_path)
+            except OSError:
+                pass
+            raise
 
     def __reduce__(self):
         return Store, (
