@@ -171,6 +171,8 @@ jobs:
         run: |
           Remove-Item -Path (Get-Command gpg).Path
           Remove-Item -Path (Get-Command file).Path
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
       - name: Bootstrap clingo
         run: |
           ./share/spack/setup-env.ps1
