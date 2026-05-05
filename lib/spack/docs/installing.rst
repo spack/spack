@@ -146,3 +146,29 @@ Failed builds show ``[x]`` in the overview.
 Navigate to a failed build and press ``v`` to see a parsed error summary and the path to the full log.
 
 See :ref:`spack install <spack-install>` for the full set of flags related to debugging and controlling build behavior.
+
+
+Build isolation and sandboxing (Linux)
+--------------------------------------
+
+Spack can optionally sandbox builds to restrict filesystem and network access.
+This feature requires a Linux kernel with Landlock support and the new installer.
+
+When enabled, the stage directory, install prefix, and system temp directory are implicitly writable.
+Spack-installed dependencies (excluding externals) are readable.
+All other paths must be explicitly allowed in your configuration:
+
+.. code-block:: yaml
+
+   config:
+     sandbox:
+       enable: true         # Enable for all builds
+       allow_network: true  # Allow network access during the build phase
+       allow_read:          # Additional readable paths
+       - /usr
+       allow_write:         # Additional writable paths
+       - /dev/null
+
+Sandboxing activates immediately after source extraction and prefix creation.
+Note that ``allow_network`` only restricts the build subprocess, leaving Spack's own fetch operations unaffected.
+Because untrusted ``package.py`` code still executes with full permissions beforehand, this feature is meant for build reproducibility and bug containment rather than acting as a strict security boundary.
