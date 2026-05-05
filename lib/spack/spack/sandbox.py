@@ -217,18 +217,8 @@ class LandlockSandbox(Sandbox):
             os.close(ruleset_fd)
 
 
-class NoSandbox(Sandbox):
-    """No-op sandbox for unsupported platforms."""
-
-    def _allow_read(self, original: Path, resolved: Path): ...
-
-    def _allow_write(self, original: Path, resolved: Path): ...
-
-    def apply(self, block_network: bool = False): ...
-
-
 def get_sandbox() -> Sandbox:
     if platform.system() == "Linux":
         return LandlockSandbox()
-    else:
-        return NoSandbox()
+
+    raise OSError("Sandboxing is not supported on this platform.")

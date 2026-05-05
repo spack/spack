@@ -685,6 +685,11 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     # Compilers write temporary files
     sandbox.allow_write(tempfile.gettempdir())
 
+    # Allow read access to sbang, which might be needed to run build scripts.
+    sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
+    for upstream_db in spack.store.STORE.upstreams or []:
+        sandbox.allow_read(os.path.join(upstream_db.root, "bin", "sbang"))
+
     # User-configured paths
     for p in config.get("allow_read", []):
         sandbox.allow_read(p)
