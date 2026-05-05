@@ -30,6 +30,7 @@ def test_sandbox_blocks_write_and_read_outside_prefix(install_mockery, mock_fetc
     succeeds, so a clean install means the sandbox correctly blocked both operations.
     """
     from spack.new_installer import PackageInstaller
+
     mutable_config.set("config:sandbox", {"enable": True, "allow_network": True})
     spec = spack.concretize.concretize_one("sandbox-escape-test")
     PackageInstaller([spec.package], explicit=True).install()
