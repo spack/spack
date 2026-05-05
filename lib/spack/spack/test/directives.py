@@ -9,6 +9,7 @@ import spack.concretize
 import spack.directives
 import spack.repo
 import spack.spec
+import spack.variant
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
@@ -226,9 +227,10 @@ def test_directives_meta_combine_when():
 
 def test_directive_descriptor_init():
     # when `pkg.variants` is initialized, only the `variant` directive should run
+    # `deprecated_variants` is also initialized since `variant` manages both dicts
     variants = DirectiveDictDescriptor("variants")
     assert variants.directives_to_run == ["variant"]
-    assert variants.dicts_to_init == ["variants"]
+    assert variants.dicts_to_init == ["deprecated_variants", "variants"]
 
     # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
     # `pkg.extendees` should be initialized
@@ -294,3 +296,79 @@ def test_patched_dependencies_sets_class_attribute():
 
     assert DoesNotPatchDependencies._patches_dependencies is False
     assert DoesNotPatchDependencies.patches  # type: ignore
+
+
+def _fake_pkg():
+    return type("FakePkg", (), {"name": "fake", "deprecated_variants": {}, "variants": {}})()
+
+
+def test_substitutions_without_deprecated_raises():
+    """Tests that passing 'substitutions' without 'deprecated=True' raises an error."""
+    with pytest.raises(
+        spack.directives.DirectiveError, match="'substitutions' requires 'deprecated=True'"
+    ):
+        spack.directives._execute_variant(
+            _fake_pkg(),
+            name="bad",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
+            deprecated=False,
+            substitutions={"+bad": "good=val"},
+        )
+
+
+def test_deprecated_substitutions_invalid_types_raises():
+    """Tests that non-string keys or values in 'substitutions' raise an error."""
+    with pytest.raises(
+        spack.directives.DirectiveError, match="substitutions keys and values must be strings"
+    ):
+        spack.directives._execute_variant(
+            _fake_pkg(),
+            name="bad",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
+            deprecated=True,
+            substitutions={"+bad": 42},  # type: ignore[dict-item]
+        )
+
+
+def test_deprecated_variant_conflicts_with_normal_raises():
+    """Tests that deprecating a variant already defined as non-deprecated raises an error."""
+    fake = _fake_pkg()
+    # Simulate a normal variant already present for "shared"
+    fake.variants["always"] = {"shared": object()}
+    with pytest.raises(spack.directives.DirectiveError, match="cannot deprecate a variant"):
+        spack.directives._handle_deprecated_variant(fake, name="shared")
+
+
+def test_normal_variant_conflicts_with_deprecated_raises():
+    """Tests that defining a non-deprecated variant with the same name as a deprecated one raises
+    an error.
+    """
+    fake = _fake_pkg()
+    # Simulate a deprecated variant already present for "shared"
+    fake.deprecated_variants["shared"] = spack.variant.DeprecatedVariant("shared")
+    with pytest.raises(
+        spack.directives.DirectiveError, match="cannot define a non-deprecated variant"
+    ):
+        spack.directives._execute_variant(
+            fake,
+            name="shared",
+            default=True,
+            description="",
+            values=None,
+            multi=None,
+            validator=None,
+            when=None,
+            sticky=False,
+        )

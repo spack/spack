@@ -1630,6 +1630,70 @@ The default for this variant, when it is present, is always ``True``, regardless
 This allows packages to override variants in packages or build system classes from which they inherit, by modifying the variant values without modifying the ``when`` clause.
 It also allows a package to implement ``or`` semantics for a variant ``when`` clause by duplicating the variant definition.
 
+Deprecating Variants
+^^^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 1.2
+
+When a variant needs to be renamed or removed, the ``deprecated`` parameter provides a graceful migration path.
+Users who still reference the old variant in CLI commands, environments, or ``packages.yaml`` will see a warning instead of a hard error.
+The old variant is automatically translated or removed before concretization.
+
+To simply remove a variant that is no longer needed:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant("old_flag", default=True, deprecated=True)
+       ...
+
+Any reference to ``old_flag`` (e.g., ``foo+old_flag``) will be silently dropped with a warning message.
+
+To rename a variant or map old values to new ones, set ``deprecated=True`` and pass a ``substitutions`` dictionary that maps old variant settings to replacement spec constraints:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant("shared", default=True, deprecated=True, substitutions={
+           "+shared": "libs=shared",
+           "~shared": "libs=static",
+       })
+       variant("libs", default="shared", values=("shared", "static"), multi=False)
+       ...
+
+With this definition, ``foo+shared`` is automatically rewritten to ``foo libs=shared``, and ``foo~shared`` becomes ``foo libs=static``.
+If the deprecated variant was set with propagation (e.g., ``foo ++shared``), propagation carries over to the replacement.
+
+Multi-valued variants can also be mapped:
+
+.. code-block:: python
+
+   class Foo(Package):
+       ...
+       variant("old_backends", default="none", values=("a", "b", "none"), multi=True,
+               deprecated=True, substitutions={
+                   "old_backends=a": "backends=alpha",
+                   "old_backends=b": "backends=beta",
+               })
+       variant("backends", default="none", values=("alpha", "beta", "none"), multi=True)
+       ...
+
+Here ``foo old_backends=a,b`` becomes ``foo backends=alpha,beta``.
+
+.. note::
+
+   The ``deprecated`` parameter cannot be combined with ``when``.
+   Deprecated variants are always unconditional.
+   Passing ``substitutions`` without ``deprecated=True`` raises a ``DirectiveError``.
+
+.. note::
+
+   Deprecated variants are not substituted in package recipes.
+   The state of a repository must be self-consistent at all times.
+   Variant deprecation is just a way to gracefully migrate user configuration or scripts.
+
 .. _dependencies:
 
 Dependencies

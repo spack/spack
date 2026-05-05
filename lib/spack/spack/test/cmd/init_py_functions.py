@@ -5,6 +5,7 @@ import pathlib
 
 import pytest
 
+import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -138,3 +139,13 @@ def test_special_cases_concretization_matching_specs_from_env(
         else:
             # assertion error from monkeypatch above if test fails
             matching_specs_from_env(specs)
+
+
+def test_cli_parse_specs_expands_deprecated(mock_packages, config):
+    """Tests that spack.cmd.parse_specs expands deprecated variants from CLI args."""
+    specs = spack.cmd.parse_specs(["deprecated-variant-pkg+shared"])
+    assert len(specs) == 1
+    spec = specs[0]
+    assert "shared" not in spec.variants
+    assert "libs" in spec.variants
+    assert "shared" in spec.variants["libs"].values

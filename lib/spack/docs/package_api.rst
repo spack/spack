@@ -37,6 +37,10 @@ Spack version |spack_version| supports package repositories with a Package API v
 Changelog
 ---------
 
+**v2.5** *(Spack v1.2.0)*
+
+* The :func:`~spack.package.variant` directive now supports the ``deprecated=`` parameter for graceful variant deprecation.
+
 **v2.4** *(Spack v1.0.3)*
 
 * The ``%%`` operator can be used on input specs to set propagated preferences, which is particularly useful for ``unify: false`` environments.

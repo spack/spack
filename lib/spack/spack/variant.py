@@ -11,11 +11,13 @@ import enum
 import functools
 import inspect
 import itertools
+import warnings
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     Collection,
+    Dict,
     Iterable,
     List,
     Optional,
@@ -28,6 +30,7 @@ from typing import (
 import spack.error
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty.color
+import spack.repo
 import spack.spec_parser
 
 if TYPE_CHECKING:
@@ -810,6 +813,98 @@ def prevalidate_variant_value(
 
 class ConditionalVariantValues(lang.TypedMutableSequence):
     """A list, just with a different type"""
+
+
+class DeprecatedVariant:
+    """A variant that has been deprecated. Deprecated variants are accepted when parsing but
+    removed or substituted before concretization.
+    """
+
+    __slots__ = ("name", "mapping")
+
+    name: str
+    mapping: Optional[Dict[str, str]]
+
+    def __init__(self, name: str, mapping: Optional[Dict[str, str]] = None):
+        """
+        Args:
+            name: name of the deprecated variant
+            mapping:  if ``None`` the variant is simply dropped. If ``mapping`` is a dict, each key
+                is a condition and each value is a replacement. When the user's value satisfies a
+                key, the corresponding replacement constraint is applied.
+        """
+        self.name = name
+        self.mapping = mapping
+
+
+def expand_deprecated_variants(
+    spec: "spack.spec.Spec", *, origin: str = "the input spec", pkg_name: Optional[str] = None
+) -> None:
+    """Expand deprecated variants on every node of *spec* in-place.
+
+    For each node in the spec DAG, look up the package class and check whether any of the node's
+    variants are deprecated. Deprecated variants are removed and, if a mapping is provided,
+    replaced with the corresponding new constraints.
+
+    Warnings are emitted for every substitution or removal.
+
+    Args:
+        spec: the spec to expand in-place
+        origin: human-readable description of where the spec came from, used in warning messages
+        pkg_name: optional package name override, used when the spec is an anonymous constraint
+            (e.g. ``+shared`` from packages.yaml) but the target package is known from context
+    """
+    for node in spec.traverse():
+        name = node.name or pkg_name
+        if not name:
+            continue
+
+        try:
+            pkg_cls = spack.repo.PATH.get_pkg_class(name)
+        except spack.repo.UnknownPackageError:
+            continue
+
+        deprecated = getattr(pkg_cls, "deprecated_variants", None)
+        if not deprecated:
+            continue
+
+        for dv_name, dv in deprecated.items():
+            if dv_name not in node.variants:
+                continue
+
+            old_variant = node.variants[dv_name]
+            propagate = old_variant.propagate
+            header = f"variant '{dv_name}' of package '{name}' is deprecated"
+
+            # Easy case: just remove the variant
+            if dv.mapping is None:
+                del node.variants[dv_name]
+                warnings.warn(f"{header}: remove '{old_variant}' {origin}")
+                continue
+
+            # More complicated: map each match to a replacement
+            replacements = []
+            for key, replacement in dv.mapping.items():
+                key_spec = spack.spec_parser.parse_one_or_raise(f"{name} {key}")
+                key_vv = key_spec.variants[dv_name]
+                if old_variant.satisfies(key_vv):
+                    replacements.append(replacement)
+
+            # Remove the deprecated variant
+            del node.variants[dv_name]
+
+            # Apply each replacement constraint
+            for repl in replacements:
+                repl_spec = spack.spec_parser.parse_one_or_raise(f"{name} {repl}")
+                # Carry over propagation from the original variant
+                if propagate:
+                    for vv in repl_spec.variants.values():
+                        vv.propagate = True
+                node.constrain(repl_spec)
+
+            warnings.warn(
+                f"{header}. Substitute '{old_variant}' {origin} with '{', '.join(replacements)}'"
+            )
 
 
 class DuplicateVariantError(spack.error.SpecError):

@@ -15,6 +15,7 @@ import spack.spec
 import spack.spec_parser
 import spack.traverse
 import spack.util.spack_yaml
+import spack.variant
 from spack.enums import PropagationPolicy
 from spack.llnl.util import tty
 from spack.util.spack_yaml import get_mark_from_yaml_data
@@ -173,10 +174,17 @@ class RequirementParser:
         self.toolchains = configuration.get_config("toolchains")
         self._warned_compiler_all: set = set()
 
-    def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
+    def _parse_and_expand(
+        self, string: str, *, named: bool = False, pkg_name: Optional[str] = None
+    ) -> spack.spec.Spec:
         result = parse_spec_from_yaml_string(string, named=named)
         if self.toolchains:
             spack.spec_parser.expand_toolchains(result, self.toolchains)
+        mark = get_mark_from_yaml_data(string)
+        origin = "packages.yaml"
+        if mark and mark.name:
+            origin = f"{mark.name}:{mark.line:d}" if mark.line is not None else mark.name
+        spack.variant.expand_deprecated_variants(result, origin=f"in {origin}", pkg_name=pkg_name)
         return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
@@ -252,7 +260,7 @@ class RequirementParser:
             if kind == RequirementKind.DEFAULT:
                 # Warn about %gcc type of preferences under `all`.
                 self._maybe_warn_compiler_in_all(item, "prefer")
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item, pkg_name=pkg_name)
             result.append(
                 preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
@@ -267,20 +275,20 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in conflicts:
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item, pkg_name=pkg_name)
             result.append(
                 conflict(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
-    def _parse_prefer_conflict_item(self, item):
+    def _parse_prefer_conflict_item(self, item, *, pkg_name: Optional[str] = None):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = self._parse_and_expand(item)
+            spec = self._parse_and_expand(item, pkg_name=pkg_name)
             condition = spack.spec.Spec()
             message = None
         else:
-            spec = self._parse_and_expand(item["spec"])
+            spec = self._parse_and_expand(item["spec"], pkg_name=pkg_name)
             condition = spack.spec.Spec(item.get("when"))
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
@@ -332,13 +340,19 @@ class RequirementParser:
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 raw_strs = list(constraints)
                 constraints = [
-                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
+                    self._parse_and_expand(
+                        constraint, named=kind == RequirementKind.VIRTUAL, pkg_name=pkg_name
+                    )
                     for constraint in raw_strs
                 ]
                 _check_unknown_targets(raw_strs, constraints)
                 _check_unknown_virtuals_on_edges(raw_strs, constraints)
                 when_str = requirement.get("when")
-                when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
+                when = (
+                    self._parse_and_expand(when_str, pkg_name=pkg_name)
+                    if when_str
+                    else spack.spec.Spec()
+                )
 
                 constraints = [
                     x
