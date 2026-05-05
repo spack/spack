@@ -67,6 +67,7 @@ if not defined EDITOR (
 :: Set shell being used
 set "SPACK_SHELL=bat"
 
+
 @echo **********************************************************************
 @echo ** Spack Package Manager
 @echo **********************************************************************
