@@ -92,7 +92,7 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
                     )
     for target in targets:
         # Now that we've mapped all our libs to the dlls they point to
-        # Replace any dll references in our target dll or exe with the 
+        # Replace any dll references in our target dll or exe with the
         # appropriate replacement for the packages new location on the host
         # and if there is an import library associated with the dll/exe,
         # regenerate it
@@ -369,7 +369,9 @@ def is_elf_magic(magic: bytes) -> bool:
 
 
 def is_msvc_magic(magic: bytes) -> bool:
-    return magic.startswith(b"!<arch>\n") or (magic.startswith(b"MZ") and magic[60:64].startswith(b"PE\0\0"))
+    return magic.startswith(b"!<arch>\n") or (
+        magic.startswith(b"MZ") and magic[60:64].startswith(b"PE\0\0")
+    )
 
 
 def is_binary(filename: str) -> bool:
