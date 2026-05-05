@@ -170,15 +170,12 @@ config:
   # Which installer to use: "old" or "new".
   installer: new
 
-  # Restrict filesystem and network access during builds using Landlock (Linux)
-  # or Seatbelt (macOS). The stage directory, spec prefix, and system temp
-  # directory are always writable. Dependency prefixes (including externals and
-  # upstreams) are always readable. Use allow_read and allow_write to add paths
-  # that compilers and build tools need. Typical values
-  # include system directories such as:
-  # /bin, /usr, /lib, /lib64, /etc for most unix platforms,
-  # /System, /Library, /private, and /Applications/Xcode.app for macOS.
-  # /proc/self, /proc/cpuinfo, and /proc/meminfo for Linux.
+  # Restrict filesystem and network access during builds. The stage directory,
+  # install prefix, and system temp directory are always writable.
+  # Spack-installed dependency prefixes are always readable. Use the allow_read
+  # and allow_write lists to grant additional permissions to other paths.
+  # This feature is only available on Linux kernels with Landlock support, and
+  # only works with the new installer.
   sandbox:
     enable: false
     allow_network: true
