@@ -399,3 +399,42 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     with working_dir(curdir):
         assert mirror_name_or_url(".").fetch_url == curdir.as_uri()
         assert mirror_name_or_url("..").fetch_url == tmp_path.as_uri()
+
+
+@pytest.mark.parametrize(
+    "select,exclude,spec_str,expected",
+    [
+        # No filters: everything matches
+        ([], [], "mpich", True),
+        # Select only: matches if spec satisfies a select pattern
+        (["mpich"], [], "mpich", True),
+        (["mpich"], [], "zlib", False),
+        # Exclude only: matches unless spec satisfies an exclude pattern
+        ([], ["mpich"], "mpich", False),
+        ([], ["mpich"], "zlib", True),
+        # Both select and exclude
+        (["mpich", "zlib"], ["zlib"], "mpich", True),
+        (["mpich", "zlib"], ["zlib"], "zlib", False),
+        # Select with version constraint
+        (["mpich@3:"], [], "mpich@3.0", True),
+        (["mpich@3:"], [], "mpich@1.0", False),
+    ],
+)
+def test_spec_matches_filters(select, exclude, spec_str, expected):
+    """Test the spec_matches_filters standalone function."""
+    spec = spack.concretize.concretize_one(spec_str)
+    assert spack.mirrors.mirror.spec_matches_filters(spec, select, exclude) is expected
+
+
+def test_mirror_matches(mock_packages, config):
+    """Test that Mirror.matches() delegates to spec_matches_filters."""
+    spec = spack.concretize.concretize_one("mpich")
+
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com"})
+    assert m.matches(spec) is True
+
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["mpich"]})
+    assert m.matches(spec) is False
+
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["zlib"]})
+    assert m.matches(spec) is False

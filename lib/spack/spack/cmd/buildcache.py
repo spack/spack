@@ -420,6 +420,27 @@ def _skip_no_redistribute_for_public(specs):
     return remaining_specs
 
 
+def _filter_specs_for_push(specs, mirror):
+    """Filter specs based on mirror select/exclude patterns."""
+    remaining_specs = list()
+    removed_specs = list()
+
+    for spec in specs:
+        if mirror.matches(spec):
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+
+    if removed_specs:
+        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.info(
+            "The following specs will not be pushed to the binary cache"
+            " because they match exclude patterns:\n"
+            f"{colified_output}"
+        )
+    return remaining_specs
+
+
 class PackagesAreNotInstalledError(spack.error.SpackError):
     """Raised when a list of specs is not installed but picked to be packaged."""
 
@@ -511,6 +532,8 @@ def push_fn(args):
 
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
+
+    specs = _filter_specs_for_push(specs, mirror)
 
     if len(specs) > 1:
         tty.info(f"Selected {len(specs)} specs to push to {push_url}")

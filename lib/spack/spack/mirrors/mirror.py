@@ -21,6 +21,24 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
+def spec_matches_filters(
+    spec: "spack.spec.Spec", select: List[str], exclude: List[str]
+) -> bool:
+    """Check if a spec matches select/exclude filters.
+
+    A spec is included when:
+    - select is empty, or spec matches at least one select pattern
+    - spec does not match any exclude pattern
+    """
+    if select and not any(spec.satisfies(s) for s in select):
+        return False
+
+    if exclude and any(spec.satisfies(e) for e in exclude):
+        return False
+
+    return True
+
+
 def _url_or_path_to_url(url_or_path: str) -> str:
     """For simplicity we allow mirror URLs in config files to be local, relative paths.
     This helper function takes care of distinguishing between URLs and paths, and
@@ -125,6 +143,22 @@ class Mirror:
         return self._data.get("autopush", False)
 
     @property
+    def select(self) -> List[str]:
+        if isinstance(self._data, str):
+            return []
+        return self._data.get("select", [])
+
+    @property
+    def exclude(self) -> List[str]:
+        if isinstance(self._data, str):
+            return []
+        return self._data.get("exclude", [])
+
+    def matches(self, spec: "spack.spec.Spec") -> bool:
+        """Check if a spec passes this mirror's select/exclude filters."""
+        return spec_matches_filters(spec, self.select, self.exclude)
+
+    @property
     def fetch_url(self) -> str:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
@@ -224,7 +258,7 @@ class Mirror:
             "endpoint_url",
         ]
         if top_level:
-            keys += ["binary", "source", "signed", "autopush"]
+            keys += ["binary", "source", "signed", "autopush", "select", "exclude"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:

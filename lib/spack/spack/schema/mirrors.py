@@ -113,6 +113,19 @@ mirror_entry = {
             "description": "Automatically push packages to this build cache immediately after "
             "they are installed locally",
         },
+        "select": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of spec patterns to include for this build cache. "
+            "If specified, only specs matching at least one pattern will be "
+            "pushed or pulled (default: all specs).",
+        },
+        "exclude": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of spec patterns to exclude from this build cache "
+            "(default: exclude nothing).",
+        },
         **connection,
     },
 }

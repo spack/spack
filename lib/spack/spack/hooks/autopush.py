@@ -21,6 +21,13 @@ def post_install(spec, explicit):
 
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
+        if not mirror.matches(spec):
+            tty.debug(
+                f"{spec.name}: Skipped push to '{mirror.name}' "
+                f"due to select/exclude filters"
+            )
+            continue
+
         signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
         with spack.binary_distribution.make_uploader(
             mirror=mirror, force=True, signing_key=signing_key
