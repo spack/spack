@@ -2,13 +2,24 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Implements a sandboxing mechanism for build processes using Linux Landlock."""
+"""
+This module implements an unprivileged sandbox for build environments.
+
+It enforces path-based filesystem whitelisting and optional network isolation,
+dynamically adapting to the host kernel's supported Landlock ABI version.
+
+By design, to support standard build system behaviors like `try_compile` tests,
+read access implicitly includes execution rights. IOCTLs and IPC mechanisms are
+left unrestricted to ensure compatibility with compilers, terminal output, and
+build jobservers.
+"""
 
 import ctypes
 import enum
 import os
 import platform
 import stat
+import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Union
@@ -68,6 +79,8 @@ class PathBeneathAttr(ctypes.Structure):
 
 
 class Sandbox(ABC):
+    """Abstract base class for sandbox implementations."""
+
     def allow_read(self, path: Union[str, Path]):
         p = Path(path).absolute()
         resolved = p.resolve()
@@ -175,8 +188,11 @@ class LandlockSandbox(Sandbox):
         try:
             for path, flags in self.path_rules.items():
                 try:
-                    fd = os.open(str(path), os.O_PATH | os.O_CLOEXEC)
-                except OSError:
+                    # use O_PATH to get an fd w/o needing permissions, and O_NOFOLLOW to avoid
+                    # TOCTOU issues after we've called resolve() on the path.
+                    fd = os.open(str(path), os.O_PATH | os.O_CLOEXEC | os.O_NOFOLLOW)
+                except OSError as e:
+                    warnings.warn(f"Cannot allow sandbox access to {path} due to: {e}")
                     continue
                 try:
                     st = os.fstat(fd)
@@ -200,7 +216,14 @@ class LandlockSandbox(Sandbox):
 
             # Lock down the current process with this ruleset
             _check_syscall(
-                self.libc.prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0), "prctl(PR_SET_NO_NEW_PRIVS)"
+                self.libc.prctl(
+                    ctypes.c_int(PR_SET_NO_NEW_PRIVS),
+                    ctypes.c_ulong(1),
+                    ctypes.c_ulong(0),
+                    ctypes.c_ulong(0),
+                    ctypes.c_ulong(0),
+                ),
+                "prctl(PR_SET_NO_NEW_PRIVS)",
             )
             tsync_flag = LANDLOCK_RESTRICT_SELF_TSYNC if self.abi_version >= 8 else 0
             _check_syscall(
