@@ -151,11 +151,12 @@ See :ref:`spack install <spack-install>` for the full set of flags related to de
 Build isolation and sandboxing (Linux)
 --------------------------------------
 
-On Linux systems with `Landlock <https://landlock.io/>`_ support, Spack can create an unprivileged sandbox for builds to restrict filesystem and network access.
+Spack can run builds in an unprivileged sandbox to restrict filesystem and network access.
+This opt-in feature requires Linux 5.13+ with Landlock support.
 
 When enabled, the stage directory, install prefix, and system temp directory are implicitly writable.
 Spack-installed dependencies (excluding externals) are readable.
-All other paths must be explicitly allowed in your configuration:
+All other paths must be explicitly allowed in configuration:
 
 .. code-block:: yaml
 
@@ -170,4 +171,5 @@ All other paths must be explicitly allowed in your configuration:
 
 The sandbox activates immediately after source extraction and prefix creation.
 Note that ``allow_network`` only restricts the build phases, leaving Spack's own fetch operations unaffected.
-Because untrusted ``package.py`` code still executes with full permissions beforehand, this feature is meant for build reproducibility and bug containment rather than acting as a strict security boundary.
+
+Sandboxing is meant for build reproducibility and bug containment rather than acting as a strict security boundary, since ``package.py`` code still executes outside the sandbox ahead of the build.
