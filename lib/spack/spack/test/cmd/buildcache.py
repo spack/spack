@@ -493,9 +493,7 @@ def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
         spack.concretize.concretize_one("brillig"),
         spack.concretize.concretize_one("canfail"),
     ]
-    mirror = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "exclude": ["brillig"]}
-    )
+    mirror = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["brillig"]})
     filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
     assert not any(s.name == "brillig" for s in filtered)
     assert any(s.name == "canfail" for s in filtered)
@@ -507,9 +505,7 @@ def test_filter_specs_for_push_with_select(mock_packages, mutable_config):
         spack.concretize.concretize_one("brillig"),
         spack.concretize.concretize_one("canfail"),
     ]
-    mirror = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "select": ["canfail"]}
-    )
+    mirror = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["canfail"]})
     filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
     assert not any(s.name == "brillig" for s in filtered)
     assert any(s.name == "canfail" for s in filtered)

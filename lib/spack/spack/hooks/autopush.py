@@ -23,8 +23,7 @@ def post_install(spec, explicit):
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
         if not mirror.matches(spec):
             tty.debug(
-                f"{spec.name}: Skipped push to '{mirror.name}' "
-                f"due to select/exclude filters"
+                f"{spec.name}: Skipped push to '{mirror.name}' due to select/exclude filters"
             )
             continue
 

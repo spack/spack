@@ -305,8 +305,7 @@ def install_from_buildcache(
 ) -> bool:
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
-        m.matches(spec)
-        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+        m.matches(spec) for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
     ):
         return False
 

@@ -21,9 +21,7 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
-def spec_matches_filters(
-    spec: "spack.spec.Spec", select: List[str], exclude: List[str]
-) -> bool:
+def spec_matches_filters(spec: "spack.spec.Spec", select: List[str], exclude: List[str]) -> bool:
     """Check if a spec matches select/exclude filters.
 
     A spec is included when:
