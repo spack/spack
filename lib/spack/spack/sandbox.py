@@ -161,21 +161,11 @@ class LandlockSandbox(Sandbox):
         current_flags = self.path_rules.get(resolved, 0)
         self.path_rules[resolved] = current_flags | self.write_flags | self.read_flags
 
-    def apply(self, block_network: bool = False):
-        attr = RulesetAttr(handled_access_fs=self.write_flags | self.read_flags)
-
-        # Network access requires ABI v4
-        if block_network and self.abi_version < 4:
-            raise RuntimeError(
-                f"Blocking network access requires Landlock ABI v4+ (kernel 6.7+), "
-                f"but this kernel only supports ABI v{self.abi_version}."
-            )
-        if block_network:
-            attr.handled_access_net = (
-                LANDLOCK_ACCESS_NET_CONNECT_TCP | LANDLOCK_ACCESS_NET_BIND_TCP
-            )
-
-        ruleset_fd = _check_syscall(
+    def _syscall_create_ruleset(self, handled_access_fs: int, handled_access_net: int) -> int:
+        attr = RulesetAttr(
+            handled_access_fs=handled_access_fs, handled_access_net=handled_access_net
+        )
+        return _check_syscall(
             self.libc.syscall(
                 ctypes.c_long(SYSCALL_LANDLOCK_CREATE_RULESET),
                 ctypes.byref(attr),
@@ -184,6 +174,53 @@ class LandlockSandbox(Sandbox):
             ),
             "landlock_create_ruleset",
         )
+
+    def _syscall_add_rule(self, ruleset_fd: int, allowed_access: int, path_fd: int) -> None:
+        rule = PathBeneathAttr(allowed_access=allowed_access, parent_fd=path_fd)
+        _check_syscall(
+            self.libc.syscall(
+                ctypes.c_long(SYSCALL_LANDLOCK_ADD_RULE),
+                ctypes.c_int(ruleset_fd),
+                ctypes.c_int(LANDLOCK_RULE_PATH_BENEATH),
+                ctypes.byref(rule),
+                ctypes.c_uint32(0),
+            ),
+            "landlock_add_rule",
+        )
+
+    def _syscall_restrict_self(self, ruleset_fd: int, tsync_flag: int) -> None:
+        _check_syscall(
+            self.libc.syscall(
+                ctypes.c_long(SYSCALL_LANDLOCK_RESTRICT_SELF),
+                ctypes.c_int(ruleset_fd),
+                ctypes.c_uint32(tsync_flag),
+            ),
+            "landlock_restrict_self",
+        )
+
+    def _prctl_no_new_privs(self) -> None:
+        _check_syscall(
+            self.libc.prctl(
+                ctypes.c_int(PR_SET_NO_NEW_PRIVS),
+                ctypes.c_ulong(1),
+                ctypes.c_ulong(0),
+                ctypes.c_ulong(0),
+                ctypes.c_ulong(0),
+            ),
+            "prctl(PR_SET_NO_NEW_PRIVS)",
+        )
+
+    def apply(self, block_network: bool = False):
+        # Network access requires ABI v4
+        if block_network and self.abi_version < 4:
+            raise RuntimeError(
+                f"Blocking network access requires Landlock ABI v4+ (kernel 6.7+), "
+                f"but this kernel only supports ABI v{self.abi_version}."
+            )
+        net_flags = (
+            LANDLOCK_ACCESS_NET_CONNECT_TCP | LANDLOCK_ACCESS_NET_BIND_TCP if block_network else 0
+        )
+        ruleset_fd = self._syscall_create_ruleset(self.write_flags | self.read_flags, net_flags)
 
         try:
             for path, flags in self.path_rules.items():
@@ -199,41 +236,14 @@ class LandlockSandbox(Sandbox):
                     if not stat.S_ISDIR(st.st_mode):
                         # Strip directory-specific flags
                         flags &= ~self.dir_flags
-
-                    rule = PathBeneathAttr(allowed_access=flags, parent_fd=fd)
-                    _check_syscall(
-                        self.libc.syscall(
-                            ctypes.c_long(SYSCALL_LANDLOCK_ADD_RULE),
-                            ctypes.c_int(ruleset_fd),
-                            ctypes.c_int(LANDLOCK_RULE_PATH_BENEATH),
-                            ctypes.byref(rule),
-                            ctypes.c_uint32(0),
-                        ),
-                        "landlock_add_rule",
-                    )
+                    self._syscall_add_rule(ruleset_fd, flags, fd)
                 finally:
                     os.close(fd)
 
             # Lock down the current process with this ruleset
-            _check_syscall(
-                self.libc.prctl(
-                    ctypes.c_int(PR_SET_NO_NEW_PRIVS),
-                    ctypes.c_ulong(1),
-                    ctypes.c_ulong(0),
-                    ctypes.c_ulong(0),
-                    ctypes.c_ulong(0),
-                ),
-                "prctl(PR_SET_NO_NEW_PRIVS)",
-            )
+            self._prctl_no_new_privs()
             tsync_flag = LANDLOCK_RESTRICT_SELF_TSYNC if self.abi_version >= 8 else 0
-            _check_syscall(
-                self.libc.syscall(
-                    ctypes.c_long(SYSCALL_LANDLOCK_RESTRICT_SELF),
-                    ctypes.c_int(ruleset_fd),
-                    ctypes.c_uint32(tsync_flag),
-                ),
-                "landlock_restrict_self",
-            )
+            self._syscall_restrict_self(ruleset_fd, tsync_flag)
         finally:
             os.close(ruleset_fd)
 

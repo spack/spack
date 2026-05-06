@@ -21,65 +21,95 @@ import spack.store
 from spack.new_installer import _enable_sandbox
 
 
-class MockLibc:
+class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):
+    """LandlockSandbox that records _syscall_* and _prctl_* calls."""
+
     def __init__(self, abi_version: int = 3) -> None:
-        self.abi_version = abi_version
-        self.syscall_calls: List[tuple] = []
-        self.prctl_calls: List[tuple] = []
-        self.dummy_fd = os.open(os.devnull, os.O_RDONLY)
+        self._abi_version_override = abi_version
+        super().__init__()
+        # We need a valid ruleset fd for tests
+        self._spy_fd = os.open(os.devnull, os.O_RDONLY)
+        self.ruleset_fd = -1
+        # (fs_flags, net_flags)
+        self.create_ruleset_calls: List[Tuple[int, int]] = []
+        # (ruleset_fd, allowed_access, path_fd)
+        self.add_rule_calls: List[Tuple[int, int, int]] = []
+        # (ruleset_fd, tsync_flag)
+        self.restrict_self_calls: List[Tuple[int, int]] = []
+        self.prctl_called: bool = False
 
-    def syscall(self, syscall_num, *args):
-        self.syscall_calls.append((syscall_num, *args))
-        if syscall_num.value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET and args[0] is None:
-            return self.abi_version
-        if syscall_num.value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET:
-            return os.dup(self.dummy_fd)
-        return 0  # Return success for add_rule and restrict_self
+    def _get_abi_version(self) -> int:
+        return self._abi_version_override
 
-    def prctl(self, *args):
-        self.prctl_calls.append(tuple(x.value for x in args))
-        return 0
+    def _syscall_create_ruleset(self, handled_access_fs: int, handled_access_net: int) -> int:
+        self.create_ruleset_calls.append((handled_access_fs, handled_access_net))
+        self.ruleset_fd = os.dup(self._spy_fd)
+        return self.ruleset_fd
+
+    def _syscall_add_rule(self, ruleset_fd: int, allowed_access: int, path_fd: int) -> None:
+        self.add_rule_calls.append((ruleset_fd, allowed_access, path_fd))
+
+    def _syscall_restrict_self(self, ruleset_fd: int, tsync_flag: int) -> None:
+        self.restrict_self_calls.append((ruleset_fd, tsync_flag))
+
+    def _prctl_no_new_privs(self) -> None:
+        self.prctl_called = True
 
 
-def test_landlock_sandbox(tmp_path: pathlib.Path):
-    """Test LandlockSandbox properly configures and applies rules via mocked libc."""
-    mock_libc = MockLibc()
+def test_landlock_sandbox_syscall_args(tmp_path: pathlib.Path):
+    """Test that LandlockSandbox passes correct arguments to each syscall."""
+    sandbox = SpyLandlockSandbox(abi_version=3)
 
-    sandbox = spack.sandbox.LandlockSandbox(libc=mock_libc)
-    assert isinstance(sandbox, spack.sandbox.LandlockSandbox)
-
-    test_dir = tmp_path / "somedir"
+    test_dir = tmp_path / "dir"
     test_dir.mkdir()
-    test_file = test_dir / "somefile"
+    test_file = test_dir / "file"
     test_file.touch()
 
     sandbox.allow_read(test_dir)
     sandbox.allow_write(test_file)
-
     sandbox.apply(block_network=False)
 
-    assert mock_libc.prctl_calls == [(spack.sandbox.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)]
+    # Ruleset covers both read and write access; no network flags
+    [(fs_flags, net_flags)] = sandbox.create_ruleset_calls
+    assert fs_flags & spack.sandbox.FSAccess.READ_FILE
+    assert fs_flags & spack.sandbox.FSAccess.WRITE_FILE
+    assert net_flags == 0
 
-    syscall_calls = mock_libc.syscall_calls
-    create_ruleset_calls = [
-        call
-        for call in syscall_calls
-        if call[0].value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET
-    ]
-    assert len(create_ruleset_calls) == 2  # 1 for ABI version check, 1 for ruleset creation
+    # One rule per path, both using the same ruleset fd
+    assert len(sandbox.add_rule_calls) == 2
+    for ruleset_fd, _access, path_fd in sandbox.add_rule_calls:
+        assert ruleset_fd == sandbox.ruleset_fd
+        assert path_fd > 0
 
-    add_rule_calls = [
-        call for call in syscall_calls if call[0].value == spack.sandbox.SYSCALL_LANDLOCK_ADD_RULE
-    ]
-    assert len(add_rule_calls) == 2  # 1 for dir, 1 for file
+    # Read-only directory: has READ_DIR, no WRITE_FILE
+    dir_access = next(
+        a for _, a, _ in sandbox.add_rule_calls if a & spack.sandbox.FSAccess.READ_DIR
+    )
+    assert not (dir_access & spack.sandbox.FSAccess.WRITE_FILE)
 
-    restrict_self_calls = [
-        call
-        for call in syscall_calls
-        if call[0].value == spack.sandbox.SYSCALL_LANDLOCK_RESTRICT_SELF
-    ]
-    assert len(restrict_self_calls) == 1
-    assert restrict_self_calls[0][1].value > 0  # Valid fd returned by mock_syscall
+    # Write file: has WRITE_FILE, no READ_DIR (dir flags stripped for non-dirs)
+    file_access = next(
+        a for _, a, _ in sandbox.add_rule_calls if a & spack.sandbox.FSAccess.WRITE_FILE
+    )
+    assert not (file_access & spack.sandbox.FSAccess.READ_DIR)
+
+    # RESTRICT_SELF gets the correct ruleset fd
+    [(restrict_fd, tsync)] = sandbox.restrict_self_calls
+    assert restrict_fd == sandbox.ruleset_fd
+    assert tsync == 0  # ABI v3: no tsync flag
+
+    assert sandbox.prctl_called
+
+
+def test_landlock_sandbox_network_args():
+    """Test that block_network=True sets the correct net flags in the ruleset."""
+    sandbox = SpyLandlockSandbox(abi_version=4)
+    sandbox.apply(block_network=True)
+
+    [(_, net_flags)] = sandbox.create_ruleset_calls
+    assert net_flags & spack.sandbox.LANDLOCK_ACCESS_NET_CONNECT_TCP
+    assert net_flags & spack.sandbox.LANDLOCK_ACCESS_NET_BIND_TCP
+    assert sandbox.prctl_called
 
 
 class MockSandbox(spack.sandbox.Sandbox):
@@ -159,16 +189,7 @@ def test_enable_sandbox_paths(
 
 def test_sandbox_network_blocking_requires_abi_v4():
     """Test that blocking network access on an older kernel raises a RuntimeError."""
-    mock_libc = MockLibc(abi_version=3)
-    sandbox = spack.sandbox.LandlockSandbox(libc=mock_libc)
+    sandbox = SpyLandlockSandbox(abi_version=3)
 
     with pytest.raises(RuntimeError, match="Blocking network access requires Landlock ABI v4\\+"):
         sandbox.apply(block_network=True)
-
-
-def test_sandbox_network_blocking_allows_abi_v4(tmp_path: pathlib.Path):
-    """Test that blocking network access on a supported kernel works."""
-    mock_libc = MockLibc(abi_version=4)
-    sandbox = spack.sandbox.LandlockSandbox(libc=mock_libc)
-    sandbox.apply(block_network=True)
-    assert mock_libc.prctl_calls == [(spack.sandbox.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)]
