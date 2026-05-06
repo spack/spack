@@ -4,6 +4,7 @@
 
 import enum
 import fnmatch
+import functools
 import gzip
 import io
 import json
@@ -1078,6 +1079,12 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
+def _read_method(manifest_url: str, url: str, cache_class) -> "URLBuildcacheEntry":
+    cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
+    cache_entry.read_manifest(manifest_url)
+    return cache_entry
+
+
 def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: BuildcacheComponent):
     """Use aws cli to sync all manifests into a local temporary directory.
 
@@ -1101,10 +1108,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
-    def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url=manifest_path)
-        return cache_entry
+    file_read_method = functools.partial(_read_method, url=url, cache_class=cache_class)
 
     include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
     component_prefix = cache_class.get_relative_path_components(component_type)
@@ -1178,10 +1182,7 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Bui
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
-    def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url)
-        return cache_entry
+    url_read_method = functools.partial(_read_method, url=url, cache_class=cache_class)
 
     try:
         filename_to_mtime = {}

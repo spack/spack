@@ -7,6 +7,7 @@ import concurrent.futures
 import contextlib
 import copy
 import datetime
+import functools
 import hashlib
 import io
 import itertools
@@ -662,6 +663,19 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
     cache_class.maybe_push_layout_json(cache_prefix)
 
 
+def _fetch_one(read_method: Callable[[str], URLBuildcacheEntry], file: str) -> Optional[dict]:
+    cache_entry: Optional[URLBuildcacheEntry] = None
+    try:
+        cache_entry = read_method(file)
+        return cache_entry.fetch_metadata()
+    except Exception as e:
+        tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+        return None
+    finally:
+        if cache_entry:
+            cache_entry.destroy()
+
+
 def _read_specs_and_push_index(
     file_list: List[str],
     read_method: Callable[[str], URLBuildcacheEntry],
@@ -672,6 +686,7 @@ def _read_specs_and_push_index(
     temp_dir: str,
     *,
     timer=timer.NULL_TIMER,
+    jobs: Optional[int] = None,
 ):
     """Read listed specs, generate the index, and push it to the mirror.
 
@@ -683,7 +698,9 @@ def _read_specs_and_push_index(
         db: A spack database used for adding specs and then writing the index.
         temp_dir: Location to write index.json and hash for pushing
     """
+    files_to_fetch = []
     with timer.measure("read"):
+        # Filter down to the files we actually need to fetch.
         for file in file_list:
             # All supported versions of build caches put the hash as the last
             # parameter before the extension
@@ -691,21 +708,22 @@ def _read_specs_and_push_index(
                 x = file.split("/")[-1].split("-")[-1].split(".")[0]
             except IndexError:
                 raise GenerateIndexError(f"Malformed metadata file name detected {file}")
+            if filter_fn(x):
+                files_to_fetch.append(file)
 
-            if not filter_fn(x):
-                continue
+        # Fetch all spec dicts concurrently
+        with spack.util.parallel.make_concurrent_executor(jobs, require_fork=False) as executor:
+            spec_dicts = list(
+                executor.map(functools.partial(_fetch_one, read_method), files_to_fetch)
+            )
 
-            cache_entry: Optional[URLBuildcacheEntry] = None
-            try:
-                cache_entry = read_method(file)
-                spec_dict = cache_entry.fetch_metadata()
-                fetched_spec = spack.spec.Spec.from_dict(spec_dict)
-            except Exception as e:
-                tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+        # Populate the database sequentially in the main thread.
+        for spec_dict in spec_dicts:
+            if spec_dict is None:
                 continue
-            finally:
-                if cache_entry:
-                    cache_entry.destroy()
+            # BuildCacheDatabase uses nullcontext for its write transactions, so it has
+            # no internal locking and is not safe to call from multiple threads.
+            fetched_spec = spack.spec.Spec.from_dict(spec_dict)
             db.add(fetched_spec)
             db.mark(fetched_spec, "in_buildcache", True)
 
@@ -721,6 +739,7 @@ def _url_generate_package_index(
     filter_fn: Callable[[str], bool] = lambda x: True,
     *,
     timer=timer.NULL_TIMER,
+    jobs: Optional[int] = None,
 ):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
@@ -758,6 +777,7 @@ def _url_generate_package_index(
                 db,
                 str(db.database_directory),
                 timer=timer,
+                jobs=jobs,
             )
         except Exception as e:
             raise GenerateIndexError(
