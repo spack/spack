@@ -224,7 +224,7 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: int, log_r: int, log_path: str, parent_w: int) -> None:
+def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
@@ -233,7 +233,7 @@ def tee(control_r: int, log_r: int, log_path: str, parent_w: int) -> None:
     selector.register(control_r, selectors.EVENT_READ)
 
     try:
-        with open(log_path, "ab") as log_file, open(parent_w, "wb", closefd=False) as parent:
+        with log_file, open(parent_w, "wb", closefd=False) as parent:
             while True:
                 for key, _ in selector.select():
                     if key.fd == log_r:
@@ -271,10 +271,11 @@ class Tee:
         self.saved_fds = {fd: os.dup(fd) for fd in fds}
         #: The path of the log file
         self.log_path = log_path
+        log_file = open(self.log_path, "ab")
         r, w = os.pipe()
         self.tee_thread = threading.Thread(
             target=tee,
-            args=(self.control.fileno(), r, self.log_path, self.parent.fileno()),
+            args=(self.control.fileno(), r, log_file, self.parent.fileno()),
             daemon=True,
         )
         self.tee_thread.start()
