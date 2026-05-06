@@ -91,8 +91,8 @@ class Sandbox(ABC):
 
 
 class LandlockSandbox(Sandbox):
-    def __init__(self):
-        self.libc = ctypes.CDLL(None, use_errno=True)
+    def __init__(self, libc=None):
+        self.libc = libc if libc is not None else ctypes.CDLL(None, use_errno=True)
         self.abi_version = self._get_abi_version()
         self.path_rules: Dict[Path, int] = {}
 
@@ -171,7 +171,7 @@ class LandlockSandbox(Sandbox):
                 try:
                     st = os.fstat(fd)
                     if not stat.S_ISDIR(st.st_mode):
-                        # Strip directory-specific flags if the target is a file (e.g. /dev/null)
+                        # Strip directory-specific flags
                         flags &= ~(
                             FSAccess.REMOVE_DIR
                             | FSAccess.REMOVE_FILE
