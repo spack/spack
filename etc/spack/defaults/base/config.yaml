@@ -178,8 +178,11 @@ config:
   # only works with the new installer.
   sandbox:
     enable: false
+    # Allow TCP network access during the build phase.
     allow_network: true
+    # Additional paths with read and execute permissions.
     allow_read: []
+    # Additional paths with write and execute permissions.
     allow_write: []
 
   # If set to true, Spack will use ccache to cache C compiles.
