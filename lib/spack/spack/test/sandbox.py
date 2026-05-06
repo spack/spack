@@ -3,13 +3,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Unit tests for Linux Landlock sandboxing in the new installer."""
 
-import os
-import pathlib
 import sys
-import tempfile
-from typing import List, Tuple
 
 import pytest
+
+if sys.platform != "linux":
+    pytest.skip("Landlock sandboxing is Linux only", allow_module_level=True)
+
+import os
+import pathlib
+import tempfile
+from typing import List, Tuple
 
 import spack.concretize
 import spack.sandbox
@@ -37,7 +41,6 @@ class MockLibc:
         return 0
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Landlock is Linux only")
 def test_landlock_sandbox(tmp_path: pathlib.Path):
     """Test LandlockSandbox properly configures and applies rules via mocked libc."""
     mock_libc = MockLibc()
@@ -154,7 +157,6 @@ def test_enable_sandbox_paths(
     assert mock_sandbox.apply_calls == [False]
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Landlock is Linux only")
 def test_sandbox_network_blocking_requires_abi_v4():
     """Test that blocking network access on an older kernel raises a RuntimeError."""
     mock_libc = MockLibc(abi_version=3)
@@ -164,7 +166,6 @@ def test_sandbox_network_blocking_requires_abi_v4():
         sandbox.apply(block_network=True)
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="Landlock is Linux only")
 def test_sandbox_network_blocking_allows_abi_v4(tmp_path: pathlib.Path):
     """Test that blocking network access on a supported kernel works."""
     mock_libc = MockLibc(abi_version=4)
