@@ -127,7 +127,7 @@ def test_env_track_nonexistent_path_fails():
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_write_env_scripts(shell):
     """Tests that the activation and deactivation scripts are written when an environment
@@ -147,7 +147,7 @@ def test_env_write_env_scripts(shell):
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_env_script_content(shell):
     """Tests that SPACK_ENV environment command is in sh's activation script"""
@@ -164,7 +164,7 @@ def test_env_env_script_content(shell):
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_update_activate_script(shell):
     """Test activatrion script is updated after installation of new specs"""
@@ -188,7 +188,7 @@ def test_env_update_activate_script(shell):
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_missing_deactivate_script(shell):
     """Test that environment deactivation script is recreated if missing"""
@@ -206,7 +206,7 @@ def test_env_missing_deactivate_script(shell):
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_env_scripts_path_after_relocation(shell):
     """Test that paths in activation/deactivation scripts are updated after relocation."""

@@ -20,7 +20,7 @@ install = SpackCommand("install")
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that load & unload shell scripts are written to the right location
@@ -47,7 +47,7 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_load_unload_scripts_exist(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -69,25 +69,11 @@ def test_load_unload_scripts_exist(
 
 
 @pytest.mark.parametrize(
-    "shell, set_command",
-    (
-        [
-            ("sh", "_spack_env_.* %s %s :"),
-            ("csh", "_spack_env_.* %s %s :"),
-            ("fish", "_spack_env_.* %s %s :"),
-            # ("bat", 'set "%s=%s"'),
-            # ("pwsh", "$Env %s %s"),
-        ]
-        if sys.platform == "win32"
-        else [
-            ("sh", "_spack_env_.* %s %s :"),
-            ("csh", "_spack_env_.* %s %s :"),
-            ("fish", "_spack_env_.* %s %s :"),
-        ]
-    ),
+    "shell",
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_contents_of_shell_scripts(
-    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Test that the load & unload shell scripts contain the correct environment
     modifications for the spec"""
@@ -109,32 +95,20 @@ def test_contents_of_shell_scripts(
         with open(path_to_unload_shell, "r", encoding="utf-8") as f:
             unload_script = f.read()
 
-        assert re.search(set_command % (uenv.spack_loaded_hashes_var, pkg.dag_hash()), load_script)
         assert re.search(
-            set_command % (uenv.spack_loaded_hashes_var, pkg.dag_hash()), unload_script
+            f"_spack_env_prepend {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} :", load_script
+            )
+        assert re.search(
+            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} :", unload_script
         )
 
 
 @pytest.mark.parametrize(
-    "shell,set_command",
-    (
-        [
-            ("sh", "_spack_env_prepend %s %s"),
-            ("csh", "_spack_env_prepend %s %s"),
-            ("fish", "_spack_env_prepend %s %s"),
-            # ("bat", 'set "%s=%s"'),
-            # ("pwsh", "$Env %s %s"),
-        ]
-        if sys.platform == "win32"
-        else [
-            ("sh", "_spack_env_prepend %s %s"),
-            ("csh", "_spack_env_prepend %s %s"),
-            ("fish", "_spack_env_prepend %s %s"),
-        ]
-    ),
+    "shell",
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_install_individual_specs_scripts(
-    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Ensure that the each spec's environment modifications are written to the apporiate
     load/unload script and aren't put together when multiple specs are installed individually"""
@@ -158,30 +132,16 @@ def test_install_individual_specs_scripts(
     with open(path_to_mpich, "r", encoding="utf-8") as f:
         mpich_load = f.read()
 
-    assert re.search(set_command % ("CMAKE_PREFIX_PATH", dyninst_spec.prefix), dyninst_load)
-    assert re.search(set_command % ("CMAKE_PREFIX_PATH", mpich_spec.prefix), mpich_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", dyninst_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {mpich_spec.prefix} :", mpich_load)
 
     assert mpich_spec.name not in dyninst_load
     assert dyninst_spec.name not in mpich_load
 
 
 @pytest.mark.parametrize(
-    "shell,set_command",
-    (
-        [
-            ("sh", "_spack_env_prepend %s %s"),
-            ("csh", "_spack_env_prepend %s %s"),
-            ("fish", "_spack_env_prepend %s %s"),
-            # ("bat", 'set "%s=%s"'),
-            # ("pwsh", "$Env %s %s"),
-        ]
-        if sys.platform == "win32"
-        else [
-            ("sh", "_spack_env_prepend %s %s"),
-            ("csh", "_spack_env_prepend %s %s"),
-            ("fish", "_spack_env_prepend %s %s"),
-        ]
-    ),
+    "shell",
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_install_multiple_specs_shell_scripts(
     shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -198,7 +158,7 @@ def test_install_multiple_specs_shell_scripts(
     # Install multiple specs
     install("--fake", dyninst_spec.name, hypre_spec.name)
 
-    # no overlap in load shell script
+    # No overlap in load shell script
     path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
     path_to_hypre = spec_script.path_to_load_shell_script(hypre_spec, shell)
 
@@ -207,11 +167,11 @@ def test_install_multiple_specs_shell_scripts(
     with open(path_to_hypre, "r", encoding="utf-8") as f:
         hypre_load = f.read()
 
-    assert re.search(set_command % ("CMAKE_PREFIX_PATH", dyninst_spec.prefix), dyninst_load)
-    assert re.search(set_command % ("CMAKE_PREFIX_PATH", hypre_spec.prefix), hypre_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", dyninst_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", hypre_load)
 
-    assert not re.search(set_command % ("CMAKE_PREFIX_PATH", dyninst_spec.prefix), hypre_load)
-    assert not re.search(set_command % ("CMAKE_PREFIX_PATH", hypre_spec.prefix), dyninst_load)
+    assert not re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", hypre_load)
+    assert not re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", dyninst_load)
 
     assert hypre_spec.name not in dyninst_load
     assert dyninst_spec.name not in hypre_load
@@ -219,7 +179,7 @@ def test_install_multiple_specs_shell_scripts(
 
 @pytest.mark.parametrize(
     "shell",
-    (["sh", "csh", "fish", "bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_no_scripts_for_external_spec_with_deps(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages

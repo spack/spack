@@ -80,29 +80,16 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         params = ["--bat", "--pwsh"]
         test_load_shell(params[0])
         test_load_shell(params[1])
-    params = ["--sh", "--csh"]
-    paths_sh = test_load_shell(params[0])
-    paths_csh = test_load_shell(params[1])
-    assert paths_sh == paths_csh
+    else:
+        params = ["--sh", "--csh"]
+        paths_sh = test_load_shell(params[0])
+        paths_csh = test_load_shell(params[1])
+        assert paths_sh == paths_csh
 
 
 @pytest.mark.parametrize(
-    "shell,set_command",
-    (
-        [
-            ("--sh", "_spack_env_set %s %s"),
-            ("--csh", "_spack_env_set %s %s"),
-            ("--fish", "_spack_env_set %s %s"),
-            ("--pwsh", "$Env:%s = %s"),
-            ("--bat", 'set "%s=%s"'),
-        ]
-        if sys.platform == "win32"
-        else [
-            ("--sh", "_spack_env_set %s %s"),
-            ("--csh", "_spack_env_set %s %s"),
-            ("--fish", "_spack_env_set %s %s"),
-        ]
-    ),
+    "shell",
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_load_includes_run_env(
     shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -114,18 +101,14 @@ def test_load_includes_run_env(
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
-    load_cmds = _get_load_cmds(mpileaks_spec, shell[2:])
+    load_cmds = _get_load_cmds(mpileaks_spec, shell)
 
-    assert set_command % ("FOOBAR", "mpileaks") in load_cmds
+    assert "_spack_env_set FOOBAR mpileaks" in load_cmds
 
 
 @pytest.mark.parametrize(
     "shell",
-    (
-        ["--sh", "--csh", "--fish", "--bat", "--pwsh"]
-        if sys.platform == "win32"
-        else ["--sh", "--csh", "--fish"]
-    ),
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
@@ -150,25 +133,11 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
 
 
 @pytest.mark.parametrize(
-    "shell,unset_command",
-    (
-        [
-            ("--sh", "_spack_env_unset %s"),
-            ("--csh", "_spack_env_unset %s"),
-            ("--fish", "_spack_env_unset %s"),
-            ("--bat", 'set "%s="'),
-            ("--pwsh", "Remove-Item Env:%s"),
-        ]
-        if sys.platform == "win32"
-        else [
-            ("--sh", "_spack_env_unset %s"),
-            ("--csh", "_spack_env_unset %s"),
-            ("--fish", "_spack_env_unset %s"),
-        ]
-    ),
+    "shell",
+    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_unload(
-    shell, unset_command, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Tests that any variables set in the user environment are undone by the
     unload command"""
@@ -190,7 +159,7 @@ def test_unload(
         unload_cmds = f.read()
 
     print(unload_cmds)
-    assert (unset_command % "FOOBAR") in unload_cmds
+    assert "_spack_env_unset FOOBAR" in unload_cmds
 
 
 def test_unload_fails_no_shell(
