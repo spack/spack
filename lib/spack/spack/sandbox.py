@@ -90,11 +90,46 @@ class Sandbox(ABC):
     def apply(self, block_network: bool = False): ...
 
 
+def _get_write_flags(abi_version: int) -> int:
+    flags = (
+        FSAccess.MAKE_BLOCK
+        | FSAccess.MAKE_CHAR
+        | FSAccess.MAKE_DIR
+        | FSAccess.MAKE_FIFO
+        | FSAccess.MAKE_REG
+        | FSAccess.MAKE_SOCK
+        | FSAccess.MAKE_SYM
+        | FSAccess.REMOVE_DIR
+        | FSAccess.REMOVE_FILE
+        | FSAccess.WRITE_FILE
+    )
+    if abi_version >= 2:
+        flags |= FSAccess.REFER
+    if abi_version >= 3:
+        flags |= FSAccess.TRUNCATE
+    return flags
+
+
 class LandlockSandbox(Sandbox):
     def __init__(self, libc=None):
         self.libc = libc if libc is not None else ctypes.CDLL(None, use_errno=True)
         self.abi_version = self._get_abi_version()
         self.path_rules: Dict[Path, int] = {}
+        self.write_flags = _get_write_flags(self.abi_version)
+        self.read_flags = FSAccess.EXECUTE | FSAccess.READ_FILE | FSAccess.READ_DIR
+        self.dir_flags = (
+            FSAccess.MAKE_BLOCK
+            | FSAccess.MAKE_CHAR
+            | FSAccess.MAKE_DIR
+            | FSAccess.MAKE_FIFO
+            | FSAccess.MAKE_REG
+            | FSAccess.MAKE_SOCK
+            | FSAccess.MAKE_SYM
+            | FSAccess.READ_DIR
+            | FSAccess.REFER
+            | FSAccess.REMOVE_DIR
+            | FSAccess.REMOVE_FILE
+        )
 
     def _get_abi_version(self) -> int:
         res = self.libc.syscall(
@@ -105,41 +140,16 @@ class LandlockSandbox(Sandbox):
         )
         return _check_syscall(res, "landlock_create_ruleset(version)")
 
-    def _get_write_flags(self) -> int:
-        flags = (
-            FSAccess.WRITE_FILE
-            | FSAccess.REMOVE_DIR
-            | FSAccess.REMOVE_FILE
-            | FSAccess.MAKE_CHAR
-            | FSAccess.MAKE_DIR
-            | FSAccess.MAKE_REG
-            | FSAccess.MAKE_SOCK
-            | FSAccess.MAKE_FIFO
-            | FSAccess.MAKE_BLOCK
-            | FSAccess.MAKE_SYM
-        )
-        if self.abi_version >= 2:
-            flags |= FSAccess.REFER
-        if self.abi_version >= 3:
-            flags |= FSAccess.TRUNCATE
-        return flags
-
-    def _get_read_flags(self) -> int:
-        return FSAccess.EXECUTE | FSAccess.READ_FILE | FSAccess.READ_DIR
-
     def _allow_read(self, original: Path, resolved: Path):
         current_flags = self.path_rules.get(resolved, 0)
-        self.path_rules[resolved] = current_flags | self._get_read_flags()
+        self.path_rules[resolved] = current_flags | self.read_flags
 
     def _allow_write(self, original: Path, resolved: Path):
         current_flags = self.path_rules.get(resolved, 0)
-        self.path_rules[resolved] = (
-            current_flags | self._get_write_flags() | self._get_read_flags()
-        )
+        self.path_rules[resolved] = current_flags | self.write_flags | self.read_flags
 
     def apply(self, block_network: bool = False):
-        handled_fs = self._get_write_flags() | self._get_read_flags()
-        attr = RulesetAttr(handled_access_fs=handled_fs)
+        attr = RulesetAttr(handled_access_fs=self.write_flags | self.read_flags)
 
         # Network access requires ABI v4
         if block_network and self.abi_version < 4:
@@ -172,19 +182,7 @@ class LandlockSandbox(Sandbox):
                     st = os.fstat(fd)
                     if not stat.S_ISDIR(st.st_mode):
                         # Strip directory-specific flags
-                        flags &= ~(
-                            FSAccess.REMOVE_DIR
-                            | FSAccess.REMOVE_FILE
-                            | FSAccess.MAKE_DIR
-                            | FSAccess.MAKE_CHAR
-                            | FSAccess.MAKE_SOCK
-                            | FSAccess.MAKE_FIFO
-                            | FSAccess.MAKE_BLOCK
-                            | FSAccess.MAKE_SYM
-                            | FSAccess.REFER
-                            | FSAccess.READ_DIR
-                            | FSAccess.MAKE_REG
-                        )
+                        flags &= ~self.dir_flags
 
                     rule = PathBeneathAttr(allowed_access=flags, parent_fd=fd)
                     _check_syscall(
