@@ -487,32 +487,32 @@ def test_skip_no_redistribute(mock_packages, config):
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
 
-def test_filter_specs_for_push_with_exclude(mock_packages, config):
+def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
     """Test that _filter_specs_for_push excludes specs matching the mirror's exclude patterns."""
     specs = [
-        spack.concretize.concretize_one("mpich"),
-        spack.concretize.concretize_one("zmpi"),
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
     ]
     mirror = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "exclude": ["mpich"]}
+        {"url": "https://example.com", "exclude": ["brillig"]}
     )
     filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
-    assert not any(s.name == "mpich" for s in filtered)
-    assert any(s.name == "zmpi" for s in filtered)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
 
 
-def test_filter_specs_for_push_with_select(mock_packages, config):
+def test_filter_specs_for_push_with_select(mock_packages, mutable_config):
     """Test that _filter_specs_for_push only includes specs matching the mirror's select patterns."""
     specs = [
-        spack.concretize.concretize_one("mpich"),
-        spack.concretize.concretize_one("zmpi"),
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
     ]
     mirror = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "select": ["zmpi"]}
+        {"url": "https://example.com", "select": ["canfail"]}
     )
     filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
-    assert not any(s.name == "mpich" for s in filtered)
-    assert any(s.name == "zmpi" for s in filtered)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
 
 
 def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):

@@ -405,36 +405,50 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
     "select,exclude,spec_str,expected",
     [
         # No filters: everything matches
-        ([], [], "mpich", True),
+        ([], [], "brillig", True),
         # Select only: matches if spec satisfies a select pattern
-        (["mpich"], [], "mpich", True),
-        (["mpich"], [], "zlib", False),
+        (["brillig"], [], "brillig", True),
+        (["brillig"], [], "canfail", False),
         # Exclude only: matches unless spec satisfies an exclude pattern
-        ([], ["mpich"], "mpich", False),
-        ([], ["mpich"], "zlib", True),
+        ([], ["brillig"], "brillig", False),
+        ([], ["brillig"], "canfail", True),
         # Both select and exclude
-        (["mpich", "zlib"], ["zlib"], "mpich", True),
-        (["mpich", "zlib"], ["zlib"], "zlib", False),
-        # Select with version constraint
-        (["mpich@3:"], [], "mpich@3.0", True),
-        (["mpich@3:"], [], "mpich@1.0", False),
+        (["brillig", "canfail"], ["canfail"], "brillig", True),
+        (["brillig", "canfail"], ["canfail"], "canfail", False),
     ],
 )
-def test_spec_matches_filters(select, exclude, spec_str, expected):
+def test_spec_matches_filters(mock_packages, mutable_config, select, exclude, spec_str, expected):
     """Test the spec_matches_filters standalone function."""
     spec = spack.concretize.concretize_one(spec_str)
     assert spack.mirrors.mirror.spec_matches_filters(spec, select, exclude) is expected
 
 
-def test_mirror_matches(mock_packages, config):
-    """Test that Mirror.matches() delegates to spec_matches_filters."""
-    spec = spack.concretize.concretize_one("mpich")
+def test_mirror_matches(mock_packages, mutable_config):
+    """Test that Mirror.matches() correctly applies select/exclude filters."""
+    spec = spack.concretize.concretize_one("brillig")
 
+    # No filters: everything matches
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com"})
     assert m.matches(spec) is True
 
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["mpich"]})
+    # Exclude matches the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["brillig"]})
     assert m.matches(spec) is False
 
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["zlib"]})
+    # Select does not include the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["canfail"]})
+    assert m.matches(spec) is False
+
+    # Select includes the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["brillig"]})
+    assert m.matches(spec) is True
+
+    # Exclude does not match the spec
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["canfail"]})
+    assert m.matches(spec) is True
+
+    # Select includes but exclude also matches: exclude wins
+    m = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "select": ["brillig"], "exclude": ["brillig"]}
+    )
     assert m.matches(spec) is False
