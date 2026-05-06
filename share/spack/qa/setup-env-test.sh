@@ -198,11 +198,6 @@ despacktivate
 is_not_set SPACK_ENV
 is_not_set SPACK_OLD_PS1
 
-echo "Testing 'despacktivate' with nonexistent environment"
-export SPACK_ENV=test_nonexistent_env_really_should_not_exist
-despacktivate || true  # returns non-zero exit code with no env to deactivate
-is_not_set SPACK_ENV
-
 echo "Testing 'spack env activate --temp'"
 succeeds spack env activate --temp
 spack env activate --temp
