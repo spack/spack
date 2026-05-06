@@ -175,6 +175,4 @@ Note that network restrictions only apply during the build phases, leaving Spack
 
 File system restrictions are complementary to existing file permissions and ACLs; they cannot grant access to files the user does not already have permission to read or write.
 
-.. tip::
-
-   Spack's sandboxing complements external containerization tools like Podman or ``bwrap``: while a container must grant the main Spack process coarse write access to the entire software store, Landlock dynamically confines each build subprocess strictly to its exact, package-specific install prefix.
+Spack's sandboxing complements external containerization tools like Podman or ``bwrap``: while a container must grant the main Spack process coarse write access to the entire software store, Landlock dynamically confines each build subprocess strictly to its exact, package-specific install prefix.
