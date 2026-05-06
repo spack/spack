@@ -577,7 +577,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
     #: Class level dictionary populated by :func:`~spack.directives.deprecated` directives
-    deprecations: Dict[spack.spec.Spec, List[Tuple[DeprecationReason, DeprecationSeverity]]]
+    deprecations: Dict[
+        spack.spec.Spec, List[Tuple[DeprecationReason, DeprecationSeverity, Optional[str]]]
+    ]
+    #: Class level dictionary populated by :func:`~spack.directives.deprecated` with ``replace=``
+    replacements: Dict[
+        spack.spec.Spec, Tuple[DeprecationReason, Dict[str, Optional[str]], Optional[str]]
+    ]
 
     #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str

@@ -363,18 +363,19 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
 
 % When a deprecated() directive matches the selected node, surface it as an attr so Python can
 % emit a warning for it. Severity is an integer: 0=none, 1=low, 2=medium, 3=high, 4=critical.
-attr("deprecated_with_reason", node(ID, Package), Reason, Severity)
-  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
+% Message is an optional human-readable string ("" when absent).
+attr("deprecated_with_reason", node(ID, Package), Reason, Severity, Message)
+  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity, Message)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)).
 
 error(1, "deprecated_error", Package, Reason, Severity, Allowed)
-  :- attr("deprecated_with_reason", node(ID, Package), Reason, Severity),
-     pkg_fact(Package, allowed_deprecation_level(Allowed)),
+  :- attr("deprecated_with_reason", node(ID, Package), Reason, Severity, _),
+     pkg_fact(Package, allowed_deprecation_severity(Allowed)),
      Severity > Allowed.
 
-#defined deprecation_directive/3.
-#defined allowed_deprecation_level/1.
+#defined deprecation_directive/4.
+#defined allowed_deprecation_severity/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -2108,7 +2109,7 @@ opt_criterion(315, "deprecation severity penalty").
 #minimize{ 0@315: #true }.
 #minimize{
     Weight@315,Package,ID
-    : attr("deprecated_with_reason", node(ID, Package), _, Severity),
+    : attr("deprecated_with_reason", node(ID, Package), _, Severity, _),
       severity_weight(Severity, Weight)
 }.
 

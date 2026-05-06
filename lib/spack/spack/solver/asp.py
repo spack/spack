@@ -51,6 +51,7 @@ import spack.package_prefs
 import spack.platforms
 import spack.repo
 import spack.solver.splicing
+import spack.solver.variant_rewrite
 import spack.spec
 import spack.store
 import spack.util.crypto
@@ -65,7 +66,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.enums import DeprecationSeverity
-from spack.llnl.util.lang import elide_list
+from spack.llnl.util.lang import dedupe, elide_list
 from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
@@ -303,22 +304,6 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
             flag_group, propagate=flag_propagate
         )
     ]
-
-
-def check_packages_exist(specs):
-    """Ensure all packages mentioned in specs exist."""
-    repo = spack.repo.PATH
-    for spec in specs:
-        for s in spec.traverse():
-            try:
-                check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
-            except Exception as e:
-                msg = "Cannot find package: {0}".format(str(e))
-                check_passed = False
-                tty.debug(msg)
-
-            if not check_passed:
-                raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
 class Result:
@@ -1339,14 +1324,14 @@ class ConditionContext(SourceContext):
 
 def _compute_default_deprecation_level() -> str:
     packages_yaml = spack.config.CONFIG.get_config("packages")
-    level_str = packages_yaml.get("all", {}).get("allowed_deprecation_level")
+    level_str = packages_yaml.get("all", {}).get("allowed_deprecation_severity")
     if level_str is not None:
         return level_str
 
     if spack.config.get("config:deprecated", False):
         warnings.warn(
             "config:deprecated is deprecated. "
-            "Use 'packages:all:allowed_deprecation_level:critical' instead",
+            "Use 'packages:all:allowed_deprecation_severity:critical' instead",
             UserWarning,
             stacklevel=2,
         )
@@ -1364,6 +1349,7 @@ class SpackSolverSetup:
     def __init__(self, tests: spack.concretize.TestsType = False):
         self._deprecation_default = ""
         self.possible_graph = create_graph_analyzer()
+        self._deprecation_errors: List[str] = []
 
         # these are all initialized in setup()
         self.requirement_parser = RequirementParser(spack.config.CONFIG)
@@ -1467,12 +1453,25 @@ class SpackSolverSetup:
         return [fn.attr("node_target_satisfies", name, target)]
 
     def conflict_rules(self, pkg):
-        for when_spec, conflict_specs in pkg.conflicts.items():
+        recipe_provenance = f"in {pkg.name}'s recipe"
+        for original_when_spec, conflict_specs in pkg.conflicts.items():
+            when_spec = spack.solver.variant_rewrite.rewritten_copy(
+                original_when_spec,
+                pkg_name=pkg.name,
+                provenance=recipe_provenance,
+                errors=self._deprecation_errors,
+            )
             when_spec_msg = f"conflict constraint {when_spec}"
             when_spec_id = self.condition(when_spec, required_name=pkg.name, msg=when_spec_msg)
             when_spec_str = str(when_spec)
 
-            for conflict_spec, conflict_msg in conflict_specs:
+            for original_conflict_spec, conflict_msg in conflict_specs:
+                conflict_spec = spack.solver.variant_rewrite.rewritten_copy(
+                    original_conflict_spec,
+                    pkg_name=original_conflict_spec.name or pkg.name,
+                    provenance=recipe_provenance,
+                    errors=self._deprecation_errors,
+                )
                 conflict_spec_str = str(conflict_spec)
                 if conflict_msg is None:
                     conflict_msg = f"{pkg.name}: "
@@ -1503,20 +1502,17 @@ class SpackSolverSetup:
         for constraint_spec, entries in pkg.deprecations.items():
             msg = f"deprecated constraint {constraint_spec or pkg.name}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
-            for reason, severity in entries:
-                self.gen.fact(
-                    fn.pkg_fact(
-                        pkg.name,
-                        fn.deprecation_directive(condition_id, reason.value, severity.value),
-                    )
+            for reason, severity, message in entries:
+                deprecation_asp = fn.deprecation_directive(
+                    condition_id, reason.value, severity.value, message or ""
                 )
+                self.gen.fact(fn.pkg_fact(pkg.name, deprecation_asp))
             self.gen.newline()
 
         pkg_cfg = spack.config.CONFIG.get_config("packages").get(pkg.name, {})
-        allowed = pkg_cfg.get("allowed_deprecation_level", self._deprecation_default)
-        self.gen.fact(
-            fn.pkg_fact(pkg.name, fn.allowed_deprecation_level(DeprecationSeverity(allowed).value))
-        )
+        allowed_str = pkg_cfg.get("allowed_deprecation_severity", self._deprecation_default)
+        allowed_value = DeprecationSeverity(allowed_str).value
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(allowed_value)))
 
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
@@ -1872,7 +1868,14 @@ class SpackSolverSetup:
 
     def package_dependencies_rules(self, pkg):
         """Translate ``depends_on`` directives into ASP logic."""
-        for cond, deps_by_name in pkg.dependencies.items():
+        recipe_provenance = f"in {pkg.name}'s recipe"
+        for original_cond, deps_by_name in pkg.dependencies.items():
+            cond = spack.solver.variant_rewrite.rewritten_copy(
+                original_cond,
+                pkg_name=pkg.name,
+                provenance=recipe_provenance,
+                errors=self._deprecation_errors,
+            )
             cond_str = str(cond)
             cond_str_suffix = f" when {cond_str}" if cond_str else ""
             for _, dep in deps_by_name.items():
@@ -1890,13 +1893,19 @@ class SpackSolverSetup:
                 if not depflag:
                     continue
 
-                msg = f"{pkg.name} depends on {dep.spec}{cond_str_suffix}"
+                dep_spec = spack.solver.variant_rewrite.rewritten_copy(
+                    dep.spec,
+                    pkg_name=dep.spec.name,
+                    provenance=recipe_provenance,
+                    errors=self._deprecation_errors,
+                )
+                msg = f"{pkg.name} depends on {dep_spec}{cond_str_suffix}"
                 context = ConditionContext()
                 context.source = ConstraintOrigin.append_type_suffix(
                     pkg.name, ConstraintOrigin.DEPENDS_ON
                 )
                 context.transform_imposed = dependency_holds(dependency_flags=depflag, pkg_cls=pkg)
-                self.condition(cond, dep.spec, required_name=pkg.name, msg=msg, context=context)
+                self.condition(cond, dep_spec, required_name=pkg.name, msg=msg, context=context)
                 self.gen.newline()
 
     def _gen_match_variant_splice_constraints(
@@ -2893,6 +2902,44 @@ class SpackSolverSetup:
                 "    " + ", ".join(str(spec) for spec in impossible),
             )
 
+    @staticmethod
+    def _check_input_specs(specs: Sequence[spack.spec.Spec]) -> None:
+        """Validates input specs for unknown virtuals, package existence, variant validity, etc."""
+        _check_unknown_virtuals_in_input_specs(specs)
+
+        analyzer = create_graph_analyzer()
+        for root in specs:
+            for s in root.traverse():
+                if s.concrete:
+                    continue
+                if spack.repo.PATH.is_virtual(s.name):
+                    continue
+                # Error if direct dependencies cannot be satisfied
+                deps = {
+                    edge.spec.name
+                    for edge in s.edges_to_dependencies()
+                    if edge.direct and edge.when == EMPTY_SPEC
+                }
+                if deps:
+                    graph = analyzer.possible_dependencies(
+                        s, allowed_deps=dt.ALL, transitive=False
+                    )
+                    deps.difference_update(graph.real_pkgs, graph.virtuals)
+                    if deps:
+                        start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
+                        raise UnsatisfiableSpecError(
+                            f"{start_str} cannot depend on {', '.join(deps)}"
+                        )
+
+                try:
+                    spack.repo.PATH.get_pkg_class(s.fullname)
+                except spack.repo.UnknownPackageError:
+                    raise UnsatisfiableSpecError(
+                        f"cannot concretize '{root}', since '{s.name}' does not exist"
+                    )
+
+                spack.spec.Spec.ensure_valid_variants(s)
+
     def setup(
         self,
         specs: Sequence[spack.spec.Spec],
@@ -2920,8 +2967,13 @@ class SpackSolverSetup:
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
-        check_packages_exist(specs)
         self.gen = ProblemInstanceBuilder()
+
+        for spec in specs:
+            spack.solver.variant_rewrite.apply_replacements_to_spec(
+                spec, provenance="input spec", errors=self._deprecation_errors
+            )
+        self._check_input_specs(specs)
 
         # Get compilers from buildcaches only if injected through "reuse" specs
         supported_compilers = spack.compilers.config.supported_compilers()
@@ -3071,6 +3123,14 @@ class SpackSolverSetup:
         abstract_specs = [s for s in specs if not s.concrete]
         self.impossible_dependencies_check(abstract_specs)
         self.input_spec_version_check(abstract_specs)
+
+        self._deprecation_errors.extend(self.requirement_parser._deprecation_errors)
+        unique_errors = list(dedupe(self._deprecation_errors))
+        if unique_errors:
+            raise spack.error.SpackError(
+                "Deprecated variants with no replacement were found:",
+                "\n".join(f"  - {e}" for e in unique_errors),
+            )
 
         return self.gen
 
@@ -3663,13 +3723,15 @@ class SpecBuilder:
     def deprecated(self, node: NodeId, version: str) -> None:
         tty.warn(f'using "{node.pkg}@{version}" which is a deprecated version')
 
-    def deprecated_with_reason(self, node: NodeId, reason: str, severity: str) -> None:
-        warnings.warn(
-            f'"{node.pkg}" matches a deprecated spec '
-            f"(reason: {reason}, severity: {_severity_to_str(severity)})",
-            UserWarning,
-            stacklevel=2,
+    def deprecated_with_reason(self, node: NodeId, reason: str, severity: str, message: str = ""):
+        pkg = self._specs[node].cformat("{name}{@version}")
+        msg = (
+            f"{pkg} matches a deprecated spec "
+            f"(reason: {reason}, severity: {_severity_to_str(severity)})"
         )
+        if message:
+            msg += f" [{message}]"
+        warnings.warn(msg, UserWarning, stacklevel=2)
 
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
@@ -3920,45 +3982,13 @@ class Solver:
         )
 
     @staticmethod
-    def _check_input_and_extract_concrete_specs(
-        specs: Sequence[spack.spec.Spec],
-    ) -> List[spack.spec.Spec]:
-        _check_unknown_virtuals_in_input_specs(specs)
-
+    def _extract_concrete_specs(specs: Sequence[spack.spec.Spec]) -> List[spack.spec.Spec]:
+        """Return all already-concrete specs found in the input trees (for reuse)."""
         reusable: List[spack.spec.Spec] = []
-        analyzer = create_graph_analyzer()
         for root in specs:
             for s in root.traverse():
                 if s.concrete:
                     reusable.append(s)
-                else:
-                    if spack.repo.PATH.is_virtual(s.name):
-                        continue
-                    # Error if direct dependencies cannot be satisfied
-                    deps = {
-                        edge.spec.name
-                        for edge in s.edges_to_dependencies()
-                        if edge.direct and edge.when == EMPTY_SPEC
-                    }
-                    if deps:
-                        graph = analyzer.possible_dependencies(
-                            s, allowed_deps=dt.ALL, transitive=False
-                        )
-                        deps.difference_update(graph.real_pkgs, graph.virtuals)
-                        if deps:
-                            start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
-                            raise UnsatisfiableSpecError(
-                                f"{start_str} cannot depend on {', '.join(deps)}"
-                            )
-
-                try:
-                    spack.repo.PATH.get_pkg_class(s.fullname)
-                except spack.repo.UnknownPackageError:
-                    raise UnsatisfiableSpecError(
-                        f"cannot concretize '{root}', since '{s.name}' does not exist"
-                    )
-
-                spack.spec.Spec.ensure_valid_variants(s)
         return reusable
 
     def solve_with_stats(
@@ -3984,7 +4014,7 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
         """
         specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
@@ -4032,7 +4062,7 @@ class Solver:
             tests (bool): add test dependencies to the solve
         """
         specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 

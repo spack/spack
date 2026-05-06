@@ -197,7 +197,7 @@ properties: Dict[str, Any] = {
                         },
                     },
                     "variants": variants,
-                    "allowed_deprecation_level": allowed_deprecation,
+                    "allowed_deprecation_severity": allowed_deprecation,
                 },
                 "deprecatedProperties": [
                     {
@@ -246,7 +246,7 @@ properties: Dict[str, Any] = {
                 # attribute, it could be useful to set it here
                 "package_attributes": package_attributes,
                 "variants": variants,
-                "allowed_deprecation_level": allowed_deprecation,
+                "allowed_deprecation_severity": allowed_deprecation,
                 "externals": {
                     "type": "array",
                     "description": "List of external, system-installed instances of this package",

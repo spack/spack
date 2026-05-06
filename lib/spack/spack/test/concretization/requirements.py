@@ -14,6 +14,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.requirements
 import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
@@ -1641,3 +1642,22 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
     assert s.satisfies("%c=gcc@10")
     assert all(s[name].satisfies("%c=clang") for name in dependency_names)
     assert s["mpi"].satisfies("%c,cxx=clang %fortran=gcc@10")
+
+
+def test_packages_yaml_prefer_when_clause_toolchain_is_expanded(mock_packages, mutable_config):
+    """The 'when:' clause in a packages.yaml prefer entry is expanded for toolchains.
+
+    Without the fix, condition = spack.spec.Spec(item.get("when")) bypasses
+    spack.spec_parser.expand_toolchains. With the fix, _parse_and_expand is used and
+    the toolchain placeholder dep is replaced by the expanded compiler constraints.
+    """
+    toolchain_data = {"test-toolchain": [{"spec": "%[virtuals=c] gcc", "when": "%c"}]}
+    mutable_config.set("toolchains", toolchain_data)
+
+    parser = spack.solver.requirements.RequirementParser(spack.config.CONFIG)
+    item = {"spec": "callpath @1.0", "when": "%test-toolchain"}
+    _, condition, _ = parser._parse_prefer_conflict_item(item, pkg_name="callpath")
+
+    # After toolchain expansion, the condition must not have a raw dep on "test-toolchain".
+    dep_names = [d.name for d in condition.dependencies()]
+    assert "test-toolchain" not in dep_names

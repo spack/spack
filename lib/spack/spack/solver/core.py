@@ -265,7 +265,7 @@ def intermediate_repr(sym):
         except RuntimeError:
             return str(sym)
     else:
-        return sym.string or str(sym)
+        return sym.string if sym.string is not None else str(sym)
 
 
 def extract_args(model, predicate_name):
