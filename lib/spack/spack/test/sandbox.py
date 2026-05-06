@@ -26,14 +26,14 @@ class MockLibc:
 
     def syscall(self, syscall_num, *args):
         self.syscall_calls.append((syscall_num, *args))
-        if syscall_num.value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET and not args[0]:
+        if syscall_num.value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET and args[0] is None:
             return self.abi_version
         if syscall_num.value == spack.sandbox.SYSCALL_LANDLOCK_CREATE_RULESET:
             return os.dup(self.dummy_fd)
         return 0  # Return success for add_rule and restrict_self
 
     def prctl(self, *args):
-        self.prctl_calls.append(args)
+        self.prctl_calls.append(tuple(x.value for x in args))
         return 0
 
 
