@@ -13,6 +13,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
+import warnings
 from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, NamedTuple, Optional
 
@@ -1500,12 +1501,13 @@ def test_mirror_metadata_with_view():
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")
 
 
-def test_update_warns_on_mirror_with_no_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
-    """Tests that BinaryCacheIndex.update() warns when a mirror has no index for any supported
-    layout version.
+def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mutable_config):
+    """Tests that BinaryIndexCache.update() does NOT warn when a mirror has no index but records
+    that information for later use.
     """
     mirror_url = url_util.path_to_file_url(str(tmp_path / "mirror_dir"))
-    spack.config.set("mirrors", {"test": mirror_url})
+    mirror_url2 = url_util.path_to_file_url(str(tmp_path / "mirror_dir2"))
+    mutable_config.set("mirrors", {"test1": mirror_url, "test2": mirror_url2})
 
     def no_index(*args, **kwargs):
         raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
@@ -1513,5 +1515,12 @@ def test_update_warns_on_mirror_with_no_index(monkeypatch, tmp_path: pathlib.Pat
     binary_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "index_cache"))
     monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
 
-    with pytest.warns(UserWarning, match="cannot be used in concretization"):
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
         binary_index.update()
+
+    concretization_warnings = [
+        w for w in caught if "cannot be used in concretization" in str(w.message)
+    ]
+    assert not concretization_warnings, "update() must not warn about concretization"
+    assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}

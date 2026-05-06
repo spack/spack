@@ -5077,3 +5077,16 @@ packages:
     assert mpileaks.satisfies("%c,cxx=llvm %fortran=gcc"), mpileaks.tree()
     assert mpileaks.satisfies("%mpi=mpich")
     assert mpileaks["mpich"].satisfies("%c,cxx=llvm %fortran=gcc")
+
+
+def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
+    """Tests that we get a warning when a binary mirror has no index."""
+
+    def fake_update_cache():
+        spack.binary_distribution.BINARY_INDEX.mirrors_without_index = {"file:///fake-mirror"}
+        return []
+
+    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", fake_update_cache)
+
+    with pytest.warns(UserWarning, match="cannot be used in concretization"):
+        spack.solver.reuse._specs_from_mirror()

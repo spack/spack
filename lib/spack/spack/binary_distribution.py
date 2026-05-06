@@ -164,6 +164,7 @@ class _MirrorIndexResult(NamedTuple):
     regenerate: bool
     had_cache_entry: bool
     error: Optional[Exception]
+    no_index: bool = False
 
 
 class _LastFetch(NamedTuple):
@@ -217,6 +218,8 @@ class BinaryIndexCache:
         self._known_specs: Dict[str, spack.spec.Spec] = {}
         #: Dictionary mapping DAG hashes of specs to a list of mirrors where they can be found
         self._mirrors_for_spec: Dict[str, Set[MirrorMetadata]] = defaultdict(set)
+        #: URLs of binary mirrors that had no buildcache index during the last update()
+        self.mirrors_without_index: Set[str] = set()
 
     def _init_local_index_cache(self):
         if not self._index_file_cache_initialized:
@@ -335,6 +338,7 @@ class BinaryIndexCache:
         from each configured mirror and stored locally (both in memory and
         on disk under ``_index_cache_root``)."""
         self._init_local_index_cache()
+        self.mirrors_without_index = set()
 
         supported_mirror_versions = {
             (m.fetch_url, m.fetch_view): m.supported_layout_versions
@@ -353,6 +357,9 @@ class BinaryIndexCache:
 
             if result.succeeded:
                 all_failed = False
+
+            if result.no_index:
+                self.mirrors_without_index.add(url)
 
             regenerate_cache |= result.regenerate
             clear_cache |= result.regenerate and result.had_cache_entry
@@ -419,10 +426,9 @@ class BinaryIndexCache:
                 self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=False)
                 continue
 
-        # All versions reported no index found. This is not a failure
-        warnings.warn(f"the mirror at {url} cannot be used in concretization (no index found)")
+        # All versions reported no index found. Record it for concretization callers to warn.
         return _MirrorIndexResult(
-            succeeded=True, regenerate=False, had_cache_entry=False, error=None
+            succeeded=True, regenerate=False, had_cache_entry=False, error=None, no_index=True
         )
 
     def _remove_stale_cache_entries(
