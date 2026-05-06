@@ -850,8 +850,11 @@ class JobServer:
         """Add one token to the jobserver to increase parallelism; this should always work."""
         if not self.created:
             return
-        os.write(self.w, b"+")
         self.target_jobs += 1
+        # If a decrease was pending, don't add a token.
+        if self.target_jobs <= self.num_jobs:
+            return
+        os.write(self.w, b"+")
         self.num_jobs += 1
 
     def decrease_parallelism(self) -> None:
