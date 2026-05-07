@@ -11,5 +11,6 @@
 #   ~/.spack/repos.yaml
 # -------------------------------------------------------------------------
 repos:
+  ocean: $spack/var/spack/repos/ocean/spack_repo/ocean
   builtin:
     git: https://github.com/spack/spack-packages.git
