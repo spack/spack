@@ -14,6 +14,7 @@ class Cxlmemsim(Package):
     git = "https://github.com/SlugLab/CXLMemSim.git"
 
     version("main", branch="main")
+    version("2026-05-07", commit="41432f81498c6d58c442238cb66bc09f8c2a3850")
     version("2026-05-06", commit="3f09b5a58d8171f12fc930a66a6f9ef52c788cb5")
 
     resource(
@@ -42,6 +43,11 @@ class Cxlmemsim(Package):
         description="Build only portable tools and install runtime scripts for macOS smoke tests",
     )
     variant(
+        "server",
+        default=True,
+        description="Build and install cxlmemsim_server for QEMU CXL Type 3 transport",
+    )
+    variant(
         "build_type",
         default="Release",
         values=("Debug", "Release", "RelWithDebInfo"),
@@ -54,12 +60,17 @@ class Cxlmemsim(Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("cmake@3.25:", type="build", when="~tools")
+    depends_on("cmake@3.25:", type="build", when="+server")
     depends_on("ninja", type="build", when="~tools")
+    depends_on("ninja", type="build", when="+server")
     depends_on("ninja", type="build", when="+qemu")
     depends_on("pkgconf", type="build", when="~tools")
+    depends_on("pkgconf", type="build", when="+server")
     depends_on("pkgconf", type="build", when="+qemu")
     depends_on("cxxopts", when="~tools")
+    depends_on("cxxopts", when="+server")
     depends_on("spdlog", when="~tools")
+    depends_on("spdlog", when="+server")
     depends_on("rdma-core", type=("build", "link"), when="+rdma platform=linux")
 
     with when("+qemu"):
@@ -105,7 +116,7 @@ class Cxlmemsim(Package):
             env.set("QEMU_DARWIN_ARCH", "x86_64")
 
     def cmake(self, spec, prefix):
-        if self.tools_only:
+        if self.tools_only and "~server" in spec:
             return
 
         self._patch_cmake_for_non_rdma_builds()
@@ -117,7 +128,7 @@ class Cxlmemsim(Package):
         if spec.satisfies("^rdma-core"):
             prefix_entries.append(spec["rdma-core"].prefix)
 
-        cmake(
+        cmake_args = [
             "-S",
             self.stage.source_path,
             "-B",
@@ -127,11 +138,29 @@ class Cxlmemsim(Package):
             "-DCMAKE_BUILD_TYPE={0}".format(spec.variants["build_type"].value),
             "-DCMAKE_INSTALL_PREFIX={0}".format(prefix),
             "-DCMAKE_PREFIX_PATH={0}".format(";".join(str(x) for x in prefix_entries)),
+            "-DCXLMEMSIM_BUILD_MICROBENCHMARKS=OFF",
+            "-DCXLMEMSIM_ENABLE_RDMA={0}".format("ON" if "+rdma" in spec else "OFF"),
+        ]
+        if spec.satisfies("platform=darwin target=x86_64:"):
+            cmake_args.append("-DCMAKE_OSX_ARCHITECTURES=x86_64")
+
+        cmake(
+            *cmake_args,
         )
 
     def build(self, spec, prefix):
         if self.tools_only:
             self._build_portable_tools()
+            if "+server" in spec:
+                cmake = which("cmake")
+                cmake(
+                    "--build",
+                    self.cmake_build_dir,
+                    "--target",
+                    "cxlmemsim_server",
+                    "--parallel",
+                    str(make_jobs),
+                )
             return
 
         cmake = which("cmake")
@@ -283,6 +312,8 @@ class Cxlmemsim(Package):
         if self.tools_only:
             mkdirp(prefix.bin)
             install(join_path(self.cmake_build_dir, "cxlmemsim_latency"), prefix.bin)
+            if "+server" in spec:
+                install(join_path(self.cmake_build_dir, "cxlmemsim_server"), prefix.bin)
         else:
             cmake = which("cmake")
             cmake("--install", self.cmake_build_dir)
@@ -321,6 +352,9 @@ class Cxlmemsim(Package):
             return
 
         cmake_file = join_path(self.stage.source_path, "CMakeLists.txt")
+        with open(cmake_file, "r", encoding="utf-8") as source:
+            if "CXLMEMSIM_ENABLE_RDMA" in source.read():
+                return
 
         filter_file(
             r"find_library\(RDMACM_LIB rdmacm\)\n"
@@ -355,6 +389,7 @@ class Cxlmemsim(Package):
         env.set("CXL_QEMU_IMAGE_DIR", self.prefix.share.cxlmemsim.images)
         env.set("CXL_MEMSIM_HOST", "127.0.0.1")
         env.set("CXL_MEMSIM_PORT", "9999")
+        env.set("CXL_MEMSIM_SERVER_BINARY", self.prefix.bin.cxlmemsim_server)
 
     def _install_runtime_files(self, prefix):
         mkdirp(prefix.bin)
@@ -508,7 +543,7 @@ tcp_port_open() {{
     if [[ "${{probe_host}}" == "0.0.0.0" ]]; then
         probe_host="127.0.0.1"
     fi
-    (echo >"/dev/tcp/${{probe_host}}/${{CXL_MEMSIM_PORT}}") >/dev/null 2>&1
+    (: >"/dev/tcp/${{probe_host}}/${{CXL_MEMSIM_PORT}}") >/dev/null 2>&1
 }}
 
 start_cxlmemsim_server() {{

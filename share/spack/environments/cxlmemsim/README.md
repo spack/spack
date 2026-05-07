@@ -7,12 +7,13 @@ This environment builds the Ocean CXLMemSim test stack with an x86_64 CXL-capabl
 - `qemu-system-x86_64` with CXL Type 3 and experimental accelerator device support.
 - `qemu_launch_cxl.sh` and `qemu_launch_cxl1.sh` for one-host and second-host launches.
 - `download_trimmed_qemu_image.sh` and `cxlmemsim-download-qemu-image` for the guest kernel and disk image.
+- `cxlmemsim_server`, required by QEMU's CXL Type 3 transport path.
 - `cxlmemsim_latency` for quick latency calculations.
 
 The default spec is:
 
 ```console
-cxlmemsim@main+tools+qemu+hvf+rosetta target=x86_64 build_type=Release
+cxlmemsim@2026-05-07+tools+server+qemu+hvf+rosetta target=x86_64 build_type=Release
 ```
 
 On Apple Silicon this builds and launches the x86_64 QEMU path through Rosetta. The launcher uses a Rosetta-compatible acceleration default; native x86_64 macOS builds can override the accelerator with `QEMU_ACCEL=hvf`.
@@ -96,7 +97,7 @@ QEMU reads these environment variables:
 | `CXL_MEMSIM_HOST` | `127.0.0.1` | Host used by TCP mode. |
 | `CXL_MEMSIM_PORT` | `9999` | Local TCP port used by TCP mode. |
 | `CXL_PGAS_SHM` | `/cxlmemsim_pgas` | POSIX shared-memory name used by QEMU SHM mode. |
-| `CXL_MEMSIM_SERVER_BINARY` | `$prefix/bin/cxlmemsim_server` | Optional host server binary. |
+| `CXL_MEMSIM_SERVER_BINARY` | `$prefix/bin/cxlmemsim_server` | Host server binary started before QEMU. |
 | `CXL_MEMSIM_SERVER_AUTOSTART` | `auto` | `auto`, `1`, or `0` for launcher-managed server startup. |
 
 The launcher maps QEMU `CXL_TRANSPORT_MODE=shm` to the server's `pgas-shm` mode because QEMU opens the PGAS shared-memory object named by `CXL_PGAS_SHM`.
@@ -109,7 +110,7 @@ Shared-memory mode is the default:
 CXL_TRANSPORT_MODE=shm qemu_launch_cxl.sh
 ```
 
-If `cxlmemsim_server` is available, the launcher starts it with `--comm-mode pgas-shm` and `--pgas-shm-name "$CXL_PGAS_SHM"` before starting QEMU.
+The launcher starts `cxlmemsim_server` with `--comm-mode pgas-shm` and `--pgas-shm-name "$CXL_PGAS_SHM"` before starting QEMU.
 
 Manual equivalent:
 
@@ -177,8 +178,7 @@ qemu_launch_cxl.sh
 
 ## Troubleshooting
 
-- `cxlmemsim_server not found`: the default macOS environment is tools-only. Set `CXL_MEMSIM_SERVER_BINARY` to a server binary, or build a non-tools CXLMemSim server package on a supported host.
+- `cxlmemsim_server not found`: rebuild this environment with `+server`, then run `spack load cxlmemsim`. You can also set `CXL_MEMSIM_SERVER_BINARY` to a compatible server binary.
 - `SHM invalid magic`: QEMU and the server are using different shared-memory names, or QEMU started before the server was ready. Use the same `CXL_PGAS_SHM` value on both sides.
 - TCP connection failure: confirm the server is listening on `127.0.0.1:9999` or set matching `CXL_MEMSIM_HOST` and `CXL_MEMSIM_PORT`.
 - Rosetta launch issues: make sure Rosetta is installed with `softwareupdate --install-rosetta`, then rerun the Spack install or launcher.
-

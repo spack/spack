@@ -1,6 +1,6 @@
 spack:
   specs:
-  - cxlmemsim@main+tools+qemu+hvf+rosetta target=x86_64 build_type=Release
+  - cxlmemsim@2026-05-07+tools+server+qemu+hvf+rosetta target=x86_64 build_type=Release
   concretizer:
     unify: true
     targets:
