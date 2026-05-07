@@ -79,7 +79,7 @@ def get_git_commit(spec):
 
     version_metadata = getattr(pkg, "versions", {})
     vmeta = version_metadata.get(spec.version) or {}
-    return vmeta.get("commit") 
+    return vmeta.get("commit")
 
 
 def get_download_location(spec):
