@@ -7,6 +7,7 @@ import os
 import tempfile
 
 import spack.binary_distribution
+import spack.cmd.common.arguments as arguments
 import spack.mirrors.mirror
 import spack.notary
 import spack.paths
