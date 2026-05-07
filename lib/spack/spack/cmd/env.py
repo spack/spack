@@ -445,20 +445,18 @@ def env_deactivate(args):
     if ev.active_environment() is None:
         # If there is a vestigial active environment, a partial error message is printed in main
         # Here we clean up the detritus and explain what we're doing
-        if ev.spack_env_var in os.environ or ev.spack_env_view_var in os.environ:
-            env_mods = EnvironmentModifications()
+        env_mods = EnvironmentModifications()
+        msg = "Cleaning up environment variables related to a nonexistent environment\n"
+        if ev.spack_env_var in os.environ:
             env_mods.unset(ev.spack_env_var)
+            msg += f"    Unsetting {ev.spack_env_var} ({os.environ[ev.spack_env_var]}).\n"
+        if ev.spack_env_view_var in os.environ:
             env_mods.unset(ev.spack_env_view_var)
-            sys.stdout.write(env_mods.shell_modifications(args.shell))
-            msg = (
-                "Cleaning up environment variables related to a nonexistent environment\n"
-                f"    Unsetting {ev.spack_env_var}\n"
-                f"    Unsetting {ev.spack_env_view_var}\n"
-            )
+            msg += f"    Unsetting {ev.spack_env_view_var} ({os.environ[ev.spack_env_view_var]})\n"
+        if env_mods:
             tty.debug(msg)
-            return 2
-        else:
-            tty.die("No environment is currently active")
+            sys.stdout.write(env_mods.shell_modifications(args.shell))
+        tty.die("No environment is currently active")
 
     cmds = spack.environment.shell.deactivate_header(args.shell)
     env_mods = spack.environment.shell.deactivate()
