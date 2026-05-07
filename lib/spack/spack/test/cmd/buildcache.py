@@ -500,7 +500,8 @@ def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
 
 
 def test_filter_specs_for_push_with_select(mock_packages, mutable_config):
-    """Test that _filter_specs_for_push only includes specs matching the mirror's select patterns."""
+    """Test that _filter_specs_for_push only includes specs matching the mirror's select
+    patterns."""
     specs = [
         spack.concretize.concretize_one("brillig"),
         spack.concretize.concretize_one("canfail"),
