@@ -195,5 +195,4 @@ def write_env_deactivate_script(env, view: str):
             if shell == "bat":
                 comments = "::"
 
-
-            generate_script(deactivate_script_path, cmds, comments=)
+            generate_script(deactivate_script_path, cmds, comments)
