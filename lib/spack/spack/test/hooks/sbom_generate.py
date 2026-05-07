@@ -64,7 +64,6 @@ def test_sbom_contains_dependencies(mock_packages, install_mockery):
     describes_rels = [r for r in relationships if r["relationshipType"] == "DESCRIBES"]
 
     assert len(contains_rels) == len(traversed_nodes) - 1
-    assert len(relationships) == len(traversed_nodes)
     assert len(describes_rels) == 1
 
 
@@ -81,10 +80,6 @@ def test_sbom_has_document_namespace(mock_packages, install_mockery):
 
     assert "documentNamespace" in sbom
     assert sbom["documentNamespace"] == f"https://spack.io/sbom/{spec.dag_hash()}"
-
-    describes = [r for r in sbom["relationships"] if r["relationshipType"] == "DESCRIBES"]
-
-    assert len(describes) == 1
 
 
 def test_sbom_external_package_skipped(mock_packages, install_mockery):

@@ -70,8 +70,6 @@ def get_checksums(spec):
 
 def get_git_commit(spec):
     pkg = spec.package
-    if not getattr(pkg, "git", None):
-        return None
 
     if "commit" in spec.variants:
         return spec.variants["commit"].value
@@ -80,8 +78,8 @@ def get_git_commit(spec):
         return spec.version.commit_sha
 
     version_metadata = getattr(pkg, "versions", {})
-    vmeta = version_metadata.get(spec.version) or version_metadata.get(str(spec.version)) or {}
-    return vmeta.get("commit") if hasattr(vmeta, "get") else getattr(vmeta, "commit", None)
+    vmeta = version_metadata.get(spec.version) or {}
+    return vmeta.get("commit") 
 
 
 def get_download_location(spec):
