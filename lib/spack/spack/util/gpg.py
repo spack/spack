@@ -306,7 +306,7 @@ def verify(signature, file=None, suppress_warnings=False):
     if file:
         args.append(file)
     kwargs = {"error": str} if suppress_warnings else {}
-    GPG("--verify", *args, **kwargs)
+    GPG("--verify", "--trust-model", "always", *args, **kwargs)
 
 
 @_autoinit
