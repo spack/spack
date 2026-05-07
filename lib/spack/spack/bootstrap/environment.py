@@ -80,6 +80,8 @@ class BootstrapEnvironment(spack.environment.Environment):
     def trust_bootstrap_mirror_keys(self):
         with spack.util.gpg.gnupghome_override(os.path.join(root_path(), ".bootstrap-gpg")):
             spack.binary_distribution.get_keys(install=True, trust=True)
+            # ensure the trust db is valid
+            spack.util.gpg.GPG("--check-trustdb")
             yield
 
     def update_installations(self) -> None:
@@ -94,17 +96,18 @@ class BootstrapEnvironment(spack.environment.Environment):
             ]
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
-            with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                with self.trust_bootstrap_mirror_keys():
-                    fetch_policy = (
-                        "cache_only"
-                        if not spack.config.get("bootstrap:dev:enable_source", False)
-                        else "auto"
-                    )
-                    self.install_all(
-                        fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
-                    )
-                    self.write(regenerate=True)
+            # with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
+            with self.trust_bootstrap_mirror_keys():
+                tty._debug = 4
+                fetch_policy = (
+                    "cache_only"
+                    if not spack.config.get("bootstrap:dev:enable_source", False)
+                    else "auto"
+                )
+                self.install_all(
+                    fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
+                )
+                self.write(regenerate=True)
 
     def load(self) -> None:
         """Update PATH and sys.path."""
