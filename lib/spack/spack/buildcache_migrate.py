@@ -6,14 +6,13 @@ import json
 import os
 import pathlib
 import tempfile
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import spack.binary_distribution
 import spack.database as spack_db
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
-import spack.notary
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -21,14 +20,13 @@ import spack.util.gpg
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
-
-from .enums import InstallRecordStatus
-from .url_buildcache import (
+from spack.enums import InstallRecordStatus
+from spack.notary import Notary
+from spack.url_buildcache import (
     BlobRecord,
     BuildcacheComponent,
     compressed_json_from_dict,
     get_url_buildcache_class,
-    sign_file,
     try_verify,
 )
 

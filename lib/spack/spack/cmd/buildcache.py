@@ -485,22 +485,8 @@ def push_fn(args):
 
     push_url = mirror.push_url
 
-    # When neither --signed, --unsigned nor --key are specified, use the mirror's default.
-    if args.signed is None and not args.key:
-        unsigned = not mirror.signed
-    else:
-        unsigned = not (args.key or args.signed)
-
-    # For OCI images, we require dependencies to be pushed for now.
-    if spack.oci.image.is_oci_url(mirror.push_url) and not unsigned:
-        tty.warn(
-            "Code signing is currently not supported for OCI images. "
-            "Use --unsigned to silence this warning."
-        )
-        unsigned = True
-
     # Select a signing key, or None if unsigned.
-    signing_key = None if unsigned else spack.notary.select_notary(mirror, args.key)
+    notary = spack.notary.select_notary(mirror, key=args.key, signed=args.signed)
 
     specs = _specs_to_be_packaged(
         roots,
@@ -541,7 +527,7 @@ def push_fn(args):
         mirror=mirror,
         force=args.force,
         update_index=args.update_index,
-        signing_key=signing_key,
+        notary=notary,
         base_image=args.base_image,
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs)

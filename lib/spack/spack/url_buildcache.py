@@ -472,7 +472,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def read_manifest_from_url(
-        cls, manifest_url: str, mirror_url: str, notary: Optional[Notary] = None
+        cls, manifest_url: str, mirror_url: str, notary: Optional[Notary]
     ) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest."""
         manifest = None
@@ -487,7 +487,9 @@ class URLBuildcacheEntry:
         if not manifest_contents:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
 
-        if notary:
+        # If this notary is capable of validation try to very the signature
+        # is_validating checked here to avoid trying to fetch detached signatures
+        if notary and notary.is_validating:
             # If the manifest isn't cleartext signed, look for detached signatures
             signature = None
             if not spack.util.gpg.is_clearsig(manifest_contents):
@@ -607,7 +609,7 @@ class URLBuildcacheEntry:
         manifest: BuildcacheManifest,
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
-        signing_key: Optional[str] = None,
+        notary: Optional[Notary] = None,
     ) -> None:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
@@ -625,10 +627,8 @@ class URLBuildcacheEntry:
             # here we still add newlines, but no indent, so save on file size and
             # line length.
 
-        if signing_key:
-            manifest_path, signature_path = sign_file(
-                signing_key, manifest_path, sigtype=self.sigtype
-            )
+        if notary:
+            manifest_path, signature_path = notary.sign(manifest_path)
 
         manifest_destination_url = url_util.join(
             mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
@@ -780,7 +780,7 @@ class URLBuildcacheEntry:
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
         # even if we deleted the pre-existing one.
-        web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=Falseb)
+        web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=False)
         if signature_path != manifest_path:
             # This is a detached style signature, upload as a sig
             web_util.push_to_url(
@@ -827,7 +827,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         """Lazily initialize the object"""
         self.mirror_url: str = push_url_base
         self.spec: Optional[spack.spec.Spec] = spec
-        self.notary: bool = notary
+        self.notary: Optional[Notary] = notary
 
         self.has_metadata: bool = False
         self.has_tarball: bool = False

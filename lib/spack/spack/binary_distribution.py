@@ -1736,14 +1736,17 @@ def download_tarball(
     mirrors = [fetch_url_to_mirror(mirror_metadata) for mirror_metadata in urls_and_versions]
 
     for mirror, layout_version in mirrors:
-        # Override mirror's default if
-        currently_unsigned = unsigned if unsigned is not None else not mirror.signed
-
         # If it's an OCI index, do things differently, since we cannot compose URLs.
         fetch_url = mirror.fetch_url
 
         # TODO: refactor this to some "nice" place.
         if spack.oci.image.is_oci_url(fetch_url):
+            if not unsigned:
+                warnings.warn(
+                    "Code signing is currently not supported for OCI images. "
+                    "Specify unsigned to silence this warning."
+                )
+
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
             # Fetch the manifest
@@ -1803,7 +1806,13 @@ def download_tarball(
             return tarball_stage
         else:
             cache_type = get_url_buildcache_class(layout_version=layout_version)
-            cache_entry = cache_type(fetch_url, spec, allow_unsigned=currently_unsigned)
+            cache_entry = cache_type(
+                fetch_url,
+                spec,
+                notary=spack.notary.select_notary(
+                    mirror, signed=not unsigned if unsigned is not None else None
+                ),
+            )
 
             try:
                 cache_entry.fetch_archive()

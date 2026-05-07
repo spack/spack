@@ -13,7 +13,6 @@ import spack.paths
 import spack.stage
 import spack.util.gpg
 import spack.util.url
-from spack.cmd.common import arguments
 
 description = "handle GPG actions for spack"
 section = "packaging"

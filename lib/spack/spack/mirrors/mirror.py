@@ -117,7 +117,19 @@ class Mirror:
         if is_oci_url(self.fetch_url):
             return False
 
-        return isinstance(self._data, str) or self._data.get("signed", True)
+        return isinstance(self._data, str) or bool(self._data.get("signed", True))
+
+    @property
+    def signing_type(self) -> Optional[str]:
+        if not self.signed:
+            return None
+
+        # Get the signature type from the config
+        sig_type = self._data.get("signed", "pgp-cleartext")
+        if isinstance(sig_type, bool):
+            sig_type = "pgp-cleartext"
+
+        return sig_type
 
     @property
     def autopush(self) -> bool:
@@ -391,9 +403,6 @@ class Mirror:
 
     def get_endpoint_url(self, direction: str) -> Optional[str]:
         return self._get_value("endpoint_url", direction)
-
-    def get_signing_type(self, direction: str) -> spack.util.gpg.Signature:
-        return self._get_value("signing_type", direction)
 
 
 class MirrorCollection(Mapping[str, Mirror]):
