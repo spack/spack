@@ -1,0 +1,31 @@
+spack:
+  specs:
+  - cxlmemsim@main+tools+qemu+hvf+rosetta target=x86_64 build_type=Release
+  concretizer:
+    unify: true
+    targets:
+      host_compatible: false
+  packages:
+    all:
+      require:
+      - one_of: ["target=x86_64", "apple-clang"]
+      - one_of: ['cflags="-arch x86_64"']
+        when: target=x86_64
+      - one_of: ['cxxflags="-arch x86_64"']
+        when: target=x86_64
+      - one_of: ['ldflags="-arch x86_64"']
+        when: target=x86_64
+    apple-clang:
+      externals:
+      - spec: apple-clang@21.0.0 languages:=c,c++
+        prefix: /usr
+        extra_attributes:
+          compilers:
+            c: /usr/bin/clang
+            cxx: /usr/bin/clang++
+      buildable: false
+    glib:
+      require: '~introspection target=x86_64 cflags="-arch x86_64" cxxflags="-arch x86_64" ldflags="-arch x86_64"'
+    m4:
+      require: '~sigsegv target=x86_64 cflags="-arch x86_64" cxxflags="-arch x86_64" ldflags="-arch x86_64"'
+  view: true
