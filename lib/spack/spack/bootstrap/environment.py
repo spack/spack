@@ -7,6 +7,7 @@ import contextlib
 import hashlib
 import os
 import pathlib
+import shutil
 import sys
 from typing import Iterable, List
 
@@ -109,7 +110,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                         )
                     except BaseException:
                         # catch any exception as we always want to clean up
-                        self.environment_root().joinpath("spack.lock").unlink()
+                        shutil.rmtree(self.environment_root())
                         raise
                     self.write(regenerate=True)
 
