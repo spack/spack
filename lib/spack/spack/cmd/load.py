@@ -146,7 +146,8 @@ def load(parser, args):
                     cached_repo = repo_path if repo_path.repos else None
                     mods = _get_environment_modifications(spec, shell, cached_repo)
 
-                    generate_script.write_spec_scripts(load_script_path, mods)
+                    comments = "::" if shell == "bat" else "###"
+                    generate_script.write_spec_scripts(load_script_path, mods, comments)
                 except Exception as err:
                     tty.die(f"Error writing to {load_script_path}\n{err}")
 

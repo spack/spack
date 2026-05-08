@@ -41,12 +41,13 @@ def path_to_unload_shell_script(spec, shell: str) -> str:
     return os.path.join(spec.prefix, ".spack", f"unload{extension}")
 
 
-def write_spec_scripts(shell_script_path, mods, comments):
+def write_spec_scripts(shell_script_path: str, mods: str, comments: str):
     """Helper function to write spec's shell scripts
 
     Args:
         shell_script_path: Path to the shell script.
         mods: Modifications to write to the script.
+        comments: Comment character(s) to use in the script (e.g. "::" for bat and ### for all other shells)
     """
 
     try:
@@ -81,6 +82,9 @@ def post_install(spec, explicit=None):
     unload_env_mod = uenv.environment_modifications_for_specs(spec).reversed()
 
     for shell in shells_avail:
+        if shell == "bat":
+            comments = "::"
+
         load_script_path = path_to_load_shell_script(spec, shell)
         unload_script_path = path_to_unload_shell_script(spec, shell)
 
@@ -94,8 +98,5 @@ def post_install(spec, explicit=None):
         unload_mods += (
             f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {spec.dag_hash()} :"
         )
-
-        if shell == "bat":
-            comments = "::"
 
         write_spec_scripts(unload_script_path, unload_mods, comments)
