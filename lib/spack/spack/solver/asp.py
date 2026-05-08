@@ -2870,17 +2870,17 @@ class SpackSolverSetup:
 
         for root in specs:
             for s in root.traverse():
-                if s.concrete:
-                    try:
-                        exists = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
-                    except Exception as e:
-                        tty.debug(f"Cannot find package: {e}")
-                        exists = False
-                    if not exists:
-                        raise spack.repo.UnknownPackageError(str(s.fullname))
+                if repo.is_virtual(s.name):
                     continue
 
-                if repo.is_virtual(s.name):
+                try:
+                    repo.get_pkg_class(s.fullname)
+                except spack.repo.UnknownPackageError:
+                    raise UnsatisfiableSpecError(
+                        f"cannot concretize '{root}', since '{s.name}' does not exist"
+                    )
+
+                if s.concrete:
                     continue
 
                 deps = {
@@ -2898,13 +2898,6 @@ class SpackSolverSetup:
                         raise UnsatisfiableSpecError(
                             f"{start_str} cannot depend on {', '.join(deps)}"
                         )
-
-                try:
-                    spack.repo.PATH.get_pkg_class(s.fullname)
-                except spack.repo.UnknownPackageError:
-                    raise UnsatisfiableSpecError(
-                        f"cannot concretize '{root}', since '{s.name}' does not exist"
-                    )
 
                 spack.spec.Spec.ensure_valid_variants(s)
 
