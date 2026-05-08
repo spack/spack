@@ -737,10 +737,11 @@ def style(parser, args):
 
     # run over package repositories
     if repos:
+        repo_tools = [x for x in tools_to_run if x != "mypy"]
         for repo in repos:
             repo_list = repo_file_dict[repo]
-            print_style_header_repo(repo_list, repo, tools_to_run)
-            for tool_name in tools_to_run:
+            print_style_header_repo(repo_list, repo, repo_tools)
+            for tool_name in repo_tools:
                 tool = tools[tool_name]
                 tty.msg(f"Running {tool.name} checks")
                 return_code |= tool.fun(repo_list, args, repo)
