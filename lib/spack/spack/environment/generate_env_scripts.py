@@ -84,7 +84,8 @@ def generate_script(shell_script_path: str, mods: str, comments: str):
     Args:
         shell_script_path: Path to the shell script.
         mods: Modifications to write to the script.
-        comments: Comment character(s) to use in the script (e.g. "::" for bat and ### for all other shells)
+        comments: Comment character(s) to use in the script
+            (e.g. "::" for bat and ### for all other shells)
 
     """
 
