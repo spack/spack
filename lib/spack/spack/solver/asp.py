@@ -53,6 +53,7 @@ import spack.repo
 import spack.solver.splicing
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.util.crypto
 import spack.util.hash
 import spack.util.lock as lk
@@ -293,22 +294,6 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
             flag_group, propagate=flag_propagate
         )
     ]
-
-
-def check_packages_exist(specs):
-    """Ensure all packages mentioned in specs exist."""
-    repo = spack.repo.PATH
-    for spec in specs:
-        for s in spec.traverse():
-            try:
-                check_passed = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
-            except Exception as e:
-                msg = "Cannot find package: {0}".format(str(e))
-                check_passed = False
-                tty.debug(msg)
-
-            if not check_passed:
-                raise spack.repo.UnknownPackageError(str(s.fullname))
 
 
 class Result:
@@ -2877,6 +2862,52 @@ class SpackSolverSetup:
                 "    " + ", ".join(str(spec) for spec in impossible),
             )
 
+    def _validate_input_specs(self, specs: Sequence[spack.spec.Spec]) -> None:
+        _check_unknown_virtuals_in_input_specs(specs)
+
+        repo = spack.repo.PATH
+        analyzer = self.possible_graph
+
+        for root in specs:
+            for s in root.traverse():
+                if s.concrete:
+                    try:
+                        exists = repo.repo_for_pkg(s).exists(s.name) or repo.is_virtual(s.name)
+                    except Exception as e:
+                        tty.debug(f"Cannot find package: {e}")
+                        exists = False
+                    if not exists:
+                        raise spack.repo.UnknownPackageError(str(s.fullname))
+                    continue
+
+                if repo.is_virtual(s.name):
+                    continue
+
+                deps = {
+                    edge.spec.name
+                    for edge in s.edges_to_dependencies()
+                    if edge.direct and edge.when == EMPTY_SPEC
+                }
+                if deps:
+                    graph = analyzer.possible_dependencies(
+                        s, allowed_deps=dt.ALL, transitive=False
+                    )
+                    deps.difference_update(graph.real_pkgs, graph.virtuals)
+                    if deps:
+                        start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
+                        raise UnsatisfiableSpecError(
+                            f"{start_str} cannot depend on {', '.join(deps)}"
+                        )
+
+                try:
+                    spack.repo.PATH.get_pkg_class(s.fullname)
+                except spack.repo.UnknownPackageError:
+                    raise UnsatisfiableSpecError(
+                        f"cannot concretize '{root}', since '{s.name}' does not exist"
+                    )
+
+                spack.spec.Spec.ensure_valid_variants(s)
+
     def setup(
         self,
         specs: Sequence[spack.spec.Spec],
@@ -2906,7 +2937,7 @@ class SpackSolverSetup:
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
-        check_packages_exist(specs)
+        self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
 
         # Get compilers from buildcaches only if injected through "reuse" specs
@@ -3905,46 +3936,8 @@ class Solver:
         )
 
     @staticmethod
-    def _check_input_and_extract_concrete_specs(
-        specs: Sequence[spack.spec.Spec],
-    ) -> List[spack.spec.Spec]:
-        _check_unknown_virtuals_in_input_specs(specs)
-
-        reusable: List[spack.spec.Spec] = []
-        analyzer = create_graph_analyzer()
-        for root in specs:
-            for s in root.traverse():
-                if s.concrete:
-                    reusable.append(s)
-                else:
-                    if spack.repo.PATH.is_virtual(s.name):
-                        continue
-                    # Error if direct dependencies cannot be satisfied
-                    deps = {
-                        edge.spec.name
-                        for edge in s.edges_to_dependencies()
-                        if edge.direct and edge.when == EMPTY_SPEC
-                    }
-                    if deps:
-                        graph = analyzer.possible_dependencies(
-                            s, allowed_deps=dt.ALL, transitive=False
-                        )
-                        deps.difference_update(graph.real_pkgs, graph.virtuals)
-                        if deps:
-                            start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
-                            raise UnsatisfiableSpecError(
-                                f"{start_str} cannot depend on {', '.join(deps)}"
-                            )
-
-                try:
-                    spack.repo.PATH.get_pkg_class(s.fullname)
-                except spack.repo.UnknownPackageError:
-                    raise UnsatisfiableSpecError(
-                        f"cannot concretize '{root}', since '{s.name}' does not exist"
-                    )
-
-                spack.spec.Spec.ensure_valid_variants(s)
-        return reusable
+    def _extract_concrete_specs(specs: Sequence[spack.spec.Spec]) -> List[spack.spec.Spec]:
+        return [s for s in spack.traverse.traverse_nodes(specs) if s.concrete]
 
     def solve_with_stats(
         self,
@@ -3971,7 +3964,7 @@ class Solver:
           allow_deprecated: allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
@@ -4022,7 +4015,7 @@ class Solver:
             allow_deprecated (bool): allow deprecated version in the solve
         """
         specs = [s.lookup_hash() for s in specs]
-        reusable_specs = self._check_input_and_extract_concrete_specs(specs)
+        reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
 
