@@ -1587,10 +1587,10 @@ class BuildStatus:
             yield "\033[0m"  # reset
         yield " "
 
-        # Package name in bold white if explicit, default otherwise
+        # Package name in bold if explicit, default otherwise
         if build_info.explicit:
             if self.color:
-                yield "\033[1;37m"  # bold white
+                yield "\033[1m"
             yield build_info.name
             if self.color:
                 yield "\033[0m"  # reset
