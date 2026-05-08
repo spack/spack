@@ -500,7 +500,7 @@ def _run_import_check(
     get_changed_files = changed_files
     changed_kwargs = {"root": root, "base": base, "all_files": all}
     if repo:
-        get_changed_files = changed_files_repo
+        get_changed_files = changed_files_repo  # type: ignore
         changed_kwargs["repo"] = repo
 
     exit_code = 0
