@@ -442,9 +442,10 @@ def run_mypy(file_list, args, repo: Optional[spack.repo.Repo] = None):
     if repo:
         repo_root = Path(repo.root)
         spack_repo_index = repo_root.parts.index("spack_repo")
-        root = str(Path(*repo_root.parts[:spack_repo_index + 1]).parent)
+        root = str(Path(*repo_root.parts[: spack_repo_index + 1]).parent)
         mypy_arg_sets = [
-            common_mypy_args + ["--package", repo.full_namespace, "--disable-error-code", "no-redef"]
+            common_mypy_args
+            + ["--package", repo.full_namespace, "--disable-error-code", "no-redef"]
         ]
     returncode = 0
     for mypy_args in mypy_arg_sets:
