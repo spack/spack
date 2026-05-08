@@ -7,6 +7,7 @@ import contextlib
 import hashlib
 import os
 import pathlib
+import subprocess
 import sys
 from typing import Iterable, List
 
@@ -82,6 +83,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             spack.binary_distribution.get_keys(install=True, trust=True)
             # ensure the trust db is valid
             spack.util.gpg.GPG("--check-trustdb")
+            subprocess.run(["gpgconf", "--homedir", os.path.join(root_path(), ".bootstrap-gpg"), "--kill", "all"])
             yield
 
     def update_installations(self) -> None:
