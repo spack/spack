@@ -10,7 +10,7 @@ import spack.user_environment as uenv
 
 
 def path_to_load_shell_script(spec, shell: str) -> str:
-    """ "Returns the path to the shell script to load the specified spec for the shell.
+    """Returns the path to the shell script to load the specified spec for the shell.
 
     Args:
         spec: The spec whose shell script we are returning the path of
@@ -18,7 +18,7 @@ def path_to_load_shell_script(spec, shell: str) -> str:
     """
     extension = ""
     if shell == "bat":
-        extension = f".bat"
+        extension = ".bat"
     elif shell == "pwsh":
         extension = ".ps1"
 
@@ -34,7 +34,7 @@ def path_to_unload_shell_script(spec, shell: str) -> str:
     """
     extension = ""
     if shell == "bat":
-        extension = f".bat"
+        extension = ".bat"
     elif shell == "pwsh":
         extension = ".ps1"
 
@@ -47,7 +47,8 @@ def write_spec_scripts(shell_script_path: str, mods: str, comments: str):
     Args:
         shell_script_path: Path to the shell script.
         mods: Modifications to write to the script.
-        comments: Comment character(s) to use in the script (e.g. "::" for bat and ### for all other shells)
+        comments: Comment character(s) to use in the script
+            (e.g. "::" for bat and ### for all other shells)
     """
 
     try:
