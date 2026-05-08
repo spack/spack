@@ -88,8 +88,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_load_includes_run_env(
     shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -107,8 +106,7 @@ def test_load_includes_run_env(
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
@@ -133,12 +131,9 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
-def test_unload(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
-):
+def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
     """Tests that any variables set in the user environment are undone by the
     unload command"""
     install("--fake", "mpileaks")

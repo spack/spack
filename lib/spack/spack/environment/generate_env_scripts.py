@@ -20,7 +20,7 @@ def path_to_env_activate_shell_script(env, shell: str) -> str:
     """
     extension = ""
     if shell == "bat":
-        extension = f".bat"
+        extension = ".bat"
     elif shell == "pwsh":
         extension = ".ps1"
 
@@ -140,7 +140,7 @@ def update_env_activate_script(env, view: str = "default"):
     comments = "###"
 
     if sys.platform == "win32":
-        shells_avail = (["bat", "pwsh"])
+        shells_avail = ["bat", "pwsh"]
 
     # Check if the lockfile exists and get its modification time
     lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00
@@ -177,7 +177,7 @@ def write_env_deactivate_script(env, view: str):
     comments = "###"
 
     if sys.platform == "win32":
-        shells_avail = (["bat", "pwsh"])
+        shells_avail = ["bat", "pwsh"]
 
     # Check if the lockfile exists and get its modification time
     lockfile_date = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.00

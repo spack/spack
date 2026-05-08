@@ -19,8 +19,7 @@ install = SpackCommand("install")
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that load & unload shell scripts are written to the right location
@@ -46,8 +45,7 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_load_unload_scripts_exist(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -69,8 +67,7 @@ def test_load_unload_scripts_exist(
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_contents_of_shell_scripts(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -97,15 +94,15 @@ def test_contents_of_shell_scripts(
 
         assert re.search(
             f"_spack_env_prepend {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} :", load_script
-            )
+        )
         assert re.search(
-            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} :", unload_script
+            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} :",
+            unload_script,
         )
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_install_individual_specs_scripts(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -140,8 +137,7 @@ def test_install_individual_specs_scripts(
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_install_multiple_specs_shell_scripts(
     shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -170,16 +166,19 @@ def test_install_multiple_specs_shell_scripts(
     assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", dyninst_load)
     assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", hypre_load)
 
-    assert not re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", hypre_load)
-    assert not re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", dyninst_load)
+    assert not re.search(
+        f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", hypre_load
+    )
+    assert not re.search(
+        f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", dyninst_load
+    )
 
     assert hypre_spec.name not in dyninst_load
     assert dyninst_spec.name not in hypre_load
 
 
 @pytest.mark.parametrize(
-    "shell",
-    (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_no_scripts_for_external_spec_with_deps(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
