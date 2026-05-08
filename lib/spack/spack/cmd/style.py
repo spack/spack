@@ -246,7 +246,7 @@ def ruff_check(file_list, args):
     """Run the ruff-check command. Handles config and non generic ruff argument logic"""
     cmd_args = ["--config", os.path.join(spack.paths.prefix, "pyproject.toml"), "--quiet"]
     if args.fix:
-        cmd_args += ["--fix", "--no-unsafe-fixes"]
+        cmd_args += ["--no-unsafe-fixes"]
     else:
         cmd_args += ["--no-fix"]
     return run_ruff(
