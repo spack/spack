@@ -660,7 +660,7 @@ class URLBuildcacheEntry:
             with compression_writer(blob_to_push, compression, checksum_algo) as (
                 fout,
                 checker,
-            ), open(local_file_path, "rb", encoding="utf-8") as fin:
+            ), open(local_file_path, "rb") as fin:
                 shutil.copyfileobj(fin, fout)
 
             record = BlobRecord(
