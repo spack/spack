@@ -13,6 +13,7 @@ import spack.database as spack_db
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -114,7 +115,7 @@ def _migrate_spec(
 
     spec_dict = {}
 
-    if notary:
+    if not notary:
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if v2_spec_url.endswith(".sig"):
@@ -128,7 +129,7 @@ def _migrate_spec(
         )
         with open(local_signed_pre_verify, "w", encoding="utf-8") as fd:
             fd.write(spec_contents)
-        if not try_verify(local_signed_pre_verify):
+        if not try_verify(notary, local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
             spec_dict = spack.util.gpg.extract_json_from_clearsig(fd.read())
@@ -219,8 +220,8 @@ def _migrate_spec(
         "data": [tarball_blob_record.to_dict(), metadata_blob_record.to_dict()],
     }
 
-    manifest_path = os.path.join(tmpdir, f"{s.dag_hash()}.manifest.json")
-    with open(manifest_path, "w", encoding="utf-8") as f:
+    manifest_path = pathlib.Path(os.path.join(tmpdir, f"{s.dag_hash()}.manifest.json"))
+    with manifest_path.open("w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=0, separators=(",", ":"))
         # Note: when using gpg clear sign, we need to avoid long lines (19995
         # chars). If lines are longer, they are truncated without error. So,
@@ -261,10 +262,7 @@ def migrate(
     if not unsigned:
         try:
             notary = spack.notary.select_notary(mirror)
-        except (
-            spack.binary_distribution.NoKeyException,
-            spack.binary_distribution.PickKeyException,
-        ):
+        except (spack.notary.NoKeyException, spack.notary.PickKeyException):
             raise MigrationException(
                 "Signed migration requires exactly one secret key in keychain"
             )

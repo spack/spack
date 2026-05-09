@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple, Union
 
 import spack.config
 import spack.error
+import spack.oci.image
 import spack.util.executable
 import spack.util.gpg
 from spack.mirrors.mirror import Mirror
@@ -26,7 +27,7 @@ class Notary(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def verify(
-        self, blob: Union[str, pathlib.Path], signature: Optional[Union[str, pathlib.Path]]
+        self, blob: Union[str, pathlib.Path], signature: Optional[Union[str, pathlib.Path]] = None
     ) -> bool:
         """Verify the signature is valid for the blob
 
@@ -69,10 +70,10 @@ class NonSigningNotary(Notary):
         Returns:
             Path to original blob and the to the signature
         """
-        return blob, blob
+        return pathlib.Path(blob), pathlib.Path(blob)
 
     def verify(
-        self, blob: Union[str, pathlib.Path], signature: Optional[Union[str, pathlib.Path]]
+        self, blob: Union[str, pathlib.Path], signature: Optional[Union[str, pathlib.Path]] = None
     ) -> bool:
         """Verify the signature is valid for the blob
 
@@ -107,10 +108,10 @@ class NonSigningNotary(Notary):
 class GpgNotary(Notary):
     """Verify and sign GPG signatures using a specific key"""
 
-    def __init__(self, gpg, key: str, signature_type: spack.util.gpg.Signature):
+    def __init__(self, gpg, key: str, signature_type: str):
         self.gpg = gpg
         self.key = key
-        self.cleartext = signature_type == spack.util.gpg.Signature.Cleartext
+        self.cleartext = signature_type == "pgp-cleartext"
 
     def sign(self, blob: Union[str, pathlib.Path]) -> Tuple[pathlib.Path, pathlib.Path]:
         """Sign a blob
@@ -122,18 +123,15 @@ class GpgNotary(Notary):
             Path to original blob and the to the signature. If they are the same path,
             then then signature wraps the original blob content (cleartext).
         """
-        signed_file_path = f"{blob}.asc"
+        signed_file_path = pathlib.Path(f"{blob}.asc")
         signopt = "--clearsign" if self.cleartext else "--detach-sign"
         self.gpg(signopt, "--armor", "--local-user", self.key, "--output", signed_file_path, blob)
         if not self.cleartext:
-            return blob, signed_file_path
+            return pathlib.Path(blob), signed_file_path
         return signed_file_path, signed_file_path
 
     def verify(
-        self,
-        blob: Union[str, pathlib.Path],
-        signature: Optional[Union[str, pathlib.Path]] = None,
-        output: Optional[pathlib.Path] = None,
+        self, blob: Union[str, pathlib.Path], signature: Optional[Union[str, pathlib.Path]] = None
     ) -> bool:
         """Verify the signature is valid for the blob
 
@@ -167,13 +165,13 @@ class GpgNotary(Notary):
         if tmpdir is None:
             tmpdir = os.getcwd()
 
-        keys = spack.util.gpg.public_keys(*(keys or ()))
-        files = [os.path.join(tmpdir, f"{key}.pub") for key in keys]
+        keys: List[str] = spack.util.gpg.public_keys(*(keys or ()))
+        files = [pathlib.Path(os.path.join(tmpdir, f"{key}.pub")) for key in keys]
 
         for key, file in zip(keys, files):
             spack.util.gpg.export_keys(file, [key])
 
-        return zip(keys, files)
+        return list(zip(keys, files))
 
 
 def select_notary(
@@ -200,7 +198,7 @@ def select_notary(
         )
 
     # This calls spack.util.gpg.init
-    keys = spack.util.gpg.signing_keys()
+    keys: List[str] = spack.util.gpg.signing_keys()
     num = len(keys)
     if not key:
         if num > 1:
@@ -216,7 +214,7 @@ def select_notary(
 
     # Assumes the gpg state is initialized.
     # TODO: Don't rely on global state
-    return GpgNotary(spack.util.gpg.GPG, key or keys[0], mirror.signing_type)
+    return GpgNotary(spack.util.gpg.GPG, key or keys[0], mirror.signing_type or "pgp-clearsign")
 
 
 class PickKeyException(spack.error.SpackError):

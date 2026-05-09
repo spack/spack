@@ -807,7 +807,7 @@ def sync_fn(args):
         cache_class = get_url_buildcache_class(
             layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(src_mirror_url, s, allow_unsigned=True)
+        src_cache_entry = cache_class(src_mirror_url, s)
         src_cache_entry.read_manifest()
         copy_buildcache_entry(src_cache_entry, dest_mirror_url)
 
@@ -832,9 +832,7 @@ def manifest_copy(
         cache_class = get_url_buildcache_class(
             layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(
-            cache_class.get_base_url(copy_obj["src"]), allow_unsigned=True
-        )
+        src_cache_entry = cache_class(cache_class.get_base_url(copy_obj["src"]))
         src_cache_entry.read_manifest(manifest_url=copy_obj["src"])
         if dest_mirror:
             destination_url = dest_mirror.push_url

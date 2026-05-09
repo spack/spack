@@ -19,7 +19,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
-import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
@@ -614,13 +613,13 @@ class URLBuildcacheEntry:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
         represents, so it can be placed in the correct relative path within the mirror.
-        If a signing_key is provided, it will be used to clearsign the manifest before
+        If a notary is provided, it will be used to clearsign the manifest before
         pushing it."""
         # write the manifest to a temporary location
         manifest_file_name = f"{manifest_name}.manifest.json"
-        manifest_path = os.path.join(tmpdir, manifest_file_name)
-        os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        manifest_path = Path(os.path.join(tmpdir, manifest_file_name))
+        manifest_path.parent.mkdir(exist_ok=True)
+        with manifest_path.open("w", encoding="utf-8") as f:
             json.dump(manifest.to_dict(), f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
             # chars). If lines are longer, they are truncated without error. So,
@@ -634,8 +633,10 @@ class URLBuildcacheEntry:
             mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
         )
 
-        web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
-        web_util.push_to_url()
+        web_util.push_to_url(str(manifest_path), manifest_destination_url, keep_original=False)
+        if manifest_path != signature_path:
+            sig_destination_url = cls.get_sig_url_for_file(str(manifest_path), mirror_url)
+            web_util.push_to_url(str(signature_path), sig_destination_url, keep_original=False)
 
     @classmethod
     def push_local_file_as_blob(
@@ -685,7 +686,7 @@ class URLBuildcacheEntry:
         checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        signing_key: Optional[Notary],
+        notary: Optional[Notary],
     ) -> None:
         """Convenience method to push tarball, specfile, and manifest to the remote mirror
 
@@ -765,8 +766,8 @@ class URLBuildcacheEntry:
         }
 
         # write the manifest to a temporary location
-        manifest_path = os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json")
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        manifest_path = Path(os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json"))
+        with manifest_path.open("w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
             # chars). If lines are longer, they are truncated without error. So,
@@ -774,18 +775,17 @@ class URLBuildcacheEntry:
             # line length.
 
         # possibly sign the manifest
-        if signing_key:
-            signature_path, manifest_path = signing_key.sign(manifest_path)
+        if notary:
+            signature_path, manifest_path = notary.sign(manifest_path)
 
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
         # even if we deleted the pre-existing one.
         web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=False)
-        if signature_path != manifest_path:
+        if manifest_path != signature_path:
             # This is a detached style signature, upload as a sig
-            web_util.push_to_url(
-                signature_path, self.signature_url_from_path(manifest_path), keeep_original=False
-            )
+            sig_destination_url = self.get_sig_url_for_file(str(manifest_path), self.mirror_url)
+            web_util.push_to_url(signature_path, sig_destination_url, keep_original=False)
 
     def destroy(self):
         """Destroy any existing stages"""
@@ -948,7 +948,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.local_specfile_path = self.spec_stage.save_filename
 
-        if not self.notary and not try_verify(self.notary, self.local_specfile_path):
+        if self.notary and not try_verify(self.notary, self.local_specfile_path):
             raise NoVerifyException(f"Signature on {self.remote_spec_url} could not be verified")
 
         # Check spec file for validity and read it, or else cleanup and exit early
@@ -1071,7 +1071,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         manifest: BuildcacheManifest,
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
-        signing_key: Optional[str] = None,
+        notary: Optional[Notary] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1093,7 +1093,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        signing_key: Optional[str],
+        notary: Optional[Notary] = None,
     ) -> None:
         raise BuildcacheEntryError("Spack can no longer push v2 buildcache entries")
 
@@ -1390,8 +1390,6 @@ def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
     Returns:
         ``True`` if the signature could be verified, ``False`` otherwise.
     """
-    suppress = config.get("config:suppress_gpg_warnings", False)
-
     try:
         # Make a working directory for verification
         tmppath = mkdtemp(dir=spack.stage.get_stage_root())
@@ -1410,9 +1408,9 @@ def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
             else:
                 sig_path = sig
 
-            valid, _ = notary.verify(sig_path, file=data_path, suppress_warnings=suppress)
+            valid = notary.verify(data_path, sig_path)
         else:
-            valid, _ = notary.verify(data_path, suppress_warnings=suppress)
+            valid = notary.verify(data_path)
 
         return valid
     except Exception:

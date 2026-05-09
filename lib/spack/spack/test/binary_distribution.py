@@ -1129,7 +1129,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmp_path: pathlib.Path):
     cache_class = get_url_buildcache_class(
         spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
-    build_cache = cache_class(mirror_url, s, allow_unsigned=True)
+    build_cache = cache_class(mirror_url, s)
 
     manifest = build_cache.read_manifest()
     spec_dict = build_cache.fetch_metadata()

@@ -8,7 +8,6 @@ from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Unio
 
 import spack.config
 import spack.llnl.util.tty as tty
-import spack.util.gpg
 import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
@@ -20,6 +19,7 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 
 #: The layout version spack can current install
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+DEFAULT_SIGNING_TYPE = "pgp-cleartext"
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -124,10 +124,13 @@ class Mirror:
         if not self.signed:
             return None
 
+        if isinstance(self._data, str):
+            return DEFAULT_SIGNING_TYPE
+
         # Get the signature type from the config
-        sig_type = self._data.get("signed", "pgp-cleartext")
+        sig_type = self._data.get("signed", DEFAULT_SIGNING_TYPE)
         if isinstance(sig_type, bool):
-            sig_type = "pgp-cleartext"
+            sig_type = DEFAULT_SIGNING_TYPE
 
         return sig_type
 

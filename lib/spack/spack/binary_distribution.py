@@ -54,6 +54,7 @@ import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
@@ -77,7 +78,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.filesystem import mkdirp
-from spack.notary import Notary, NonSigningNotary
+from spack.notary import Notary
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -1166,10 +1167,7 @@ def _url_push(
     errors: List[Tuple[spack.spec.Spec, BaseException]] = []
 
     exists_futures = [
-        executor.submit(
-            _exists_in_buildcache, spec, out_url, notary=notary
-        )
-        for spec in specs
+        executor.submit(_exists_in_buildcache, spec, out_url, notary=notary) for spec in specs
     ]
 
     cache_entries = {
@@ -1229,6 +1227,7 @@ def _url_push(
     if notary:
         keys_tmpdir = os.path.join(tmpdir, "keys")
         os.mkdir(keys_tmpdir)
+        print(notary.get_keys())
         _url_push_keys(
             out_url, keys=notary.get_keys(), update_index=update_index, tmpdir=keys_tmpdir
         )
@@ -2288,7 +2287,7 @@ def _get_keys(
         mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEY)
     )
     key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
-    index_entry = cache_class(mirror_url, notary=NonSigningNotary())
+    index_entry = cache_class(mirror_url)
 
     try:
         index_manifest = index_entry.read_manifest(manifest_url=key_index_manifest_url)
@@ -2305,7 +2304,7 @@ def _get_keys(
     saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
-        key_entry = cache_class(mirror_url, notary=NonSigningNotary())
+        key_entry = cache_class(mirror_url)
         try:
             key_manifest = key_entry.read_manifest(manifest_url=key_manifest_url)
             key_blob_path = key_entry.fetch_blob(key_manifest.data[0])
@@ -2383,7 +2382,10 @@ def _url_push_keys(
     tmpdir: str,
     update_index: bool = False,
 ):
-    """Upload pgp public keys to the given mirrors"""
+    """Upload pgp public keys to the given mrrors"""
+    if not keys:
+        return
+
     cache_class = get_url_buildcache_class()
 
     for mirror in mirrors:
@@ -2394,7 +2396,7 @@ def _url_push_keys(
 
         for key, file in keys:
             cache_class.push_local_file_as_blob(
-                local_file_path=file,
+                local_file_path=str(file),
                 mirror_url=push_url,
                 manifest_name=f"{key}.key",
                 component_type=BuildcacheComponent.KEY,
@@ -2424,7 +2426,7 @@ def needs_rebuild(spec, mirror_url):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry = cache_class(mirror_url, spec, notary=NonSigningNotary())
+    cache_entry = cache_class(mirror_url, spec)
     exists = cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     return not exists
 
@@ -2499,7 +2501,7 @@ def download_single_spec(
 
     for url in urls:
         cache_class = get_url_buildcache_class(layout_version=layout_version)
-        cache_entry = cache_class(url, concrete_spec, notary=NonSigningNotary())
+        cache_entry = cache_class(url, concrete_spec)
 
         try:
             cache_entry.fetch_metadata()
@@ -2808,7 +2810,7 @@ class DefaultIndexHandler(IndexHandler):
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download the index blob
-        cache_entry = cache_class(self.url, notary=NonSigningNotary())
+        cache_entry = cache_class(self.url)
         computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
         cache_entry.destroy()
 
@@ -2870,7 +2872,7 @@ class EtagIndexHandler(IndexHandler):
                 "etag", None
             )
 
-        cache_entry = cache_class(self.url, notary=NonSigningNotary())
+        cache_entry = cache_class(self.url)
         computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
         cache_entry.destroy()
 
