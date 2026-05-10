@@ -12,6 +12,8 @@ from typing import Dict
 from spack.llnl.util import tty
 from spack.util.executable import which
 
+SSH_DEFAULT_ARGS = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
+
 
 class SSHConnection(object):
     # used to cache connection objects and avoid checking SSH config multiple times
@@ -25,30 +27,44 @@ class SSHConnection(object):
             cls._connections[url.netloc]
 
     def __init__(self, url):
-        SSH_DEFAULT_ARGS = [] if tty.is_debug() else ["-q", "-o", "LogLevel=QUIET"]
-        self.ssh = which("ssh", required=True).with_default_args(*SSH_DEFAULT_ARGS)
-        self.scp = which("scp", required=True).with_default_args(*SSH_DEFAULT_ARGS)
-        if url.username:
-            self.ssh.add_default_arg("-l", url.username)
-            self.scp.add_default_arg("-l", url.username)
-        if url.port:
-            self.ssh.add_default_arg("-p", url.port)
-            self.scp.add_default_arg("-p", url.port)
+        self._ssh = None
+        self._scp = None
         self.url = url
 
-        has_control_master = False
-        for config_line in self.ssh(
-            "-G", self.url.hostname, fail_on_error=True, output=str
-        ).splitlines():
-            if config_line == "controlmaster true" or config_line == "controlmaster auto":
-                has_control_master = True
-                break
+    @property
+    def _default_ssh_args(self):
+        args = SSH_DEFAULT_ARGS[:]
+        if self.url.username:
+            args.extend(["-l", self.url.username])
+        if self.url.port:
+            args.extend(["-p", self.url.port])
+        return args
 
-        if not has_control_master:
-            warnings.warn(
-                f"Minimize SSH connections to {self.url.netloc} via "
-                f"'ControlMaster' in your SSH config!"
-            )
+    @property
+    def ssh(self):
+        if self._ssh is None:
+            self._ssh = which("ssh", required=True).with_default_args(self._default_ssh_args)
+
+            has_control_master = False
+            for config_line in self._ssh(
+                "-G", self.url.hostname, fail_on_error=True, output=str
+            ).splitlines():
+                if config_line == "controlmaster true" or config_line == "controlmaster auto":
+                    has_control_master = True
+                    break
+
+            if not has_control_master:
+                warnings.warn(
+                    f"Minimize SSH connections to {self.url.netloc} via "
+                    f"'ControlMaster' in your SSH config!"
+                )
+        return self._ssh
+
+    @property
+    def scp(self):
+        if self.ssh and self._scp is None:
+            self._scp = which("scp", required=True).with_default_args(self._default_ssh_args)
+        return self._scp
 
     def exists(self, path):
         self.ssh(self.url.hostname, f"test -e {shlex.quote(path)}", fail_on_error=False)
