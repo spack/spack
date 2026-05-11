@@ -4,7 +4,7 @@
 
 import platform as py_platform
 
-from spack.operating_systems.mac_os import MacOs
+from spack.operating_systems.mac_os import MacOs, mac_releases
 from spack.version import Version
 
 from ._platform import Platform
@@ -21,7 +21,7 @@ class Darwin(Platform):
         self.default_os = str(mac_os)
         self.add_operating_system(str(mac_os), mac_os)
 
-        for version in ["26", "15", "14"]:
+        for version in mac_releases.keys():
             mac_os_version = MacOs(version)
             # This is idempotent, so it doesn't matter if it's already there
             self.add_operating_system(str(mac_os_version), mac_os_version)
