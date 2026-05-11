@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import spack.schema.merged
+
 matrix_schema = {
     "type": "array",
     "description": "List of spec constraint lists whose cross product generates multiple specs",
@@ -10,7 +12,6 @@ matrix_schema = {
         "items": {"type": "string"},
     },
 }
-
 
 group_name_and_deps = {
     "group": {"type": "string", "description": "Name for this group of specs"},
@@ -32,7 +33,6 @@ group_name_and_deps = {
         "properties": {**spack.schema.merged.ref_sections},
     },
 }
-
 
 spec_list_properties = {
     "matrix": matrix_schema,
