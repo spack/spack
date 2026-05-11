@@ -113,7 +113,7 @@ class MacOs(OperatingSystem):
     system name, i.e el capitan, yosemite...etc.
     """
 
-    def __init__(self):
+    def __init__(self, version=None):
         """Autodetects the mac version from a dictionary.
 
         If the mac version is too old or too new for Spack to recognize,
@@ -144,8 +144,9 @@ class MacOs(OperatingSystem):
             "15": "sequoia",
             "26": "tahoe",
         }
-
-        version = macos_version()
+        if isinstance(version, str):
+            version = Version(version)
+        version = version or macos_version()
 
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
         # only used the minor component)
