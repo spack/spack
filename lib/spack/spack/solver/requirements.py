@@ -281,7 +281,8 @@ class RequirementParser:
             message = None
         else:
             spec = self._parse_and_expand(item["spec"])
-            condition = spack.spec.Spec(item.get("when"))
+            when_str = item.get("when")
+            condition = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
         _check_unknown_targets([raw_key], [spec], always_warn=True)
