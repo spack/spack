@@ -1049,3 +1049,33 @@ def test_repo_show_version_updates_excludes_git_versions(mock_git_package_change
         assert "diff-test@" in output
         assert "2.1.7" in output
         assert "2.1.8" in output
+
+
+def test_repo_show_version_updates_excludes_deprecated(monkeypatch, mock_git_package_changes):
+    """Test --no-deprecated flag excludes versions marked with deprecated=True"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Mark version 2.1.7 as deprecated
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        for v in pkg_class.versions:
+            if str(v) == "2.1.7":
+                pkg_class.versions[v]["deprecated"] = True
+                break
+
+        # Run show-version-updates with --no-deprecated flag
+        output = repo(
+            "show-version-updates",
+            "--no-deprecated",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
+        )
+
+        # v2.1.7 (deprecated) should be excluded
+        assert "2.1.7" not in output
+
+        # v2.1.6 and v2.1.8 (not deprecated) should be included
+        assert "diff-test@" in output
+        assert "2.1.6" in output
+        assert "2.1.8" in output
