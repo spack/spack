@@ -2958,7 +2958,7 @@ complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r 
 complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -d 'name of a commit to change to'
 
 # spack repo show-version-updates
-set -g __fish_spack_optspecs_spack_repo_show_version_updates h/help no-manual-packages no-git-versions only-redistributable
+set -g __fish_spack_optspecs_spack_repo_show_version_updates h/help no-manual-packages no-git-versions only-redistributable no-deprecated
 
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -s h -l help -d 'show this help message and exit'
@@ -2968,6 +2968,8 @@ complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l n
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-git-versions -d 'exclude versions from git'
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l only-redistributable -f -a only_redistributable
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l only-redistributable -d 'exclude non-redistributable packages'
+complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-deprecated -f -a no_deprecated
+complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-deprecated -d 'exclude deprecated versions'
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help

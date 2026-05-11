@@ -1880,7 +1880,7 @@ _spack_repo_update() {
 _spack_repo_show_version_updates() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --no-manual-packages --no-git-versions --only-redistributable"
+        SPACK_COMPREPLY="-h --help --no-manual-packages --no-git-versions --only-redistributable --no-deprecated"
     else
         SPACK_COMPREPLY=""
     fi
