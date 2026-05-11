@@ -26,7 +26,6 @@ class Darwin(Platform):
             # This is idempotent, so it doesn't matter if it's already there
             self.add_operating_system(str(mac_os_version), mac_os_version)
 
-
     @classmethod
     def detect(cls):
         return "darwin" in py_platform.system().lower()
