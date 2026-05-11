@@ -1155,9 +1155,9 @@ class FancyProgress:
 def _url_push(
     specs: List[spack.spec.Spec],
     out_url: str,
-    notary: Optional[Notary],
     force: bool,
     update_index: bool,
+    notary: Optional[Notary],
     tmpdir: str,
     executor: concurrent.futures.Executor,
 ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:

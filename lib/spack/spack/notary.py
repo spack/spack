@@ -12,6 +12,15 @@ import spack.util.gpg
 from spack.mirrors.mirror import Mirror
 
 
+def _raise_no_signing_keys():
+    """Helper function to raise a consistent error when
+    there are no default signing keys available"""
+    raise NoKeyException(
+        "No keys available for signing.\n"
+        "Use spack gpg init and spack gpg create to create a default key."
+    )
+
+
 class Notary(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def sign(self, blob: Union[str, pathlib.Path]) -> Tuple[pathlib.Path, pathlib.Path]:
@@ -108,10 +117,24 @@ class NonSigningNotary(Notary):
 class GpgNotary(Notary):
     """Verify and sign GPG signatures using a specific key"""
 
-    def __init__(self, gpg, key: str, signature_type: str):
+    def __init__(self, gpg, key: Optional[str] = None, signature_type: Optional[str] = None):
         self.gpg = gpg
         self.key = key
         self.cleartext = signature_type == "pgp-cleartext"
+
+    @property
+    def _signing_key(self):
+        if self.key:
+            return self.key
+
+        # Fallback here to get the first private key in the keyring
+        # TODO: Don't use the global state, use the passed gpg
+        keys: List[str] = spack.util.gpg.signing_keys()
+        if not keys:
+            _raise_no_signing_keys()
+        self.key = keys[0]
+
+        return self.key
 
     def sign(self, blob: Union[str, pathlib.Path]) -> Tuple[pathlib.Path, pathlib.Path]:
         """Sign a blob
@@ -125,7 +148,15 @@ class GpgNotary(Notary):
         """
         signed_file_path = pathlib.Path(f"{blob}.asc")
         signopt = "--clearsign" if self.cleartext else "--detach-sign"
-        self.gpg(signopt, "--armor", "--local-user", self.key, "--output", signed_file_path, blob)
+        self.gpg(
+            signopt,
+            "--armor",
+            "--local-user",
+            self._signing_key,
+            "--output",
+            str(signed_file_path),
+            str(blob),
+        )
         if not self.cleartext:
             return pathlib.Path(blob), signed_file_path
         return signed_file_path, signed_file_path
@@ -169,7 +200,7 @@ class GpgNotary(Notary):
         files = [pathlib.Path(os.path.join(tmpdir, f"{key}.pub")) for key in keys]
 
         for key, file in zip(keys, files):
-            spack.util.gpg.export_keys(file, [key])
+            spack.util.gpg.export_keys(str(file), [key])
 
         return list(zip(keys, files))
 
@@ -197,18 +228,14 @@ def select_notary(
             "Specify unsigned to silence this warning."
         )
 
-    # This calls spack.util.gpg.init
-    keys: List[str] = spack.util.gpg.signing_keys()
+    # Attempt to get a list of signing keys.
+    # If there are none, then fall back to a list of None and defer the error
+    # to the call point of Notary::sign to allow for verify
+    keys: List[str] = spack.util.gpg.signing_keys() or [None]
     num = len(keys)
     if not key:
         if num > 1:
             raise PickKeyException(str(keys))
-        elif num == 0:
-            raise NoKeyException(
-                "No keys available for signing.\n"
-                "Use spack gpg init and spack gpg create"
-                " to create a default key."
-            )
     elif key not in keys:
         raise NoKeyException(f"Could not find specified key {key} in keyring.")
 

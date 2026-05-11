@@ -625,7 +625,7 @@ class URLBuildcacheEntry:
             # chars). If lines are longer, they are truncated without error. So,
             # here we still add newlines, but no indent, so save on file size and
             # line length.
-
+        signature_path = manifest_path
         if notary:
             manifest_path, signature_path = notary.sign(manifest_path)
 
@@ -775,8 +775,9 @@ class URLBuildcacheEntry:
             # line length.
 
         # possibly sign the manifest
+        signature_path = manifest_path
         if notary:
-            signature_path, manifest_path = notary.sign(manifest_path)
+            manifest_path, signature_path = notary.sign(manifest_path)
 
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
@@ -1418,8 +1419,6 @@ def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
     finally:
         # Cleanup workdir
         shutil.rmtree(tmppath)
-
-        return True
 
 
 class MirrorMetadata:

@@ -26,6 +26,7 @@ import spack.environment as ev
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirrors.mirror
+import spack.notary
 import spack.oci.image
 import spack.spec
 import spack.stage
@@ -153,8 +154,13 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
         assert len(keys) == 1
         fpr = keys[0]
 
+        notary = spack.notary.GpgNotary(spack.util.gpg.GPG, fpr)
+        key_files = notary.get_keys()
+        assert len(key_files) == 1
+        assert key_files[0][0] == fpr
+
         spack.binary_distribution._url_push_keys(
-            mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True
+            mirror, keys=key_files, tmpdir=str(tmp_path), update_index=True
         )
 
     # dir 2: import the key from the mirror, and confirm that its fingerprint

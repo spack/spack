@@ -92,13 +92,9 @@ def _migrate_spec(
 
     # Try to fetch the spec metadata
     v2_metadata_urls = [
-        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig"))
+        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json.sig")),
+        url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json")),
     ]
-
-    if notary:
-        v2_metadata_urls.append(
-            url_util.join(mirror_url, "build_cache", v2_tarball_name(s, ".spec.json"))
-        )
 
     spec_contents = None
 
@@ -229,8 +225,9 @@ def _migrate_spec(
         # line length.
 
     # Possibly sign the manifest
+    signature_path = manifest_path
     if notary:
-        signature_path, manifest_path = notary.sign(manifest_path)
+        manifest_path, signature_path = notary.sign(manifest_path)
 
     v3_manifest_url = v3_cache_class.get_manifest_url(s, mirror_url)
 
@@ -261,7 +258,7 @@ def migrate(
     notary = None
     if not unsigned:
         try:
-            notary = spack.notary.select_notary(mirror)
+            notary = spack.notary.select_notary(mirror, signed=not unsigned)
         except (spack.notary.NoKeyException, spack.notary.PickKeyException):
             raise MigrationException(
                 "Signed migration requires exactly one secret key in keychain"
