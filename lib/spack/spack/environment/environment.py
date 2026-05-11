@@ -3303,7 +3303,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._user_specs[group] = []
             self._explicit[group] = True
 
-        group_entry["specs"].setdefault([]).append(addition)
+        group_entry["specs"].append(addition)
 
     def remove_user_spec(self, user_spec: str) -> None:
         """Removes the user spec passed as input from the default list of root specs
