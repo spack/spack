@@ -1065,11 +1065,7 @@ def test_repo_show_version_updates_excludes_deprecated(monkeypatch, mock_git_pac
 
         # Run show-version-updates with --no-deprecated flag
         output = repo(
-            "show-version-updates",
-            "--no-deprecated",
-            test_repo.root,
-            commits[-2],
-            commits[-4],
+            "show-version-updates", "--no-deprecated", test_repo.root, commits[-2], commits[-4]
         )
 
         # v2.1.7 (deprecated) should be excluded
