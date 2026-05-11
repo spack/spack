@@ -74,7 +74,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     create.set_defaults(func=gpg_create, subparser=create)
 
     list = subparsers.add_parser("list", help=gpg_list.__doc__)
-    list.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
+    list.add_argument(
+        "--trusted", action="store_true", default=True, help="list trusted keys (default)"
+    )
     list.add_argument(
         "--signing", action="store_true", help="list keys which may be used for signing"
     )

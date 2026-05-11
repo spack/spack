@@ -161,7 +161,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         dest="untracked",
         action="store_false",
         default=True,
-        help="exclude untracked files from checks",
+        help="exclude untracked files from checks (default)",
     )
     subparser.add_argument(
         "-f",
