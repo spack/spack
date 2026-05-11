@@ -542,8 +542,7 @@ This process can be driven manually with:
     $ spack bootstrap now --dev
    
 By default, Spack's "development" bootstrap dependencies are set to install from the cache only.
-If for whatever reason you wish to allows for the options to build these dependencies from source,
-you can configure Spack to do so:
+If for whatever reason you wish to allows for the options to build these dependencies from source, you can configure Spack to do so:
 
 .. code-block::console 
 
@@ -551,8 +550,7 @@ you can configure Spack to do so:
 
 .. note:: 
     Spack defaults to bootstrapping development dependencies from binary due to the space and time required to build rust.
-    If you enable from source development dependency bootstrapping, be sure your home drive has sufficient storage and be aware the bootstrap
-    may take some time to complete.
+    If you enable from source development dependency bootstrapping, be sure your home drive has sufficient storage and be aware the bootstrap may take some time to complete.
 
 ``spack unit-test``
 ^^^^^^^^^^^^^^^^^^^
