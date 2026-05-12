@@ -235,11 +235,27 @@ properties: Dict[str, Any] = {
             },
             "sandbox": {
                 "type": "object",
+                "description": "Restrict filesystem and network access during builds.",
+                "additionalProperties": False,
                 "properties": {
-                    "enable": {"type": "boolean"},
-                    "allow_network": {"type": "boolean"},
-                    "allow_read": {"type": "array", "items": {"type": "string"}},
-                    "allow_write": {"type": "array", "items": {"type": "string"}},
+                    "enable": {
+                        "type": "boolean",
+                        "description": "Enable or disable the build sandbox.",
+                    },
+                    "allow_network": {
+                        "type": "boolean",
+                        "description": "Allow TCP network access during the build phase.",
+                    },
+                    "allow_read": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with read and execute permissions.",
+                    },
+                    "allow_write": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Additional paths with write and execute permissions.",
+                    },
                 },
             },
         },
