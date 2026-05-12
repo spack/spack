@@ -155,20 +155,20 @@ Spack can run builds in an unprivileged sandbox to restrict filesystem and netwo
 This opt-in feature requires Linux 5.13+ with Landlock support (network restrictions require Linux 6.7+).
 Sandboxing is meant for build reproducibility and bug containment rather than acting as a strict security boundary, as package recipes still execute outside the sandbox ahead of the build.
 
-When enabled, the stage directory, install prefix, and system temp directory are implicitly writable.
-Spack-installed dependencies (excluding externals) are readable.
+When enabled, the stage directory, install prefix, system temp directory and ``/dev/null`` are implicitly writable.
+Spack-installed dependencies (excluding externals) are implicitly readable.
 All other paths must be explicitly allowed in configuration:
 
 .. code-block:: yaml
 
    config:
      sandbox:
-       enable: true         # Enable for all builds
-       allow_network: true  # Allow TCP network access during the build phase
-       allow_read:          # Additional paths with read and execute permissions
+       enable: true          # Enable for all builds
+       allow_network: false  # Disable TCP network access during the build phase
+       allow_read:           # Additional paths with read and execute permissions
        - /usr
-       allow_write:         # Additional paths with write and execute permissions
-       - /dev/null
+       allow_write:          # Additional paths with write and execute permissions
+       - /scratch
 
 The sandbox activates immediately after source extraction and prefix creation.
 Note that network restrictions only apply during the build phases, leaving Spack's own fetch operations unaffected.

@@ -683,8 +683,10 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     sandbox.allow_write(stage_path)
     sandbox.allow_write(spec.prefix)
 
-    # Compilers write temporary files
+    # POSIX prescribes /tmp and /dev/null are present. In the future we can consider setting
+    # TMPPATH to a sibling of the stage path to isolate concurrent builds better.
     sandbox.allow_write(tempfile.gettempdir())
+    sandbox.allow_write(os.devnull)
 
     # Allow read access to sbang, which might be needed to run build scripts.
     sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
