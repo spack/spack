@@ -1074,8 +1074,13 @@ class Environment:
         self._load_manifest_file()
 
     def _read(self):
-        self._construct_state_from_manifest()
+        """Set up user specs and views from the manifest file."""
+        self.views = {}
+        self._sync_speclists()
+        self._process_view(spack.config.get("view", True))
+        self._process_included_lockfiles()
 
+        # self._read_lockfile() is needed for correctness even without the version check
         if os.path.exists(self.lock_path):
             with open(self.lock_path, encoding="utf-8") as f:
                 read_lock_version = self._read_lockfile(f)["_meta"]["lockfile-version"]
@@ -1188,13 +1193,6 @@ class Environment:
 
         # Cache concrete environments for required lock files.
         self._load_concrete_include_data()
-
-    def _construct_state_from_manifest(self):
-        """Set up user specs and views from the manifest file."""
-        self.views = {}
-        self._sync_speclists()
-        self._process_view(spack.config.get("view", True))
-        self._process_included_lockfiles()
 
     # TODO/50207: Properly resolve the conflicts related to adding included
     # TODO/50207: user specs.
