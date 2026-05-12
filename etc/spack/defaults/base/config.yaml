@@ -183,7 +183,8 @@ config:
     # Additional paths with read and execute permissions.
     allow_read: []
     # Additional paths with write and execute permissions.
-    allow_write: []
+    allow_write:
+    - /dev/null
 
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
