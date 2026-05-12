@@ -1,7 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.schema.merged
+
+# from spack.schema.merged import ref_sections
 
 matrix_schema = {
     "type": "array",
@@ -29,8 +30,8 @@ group_name_and_deps = {
     "override": {
         "type": "object",
         "description": "Top-most configuration scope for this group of specs",
-        "additionalProperties": False,
-        "properties": {**spack.schema.merged.ref_sections},
+        "additionalProperties": True,  # TODO: fix circular import
+#        "properties": {**ref_sections},
     },
 }
 
@@ -69,7 +70,7 @@ spec_list_schema = {
                 "type": "object",
                 "description": "User spec group with multiple matrices",
                 "additionalProperties": False,
-                "properties": {**group_name_and_deps, "specs": spec_list_schema},
+                "properties": {**group_name_and_deps, "specs": {}},  # spec_list_schema},
             },
         ]
     },
