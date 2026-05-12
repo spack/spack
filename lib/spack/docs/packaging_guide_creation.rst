@@ -2142,6 +2142,137 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
    See :ref:`sec-specs` for more information.
 
 
+.. _packaging_deprecations:
+
+Deprecations
+------------
+
+The ``deprecated()`` directive signals that a package configuration should no longer be used.
+Called with no positional argument it deprecates the entire package:
+
+.. code-block:: python
+
+   class Foo(Package):
+       deprecated(reason="unavailable", severity="critical")
+
+Called with a spec constraint it narrows the deprecation to matching configurations only.
+The two most common cases — deprecating a version and deprecating a variant — are described in the subsections below.
+
+.. _packaging_deprecations_versions:
+
+Deprecating versions
+^^^^^^^^^^^^^^^^^^^^
+
+Pass a version constraint as the first argument to mark specific versions as deprecated:
+
+.. code-block:: python
+
+   class Openssl(Package):
+       version("3.0.7", sha256="...")
+       version("1.1.1t", sha256="...")
+
+       deprecated(
+           "@:1.1.1t",
+           reason="cve",
+           severity="high",
+           msg="See https://www.cve.org/CVERecord?id=CVE-2023-0286",
+       )
+
+The optional ``msg=`` argument appends a custom string to the warning, making it easy to point users to a CVE record, a migration guide, or a replacement package.
+
+The first positional argument accepts any :ref:`version constraint <version-specifier>`, so an entire range can be deprecated in one directive:
+
+.. code-block:: python
+
+   class Openssl(Package):
+       deprecated("@:1", reason="maintenance", severity="critical")
+
+The ``reason`` keyword must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"`` and defaults to ``"maintenance"``.
+The ``severity`` keyword ranks the urgency from lowest to highest (``"low"``, ``"medium"``, ``"high"``, or ``"critical"``) and defaults to ``"low"``.
+
+When the concretizer selects a deprecated version it emits a :class:`UserWarning`.
+Non-deprecated versions are always preferred over deprecated ones, and lower-severity deprecated versions are preferred over higher-severity ones.
+Depending on the configured threshold the concretizer may also raise a hard error instead of a warning.
+See :ref:`package-deprecations-config` for how to configure that threshold.
+
+The old ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
+
+.. code-block:: python
+
+   deprecated("@X.Y", reason="maintenance", severity="critical")
+
+.. _packaging_deprecations_variants:
+
+Renaming or removing variants
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When a variant is renamed or removed, the ``replace=`` argument instructs the concretizer to rewrite any input spec that uses the old variant *before solving begins*.
+This covers input specs typed on the command line, ``packages.yaml`` preference and requirement entries, and constraints in package recipes.
+
+For example, suppose the boolean ``shared`` variant is replaced by a multi-valued ``libs`` variant:
+
+.. code-block:: python
+
+   class Foo(Package):
+       version("2.0", sha256="...")
+       variant("libs", default="shared", values=("shared", "static"), multi=True,
+               description="Build shared and/or static libraries")
+
+       deprecated(
+           "shared=*",
+           reason="rename",
+           replace={"+shared": "libs=shared", "~shared": "libs=static"}
+       )
+
+The first positional argument is the *trigger*: rewriting only happens when the input spec satisfies it.
+The ``replace=`` dict maps each old variant constraint to its replacement.
+Both keys and values must contain only variant constraints - version, platform, compiler, and dependency constraints are not allowed.
+
+When a variant is simply dropped, but the package continues to build correctly without it, map its constraint to an empty string:
+
+.. code-block:: python
+
+       deprecated("pic=*", replace={"pic=*": ""})
+
+This will emit a deprecation warning about the removal, and then continue.
+
+To signal that a variant has been removed with no valid replacement — so any request for it is always an error — map it to ``None`` instead:
+
+.. code-block:: python
+
+       deprecated(
+           "~shared",
+           reason="maintenance",
+           replace={"~shared": None},
+           msg="Static builds are no longer supported. Remove ~shared from your spec.",
+       )
+
+The optional ``msg=`` argument appends a custom string to the warning or error, and is the right place to tell users what to do instead.
+Use this option only when the old variant configuration is genuinely no longer buildable and there is no sensible migration path.
+
+Multiple old variants that together map to a single new constraint can be expressed with a multi-variant key:
+
+.. code-block:: python
+
+       deprecated(
+           "shared=*",
+           reason="rename",
+           replace={
+               "+shared": "libs=shared",
+               "+shared~static": "libs:=shared",
+               "~shared": "libs:=static",
+           }
+       )
+
+A key with multiple variants only fires when all of them are present simultaneously.
+This makes it possible to enumerate specific combinations precisely.
+
+.. note::
+
+   ``replace=`` rewrites happen before the solver runs, on the abstract input specs and package constraints.
+   A trigger that includes non-variant constraints such as a version range or a platform will therefore only fire when those constraints are *already explicit* in the input spec.
+   For the common case of renaming a variant unconditionally, use a variant-only trigger.
+
 .. _packaging_requires:
 
 Requires

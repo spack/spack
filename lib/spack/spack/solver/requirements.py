@@ -11,6 +11,7 @@ import spack.config
 import spack.error
 import spack.package_base
 import spack.repo
+import spack.solver.variant_rewrite
 import spack.spec
 import spack.spec_parser
 import spack.traverse
@@ -172,11 +173,23 @@ class RequirementParser:
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
         self.toolchains = configuration.get_config("toolchains")
         self._warned_compiler_all: set = set()
+        self._deprecation_errors: List[str] = []
 
-    def _parse_and_expand(self, string: str, *, named: bool = False) -> spack.spec.Spec:
+    def _parse_and_expand(
+        self, string: str, *, named: bool = False, pkg_name: Optional[str] = None
+    ) -> spack.spec.Spec:
         result = parse_spec_from_yaml_string(string, named=named)
         if self.toolchains:
             spack.spec_parser.expand_toolchains(result, self.toolchains)
+        if pkg_name:
+            mark = get_mark_from_yaml_data(string)
+            if mark and mark.name:
+                provenance = f"{mark.name}:{mark.line + 1}" if mark.line is not None else mark.name
+            else:
+                provenance = "packages.yaml"
+            spack.solver.variant_rewrite.apply_replacements_to_spec(
+                result, pkg_name=pkg_name, provenance=provenance, errors=self._deprecation_errors
+            )
         return result
 
     def rules(self, pkg: spack.package_base.PackageBase) -> List[RequirementRule]:
@@ -252,7 +265,7 @@ class RequirementParser:
             if kind == RequirementKind.DEFAULT:
                 # Warn about %gcc type of preferences under `all`.
                 self._maybe_warn_compiler_in_all(item, "prefer")
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item, pkg_name=pkg_name)
             result.append(
                 preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
@@ -267,21 +280,22 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in conflicts:
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg = self._parse_prefer_conflict_item(item, pkg_name=pkg_name)
             result.append(
                 conflict(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
             )
         return result
 
-    def _parse_prefer_conflict_item(self, item):
+    def _parse_prefer_conflict_item(self, item, pkg_name: Optional[str] = None):
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
-            spec = self._parse_and_expand(item)
+            spec = self._parse_and_expand(item, pkg_name=pkg_name)
             condition = spack.spec.Spec()
             message = None
         else:
-            spec = self._parse_and_expand(item["spec"])
-            condition = spack.spec.Spec(item.get("when"))
+            spec = self._parse_and_expand(item["spec"], pkg_name=pkg_name)
+            when_str = item.get("when", spack.spec.EMPTY_SPEC)
+            condition = self._parse_and_expand(when_str, pkg_name=pkg_name)
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
         _check_unknown_targets([raw_key], [spec], always_warn=True)
@@ -332,7 +346,11 @@ class RequirementParser:
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 raw_strs = list(constraints)
                 constraints = [
-                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
+                    self._parse_and_expand(
+                        constraint,
+                        named=kind == RequirementKind.VIRTUAL,
+                        pkg_name=pkg_name if kind != RequirementKind.VIRTUAL else None,
+                    )
                     for constraint in raw_strs
                 ]
                 _check_unknown_targets(raw_strs, constraints)

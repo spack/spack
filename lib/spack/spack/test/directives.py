@@ -11,7 +11,8 @@ import spack.repo
 import spack.spec
 import spack.version
 from spack.directives import _make_when_spec, depends_on, extends, patch
-from spack.directives_meta import DirectiveDictDescriptor, DirectiveMeta
+from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
+from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.spec import Spec
 
 
@@ -293,4 +294,227 @@ def test_patched_dependencies_sets_class_attribute():
         patch("https://example.com/diff.patch", sha256=sha256)
 
     assert DoesNotPatchDependencies._patches_dependencies is False
-    assert DoesNotPatchDependencies.patches  # type: ignore
+    assert DoesNotPatchDependencies.patches
+
+
+class MockPkg:
+    name = "mypkg"
+    deprecations: dict = {}
+    replacements: dict = {}
+
+
+@pytest.fixture
+def mock_pkg():
+    pkg = MockPkg()
+    pkg.deprecations = {}
+    pkg.replacements = {}
+    return pkg
+
+
+class TestDeprecatedDirective:
+    def test_severity_ordering(self):
+        """Tests that severity levels are kept in the correct order."""
+        assert (
+            DeprecationSeverity("none")
+            < DeprecationSeverity("low")
+            < DeprecationSeverity("medium")
+            < DeprecationSeverity("high")
+            < DeprecationSeverity("critical")
+        )
+
+    def test_severity_and_reason_invalid_values(self):
+        """Tests that an invalid value raises a ValueError."""
+        with pytest.raises(ValueError, match="bogus"):
+            DeprecationSeverity("bogus")
+
+        with pytest.raises(ValueError, match="foo"):
+            DeprecationReason("foo")
+
+    def test_deprecated_directive_version_constraint(self, mock_pkg):
+        """Tests the basic use of the deprecated directive."""
+        spack.directives._execute_deprecated(mock_pkg, spec="@1.0", reason="cve", severity="high")
+        assert len(mock_pkg.deprecations) == 1
+        constraint, entries = list(mock_pkg.deprecations.items())[0]
+        reason, severity, message = entries[0]
+        assert constraint.satisfies("mypkg@1.0")
+        assert reason == DeprecationReason.CVE
+        assert severity == DeprecationSeverity.HIGH
+        assert message is None
+
+    def test_deprecated_directive_whole_package(self, mock_pkg):
+        """Tests the deprecated directive on a package."""
+        spack.directives._execute_deprecated(mock_pkg, spec=None, reason="rename", severity="low")
+        assert len(mock_pkg.deprecations) == 1
+        constraint = list(mock_pkg.deprecations.keys())[0]
+        assert constraint == spack.spec.EMPTY_SPEC
+
+    def test_deprecated_directive_invalid_arguments(self, mock_pkg):
+        """Tests that an invalid value raises a ValueError."""
+        with pytest.raises(ValueError, match="bogus"):
+            spack.directives._execute_deprecated(
+                mock_pkg, spec="@1.0", reason="bogus", severity="low"
+            )
+
+        with pytest.raises(ValueError, match="extreme"):
+            spack.directives._execute_deprecated(
+                mock_pkg, spec="@1.0", reason="cve", severity="extreme"
+            )
+
+    def test_deprecated_directive_multiple_reasons(self, mock_pkg):
+        """Tests cases where we have multiple deprecation reasons on the same constraint."""
+        spack.directives._execute_deprecated(mock_pkg, spec="@1.0", reason="cve", severity="high")
+        spack.directives._execute_deprecated(
+            mock_pkg, spec="@1.0", reason="rename", severity="low"
+        )
+        assert len(mock_pkg.deprecations) == 1
+        assert len(mock_pkg.deprecations[spack.spec.Spec("@1.0")]) == 2
+
+    def test_deprecated_replace_populates_replacements(self, mock_pkg):
+        """Tests that replace= stores entry in pkg.replacements, not pkg.deprecations."""
+        spack.directives._execute_deprecated(
+            mock_pkg,
+            spec="+shared",
+            reason="rename",
+            severity="low",
+            replace={"+shared": "libs=shared"},
+        )
+        assert mock_pkg.replacements
+        assert not mock_pkg.deprecations
+        assert Spec("+shared") in mock_pkg.replacements
+
+    def test_deprecated_replace_empty_dict_raises(self, mock_pkg):
+        """Tests that replace={} raises DirectiveError."""
+        with pytest.raises(DirectiveError, match="non-empty"):
+            spack.directives._execute_deprecated(
+                mock_pkg, spec="+shared", reason="rename", severity="low", replace={}
+            )
+
+    def test_deprecated_replace_version_only_spec_raises(self, mock_pkg):
+        """Tests that replace= on a version-only spec raises DirectiveError."""
+        with pytest.raises(DirectiveError, match="variant"):
+            spack.directives._execute_deprecated(
+                mock_pkg, spec="@1.0", reason="rename", severity="low", replace={"+old": "new"}
+            )
+
+    def test_deprecated_replace_none_still_uses_solver_path(self, mock_packages):
+        """Tests that deprecated() without replace= still populates deprecations."""
+        pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-with-reason")
+        assert pkg_cls.deprecations
+        assert not pkg_cls.replacements
+
+    def test_deprecated_replace_populates_replacements_via_repo(self, mock_packages):
+        """Tests that deprecated-with-replace has replacements for +shared and ~shared."""
+        pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-with-replace")
+        assert pkg_cls.replacements
+        triggers = [str(s) for s in pkg_cls.replacements]
+        assert "+shared" in triggers
+        assert "~shared" in triggers
+
+    # --- replace= key validation ---
+
+    @pytest.mark.parametrize(
+        "key,label",
+        [
+            ("@1 +shared", "version"),
+            ("platform=darwin +shared", "platform"),
+            ("os=ubuntu22.04 +shared", "os"),
+            ("target=x86_64 +shared", "target"),
+            ("%gcc +shared", "compiler"),
+            ("cflags=-O2 +shared", "compiler flags"),
+            ("^zlib +shared", "dependency"),
+        ],
+    )
+    def test_deprecated_replace_key_non_variant_raises(self, mock_pkg, key, label):
+        """replace= key containing non-variant constraints raises DirectiveError."""
+        with pytest.raises(DirectiveError, match="variant"):
+            spack.directives._execute_deprecated(
+                mock_pkg,
+                spec="+shared",
+                reason="rename",
+                severity="low",
+                replace={key: "libs=shared"},
+            )
+
+    # --- replace= value validation ---
+
+    @pytest.mark.parametrize(
+        "value,label",
+        [
+            ("@2", "version"),
+            ("platform=linux libs=shared", "platform"),
+            ("os=ubuntu22.04 libs=shared", "os"),
+            ("target=x86_64 libs=shared", "target"),
+            ("%gcc libs=shared", "compiler"),
+            ("cflags=-O2 libs=shared", "compiler flags"),
+            ("^zlib libs=shared", "dependency"),
+        ],
+    )
+    def test_deprecated_replace_value_non_variant_raises(self, mock_pkg, value, label):
+        """replace= value containing non-variant constraints raises DirectiveError."""
+        with pytest.raises(DirectiveError, match="variant"):
+            spack.directives._execute_deprecated(
+                mock_pkg,
+                spec="+shared",
+                reason="rename",
+                severity="low",
+                replace={"+shared": value},
+            )
+
+    def test_deprecated_replace_empty_string_value_is_valid(self, mock_pkg):
+        """replace= value of '' (drop variant) must not be rejected by the validator."""
+        spack.directives._execute_deprecated(
+            mock_pkg, spec="+shared", reason="rename", severity="low", replace={"+shared": ""}
+        )
+        assert mock_pkg.replacements
+
+    # --- msg= parameter ---
+
+    def test_deprecated_message_stored_in_solver_path(self, mock_pkg):
+        """msg= is stored as the third element of each deprecations entry."""
+        spack.directives._execute_deprecated(
+            mock_pkg, spec="@1.0", reason="cve", severity="high", message="Use v2.0 instead."
+        )
+        _, entries = list(mock_pkg.deprecations.items())[0]
+        reason, severity, message = entries[0]
+        assert message == "Use v2.0 instead."
+
+    def test_deprecated_no_message_stores_none(self, mock_pkg):
+        """Omitting msg= stores None as the third element."""
+        spack.directives._execute_deprecated(mock_pkg, spec="@1.0", reason="cve", severity="high")
+        _, entries = list(mock_pkg.deprecations.items())[0]
+        reason, severity, message = entries[0]
+        assert message is None
+
+    def test_deprecated_replace_message_stored(self, mock_pkg):
+        """msg= is stored as the third element in replacements."""
+        spack.directives._execute_deprecated(
+            mock_pkg,
+            spec="+shared",
+            reason="rename",
+            severity="low",
+            replace={"+shared": "libs=shared"},
+            message="Use libs=shared instead.",
+        )
+        trigger = Spec("+shared")
+        reason, mapping, message = mock_pkg.replacements[trigger]
+        assert message == "Use libs=shared instead."
+
+    # --- replace= with None value (removed, no replacement) ---
+
+    def test_deprecated_replace_none_value_accepted(self, mock_pkg):
+        """replace= with None value (variant removed, no replacement) is stored without error."""
+        spack.directives._execute_deprecated(
+            mock_pkg,
+            spec="~shared",
+            reason="maintenance",
+            severity="low",
+            replace={"~shared": None},
+        )
+        trigger = Spec("~shared")
+        _, mapping, _ = mock_pkg.replacements[trigger]
+        assert mapping["~shared"] is None
+
+    def test_deprecated_replace_none_value_via_repo(self, mock_packages):
+        """deprecated-with-removed-variant stores None in its replacements mapping."""
+        pkg_cls = spack.repo.PATH.get_pkg_class("deprecated-with-removed-variant")
+        assert any(v is None for _, (_, m, _) in pkg_cls.replacements.items() for v in m.values())

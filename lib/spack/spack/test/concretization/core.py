@@ -2062,7 +2062,7 @@ spack:
             # pkg_fact("pkg-b", version_origin("0.9", "package_py")).
 
             weights = weights_from_result(result, name="version badness (non roots)")
-            assert weights["reused"] == 3 and weights["built"] == 0
+            assert weights["reused"] == 4 and weights["built"] == 0
 
             result_spec = result.specs[0]
             assert result_spec.satisfies("^pkg-b@1.0")
@@ -2246,7 +2246,7 @@ spack:
         mutable_config.set("packages", packages_yaml["packages"])
 
         setup = spack.solver.asp.SpackSolverSetup()
-        asp_problem = setup.setup([Spec("mpileaks")], reuse=[], allow_deprecated=False).asp_problem
+        asp_problem = setup.setup([Spec("mpileaks")], reuse=[]).asp_problem
 
         assert all(x in asp_problem for x in expected)
 
@@ -4858,21 +4858,14 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(mock_packages):
-    """Test that concrete specs are not checked for unknown versions and dependencies."""
-
-    specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
-
-    with pytest.raises(spack.solver.asp.DeprecatedVersionError):
-        spack.solver.asp.SpackSolverSetup().setup(specs)
+def test_concrete_specs_skip_prechecks(mock_packages, mutable_config):
+    """Tests that deprecated versions are blocked by default but allowed with config:deprecated."""
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="deprecated"):
+        spack.concretize.concretize_one("deprecated-versions@=1.1.0")
 
     with spack.config.override("config:deprecated", True):
-        concrete_spec = spack.concretize.concretize_one(specs[1])
-
-    # Try again with the same version but a concrete spec
-    specs[1] = concrete_spec
-
-    spack.solver.asp.SpackSolverSetup().setup(specs)
+        concrete_spec = spack.concretize.concretize_one("deprecated-versions@=1.1.0")
+        assert concrete_spec.satisfies("deprecated-versions@=1.1.0")
 
 
 @pytest.mark.regression("51683")

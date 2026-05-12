@@ -174,6 +174,101 @@ See also :ref:`faq-concretizer-precedence` for an overview of how criteria are p
 
 For a deeper investigation of solver internals, see :ref:`debugging-concretization` in the developer guide.
 
+.. _faq-variant-rename:
+
+How do I rename or remove a variant?
+-------------------------------------
+
+Abruptly removing or renaming a variant in a package breaks any spec that still uses the old name, and leaves users with an opaque error and no guidance on what to use instead.
+The ``deprecated()`` directive with ``replace=`` lets you keep the old variant name working while transparently rewriting it to the new form *before the solver runs*.
+
+**Removing a variant**
+
+Suppose we want to remove the ``pic`` variant from ``bzip2``, and always build with ``PIC`` enabled:
+
+.. code-block:: python
+
+   class Bzip2(Package):
+       variant("pic", default=False, description="Build with PIC")
+
+Removing the ``variant()`` directive and replacing it with a proper ``deprecated()`` directive:
+
+.. code-block:: python
+
+   class Bzip2(Package):
+       deprecated("pic=*", reason="maintenance", replace={"pic=*": ""})
+
+is enough to warn users during concretization, if they still reference the ``pic`` variant explicitly in any place.
+
+**Removing a variant with no valid replacement**
+
+Sometimes a variant cannot be silently dropped because the corresponding configuration is no longer buildable at all.
+For instance, suppose we plan to drop support for ``+guile`` in ``gmake``.
+
+In these cases it is good practice to deprecate only the affected value first, so users get a warning during concretization while the variant is still accepted.
+This gives them time to update their specs before the hard cutover:
+
+.. code-block:: python
+
+   class GMake(Package):
+       variant("guile", default=False, description="Support GNU Guile for embedded scripting")
+       deprecated("+guile", msg="Guile support will be dropped in the next release")
+
+In the following release, the variant definition can then be removed, and the ``replace=`` argument can be added to the deprecated directive:
+
+.. code-block:: python
+
+   class GMake(Package):
+      deprecated(
+        "guile=*",
+        replace={
+            "+guile": None,  # error: Guile support has been removed entirely
+            "~guile": "",    # no-op: package always builds without Guile now
+        },
+        msg="Guile is not supported anymore"
+      )
+
+At this point, any spec that requests ``gmake+guile`` will produce a hard error:
+
+.. code-block:: console
+
+   $ spack solve gmake+guile
+   ==> Error: Deprecated variants with no replacement were found:
+     - input spec: gmake+guile is deprecated with no replacement [Guile is not supported anymore]
+     - in foo's recipe: gmake+guile is deprecated with no replacement [Guile is not supported anymore]
+
+The provenance prefix tells you exactly where the offending constraint came from -- fix it there.
+
+**Renaming a variant**
+
+Suppose ``hdf5`` currently defines a boolean ``shared`` variant:
+
+.. code-block:: python
+
+   class Hdf5(Package):
+       variant("shared", default=True, description="When active, builds shared libraries")
+
+and we want to replace it with a multi-valued ``libs`` variant.
+To do it, we have to remove the old ``variant()`` directive, add the new variant, and finally add ``deprecated()``:
+
+.. code-block:: python
+
+   class Hdf5(Package):
+       variant(
+           "libs",
+           default="shared",
+           values=("shared", "static"),
+           multi=True,
+           description="Build shared and/or static libraries"
+       )
+
+       deprecated("shared=*", replace={"+shared": "libs=shared", "~shared": "libs=static"})
+
+When a user installs ``hdf5+shared``, Spack rewrites it in-memory to ``hdf5 libs=shared`` before solving and emits a deprecation warning.
+The in-memory rewriting also applies automatically to ``packages.yaml`` preference and requirement entries, and to constraints in package recipes, so downstream packages do not need to be updated immediately.
+
+See :ref:`packaging_deprecations_variants` for the full API, including how to handle multiple old variants mapping to a single new constraint.
+
 .. rubric:: Footnotes
 
 .. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command.

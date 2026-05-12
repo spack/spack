@@ -46,7 +46,7 @@ import os
 import re
 import warnings
 from functools import partial
-from typing import Any, Callable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
 import spack.deptypes as dt
 import spack.error
@@ -59,6 +59,7 @@ import spack.util.crypto
 import spack.variant
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, directive, get_spec
+from spack.enums import DeprecationReason, DeprecationSeverity
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
@@ -69,6 +70,7 @@ __all__ = [
     "conditional",
     "conflicts",
     "depends_on",
+    "deprecated",
     "extends",
     "maintainers",
     "license",
@@ -154,7 +156,7 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive("versions", supports_when=False)
+@directive(("versions", "deprecations"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -261,6 +263,9 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
     # Store kwargs for the package to later with a fetch_strategy.
     pkg.versions[version] = kwargs
 
+    if kwargs.get("deprecated", False):
+        _execute_deprecated(pkg, spec=f"@{version}", reason="maintenance", severity="critical")
+
 
 @directive("conflicts")
 def conflicts(conflict_spec: SpecType, when: WhenType = None, msg: Optional[str] = None):
@@ -293,6 +298,103 @@ def _execute_conflicts(pkg: PackageType, conflict_spec, when, msg):
     conflict_spec_list = pkg.conflicts.setdefault(when_spec, [])
     msg_with_name = f"{pkg.name}: {msg}" if msg is not None else msg
     conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
+
+
+@directive(("deprecations", "replacements"), supports_when=False)
+def deprecated(
+    spec: Optional[SpecType] = None,
+    *,
+    reason: str = "maintenance",
+    severity: str = "low",
+    replace: Optional[Dict[str, Optional[str]]] = None,
+    msg: Optional[str] = None,
+):
+    """Mark a spec constraint as deprecated.
+
+    Args:
+        spec: optional spec constraint (e.g. ``"@1.0"``); if omitted, the whole package
+            is deprecated.
+        reason: why this spec is deprecated.  One of ``"cve"``, ``"rename"``,
+            ``"unavailable"``, ``"maintenance"``.
+        severity: how severe the deprecation is.  One of ``"low"`` (default), ``"medium"``,
+            ``"high"``, ``"critical"``.  Ignored when ``replace`` is given.
+        replace: if provided, a non-empty mapping of deprecated variant constraint strings
+            to replacement strings (use ``""`` to drop a variant).  When present, triggers
+            pre-solver rewriting instead of solver-side penalization.
+        msg: optional human-readable explanation shown verbatim in the warning or error,
+            after the standard preamble.  Useful for package renames, CVE references, or
+            migration guides.
+    """
+    return partial(
+        _execute_deprecated,
+        spec=spec,
+        reason=reason,
+        severity=severity,
+        replace=replace,
+        message=msg,
+    )
+
+
+def _replace_spec_non_variant_parts(spec_str: str) -> List[str]:
+    """Return a list of non-variant constraint types present in *spec_str*.
+
+    Used to validate that replace= keys and values contain only variant constraints.
+    """
+    s = spack.spec.Spec(spec_str)
+    empty = spack.spec.Spec()
+    found = []
+    if s.versions != empty.versions:
+        found.append("version")
+    if s.architecture is not None:
+        found.append("architecture (platform/os/target)")
+    if any(v for v in s.compiler_flags.values()):
+        found.append("compiler flags")
+    if list(s.dependencies()):
+        found.append("compiler or dependency")
+    return found
+
+
+def _execute_deprecated(
+    pkg: PackageType,
+    spec: Optional[str],
+    reason: str,
+    severity: str,
+    replace: Optional[Dict[str, Optional[str]]] = None,
+    message: Optional[str] = None,
+):
+    constraint = get_spec(spec) if spec is not None else EMPTY_SPEC
+    if replace is not None:
+        if not replace:
+            raise DirectiveError(
+                f"'deprecated()' in {pkg.name}: "
+                "'replace' must be non-empty; map a key to '' to drop the variant"
+            )
+        if not constraint.variants:
+            raise DirectiveError(
+                f"'deprecated()' in {pkg.name}: "
+                "'replace' requires at least one variant constraint in the spec"
+            )
+        for key_str, value_str in replace.items():
+            bad = _replace_spec_non_variant_parts(key_str)
+            if bad:
+                raise DirectiveError(
+                    f"'deprecated()' in {pkg.name}: replace= key '{key_str}' contains "
+                    f"non-variant constraints ({', '.join(bad)}); "
+                    "only variant constraints are allowed in replace= keys and values"
+                )
+            if value_str:
+                bad = _replace_spec_non_variant_parts(value_str)
+                if bad:
+                    raise DirectiveError(
+                        f"'deprecated()' in {pkg.name}: replace= value '{value_str}' contains "
+                        f"non-variant constraints ({', '.join(bad)}); "
+                        "only variant constraints are allowed in replace= keys and values"
+                    )
+        pkg.replacements[constraint] = (DeprecationReason(reason), replace, message)
+    else:
+        sev = DeprecationSeverity(severity)  # type: ignore[arg-type]
+        rsn = DeprecationReason(reason)
+        pkg.deprecations.setdefault(constraint, []).append((rsn, sev, message))
 
 
 @directive("dependencies", can_patch_dependencies=True)

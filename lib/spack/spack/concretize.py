@@ -41,10 +41,7 @@ def _concretize_specs_together(
     """
     from spack.solver.asp import Solver
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        abstract_specs, tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = Solver(specs_factory=factory).solve(abstract_specs, tests=tests)
     return [s.copy() for s in result.specs]
 
 
@@ -95,12 +92,9 @@ def concretize_together_when_possible(
     }
 
     result_by_user_spec: Dict[Spec, Spec] = {}
-    allow_deprecated = spack.config.get("config:deprecated", False)
     j = 0
     start = time.monotonic()
-    for result in Solver(specs_factory=factory).solve_in_rounds(
-        to_concretize, tests=tests, allow_deprecated=allow_deprecated
-    ):
+    for result in Solver(specs_factory=factory).solve_in_rounds(to_concretize, tests=tests):
         now = time.monotonic()
         duration = now - start
         percentage = int((j + 1) / len(to_concretize) * 100)
@@ -247,10 +241,7 @@ def concretize_one(
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    allow_deprecated = spack.config.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        [spec], tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = Solver(specs_factory=factory).solve([spec], tests=tests)
 
     # take the best answer
     opt, i, answer = min(result.answers)
