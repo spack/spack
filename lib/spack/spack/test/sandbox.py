@@ -27,8 +27,7 @@ class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):
     def __init__(self, abi_version: int = 3) -> None:
         self._abi_version_override = abi_version
         super().__init__()
-        # We need a valid ruleset fd for tests
-        self._spy_fd = os.open(os.devnull, os.O_RDONLY)
+        self._fds: List[int] = []
         self.ruleset_fd = -1
         # (fs_flags, net_flags)
         self.create_ruleset_calls: List[Tuple[int, int]] = []
@@ -38,12 +37,21 @@ class SpyLandlockSandbox(spack.sandbox.LandlockSandbox):
         self.restrict_self_calls: List[Tuple[int, int]] = []
         self.prctl_called: bool = False
 
+    def __del__(self):
+        for fd in self._fds:
+            os.close(fd)
+
+    def _new_fd(self) -> int:
+        fd = os.open(os.devnull, os.O_RDONLY)
+        self._fds.append(fd)
+        return fd
+
     def _get_abi_version(self) -> int:
         return self._abi_version_override
 
     def _syscall_create_ruleset(self, handled_access_fs: int, handled_access_net: int) -> int:
         self.create_ruleset_calls.append((handled_access_fs, handled_access_net))
-        self.ruleset_fd = os.dup(self._spy_fd)
+        self.ruleset_fd = self._new_fd()
         return self.ruleset_fd
 
     def _syscall_add_rule(self, ruleset_fd: int, allowed_access: int, path_fd: int) -> None:
