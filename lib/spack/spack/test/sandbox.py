@@ -191,5 +191,7 @@ def test_sandbox_network_blocking_requires_abi_v4():
     """Test that blocking network access on an older kernel raises a RuntimeError."""
     sandbox = SpyLandlockSandbox(abi_version=3)
 
-    with pytest.raises(RuntimeError, match="Blocking network access requires Landlock ABI v4\\+"):
+    with pytest.raises(
+        spack.sandbox.SandboxError, match="Blocking network access requires Landlock ABI v4\\+"
+    ):
         sandbox.apply(block_network=True)

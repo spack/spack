@@ -24,6 +24,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Union
 
+import spack.error
+
 # Linux landlock syscalls
 SYSCALL_LANDLOCK_CREATE_RULESET = 444
 SYSCALL_LANDLOCK_ADD_RULE = 445
@@ -213,13 +215,19 @@ class LandlockSandbox(Sandbox):
     def apply(self, block_network: bool = False):
         # Network access requires ABI v4
         if block_network and self.abi_version < 4:
-            raise RuntimeError(
+            raise SandboxError(
                 f"Blocking network access requires Landlock ABI v4+ (kernel 6.7+), "
                 f"but this kernel only supports ABI v{self.abi_version}."
             )
         net_flags = (
             LANDLOCK_ACCESS_NET_CONNECT_TCP | LANDLOCK_ACCESS_NET_BIND_TCP if block_network else 0
         )
+        try:
+            self._apply(net_flags)
+        except OSError as e:
+            raise SandboxError(f"Failed to apply build sandbox: {e}") from e
+
+    def _apply(self, net_flags: int) -> None:
         ruleset_fd = self._syscall_create_ruleset(self.write_flags | self.read_flags, net_flags)
 
         try:
@@ -249,7 +257,13 @@ class LandlockSandbox(Sandbox):
 
 
 def get_sandbox() -> Sandbox:
-    if platform.system() == "Linux":
+    if platform.system() != "Linux":
+        raise SandboxError("Build sandboxing is only supported on Linux")
+    try:
         return LandlockSandbox()
+    except OSError as e:
+        raise SandboxError(f"Landlock sandboxing is unavailable: {e}") from e
 
-    raise OSError("Sandboxing is not supported on this platform.")
+
+class SandboxError(spack.error.SpackError):
+    """Raised when the build sandbox cannot be set up or applied."""

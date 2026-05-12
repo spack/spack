@@ -674,7 +674,10 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     if not config.get("enable", False):
         return
 
-    sandbox = spack.sandbox.get_sandbox()
+    try:
+        sandbox = spack.sandbox.get_sandbox()
+    except spack.sandbox.SandboxError as e:
+        raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
     for dep in spec.traverse(root=False):
         if not dep.external:
@@ -699,7 +702,10 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     for p in config.get("allow_write", []):
         sandbox.allow_write(p)
 
-    sandbox.apply(block_network=not config.get("allow_network", True))
+    try:
+        sandbox.apply(block_network=not config.get("allow_network", True))
+    except spack.sandbox.SandboxError as e:
+        raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
 
 def _install(
