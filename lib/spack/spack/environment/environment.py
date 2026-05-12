@@ -1065,8 +1065,6 @@ class Environment:
         self._unify = None
         self.views: Dict[str, ViewDescriptor] = {}
 
-        #: Parser for spec lists
-        self._spec_lists_parser = SpecListParser()
         #: Specs from "spack.yaml"
         self.spec_lists: Dict[str, SpecList] = {}
         #: Information on concretized roots
@@ -1269,11 +1267,11 @@ class Environment:
     # TODO/50207: user specs.
     def _sync_speclists(self):
         toolchains = spack.config.CONFIG.get("toolchains", {})
-        self._spec_lists_parser = SpecListParser(toolchains=toolchains)
+        parser = SpecListParser(toolchains=toolchains)
 
         self.spec_lists = {}
         self.spec_lists.update(
-            self._spec_lists_parser.parse_definitions(
+            parser.parse_definitions(
                 data=spack.config.CONFIG.get("definitions", [])
             )
         )
@@ -1286,7 +1284,7 @@ class Environment:
             tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
 
             key = self._user_specs_key(group=group)
-            self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
+            self.spec_lists[key] = parser.parse_user_specs(
                 name=key, yaml_list=self.manifest.user_specs(group=group)
             )
 
