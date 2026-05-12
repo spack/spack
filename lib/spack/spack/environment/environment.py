@@ -1152,44 +1152,22 @@ class Environment:
 
     def _process_included_lockfiles(self):
         """Extract and load into memory included lock file data."""
-        includes = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
-        if includes:
+        self.included_concrete_env_root_dirs = []
+
+        _old_includes = self.manifest[TOP_LEVEL_KEY].get(lockfile_include_key, [])
+        if _old_includes:
             tty.warn(
                 f"Use of '{lockfile_include_key}' in manifest files "
                 f"is deprecated. The key should be '{manifest_include_name}' "
                 f"and the path should end with '{lockfile_name}'. Run "
                 f"'spack env update {self.name}' to update the manifest."
             )
-            includes = [os.path.join(inc, lockfile_name) for inc in includes]
-        includes += self.manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
-        if not includes:
-            return
+            self.included_concrete_env_root_dirs = _old_includes
 
-        # Expand config and environment variables for concrete environments,
-        # indicated by the inclusion of lock files.
-        self.included_concrete_env_root_dirs = []
-
-        for entry in includes:
-            include = spack.config.included_path(entry)
-            if isinstance(include, spack.config.GitIncludePaths):
-                # Git includes must be cloned first; paths are relative to the
-                # clone destination, not to the manifest directory.
-                destination = include._clone(self.manifest.env_config_scope)
-                if destination is None:
-                    continue
-                resolved = [os.path.join(destination, p) for p in include.paths]
-            else:
-                resolved = [
-                    spack.util.path.canonicalize_path(p, default_wd=self.path)
-                    for p in include.paths
-                ]
-
-            for path in resolved:
-                if os.path.basename(path) != lockfile_name:
-                    continue
-
-                tty.debug(f"Adding {path} to the concrete environment root directories")
-                self.included_concrete_env_root_dirs.append(os.path.dirname(path))
+        # Implicitly clones remote scopes and resolves all paths
+        self.included_concrete_env_root_dirs += [
+            os.path.dirname(f.path) for f in self.manifest.env_config_scope.included_lockfiles
+        ]
 
         # Cache concrete environments for required lock files.
         self._load_concrete_include_data()
