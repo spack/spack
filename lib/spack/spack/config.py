@@ -81,6 +81,9 @@ from spack.util.spack_yaml import get_mark_from_yaml_data
 
 from .enums import ConfigScopePriority
 
+
+ScopeLike = Union["ConfigScope", "IncludedLockfile"]
+
 #: Dict from section names -> schema for that section
 SECTION_SCHEMAS: Dict[str, Any] = {
     "compilers": spack.schema.compilers.schema,
@@ -164,36 +167,52 @@ class ConfigScope:
 
     @property
     def included_scopes(self) -> List["ConfigScope"]:
-        """Memoized list of included scopes, in the order they appear in this scope."""
         if self._included_scopes is None:
-            self._included_scopes = []
-
-            includes = self.get_includes()
-            if includes:
-                if "include" not in includes:
-                    return self._included_scopes
-
-                include_paths = [included_path(data) for data in includes["include"]]
-                tty.debug(
-                    f"Processing included paths: {[str(path) for path in include_paths]}", level=3
-                )
-                included_scopes = chain(*[include.scopes(self) for include in include_paths])
-
-                for included_scope in included_scopes:
-                    # Do not include duplicate scopes
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
-                        continue
-
-                    if included_scope not in self._included_scopes:
-                        self._included_scopes.append(included_scope)
+            self._read_included_scopes()
 
         tty.debug(
             f"{self.name} has {'' if len(self._included_scopes) else 'no '}"
             f"included scopes: {self._included_scopes}",
             level=3,
         )
+
         return self._included_scopes
+
+    @property
+    def included_lockfiles(self) -> List[IncludedLockfile]:
+        if self._included_lockfiles is None:
+            self._read_included_scopes()
+        return self._included_lockfiles
+
+    def _read_included_scopes(self) -> List["ConfigScope"]:
+        """Memoized list of included scopes, in the order they appear in this scope."""
+        self._included_scopes = []
+        self._included_lockfiles = []
+
+        includes = self.get_includes()
+        if includes:
+            if "include" not in includes:
+                return self._included_scopes
+
+            include_paths = [included_path(data) for data in includes["include"]]
+            tty.debug(
+                f"Processing included paths: {[str(path) for path in include_paths]}", level=3
+            )
+            included_scopes = chain(*[include.scopes(self) for include in include_paths])
+
+            for included_scope in included_scopes:
+                # If it's a lockfile, sort it accordingly
+                if isinstance(included_scope, IncludedLockfile):
+                    if included_scope not in self._included_lockfiles:
+                        self._included_lockfiles.append(included_scope)
+                    continue
+
+                # Do not include duplicate scopes
+                if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                    tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                    continue
+
+                self._included_scopes.append(included_scope)
 
     @property
     def exists(self) -> bool:
@@ -516,6 +535,15 @@ class InternalConfigScope(ConfigScope):
                 result[key] = copy.copy(sv)
 
         return result
+
+
+class IncludedLockfile:
+    """This is a placeholder scope-like class for handling includes of lockfiles."""
+    def __init__(self, path: str):
+        self.path = path
+
+    def __eq__(self, other):
+        return self.path == other.path
 
 
 def _config_mutator(method):
@@ -1189,7 +1217,7 @@ class OptionalInclude:
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
-    ) -> Optional[ConfigScope]:
+    ) -> ScopeLike:
         """Instantiate a configuration scope for a configuration path.
 
         Args:
@@ -1197,7 +1225,7 @@ class OptionalInclude:
             config_path: configuration path
             parent_scope: including scope
 
-        Returns: configuration scope or ``None``
+        Returns: configuration scope or IncludedLockfile placeholder
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -1213,7 +1241,7 @@ class OptionalInclude:
                 f"Ignoring inclusion of lock file '{path}' since it is processed "
                 "in the environment."
             )
-            return None
+            return IncludedLockfile(config_path)
 
         # Ensure the parent scope is valid
         self._validate_parent_scope(parent_scope)
@@ -1306,14 +1334,15 @@ class OptionalInclude:
 
         return (not self.when) or spack.spec.eval_conditional(self.when)
 
-    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ScopeLike]:
         """Instantiate configuration scopes.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes for configuration files IF the when
-            condition is satisfied; otherwise, an empty list.
+            condition is satisfied; otherwise, an empty list. Scopes may include
+            IncludedLockfile placeholders.
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -1371,14 +1400,15 @@ class IncludePath(OptionalInclude):
             f"destination={self.destination})"
         )
 
-    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ScopeLike]:
         """Instantiate a configuration scope for the included path.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes for configuration files IF the when
-            condition is satisfied; otherwise, an empty list.
+            condition is satisfied; otherwise, an empty list. List may include
+            IncludedLockfile placeholders.
 
         Raises:
             AssertionError: unable to write to the directory
@@ -1536,14 +1566,15 @@ class GitIncludePaths(OptionalInclude):
             os.path.join(self.destination, ".git")  # type: ignore[arg-type]
         )
 
-    def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
+    def scopes(self, parent_scope: ConfigScope) -> List[ScopeLike]:
         """Instantiate configuration scopes for the included paths.
 
         Args:
             parent_scope: including scope
 
         Returns: configuration scopes for configuration files IF the when
-            condition is satisfied; otherwise, an empty list.
+            condition is satisfied; otherwise, an empty list. List may include
+            IncludedLockfile placeholders
 
         Raises:
             ConfigFileError: unable to access remote configuration file(s)
