@@ -697,7 +697,7 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     for p in config.get("allow_write", []):
         sandbox.allow_write(p)
 
-    sandbox.apply(block_network=not config.get("allow_network", False))
+    sandbox.apply(block_network=not config.get("allow_network", True))
 
 
 def _install(
