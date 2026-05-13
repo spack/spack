@@ -2217,9 +2217,8 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
     # include concrete spec vs reuse due to the reuse configuration
     _config["concretizer"].update({"unify": False})
 
-    combined_env.manifest.configuration.update(_config)
-    combined_env.manifest.changed = True
-    combined_env.write()
+    with combined_env.manifest.use_config():
+        spack.config.CONFIG.set("concretizer", _config["concretizer"], scope=combined_env.manifest.env_config_scope.name)
 
     return override_env
 
