@@ -1188,6 +1188,22 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     return errors
 
 
+@package_directives
+def _ensure_maintainers_are_not_placeholders(pkgs, error_cls):
+    """Ensure placeholder maintainers are not defined in the package."""
+    errors = []
+    placeholder_maintainers = ("github_user1", "github_user2")
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+
+        for maintainer in pkg_cls.maintainers:
+            if maintainer in placeholder_maintainers:
+                summary = f"Package '{pkg_name}' has placeholder maintainers"
+                details = [f"Remove placeholder maintainer: {maintainer}"]
+                errors.append(error_cls(summary, details))
+    return errors
+
+
 def _issues_in_directive_constraint(pkg, constraint, *, directive, error_cls, filename, requestor):
     errors = []
     errors.extend(
