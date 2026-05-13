@@ -3482,14 +3482,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
-        view_data = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
-        if isinstance(view_data, collections.abc.Mapping):
-            view_data.pop(default_view_name)
-            spack.config.CONFIG.set("view", view_data)
-            self.changed = True
-            return
+        with self.use_config():
+            view_data = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
+            if isinstance(view_data, collections.abc.Mapping):
+                view_data.pop(default_view_name)
+                spack.config.CONFIG.set("view", view_data)
+                self.changed = True
+                return
 
-        self.set_default_view(view=False)
+            self.set_default_view(view=False)
 
     def flush(self) -> None:
         """Synchronizes the object with the manifest file on disk."""
