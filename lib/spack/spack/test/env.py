@@ -273,7 +273,9 @@ def test_update_default_view(init_view, update_value, tmp_path: pathlib.Path, co
     if isinstance(init_view, str) and update_value is True:
         expected_value = init_view
 
-    assert env.manifest.yaml_content["spack"]["view"] == expected_value
+    with env.manifest.use_config():
+        current = spack.config.CONFIG.get("view", scope=env.manifest.scope_name)
+    assert current == expected_value
 
 
 @pytest.mark.parametrize(
@@ -409,7 +411,9 @@ spack:
     env.add("pkg-a")
 
     assert len(env.user_specs) == 1
-    assert env.manifest.yaml_content["spack"]["specs"] == ["pkg-a"]
+    with env.manifest.use_config():
+        specs = spack.config.CONFIG.get("specs")
+        assert specs == ["pkg-a"]
 
 
 @pytest.mark.parametrize(
@@ -675,6 +679,8 @@ spack:
     )
     s = spack.spec.Spec(spec_str)
     spack_yaml = EnvironmentManifestFile(tmp_path)
+    spack_yaml.init_user_specs()
+
     # Doing a round trip str -> Spec -> str normalizes the representation
     spack_yaml.remove_user_spec(str(s))
     spack_yaml.flush()
@@ -1668,7 +1674,9 @@ def create_temporary_manifest(tmp_path):
 
     def _create(spack_yaml: str):
         manifest_path.write_text(spack_yaml)
-        return EnvironmentManifestFile(tmp_path)
+        manifest = EnvironmentManifestFile(tmp_path)
+        manifest.init_user_specs()
+        return manifest
 
     return _create
 
@@ -2194,21 +2202,22 @@ spack:
     for pkg in pkgs:
         assert spack.spec.Spec(pkg) in user_specs
 
-    # ensure the included environment scopes are found
-    pattern = rf"^env:{str(tmp_path)}"
-    assert len(mutable_config.matching_scopes(rf"{pattern}$")) == 1  # environment's scope
-    hash_pattern = "[0-9a-fA-F]{7}"
-    assert (
-        len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
-    )  # 1st level includes
-    hash_pattern = rf"{hash_pattern}:{hash_pattern}"
-    assert (
-        len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
-    )  # 2nd level includes
+    with e.manifest.use_config():
+        # ensure the included environment scopes are found
+        pattern = rf"^env:{str(tmp_path)}"
+        assert len(mutable_config.matching_scopes(rf"{pattern}$")) == 1  # environment's scope
+        hash_pattern = "[0-9a-fA-F]{7}"
+        assert (
+            len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+        )  # 1st level includes
+        hash_pattern = rf"{hash_pattern}:{hash_pattern}"
+        assert (
+            len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+        )  # 2nd level includes
 
-    # ensure the install root matches the top-most (i.e., environment's) configured path
-    config_install_root = mutable_config.get("config:install_tree:root", None)
-    assert config_install_root == str(install_root)
+        # ensure the install root matches the top-most (i.e., environment's) configured path
+        config_install_root = mutable_config.get("config:install_tree:root", None)
+        assert config_install_root == str(install_root)
 
 
 def test_env_include_env_highest_config(tmp_path, config):
