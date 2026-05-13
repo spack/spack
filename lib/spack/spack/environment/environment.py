@@ -3429,24 +3429,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         self.changed = True
 
-    def override_include(self, include: Union[str, dict], idx: int) -> None:
-        """Overrides the included path data at index idx with the one passed as input.
-        Args:
-            include: new include data
-            idx: index of the include to be overridden
-
-        Raises:
-            SpackEnvironmentError: when the include cannot be overridden
-        """
-        current_include = spack.config.CONFIG.get("include", [], scope=self.scope_name)
-        try:
-            current_include[idx] = include
-            spack.config.CONFIG.set("include", current_include, scope=self.scope_name)
-            self.changed = True
-        except ValueError as e:
-            msg = f"cannot override '{current_include}' with '{include}'"
-            raise SpackEnvironmentError(msg) from e
-
     def add_definition(self, user_spec: str, list_name: str) -> None:
         """Appends a user spec to the first active definition matching the name passed as argument.
 
