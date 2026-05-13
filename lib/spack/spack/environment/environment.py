@@ -3047,35 +3047,32 @@ def initialize_environment_dir(
         include for include in included_paths if isinstance(include, spack.config.IncludePath)
     ]
     for idx, include in enumerate(included_paths):
-        if os.path.isabs(include.path):
+        path = include.path
+
+        if os.path.isabs(path):
             continue
 
-        abspath = pathlib.Path(os.path.normpath(environment_dir / include.path))
+        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
         common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
         if common_path != environment_dir:
-            tty.warn(
-                f"Relative include path ({include.path}) is outside environment "
-                "so will retain as is"
-            )
+            tty.debug(f"Will not copy relative include file from outside environment: {path}")
             continue
 
-        orig_abspath = os.path.normpath(envfile.parent / include.path)
-        if not os.path.exists(orig_abspath):
-            tty.warn(f"Include '{include.path}' does not exist so will retain as is")
-            continue
-
+        orig_abspath = os.path.normpath(envfile.parent / path)
         if os.path.isfile(orig_abspath):
-            manifest.override_include(new_include(include, orig_abspath), idx)
-        else:
-            if os.path.exists(abspath):
-                tty.warn(
-                    f"Skipping replacement of duplicate directory ({include.path}) "
-                    f"since {abspath} exists"
-                )
-                continue
-            manifest.override_include(new_include(include, orig_abspath), idx)
+            fs.touchp(abspath)
+            shutil.copy(orig_abspath, abspath)
+            continue
 
-    manifest.flush()
+        if not os.path.exists(orig_abspath):
+            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            continue
+
+        if os.path.exists(abspath):
+            tty.warn(f"Skipping copy of directory over existing path: {path}")
+            continue
+
+        shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
