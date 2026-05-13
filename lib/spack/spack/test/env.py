@@ -2206,13 +2206,13 @@ spack:
         # ensure the included environment scopes are found
         pattern = rf"^env:{str(tmp_path)}"
         assert len(mutable_config.matching_scopes(rf"{pattern}$")) == 1  # environment's scope
-        hash_pattern = "[0-9a-fA-F]{7}"
+        inc_pattern = rf"{str(includes_dir)}/({'|'.join(pkgs)})/spack\.yaml"
         assert (
-            len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+            len(mutable_config.matching_scopes(rf"{pattern}:{inc_pattern}$")) == 2
         )  # 1st level includes
-        hash_pattern = rf"{hash_pattern}:{hash_pattern}"
+        leaf_pattern = rf"{str(includes_dir)}/({'|'.join(pkgs)})/config\.yaml"
         assert (
-            len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+            len(mutable_config.matching_scopes(rf"{pattern}:{inc_pattern}:{leaf_pattern}$")) == 2
         )  # 2nd level includes
 
         # ensure the install root matches the top-most (i.e., environment's) configured path
