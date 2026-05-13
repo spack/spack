@@ -867,7 +867,7 @@ class Configuration:
 
         # no config files -- empty config.
         if section not in merged_section:
-            return syaml.syaml_dict()
+            return get_valid_type(section)
 
         # take the top key off before returning.
         ret = merged_section[section]
