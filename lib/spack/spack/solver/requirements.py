@@ -117,7 +117,7 @@ class RequirementRule(NamedTuple):
 def preference(
     pkg_name: str,
     constraint: spack.spec.Spec,
-    condition: spack.spec.Spec = spack.spec.Spec(),
+    condition: spack.spec.Spec = spack.spec.EMPTY_SPEC,
     origin: RequirementOrigin = RequirementOrigin.PREFER_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
@@ -141,7 +141,7 @@ def preference(
 def conflict(
     pkg_name: str,
     constraint: spack.spec.Spec,
-    condition: spack.spec.Spec = spack.spec.Spec(),
+    condition: spack.spec.Spec = spack.spec.EMPTY_SPEC,
     origin: RequirementOrigin = RequirementOrigin.CONFLICT_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
@@ -277,12 +277,12 @@ class RequirementParser:
         # The item is either a string or an object with at least a "spec" attribute
         if isinstance(item, str):
             spec = self._parse_and_expand(item)
-            condition = spack.spec.Spec()
+            condition = spack.spec.EMPTY_SPEC
             message = None
         else:
             spec = self._parse_and_expand(item["spec"])
             when_str = item.get("when")
-            condition = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
+            condition = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
         _check_unknown_targets([raw_key], [spec], always_warn=True)
@@ -339,7 +339,7 @@ class RequirementParser:
                 _check_unknown_targets(raw_strs, constraints)
                 _check_unknown_virtuals_on_edges(raw_strs, constraints)
                 when_str = requirement.get("when")
-                when = self._parse_and_expand(when_str) if when_str else spack.spec.Spec()
+                when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
 
                 constraints = [
                     x
