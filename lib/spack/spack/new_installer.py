@@ -186,8 +186,9 @@ class ChildInfo(DatabaseAction):
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
 
-    def cleanup(self, selector: selectors.BaseSelector) -> None:
-        """Unregister and close file descriptors, and join the child process."""
+    def close(self, selector: selectors.BaseSelector) -> int:
+        """Unregister and close file descriptors, and join the child process.
+        Returns the exit code of the child process."""
         try:
             selector.unregister(self.output_r_conn.fileno())
         except KeyError:
@@ -204,6 +205,11 @@ class ChildInfo(DatabaseAction):
         self.state_r_conn.close()
         self.control_w_conn.close()
         self.proc.join()
+        exit_code = self.proc.exitcode
+        assert exit_code is not None, "Finished build should have exit code set"
+        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
+            self.proc.close()
+        return exit_code
 
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
@@ -2751,9 +2757,7 @@ class PackageInstaller:
         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
         self._drain_child_state(build, selector)
-        build.cleanup(selector)
-        exitcode = build.proc.exitcode
-        assert exitcode is not None, "Finished build should have exit code set"
+        exitcode = build.close(selector)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
