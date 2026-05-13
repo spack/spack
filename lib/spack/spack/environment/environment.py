@@ -3317,12 +3317,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: when the user spec cannot be overridden
         """
+
         try:
-            specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
-            specs_yaml[idx] = user_spec
-            spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
-            self._clear_user_specs()
-            self.init_user_specs()
+            with self.use_config():
+                specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
+                specs_yaml[idx] = user_spec
+                spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
+                self._clear_user_specs()
+                self.init_user_specs()
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
