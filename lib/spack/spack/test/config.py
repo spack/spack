@@ -2132,3 +2132,44 @@ def test_config_invalid_scope(mock_low_high_config):
     err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
+
+
+def test_config_add_set_whole_section_empty(mock_low_high_config):
+    """Test adding an override to set an entire config section."""
+    spack.config.add("upstreams::{}", scope="low")
+
+    result = spack.config.get("upstreams", scope="low")
+    assert result == {}
+
+    # Verify it's written with override syntax in the file
+    config_file = spack.config.CONFIG.get_config_filename("low", "upstreams")
+    with open(config_file) as f:
+        data = syaml.load_config(f)
+    (section_key,) = data.keys()
+    assert section_key.override
+    assert not data["upstreams"]
+
+
+def test_config_add_override_whole_section_existing(mock_low_high_config, write_config_file):
+    """Test using override to replace pre-existing config section."""
+    upstream_data = {
+        "upstreams": {"spack-instance-1": {"install_tree": "/path/to/upstream/install"}}
+    }
+    write_config_file("upstreams", upstream_data, "low")
+
+    result = spack.config.get("upstreams", scope="low")
+    assert "spack-instance-1" in result
+
+    # Add an override in the high scope to disable upstreams
+    spack.config.add("upstreams::{}", scope="high")
+
+    # Verify the override took effect (high scope wins)
+    result = spack.config.get("upstreams")
+    assert result == {}
+
+    config_file = spack.config.CONFIG.get_config_filename("high", "upstreams")
+    with open(config_file) as f:
+        data = syaml.load_config(f)
+    (section_key,) = data.keys()
+    assert section_key.override
+    assert not data["upstreams"]
