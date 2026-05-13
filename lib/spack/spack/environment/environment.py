@@ -1095,6 +1095,7 @@ class Environment:
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(self.path, self.name)
             with self.manifest.use_config():
+                self.manifest.init_user_specs()
                 self._read()
 
     @contextlib.contextmanager
@@ -3174,6 +3175,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         default_content = manifest_dir / manifest_name
         default_content.write_text(default_manifest_yaml())
         manifest = EnvironmentManifestFile(manifest_dir)
+        manifest.init_user_specs()
 
         for group, specs in user_specs_by_group.items():
             for spec in specs:
@@ -3208,11 +3210,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
         # Whether specs in each group are marked explicit
         self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
-        self._init_user_specs()
 
         self.changed = False
 
-    def _init_user_specs(self):
+    def init_user_specs(self):
         with self.use_config():
             specs_yaml = spack.config.CONFIG.get("specs", [])
         for item in specs_yaml:
@@ -3390,7 +3391,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             specs_yaml[idx] = user_spec
             spack.config.CONFIG.set("specs", specs_yaml, scope=self.scope_name)
             self._clear_user_specs()
-            self._init_user_specs()
+            self.init_user_specs()
         except ValueError as e:
             msg = f"cannot override {user_spec} from {self}"
             raise SpackEnvironmentError(msg) from e
