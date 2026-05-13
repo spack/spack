@@ -55,8 +55,8 @@ def get_checksums(spec):
 
     # Get SHA256 from version metadata if available
     version_metadata = getattr(spec.package, "versions", {})
-    vmeta = version_metadata.get(spec.version) or version_metadata.get(str(spec.version)) or {}
-    sha256 = vmeta.get("sha256") if hasattr(vmeta, "get") else getattr(vmeta, "sha256", None)
+    vmeta = version_metadata.get(spec.version) or {}
+    sha256 = vmeta.get("sha256", None)
     if sha256:
         checksums.append({"algorithm": "SHA256", "checksumValue": sha256})
 
