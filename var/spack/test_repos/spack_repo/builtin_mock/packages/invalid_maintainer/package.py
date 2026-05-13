@@ -7,7 +7,7 @@ from spack.package import *
 class InvalidMaintainer(Package):
     """Package with invalid maintainers (placeholders)."""
 
-    url = "https://www.example.com/archive/v1.0.tar.gz"
+    url = "https://www.invalid-maintainer.org/archive/v1.0.tar.gz"
 
     maintainers("github_user1", "github_user2")
 
