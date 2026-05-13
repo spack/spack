@@ -1174,11 +1174,10 @@ class OptionalInclude:
                 prefer_modify=self.prefer_modify,
                 included=True,
             )
-
-        if ext and not is_dir:
-            raise ValueError(
-                f"File-based scope does not exist yet: should have a .yaml/.yml extension \
-for file scopes, or no extension for directory scopes (currently {ext})"
+        if not is_dir:
+            tty.debug(
+                f"Optional scope {config_path} does not exist. Treating as Directory Scope."
+                " To include as file scope, use .yml|.yaml extension"
             )
 
         # directories are treated as regular ConfigScopes
