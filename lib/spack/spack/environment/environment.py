@@ -1076,10 +1076,11 @@ class Environment:
 
     def _read(self):
         """Set up user specs and views from the manifest file."""
-        self.views = {}
-        self._sync_speclists()
-        self._process_view(spack.config.get("view", True))
-        self._process_included_lockfiles()
+        with self.manifest.use_config():
+            self.views = {}
+            self._sync_speclists()
+            self._process_view(spack.config.get("view", True))
+            self._process_included_lockfiles()
 
         # self._read_lockfile() is needed for correctness even without the version check
         if os.path.exists(self.lock_path):
@@ -3359,7 +3360,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                 msg += f"\n\t`spack -e {env} concretize`"
             raise SpackEnvironmentError(msg)
 
-        self.configuration[manifest_include_name] = concrete_paths
+        with self.use_config():
+            spack.config.CONFIG.set("include", concrete_paths)
+
         self.changed = True
 
     def override_include(self, include: Union[str, dict], idx: int) -> None:
