@@ -49,7 +49,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def dependencies(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
-        tty.die("spack dependencies takes only one spec.")
+        args.subparser.error("takes only one spec")
 
     if args.installed:
         env = ev.active_environment()

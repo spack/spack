@@ -65,7 +65,7 @@ import re
 import sys
 import textwrap
 from contextlib import contextmanager
-from typing import Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import IO, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 
 class ColorParseError(Exception):
@@ -375,7 +375,7 @@ def cextra(string: str) -> int:
     return len("".join(re.findall(r"\033[^m]*m", string)))
 
 
-def cwrite(string: str, stream: Optional[io.IOBase] = None, color: Optional[bool] = None) -> None:
+def cwrite(string: str, stream: Optional[IO[str]] = None, color: Optional[bool] = None) -> None:
     """Replace all color expressions in string with ANSI control
     codes and write the result to the stream.  If color is
     False, this will write plain text with no color.  If True,
@@ -388,7 +388,7 @@ def cwrite(string: str, stream: Optional[io.IOBase] = None, color: Optional[bool
     stream.write(colorize(string, color=color))
 
 
-def cprint(string: str, stream: Optional[io.IOBase] = None, color: Optional[bool] = None) -> None:
+def cprint(string: str, stream: Optional[IO[str]] = None, color: Optional[bool] = None) -> None:
     """Same as cwrite, but writes a trailing newline to the stream."""
     cwrite(string + "\n", stream, color)
 

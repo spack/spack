@@ -859,7 +859,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = spack.cmd.require_active_env(cmd_name="env loads")
+    env = spack.cmd.require_active_env(args.subparser)
 
     # Set the module types that have been selected
     module_type = args.module_type
@@ -1033,7 +1033,7 @@ def env_depfile_setup_parser(subparser):
 
 def env_depfile(args):
     # Currently only make is supported.
-    spack.cmd.require_active_env(cmd_name="env depfile")
+    spack.cmd.require_active_env(args.subparser)
 
     env = ev.active_environment()
 
@@ -1098,6 +1098,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
             description=spack.cmd.doc_dedented(setup_parser_cmd),
             help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
+        subsubparser.set_defaults(subparser=subsubparser)
         setup_parser_cmd(subsubparser)
 
 

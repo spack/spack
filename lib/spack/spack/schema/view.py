@@ -63,6 +63,12 @@ properties: Dict[str, Any] = {
                             "description": "How files are linked in the view: 'symlink' "
                             "(default), 'hardlink', or 'copy'",
                         },
+                        "link_dirs": {
+                            "type": "boolean",
+                            "description": "Whether to link directories in the view, or only files"
+                            " (default: true, only applicable when link_type is 'symlink')",
+                            "default": True,
+                        },
                         "select": {
                             "type": "array",
                             "items": {"type": "string"},

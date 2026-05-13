@@ -4,9 +4,10 @@
 
 import io
 import pathlib
+import re
 
 from spack.llnl.util.tty.color import color_when
-from spack.util.ctest_log_parser import CTestLogParser
+from spack.util.ctest_log_parser import CTestLogParser, LogEvent, _optimize_regexes
 from spack.util.log_parse import make_log_context
 
 
@@ -31,7 +32,7 @@ configure: error: cannot run C compiled programs.                           E
         )
 
     parser = CTestLogParser()
-    errors, warnings = parser.parse(str(log_file))
+    errors, warnings, _ = parser.parse(str(log_file))
 
     assert len(errors) == 4
     assert all(e.text.endswith("E") for e in errors)
@@ -48,7 +49,7 @@ def test_log_parser_stream():
         "/var/tmp/build/foo.py:60: warning: some weird warning              W\n"
     )
     parser = CTestLogParser()
-    errors, warnings = parser.parse(log)
+    errors, warnings, _ = parser.parse(log)
 
     assert len(errors) == 1
     assert errors[0].text.endswith("E")
@@ -64,7 +65,7 @@ def test_log_parser_preserves_leading_whitespace():
         "            ^\n"
     )
     parser = CTestLogParser()
-    errors, _ = parser.parse(log, context=6)
+    errors, _, _ = parser.parse(log, context=6)
 
     assert len(errors) == 1
     assert errors[0].post_context[0] == "    int y = x + 1;"
@@ -83,7 +84,7 @@ def test_make_log_context_merges_overlapping_events(tmp_path: pathlib.Path):
     log_file.write_text("".join(lines))
 
     parser = CTestLogParser()
-    errors, warnings = parser.parse(str(log_file), context=3)
+    errors, warnings, _ = parser.parse(str(log_file), context=3)
 
     log_events = sorted([*errors, *warnings], key=lambda e: e.line_no)
     output = make_log_context(log_events)
@@ -107,7 +108,7 @@ def test_make_log_context_warning_in_error_context_keeps_yellow(tmp_path: pathli
     log_file.write_text("".join(lines))
 
     parser = CTestLogParser()
-    errors, warnings = parser.parse(str(log_file), context=3)
+    errors, warnings, _ = parser.parse(str(log_file), context=3)
 
     assert len(errors) == len(warnings) == 1
 
@@ -126,5 +127,102 @@ def test_log_parser_non_utf8_bytes(tmp_path: pathlib.Path):
     log_file = tmp_path / "log.bin"
     log_file.write_bytes(b"checking things...\nerror: \x80\xff something broke\ndone\n")
     parser = CTestLogParser()
-    errors, _ = parser.parse(str(log_file))
+    errors, _, _ = parser.parse(str(log_file))
     assert len(errors) == 1
+
+
+def test_tail_renders_as_plain_context():
+    """A LogEvent should render all lines as plain context with no highlighting."""
+    lines = ["tail line 1", "tail line 2", "tail line 3"]
+    section = LogEvent(text=lines[-1], line_no=100, pre_context=lines[:-1])
+
+    with color_when(False):
+        output = make_log_context([section])
+
+    assert "-- lines 98 to 100 --" in output
+    # All lines should be plain context (indented with two spaces, no "> " prefix)
+    assert "  tail line 1\n" in output
+    assert "  tail line 2\n" in output
+    assert "  tail line 3\n" in output
+    assert "> " not in output
+
+
+def test_tail_overlapping_with_error():
+    """Tail lines overlapping with an error's context should not be duplicated."""
+    log = io.StringIO("line 1\nline 2\nline 3\nerror: something broke\nline 5\nline 6\nline 7\n")
+    parser = CTestLogParser()
+    errors, _, tail = parser.parse(log, context=2, tail=3)
+    assert len(errors) == 1
+    assert tail is not None
+
+    with color_when(False):
+        output = make_log_context([*errors, tail])
+
+    # "line 5" and "line 6" appear in both the error context and the tail,
+    # but should only appear once in the output
+    assert output.count("line 5") == 1
+    assert output.count("line 6") == 1
+    assert output.count("line 7") == 1
+
+
+def test_tail_only():
+    """A LogEvent with no errors/warnings renders correctly."""
+    lines = ["final line 1", "final line 2"]
+    section = LogEvent(text=lines[-1], line_no=51, pre_context=lines[:-1])
+
+    with color_when(False):
+        output = make_log_context([section])
+
+    assert "-- lines 50 to 51 --" in output
+    assert "  final line 1\n" in output
+    assert "  final line 2\n" in output
+
+
+class TestOptimizeRegexes:
+    def test_groups_by_first_char(self):
+        """Regexes sharing a first character are combined into one."""
+        result = _optimize_regexes(["bar", "far", "foo"])
+        assert len(result) == 2
+        assert result == ["bar", "far|foo"]
+
+    def test_singletons_unchanged(self):
+        """A regex that is the only one with its prefix is kept as-is."""
+        result = _optimize_regexes(["^unique pattern"])
+        assert result == ["^unique pattern"]
+
+    def test_escaping(self):
+        """Regexes starting with the same metacharacter are grouped too."""
+        result = _optimize_regexes(["\\(foo\\)", "\\(bar\\)", "\\*", "[abc]"])
+        assert len(result) == 3
+        assert "\\(bar\\)|\\(foo\\)" in result
+        assert "\\*" in result
+        assert "[abc]" in result
+
+    def test_semantics_preserved(self):
+        """Optimized regexes match the same strings as the originals."""
+        originals = [
+            "^FAIL: ",
+            "^FATAL: ",
+            "^failed ",
+            ": error",
+            ": warning",
+            "make: Fatal error",
+            "make\\[.*\\]: \\*\\*\\*",
+        ]
+        test_lines = [
+            "FAIL: test_something",
+            "FATAL: crash",
+            "failed to build",
+            "foo.c: error: syntax",
+            "foo.c: warning: unused",
+            "make: Fatal error in target",
+            "make[1]: *** Error 1",
+            "this matches nothing",
+        ]
+        compiled_orig = [re.compile(r) for r in originals]
+        compiled_opt = [re.compile(r) for r in _optimize_regexes(originals)]
+
+        for line in test_lines:
+            orig_match = any(r.search(line) for r in compiled_orig)
+            opt_match = any(r.search(line) for r in compiled_opt)
+            assert orig_match == opt_match, f"mismatch on {line!r}"

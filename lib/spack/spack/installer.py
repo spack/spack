@@ -2461,6 +2461,7 @@ class PackageInstaller:
 
         """
 
+        spack.store.STORE.install_sbang()
         self._init_queue()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))

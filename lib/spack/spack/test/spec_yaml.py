@@ -186,8 +186,8 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     # Dump to YAML and JSON
     yaml_string = syaml.dump(spec_dict, default_flow_style=False)
     yaml_string_rev = syaml.dump(spec_dict_rev, default_flow_style=False)
-    json_string = sjson.dump(spec_dict)
-    json_string_rev = sjson.dump(spec_dict_rev)
+    json_string = sjson.dumps(spec_dict)
+    json_string_rev = sjson.dumps(spec_dict_rev)
 
     # spec yaml is ordered like the spec dict
     assert yaml_string == spec_yaml

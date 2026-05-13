@@ -32,6 +32,7 @@ import hashlib
 import http.client
 import os
 import re
+import secrets
 import shutil
 import sys
 import time
@@ -1760,10 +1761,29 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class FsCache:
+class FsCacheBase:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
+    def store(self, fetcher, relative_dest):
+        dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        tmp = os.path.join(
+            os.path.dirname(dst), ".tmp." + secrets.token_hex(6) + "." + os.path.basename(dst)
+        )
+        open(tmp, "xb").close()
+        try:
+            fetcher.archive(tmp)
+            os.replace(tmp, dst)
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+
+class FsCache(FsCacheBase):
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
@@ -1773,9 +1793,7 @@ class FsCache:
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
-        fetcher.archive(dst)
+        super().store(fetcher, relative_dest)
 
     def fetcher(self, target_path: str, digest: Optional[str], **kwargs) -> CacheURLFetchStrategy:
         path = os.path.join(self.root, target_path)

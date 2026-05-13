@@ -13,6 +13,7 @@ import tarfile
 import urllib.error
 import urllib.request
 import urllib.response
+import warnings
 from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, NamedTuple, Optional
 
@@ -277,7 +278,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -292,7 +293,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config):
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
         index_cache_root
     )
     cache_list = buildcache_cmd("list", "-al")
@@ -310,7 +311,7 @@ def test_use_bin_index_active_env_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -329,7 +330,7 @@ def test_use_bin_index_active_env_with_view(
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
         index_cache_root
     )
     cache_list = buildcache_cmd("list", "-al")
@@ -347,7 +348,7 @@ def test_use_bin_index_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryCacheIndex(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -367,7 +368,7 @@ def test_use_bin_index_with_view(
 
     # Now the test
     buildcache_cmd("list", "-al")
-    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryCacheIndex(
+    spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
         index_cache_root
     )
     cache_list = buildcache_cmd("list", "-al")
@@ -580,8 +581,8 @@ def test_v2_etag_fetching_304():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
-        url="https://www.example.com",
+    fetcher = spack.binary_distribution.EtagIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
     )
@@ -605,8 +606,8 @@ def test_v2_etag_fetching_200():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
-        url="https://www.example.com",
+    fetcher = spack.binary_distribution.EtagIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
     )
@@ -630,8 +631,8 @@ def test_v2_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = spack.binary_distribution.EtagIndexFetcherV2(
-        url="https://www.example.com",
+    fetcher = spack.binary_distribution.EtagIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,
     )
@@ -664,8 +665,10 @@ def test_v2_default_index_fetch_200():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
-        url="https://www.example.com", local_hash="outdated", urlopen=urlopen
+    fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        local_hash="outdated",
+        urlopen=urlopen,
     )
 
     result = fetcher.conditional_fetch()
@@ -695,8 +698,10 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
-        url="https://www.example.com", local_hash=None, urlopen=urlopen
+    fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        local_hash=None,
+        urlopen=urlopen,
     )
 
     result = fetcher.conditional_fetch()
@@ -725,8 +730,10 @@ def test_v2_default_index_not_modified():
         # No request to index.json should be made.
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
-        url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
+    fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        local_hash=index_json_hash,
+        urlopen=urlopen,
     )
 
     assert fetcher.conditional_fetch().fresh
@@ -745,8 +752,10 @@ def test_v2_default_index_invalid_hash_file(index_json):
             code=200,
         )
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
-        url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
+    fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        local_hash=index_json_hash,
+        urlopen=urlopen,
     )
 
     assert fetcher.get_remote_hash() is None
@@ -778,8 +787,10 @@ def test_v2_default_index_json_404():
 
         assert False, "Unexpected fetch {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcherV2(
-        url="https://www.example.com", local_hash="invalid", urlopen=urlopen
+    fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
+        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        local_hash="invalid",
+        urlopen=urlopen,
     )
 
     with pytest.raises(spack.binary_distribution.FetchIndexError, match="Could not fetch index"):
@@ -1267,7 +1278,7 @@ def test_etag_fetching_304():
             )
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.EtagIndexFetcher(
+    fetcher = spack.binary_distribution.EtagIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1294,7 +1305,7 @@ def test_etag_fetching_200(mock_index):
             )
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.EtagIndexFetcher(
+    fetcher = spack.binary_distribution.EtagIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1322,7 +1333,7 @@ def test_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = spack.binary_distribution.EtagIndexFetcher(
+    fetcher = spack.binary_distribution.EtagIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1348,7 +1359,7 @@ def test_default_index_fetch_200(mock_index):
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+    fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1377,7 +1388,7 @@ def test_default_index_404():
             fp=None,
         )
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+    fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1404,7 +1415,7 @@ def test_default_index_not_modified(mock_index):
         # No other request should be made.
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(
+    fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(
             "https://www.example.com", spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         ),
@@ -1488,3 +1499,28 @@ def test_mirror_metadata_with_view():
 
     with pytest.raises(spack.url_buildcache.MirrorMetadataError, match="Malformed string"):
         spack.binary_distribution.MirrorMetadata.from_string("https://dummy.io/__v3%asdf__@aview")
+
+
+def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mutable_config):
+    """Tests that BinaryIndexCache.update() does NOT warn when a mirror has no index but records
+    that information for later use.
+    """
+    mirror_url = url_util.path_to_file_url(str(tmp_path / "mirror_dir"))
+    mirror_url2 = url_util.path_to_file_url(str(tmp_path / "mirror_dir2"))
+    mutable_config.set("mirrors", {"test1": mirror_url, "test2": mirror_url2})
+
+    def no_index(*args, **kwargs):
+        raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
+
+    binary_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "index_cache"))
+    monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        binary_index.update()
+
+    concretization_warnings = [
+        w for w in caught if "cannot be used in concretization" in str(w.message)
+    ]
+    assert not concretization_warnings, "update() must not warn about concretization"
+    assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}

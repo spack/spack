@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, List, Optional, Set, Union
 from spack.vendor.typing_extensions import Literal
 
 import spack.config
+import spack.sandbox
 import spack.traverse
 
 if TYPE_CHECKING:
@@ -54,6 +55,14 @@ def create_installer(
             if s.build_spec is not s:
                 use_old_installer = True
                 break
+    if spack.config.get("config:sandbox:enable", False):
+        if use_old_installer:
+            raise spack.sandbox.SandboxError(
+                "config:sandbox:enable is only supported with config:installer:new"
+            )
+        # Probe sandbox support now so builds don't fail later inside a subprocess.
+        spack.sandbox.get_sandbox()
+
     if use_old_installer:
         from spack.installer import PackageInstaller  # type: ignore
     else:

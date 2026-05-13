@@ -37,6 +37,11 @@ Spack version |spack_version| supports package repositories with a Package API v
 Changelog
 ---------
 
+**v2.5** *(Spack v1.2.0)*
+
+* Added ``cuda-lang`` and ``hip-lang`` as language virtuals, analogous to ``c``, ``cxx``, and ``fortran``.
+  Packages that use CUDA or HIP can now declare explicit language dependencies on these virtuals.
+
 **v2.4** *(Spack v1.0.3)*
 
 * The ``%%`` operator can be used on input specs to set propagated preferences, which is particularly useful for ``unify: false`` environments.

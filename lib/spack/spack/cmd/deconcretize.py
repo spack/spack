@@ -74,7 +74,7 @@ def get_deconcretize_list(
 
 
 def deconcretize_specs(args, specs):
-    env = spack.cmd.require_active_env(cmd_name="deconcretize")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.specs:
         deconcretize_list = get_deconcretize_list(args, specs, env)
@@ -92,9 +92,9 @@ def deconcretize_specs(args, specs):
 
 def deconcretize(parser, args):
     if not args.specs and not args.all:
-        tty.die(
-            "deconcretize requires at least one spec argument.",
-            " Use `spack deconcretize --all` to deconcretize ALL specs.",
+        args.subparser.error(
+            "requires at least one spec argument\n"
+            "  use `spack deconcretize --all` to deconcretize ALL specs"
         )
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]

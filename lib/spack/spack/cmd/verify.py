@@ -20,28 +20,26 @@ description = "verify spack installations on disk"
 section = "admin"
 level = "long"
 
-MANIFEST_SUBPARSER: Optional[argparse.ArgumentParser] = None
-
 
 def setup_parser(subparser: argparse.ArgumentParser):
-    global MANIFEST_SUBPARSER
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="verify_command")
 
-    MANIFEST_SUBPARSER = sp.add_parser(
+    manifest_subparser = sp.add_parser(
         "manifest", help=verify_manifest.__doc__, description=verify_manifest.__doc__
     )
-    MANIFEST_SUBPARSER.add_argument(
+    manifest_subparser.set_defaults(subparser=manifest_subparser)
+    manifest_subparser.add_argument(
         "-l", "--local", action="store_true", help="verify only locally installed packages"
     )
-    MANIFEST_SUBPARSER.add_argument(
+    manifest_subparser.add_argument(
         "-j", "--json", action="store_true", help="output json-formatted errors"
     )
-    MANIFEST_SUBPARSER.add_argument("-a", "--all", action="store_true", help="verify all packages")
-    MANIFEST_SUBPARSER.add_argument(
+    manifest_subparser.add_argument("-a", "--all", action="store_true", help="verify all packages")
+    manifest_subparser.add_argument(
         "specs_or_files", nargs=argparse.REMAINDER, help="specs or files to verify"
     )
 
-    manifest_sp_type = MANIFEST_SUBPARSER.add_mutually_exclusive_group()
+    manifest_sp_type = manifest_subparser.add_mutually_exclusive_group()
     manifest_sp_type.add_argument(
         "-s",
         "--specs",
@@ -64,12 +62,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
     libraries_subparser = sp.add_parser(
         "libraries", help=verify_libraries.__doc__, description=verify_libraries.__doc__
     )
+    libraries_subparser.set_defaults(subparser=libraries_subparser)
 
     arguments.add_common_arguments(libraries_subparser, ["constraint"])
 
     versions_subparser = sp.add_parser(
         "versions", help=verify_versions.__doc__, description=verify_versions.__doc__
     )
+    versions_subparser.set_defaults(subparser=versions_subparser)
     arguments.add_common_arguments(versions_subparser, ["constraint"])
 
 
@@ -186,7 +186,7 @@ def verify_manifest(args):
 
     if args.type == "files":
         if args.all:
-            MANIFEST_SUBPARSER.error("cannot use --all with --files")
+            args.subparser.error("cannot use --all with --files")
 
         for file in args.specs_or_files:
             results = spack.verify.check_file_manifest(file)
@@ -217,7 +217,7 @@ def verify_manifest(args):
         env = ev.active_environment()
         specs = list(map(lambda x: spack.cmd.disambiguate_spec(x, env, local=local), spec_args))
     else:
-        MANIFEST_SUBPARSER.error("use --all or specify specs to verify")
+        args.subparser.error("use --all or specify specs to verify")
 
     for spec in specs:
         tty.debug("Verifying package %s")

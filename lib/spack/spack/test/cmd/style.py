@@ -155,7 +155,7 @@ def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""
     output = style("--root", str(tmp_path), fail_on_error=False)
     assert "This does not look like a valid spack root" in output
-    assert style.returncode != 0
+    assert style.returncode == 1
 
 
 @pytest.fixture
@@ -223,7 +223,7 @@ def test_external_root(external_style_root):
     output = style("--root-relative", "--root", str(tmp_path), fail_on_error=False)
 
     # make sure it failed
-    assert style.returncode != 0
+    assert style.returncode == 1
 
     # ruff-check error
     assert "Import block is un-sorted or un-formatted\n --> lib/spack/spack/dummy.py" in output
@@ -272,7 +272,7 @@ def test_style_with_errors(ruff_package_with_errors):
         "--tool", "ruff-check", "--root-relative", ruff_package_with_errors, fail_on_error=False
     )
     assert root_relative in output
-    assert style.returncode != 0
+    assert style.returncode == 1
     assert "spack style found errors" in output
 
 
@@ -280,7 +280,7 @@ def test_style_with_errors(ruff_package_with_errors):
 def test_style_with_ruff_format(ruff_package_with_errors):
     output = style("--tool", "ruff-format", ruff_package_with_errors, fail_on_error=False)
     assert "ruff-format found errors" in output
-    assert style.returncode != 0
+    assert style.returncode == 1
     assert "spack style found errors" in output
 
 

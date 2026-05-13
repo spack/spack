@@ -269,7 +269,7 @@ class StaticAnalysis(NoStaticAnalysis):
         configuration: spack.config.Configuration,
         repo: spack.repo.RepoPath,
         store: spack.store.Store,
-        binary_index: spack.binary_distribution.BinaryCacheIndex,
+        binary_index: spack.binary_distribution.BinaryIndexCache,
     ):
         self.store = store
         self.binary_index = binary_index

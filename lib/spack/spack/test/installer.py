@@ -1401,3 +1401,13 @@ def test_fallback_to_old_installer_for_splicing(monkeypatch, mock_packages, muta
     assert isinstance(
         spack.installer_dispatch.create_installer([out.package]), inst.PackageInstaller
     )
+
+
+@pytest.mark.disable_clean_stage_check
+def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_variant):
+    """Test that the log file is preserved when an install error occurs."""
+    pkg = spack.concretize.concretize_one("build-error").package
+    installer = spack.installer_dispatch.create_installer([pkg])
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert os.path.exists(pkg.log_path)

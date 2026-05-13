@@ -10,7 +10,6 @@ import spack.cmd
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.llnl.util.lang as lang
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.spec
 import spack.store
@@ -98,7 +97,7 @@ def spec(parser, args):
         env.concretize()
         concrete_specs = env.concrete_roots()
     else:
-        tty.die("spack spec requires at least one spec or an active environment")
+        args.subparser.error("requires at least one spec or an active environment")
 
     # With --yaml, --json, or --format, just print the raw specs to output
     if args.format:

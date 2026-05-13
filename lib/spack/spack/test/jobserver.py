@@ -366,7 +366,8 @@ class TestJobServer:
             js.close()
 
     def test_decrease_parallelism_no_token_available(self):
-        """When all tokens are held, decrease_parallelism defers the discard."""
+        """When all tokens are held, decrease_parallelism defers the discard.
+        A subsequent increase cancels the pending decrease instead of adding a token."""
         js = JobServer(3)
         try:
             # Drain the pipe so no tokens are available for immediate discard.
@@ -375,6 +376,10 @@ class TestJobServer:
             js.decrease_parallelism()
             # target_jobs decremented but num_jobs unchanged (no token to discard yet).
             assert js.target_jobs == original_num - 1
+            assert js.num_jobs == original_num
+            # increase should cancel the pending decrease, not write a new token.
+            js.increase_parallelism()
+            assert js.target_jobs == original_num
             assert js.num_jobs == original_num
         finally:
             js.close()

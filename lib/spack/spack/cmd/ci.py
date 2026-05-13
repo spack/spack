@@ -149,7 +149,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="Environment variables to forward from the generate environment "
         "to the generated jobs.",
     )
-    generate.set_defaults(func=ci_generate)
+    generate.set_defaults(func=ci_generate, subparser=generate)
 
     spack.cmd.common.arguments.add_concretizer_args(generate)
     spack.cmd.common.arguments.add_common_arguments(generate, ["jobs"])
@@ -159,7 +159,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     index = subparsers.add_parser(
         "rebuild-index", description=doc_dedented(ci_reindex), help=doc_first_line(ci_reindex)
     )
-    index.set_defaults(func=ci_reindex)
+    index.set_defaults(func=ci_reindex, subparser=index)
 
     # Handle steps of a ci build/rebuild
     rebuild = subparsers.add_parser(
@@ -192,7 +192,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="maximum time (in seconds) that tests are allowed to run",
     )
-    rebuild.set_defaults(func=ci_rebuild)
+    rebuild.set_defaults(func=ci_rebuild, subparser=rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
     # Facilitate reproduction of a failed CI build job
@@ -231,7 +231,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--gpg-url", help="URL to public GPG key for validating binary cache installs"
     )
 
-    reproduce.set_defaults(func=ci_reproduce)
+    reproduce.set_defaults(func=ci_reproduce, subparser=reproduce)
 
     # Verify checksums inside of ci workflows
     verify_versions = subparsers.add_parser(
@@ -241,7 +241,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
-    verify_versions.set_defaults(func=ci_verify_versions)
+    verify_versions.set_defaults(func=ci_verify_versions, subparser=verify_versions)
 
 
 def ci_generate(args):
@@ -252,7 +252,7 @@ def ci_generate(args):
     before invoking this command. the value must be the CDash authorization token needed to create
     a build group and register all generated jobs under it
     """
-    env = spack.cmd.require_active_env(cmd_name="ci generate")
+    env = spack.cmd.require_active_env(args.subparser)
     spack_ci.generate_pipeline(env, args)
 
 
@@ -263,7 +263,7 @@ def ci_reindex(args):
     use the active, gitlab-enabled environment to rebuild the buildcache index for the associated
     mirror
     """
-    env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
+    env = spack.cmd.require_active_env(args.subparser)
     yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
@@ -286,7 +286,7 @@ def ci_rebuild(args):
     """
     rebuild_timer = timer.Timer()
 
-    env = spack.cmd.require_active_env(cmd_name="ci rebuild")
+    env = spack.cmd.require_active_env(args.subparser)
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.

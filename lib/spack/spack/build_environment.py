@@ -1654,7 +1654,7 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
 
 
 def write_log_summary(out, log_type, log, last=None):
-    errors, warnings = parse_log_events(log)
+    errors, warnings, _ = parse_log_events(log)
     nerr = len(errors)
     nwar = len(warnings)
 

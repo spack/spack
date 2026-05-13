@@ -1643,3 +1643,23 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
     assert s.satisfies("%c=gcc@10")
     assert all(s[name].satisfies("%c=clang") for name in dependency_names)
     assert s["mpi"].satisfies("%c,cxx=clang %fortran=gcc@10")
+
+
+def test_prefer_when_condition_expands_toolchain(concretize_scope, mutable_config, mock_packages):
+    """Tests that toolchains in the 'when' condition of a 'prefer' rule must are expanded."""
+    # If the expansion to %gcc doesn't happen, the preference for @2.1 is silently ignored
+    mutable_config.set("toolchains", {"gcc_toolchain": "%c=gcc"}, scope="concretize")
+    update_packages_config("""
+packages:
+  multivalue-variant:
+    prefer:
+    - spec: "@2.1"
+      when: "%gcc_toolchain"
+""")
+
+    s_gcc = spack.concretize.concretize_one("multivalue-variant %c=gcc")
+    assert s_gcc.satisfies("@2.1 %c=gcc"), f"expected @2.1 with gcc, got {s_gcc.version}"
+
+    # With clang as compiler, condition does not fire -> default highest version @2.3
+    s_clang = spack.concretize.concretize_one("multivalue-variant %clang")
+    assert s_clang.satisfies("@2.3 %c=clang"), f"expected @2.3 with clang, got {s_clang.version}"

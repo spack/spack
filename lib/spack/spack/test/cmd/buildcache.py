@@ -515,6 +515,26 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
     assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
 
 
+def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
+    """When --allow-missing is passed, the push command should push installed specs and skip specs
+    that are not installed without raising an error."""
+
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+
+    # Uninstall mpich so that its dependent mpileaks can't be pushed
+    for s in mutable_database.query_local("mpich"):
+        s.package.do_uninstall(force=True)
+
+    # There should be warnings but no errors
+    buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
+
+    specs = spack.binary_distribution.update_cache_and_get_specs()
+
+    # Everything but mpich should be pushed
+    mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
+    assert set(specs) == {s for s in mpileaks.traverse() if s.name != "mpich"}
+
+
 def test_push_without_build_deps(
     tmp_path: pathlib.Path, temporary_store, mock_packages, mutable_config
 ):
@@ -1028,7 +1048,7 @@ def read_specs_in_index(mirror_directory, view):
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
+    fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return set([h for h in db_dict["database"]["installs"]])

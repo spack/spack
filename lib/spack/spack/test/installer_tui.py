@@ -179,6 +179,30 @@ class TestBasicStateManagement:
         assert status.completed == 1
         assert status.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
+    def test_remove_build(self):
+        """Test that remove_build removes the build from the display."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_id = specs[0].dag_hash()
+
+        status.dirty = False
+        status.remove_build(build_id)
+        assert build_id not in status.builds
+        assert len(status.builds) == 1
+        assert status.dirty is True
+
+    def test_remove_build_resets_tracked(self):
+        """Test that removing the tracked build resets tracking to overview mode."""
+        status, _, _ = create_build_status(total=1)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.tracked_build_id = build_id
+        status.overview_mode = False
+        status.remove_build(build_id)
+        assert status.tracked_build_id == ""
+        assert status.overview_mode is True
+
     def test_parse_log_summary(self, tmp_path):
         """Test that parse_log_summary parses the build log and stores the summary."""
         status, _, _ = create_build_status()

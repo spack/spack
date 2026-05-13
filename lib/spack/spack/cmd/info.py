@@ -639,9 +639,9 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
 def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
-        tty.die(f"`spack info` requires exactly one spec. Parsed {len(specs)}")
+        args.subparser.error(f"requires exactly one spec, got {len(specs)}")
     if len(specs) == 0:
-        tty.die("`spack info` requires a spec.")
+        args.subparser.error("requires a spec")
 
     spec = specs[0]
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)

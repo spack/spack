@@ -7,6 +7,7 @@ import contextlib
 import hashlib
 import os
 import pathlib
+import shutil
 import sys
 from typing import Iterable, List
 
@@ -101,9 +102,16 @@ class BootstrapEnvironment(spack.environment.Environment):
                         if not spack.config.get("bootstrap:dev:enable_source", False)
                         else "auto"
                     )
-                    self.install_all(
-                        fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
-                    )
+                    try:
+                        self.install_all(
+                            fail_fast=True,
+                            root_policy=fetch_policy,
+                            dependencies_policy=fetch_policy,
+                        )
+                    except BaseException:
+                        # catch any exception as we always want to clean up
+                        shutil.rmtree(self.environment_root())
+                        raise
                     self.write(regenerate=True)
 
     def load(self) -> None:

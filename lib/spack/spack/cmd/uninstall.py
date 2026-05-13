@@ -295,9 +295,9 @@ def uninstall_specs(args, specs):
 
 def uninstall(parser, args):
     if not args.specs and not args.all:
-        tty.die(
-            "uninstall requires at least one package argument.",
-            "  Use `spack uninstall --all` to uninstall ALL packages.",
+        args.subparser.error(
+            "requires at least one package argument\n"
+            "  use `spack uninstall --all` to uninstall ALL packages"
         )
 
     # [None] here handles the --all case by forcing all specs to be returned

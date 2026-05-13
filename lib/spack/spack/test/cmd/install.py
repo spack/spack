@@ -681,21 +681,27 @@ def test_build_warning_output(mock_fetch, install_mockery):
     assert "foo.c:89: warning: some weird warning!" in e.value.long_message
 
 
-def test_cache_only_fails(mock_fetch, install_mockery):
+@pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
+def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
+    assert isinstance(install.error, spack.error.InstallError)
+    assert not spack.store.STORE.db.query_local("libdwarf")
+    assert not spack.store.STORE.db.query_local("libelf")
 
-    assert "Failed to install gcc-runtime" in out
-    assert "Skipping build of libdwarf" in out
-    assert "was not installed" in out
+    if installer_variant == "old":
+        assert "Failed to install gcc-runtime" in out
+        assert "Skipping build of libdwarf" in out
+        assert "was not installed" in out
 
-    # Check that failure prefix locks are still cached
-    failed_packages = [
-        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
-    ]
-    assert "libelf" in failed_packages
-    assert "libdwarf" in failed_packages
+        # Check that failure prefix locks are still cached
+        failed_packages = [
+            pkg_name
+            for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+        ]
+        assert "libelf" in failed_packages
+        assert "libdwarf" in failed_packages
 
 
 def test_install_only_dependencies(mock_fetch, install_mockery, installer_variant):
