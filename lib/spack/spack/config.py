@@ -1876,6 +1876,16 @@ def get_valid_type(path):
         validate(test_data, SECTION_SCHEMAS[section])
     except (ConfigFormatError, AttributeError) as e:
         jsonschema_error = e.validation_error
+
+        # Try to get the type from the default value
+        schema_path = jsonschema_error.schema_path
+        schema_part = SECTION_SCHEMAS[section]
+        for part in list(schema_path)[:-1]:
+            schema_part = schema_part[part]
+        if "default" in schema_part:
+            return schema_part["default"]
+
+        # If there is no default, infer the type from the validator
         if jsonschema_error.validator == "type":
             return types[jsonschema_error.validator_value]()
         elif jsonschema_error.validator in ("anyOf", "oneOf"):
