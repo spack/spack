@@ -8,21 +8,8 @@
 """
 from typing import Any, Dict
 
-from .spec_list import spec_list_properties, spec_list_schema
+from .spec_list import spec_list_properties, spec_list_schema, group_name_and_deps
 
-#: Properties for inclusion in other schemas
-group_name_and_deps = {
-    "group": {"type": "string", "description": "Name for this group of specs"},
-    "needs": {
-        "type": "array",
-        "description": "Groups of specs that are needed by this group",
-        "items": {"type": "string"},
-    },
-    "override": {
-        "description": "Top-most configuration scope for this group of specs",
-        "$ref": "#/properties",
-    },
-}
 
 properties: Dict[str, Any] = {
     "specs": {
