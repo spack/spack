@@ -3546,18 +3546,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(self, includes=True) -> None:
+    def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        if includes:
-            scope = self.env_config_scope
-        else:
-            scope = spack.config.SingleFileScope(
-                self.scope_name,
-                str(self.manifest_file),
-                spack.schema.env.schema,
-                yaml_path=[TOP_LEVEL_KEY],
-            )
-            scope._included_scopes = []  # TODO make this less hacky
+        scope = self.env_config_scope
         spack.config.CONFIG.push_scope(
             self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
         )
@@ -3567,10 +3558,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         spack.config.CONFIG.remove_scope(self.env_config_scope.name)
 
     @contextlib.contextmanager
-    def use_config(self, includes=True):
+    def use_config(self):
         """Ensure only the manifest's configuration scopes are global."""
         with no_active_environment():
-            self.prepare_config_scope(includes=includes)
+            self.prepare_config_scope()
             yield
             self.deactivate_config_scope()
 
