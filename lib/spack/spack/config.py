@@ -179,7 +179,7 @@ class ConfigScope:
         return self._included_scopes
 
     @property
-    def included_lockfiles(self) -> List[IncludedLockfile]:
+    def included_lockfiles(self) -> List["IncludedLockfile"]:
         if self._included_lockfiles is None:
             self._read_included_scopes()
         return self._included_lockfiles
