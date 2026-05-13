@@ -346,7 +346,7 @@ complete -c spack --erase
 # Everything below here is auto-generated.
 
 # spack
-set -g __fish_spack_optspecs_spack color= v/verbose k/insecure b/bootstrap V/version h/help H/all-help c/config= C/config-scope= e/env= D/env-dir= E/no-env use-env-repo d/debug t/backtrace pdb timestamp m/mock print-shell-vars= stacktrace l/enable-locks L/disable-locks p/profile profile-file= sorted-profile= lines=
+set -g __fish_spack_optspecs_spack color= v/verbose k/insecure b/bootstrap V/version h/help H/all-help c/config= C/config-scope= e/env= D/env-dir= E/no-env use-env-repo d/debug t/backtrace pdb timestamp m/mock print-shell-vars= stacktrace warn-writes-into-spack l/enable-locks L/disable-locks p/profile profile-file= sorted-profile= lines=
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a add -d 'add a spec to an environment'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a arch -d 'print architecture information about this machine'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a audit -d 'audit configuration files, packages, etc.'
@@ -466,6 +466,8 @@ complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -f -a 
 complete -c spack -n '__fish_spack_using_command ' -l print-shell-vars -r -d 'print info needed by setup-env.*sh'
 complete -c spack -n '__fish_spack_using_command ' -l stacktrace -f -a stacktrace
 complete -c spack -n '__fish_spack_using_command ' -l stacktrace -d 'add stacktraces to all printed statements'
+complete -c spack -n '__fish_spack_using_command ' -l warn-writes-into-spack -f -a warn_writes_into_spack
+complete -c spack -n '__fish_spack_using_command ' -l warn-writes-into-spack -d 'Warn when Spack tries to write into its own prefix'
 complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -f -a locks
 complete -c spack -n '__fish_spack_using_command ' -s l -l enable-locks -d 'use filesystem locking (default)'
 complete -c spack -n '__fish_spack_using_command ' -s L -l disable-locks -f -a locks
@@ -921,7 +923,7 @@ complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes
 complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack cd
-set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
+set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir install-root p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 cd' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -d 'show this help message and exit'
@@ -931,6 +933,8 @@ complete -c spack -n '__fish_spack_using_command cd' -s r -l spack-root -f -a sp
 complete -c spack -n '__fish_spack_using_command cd' -s r -l spack-root -d 'spack installation root'
 complete -c spack -n '__fish_spack_using_command cd' -s i -l install-dir -f -a install_dir
 complete -c spack -n '__fish_spack_using_command cd' -s i -l install-dir -d 'install prefix for spec (spec need not be installed)'
+complete -c spack -n '__fish_spack_using_command cd' -l install-root -f -a install_root
+complete -c spack -n '__fish_spack_using_command cd' -l install-root -d 'where spack installs specs'
 complete -c spack -n '__fish_spack_using_command cd' -s p -l package-dir -f -a package_dir
 complete -c spack -n '__fish_spack_using_command cd' -s p -l package-dir -d 'directory enclosing a spec'"'"'s package.py file'
 complete -c spack -n '__fish_spack_using_command cd' -l repo -l packages -s P -r -f -a repo
@@ -2262,7 +2266,7 @@ complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as ``spack find --loaded``'
 
 # spack location
-set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
+set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir install-root p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 location' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -d 'show this help message and exit'
@@ -2272,6 +2276,8 @@ complete -c spack -n '__fish_spack_using_command location' -s r -l spack-root -f
 complete -c spack -n '__fish_spack_using_command location' -s r -l spack-root -d 'spack installation root'
 complete -c spack -n '__fish_spack_using_command location' -s i -l install-dir -f -a install_dir
 complete -c spack -n '__fish_spack_using_command location' -s i -l install-dir -d 'install prefix for spec (spec need not be installed)'
+complete -c spack -n '__fish_spack_using_command location' -l install-root -f -a install_root
+complete -c spack -n '__fish_spack_using_command location' -l install-root -d 'where spack installs specs'
 complete -c spack -n '__fish_spack_using_command location' -s p -l package-dir -f -a package_dir
 complete -c spack -n '__fish_spack_using_command location' -s p -l package-dir -d 'directory enclosing a spec'"'"'s package.py file'
 complete -c spack -n '__fish_spack_using_command location' -l repo -l packages -s P -r -f -a repo
