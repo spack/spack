@@ -1195,12 +1195,12 @@ def _ensure_maintainers_are_not_placeholders(pkgs, error_cls):
     placeholder_maintainers = ("github_user1", "github_user2")
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        found_placeholders = set(pkg_cls.maintainers).intersection(placeholder_maintainers)
 
-        for maintainer in pkg_cls.maintainers:
-            if maintainer in placeholder_maintainers:
-                summary = f"Package '{pkg_name}' has placeholder maintainers"
-                details = [f"Remove placeholder maintainer: {maintainer}"]
-                errors.append(error_cls(summary, details))
+        if found_placeholders:
+            summary = f"Package '{pkg_name}' has placeholder maintainer(s)"
+            details = [f"Remove placeholder maintainer(s): {found_placeholders}"]
+            errors.append(error_cls(summary, details))
     return errors
 
 
