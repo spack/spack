@@ -83,13 +83,38 @@ def get_git() -> Executable:
 
 def get_repo_default_ref(repo: spack.repo.Repo) -> str:
     git = get_git()
+    full_default = ""
     with fsys.working_dir(repo.root):
-        full_default = git(
-            "rev-parse", "--abbrev-ref", "origin/HEAD", fail_on_error=False, output=str
+        res = git(
+            "rev-parse", "--abbrev-ref", "origin/HEAD", fail_on_error=False, output=str, error=str
         )
-    if git.returncode != 0:
-        raise RuntimeError("This repo is not a git repository")
-    return "/".join(full_default.strip("\n").split("/")[1:])
+        if git.returncode == 0 and res:
+            full_default = res.strip()
+
+        if git.returncode != 0 or not full_default or "origin/HEAD" in full_default:
+            ls_remote = git(
+                "ls-remote",
+                "--symref",
+                "origin",
+                "HEAD",
+                fail_on_error=False,
+                output=str,
+                error=str,
+            )
+            if git.returncode == 0 and ls_remote:
+                for line in ls_remote.splitlines():
+                    if line.startswith("ref:"):
+                        full_ref = line.split()[1]
+                        full_default = full_ref.split("/")[-1]
+                        break
+
+    if not full_default:
+        raise RuntimeError("Cannot determine default git ref")
+
+    if full_default.startswith("origin/"):
+        return full_default.replace("origin/", "", 1)
+
+    return full_default
 
 
 def get_repo_git_root(repo: spack.repo.Repo):
@@ -97,8 +122,28 @@ def get_repo_git_root(repo: spack.repo.Repo):
     with fsys.working_dir(repo.root):
         git_root = git("rev-parse", "--show-toplevel", fail_on_error=False, output=str, error=str)
     if git.returncode != 0:
-        raise RuntimeError(f"Encountered an error running git on {repo}: {git_root}")
+        tty.warn(f"Encountered an error running git on {repo}")
+        return None
     return Path(git_root.strip("\n"))
+
+
+def get_all_repo_py_files(repo: spack.repo.Repo):
+    """returns all python files in a given package repo"""
+    git = get_git()
+    with fsys.working_dir(repo.root):
+        all_files = git(
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "*.py",
+            fail_on_error=False,
+            output=str,
+            error=str,
+        )
+    if git.returncode != 0:
+        raise RuntimeError(f"Encountered and error running git on {repo}")
+    return [repo.root / Path(x) for x in all_files.splitlines()]
 
 
 def is_relative_to(path: Path, root: Union[Path, str]):
@@ -119,10 +164,13 @@ def changed_files_repo(
         untracked: include untracked packages
         all_packages: include all package files
     """
-    if not base:
-        base = get_repo_default_ref(repo)
-    file_root = get_repo_git_root(repo)
-    return changed_files(root=file_root, base=base, untracked=untracked, all_files=all_files)
+    try:
+        if not base:
+            base = get_repo_default_ref(repo)
+        file_root = get_repo_git_root(repo) or repo.root
+        return changed_files(root=file_root, base=base, untracked=untracked, all_files=all_files)
+    except RuntimeError:
+        return get_all_repo_py_files(repo)
 
 
 def changed_files(base="develop", untracked=True, all_files=False, root=None) -> List[Path]:
@@ -264,7 +312,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     repo_group.add_argument(
         "--repo",
         nargs="*",
-        help="repositories to perform style checks against, specified by namespace. "
+        help="repositories to perform style checks against, specified by namespace, space separated. "
         "(default: builtin)",
     )
     repo_group.add_argument(
@@ -496,7 +544,7 @@ def _run_import_check(
         return 0
 
     is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
-
+    import pdb; pdb.set_trace()
     get_changed_files = changed_files
     changed_kwargs = {"root": root, "base": base, "all_files": all}
     if repo:
@@ -605,10 +653,10 @@ def run_import_check(file_list, args, repo: Optional[spack.repo.Repo] = None):
     working_dir = args.initial_working_dir
     base = args.base
     if repo:
-        repo_root = get_repo_git_root(repo)
+        repo_root = get_repo_git_root(repo) or Path(repo.root)
         root = repo_root
         working_dir = repo_root
-        base = get_repo_default_ref(repo)
+        base = ""
     exit_code = _run_import_check(
         file_list,
         fix=args.fix,
