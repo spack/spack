@@ -37,7 +37,7 @@ Software Bill of Materials (SBOM)
 ==================================
 
 Every installation through Spack produces an SBOM that follows SPDX-2.3 format, including NTIA minimum elements.
-The SBOM for each package installation can be found in the ``.spack/sbom`` directory of the package's prefix. 
+The SBOM for each package installation can be found in the ``.spack/sbom`` directory of the package's prefix.
 To locate the package prefix, run:
 
 .. code-block:: console
