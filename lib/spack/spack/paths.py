@@ -230,6 +230,11 @@ class SpackPaths:
         return os.path.join(self.state_home, "package_repos")
 
     @property
+    def dotspack_backup(self):
+        #: backup location for old ~/.spack directory during migration
+        return os.path.join(self.data_home, "dotspack_backup")
+
+    @property
     def gpg_path(self):
         return self._decide_old_or_new_location(
             self.base.old_gpg_path,
