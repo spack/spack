@@ -168,7 +168,7 @@ def changed_files_repo(
         if not base:
             base = get_repo_default_ref(repo)
         file_root = get_repo_git_root(repo) or repo.root
-        return changed_files(root=file_root, base=base, untracked=untracked, all_files=all_files)
+        return [file_root / x for x in changed_files(root=file_root, base=base, untracked=untracked, all_files=all_files)]
     except RuntimeError:
         return get_all_repo_py_files(repo)
 
