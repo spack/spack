@@ -436,12 +436,12 @@ def test_changed_files_repo(git, repo_builder: RepoBuilder):
 
             (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
             (repo_root / "packages" / "repo_test_package" / "package.py").touch()
-        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
-            repo, base="HEAD"
-        )
-        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
-            repo, base="main"
-        )
+        assert repo_root / pathlib.Path(
+            "packages/repo_test_package/package.py"
+        ) in changed_files_repo(repo, base="HEAD")
+        assert repo_root / pathlib.Path(
+            "packages/repo_test_package/package.py"
+        ) in changed_files_repo(repo, base="main")
 
 
 def test_changed_files_repo_no_git(repo_builder):
@@ -451,9 +451,9 @@ def test_changed_files_repo_no_git(repo_builder):
             repo_root = pathlib.Path(repo.root)
             (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
             (repo_root / "packages" / "repo_test_package" / "package.py").touch()
-        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
-            repo
-        )
+        assert repo_root / pathlib.Path(
+            "packages/repo_test_package/package.py"
+        ) in changed_files_repo(repo)
 
 
 def test_get_repo_config_file(repo_builder: RepoBuilder):

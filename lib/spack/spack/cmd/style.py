@@ -168,7 +168,12 @@ def changed_files_repo(
         if not base:
             base = get_repo_default_ref(repo)
         file_root = get_repo_git_root(repo) or repo.root
-        return [file_root / x for x in changed_files(root=file_root, base=base, untracked=untracked, all_files=all_files)]
+        return [
+            file_root / x
+            for x in changed_files(
+                root=file_root, base=base, untracked=untracked, all_files=all_files
+            )
+        ]
     except RuntimeError:
         return get_all_repo_py_files(repo)
 
@@ -312,8 +317,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     repo_group.add_argument(
         "--repo",
         nargs="*",
-        help="repositories to perform style checks against, specified by namespace, space separated. "
-        "(default: builtin)",
+        help="repositories to perform style checks against, specified by namespace,"
+        " space separated. (default: builtin)",
     )
     repo_group.add_argument(
         "--repo-only",
@@ -544,7 +549,6 @@ def _run_import_check(
         return 0
 
     is_use = re.compile(r"(?<!from )(?<!import )spack\.[a-zA-Z0-9_\.]+")
-    import pdb; pdb.set_trace()
     get_changed_files = changed_files
     changed_kwargs = {"root": root, "base": base, "all_files": all}
     if repo:
