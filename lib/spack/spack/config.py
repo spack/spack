@@ -1258,44 +1258,6 @@ for file scopes, or no extension for directory scopes (currently {ext})"
         raise NotImplementedError("must be implemented in derived classes")
 
 
-_yaml_exts = ".yaml", ".yml"
-is_yaml = lambda x: x.suffix in _yaml_exts
-
-
-def there_are_yaml_files_in(_dir):
-    for path in pathlib.Path(_dir).rglob("*"):
-        if is_yaml(path):
-            return True
-    return False
-
-
-def copy_yaml_files(_from, to):
-    _from = pathlib.Path(_from)
-    to = pathlib.Path(to)
-    to.parent.mkdir(parents=True, exist_ok=True)
-    tmpdir = pathlib.Path(tempfile.mkdtemp(prefix=f".{to.name}.tmp-", dir=to.parent))
-
-    try:
-        _copy_yaml_files(_from, tmpdir)
-    except Exception as e:
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        raise ConfigFileError(str(e))
-
-    try:
-        tmpdir.rename(to)
-    except FileExistsError:
-        shutil.rmtree(tmpdir, ignore_errors=True)
-
-
-def _copy_yaml_files(_from, to):
-    for path in _from.rglob("*"):
-        if is_yaml(path):
-            rel_from = path.relative_to(_from)
-            abs_to = to / rel_from
-            abs_to.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, abs_to)
-
-
 class IncludePath(OptionalInclude):
     path: str
     sha256: str
