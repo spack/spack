@@ -116,11 +116,12 @@ class SpackPaths:
             elif "SPACK_USER_CACHE_PATH" in os.environ:
                 # If we're here, SPACK_STATE_HOME is not in os.environ
                 self._state_home = os.environ.get("SPACK_USER_CACHE_PATH")
-                # TODO: print warning
+            elif dir_is_occupied(state_home):
+                self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
                 self._state_home = self.base.old_default_dot_spack
-                # TODO: make sure package_repos_path returns the right thing
-                # TODO: print warning
+                # TODO: generate a warning if this dir is occupied (doesn't necessarily
+                # have to happen here)
             else:
                 self._state_home = state_home
 
