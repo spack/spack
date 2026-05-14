@@ -436,11 +436,23 @@ def test_changed_files_repo(git, repo_builder: RepoBuilder):
 
             (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
             (repo_root / "packages" / "repo_test_package" / "package.py").touch()
-        assert pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
+        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
             repo, base="HEAD"
         )
-        assert pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
+        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
             repo, base="main"
+        )
+
+
+def test_changed_files_repo_no_git(repo_builder):
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        with working_dir(repo.root):
+            repo_root = pathlib.Path(repo.root)
+            (repo_root / "packages" / "repo_test_package").mkdir(parents=True, exist_ok=True)
+            (repo_root / "packages" / "repo_test_package" / "package.py").touch()
+        assert repo_root / pathlib.Path("packages/repo_test_package/package.py") in changed_files_repo(
+            repo
         )
 
 
