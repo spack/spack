@@ -36,15 +36,16 @@ If issues are found, they are reported to stdout:
 Software Bill of Materials (SBOM)
 ==================================
 
-Every installation through Spack produces an SBOM that follows SPDX-2.3 format, including NTIA minimum elements. The SBOM for each package installation
-can be found in the ``.spack/sbom`` directory of the package's prefix. To locate the package prefix, run:
+Every installation through Spack produces an SBOM that follows SPDX-2.3 format, including NTIA minimum elements.
+The SBOM for each package installation can be found in the ``.spack/sbom`` directory of the package's prefix. 
+To locate the package prefix, run:
 
 .. code-block:: console
 
    $ spack cd -i <package>
 
-This feature adds a new field in the package template: ``supplier``. The supplier field refers to organization, project, or individual responsible for
-distributing the software.
+This feature adds a new field in the package template: ``supplier``.
+The supplier field refers to organization, project, or individual responsible for distributing the software.
 
 Support for additional SBOM formats will be added in future releases.
 
