@@ -351,7 +351,7 @@ Official Container Images for Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Container images with Spack preinstalled are available on `Docker Hub <https://hub.docker.com/u/spack>`_ and `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
-These images are based on popular distributions and are named accordingly (e.g. ``spack/ubuntu-noble`` for Spack on top of ``ubuntu:24.04``).
+These images are based on popular distributions and are named accordingly (e.g. ``spack/ubuntu-resolute`` for Spack on top of ``ubuntu:26.04``).
 
 The table below summarizes the available base images and their corresponding Spack images:
 
@@ -372,6 +372,9 @@ The table below summarizes the available base images and their corresponding Spa
    * - Ubuntu 24.04
      - ``ubuntu:24.04``
      - ``spack/ubuntu-noble``
+   * - Ubuntu 26.04
+     - ``ubuntu:26.04``
+     - ``spack/ubuntu-resolute``
    * - CentOS Stream 9
      - ``quay.io/centos/centos:stream9``
      - ``spack/centos-stream9``
