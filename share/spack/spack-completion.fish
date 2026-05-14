@@ -3102,7 +3102,7 @@ complete -c spack -n '__fish_spack_using_command stage' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command stage' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack style
-set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings
+set -g __fish_spack_optspecs_spack_style h/help b/base= a/all r/root-relative U/no-untracked f/fix root= t/tool= s/skip= spec-strings repo= repo-only
 
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command style' -s h -l help -d 'show this help message and exit'
@@ -3124,6 +3124,10 @@ complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a sk
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, ruff-format, ruff-check, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be used only on specs from spack v0.X.'
+complete -c spack -n '__fish_spack_using_command style' -l repo -r -f -a repo
+complete -c spack -n '__fish_spack_using_command style' -l repo -r -d 'repositories to perform style checks against, specified by namespace. (default: builtin)'
+complete -c spack -n '__fish_spack_using_command style' -l repo-only -f -a repo_only
+complete -c spack -n '__fish_spack_using_command style' -l repo-only -d 'Runs style checks only against given repositories, specified by namespace,  not spack core. (default: builtin)'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all
