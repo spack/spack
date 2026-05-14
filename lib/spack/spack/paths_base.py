@@ -56,9 +56,14 @@ class SpackPathsBase:
         self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
         self.old_licenses_path = os.path.join(self.etc_path, "licenses")
 
+        expanded_home = os.path.expanduser("~")
+
+        # If this exists, this was the location for configs and for the package repository
+        self.old_default_dot_spack = os.path.join(expanded_home, ".spack")
+
         #: User configuration location
         self.user_config_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join("~", ".config", "spack")
+            os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join(expanded_home, ".config", "spack")
         )
 
         #: System configuration location

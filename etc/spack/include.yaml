@@ -3,9 +3,7 @@ include:
   - name: "user"
     path_override_env_var: SPACK_USER_CONFIG_PATH
     path: "~/.config/spack/"
-    backwards_compat:
-      from: "~/.spack/"
-      to: "~/.config/spack/"
+    backwards_compat: "~/.spack/"
     optional: true
     prefer_modify: true
     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'

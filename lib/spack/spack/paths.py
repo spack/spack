@@ -69,6 +69,11 @@ class Spack_vars(Enum):
     user_cache_path = "SPACK_USER_CACHE_PATH"
     home = "SPACK_HOME"
 
+    @classmethod
+    def new_layout(cls):
+        # Exclude SPACK_USER_CACHE_PATH
+        return [Spack_vars.state_home, Spack_vars.data_home, Spack_vars.cache_home, Spack_vars.home]
+
 
 # This is for tests that want to clean the environment of XDG_ variables that
 # affect spack behavior. Note that this will not influence install_test.py's
@@ -94,17 +99,31 @@ class SpackPaths:
             os.path.expanduser("~"), SpackPaths.relative_data_home, "spack"
         )
 
-        self.old_layout = detect_old_spack_layout(base)
+        self.old_layout_detected = detect_old_spack_layout(base)
 
     @property
     def state_home(self):
         if not self._state_home:
-            self._state_home, _ = self.resolve_a_home(
+            state_home, _ = self.resolve_a_home(
                 ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH"],
                 "state",
                 SpackPaths.relative_state_home,
                 "XDG_STATE_HOME",
             )
+
+            if new_layout_enforced():
+                self._state_home = state_home
+            elif "SPACK_USER_CACHE_PATH" in os.environ:
+                # If we're here, SPACK_STATE_HOME is not in os.environ
+                self._state_home = os.environ.get("SPACK_USER_CACHE_PATH")
+                # TODO: print warning
+            elif dir_is_occupied(self.base.old_default_dot_spack):
+                self._state_home = self.base.old_default_dot_spack
+                # TODO: make sure package_repos_path returns the right thing
+                # TODO: print warning
+            else:
+                self._state_home = state_home
+
         return self._state_home
 
     @property
@@ -325,10 +344,18 @@ class SpackPaths:
     def _decide_old_or_new_location(
         self, old_location, new_location, default_new_location, provenance
     ):
-        if self.old_layout:
+        if new_layout_enforced():
+            return new_location
+        if self.old_layout_detected:
             return old_location
         else:
             return new_location
+
+
+def new_layout_enforced():
+    first = any(x.value in os.environ for x in Spack_vars.new_layout())
+    second = bool(config.get("config:locations"))
+    return first or second
 
 
 def detect_old_spack_layout(paths: paths_base.SpackPathsBase):

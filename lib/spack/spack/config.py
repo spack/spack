@@ -1311,21 +1311,18 @@ class IncludePath(OptionalInclude):
 
         context_prefix = f"({self.name}) " if self.name else ""
         context = f"{context_prefix}{path}"
-        self.path = substitute_include_path(path, context)
 
-        backwards_compat = entry.get("backwards_compat", {})
+        new_path = substitute_include_path(path, context)
+        old_path = None
+        backwards_compat = entry.get("backwards_compat", None)
         if backwards_compat:
-            _from = substitute_include_path(backwards_compat.get("from"), context)
-            to = substitute_include_path(backwards_compat.get("to"), context)
-            if not os.path.exists(_from):
-                # We'll initialize the empty dir and use it from now on (even if
-                # config is written into the old location later)
-                pathlib.Path(to).mkdir(parents=True, exist_ok=True)
-            elif to == self.path:
-                if not os.path.exists(to):
-                    if there_are_yaml_files_in(_from):
-                        tty.debug(f"Generating initial config in {to} from {_from}")
-                        copy_yaml_files(_from, to)
+            old_path = substitute_include_path(backwards_compat, context)
+
+        if old_path and os.path.exists(old_path) and not os.path.exists(new_path):
+            self.path = old_path
+            # TODO: warn
+        else:
+            self.path = new_path
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
