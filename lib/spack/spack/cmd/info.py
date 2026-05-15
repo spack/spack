@@ -490,8 +490,11 @@ def print_by_name(
         spec = getattr(definition, "spec", None)
         if spec:
             return (spec != spack.spec.Spec(spec.name), spec)
-        else:
-            return getattr(definition, "name", None)  # type: ignore[return-value]
+        # Handle dictionary definitions (e.g., licenses with 'id' field)
+        if isinstance(definition, dict):
+            return (True, definition.get("id", ""))  # type: ignore[return-value]
+        name = getattr(definition, "name", None)
+        return (True, name or "")  # type: ignore[return-value]
 
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
         for when, definition in sorted(
@@ -564,7 +567,11 @@ def print_variants(pkg: PackageBase, args: Namespace) -> None:
 
 def print_licenses(pkg: PackageBase, args: Namespace) -> None:
     """Output the licenses of the project."""
-    print_definitions(pkg, "Licenses", pkg.licenses, Formatter(), args.by_name)
+    license_ids = {
+        when: data.get("id") if isinstance(data, dict) else data
+        for when, data in pkg.licenses.items()
+    }
+    print_definitions(pkg, "Licenses", license_ids, Formatter(), args.by_name)
 
 
 def print_versions(pkg: PackageBase, args: Namespace) -> None:
