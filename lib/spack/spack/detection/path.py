@@ -441,7 +441,7 @@ def by_path(
     if max_workers == 1:
         executor = spack.util.parallel.SequentialExecutor()
     else:
-        executor = spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False)
+        executor = spack.util.parallel.make_concurrent_executor(max_workers)
     with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(

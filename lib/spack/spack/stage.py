@@ -1299,7 +1299,7 @@ def get_checksums_for_versions(
         else:
             version_hashes[version] = result
 
-    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
+    with spack.util.parallel.make_concurrent_executor(concurrency) as executor:
         results = [
             (version, executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage))
             for url, version in search_arguments

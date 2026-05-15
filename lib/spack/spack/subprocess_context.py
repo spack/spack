@@ -72,7 +72,7 @@ class PackageInstallContext:
         ctx: Optional[multiprocessing.context.BaseContext] = None,
     ):
         ctx = ctx or multiprocessing.get_context()
-        self.global_state = GlobalStateMarshaler(ctx=ctx)
+        self.global_state = GlobalStateMarshaler(ctx=ctx, serialize_env=True)
         self.pkg = pkg if ctx.get_start_method() == "fork" else serialize(pkg)
         self.spack_working_dir = spack.paths.spack_working_dir
 
@@ -90,23 +90,38 @@ class GlobalStateMarshaler:
     """
 
     def __init__(
-        self, *, ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None
+        self,
+        *,
+        ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None,
+        serialize_env: bool = False,
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
         if self.is_forked:
             return
 
-        from spack.environment import active_environment
-
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
         self.test_patches = TestPatches.create()
-        self.env = active_environment()
+        if serialize_env:
+            from spack.environment import active_environment
+
+            self.env = active_environment()
+        else:
+            self.env = None
 
     def restore(self):
         if self.is_forked:
+            # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
+            # and botocore connection pools are not fork-safe.
+            from spack.oci import opener
+            from spack.util import web
+            from spack.util.s3 import s3_client_cache
+
+            web.urlopen._instance = None
+            opener.urlopen._instance = None
+            s3_client_cache.clear()
             return
         spack.config.CONFIG = self.config
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
