@@ -22,6 +22,8 @@ RUN apt-get -yqq update \
         iproute2 \
         locales \
         make \
+        mercurial \
+        subversion \
         python3 \
         unzip \
         zstd \
