@@ -106,8 +106,8 @@ mirror_entry = {
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": ["pgp_clearsign", "pgp_detached"],
-                            "default": "gnupg-detached",
+                            "enum": ["pgp-cleartext", "pgp-detached"],
+                            "default": "pgp-detached",
                         }
                     },
                 },
