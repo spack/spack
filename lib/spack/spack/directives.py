@@ -923,10 +923,17 @@ def license(
         when: A spec specifying when the license applies.
     """
 
-    return partial(_execute_license, license_identifier=license_identifier, when=when)
+    return partial(
+        _execute_license, license_identifier=license_identifier, checked_by=checked_by, when=when
+    )
 
 
-def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[Union[str, bool]]):
+def _execute_license(
+    pkg: PackageType,
+    license_identifier: str,
+    checked_by: Optional[Union[str, List[str]]],
+    when: Optional[Union[str, bool]],
+):
     # If when is not specified the license always holds
     when_spec = _make_when_spec(when)
     if not when_spec:
@@ -943,11 +950,11 @@ def _execute_license(pkg: PackageType, license_identifier: str, when: Optional[U
             err_msg = (
                 f"{pkg.name} is specified as being licensed as {license_identifier} "
                 f"{when_message}, but it is also specified as being licensed under "
-                f"{pkg.licenses[other_when_spec]} {other_when_message}, which conflict."
+                f"{pkg.licenses[other_when_spec]['id']} {other_when_message}, which conflict."
             )
             raise OverlappingLicenseError(err_msg)
 
-    pkg.licenses[when_spec] = license_identifier
+    pkg.licenses[when_spec] = {"id": license_identifier, "checked_by": checked_by}
 
 
 @directive("requirements")

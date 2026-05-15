@@ -113,12 +113,12 @@ def test_license_directive(config, mock_packages, package_name, expected_license
     pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
     for license in expected_licenses:
         assert spack.spec.Spec(license[1]) in pkg_cls.licenses
-        assert license[0] == pkg_cls.licenses[spack.spec.Spec(license[1])]
+        assert license[0] == pkg_cls.licenses[spack.spec.Spec(license[1])]["id"]
 
 
 def test_duplicate_exact_range_license():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): {"id": "Apache-2.0", "checked_by": None}}
     package.name = "test_package"
 
     msg = (
@@ -127,12 +127,12 @@ def test_duplicate_exact_range_license():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+foo")
+        spack.directives._execute_license(package, "MIT", None, "+foo")
 
 
 def test_overlapping_duplicate_licenses():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
+    package.licenses = {spack.spec.Spec("+foo"): {"id": "Apache-2.0", "checked_by": None}}
     package.name = "test_package"
 
     msg = (
@@ -141,7 +141,7 @@ def test_overlapping_duplicate_licenses():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+bar")
+        spack.directives._execute_license(package, "MIT", None, "+bar")
 
 
 def test_version_type_validation():
