@@ -38,7 +38,7 @@ if TYPE_CHECKING:
         def __ge__(self, other: Any) -> bool:
             raise NotImplementedError
 
-    class SupportsRichComparisonAndHash(Protocol):
+    class SupportsRichComparisonAndHash(SupportsRichComparison, Protocol):
         """The above, but also implementing or inheriting `__hash__`."""
 
         def __hash__(self) -> int:
