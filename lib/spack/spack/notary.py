@@ -196,13 +196,14 @@ class GpgNotary(Notary):
         if tmpdir is None:
             tmpdir = os.getcwd()
 
-        keys: List[str] = spack.util.gpg.public_keys(*(keys or ()))
-        files = [pathlib.Path(os.path.join(tmpdir, f"{key}.pub")) for key in keys]
+        key_files: List[Tuple[str, pathlib.Path]] = [
+            (key, pathlib.Path(os.path.join(tmpdir, f"{key}.pub"))) for k in spack.util.gpg.public_keys(*(keys or ()))
+        ]
 
-        for key, file in zip(keys, files):
+        for key, file in key_files.items():
             spack.util.gpg.export_keys(str(file), [key])
 
-        return list(zip(keys, files))
+        return key_files
 
     @property
     def is_signing(self):

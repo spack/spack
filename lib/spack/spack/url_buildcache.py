@@ -1396,15 +1396,15 @@ def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
         tmppath = mkdtemp(dir=spack.stage.get_stage_root())
         if not os.path.exists(data):
             data_path = os.path.join(tmppath, "data.txt")
-            with open(data_path, "r", encoding="utf-8") as fd:
+            with open(data_path, "w", encoding="utf-8") as fd:
                 fd.write(data)
         else:
             data_path = data
 
         if sig:
             if not os.path.exists(sig):
-                sig_path = os.path.join(tmppath, "data.txt")
-                with open(sig_path, "r", encoding="utf-8") as fd:
+                sig_path = os.path.join(tmppath, "sig.txt")
+                with open(sig_path, "w", encoding="utf-8") as fd:
                     fd.write(sig)
             else:
                 sig_path = sig

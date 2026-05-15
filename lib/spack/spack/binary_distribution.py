@@ -2382,7 +2382,7 @@ def _url_push_keys(
     tmpdir: str,
     update_index: bool = False,
 ):
-    """Upload pgp public keys to the given mrrors"""
+    """Upload pgp public keys to the given mirrors"""
     if not keys:
         return
 

@@ -131,6 +131,8 @@ class Mirror:
         sig_type = self._data.get("signed", DEFAULT_SIGNING_TYPE)
         if isinstance(sig_type, bool):
             sig_type = DEFAULT_SIGNING_TYPE
+        else:
+            sig_type = sig_type.get("type")
 
         return sig_type
 
