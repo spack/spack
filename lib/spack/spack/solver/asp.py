@@ -438,8 +438,8 @@ class Result:
         Does not include anything related to unsatisfiability as we
         are only interested in storing satisfiable results
         """
-        serial_node_arg = (
-            lambda node_dict: f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
+        serial_node_arg = lambda node_dict: (
+            f"""{{"id": "{node_dict.id}", "pkg": "{node_dict.pkg}"}}"""
         )
         ret = dict()
         ret["criteria"] = self.criteria
@@ -744,10 +744,7 @@ class ConcretizationCache:
 
         # update mod/access time for use w/ LRU cleanup
         os.utime(cache_path)
-        return (
-            self._results_from_cache(cache_content),
-            self._stats_from_cache(cache_content),
-        )  # type: ignore
+        return (self._results_from_cache(cache_content), self._stats_from_cache(cache_content))  # type: ignore
 
 
 def _is_checksummed_git_version(v):
@@ -865,7 +862,7 @@ class ErrorHandler:
         input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
         header = f"failed to concretize {input_specs} for the following reasons:"
         messages = (
-            f"    {idx+1:2}. {self.handle_error(msg, *args)}"
+            f"    {idx + 1:2}. {self.handle_error(msg, *args)}"
             for idx, (_, msg, args) in enumerate(errors)
         )
         return "\n".join((header, *messages))
@@ -2604,8 +2601,15 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = spack.vendor.archspec.cpu.TARGETS.get(spec.target.name)
+            target_name = spec.target.name
+            target = spack.vendor.archspec.cpu.TARGETS.get(target_name)
             if not target:
+                if spec.architecture.target_concrete:
+                    raise spack.error.SpecError(
+                        f"the target '{target_name}' in '{spec} is not a known target. "
+                        f"Run 'spack arch --known-targets' to see valid targets."
+                    )
+                # range/list constraint (contains ':' or ','): keep existing path
                 self.target_ranges(spec, None)
                 continue
 
@@ -3913,6 +3917,8 @@ class Solver:
     def _check_input_and_extract_concrete_specs(
         specs: Sequence[spack.spec.Spec],
     ) -> List[spack.spec.Spec]:
+        _check_unknown_virtuals_in_input_specs(specs)
+
         reusable: List[spack.spec.Spec] = []
         analyzer = create_graph_analyzer()
         for root in specs:
@@ -4061,6 +4067,35 @@ class Solver:
         self._conc_cache.cleanup()
 
 
+class _SkipConcreteVisitor(traverse.BaseVisitor):
+    """Visitor that trims edges between two concrete nodes."""
+
+    def neighbors(self, item):
+        if item.edge.spec.concrete:
+            return []
+        return super().neighbors(item)
+
+
+def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> None:
+    """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
+    errors = []
+    for root in specs:
+        root_edges = traverse.with_artificial_edges([root])
+        visitor = traverse.CoverNodesVisitor(_SkipConcreteVisitor())
+        for edge in traverse.traverse_breadth_first_edges_generator(root_edges, visitor):
+            for virtual in edge.virtuals:
+                if not spack.repo.PATH.is_virtual(virtual):
+                    errors.append(f"'{virtual}' in '{root}' is not a known virtual package")
+    if not errors:
+        return
+    if len(errors) == 1:
+        raise spack.error.InvalidVirtualOnEdgeError(errors[0])
+    details = "\n".join(f"    {idx}. {msg}" for idx, msg in enumerate(errors, 1))
+    raise spack.error.InvalidVirtualOnEdgeError(
+        f"unknown virtuals have been found in input specs:\n{details}"
+    )
+
+
 class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
     """There was an issue with the spec that was requested (i.e. a user error)."""
 
@@ -4082,7 +4117,6 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
 
 
 class OutputDoesNotSatisfyInputError(InternalConcretizerError):
-
     def __init__(
         self, input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]]
     ) -> None:

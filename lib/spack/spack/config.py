@@ -26,6 +26,7 @@ When read in, Spack validates configurations with jsonschemas.  The
 schemas are in submodules of :py:mod:`spack.schema`.
 
 """
+
 import contextlib
 import copy
 import functools
@@ -37,7 +38,7 @@ import sys
 import tempfile
 from collections import defaultdict
 from itertools import chain
-from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
 
 from spack.vendor import jsonschema
 
@@ -601,9 +602,9 @@ class Configuration:
 
         # transitively remove included scopes
         for included_scope in scope.included_scopes:
-            assert (
-                included_scope.name in self.scopes
-            ), f"Included scope '{included_scope.name}' was never added to configuration!"
+            assert included_scope.name in self.scopes, (
+                f"Included scope '{included_scope.name}' was never added to configuration!"
+            )
             self.remove_scope(included_scope.name)
 
         return scope
@@ -1199,9 +1200,9 @@ class OptionalInclude:
     def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
         # enforced by type checking but those can always be # type: ignore'd
-        assert isinstance(
-            parent_scope, ConfigScope
-        ), f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"
+        assert isinstance(parent_scope, ConfigScope), (
+            f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"  # noqa: E501
+        )
 
         assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
@@ -1568,7 +1569,7 @@ def create() -> Configuration:
 
 
 #: This is the singleton configuration instance for Spack.
-CONFIG: Configuration = lang.Singleton(create_incremental)  # type: ignore
+CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
@@ -2130,7 +2131,7 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
 
 @contextlib.contextmanager
 def use_configuration(
-    *scopes_or_paths: Union[ScopeWithOptionalPriority, str]
+    *scopes_or_paths: Union[ScopeWithOptionalPriority, str],
 ) -> Generator[Configuration, None, None]:
     """Use the configuration scopes passed as arguments within the context manager.
 

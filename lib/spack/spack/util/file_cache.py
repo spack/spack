@@ -6,6 +6,7 @@ import hashlib
 import os
 import pathlib
 import shutil
+import tempfile
 from contextlib import contextmanager
 from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
@@ -25,6 +26,22 @@ def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:
         return None
 
 
+def _open_temp(context_dir: Union[str, pathlib.Path]) -> Tuple[IO[str], str]:
+    """Open a temporary file in a directory
+
+    This implementation minimizes the number of system calls for the case
+    the target directory already exists.
+    """
+    try:
+        fd, path = tempfile.mkstemp(dir=context_dir)
+    except FileNotFoundError:
+        os.makedirs(context_dir, exist_ok=True)
+        fd, path = tempfile.mkstemp(dir=context_dir)
+
+    stream = os.fdopen(fd, "w", encoding="utf-8")
+    return stream, path
+
+
 class ReadContextManager:
     def __init__(self, path: Union[str, pathlib.Path]) -> None:
         self.path = path
@@ -40,19 +57,14 @@ class ReadContextManager:
 
 
 class WriteContextManager:
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: Union[str, pathlib.Path]) -> None:
         self.path = path
-        self.tmp_path = f"{self.path}.tmp"
 
     def __enter__(self) -> Tuple[Optional[IO[str]], IO[str]]:
         """Return (old_file, new_file) file objects, where old_file is optional."""
-        self.old_file = _maybe_open(self.path)
         try:
-            try:
-                self.new_file = open(self.tmp_path, "w", encoding="utf-8")
-            except FileNotFoundError:
-                os.makedirs(os.path.dirname(self.path), exist_ok=True)
-                self.new_file = open(self.tmp_path, "w", encoding="utf-8")
+            self.old_file = _maybe_open(self.path)
+            self.new_file, self.tmp_path = _open_temp(os.path.dirname(self.path))
         except PermissionError:
             if self.old_file:
                 self.old_file.close()
@@ -102,7 +114,7 @@ class FileCache:
         self.root.mkdir(parents=True, exist_ok=True)
 
         self.lock_path = self.root / ".lock"
-        self._locks: Dict[Union[pathlib.Path, str], Lock] = {}
+        self._locks: Dict[str, Lock] = {}
         self.lock_timeout = timeout
 
     def destroy(self):

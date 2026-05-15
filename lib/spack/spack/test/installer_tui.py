@@ -17,7 +17,7 @@ from multiprocessing import Pipe
 from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
-from spack.new_installer import BuildStatus
+from spack.new_installer import BuildStatus, StdinReader
 
 
 class MockConnection:
@@ -178,6 +178,30 @@ class TestBasicStateManagement:
         assert status.builds[build_id].state == "failed"
         assert status.completed == 1
         assert status.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
+
+    def test_remove_build(self):
+        """Test that remove_build removes the build from the display."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_id = specs[0].dag_hash()
+
+        status.dirty = False
+        status.remove_build(build_id)
+        assert build_id not in status.builds
+        assert len(status.builds) == 1
+        assert status.dirty is True
+
+    def test_remove_build_resets_tracked(self):
+        """Test that removing the tracked build resets tracking to overview mode."""
+        status, _, _ = create_build_status(total=1)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.tracked_build_id = build_id
+        status.overview_mode = False
+        status.remove_build(build_id)
+        assert status.tracked_build_id == ""
+        assert status.overview_mode is True
 
     def test_parse_log_summary(self, tmp_path):
         """Test that parse_log_summary parses the build log and stores the summary."""
@@ -1459,3 +1483,47 @@ class TestHeadlessMode:
         status.dirty = True
         status.update()
         assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
+
+
+class TestStdinReader:
+    def test_basic_ascii(self):
+        r, w = os.pipe()
+        try:
+            reader = StdinReader(r)
+            os.write(w, b"abc")
+            assert reader.read() == "abc"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_ansi_stripping(self):
+        r, w = os.pipe()
+        try:
+            reader = StdinReader(r)
+            os.write(w, b"hello\x1b[Aworld\x1b[B!")
+            assert reader.read() == "helloworld!"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_multibyte_utf8(self):
+        r, w = os.pipe()
+        try:
+            reader = StdinReader(r)
+            encoded = "é".encode("utf-8")  # 0xc3 0xa9
+            os.write(w, encoded[:1])
+            # First read: incomplete char, decoder buffers it
+            result1 = reader.read()
+            os.write(w, encoded[1:])
+            result2 = reader.read()
+            assert result1 + result2 == "é"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_oserror_returns_empty(self):
+        r, w = os.pipe()
+        os.close(w)
+        os.close(r)
+        reader = StdinReader(r)
+        assert reader.read() == ""

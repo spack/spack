@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
+
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error

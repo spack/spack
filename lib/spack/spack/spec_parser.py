@@ -56,6 +56,7 @@ thing.  Spack uses ``~variant`` in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ``~`` can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+
 import json
 import pathlib
 import re
@@ -707,7 +708,7 @@ class SpecParsingError(spack.error.SpecSyntaxError):
     def __init__(self, message, token, text):
         message += f"\n{text}"
         if token:
-            underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+            underline = f"\n{' ' * token.start}{'^' * (token.end - token.start)}"
             message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 

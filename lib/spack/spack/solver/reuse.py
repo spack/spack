@@ -4,6 +4,7 @@
 import enum
 import functools
 import typing
+import warnings
 from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
@@ -129,12 +130,15 @@ def _specs_from_store(configuration):
 
 def _specs_from_mirror():
     try:
-        return spack.binary_distribution.update_cache_and_get_specs()
+        specs = spack.binary_distribution.update_cache_and_get_specs()
     except (spack.binary_distribution.FetchCacheError, IndexError):
         # this is raised when no mirrors had indices.
         # TODO: update mirror configuration so it can indicate that the
         # TODO: source cache (or any mirror really) doesn't have binaries.
         return []
+    for url in sorted(spack.binary_distribution.BINARY_INDEX.mirrors_without_index):
+        warnings.warn(f"the mirror at {url} cannot be used in concretization (no index found)")
+    return specs
 
 
 def _specs_from_environment(env):

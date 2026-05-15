@@ -998,6 +998,38 @@ The ``override:`` attribute allows us to override the configuration for a single
 The overridden part is always added as the *topmost* scope when the current group is concretized.
 This ensures the override always takes precedence over other sources of configuration.
 
+.. _environment-spec-groups-explicit:
+
+Controlling garbage collection with ``explicit: false``
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+By default every spec group is treated as a set of *explicit* roots.
+This means its specs are preserved by ``spack gc`` even when nothing else depends on them.
+Setting ``explicit: false`` on a group marks its specs as *implicit*, making them eligible for garbage collection once no other installed spec depends on them:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+     - group: compiler
+       explicit: false
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5 %gcc@15.2
+       - libtree %gcc@15.2
+
+After the apps are installed, ``spack gc`` will remove the compiler once no installed spec has a link or run dependency on it.
+
+.. note::
+
+   Flipping ``explicit: false`` on a group that has already been installed does **not** retroactively update the database record for the already-installed specs.
+   The flag takes effect only for specs installed, or re-installed, after the change.
+   To immediately mark an existing spec as implicit, use ``spack mark -i <spec>``.
+
 
 Modifying Environment Variables
 -------------------------------
@@ -1101,6 +1133,7 @@ The root specs with their (transitive) link and run type dependencies will be pu
            all: "{name}/{version}-{compiler.name}"
          link: all
          link_type: symlink
+         link_dirs: true
 
 The default for the ``select`` and ``exclude`` values is to select everything and exclude nothing.
 The default projection is the default view projection (``{}``).
@@ -1111,6 +1144,13 @@ The ``link`` attribute allows the following values:
 #. ``link: roots`` include root specs without their dependencies.
 
 The ``link_type`` defaults to ``symlink`` but can also take the value of ``hardlink`` or ``copy``.
+
+.. versionadded:: 1.2
+
+   The ``link_dirs`` option controls whether directories are symlinked. This is the default
+   behavior in Spack v1.2 and later. This is an optimization that significantly reduces the time
+   to create views, and reduces the inode usage of the view. It only applies when ``link_type``
+   is set to ``symlink``. If you want to link only non-directory files, set ``link_dirs: false``.
 
 .. tip::
 

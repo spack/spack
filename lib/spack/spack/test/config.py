@@ -2019,9 +2019,9 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
 def test_missing_include_scope_list(mock_missing_dir_include_scopes):
     """Tests that an included scope with a non existent file/directory
     is still listed as a scope under spack.config.CONFIG.scopes"""
-    assert "sub_base" in list(
-        spack.config.CONFIG.scopes
-    ), "Missing Optional Scope Missing from Config Scopes"
+    assert "sub_base" in list(spack.config.CONFIG.scopes), (
+        "Missing Optional Scope Missing from Config Scopes"
+    )
 
 
 def test_missing_include_scope_writable_list(mock_missing_dir_include_scopes):
@@ -2053,34 +2053,34 @@ def test_missing_include_scope_yaml_ext_is_file_scope(mock_missing_file_include_
 def test_missing_include_scope_writeable_not_readable(mock_missing_dir_include_scopes):
     """Tests that an included scope with a non existent file/directory
     can be written to (and created)"""
-    assert spack.config.CONFIG.scopes[
-        "sub_base"
-    ].writable, "Missing Optional Scope should be writable"
-    assert not spack.config.CONFIG.scopes[
-        "sub_base"
-    ].exists, "Missing Optional Scope should not exist"
+    assert spack.config.CONFIG.scopes["sub_base"].writable, (
+        "Missing Optional Scope should be writable"
+    )
+    assert not spack.config.CONFIG.scopes["sub_base"].exists, (
+        "Missing Optional Scope should not exist"
+    )
 
 
 def test_missing_include_scope_empty_read(mock_missing_dir_include_scopes):
     """Tests that an included scope with a non existent file/directory
     returns an empty dict on read and has "exists" set to false"""
-    assert (
-        spack.config.CONFIG.get("config", scope="sub_base") == {}
-    ), "Missing optional include scope does not return an empty value."
-    assert not spack.config.CONFIG.scopes[
-        "sub_base"
-    ].exists, "Missing optional include should not be created on read"
+    assert spack.config.CONFIG.get("config", scope="sub_base") == {}, (
+        "Missing optional include scope does not return an empty value."
+    )
+    assert not spack.config.CONFIG.scopes["sub_base"].exists, (
+        "Missing optional include should not be created on read"
+    )
 
 
 def test_missing_include_scope_file_empty_read(mock_missing_file_include_scopes):
     """Tests that an include scope with a non existent file returns an empty
     dict and has exists set to false"""
-    assert (
-        spack.config.CONFIG.get("config", scope="sub_base") == {}
-    ), "Missing optional include scope does not return an empty value."
-    assert not spack.config.CONFIG.scopes[
-        "sub_base"
-    ].exists, "Missing optional include should not be created on read"
+    assert spack.config.CONFIG.get("config", scope="sub_base") == {}, (
+        "Missing optional include scope does not return an empty value."
+    )
+    assert not spack.config.CONFIG.scopes["sub_base"].exists, (
+        "Missing optional include should not be created on read"
+    )
 
 
 def test_missing_include_scope_write_directory(mock_missing_dir_include_scopes):

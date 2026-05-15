@@ -148,7 +148,7 @@ def solve(parser, args):
     elif env:
         specs = list(env.user_specs)
     else:
-        tty.die("spack solve requires at least one spec or an active environment")
+        args.subparser.error("requires at least one spec or an active environment")
 
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None

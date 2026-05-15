@@ -566,7 +566,7 @@ _spack_buildcache() {
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private --group -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --allow-missing --base-image --tag -t --private --group -j --jobs"
     else
         _mirrors
     fi
@@ -575,7 +575,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private --group -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --allow-missing --base-image --tag -t --private --group -j --jobs"
     else
         _mirrors
     fi
@@ -677,7 +677,7 @@ _spack_buildcache_migrate() {
 _spack_cd() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir --repo --packages -P -s --stage-dir -S --stages -c --source-dir -b --build-dir -e --env --first"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir --repo --packages -P -s --stage-dir -S --stages -c --source-dir -b --build-dir -e --env -v --view --first"
     else
         _all_packages
     fi
@@ -1137,7 +1137,7 @@ _spack_env_view() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY=""
+        SPACK_COMPREPLY="disable enable regenerate"
     fi
 }
 
@@ -1406,7 +1406,7 @@ _spack_load() {
 _spack_location() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir --repo --packages -P -s --stage-dir -S --stages -c --source-dir -b --build-dir -e --env --first"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir --repo --packages -P -s --stage-dir -S --stages -c --source-dir -b --build-dir -e --env -v --view --first"
     else
         _all_packages
     fi
@@ -1415,7 +1415,7 @@ _spack_location() {
 _spack_log_parse() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show -c --context -p --profile -w --width -j --jobs"
+        SPACK_COMPREPLY="-h --help --show -c --context -p --profile -w --width -j --jobs -t --tail"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1802,7 +1802,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list ls add set remove rm migrate update"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate update show-version-updates"
     fi
 }
 
@@ -1872,6 +1872,15 @@ _spack_repo_update() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_repo_show_version_updates() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --no-manual-packages --no-git-versions --only-redistributable"
     else
         SPACK_COMPREPLY=""
     fi

@@ -30,6 +30,12 @@ include_concrete = {
 
 group_name_and_deps = {
     "group": {"type": "string", "description": "Name for this group of specs"},
+    "explicit": {
+        "type": "boolean",
+        "default": True,
+        "description": "When false, specs in this group are installed as implicit "
+        "dependencies and are eligible for garbage collection.",
+    },
     "needs": {
         "type": "array",
         "description": "Groups of specs that are needed by this group",

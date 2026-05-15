@@ -925,7 +925,8 @@ class Task:
         self.request = request
 
         # Report for tracking install success/failure
-        self.record = spack.report.InstallRecord(self.pkg.spec)
+        record_cls = self.request.install_args.get("record_cls", spack.report.InstallRecord)
+        self.record = record_cls(self.pkg.spec)
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
@@ -1288,9 +1289,9 @@ class BuildTask(Task):
     def poll(self):
         """Check if task has successfully executed, caused an InstallError,
         or the child process has information ready to receive."""
-        assert (
-            self.started or self.no_op
-        ), "Can't call `poll()` before `start()` or identified no-operation task"
+        assert self.started or self.no_op, (
+            "Can't call `poll()` before `start()` or identified no-operation task"
+        )
         return self.no_op or self.success_result or self.error_result or self.process_handle.poll()
 
     def succeed(self):
@@ -1323,9 +1324,9 @@ class BuildTask(Task):
         Complete the installation of the requested spec and/or dependency
         represented by the build task.
         """
-        assert (
-            self.started or self.no_op
-        ), "Can't call `complete()` before `start()` or identified no-operation task"
+        assert self.started or self.no_op, (
+            "Can't call `complete()` before `start()` or identified no-operation task"
+        )
         pkg = self.pkg
 
         self.status = BuildStatus.INSTALLING
@@ -1485,6 +1486,7 @@ class PackageInstaller:
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
+        create_reports: bool = False,
     ) -> None:
         """
         Arguments:
@@ -1510,6 +1512,7 @@ class PackageInstaller:
             concurrent_packages: Max packages to be built concurrently
             root_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
             dependencies_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
+            create_reports: whether to generate reports for each install
         """
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
@@ -1554,6 +1557,11 @@ class PackageInstaller:
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args) for pkg in packages]
 
+        # When no reporter is configured, use NullInstallRecord to skip log file reads.
+        if not create_reports:
+            for br in self.build_requests:
+                br.install_args["record_cls"] = spack.report.NullInstallRecord
+
         # Priority queue of tasks
         self.build_pq: List[Tuple[Tuple[int, int], Task]] = []
 
@@ -1586,12 +1594,17 @@ class PackageInstaller:
         self.max_active_tasks = self.concurrent_packages
 
         # Reports on install success/failure
-        self.reports: Dict[str, spack.report.RequestRecord] = {}
-        for build_request in self.build_requests:
-            # Skip reporting for already installed specs
-            request_record = spack.report.RequestRecord(build_request.pkg.spec)
-            request_record.skip_installed()
-            self.reports[build_request.pkg_id] = request_record
+        if create_reports:
+            self.reports: Dict[str, spack.report.RequestRecord] = {}
+            for build_request in self.build_requests:
+                # Skip reporting for already installed specs
+                request_record = spack.report.RequestRecord(build_request.pkg.spec)
+                request_record.skip_installed()
+                self.reports[build_request.pkg_id] = request_record
+        else:
+            self.reports = {
+                br.pkg_id: spack.report.NullRequestRecord() for br in self.build_requests
+            }
 
     def __repr__(self) -> str:
         """Returns a formal representation of the package installer."""
@@ -1828,10 +1841,9 @@ class PackageInstaller:
         Return:
             (lock_type, lock) tuple where lock will be None if it could not be obtained
         """
-        assert lock_type in [
-            "read",
-            "write",
-        ], f'"{lock_type}" is not a supported package management lock type'
+        assert lock_type in ["read", "write"], (
+            f'"{lock_type}" is not a supported package management lock type'
+        )
 
         pkg_id = package_id(pkg.spec)
         ltype, lock = self.locks.get(pkg_id, (lock_type, None))
@@ -2367,9 +2379,7 @@ class PackageInstaller:
         except KeyboardInterrupt as exc:
             # The build has been terminated with a Ctrl-C so terminate
             # regardless of the number of remaining specs.
-            tty.error(
-                f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
-            )
+            tty.error(f"Failed to install {pkg.name} due to {exc.__class__.__name__}: {str(exc)}")
             raise
 
         except BuildcacheEntryError as exc:
@@ -2410,7 +2420,7 @@ class PackageInstaller:
                 # lower levels -- skip printing if already printed.
                 # TODO: sort out this and SpackError.print_context()
                 tty.error(
-                    f"Failed to install {pkg.name} due to " f"{exc.__class__.__name__}: {str(exc)}"
+                    f"Failed to install {pkg.name} due to {exc.__class__.__name__}: {str(exc)}"
                 )
             # Terminate if requested to do so on the first failure.
             if self.fail_fast:
@@ -2451,6 +2461,7 @@ class PackageInstaller:
 
         """
 
+        spack.store.STORE.install_sbang()
         self._init_queue()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
@@ -2511,7 +2522,7 @@ class PackageInstaller:
             # be dependencies of this task.
             term_status.clear()
             tty.error(
-                f"Detected uninstalled dependencies for {task.pkg_id}: " f"{task.uninstalled_deps}"
+                f"Detected uninstalled dependencies for {task.pkg_id}: {task.uninstalled_deps}"
             )
             left = [dep_id for dep_id in task.uninstalled_deps if dep_id not in self.installed]
             if not left:

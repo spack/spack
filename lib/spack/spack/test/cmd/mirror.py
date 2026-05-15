@@ -12,7 +12,6 @@ import spack.cmd.mirror
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.error
 import spack.mirrors.utils
 import spack.package_base
 import spack.spec
@@ -521,27 +520,19 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all
+            (["create", "--file", "input.txt", "--all"], "cannot specify specs with a file if"),
+            (["create", "--file", "input.txt", "hdf5"], "cannot specify specs with a file AND"),
+            (["create"], "no packages were specified"),
             (
-                {"specs": None, "file": "input.txt", "all": True},
-                "cannot specify specs with a file if",
-            ),
-            (
-                {"specs": "hdf5", "file": "input.txt", "all": False},
-                "cannot specify specs with a file AND",
-            ),
-            ({"specs": None, "file": None, "all": False}, "no packages were specified"),
-            # Passed -n along with --all
-            (
-                {"specs": None, "file": None, "all": True, "versions_per_spec": 2},
+                ["create", "--all", "--versions-per-spec", "2"],
                 "cannot specify '--versions_per-spec'",
             ),
         ],
     )
     def test_error_conditions(self, cli_args, error_str):
-        args = MockMirrorArgs(**cli_args)
-        with pytest.raises(spack.error.SpackError, match=error_str):
-            spack.cmd.mirror.mirror_create(args)
+        output = mirror(*cli_args, fail_on_error=False)
+        assert error_str in output
+        assert mirror.returncode == 2
 
     @pytest.mark.parametrize(
         "cli_args,not_expected",

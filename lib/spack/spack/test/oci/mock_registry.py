@@ -198,10 +198,9 @@ class InMemoryOCIRegistry(DummyServer):
 
         else:
             for manifest in index_or_manifest["manifests"]:
-                assert (
-                    name,
-                    manifest["digest"],
-                ) in self.manifests, "Missing manifest while uploading index"
+                assert (name, manifest["digest"]) in self.manifests, (
+                    "Missing manifest while uploading index"
+                )
 
         self.manifests[(name, ref)] = index_or_manifest
 

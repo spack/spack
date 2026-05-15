@@ -26,16 +26,16 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     verify = subparsers.add_parser("verify", help=gpg_verify.__doc__)
     arguments.add_common_arguments(verify, ["installed_spec"])
     verify.add_argument("signature", type=str, nargs="?", help="the signature file")
-    verify.set_defaults(func=gpg_verify)
+    verify.set_defaults(func=gpg_verify, subparser=verify)
 
     trust = subparsers.add_parser("trust", help=gpg_trust.__doc__)
     trust.add_argument("keyfile", type=str, help="add a key to the trust store")
-    trust.set_defaults(func=gpg_trust)
+    trust.set_defaults(func=gpg_trust, subparser=trust)
 
     untrust = subparsers.add_parser("untrust", help=gpg_untrust.__doc__)
     untrust.add_argument("--signing", action="store_true", help="allow untrusting signing keys")
     untrust.add_argument("keys", nargs="+", type=str, help="remove keys from the trust store")
-    untrust.set_defaults(func=gpg_untrust)
+    untrust.set_defaults(func=gpg_untrust, subparser=untrust)
 
     sign = subparsers.add_parser("sign", help=gpg_sign.__doc__)
     sign.add_argument(
@@ -46,7 +46,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--clearsign", action="store_true", help="if specified, create a clearsign signature"
     )
     arguments.add_common_arguments(sign, ["installed_spec"])
-    sign.set_defaults(func=gpg_sign)
+    sign.set_defaults(func=gpg_sign, subparser=sign)
 
     create = subparsers.add_parser("create", help=gpg_create.__doc__)
     create.add_argument("name", type=str, help="the name to use for the new key")
@@ -71,18 +71,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         dest="secret",
         help="export the private key to a file",
     )
-    create.set_defaults(func=gpg_create)
+    create.set_defaults(func=gpg_create, subparser=create)
 
     list = subparsers.add_parser("list", help=gpg_list.__doc__)
     list.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
     list.add_argument(
         "--signing", action="store_true", help="list keys which may be used for signing"
     )
-    list.set_defaults(func=gpg_list)
+    list.set_defaults(func=gpg_list, subparser=list)
 
     init = subparsers.add_parser("init", help=gpg_init.__doc__)
     init.add_argument("--from", metavar="DIR", type=str, dest="import_dir", help=argparse.SUPPRESS)
-    init.set_defaults(func=gpg_init)
+    init.set_defaults(func=gpg_init, subparser=init)
 
     export = subparsers.add_parser("export", help=gpg_export.__doc__)
     export.add_argument("location", type=str, help="where to export keys")
@@ -90,7 +90,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "keys", nargs="*", help="the keys to export (all public keys if unspecified)"
     )
     export.add_argument("--secret", action="store_true", help="export secret keys")
-    export.set_defaults(func=gpg_export)
+    export.set_defaults(func=gpg_export, subparser=export)
 
     publish = subparsers.add_parser("publish", help=gpg_publish.__doc__)
 
@@ -125,7 +125,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     publish.add_argument(
         "keys", nargs="*", help="keys to publish (all public keys if unspecified)"
     )
-    publish.set_defaults(func=gpg_publish)
+    publish.set_defaults(func=gpg_publish, subparser=publish)
 
 
 def gpg_create(args):

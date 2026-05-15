@@ -146,3 +146,33 @@ Failed builds show ``[x]`` in the overview.
 Navigate to a failed build and press ``v`` to see a parsed error summary and the path to the full log.
 
 See :ref:`spack install <spack-install>` for the full set of flags related to debugging and controlling build behavior.
+
+
+Build isolation and sandboxing (Linux)
+--------------------------------------
+
+Spack can run builds in an unprivileged sandbox to restrict filesystem and network access.
+This opt-in feature requires Linux 5.13+ with Landlock support (network restrictions require Linux 6.7+).
+Sandboxing is meant for build reproducibility and bug containment rather than acting as a strict security boundary, as package recipes still execute outside the sandbox ahead of the build.
+
+When enabled, the stage directory, install prefix, system temp directory and ``/dev/null`` are implicitly writable.
+Spack-installed dependencies (excluding externals) are implicitly readable.
+All other paths must be explicitly allowed in configuration:
+
+.. code-block:: yaml
+
+   config:
+     sandbox:
+       enable: true          # Enable for all builds
+       allow_network: false  # Disable TCP network access during the build phase
+       allow_read:           # Additional paths with read and execute permissions
+       - /usr
+       allow_write:          # Additional paths with write and execute permissions
+       - /scratch
+
+The sandbox activates immediately after source extraction and prefix creation.
+Note that network restrictions only apply during the build phases, leaving Spack's own fetch operations unaffected.
+
+File system restrictions are complementary to existing file permissions and ACLs; they cannot grant access to files the user does not already have permission to read or write.
+
+Spack's sandboxing complements external containerization tools like Podman or Bubblewrap: while a container must grant the main Spack process write access to the entire software store, Landlock dynamically confines each build subprocess strictly to its exact, package-specific install prefix.

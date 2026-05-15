@@ -20,6 +20,7 @@ import spack.deptypes as dt
 import spack.package_base
 import spack.spec
 import spack.util.environment
+import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
 from spack.context import Context
@@ -159,7 +160,7 @@ def test_cc_not_changed_by_modules(monkeypatch, mutable_config, working_env, com
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake %gcc@14")
     spack.build_environment.setup_package(s.package, dirty=False)
@@ -287,6 +288,39 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_load_external_modules_error(working_env, monkeypatch):
+    """Test that load_external_modules raises an exception when a module cannot be loaded"""
+
+    # Create a mock spec object with the minimum attributes needed for the test
+    class MockSpec:
+        def __init__(self):
+            self.external_modules = ["non_existent_module"]
+
+        def __str__(self):
+            return "mock-external-spec"
+
+    mock_spec = MockSpec()
+
+    # Create a simplified SetupContext-like class that only contains what we need
+    class MockSetupContext:
+        def __init__(self, spec):
+            self.external = [(spec, None)]
+
+    context = MockSetupContext(mock_spec)
+
+    # Mock the load_module function to raise an exception
+    def mock_load_module(module_name):
+        # Simulate module load failure
+        raise spack.util.module_cmd.ModuleLoadError(module_name)
+
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
+
+    # Test that load_external_modules raises ModuleLoadError
+    with pytest.raises(spack.util.module_cmd.ModuleLoadError):
+        spack.build_environment.load_external_modules(context)
+
+
 def test_external_config_env(mock_packages, mutable_config, working_env):
     cmake_config = {
         "externals": [
@@ -320,7 +354,7 @@ def test_spack_paths_before_module_paths(
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake")
 

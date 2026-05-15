@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
+
 import collections
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
@@ -268,7 +269,7 @@ class StaticAnalysis(NoStaticAnalysis):
         configuration: spack.config.Configuration,
         repo: spack.repo.RepoPath,
         store: spack.store.Store,
-        binary_index: spack.binary_distribution.BinaryCacheIndex,
+        binary_index: spack.binary_distribution.BinaryIndexCache,
     ):
         self.store = store
         self.binary_index = binary_index

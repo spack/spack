@@ -1863,7 +1863,6 @@ def _find_max_depth(
 
         with dir_iter:
             for dir_entry in dir_iter:
-
                 # Match filename only patterns
                 if filename_only_patterns:
                     m = regex.match(os.path.normcase(dir_entry.name))

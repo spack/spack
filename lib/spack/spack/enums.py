@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Enumerations used throughout Spack"""
+
 import enum
 
 

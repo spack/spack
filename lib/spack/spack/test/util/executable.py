@@ -32,9 +32,7 @@ def test_read_unicode(tmp_path: pathlib.Path, working_env):
             f.write(
                 """#!{0}
 print(u'\\xc3')
-""".format(
-                    sys.executable
-                )
+""".format(sys.executable)
             )
 
         # make it executable

@@ -41,9 +41,7 @@ def test_reporters_extract_basics():
 ==> [2022-02-15-18:44:21.250165] test: {0}: {1}
 ==> [2022-02-15-18:44:21.250200] '{2}'
 {3}: {0}
-""".format(
-        name, desc, fake_bin, status
-    ).splitlines()
+""".format(name, desc, fake_bin, status).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     assert len(parts) == 1
@@ -63,9 +61,7 @@ def test_reporters_extract_no_parts(capfd):
 ==> Testing package fake-1.0-abcdefg
 ==> [2022-02-11-17:14:38.875259] Installing {0} to {1}
 {2}
-""".format(
-        fake_install_test_root, fake_test_cache, status
-    ).splitlines()
+""".format(fake_install_test_root, fake_test_cache, status).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     err = capfd.readouterr()[1]
@@ -125,9 +121,7 @@ def test_reporters_extract_skipped(state):
     outputs = """
 ==> Testing package fake-1.0-abcdefg
 {0}
-""".format(
-        expected
-    ).splitlines()
+""".format(expected).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 

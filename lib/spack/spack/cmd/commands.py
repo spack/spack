@@ -196,9 +196,7 @@ class BashCompletionWriter(ArgparseWriter):
         assert not (cmd.positionals and cmd.subcommands)  # one or the other
 
         # We only care about the arguments/flags, not the help messages
-        positionals: Tuple[str, ...] = ()
-        if cmd.positionals:
-            positionals, _, _, _ = zip(*cmd.positionals)
+        positionals = cmd.positionals or ()
         optionals, _, _, _, _ = zip(*cmd.optionals)
         subcommands: Tuple[str, ...] = ()
         if cmd.subcommands:
@@ -237,12 +235,12 @@ class BashCompletionWriter(ArgparseWriter):
         return "}\n"
 
     def body(
-        self, positionals: Sequence[str], optionals: Sequence[str], subcommands: Sequence[str]
+        self, positionals: Sequence, optionals: Sequence[str], subcommands: Sequence[str]
     ) -> str:
         """Return the body of the function.
 
         Args:
-            positionals: List of positional arguments.
+            positionals: List of positional argument tuples (name, choices, nargs, help).
             optionals: List of optional arguments.
             subcommands: List of subcommand parsers.
 
@@ -272,20 +270,30 @@ class BashCompletionWriter(ArgparseWriter):
     {self.optionals(optionals)}
 """
 
-    def positionals(self, positionals: Sequence[str]) -> str:
+    def positionals(self, positionals: Sequence) -> str:
         """Return the syntax for reporting positional arguments.
 
         Args:
-            positionals: List of positional arguments.
+            positionals: List of positional argument tuples (name, choices, nargs, help).
 
         Returns:
             Syntax for positional arguments.
         """
-        # If match found, return function name
-        for positional in positionals:
+        for name, choices, nargs, help in positionals:
+            # Check for a predefined subroutine mapping
             for key, value in _positional_to_subroutine.items():
-                if positional.startswith(key):
+                if name.startswith(key):
                     return value
+
+            # Use choices if available
+            if choices is not None:
+                if isinstance(choices, dict):
+                    choices = sorted(choices.keys())
+                elif isinstance(choices, (set, frozenset)):
+                    choices = sorted(choices)
+                else:
+                    choices = sorted(choices)
+                return 'SPACK_COMPREPLY="{}"'.format(" ".join(str(c) for c in choices))
 
         # If no matches found, return empty list
         return 'SPACK_COMPREPLY=""'
@@ -838,7 +846,7 @@ def _commands(parser: ArgumentParser, args: Namespace) -> None:
 
     # check header first so we don't open out files unnecessarily
     if args.header and not os.path.exists(args.header):
-        tty.die(f"No such file: '{args.header}'")
+        args.subparser.error(f"no such file: '{args.header}'")
 
     if args.update:
         tty.msg(f"Updating file: {args.update}")
@@ -876,7 +884,7 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
     """
     if args.update_completion:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
-            tty.die("--update-completion can only be specified alone.")
+            args.subparser.error("--update-completion can only be specified alone")
 
         # this runs the command multiple times with different arguments
         update_completion(parser, args)

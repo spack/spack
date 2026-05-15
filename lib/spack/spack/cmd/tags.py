@@ -60,7 +60,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def tags(parser, args):
     # Disallow combining all option with (positional) tags to avoid confusion
     if args.all and args.tag:
-        tty.die("Use the '--all' option OR provide tag(s) on the command line")
+        args.subparser.error("use the '--all' option OR provide tag(s) on the command line")
 
     # Provide a nice, simple message if database is empty
     if args.installed and not spack.environment.installed_specs():

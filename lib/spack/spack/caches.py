@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Caches used by Spack to store data"""
-import os
+
+from typing import cast
 
 import spack.config
 import spack.fetch_strategy
@@ -11,7 +12,6 @@ import spack.llnl.util.lang
 import spack.paths
 import spack.util.file_cache
 import spack.util.path
-from spack.llnl.util.filesystem import mkdirp
 
 
 def misc_cache_location():
@@ -30,9 +30,7 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE: spack.util.file_cache.FileCache = spack.llnl.util.lang.Singleton(  # type: ignore
-    _misc_cache
-)
+MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.llnl.util.lang.Singleton(_misc_cache))
 
 
 def fetch_cache_location():
@@ -53,21 +51,18 @@ def _fetch_cache():
     return spack.fetch_strategy.FsCache(path)
 
 
-class MirrorCache:
+class MirrorCache(spack.fetch_strategy.FsCacheBase):
     def __init__(self, root, skip_unstable_versions):
-        self.root = os.path.abspath(root)
+        super().__init__(root)
         self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
-        """Fetch and relocate the fetcher's target into our mirror cache."""
+        """Fetch and relocate the fetcher's target into our mirror cache.
 
-        # Note this will archive package sources even if they would not
-        # normally be cached (e.g. the current tip of an hg/git branch)
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
-        fetcher.archive(dst)
+        Note: archives package sources even if not normally cached (e.g. tip of hg/git branch).
+        """
+        super().store(fetcher, relative_dest)
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE: "spack.fetch_strategy.FsCache"
-FETCH_CACHE = spack.llnl.util.lang.Singleton(_fetch_cache)  # type: ignore
+FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.llnl.util.lang.Singleton(_fetch_cache))

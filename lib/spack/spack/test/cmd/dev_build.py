@@ -161,7 +161,8 @@ def test_dev_build_fails_nonexistent_package_name(mock_packages):
 
 def test_dev_build_fails_no_version(mock_packages):
     output = dev_build("dev-build-test-install", fail_on_error=False)
-    assert "dev-build spec must have a single, concrete version" in output
+    assert "spec must have a single, concrete version" in output
+    assert dev_build.returncode == 2
 
 
 def test_dev_build_can_parse_path_with_at_symbol(tmp_path: pathlib.Path, install_mockery):

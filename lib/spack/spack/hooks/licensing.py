@@ -91,9 +91,7 @@ def write_license_file(pkg, license_path):
    file UNCHANGED. The system may be configured if:
 
     - A license file is installed in a default location.
-""".format(
-        pkg.name
-    )
+""".format(pkg.name)
 
     if envvars:
         txt += """\
@@ -101,9 +99,7 @@ def write_license_file(pkg, license_path):
       a module file:
 
 {0}
-""".format(
-            envvars
-        )
+""".format(envvars)
 
     txt += """\
  * Otherwise, depending on the license you have, enter AT THE BEGINNING of
@@ -116,18 +112,14 @@ def write_license_file(pkg, license_path):
    this Spack-global file (relative to the installation prefix).
 
 {0}
-""".format(
-        linktargets
-    )
+""".format(linktargets)
 
     if url:
         txt += """\
  * For further information on licensing, see:
 
 {0}
-""".format(
-            url
-        )
+""".format(url)
 
     txt += """\
  Recap:

@@ -8,6 +8,7 @@
 a stack trace and drops the user into an interpreter.
 
 """
+
 import collections
 import sys
 import time
@@ -180,7 +181,7 @@ class Timer(BaseTimer):
         if extra_attributes:
             data.update(extra_attributes)
         if out:
-            out.write(sjson.dump(data))
+            out.write(sjson.dumps(data))
         else:
             return data
 

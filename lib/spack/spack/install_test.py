@@ -476,9 +476,9 @@ def test_part(
 
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
-    assert test_name and test_name.startswith(
-        "test_"
-    ), f"Test name must start with 'test_' but {test_name} was provided"
+    assert test_name and test_name.startswith("test_"), (
+        f"Test name must start with 'test_' but {test_name} was provided"
+    )
 
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
@@ -511,9 +511,7 @@ def test_part(
 
             if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
-                write_log_summary(
-                    iostr, "test", tester.test_log_file, last=1
-                )  # type: ignore[assignment]
+                write_log_summary(iostr, "test", tester.test_log_file, last=1)  # type: ignore[assignment]
                 m = iostr.getvalue()
             else:
                 # We're below the package context, so get context from
@@ -860,8 +858,7 @@ class TestSuite:
     def content_hash(self) -> str:
         """The hash used to uniquely identify the test suite."""
         if not self._hash:
-            json_text = sjson.dump(self.to_dict())
-            assert json_text is not None, f"{__name__} unexpected value for 'json_text'"
+            json_text = sjson.dumps(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
             b32_hash = b32_hash.decode("utf-8")

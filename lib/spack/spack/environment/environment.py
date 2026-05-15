@@ -13,6 +13,7 @@ import shutil
 import stat
 import warnings
 from collections.abc import KeysView
+from itertools import zip_longest
 from typing import (
     Any,
     Callable,
@@ -150,9 +151,7 @@ spack:
   view: true
   concretizer:
     unify: {}
-""".format(
-        "true" if spack.config.get("concretizer:unify") else "false"
-    )
+""".format("true" if spack.config.get("concretizer:unify") else "false")
 
 
 sep_re = re.escape(os.sep)
@@ -304,7 +303,7 @@ def root(name):
 
 def exists(name):
     """Whether an environment with this name exists or not."""
-    return valid_env_name(name) and os.path.isdir(_root(name))
+    return valid_env_name(name) and os.path.lexists(os.path.join(_root(name), manifest_name))
 
 
 def active(name):
@@ -584,8 +583,8 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-        if not os.path.exists(Environment(env_path).lock_path):
-            non_concrete_envs.add(Environment(env_path).name)
+        if not os.path.exists(os.path.join(env_path, lockfile_name)):
+            non_concrete_envs.add(environment_name(env_path))
 
     if non_concrete_envs:
         msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
@@ -705,6 +704,7 @@ class ViewDescriptor:
         exclude: Optional[List[str]] = None,
         link: str = default_view_link,
         link_type: fsv.LinkType = "symlink",
+        link_dirs: bool = True,
         groups: Optional[Union[str, List[str]]] = None,
     ) -> None:
         self.base = base_path
@@ -714,6 +714,7 @@ class ViewDescriptor:
         self.select = select or []
         self.exclude = exclude or []
         self.link_type: fsv.LinkType = fsv.canonicalize_link_type(link_type)
+        self.link_dirs: bool = link_type == "symlink" and link_dirs
         self.link = link
         if isinstance(groups, str):
             groups = [groups]
@@ -730,15 +731,15 @@ class ViewDescriptor:
         self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, ViewDescriptor) and all(
-            [
-                self.root == other.root,
-                self.projections == other.projections,
-                self.select == other.select,
-                self.exclude == other.exclude,
-                self.link == other.link,
-                self.link_type == other.link_type,
-            ]
+        return (
+            isinstance(other, ViewDescriptor)
+            and self.root == other.root
+            and self.projections == other.projections
+            and self.select == other.select
+            and self.exclude == other.exclude
+            and self.link == other.link
+            and self.link_type == other.link_type
+            and self.link_dirs == other.link_dirs
         )
 
     def to_dict(self):
@@ -751,6 +752,8 @@ class ViewDescriptor:
             ret["exclude"] = self.exclude
         if self.link_type:
             ret["link_type"] = self.link_type
+        if self.link_dirs:
+            ret["link_dirs"] = self.link_dirs
         if self.link != default_view_link:
             ret["link"] = self.link
         return ret
@@ -765,6 +768,7 @@ class ViewDescriptor:
             exclude=d.get("exclude", []),
             link=d.get("link", default_view_link),
             link_type=d.get("link_type", "symlink"),
+            link_dirs=d.get("link_dirs", True),
             groups=d.get("group", None),
         )
 
@@ -793,7 +797,7 @@ class ViewDescriptor:
                 ("specs", [(spec.dag_hash(), spec.prefix) for spec in sorted(specs)]),
             ]
         )
-        contents = sjson.dump(d)
+        contents = sjson.dumps(d)
         return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):
@@ -829,6 +833,7 @@ class ViewDescriptor:
             ignore_conflicts=True,
             projections=self.projections,
             link_type=self.link_type,
+            link_dirs=self.link_dirs,
         )
 
     def __contains__(self, spec):
@@ -1288,6 +1293,11 @@ class Environment:
         key = self._user_specs_key(group=group)
         return self.spec_lists[key]
 
+    def explicit_roots(self):
+        for x in self.concretized_roots:
+            if self.manifest.is_explicit(group=x.group):
+                yield x
+
     @property
     def dev_specs(self):
         dev_specs = {}
@@ -1570,34 +1580,45 @@ class Environment:
         """Returns true when the spec is built from local sources"""
         return spec.name in self.dev_specs
 
-    def apply_develop(self, spec: spack.spec.Spec, path: Optional[str] = None):
+    def apply_develop(self, specs: List[spack.spec.Spec], paths: Optional[List[str]] = None):
         """Mutate concrete specs to include dev_path provenance pointing to path.
 
         This will fail if any existing concrete spec for the same package does not satisfy the
 
         given develop spec."""
-        selector = spack.spec.Spec(spec.name)
+        selectors = []
+        mutators = []
+        msgs = []
 
-        mutator = spack.spec.Spec()
-        if path:
-            variant = vt.SingleValuedVariant("dev_path", path)
-        else:
-            variant = vt.VariantValueRemoval("dev_path")
-        mutator.variants["dev_path"] = variant
+        assert not paths or len(specs) == len(paths)
+        for spec, path in zip_longest(specs, paths or [], fillvalue=None):
+            assert spec
+            selector = spack.spec.Spec(spec.name)
 
-        msg = (
-            f"Develop spec '{spec}' conflicts with concrete specs in environment."
-            " Try again with 'spack develop --no-modify-concrete-specs'"
-            " and run 'spack concretize --force' to apply your changes."
-        )
-        self.mutate(selector, mutator, validator=spec, msg=msg)
+            mutator = spack.spec.Spec()
+            if path:
+                variant = vt.SingleValuedVariant("dev_path", path)
+            else:
+                variant = vt.VariantValueRemoval("dev_path")
+            mutator.variants["dev_path"] = variant
+
+            msg = (
+                f"Develop spec '{spec}' conflicts with concrete specs in environment."
+                " Try again with 'spack develop --no-modify-concrete-specs'"
+                " and run 'spack concretize --force' to apply your changes."
+            )
+            selectors.append(selector)
+            mutators.append(mutator)
+            msgs.append(msg)
+
+        self.mutate(selectors, mutators, validators=specs, msgs=msgs)
 
     def mutate(
         self,
-        selector: spack.spec.Spec,
-        mutator: spack.spec.Spec,
-        validator: Optional[spack.spec.Spec] = None,
-        msg: Optional[str] = None,
+        selectors: List[spack.spec.Spec],
+        mutators: List[spack.spec.Spec],
+        validators: Optional[List[spack.spec.Spec]] = None,
+        msgs: Optional[List[str]] = None,
     ):
         """Mutate concrete specs of an environment
 
@@ -1608,17 +1629,37 @@ class Environment:
         # Find all specs that this mutation applies to
         modify_specs = []
         modified_specs = []
+        if len(selectors) != len(mutators):
+            raise ValueError(
+                f"Length mismatch: selectors ({len(selectors)}) != mutators ({len(mutators)})"
+            )
+
+        if validators and len(validators) != len(selectors):
+            raise ValueError(
+                f"Length mismatch: validators ({len(validators)}) != selectors ({len(selectors)})"
+            )
+
+        if msgs and len(msgs) != len(selectors):
+            raise ValueError(
+                f"Length mismatch: msgs ({len(msgs)}) != selectors ({len(selectors)})"
+            )
+
         for dep in self.all_specs_generator():
-            if dep.satisfies(selector):
-                if not dep.satisfies(validator or selector):
-                    if not msg:
-                        msg = f"spec {dep} satisfies selector {selector}"
-                        msg += f" but not validator {validator}"
-                    raise SpackEnvironmentDevelopError(msg)
-                modify_specs.append(dep)
+            for selector, mutator, validator, msg in zip_longest(
+                selectors, mutators, validators or [], msgs or [], fillvalue=None
+            ):
+                assert selector
+                assert mutator
+                if dep.satisfies(selector):
+                    if not dep.satisfies(validator or selector):
+                        if not msg:
+                            msg = f"spec {dep} satisfies selector {selector}"
+                            msg += f" but not validator {validator}"
+                        raise SpackEnvironmentDevelopError(msg)
+                    modify_specs.append((dep, mutator))
 
         # Manipulate selected specs
-        for s in modify_specs:
+        for s, mutator in modify_specs:
             modified = s.mutate(mutator, rehash=False)
             if modified:
                 modified_specs.append(s)
@@ -1715,9 +1756,9 @@ class Environment:
         discarded, self.concretized_roots = stable_partition(
             self.concretized_roots, lambda x: x.group == group and x.root == spec
         )
-        assert (
-            len({x.hash for x in discarded}) == 1
-        ), "More than one hash associated with a single user spec"
+        assert len({x.hash for x in discarded}) == 1, (
+            "More than one hash associated with a single user spec"
+        )
         dag_hash = discarded[0].hash
         self._maybe_remove_dag_hash(dag_hash)
 
@@ -1979,14 +2020,14 @@ class Environment:
             *self._dev_specs_that_need_overwrite(),
         }
 
-        # Only environment roots are marked explicit
+        # Only environment roots in explicit groups are marked explicit
         install_args["explicit"] = {
             *install_args.get("explicit", ()),
-            *(s.dag_hash() for s in roots),
+            *(x.hash for x in self.explicit_roots()),
         }
 
         builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], **install_args
+            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
         )
 
         try:
@@ -3158,6 +3199,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
         # Configuration overrides for each group
         self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
+        # Whether specs in each group are marked explicit
+        self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
         self._init_user_specs()
 
         self.changed = False
@@ -3181,6 +3224,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     self._user_specs[group] = []
                     self._groups[group] = tuple(item.get("needs", ()))
                     self._config_override[group] = item.get("override", None)
+                    self._explicit[group] = item.get("explicit", True)
 
                 if "matrix" in item:
                     # Short form if the group is composed of only one matrix
@@ -3192,6 +3236,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
         self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
+        self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
     def _all_matches(self, user_spec: str) -> List[str]:
         """Maps the input string to the first equivalent user spec in the manifest,
@@ -3235,6 +3280,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         group = self._ensure_group_exists(group)
         return self._groups[group]
 
+    def is_explicit(self, *, group: Optional[str] = None) -> bool:
+        """Returns whether specs in a group are marked explicit.
+
+        When False, specs in the group are installed as implicit dependencies
+        and are eligible for garbage collection once no other spec depends on them.
+        """
+        group = self._ensure_group_exists(group)
+        return self._explicit[group]
+
     def _ensure_group_exists(self, group: Optional[str]) -> str:
         group = DEFAULT_USER_SPEC_GROUP if group is None else group
         if group not in self._groups:
@@ -3277,6 +3331,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._groups[group] = tuple()
             self._config_override[group] = None
             self._user_specs[group] = []
+            self._explicit[group] = True
 
         return group_entry
 
@@ -3329,11 +3384,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
             include_concrete: list of already existing concrete environments to include
         """
-        self.configuration[lockfile_include_key] = []
-
-        for env_path in include_concrete:
-            self.configuration[lockfile_include_key].append(env_path)
-
+        self.configuration[lockfile_include_key] = list(include_concrete)
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:

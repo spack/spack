@@ -15,6 +15,8 @@ if sys.platform == "win32":
 import spack.spec
 from spack.new_installer import (
     OVERWRITE_GARBAGE_SUFFIX,
+    BinaryCacheMiss,
+    BuildGraph,
     JobServer,
     PackageInstaller,
     PrefixPivoter,
@@ -162,6 +164,19 @@ class TestPrefixPivoter:
         # Nothing should remain
         assert len(list(tmp_path.iterdir())) == 0
 
+    def test_binary_cache_miss_with_keep_prefix_and_existing_prefix_restores_original(
+        self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
+    ):
+        """BinaryCacheMiss bypasses keep_prefix: original prefix is restored."""
+        with pytest.raises(BinaryCacheMiss), PrefixPivoter(str(existing_prefix), keep_prefix=True):
+            existing_prefix.mkdir()
+            (existing_prefix / "partial_file").write_text("partial content")
+            raise BinaryCacheMiss("cache miss")
+
+        assert (existing_prefix / "old_file").read_text() == "old content"
+        assert not (existing_prefix / "partial_file").exists()
+        assert len(list(tmp_path.iterdir())) == 1
+
 
 class FailingPrefixPivoter(PrefixPivoter):
     """Test subclass that can simulate filesystem failures."""
@@ -255,6 +270,28 @@ class TestPackageInstallerConstructor:
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
         assert PackageInstaller([spec.package]).capacity == 1
+
+    def test_no_binary_mirrors_forces_source_only(
+        self, temporary_store, mock_packages, mutable_config
+    ):
+        """With no binary mirrors configured, auto is overridden to source_only."""
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        installer = PackageInstaller([spec.package], root_policy="auto")
+        assert installer.root_policy == "source_only"
+        assert installer.dependencies_policy == "source_only"
+
+    def test_no_binary_mirrors_preserves_cache_only(
+        self, temporary_store, mock_packages, mutable_config
+    ):
+        """Without binary mirrors, an explicit cache_only shouldn't turn into source_only."""
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        installer = PackageInstaller(
+            [spec.package], root_policy="cache_only", dependencies_policy="cache_only"
+        )
+        assert installer.root_policy == "cache_only"
+        assert installer.dependencies_policy == "cache_only"
 
 
 class _FakeBuildGraph:
@@ -622,3 +659,56 @@ def test_nodes_to_roots_shared_dependency():
     assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
     assert node_to_roots[b.dag_hash()] == frozenset([b.dag_hash()])
     assert node_to_roots[c.dag_hash()] == frozenset([a.dag_hash(), b.dag_hash()])
+
+
+def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_store):
+    """When dependencies_policy is source_only, expand_build_deps must include BUILD deps of
+    dynamically added specs, not just LINK|RUN. Otherwise those specs attempt to build from source
+    without their build tools in the graph."""
+    # root --[build]--> build_tool --[build]--> nested_build_tool
+    #                              --[link]-->  lib_dep
+    specs = create_dag(
+        nodes=["root", "build_tool", "nested_build_tool", "lib_dep"],
+        edges=[
+            ("root", "build_tool", "build"),
+            ("build_tool", "nested_build_tool", "build"),
+            ("build_tool", "lib_dep", "link"),
+        ],
+    )
+    root = specs["root"]
+    for s in specs.values():
+        s._mark_concrete()
+
+    # Construct a BuildGraph with root_policy="auto" so root's build deps are deferred.
+    bg = BuildGraph(
+        specs=[root],
+        root_policy="auto",
+        dependencies_policy="source_only",
+        include_build_deps=False,
+        install_package=True,
+        install_deps=True,
+        database=temporary_store.db,
+    )
+
+    # The initial graph should contain only root (build deps deferred for "auto" policy).
+    assert root.dag_hash() in bg.nodes
+    assert specs["build_tool"].dag_hash() not in bg.nodes
+
+    # Simulate a cache miss: expand build deps for root.
+    pending = []
+    with temporary_store.db.read_transaction():
+        newly_added = bg.expand_build_deps(
+            [root.dag_hash()], pending, temporary_store.db, dependencies_policy="source_only"
+        )
+
+    added_hashes = set(newly_added)
+
+    # build_tool must be added (direct BUILD dep of root)
+    assert specs["build_tool"].dag_hash() in added_hashes
+
+    # lib_dep must be added (LINK dep of build_tool)
+    assert specs["lib_dep"].dag_hash() in added_hashes
+
+    # nested_build_tool must also be added (BUILD dep of build_tool). This is the bug: without the
+    # fix, expand_build_deps only traverses LINK|RUN, so nested_build_tool is missing.
+    assert specs["nested_build_tool"].dag_hash() in added_hashes

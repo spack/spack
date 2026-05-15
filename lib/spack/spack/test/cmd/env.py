@@ -254,6 +254,12 @@ def template_combinatorial_env(tmp_path: pathlib.Path):
     """
 
 
+def test_add_requires_active_env():
+    """Test that spack add exits with code 2 when no environment is active."""
+    add("hdf5", fail_on_error=False)
+    assert add.returncode == 2
+
+
 def test_add():
     e = ev.create("test")
     e.add("mpileaks")
@@ -265,7 +271,6 @@ def test_change_match_spec():
 
     e = ev.read("test")
     with e:
-
         add("mpileaks@2.1")
         add("mpileaks@2.2")
 
@@ -1161,9 +1166,7 @@ packages:
     - spec: pkg-a@2.0
       prefix: {a_prefix}
     buildable: false
-""".format(
-            a_prefix=str(fake_prefix)
-        )
+""".format(a_prefix=str(fake_prefix))
     )
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
@@ -1347,9 +1350,7 @@ spack:
   - {0}
   specs:
   - mpileaks
-""".format(
-        include_path
-    )
+""".format(include_path)
 
 
 def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
@@ -3105,7 +3106,7 @@ spack:
         "dtlink2",
         "dtlink3",
         "dtlink4",
-        "dtlink5" "dtbuild1",
+        "dtlink5dtbuild1",
         "dtbuild2",
         "dtbuild3",
     ):
@@ -3781,9 +3782,7 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(
-            install_root
-        )
+""".format(install_root)
     )
     current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != str(install_root)
@@ -4508,7 +4507,7 @@ view:
         f"""\
 spack:
   include:
-{''.join(includes)}
+{"".join(includes)}
   specs:
   - mpileaks
 """
@@ -4945,3 +4944,53 @@ spack:
         # Sanity check: make sure the target we expect was applied to the
         # compiler entry
         assert libdwarf["c"].satisfies("gcc@12.100.100 languages:=c,c++ target=x86_64_v3")
+
+
+@pytest.mark.regression("52247")
+def test_create_with_orphaned_directory(mutable_mock_env_path: pathlib.Path):
+    """Tests that an orphaned environment directory (directory exists, no spack.yaml) must not
+    prevent 'spack env create' from creating a new environment with that name.
+    """
+    orphaned = mutable_mock_env_path / "test1"
+    orphaned_subdir = orphaned / ".spack-env"
+    orphaned_subdir.mkdir(parents=True)
+
+    # The orphaned directory must not be seen as an existing environment
+    assert not ev.exists("test1")
+
+    # Creating an environment over an orphaned directory must succeed
+    env("create", "test1")
+
+    assert ev.exists("test1")
+    assert "test1" in env("list")
+
+
+@pytest.mark.parametrize(
+    "setup",
+    [
+        # valid environment: spack.yaml is a regular file
+        pytest.param("valid", id="valid"),
+        # orphaned directory: no spack.yaml at all
+        pytest.param("orphaned", id="orphaned"),
+        # broken manifest symlink: spack.yaml points to a non-existent target
+        pytest.param("broken_symlink", id="broken_symlink"),
+    ],
+)
+@pytest.mark.regression("52247")
+def test_exists_consistent_with_all_environment_names(
+    mutable_mock_env_path: pathlib.Path, setup: str
+):
+    """Tests that exists() and all_environment_names() agree on whether an environment exists."""
+    env_dir = mutable_mock_env_path / "myenv"
+    env_dir.mkdir(parents=True)
+    manifest = env_dir / ev.manifest_name
+
+    if setup == "valid":
+        manifest.write_text(ev.default_manifest_yaml())
+    elif setup == "orphaned":
+        pass  # no manifest
+    elif setup == "broken_symlink":
+        manifest.symlink_to("/nonexistent/spack.yaml")
+
+    listed = "myenv" in ev.all_environment_names()
+    assert ev.exists("myenv") == listed

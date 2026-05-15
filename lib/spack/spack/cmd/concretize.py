@@ -31,7 +31,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def concretize(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="concretize")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.test == "all":
         tests = True

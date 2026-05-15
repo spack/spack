@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for ``llnl/util/filesystem.py``"""
+
 import filecmp
 import os
 import pathlib

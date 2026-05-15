@@ -209,7 +209,7 @@ def diff(parser, args):
     env = ev.active_environment()
 
     if len(args.specs) != 2:
-        tty.die("You must provide two specs to diff.")
+        args.subparser.error("you must provide two specs to diff")
 
     specs = []
     for spec in spack.cmd.parse_specs(args.specs):
@@ -228,7 +228,7 @@ def diff(parser, args):
     attributes = args.attribute or ["all"]
 
     if args.dump_json:
-        print(sjson.dump(c))
+        print(sjson.dumps(c))
     else:
         tty.warn("This interface is subject to change.\n")
         print_difference(c, attributes)

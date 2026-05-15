@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, List, Optional, Set, Union
 from spack.vendor.typing_extensions import Literal
 
 import spack.config
+import spack.sandbox
 import spack.traverse
 
 if TYPE_CHECKING:
@@ -40,6 +41,7 @@ def create_installer(
     concurrent_packages: Optional[int] = None,
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
+    create_reports: bool = False,
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = (
@@ -53,6 +55,14 @@ def create_installer(
             if s.build_spec is not s:
                 use_old_installer = True
                 break
+    if spack.config.get("config:sandbox:enable", False):
+        if use_old_installer:
+            raise spack.sandbox.SandboxError(
+                "config:sandbox:enable is only supported with config:installer:new"
+            )
+        # Probe sandbox support now so builds don't fail later inside a subprocess.
+        spack.sandbox.get_sandbox()
+
     if use_old_installer:
         from spack.installer import PackageInstaller  # type: ignore
     else:
@@ -81,4 +91,5 @@ def create_installer(
         concurrent_packages=concurrent_packages,
         root_policy=root_policy,
         dependencies_policy=dependencies_policy,
+        create_reports=create_reports,
     )

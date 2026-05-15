@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/view.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.projections
@@ -61,6 +62,12 @@ properties: Dict[str, Any] = {
                             "enum": ["symlink", "hardlink", "copy"],
                             "description": "How files are linked in the view: 'symlink' "
                             "(default), 'hardlink', or 'copy'",
+                        },
+                        "link_dirs": {
+                            "type": "boolean",
+                            "description": "Whether to link directories in the view, or only files"
+                            " (default: true, only applicable when link_type is 'symlink')",
+                            "default": True,
                         },
                         "select": {
                             "type": "array",

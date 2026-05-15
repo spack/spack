@@ -165,3 +165,69 @@ def test_gc_except_specific_dir_env(
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")
+
+
+@pytest.fixture
+def mock_installed_environment(mutable_database, mutable_mock_env_path):
+
+    def _create_environment(name, spack_yaml):
+        tmp_env = ev.create(name)
+        spack_yaml_path = pathlib.Path(tmp_env.path) / "spack.yaml"
+        spack_yaml_path.write_text(spack_yaml)
+        e = ev.read(name)
+        with ev.read(name):
+            e.concretize()
+            e.install_all(fake=True)
+            e.write()
+        return e
+
+    return _create_environment
+
+
+@pytest.mark.db
+@pytest.mark.parametrize(
+    "explicit,expected_explicit,expected_implicit",
+    [
+        (True, ["gcc@14.0.1", "openblas", "dyninst"], []),
+        (False, ["dyninst"], ["gcc@14.0.1", "openblas"]),
+    ],
+)
+def test_gc_with_explicit_groups(
+    explicit, expected_explicit, expected_implicit, mutable_database, mock_installed_environment
+):
+    """Tests the semantics of the "explicit" attribute of environment groups"""
+    e = mock_installed_environment(
+        "test_gc_explicit",
+        f"""
+spack:
+  config:
+    installer: new
+  specs:
+  - group: base
+    explicit: {explicit}
+    specs:
+    - gcc@14.0.1
+    - openblas
+  - group: apps
+    needs: [base]
+    specs:
+    - dyninst %c=gcc@14.0.1
+""",
+    )
+
+    # Test DB status
+    for query in expected_explicit:
+        assert mutable_database.query_local(query, explicit=True)
+
+    for query in expected_implicit:
+        assert mutable_database.query_local(query, explicit=False)
+
+    with e:
+        output = gc("-y")
+
+    # Test gc behavior
+    for query in expected_implicit:
+        assert f"Successfully uninstalled {query}" in output
+
+    for query in expected_explicit:
+        assert f"Successfully uninstalled {query}" not in output

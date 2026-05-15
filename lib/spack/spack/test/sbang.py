@@ -5,6 +5,7 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
 import pathlib
@@ -280,9 +281,7 @@ all:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
+""".format(group_name)
     )
     spack.config.set("packages", conf, scope="user")
 
@@ -334,7 +333,7 @@ def run_test_install_sbang(group):
     assert sbang_path.startswith(spack.store.STORE.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
     # put an invalid file in for sbang
@@ -342,11 +341,11 @@ def run_test_install_sbang(group):
     with open(sbang_path, "w", encoding="utf-8") as f:
         f.write("foo")
 
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
     # install again and make sure sbang is still fine
-    sbang.install_sbang()
+    spack.store.STORE.install_sbang()
     check_sbang_installation(group)
 
 
