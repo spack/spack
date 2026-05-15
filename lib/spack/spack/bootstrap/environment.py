@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Bootstrap non-core Spack dependencies from an environment."""
 
-import contextlib
 import hashlib
 import os
 import pathlib
@@ -13,10 +12,12 @@ from typing import Iterable, List
 
 import spack.vendor.archspec.cpu
 
-import spack.binary_distribution
 import spack.config
 import spack.environment
+import spack.error
+import spack.paths
 import spack.spec
+import spack.stage
 import spack.tengine
 import spack.util.gpg
 import spack.util.path
@@ -77,12 +78,6 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment spack.yaml file"""
         return cls.environment_root().joinpath("spack.yaml")
 
-    @contextlib.contextmanager
-    def trust_bootstrap_mirror_keys(self):
-        with spack.util.gpg.gnupghome_override(os.path.join(root_path(), ".bootstrap-gpg")):
-            spack.binary_distribution.get_keys(install=True, trust=True)
-            yield
-
     def update_installations(self) -> None:
         """Update the installations of this environment."""
         log_enabled = tty.is_debug() or tty.is_verbose()
@@ -96,23 +91,23 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                with self.trust_bootstrap_mirror_keys():
-                    fetch_policy = (
-                        "cache_only"
-                        if not spack.config.get("bootstrap:dev:enable_source", False)
-                        else "auto"
+                download_and_trust_key()
+                fetch_policy = (
+                    "cache_only"
+                    if not spack.config.get("bootstrap:dev:enable_source", False)
+                    else "auto"
+                )
+                try:
+                    self.install_all(
+                        fail_fast=True,
+                        root_policy=fetch_policy,
+                        dependencies_policy=fetch_policy,
                     )
-                    try:
-                        self.install_all(
-                            fail_fast=True,
-                            root_policy=fetch_policy,
-                            dependencies_policy=fetch_policy,
-                        )
-                    except BaseException:
-                        # catch any exception as we always want to clean up
-                        shutil.rmtree(self.environment_root())
-                        raise
-                    self.write(regenerate=True)
+                except BaseException:
+                    # catch any exception as we always want to clean up
+                    shutil.rmtree(self.environment_root())
+                    raise
+                self.write(regenerate=True)
 
     def load(self) -> None:
         """Update PATH and sys.path."""
@@ -164,6 +159,19 @@ def dev_bootstrap_mirror_names() -> List[str]:
         "developer-tools-x86_64_v3-linux-gnu",
         "developer-tools-aarch64-linux-gnu",
     ]
+
+
+def download_and_trust_key():
+    """Fetches and verifies the validity of Spack's public key"""
+    fingerprint_file = pathlib.Path(spack.paths.share_path) / "bootstrap" / "fingerprints" / "public.txt"
+    with open(fingerprint_file, "r", encoding="utf-8") as f:
+        fingerprint, key_endpoint = f.readline().split(":")
+    with spack.stage.Stage(key_endpoint) as stage:
+        try:
+            stage.fetch()
+        except spack.error.FetchError as e:
+            raise RuntimeError("Cannot fetch Spack Public key for binary cache validation") from e
+        spack.util.gpg.validate_fingerprint(fingerprint, stage.save_filename)
 
 
 def ensure_environment_dependencies() -> None:
