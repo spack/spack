@@ -118,7 +118,9 @@ def changed_files_repo(
     try:
         return [
             root / x
-            for x in changed_files(root=str(root), base=base, untracked=untracked, all_files=all_files)
+            for x in changed_files(
+                root=str(root), base=base, untracked=untracked, all_files=all_files
+            )
         ]
     except SystemExit:
         return get_all_repo_py_files(repo)
