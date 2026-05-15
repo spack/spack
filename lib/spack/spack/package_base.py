@@ -62,7 +62,7 @@ from spack.llnl.util.filesystem import (
 from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
 from spack.util.package_hash import package_hash
-from spack.util.typing import SupportsRichComparison
+from spack.util.typing import SupportsRichComparisonAndHash
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
@@ -400,7 +400,7 @@ Pb = TypeVar("Pb", bound="PackageBase")
 #
 # K might be a variant name, a version, etc. V is a definition of some Spack object.
 # The methods below transform these types of dictionaries.
-K = TypeVar("K", bound=SupportsRichComparison)
+K = TypeVar("K", bound=SupportsRichComparisonAndHash)
 V = TypeVar("V")
 
 
