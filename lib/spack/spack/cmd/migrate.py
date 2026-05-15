@@ -154,8 +154,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     elif not migrations:
         tty.msg("Nothing to migrate - no config files or package repositories found in ~/.spack")
 
-    # Show what will be migrated
     if args.dry_run:
+        # Show what will be migrated
         if migrations:
             tty.msg("Would migrate the following:")
             for migration_type, items, src, dst in migrations:
@@ -175,7 +175,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             os.makedirs(dst, exist_ok=True)
 
             if migration_type == "config":
-                # Copy config files
                 for item in items:
                     src_path = os.path.join(src, item)
                     dst_path = os.path.join(dst, item)
@@ -183,7 +182,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
                     shutil.copy2(src_path, dst_path)
 
             elif migration_type == "package_repos":
-                # Copy entire package_repos directory contents
                 for item in items:
                     src_path = os.path.join(src, item)
                     dst_path = os.path.join(dst, item)
@@ -198,7 +196,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         tty.msg(f"  State location: {new_state_location}")
 
     if args.clear:
-        tty.msg(f"\nBacking up ~/.spack to {backup_location}...")
         os.makedirs(os.path.dirname(backup_location), exist_ok=True)
         shutil.move(old_location, backup_location)
         tty.msg(f"Backup complete! Original ~/.spack moved to {backup_location}")
