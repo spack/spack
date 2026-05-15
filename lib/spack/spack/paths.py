@@ -111,6 +111,8 @@ class SpackPaths:
                 "XDG_STATE_HOME",
             )
 
+            self.default_state_home_dot_spack = False
+
             if new_layout_enforced():
                 self._state_home = state_home
             elif "SPACK_USER_CACHE_PATH" in os.environ:
@@ -120,7 +122,7 @@ class SpackPaths:
                 self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
                 self._state_home = self.base.old_default_dot_spack
-                # TODO [default state home case in old ~/.spack]
+                self.default_state_home_dot_spack = True
             else:
                 self._state_home = state_home
 

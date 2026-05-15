@@ -935,50 +935,46 @@ def _warn_about_old_dotspack():
     if not os.path.exists(old_dotspack):
         return
 
-    # Check if explicitly configured via config:locations
-    if spack.config.get("config:locations"):
-        # Any config:locations setting means explicit configuration, don't warn
-        return
-
-    # Check if explicitly configured via environment variables
-    explicit_env_vars = [
-        "SPACK_HOME",
-        "SPACK_DATA_HOME",
-        "SPACK_STATE_HOME",
-        "SPACK_CACHE_HOME",
-        "SPACK_USER_CACHE_PATH",
-    ]
-    if any(var in os.environ for var in explicit_env_vars):
-        # Explicitly configured, don't warn
-        return
-
     # Helper to check if old_dotspack is a prefix
     def uses_old_dotspack(path):
         return path == old_dotspack or path.startswith(old_dotspack + os.sep)
 
     # Check if any config scope is using ~/.spack (means explicit configuration)
+    reasons = []
     for scope in spack.config.CONFIG.scopes.values():
         if hasattr(scope, "path") and uses_old_dotspack(scope.path):
             # Explicitly configured via a config scope, don't warn
-            return
+            if scope.backwards_compat_fallback:
+                reasons.append(f"Used by config scope: {scope.name}")
+            else:
+                # A config scope explicitly targets ~/.spack
+                return
 
     from spack.paths import locations as paths
 
-    # Check which paths are using ~/.spack
-    parts = []
+    explicit_path = False
     if uses_old_dotspack(paths.state_home):
-        parts.append("user cache path is in use")
+        if paths.default_state_home_dot_spack:
+            reasons.append("User cache path fallback")
+        else:
+            explicit_path = True
     if uses_old_dotspack(paths.data_home):
-        parts.append("data home is in use")
+        explicit_path = True
     if uses_old_dotspack(paths.cache_home):
-        parts.append("cache home is in use")
+        explicit_path = True
 
-    # Only warn if something is using it
-    if not parts:
+    if explicit_path:
         return
 
-    usage = " and ".join(parts)
-    tty.warn(f"Old config/user-cache-path in `~/.spack` detected ({usage}). Run `spack migrate`")
+    msg = "Old config/user-cache-path in `~/.spack`"
+    if reasons:
+        msg += " - it is currently in use:"
+        for reason in reasons:
+            msg += f"\n\t{reason}"
+    else:
+        msg += " - it is not currently used by this spack instance."
+    msg += ("\nIf all spack instances are >= 1.2, you can use"
+            " `spack migrate --clear` to silence this warning")
 
 
 def _main(argv=None):

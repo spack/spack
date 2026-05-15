@@ -161,6 +161,7 @@ class ConfigScope:
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
+        self.backwards_compat_fallback = False
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -1280,9 +1281,10 @@ class IncludePath(OptionalInclude):
         if backwards_compat:
             old_path = substitute_include_path(backwards_compat, context)
 
+        self.backwards_compat_fallback = False
         if old_path and os.path.exists(old_path) and not os.path.exists(new_path):
             self.path = old_path
-            # TODO: warn
+            self.backwards_compat_fallback = True
         else:
             self.path = new_path
 
@@ -1335,6 +1337,8 @@ class IncludePath(OptionalInclude):
 
         scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
+            if self.backwards_compat_fallback:
+                scope.backwards_compat_fallback = True
             self._scopes = [scope]
 
         return self._scopes
