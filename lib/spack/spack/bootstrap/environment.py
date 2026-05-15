@@ -99,9 +99,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                 )
                 try:
                     self.install_all(
-                        fail_fast=True,
-                        root_policy=fetch_policy,
-                        dependencies_policy=fetch_policy,
+                        fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
                     )
                 except BaseException:
                     # catch any exception as we always want to clean up
@@ -163,9 +161,12 @@ def dev_bootstrap_mirror_names() -> List[str]:
 
 def download_and_trust_key():
     """Fetches and verifies the validity of Spack's public key"""
-    fingerprint_file = pathlib.Path(spack.paths.share_path) / "bootstrap" / "fingerprints" / "public.txt"
+    fingerprint_file = (
+        pathlib.Path(spack.paths.share_path) / "bootstrap" / "fingerprints" / "public.txt"
+    )
     with open(fingerprint_file, "r", encoding="utf-8") as f:
-        fingerprint, key_endpoint = f.readline().split(":")
+        fingerprint, key_endpoint = f.readline().strip("\n").split(";")
+    fingerprint = fingerprint.strip().upper()
     with spack.stage.Stage(key_endpoint) as stage:
         try:
             stage.fetch()
