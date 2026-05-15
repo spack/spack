@@ -120,8 +120,7 @@ class SpackPaths:
                 self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
                 self._state_home = self.base.old_default_dot_spack
-                # TODO: generate a warning if this dir is occupied (doesn't necessarily
-                # have to happen here)
+                # TODO [default state home case in old ~/.spack]
             else:
                 self._state_home = state_home
 

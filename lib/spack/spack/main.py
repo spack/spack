@@ -927,6 +927,60 @@ def add_command_line_scopes(
         cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
+def _warn_about_old_dotspack():
+    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+    old_dotspack = os.path.expanduser("~/.spack")
+
+    # Don't warn if it doesn't exist
+    if not os.path.exists(old_dotspack):
+        return
+
+    # Check if explicitly configured via config:locations
+    if spack.config.get("config:locations"):
+        # Any config:locations setting means explicit configuration, don't warn
+        return
+
+    # Check if explicitly configured via environment variables
+    explicit_env_vars = [
+        "SPACK_HOME",
+        "SPACK_DATA_HOME",
+        "SPACK_STATE_HOME",
+        "SPACK_CACHE_HOME",
+        "SPACK_USER_CACHE_PATH",
+    ]
+    if any(var in os.environ for var in explicit_env_vars):
+        # Explicitly configured, don't warn
+        return
+
+    # Helper to check if old_dotspack is a prefix
+    def uses_old_dotspack(path):
+        return path == old_dotspack or path.startswith(old_dotspack + os.sep)
+
+    # Check if any config scope is using ~/.spack (means explicit configuration)
+    for scope in spack.config.CONFIG.scopes.values():
+        if hasattr(scope, "path") and uses_old_dotspack(scope.path):
+            # Explicitly configured via a config scope, don't warn
+            return
+
+    from spack.paths import locations as paths
+
+    # Check which paths are using ~/.spack
+    parts = []
+    if uses_old_dotspack(paths.state_home):
+        parts.append("user cache path is in use")
+    if uses_old_dotspack(paths.data_home):
+        parts.append("data home is in use")
+    if uses_old_dotspack(paths.cache_home):
+        parts.append("cache home is in use")
+
+    # Only warn if something is using it
+    if not parts:
+        return
+
+    usage = " and ".join(parts)
+    tty.warn(f"Old config/user-cache-path in `~/.spack` detected ({usage}). Run `spack migrate`")
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -1054,7 +1108,9 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        _warn_about_old_dotspack()
+        return result
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
