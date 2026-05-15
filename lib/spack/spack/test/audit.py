@@ -34,6 +34,8 @@ import spack.config
         (["fail-test-audit-impl"], ["PKG-PROPERTIES"]),
         # This package has maintainers with placeholders
         (["invalid-maintainer"], ["PKG-DIRECTIVES"]),
+        # This package has a placeholder license
+        (["invalid-license"], ["PKG-DIRECTIVES"]),
         # This package has no issues
         (["mpileaks"], None),
         # This package has a conflict with a trigger which cannot constrain the constraint
