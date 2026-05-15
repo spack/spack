@@ -398,6 +398,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a logs -d 'print ou
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a maintainers -d 'get information about package maintainers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d 'generate Windows installer'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a migrate -d 'migrate user config and cache from old to new locations'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mirror -d 'manage mirrors (source and binary)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a module -d 'generate/manage module files'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded sources in preparation for install'
@@ -2356,6 +2357,17 @@ complete -c spack -n '__fish_spack_using_command mark' -s e -l explicit -f -a ex
 complete -c spack -n '__fish_spack_using_command mark' -s e -l explicit -d 'mark packages as explicitly installed'
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -f -a implicit
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark packages as implicitly installed'
+
+# spack migrate
+set -g __fish_spack_optspecs_spack_migrate h/help dry-run clear restore-old-configs
+complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -d 'show what would be migrated without actually moving files'
+complete -c spack -n '__fish_spack_using_command migrate' -l clear -f -a clear
+complete -c spack -n '__fish_spack_using_command migrate' -l clear -d 'move entire ~/.spack directory to backup location:use this if no other instances need this old location'
+complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -f -a restore_old_configs
+complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -d 'restore ~/.spack from backup location (after --clear)'
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum
