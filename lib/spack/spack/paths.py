@@ -105,6 +105,13 @@ class SpackPaths:
         )
 
         self.old_layout_detected = detect_old_spack_layout(base)
+        self._new_layout_enforced = None
+
+    @property
+    def new_layout_enforced(self):
+        if not self._new_layout_enforced:
+            self._new_layout_enforced = new_layout_enforced()
+        return self._new_layout_enforced
 
     @property
     def state_home(self):
@@ -404,8 +411,8 @@ def freeze():
         "data_home": locations.data_home,
         "cache_home": locations.cache_home,
         "old_layout_detected": locations.old_layout_detected,
+        "new_layout_enforced": new_layout_enforced(),
     }
-    # TODO: also need to propagate new_layout_enforced()
 
 
 def restore(bundled_state):
@@ -413,3 +420,4 @@ def restore(bundled_state):
     locations._data_home = bundled_state["data_home"]
     locations._cache_home = bundled_state["cache_home"]
     locations.old_layout_detected = bundled_state["old_layout_detected"]
+    locations._new_layout_enforced = bundled_state["new_layout_enforced"]
