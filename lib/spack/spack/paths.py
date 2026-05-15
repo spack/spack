@@ -403,12 +403,13 @@ def freeze():
         "state_home": locations.state_home,
         "data_home": locations.data_home,
         "cache_home": locations.cache_home,
-        "old_layout": locations.old_layout,
+        "old_layout_detected": locations.old_layout_detected,
     }
+    # TODO: also need to propagate new_layout_enforced()
 
 
 def restore(bundled_state):
     locations._state_home = bundled_state["state_home"]
     locations._data_home = bundled_state["data_home"]
     locations._cache_home = bundled_state["cache_home"]
-    locations.old_layout = bundled_state["old_layout"]
+    locations.old_layout_detected = bundled_state["old_layout_detected"]
