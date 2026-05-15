@@ -109,7 +109,7 @@ class SpackPaths:
 
     @property
     def new_layout_enforced(self):
-        if not self._new_layout_enforced:
+        if self._new_layout_enforced is None:
             self._new_layout_enforced = new_layout_enforced()
         return self._new_layout_enforced
 
@@ -125,7 +125,7 @@ class SpackPaths:
 
             self.default_state_home_dot_spack = False
 
-            if new_layout_enforced():
+            if self.new_layout_enforced:
                 self._state_home = state_home
             elif "SPACK_USER_CACHE_PATH" in os.environ:
                 # If we're here, SPACK_STATE_HOME is not in os.environ
@@ -363,7 +363,7 @@ class SpackPaths:
     def _decide_old_or_new_location(
         self, old_location, new_location, default_new_location, provenance
     ):
-        if new_layout_enforced():
+        if self.new_layout_enforced:
             return new_location
         if self.old_layout_detected:
             return old_location
