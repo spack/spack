@@ -149,8 +149,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         tty.msg("Migration conflicts detected (files already in new locations):")
         for error in errors:
             tty.msg(f"  {error}")
-        tty.msg(f"\nSkipping migration")
-        migrations = []
+        tty.msg(f"\nSkipping migration and backup/clear due to conflicts")
+        # Exit early here regardless of --clear (we shouldn't move .spack if
+        # we couldn't copy out the components we want)
+        return
     elif not migrations:
         tty.msg("Nothing to migrate - no config files or package repositories found in ~/.spack")
 
