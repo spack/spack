@@ -14,6 +14,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
+import spack.mirrors.mirror
 import spack.paths
 import spack.repo as repo
 import spack.util.git
@@ -450,7 +451,11 @@ def test_ci_create_buildcache(working_env, config, monkeypatch):
     monkeypatch.setattr(ci, "push_to_build_cache", lambda a, b, c: True)
 
     results = ci.create_buildcache(
-        Spec(), destination_mirror_urls=["file:///fake-url-one", "file:///fake-url-two"]
+        Spec(),
+        destination_mirrors=[
+            spack.mirrors.mirror.Mirror("file:///fake-url-one"),
+            spack.mirrors.mirror.Mirror("file:///fake-url-two"),
+        ],
     )
 
     assert len(results) == 2
@@ -460,7 +465,9 @@ def test_ci_create_buildcache(working_env, config, monkeypatch):
     assert result2.success
     assert result2.url == "file:///fake-url-two"
 
-    results = ci.create_buildcache(Spec(), destination_mirror_urls=["file:///fake-url-one"])
+    results = ci.create_buildcache(
+        Spec(), destination_mirrors=[spack.mirrors.mirror.Mirror("file:///fake-url-one")]
+    )
 
     assert len(results) == 1
     assert results[0].success

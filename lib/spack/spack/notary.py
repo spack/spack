@@ -61,11 +61,11 @@ class Notary(metaclass=abc.ABCMeta):
         pass
 
     @property
-    def is_signing(cls):
+    def is_signing(self):
         return True
 
     @property
-    def is_validating(cls):
+    def is_validating(self):
         return True
 
 
@@ -106,11 +106,11 @@ class NonSigningNotary(Notary):
         return []
 
     @property
-    def is_signing(cls):
+    def is_signing(self):
         return False
 
     @property
-    def is_validating(cls):
+    def is_validating(self):
         return False
 
 
@@ -203,6 +203,13 @@ class GpgNotary(Notary):
             spack.util.gpg.export_keys(str(file), [key])
 
         return list(zip(keys, files))
+
+    @property
+    def is_signing(self):
+        # Attempt to load the Gpg signing key to ensure that this notary
+        # can actual sign things
+        _ = self._signing_key
+        return True
 
 
 def select_notary(

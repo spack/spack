@@ -937,7 +937,7 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path: pathlib.Path, cap
 
     # Input doesn't matter, as we are faking exceptional output
     url = tmp_path.as_uri()
-    ci.push_to_build_cache(spack.spec.Spec(), spack.mirrors.mirror.Mirror(**dict(url=url)), False)
+    ci.push_to_build_cache(spack.spec.Spec(), spack.mirrors.mirror.Mirror(url), False)
     assert f"Problem writing to {url}: Error: Access Denied" in capfd.readouterr().err
 
 

@@ -1317,7 +1317,6 @@ def test_buildcache_check_index_full(
     blob_path = tmp_path / "blobs" / "sha256"
     with open(tmp_path / "v3" / "manifests" / "index" / index_name, "r", encoding="utf-8") as fd:
         manifest = json.load(fd)
-        print(manifest)
         digest = manifest["data"][0]["checksum"]
         blob_path = blob_path / digest[:2] / digest
 

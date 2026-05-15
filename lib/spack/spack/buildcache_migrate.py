@@ -258,7 +258,9 @@ def migrate(
     notary = None
     if not unsigned:
         try:
-            notary = spack.notary.select_notary(mirror, signed=not unsigned)
+            notary = spack.notary.select_notary(mirror, signed=True)
+            if not notary.is_signing:
+                raise spack.notary.NoKeyException("")
         except (spack.notary.NoKeyException, spack.notary.PickKeyException):
             raise MigrationException(
                 "Signed migration requires exactly one secret key in keychain"
@@ -304,6 +306,7 @@ def migrate(
         ]
 
         success_count = 0
+        errors_detected = False
 
         tty.msg("Migration summary:")
         for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
@@ -314,6 +317,7 @@ def migrate(
                 tty.msg(msg)
             else:
                 tty.error(msg)
+                errors_detected = True
             # The migrated index should have the same specs as the original index,
             # modulo any specs that we failed to migrate for whatever reason. So
             # to avoid having to re-fetch all the spec files now, just mark them
@@ -339,11 +343,15 @@ def migrate(
                 spack.binary_distribution._url_push_keys(
                     mirror_url, keys=notary.get_keys(), update_index=True, tmpdir=keys_tmpdir
                 )
-        else:
-            tty.warn("No specs migrated, did you mean to perform an unsigned migration instead?")
+
+        if errors_detected:
+            tty.warn(
+                "Failed to migrated some specs, did you "
+                "mean to perform an unsigned migration instead?"
+            )
 
         # Delete the old layout if the user requested it
-        if delete_existing:
+        if not errors_detected and delete_existing:
             delete_prefix = url_util.join(mirror_url, "build_cache")
             tty.msg(f"Recursively deleting {delete_prefix}")
             web_util.remove_url(delete_prefix, recursive=True)
