@@ -6,7 +6,6 @@ import ast
 import os
 import re
 import sys
-from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
@@ -81,42 +80,6 @@ def get_git() -> Executable:
     return spack.util.git.git(required=True)
 
 
-def get_repo_default_ref(repo: spack.repo.Repo) -> str:
-    git = get_git()
-    full_default = ""
-    with fsys.working_dir(repo.root):
-        res = git(
-            "rev-parse", "--abbrev-ref", "origin/HEAD", fail_on_error=False, output=str, error=str
-        )
-        if git.returncode == 0 and res:
-            full_default = res.strip()
-
-        if git.returncode != 0 or not full_default or "origin/HEAD" in full_default:
-            ls_remote = git(
-                "ls-remote",
-                "--symref",
-                "origin",
-                "HEAD",
-                fail_on_error=False,
-                output=str,
-                error=str,
-            )
-            if git.returncode == 0 and ls_remote:
-                for line in ls_remote.splitlines():
-                    if line.startswith("ref:"):
-                        full_ref = line.split()[1]
-                        full_default = full_ref.split("/")[-1]
-                        break
-
-    if not full_default:
-        raise RuntimeError("Cannot determine default git ref")
-
-    if full_default.startswith("origin/"):
-        return full_default.replace("origin/", "", 1)
-
-    return full_default
-
-
 def get_repo_git_root(repo: spack.repo.Repo):
     git = get_git()
     with fsys.working_dir(repo.root):
@@ -129,21 +92,7 @@ def get_repo_git_root(repo: spack.repo.Repo):
 
 def get_all_repo_py_files(repo: spack.repo.Repo):
     """returns all python files in a given package repo"""
-    git = get_git()
-    with fsys.working_dir(repo.root):
-        all_files = git(
-            "ls-files",
-            "--cached",
-            "--others",
-            "--exclude-standard",
-            "*.py",
-            fail_on_error=False,
-            output=str,
-            error=str,
-        )
-    if git.returncode != 0:
-        raise RuntimeError(f"Encountered and error running git on {repo}")
-    return [repo.root / Path(x) for x in all_files.splitlines()]
+    return list(Path(repo.root).rglob("*.py"))
 
 
 def is_relative_to(path: Path, root: Union[Path, str]):
@@ -155,7 +104,7 @@ def is_relative_to(path: Path, root: Union[Path, str]):
 
 
 def changed_files_repo(
-    repo: spack.repo.Repo, untracked=True, all_files: bool = False, root=None, base=None
+    repo: spack.repo.Repo, untracked=True, all_files: bool = False, root=None, base="develop"
 ) -> List[Path]:
     """Get list of changed files in given repo
 
@@ -164,17 +113,14 @@ def changed_files_repo(
         untracked: include untracked packages
         all_packages: include all package files
     """
+    if not root:
+        root = get_repo_git_root(repo) or repo.root
     try:
-        if not base:
-            base = get_repo_default_ref(repo)
-        file_root = get_repo_git_root(repo) or repo.root
         return [
-            file_root / x
-            for x in changed_files(
-                root=file_root, base=base, untracked=untracked, all_files=all_files
-            )
+            root / x
+            for x in changed_files(root=str(root), base=base, untracked=untracked, all_files=all_files)
         ]
-    except RuntimeError:
+    except SystemExit:
         return get_all_repo_py_files(repo)
 
 
@@ -268,7 +214,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--root-relative",
         action="store_true",
         default=False,
-        help="print root-relative paths (default: cwd-relative)",
+        help="print root-relative paths (default: cwd-relative or repo-relative"
+        " if --repo is specified)",
     )
     subparser.add_argument(
         "-U",
@@ -286,7 +233,20 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="format automatically if possible (e.g., with isort, black)",
     )
     subparser.add_argument(
-        "--root", action="store", default=None, help="style check a different spack instance"
+        "--root",
+        action="store",
+        default=None,
+        help="style check a different spack or repo instance."
+        " If --repo is specified, --root should be the root of"
+        " the repo repository, not the repo root.",
+    )
+    subparser.add_argument(
+        "--repo",
+        nargs="?",
+        const="builtin",
+        default=None,
+        help="repositories to perform style checks against, specified by namespace."
+        " (default: builtin)",
     )
 
     tool_group = subparser.add_mutually_exclusive_group()
@@ -310,24 +270,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "v1.0 and v0.x. Example: spack style ``--spec-strings $(git ls-files)``. Note: must be "
         "used only on specs from spack v0.X.",
     )
-    repo_group = subparser.add_argument_group(
-        title="Repo", description="Options to configure style checks on Spack repositories"
-    )
-
-    repo_group.add_argument(
-        "--repo",
-        nargs="*",
-        help="repositories to perform style checks against, specified by namespace,"
-        " space separated. (default: builtin)",
-    )
-    repo_group.add_argument(
-        "--repo-only",
-        action="store_true",
-        default=False,
-        help="Runs style checks only against given repositories, specified by namespace, "
-        " not spack core. (default: builtin)",
-    )
-
     subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
 
 
@@ -338,16 +280,13 @@ def cwd_relative(path: Path, root: Union[Path, str], initial_working_dir: Path) 
     return Path(os.path.relpath((root / path), initial_working_dir))
 
 
-def validate_repos(repos: List[str]) -> List[spack.repo.Repo]:
-    valid_repos = []
-    for repo in repos:
-        try:
-            pkg_repo = spack.repo.PATH.get_repo(repo)
-        except spack.repo.UnknownNamespaceError:
-            tty.debug(f"Unknown Namespace: {repo}. Skipping style checks on unknown repo")
-        else:
-            valid_repos.append(pkg_repo)
-    return valid_repos
+def validate_repo(repo: str) -> Optional[spack.repo.Repo]:
+    pkg_repo = None
+    try:
+        pkg_repo = spack.repo.PATH.get_repo(repo)
+    except spack.repo.UnknownNamespaceError:
+        tty.error(f"Unknown Namespace: {repo}. Skipping style checks on unknown repo")
+    return pkg_repo
 
 
 def repo_config_file(repo: spack.repo.Repo, *config_file_names: str):
@@ -653,21 +592,16 @@ def _run_import_check(
 
 @tool("import", external=False)
 def run_import_check(file_list, args, repo: Optional[spack.repo.Repo] = None):
-    root = args.root
     working_dir = args.initial_working_dir
-    base = args.base
     if repo:
-        repo_root = get_repo_git_root(repo) or Path(repo.root)
-        root = repo_root
-        working_dir = repo_root
-        base = ""
+        working_dir = args.root
     exit_code = _run_import_check(
         file_list,
         fix=args.fix,
         root_relative=args.root_relative,
-        root=root,
+        root=args.root,
         working_dir=working_dir,
-        base=base,
+        base=args.base,
         all=args.all,
         repo=repo,
     )
@@ -718,30 +652,39 @@ def style(parser, args):
     # save initial working directory for relativizing paths later
     args.initial_working_dir = Path.cwd()
 
-    # ensure that the config files we need actually exist in the spack prefix.
-    # assertions b/c users should not ever see these errors -- they're checked in CI.
-    assert (Path(spack.paths.prefix) / "pyproject.toml").is_file()
-
-    # validate spack root if the user provided one
-    args.root = Path(args.root).resolve() if args.root else Path(spack.paths.prefix)
-    spack_script = args.root / "bin" / "spack"
-    if not spack_script.exists():
-        tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
-
     def prefix_relative(path: Union[Path, str]) -> Path:
         return Path(os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root))
 
-    # determine repos to run style checks on
+    # determine repo to run style checks on
     # if --repo is given but no repos are listed
     # we fallback to builtin by default
-    repos = []
     # args.repo is none if --repo is not supplied
     # if supplied with no args, its []
     # if supplied with args, [repo_name1, ...]
-    if args.repo is not None or args.repo_only:
-        repos = validate_repos(args.repo or ["builtin"])
-        if not repos:
-            raise SpackError("Style specified repos or repo-only but no repos were found.")
+    repo = None
+    if args.repo:
+        repo = validate_repo(args.repo or "builtin")
+        if not repo:
+            raise SpackError(f"Style specified repo: {args.repo} but no repo was found.")
+
+    # ensure that the config files we need actually exist in the spack prefix.
+    # assertions b/c users should not ever see these errors -- they're checked in CI.
+    assert (Path(spack.paths.prefix) / "pyproject.toml").is_file()
+    default_root_base = (
+        get_repo_git_root(repo) or Path(repo.root) if repo else Path(spack.paths.prefix)
+    )
+    # validate spack root if the user provided one
+    args.root = Path(args.root).resolve() if args.root else default_root_base
+
+    # no need to validate the repo, we already have by virtue of the repo object's construction
+    # we need to validate spack core repos though, since users can point to any directory
+    # with --root
+    if not repo:
+        spack_script = args.root / "bin" / "spack"
+        if not spack_script.exists():
+            tty.die(
+                "This does not look like a valid spack root.", "No such file: '%s'" % spack_script
+            )
 
     # process --tool and --skip arguments
     selected = set(tool_names)
@@ -758,46 +701,47 @@ def style(parser, args):
     if missing_tools(tools_to_run):
         _bootstrap_dev_dependencies()
 
-    def find_repo_file(path, repos):
-        for repo in repos:
-            if is_relative_to(path, repo.root):
-                return (repo, path)
-        return ()
-
-    repo_file_dict = defaultdict(list)
-    core_file_list = []
+    repo_files = []
+    core_files = []
     for file in args.files:
-        repo_assoc = find_repo_file(file, repos)
-        if repo_assoc:
-            repo_file_dict[repo_assoc[0]].append(repo_assoc[1])
+        file = Path(file)
+        if is_relative_to(file, args.root):
+            core_files.append(prefix_relative(file))
+        elif repo and is_relative_to(file, repo.root):
+            repo_files.append(file)
         else:
-            core_file_list.append(prefix_relative(file))
+            tty.warn(
+                f"File {file} is not in the spack root or specified repo,"
+                " linting as if it were core."
+            )
+            core_files.append(prefix_relative(file))
 
     return_code = 0
 
-    if not args.repo_only:
+    if not repo:
         # run over core spack
         with working_dir(str(args.root)):
-            print_style_header(core_file_list, args, tools_to_run)
+            print_style_header(core_files, args, tools_to_run)
             for tool_name in tools_to_run:
                 tool = tools[tool_name]
                 tty.msg(f"Running {tool.name} checks")
-                return_code |= tool.fun(core_file_list, args)
-    elif core_file_list:
-        tty.msg(
-            f"Repo only specified but files in core provided: Skipping {', '.join(core_file_list)}"
-        )
+                return_code |= tool.fun(core_files, args)
+    elif core_files:
+        tty.msg(f"Repo specified but files in core provided: Skipping {', '.join(core_files)}")
 
     # run over package repositories
-    if repos:
+    if repo:
         repo_tools = [x for x in tools_to_run if x != "mypy"]
-        for repo in repos:
-            repo_list = repo_file_dict[repo]
-            print_style_header_repo(repo_list, repo, repo_tools)
-            for tool_name in repo_tools:
-                tool = tools[tool_name]
-                tty.msg(f"Running {tool.name} checks")
-                return_code |= tool.fun(repo_list, args, repo)
+        print_style_header_repo(repo_files, repo, repo_tools)
+        for tool_name in repo_tools:
+            tool = tools[tool_name]
+            tty.msg(f"Running {tool.name} checks")
+            return_code |= tool.fun(repo_files, args, repo)
+    elif repo_files:
+        tty.msg(
+            "Files provided in repo specified but no repo provided:"
+            f" Skipping {', '.join(repo_files)}"
+        )
 
     if return_code == 0:
         tty.msg(color.colorize("@*{spack style checks were clean}"))

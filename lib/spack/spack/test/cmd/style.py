@@ -490,26 +490,4 @@ def test_repo_style(repo_builder: RepoBuilder, ruff_package_with_errors, externa
         bad_file_rel_path = os.path.relpath(bad_file, repo.root)
         assert bad_file_rel_path in output
         # check that we still ran on core
-        assert "lib/spack/spack/dummy.py" in output
-
-
-@pytest.mark.skipif(not RUFF, reason="ruff not installed")
-def test_repo_only_style(repo_builder: RepoBuilder, ruff_package_with_errors):
-    """Test repo only does not lint core changes"""
-    repo_builder.add_package("pkg-c")
-    repo_builder.add_package("pkg-b", dependencies=[("pkg-d", None, None), ("pkg-e", None, None)])
-    repo_builder.add_package("pkg-a", dependencies=[("pkg-b", None, None), ("pkg-c", None, None)])
-    with spack.repo.use_repositories(repo_builder.root) as repo_path:
-        repo = repo_path.get_repo(repo_builder.namespace)
-        repo_name = repo.namespace
-        repo_root = pathlib.Path(repo.root)
-        make_pyproject_config(repo_root)
-        bad_file = pathlib.Path(repo_builder._recipe_filename("bad_package"))
-        bad_file.parent.mkdir(parents=True)
-        bad_file.touch()
-        shutil.copy(ruff_package_with_errors, bad_file)
-        output = style("--repo-only", "--repo", repo_name, "-t", "ruff-check", fail_on_error=False)
-        bad_file_rel_path = os.path.relpath(bad_file, repo.root)
-        assert bad_file_rel_path in output
-        # check that we did not run on core
         assert "lib/spack/spack/dummy.py" not in output
