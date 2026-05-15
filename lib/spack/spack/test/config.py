@@ -1722,11 +1722,7 @@ def backwards_compat_setup(tmp_path: pathlib.Path):
     # Path doesn't exist yet
     to_dir = tmp_path / "to"
 
-    entry = {
-        "path": str(to_dir),
-        "optional": True,
-        "backwards_compat": str(src_dir)
-    }
+    entry = {"path": str(to_dir), "optional": True, "backwards_compat": str(src_dir)}
 
     yield src_dir, to_dir, entry
 

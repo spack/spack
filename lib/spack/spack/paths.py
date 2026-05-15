@@ -72,7 +72,12 @@ class Spack_vars(Enum):
     @classmethod
     def new_layout(cls):
         # Exclude SPACK_USER_CACHE_PATH
-        return [Spack_vars.state_home, Spack_vars.data_home, Spack_vars.cache_home, Spack_vars.home]
+        return [
+            Spack_vars.state_home,
+            Spack_vars.data_home,
+            Spack_vars.cache_home,
+            Spack_vars.home,
+        ]
 
 
 # This is for tests that want to clean the environment of XDG_ variables that

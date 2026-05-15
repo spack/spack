@@ -25,7 +25,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--clear",
         action="store_true",
         help="move entire ~/.spack directory to backup location:"
-             "use this if no other instances need this old location",
+        "use this if no other instances need this old location",
     )
     subparser.add_argument(
         "--restore-old-configs",
@@ -53,8 +53,7 @@ def restore_old_configs(args: argparse.Namespace) -> None:
 
     if not backup_location:
         tty.die(
-            f"No backup found. Checked:\n"
-            + "\n".join(f"  - {loc}" for loc in backup_locations)
+            "No backup found. Checked:\n" + "\n".join(f"  - {loc}" for loc in backup_locations)
         )
 
     # Check if ~/.spack already exists
@@ -109,7 +108,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if config_files:
         if os.path.exists(new_config_location):
             existing_configs = [
-                f for f in os.listdir(new_config_location)
+                f
+                for f in os.listdir(new_config_location)
                 if f.endswith(".yaml") or f.endswith(".yml")
             ]
             if existing_configs:
@@ -119,9 +119,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
                 )
 
         if not errors:
-            migrations.append(
-                ("config", config_files, old_location, new_config_location)
-            )
+            migrations.append(("config", config_files, old_location, new_config_location))
 
     # 2. Check for package repositories to migrate
     old_package_repos = os.path.join(old_location, "package_repos")
@@ -141,15 +139,13 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
                     )
 
             if not errors:
-                migrations.append(
-                    ("package_repos", repos, old_package_repos, new_package_repos)
-                )
+                migrations.append(("package_repos", repos, old_package_repos, new_package_repos))
 
     if errors:
         tty.msg("Migration conflicts detected (files already in new locations):")
         for error in errors:
             tty.msg(f"  {error}")
-        tty.msg(f"\nSkipping migration and backup/clear due to conflicts")
+        tty.msg("\nSkipping migration and backup/clear due to conflicts")
         # Exit early here regardless of --clear (we shouldn't move .spack if
         # we couldn't copy out the components we want)
         return

@@ -34,7 +34,6 @@ import os
 import os.path
 import pathlib
 import re
-import shutil
 import sys
 import tempfile
 from collections import defaultdict
