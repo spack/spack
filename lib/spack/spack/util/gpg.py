@@ -1000,6 +1000,22 @@ def verify(signature: str, file: Optional[str] = None, suppress_warnings: bool =
 
 
 @_autoinit
+def validate_fingerprint(fingerprint: str, keyfile: str):
+    """Verify a given key's fingerprint matches the provided fingerprint
+    
+    Args:
+        fingerpint: fingerprint used to verify the public key
+        keyfile: filepath to public key that needs fingerprint confirmation
+    """
+    key_fpr = public_keys_to_fingerprint(keyfile)
+    # just one key, so we know it's the first index
+    fpr = key_fpr[0][1]
+    if fpr != fingerprint:
+        raise SpackGPGError(f"Trusted fingerprint does not match fingerprint from public key: {keyfile}")
+    trust(keyfile)
+
+
+@_autoinit
 def glist(trusted: bool, signing: bool, fmt: str = "default"):
     """List known keys.
 
