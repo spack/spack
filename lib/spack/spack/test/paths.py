@@ -135,6 +135,31 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
     )
 
 
+def test_state_home(working_env, tmp_path, mutable_config, set_home):
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+
+    set_home(home_prefix)
+    pb = SpackPathsBase(base_prefix)
+
+    p0 = SpackPaths(pb)
+    # if neither old nor new dir is occupied, choose new
+    assert p0.state_home == str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
+
+    old_user_cache_path = pathlib.Path(home_prefix) / ".spack"
+    old_user_cache_path.mkdir(parents=True)
+    (old_user_cache_path / "afile").touch()
+    p1 = SpackPaths(pb)
+    # if new dir does not exist, and old dir does, choose old
+    assert p1.state_home == str(old_user_cache_path)
+
+    os.environ["SPACK_DATA_HOME"] = base_prefix
+    p2 = SpackPaths(pb)
+    # even though new dir does not exist, and old dir does, if the user sets a variable
+    # like SPACK_DATA_HOME use the new default location for state_home/user_cache_path
+    assert p2.state_home == str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
+
+
 def test_system_config_path_is_overridable(working_env, tmp_path):
     redirect_syscfg_path = str(pathlib.Path(tmp_path) / "redirected_syscfg")
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = redirect_syscfg_path
