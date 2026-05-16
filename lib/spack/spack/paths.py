@@ -126,12 +126,17 @@ class SpackPaths:
             self.default_state_home_dot_spack = False
 
             def cfg_state_home():
-                return config.get("config:locations:home", None) or config.get("config:locations:state", None)
+                return config.get("config:locations:home", None) or config.get(
+                    "config:locations:state", None
+                )
 
             def env_state_home():
                 disable_env = config.get("config:locations:disable_env", False)
-                return not disable_env and any(x in os.environ for x in ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME", "SPACK_HOME"])
-        
+                return not disable_env and any(
+                    x in os.environ
+                    for x in ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME", "SPACK_HOME"]
+                )
+
             if env_state_home() or cfg_state_home():
                 self._state_home = state_home
             elif dir_is_occupied(state_home):
