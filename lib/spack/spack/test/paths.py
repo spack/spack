@@ -142,9 +142,11 @@ def test_state_home(working_env, tmp_path, mutable_config, set_home):
     set_home(home_prefix)
     pb = SpackPathsBase(base_prefix)
 
+    new_user_cache_path = str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
+
     p0 = SpackPaths(pb)
     # if neither old nor new dir is occupied, choose new
-    assert p0.state_home == str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
+    assert p0.state_home == new_user_cache_path
 
     old_user_cache_path = pathlib.Path(home_prefix) / ".spack"
     old_user_cache_path.mkdir(parents=True)
@@ -155,9 +157,17 @@ def test_state_home(working_env, tmp_path, mutable_config, set_home):
 
     os.environ["SPACK_DATA_HOME"] = base_prefix
     p2 = SpackPaths(pb)
-    # even though new dir does not exist, and old dir does, if the user sets a variable
-    # like SPACK_DATA_HOME use the new default location for state_home/user_cache_path
-    assert p2.state_home == str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
+    # While setting any new-style location env var or config:locations value
+    # relocates installs, gpg keys, downloads, etc. It does not make spack
+    # choose ~/.local/state/spack over ~/.spack
+    assert p2.state_home == str(old_user_cache_path)
+
+    os.environ["SPACK_HOME"] = home_prefix
+    p3 = SpackPaths(pb)
+    # ... SPACK_HOME is special amongst these variables though, because by
+    # definition it is supposed to relocate everything except for config
+    # (caches included)
+    assert p3.state_home == new_user_cache_path
 
 
 def test_system_config_path_is_overridable(working_env, tmp_path):

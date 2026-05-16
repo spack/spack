@@ -125,11 +125,15 @@ class SpackPaths:
 
             self.default_state_home_dot_spack = False
 
-            if self.new_layout_enforced:
+            def cfg_state_home():
+                return config.get("config:locations:home", None) or config.get("config:locations:state", None)
+
+            def env_state_home():
+                disable_env = config.get("config:locations:disable_env", False)
+                return not disable_env and any(x in os.environ for x in ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME", "SPACK_HOME"])
+        
+            if env_state_home() or cfg_state_home():
                 self._state_home = state_home
-            elif "SPACK_USER_CACHE_PATH" in os.environ:
-                # If we're here, SPACK_STATE_HOME is not in os.environ
-                self._state_home = os.environ.get("SPACK_USER_CACHE_PATH")
             elif dir_is_occupied(state_home):
                 self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
