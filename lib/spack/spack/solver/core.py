@@ -3,30 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Low-level wrappers around clingo API and other basic functionality related to ASP"""
 
+import enum
 import importlib
 import pathlib
 from types import ModuleType
-from typing import Any, Callable, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple, Optional, Tuple
 
 import spack.platforms
 from spack.llnl.util import lang
-
-
-def _ast_getter(*names: str) -> Callable[[Any], Any]:
-    """Helper to retrieve AST attributes from different versions of the clingo API"""
-
-    def getter(node):
-        for name in names:
-            result = getattr(node, name, None)
-            if result:
-                return result
-        raise KeyError(f"node has no such keys: {names}")
-
-    return getter
-
-
-ast_type = _ast_getter("ast_type", "type")
-ast_sym = _ast_getter("symbol", "term")
 
 
 class AspVar:
@@ -102,7 +86,21 @@ class _AspFunctionBuilder:
 #: Global AspFunction builder
 fn = _AspFunctionBuilder()
 
+
+class ClingoFlavor(enum.Enum):
+    """The clingo Python API variant in use.
+
+    Spack supports three: the legacy pre-CFFI API, the CFFI-based API (clingo ``@5.5:5``), and the
+    clingo 6 rewrite, which restructured everything into submodules ``clingo.*``."""
+
+    LEGACY = enum.auto()
+    CFFI = enum.auto()
+    V6 = enum.auto()
+
+
+#: Process-global clingo module and its API flavor, both set once on first import.
 _CLINGO_MODULE: Optional[ModuleType] = None
+_CLINGO_FLAVOR: Optional[ClingoFlavor] = None
 
 
 def clingo() -> ModuleType:
@@ -125,11 +123,22 @@ def clingo() -> ModuleType:
 
 
 def _set_clingo_module_cache(clingo_mod: ModuleType) -> ModuleType:
-    """Sets the global cache to the lazy imported clingo module"""
-    global _CLINGO_MODULE
+    """Caches the lazily-imported clingo module and detects its API flavor once."""
+    global _CLINGO_MODULE, _CLINGO_FLAVOR
     importlib.import_module("clingo.ast")
+    _CLINGO_FLAVOR = _detect_clingo_flavor(clingo_mod)
     _CLINGO_MODULE = clingo_mod
     return clingo_mod
+
+
+def _detect_clingo_flavor(clingo_mod: ModuleType) -> ClingoFlavor:
+    """Determine which of the three supported clingo Python APIs is in use."""
+    if not hasattr(clingo_mod, "Control"):
+        # clingo 6 dropped the top-level Control/Symbol.
+        return ClingoFlavor.V6
+    if hasattr(getattr(clingo_mod, "Symbol", None), "_rep"):
+        return ClingoFlavor.CFFI
+    return ClingoFlavor.LEGACY
 
 
 def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
@@ -143,6 +152,12 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
     try:
         clingo_mod.Symbol
     except AttributeError:
+        # clingo 6 moved Symbol into the clingo.symbol submodule
+        try:
+            if importlib.import_module("clingo.symbol").Symbol is not None:
+                return
+        except (ImportError, AttributeError):
+            pass
         assert clingo_mod.__file__ is not None, "clingo installation is incomplete or invalid"
         # Reaching this point indicates a broken clingo installation
         # If Spack derived clingo, suggest user re-run bootstrap
@@ -176,9 +191,16 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
         )
 
 
-def clingo_cffi() -> bool:
-    """Returns True if clingo uses the CFFI interface"""
-    return hasattr(clingo().Symbol, "_rep")
+def clingo_flavor() -> ClingoFlavor:
+    """Return the cached :class:`ClingoFlavor` of the loaded clingo module.
+
+    The flavor is detected exactly once, when clingo is first imported; callers
+    dispatch off the cached value rather than re-probing the module.
+    """
+    if _CLINGO_FLAVOR is None:
+        clingo()  # forces the import and the one-time flavor detection
+    assert _CLINGO_FLAVOR is not None, "clingo flavor was not detected"
+    return _CLINGO_FLAVOR
 
 
 def _bootstrap_clingo() -> ModuleType:
@@ -192,26 +214,122 @@ def _bootstrap_clingo() -> ModuleType:
     return clingo_mod
 
 
-def parse_files(*args, **kwargs):
-    """Wrapper around clingo parse_files, that dispatches the function according
-    to clingo API version.
-    """
-    clingo()
-    try:
-        return importlib.import_module("clingo.ast").parse_files(*args, **kwargs)
-    except (ImportError, AttributeError):
-        return clingo().parse_files(*args, **kwargs)
+#: Process-global clingo 6 library object (lazily created)
+_CLINGO_LIBRARY: Optional[Any] = None
 
 
-def parse_term(*args, **kwargs):
-    """Wrapper around clingo parse_term, that dispatches the function according
-    to clingo API version.
+def clingo_library() -> Any:
+    """Return a process-global ``clingo.core.Library`` (clingo 6 only).
+
+    A single shared library lets symbols produced by one control object be
+    reused by another (e.g. when ``raise_if_errors`` feeds a model from the
+    main solve into a second control object).
     """
-    clingo()
-    try:
-        return importlib.import_module("clingo.symbol").parse_term(*args, **kwargs)
-    except (ImportError, AttributeError):
-        return clingo().parse_term(*args, **kwargs)
+    global _CLINGO_LIBRARY
+    if _CLINGO_LIBRARY is None:
+        clingo()  # ensure the clingo module is importable
+        _CLINGO_LIBRARY = importlib.import_module("clingo.core").Library()
+    return _CLINGO_LIBRARY
+
+
+class _ClingoBackend:
+    """Context manager adapting the clingo 6 backend to the legacy interface."""
+
+    def __init__(self, manager: Any) -> None:
+        self._manager = manager
+        self._backend: Any = None
+
+    def __enter__(self) -> "_ClingoBackend":
+        self._backend = self._manager.__enter__()
+        return self
+
+    def __exit__(self, *exc_info) -> Any:
+        return self._manager.__exit__(*exc_info)
+
+    def add_atom(self, symbol: Any = None) -> int:
+        return self._backend.atom(symbol)
+
+    def add_rule(self, head: Any, body: Any = (), choice: bool = False) -> None:
+        self._backend.rule(head, body, choice)
+
+
+class _ClingoV6Control:
+    """Adapter exposing the legacy clingo ``Control`` interface on top of the restructured clingo 6
+    Python API.
+
+    Only the subset of the API used by Spack's solver is implemented. This keeps ``asp.py``
+    agnostic to which clingo version is in use; it is created through
+    :func:`default_clingo_control` / :func:`make_error_control` rather than directly."""
+
+    def __init__(self, options: Optional[Tuple[str, ...]] = None) -> None:
+        control_mod = importlib.import_module("clingo.control")
+        # clingo 6's grounder no longer implicitly projects anonymous variables
+        # that occur only in negative body literals (older gringo did). Spack's
+        # logic program relies on that behavior, so request it explicitly.
+        control_options = ["--project-anonymous", *(options or ())]
+        self._control = control_mod.Control(clingo_library(), control_options)
+
+    def add(self, name: str, parameters: Tuple[str, ...], program: str) -> None:
+        # Spack only ever adds the implicit "base" part without parameters.
+        self._control.parse_string(program)
+
+    def load(self, path: str) -> None:
+        self._control.parse_files([path])
+
+    def ground(self, parts: Any) -> None:
+        # ``parts`` looks like ``[("base", [])]``; clingo 6 expects a sequence
+        # of ``(name, [symbols])`` tuples.
+        self._control.ground([(name, list(args)) for name, args in parts])
+
+    def solve(self, on_model: Any = None, async_: bool = False) -> Any:
+        # The returned async handle supports timed ``wait()`` / ``get()`` /
+        # ``cancel()``, matching what ``_run_clingo`` expects.
+        if async_:
+            return self._control.start_solve(on_model=on_model, async_=True)
+        return self._control.solve(on_model=on_model)
+
+    def backend(self) -> _ClingoBackend:
+        return _ClingoBackend(self._control.backend)
+
+    @property
+    def statistics(self) -> Any:
+        # clingo 6 exposes a lazy StatsView; nestify() turns it into a plain
+        # nested dict, matching what older clingo versions returned.
+        return self._control.stats.nestify()
+
+
+def _make_control(options: Tuple[str, ...] = ()) -> Any:
+    """Create a clingo control object for the loaded clingo flavor.
+
+    For clingo 6 the result is a :class:`_ClingoV6Control` adapter; for the
+    legacy/CFFI APIs it is a raw ``clingo.Control``. Both expose the subset of
+    the control interface Spack's solver relies on. ``options`` (command-line
+    options) only apply to clingo 6 -- legacy/CFFI configure the solver through
+    the ``.configuration`` attribute instead.
+    """
+    if clingo_flavor() is ClingoFlavor.V6:
+        return _ClingoV6Control(options)
+    return clingo().Control()
+
+
+def default_clingo_control() -> Any:
+    """Return a control object configured with Spack's default solver settings."""
+    if clingo_flavor() is ClingoFlavor.V6:
+        # clingo 6 has no `configuration` API; the equivalent settings are
+        # passed as command line options instead.
+        return _make_control(
+            ("--configuration=tweety", "--heuristic=Domain", "--opt-strategy=usc")
+        )
+    control = _make_control()
+    control.configuration.configuration = "tweety"
+    control.configuration.solver.heuristic = "Domain"
+    control.configuration.solver.opt_strategy = "usc"
+    return control
+
+
+def make_error_control() -> Any:
+    """Return a plain control object, used to derive error causation on unsat."""
+    return _make_control()
 
 
 class NodeId(NamedTuple):
@@ -253,19 +371,22 @@ def intermediate_repr(sym):
                 flag_group=intermediate_repr(sym.arguments[2]),
                 source=intermediate_repr(sym.arguments[3]),
             )
-    except RuntimeError:
-        # This happens when using clingo w/ CFFI and trying to access ".name" for symbols
-        # that are not functions
+    except (RuntimeError, ValueError):
+        # Accessing ".name" on a non-function symbol raises: RuntimeError with
+        # clingo+CFFI, ValueError with clingo 6.
         pass
 
-    if clingo_cffi():
-        # Clingo w/ CFFI will throw an exception on failure
+    if clingo_flavor() is ClingoFlavor.CFFI:
+        # Clingo w/ CFFI throws RuntimeError on ".string" for a non-string symbol.
         try:
             return sym.string
         except RuntimeError:
             return str(sym)
-    else:
+    # Legacy clingo returns "" for non-string symbols; clingo 6 raises ValueError.
+    try:
         return sym.string or str(sym)
+    except (RuntimeError, ValueError):
+        return str(sym)
 
 
 def extract_args(model, predicate_name):
@@ -274,7 +395,15 @@ def extract_args(model, predicate_name):
     Pull out all the predicates with name ``predicate_name`` from the model, and
     return their intermediate representation.
     """
-    return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
+
+    def _matches(sym):
+        try:
+            return sym.name == predicate_name
+        except (RuntimeError, ValueError):
+            # ".name" raises for non-function symbols (CFFI / clingo 6)
+            return False
+
+    return [intermediate_repr(sym.arguments) for sym in model if _matches(sym)]
 
 
 class SourceContext:

@@ -73,9 +73,10 @@ from .core import (
     AspVar,
     NodeId,
     SourceContext,
-    clingo,
+    default_clingo_control,
     extract_args,
     fn,
+    make_error_control,
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
@@ -106,15 +107,6 @@ class OutputConfiguration(NamedTuple):
 DEFAULT_OUTPUT_CONFIGURATION = OutputConfiguration(
     timers=False, stats=False, out=None, setup_only=False
 )
-
-
-def default_clingo_control():
-    """Return a control object with the default settings used in Spack"""
-    control = clingo().Control()
-    control.configuration.configuration = "tweety"
-    control.configuration.solver.heuristic = "Domain"
-    control.configuration.solver.opt_strategy = "usc"
-    return control
 
 
 # Below numbers are used to map names of criteria to the order
@@ -872,7 +864,7 @@ class ErrorHandler:
         if not initial_error_args:
             return
 
-        error_causation = clingo().Control()
+        error_causation = make_error_control()
 
         parent_dir = pathlib.Path(__file__).parent
         errors_lp = parent_dir / "error_messages.lp"
