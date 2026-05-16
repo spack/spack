@@ -28,6 +28,18 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "use this if no other instances need this old location",
     )
     subparser.add_argument(
+        "--clear-only",
+        action="store_true",
+        help="only move ~/.spack to backup without migrating files "
+        "(useful after running migrate without --clear)",
+    )
+    subparser.add_argument(
+        "--replace",
+        action="store_true",
+        help="replace existing files in new locations (use with --clear "
+        "if you forgot to use --clear on first run)",
+    )
+    subparser.add_argument(
         "--restore-old-configs",
         action="store_true",
         help="restore ~/.spack from backup location (after --clear)",
@@ -85,6 +97,32 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     new_config_location = paths_base.user_config_path
     new_state_location = os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
     backup_location = paths.dotspack_backup
+
+    # Handle --clear-only mode
+    if args.clear_only:
+        if not os.path.exists(old_location):
+            tty.die(f"Old configuration location does not exist: {old_location}")
+        if os.path.exists(backup_location):
+            tty.die(f"Backup location already exists: {backup_location}")
+
+        if args.dry_run:
+            tty.msg(f"Would move {old_location} to {backup_location}")
+            return
+
+        os.makedirs(os.path.dirname(backup_location), exist_ok=True)
+        shutil.move(old_location, backup_location)
+        tty.msg(f"Backup complete! Original ~/.spack moved to {backup_location}")
+        return
+
+    # Handle --replace: delete destination directories before migrating
+    if args.replace:
+        if os.path.exists(new_config_location):
+            tty.msg(f"Removing existing config location: {new_config_location}")
+            shutil.rmtree(new_config_location)
+        new_package_repos = os.path.join(new_state_location, "package_repos")
+        if os.path.exists(new_package_repos):
+            tty.msg(f"Removing existing package repos: {new_package_repos}")
+            shutil.rmtree(new_package_repos)
 
     # Check if old location exists
     if not os.path.exists(old_location):
