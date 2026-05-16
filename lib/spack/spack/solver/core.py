@@ -263,10 +263,7 @@ class _ClingoV6Control:
 
     def __init__(self, options: Optional[Tuple[str, ...]] = None) -> None:
         control_mod = importlib.import_module("clingo.control")
-        # clingo 6's grounder no longer implicitly projects anonymous variables
-        # that occur only in negative body literals (older gringo did). Spack's
-        # logic program relies on that behavior, so request it explicitly.
-        control_options = ["--project-anonymous", *(options or ())]
+        control_options = [*(options or ())]
         self._control = control_mod.Control(clingo_library(), control_options)
 
     def add(self, name: str, parameters: Tuple[str, ...], program: str) -> None:
