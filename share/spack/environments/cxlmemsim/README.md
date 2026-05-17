@@ -123,15 +123,18 @@ cxlmemsim_server \
   --backing-file "${TMPDIR:-/tmp}/cxlmemsim/cxlmemsim_shared"
 ```
 
-Then launch QEMU in another shell:
+Then launch QEMU in another shell with launcher-managed server startup disabled:
 
 ```console
-CXL_TRANSPORT_MODE=shm CXL_PGAS_SHM=/cxlmemsim_pgas qemu_launch_cxl.sh
+CXL_MEMSIM_SERVER_AUTOSTART=0 \
+CXL_TRANSPORT_MODE=shm \
+CXL_PGAS_SHM=/cxlmemsim_pgas \
+qemu_launch_cxl.sh
 ```
 
 ### TCP Mode
 
-TCP mode requires a running server on the local port. The launcher will fail early if `CXL_TRANSPORT_MODE=tcp` and no `cxlmemsim_server` binary is available.
+TCP mode requires a running server on the local port. With the default `CXL_MEMSIM_SERVER_AUTOSTART=auto`, the launcher starts it and fails early if no `cxlmemsim_server` binary is available.
 
 Launcher-managed TCP:
 
@@ -154,9 +157,10 @@ cxlmemsim_server \
   --backing-file "${TMPDIR:-/tmp}/cxlmemsim/cxlmemsim_shared"
 ```
 
-Then launch QEMU:
+Then launch QEMU with launcher-managed server startup disabled:
 
 ```console
+CXL_MEMSIM_SERVER_AUTOSTART=0 \
 CXL_TRANSPORT_MODE=tcp \
 CXL_MEMSIM_HOST=127.0.0.1 \
 CXL_MEMSIM_PORT=9999 \
@@ -178,7 +182,7 @@ qemu_launch_cxl.sh
 
 ## Troubleshooting
 
-- `cxlmemsim_server not found`: rebuild this environment with `+server`, then run `spack load cxlmemsim`. You can also set `CXL_MEMSIM_SERVER_BINARY` to a compatible server binary.
+- `cxlmemsim_server not found`: rebuild this environment with `+server`, then run `spack load cxlmemsim`. You can also set `CXL_MEMSIM_SERVER_BINARY` to a compatible server binary, or set `CXL_MEMSIM_SERVER_AUTOSTART=0` if you already started the server manually.
 - `SHM invalid magic`: QEMU and the server are using different shared-memory names, or QEMU started before the server was ready. Use the same `CXL_PGAS_SHM` value on both sides.
 - TCP connection failure: confirm the server is listening on `127.0.0.1:9999` or set matching `CXL_MEMSIM_HOST` and `CXL_MEMSIM_PORT`.
 - Rosetta launch issues: make sure Rosetta is installed with `softwareupdate --install-rosetta`, then rerun the Spack install or launcher.

@@ -554,14 +554,9 @@ start_cxlmemsim_server() {{
     esac
 
     if [[ ! -x "${{CXL_MEMSIM_SERVER_BINARY}}" ]]; then
-        if [[ "${{CXL_TRANSPORT_MODE}}" == "tcp" || "${{CXL_MEMSIM_SERVER_AUTOSTART}}" == "1" || "${{CXL_MEMSIM_SERVER_AUTOSTART}}" == "true" || "${{CXL_MEMSIM_SERVER_AUTOSTART}}" == "True" ]]; then
-            echo "error: cxlmemsim_server not found at ${{CXL_MEMSIM_SERVER_BINARY}}" >&2
-            echo "Set CXL_MEMSIM_SERVER_BINARY or install a non-tools-only CXLMemSim server build." >&2
-            exit 1
-        fi
-
-        echo "warning: cxlmemsim_server not found at ${{CXL_MEMSIM_SERVER_BINARY}}; continuing without host server" >&2
-        return 0
+        echo "error: cxlmemsim_server not found at ${{CXL_MEMSIM_SERVER_BINARY}}" >&2
+        echo "Set CXL_MEMSIM_SERVER_BINARY, rebuild with +server, or set CXL_MEMSIM_SERVER_AUTOSTART=0 when using an already-running manual server." >&2
+        exit 1
     fi
 
     if [[ -s "${{CXL_MEMSIM_SERVER_PID}}" ]] && kill -0 "$(cat "${{CXL_MEMSIM_SERVER_PID}}")" >/dev/null 2>&1; then
