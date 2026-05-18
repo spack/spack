@@ -7,6 +7,7 @@ import pathlib
 
 import pytest
 
+import spack
 import spack.cmd.migrate
 import spack.main
 import spack.paths
