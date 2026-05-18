@@ -1458,7 +1458,7 @@ _spack_mark() {
 }
 
 _spack_migrate() {
-    SPACK_COMPREPLY="-h --help --dry-run --clear --restore-old-configs"
+    SPACK_COMPREPLY="-h --help --dry-run --clear --clear-only --replace --restore-old-configs"
 }
 
 _spack_mirror() {

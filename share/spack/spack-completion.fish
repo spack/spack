@@ -2359,13 +2359,17 @@ complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -f -a im
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark packages as implicitly installed'
 
 # spack migrate
-set -g __fish_spack_optspecs_spack_migrate h/help dry-run clear restore-old-configs
+set -g __fish_spack_optspecs_spack_migrate h/help dry-run clear clear-only replace restore-old-configs
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -d 'show what would be migrated without actually moving files'
 complete -c spack -n '__fish_spack_using_command migrate' -l clear -f -a clear
 complete -c spack -n '__fish_spack_using_command migrate' -l clear -d 'move entire ~/.spack directory to backup location:use this if no other instances need this old location'
+complete -c spack -n '__fish_spack_using_command migrate' -l clear-only -f -a clear_only
+complete -c spack -n '__fish_spack_using_command migrate' -l clear-only -d 'only move ~/.spack to backup without migrating files (useful after running migrate without --clear)'
+complete -c spack -n '__fish_spack_using_command migrate' -l replace -f -a replace
+complete -c spack -n '__fish_spack_using_command migrate' -l replace -d 'replace existing files in new locations (use with --clear if you forgot to use --clear on first run)'
 complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -f -a restore_old_configs
 complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -d 'restore ~/.spack from backup location (after --clear)'
 
