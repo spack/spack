@@ -180,7 +180,12 @@ def verify_package_repos_copied(source_repos_base, dest_repos_base, created_file
 
 
 def test_migrate_basic(migrate_setup):
-    """Test basic migrate: copies files to new locations, preserves old location."""
+    """`spack migrate` with no additional arguments moves config files
+    out of ~/.spack into ~/.config/spack, moves package repositories
+    from ~/.spack/package_repos into ~/.local/state/spack/package_repos,
+    and does not delete any files in ~/.spack (e.g. if some spack
+    instances are not getting updated to 1.2).
+    """
     dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
@@ -199,7 +204,9 @@ def test_migrate_basic(migrate_setup):
 
 
 def test_migrate_with_clear(migrate_setup):
-    """Test migrate --clear: copies files and removes ~/.spack."""
+    """Test --clear: does everything `spack migrate` does, plus
+    removes ~/.spack (moves it into a backup location in
+    $data_home/dotspack_backup)."""
     dotspack, created, new_config, new_state, paths = migrate_setup
 
     # The backup location is now paths.dotspack_backup
@@ -222,7 +229,13 @@ def test_migrate_with_clear(migrate_setup):
 
 
 def test_migrate_then_clear_replace(migrate_setup):
-    """Test migrate, then migrate --clear --replace to clean up."""
+    """A user who runs `spack migrate` but forgets --clear should
+    run `spack migrate --clear --replace`, which deletes everything
+    in ~/.config/spack and ~/.local/state/spack/package_repos
+    (--replace is telling Spack it's OK to do this, because
+    otherwise configs in the old/new locations may have diverged
+    and Spack has no notion of how to merge them).
+    """
     dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
@@ -250,7 +263,11 @@ def test_migrate_then_clear_replace(migrate_setup):
 
 
 def test_migrate_then_clear_only(migrate_setup):
-    """Test migrate, then migrate --clear-only to just remove ~/.spack."""
+    """If the user runs `spack migrate` but forgets --clear, then
+    using `spack migrate --clear-only` is telling spack it's ok
+    to get rid of `~/.spack` (it won't try coping files out of
+    ~/.spack, which would trigger a collision if `spack migrate`
+    copied anything into ~/.config/spack, for example)."""
     dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
