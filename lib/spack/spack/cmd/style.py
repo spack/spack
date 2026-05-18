@@ -122,6 +122,7 @@ def changed_files_repo(
                 root=str(root), base=base, untracked=untracked, all_files=all_files
             )
         ]
+    # Git failed, just return all the files
     except SystemExit:
         return get_all_repo_py_files(repo)
 
@@ -302,6 +303,7 @@ def repo_config_file(repo: spack.repo.Repo, *config_file_names: str):
         builtin = spack.repo.PATH.get_repo(DEFAULT_REPO)
     except spack.repo.UnknownNamespaceError:
         return None
+    # hardcode path to builtin config since we know where it is
     return str(Path(builtin.root).parent.parent.parent / "pyproject.toml")
 
 
