@@ -146,13 +146,11 @@ def verify_package_repos_copied(source_repos_base, dest_repos_base, created_file
 
 def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
     """Test basic migrate: copies files to new locations, preserves old location."""
-    # Set up directories
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
     home = tmp_path / "home"
     home.mkdir()
 
-    # Set home BEFORE creating paths objects
     set_home(str(home))
 
     # Create ~/.spack with test files
@@ -160,7 +158,6 @@ def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
     dotspack.mkdir()
     created = create_dotspack_files(dotspack)
 
-    # Set expected new locations
     new_config = home / ".config" / "spack"
     new_state = home / ".local" / "state" / "spack"
 
@@ -174,13 +171,11 @@ def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
     monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
     monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
 
-    # Run migrate
     migrate()
 
     # Verify config files were copied
     assert verify_files_copied(dotspack, new_config, created)
 
-    # Verify package repos were copied
     old_repos = dotspack / "package_repos"
     new_repos = new_state / "package_repos"
     assert verify_package_repos_copied(old_repos, new_repos, created)
@@ -193,13 +188,11 @@ def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
 
 def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
     """Test migrate --clear: copies files and removes ~/.spack."""
-    # Set up directories
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
     home = tmp_path / "home"
     home.mkdir()
 
-    # Set home BEFORE creating paths objects
     set_home(str(home))
 
     # Create ~/.spack with test files
@@ -207,7 +200,6 @@ def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
     dotspack.mkdir()
     created = create_dotspack_files(dotspack)
 
-    # Set expected new locations
     new_config = home / ".config" / "spack"
     new_state = home / ".local" / "state" / "spack"
 
@@ -224,13 +216,11 @@ def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
     # The backup location is now paths.dotspack_backup
     backup_location = pathlib.Path(paths.dotspack_backup)
 
-    # Run migrate with --clear
     migrate("--clear")
 
     # Verify config files were copied
     assert verify_files_copied(backup_location, new_config, created)
 
-    # Verify package repos were copied
     old_repos = backup_location / "package_repos"
     new_repos = new_state / "package_repos"
     assert verify_package_repos_copied(old_repos, new_repos, created)
@@ -244,13 +234,11 @@ def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
 
 def test_migrate_then_clear_replace(tmp_path, set_home, monkeypatch, mutable_config):
     """Test migrate, then migrate --clear --replace to clean up."""
-    # Set up directories
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
     home = tmp_path / "home"
     home.mkdir()
 
-    # Set home BEFORE creating paths objects
     set_home(str(home))
 
     # Create ~/.spack with test files
@@ -272,10 +260,8 @@ def test_migrate_then_clear_replace(tmp_path, set_home, monkeypatch, mutable_con
     monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
     monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
 
-    # Run migrate (without --clear)
     migrate()
 
-    # Verify files were copied
     assert verify_files_copied(dotspack, new_config, created)
     old_repos = dotspack / "package_repos"
     new_repos = new_state / "package_repos"
@@ -300,13 +286,11 @@ def test_migrate_then_clear_replace(tmp_path, set_home, monkeypatch, mutable_con
 
 def test_migrate_then_clear_only(tmp_path, set_home, monkeypatch, mutable_config):
     """Test migrate, then migrate --clear-only to just remove ~/.spack."""
-    # Set up directories
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
     home = tmp_path / "home"
     home.mkdir()
 
-    # Set home BEFORE creating paths objects
     set_home(str(home))
 
     # Create ~/.spack with test files
@@ -328,10 +312,8 @@ def test_migrate_then_clear_only(tmp_path, set_home, monkeypatch, mutable_config
     monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
     monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
 
-    # Run migrate (without --clear)
     migrate()
 
-    # Verify files were copied
     assert verify_files_copied(dotspack, new_config, created)
     old_repos = dotspack / "package_repos"
     new_repos = new_state / "package_repos"
