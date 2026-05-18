@@ -55,3 +55,10 @@ Spack by default stores user_cache_path and the user config scope in
 each of these individually (and those still take precedence). This
 PR offers additional mechanisms to set a single env var or config
 option in order to relocate all of them together.
+
+## New mechanisms for controlling data location
+
+This is described in detail in where_spack_writes_data.rst (that
+section is focused on how Spack behaves going forward - questions
+about how existing spack instances can keep using their old data
+is described here).
