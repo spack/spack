@@ -22,6 +22,41 @@ def clear_env_vars(working_env):
     spack.paths._unset_path_vars(os.environ)
 
 
+@pytest.fixture
+def migrate_setup(tmp_path, set_home, monkeypatch, mutable_config):
+    """Set up common test environment for migrate tests.
+
+    Yields:
+        tuple: (dotspack, created, new_config, new_state, paths)
+    """
+    spack_root = tmp_path / "spack-root"
+    spack_root.mkdir()
+    home = tmp_path / "home"
+    home.mkdir()
+
+    set_home(str(home))
+
+    # Create ~/.spack with test files
+    dotspack = home / ".spack"
+    dotspack.mkdir()
+    created = create_dotspack_files(dotspack)
+
+    new_config = home / ".config" / "spack"
+    new_state = home / ".local" / "state" / "spack"
+
+    # Create fresh SpackPaths object and patch the module
+    base_paths = SpackPathsBase(str(spack_root))
+    paths = SpackPaths(base_paths)
+    monkeypatch.setattr(spack.paths, "locations", paths)
+    monkeypatch.setattr(spack.paths_base, "locations", base_paths)
+
+    # Also need to patch the cmd.migrate module which has already imported these
+    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
+    monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
+
+    yield (dotspack, created, new_config, new_state, paths)
+
+
 def create_dotspack_files(base_path):
     """Create minimal test files under a base path to simulate ~/.spack structure.
 
@@ -144,32 +179,9 @@ def verify_package_repos_copied(source_repos_base, dest_repos_base, created_file
     return True
 
 
-def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
+def test_migrate_basic(migrate_setup):
     """Test basic migrate: copies files to new locations, preserves old location."""
-    spack_root = tmp_path / "spack-root"
-    spack_root.mkdir()
-    home = tmp_path / "home"
-    home.mkdir()
-
-    set_home(str(home))
-
-    # Create ~/.spack with test files
-    dotspack = home / ".spack"
-    dotspack.mkdir()
-    created = create_dotspack_files(dotspack)
-
-    new_config = home / ".config" / "spack"
-    new_state = home / ".local" / "state" / "spack"
-
-    # Create fresh SpackPaths object and patch the module
-    base_paths = SpackPathsBase(str(spack_root))
-    paths = SpackPaths(base_paths)
-    monkeypatch.setattr(spack.paths, "locations", paths)
-    monkeypatch.setattr(spack.paths_base, "locations", base_paths)
-
-    # Also need to patch the cmd.migrate module which has already imported these
-    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
-    monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
+    dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
 
@@ -186,32 +198,9 @@ def test_migrate_basic(tmp_path, set_home, monkeypatch, mutable_config):
         assert (dotspack / config_file).exists()
 
 
-def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
+def test_migrate_with_clear(migrate_setup):
     """Test migrate --clear: copies files and removes ~/.spack."""
-    spack_root = tmp_path / "spack-root"
-    spack_root.mkdir()
-    home = tmp_path / "home"
-    home.mkdir()
-
-    set_home(str(home))
-
-    # Create ~/.spack with test files
-    dotspack = home / ".spack"
-    dotspack.mkdir()
-    created = create_dotspack_files(dotspack)
-
-    new_config = home / ".config" / "spack"
-    new_state = home / ".local" / "state" / "spack"
-
-    # Create fresh SpackPaths object and patch the module
-    base_paths = SpackPathsBase(str(spack_root))
-    paths = SpackPaths(base_paths)
-    monkeypatch.setattr(spack.paths, "locations", paths)
-    monkeypatch.setattr(spack.paths_base, "locations", base_paths)
-
-    # Also need to patch the cmd.migrate module which has already imported these
-    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
-    monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
+    dotspack, created, new_config, new_state, paths = migrate_setup
 
     # The backup location is now paths.dotspack_backup
     backup_location = pathlib.Path(paths.dotspack_backup)
@@ -232,33 +221,9 @@ def test_migrate_with_clear(tmp_path, set_home, monkeypatch, mutable_config):
     assert backup_location.exists()
 
 
-def test_migrate_then_clear_replace(tmp_path, set_home, monkeypatch, mutable_config):
+def test_migrate_then_clear_replace(migrate_setup):
     """Test migrate, then migrate --clear --replace to clean up."""
-    spack_root = tmp_path / "spack-root"
-    spack_root.mkdir()
-    home = tmp_path / "home"
-    home.mkdir()
-
-    set_home(str(home))
-
-    # Create ~/.spack with test files
-    dotspack = home / ".spack"
-    dotspack.mkdir()
-    created = create_dotspack_files(dotspack)
-
-    # Set expected new locations
-    new_config = home / ".config" / "spack"
-    new_state = home / ".local" / "state" / "spack"
-
-    # Create fresh SpackPaths object and patch the module
-    base_paths = SpackPathsBase(str(spack_root))
-    paths = SpackPaths(base_paths)
-    monkeypatch.setattr(spack.paths, "locations", paths)
-    monkeypatch.setattr(spack.paths_base, "locations", base_paths)
-
-    # Also need to patch the cmd.migrate module which has already imported these
-    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
-    monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
+    dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
 
@@ -284,33 +249,9 @@ def test_migrate_then_clear_replace(tmp_path, set_home, monkeypatch, mutable_con
         assert (backup_location / config_file).exists()
 
 
-def test_migrate_then_clear_only(tmp_path, set_home, monkeypatch, mutable_config):
+def test_migrate_then_clear_only(migrate_setup):
     """Test migrate, then migrate --clear-only to just remove ~/.spack."""
-    spack_root = tmp_path / "spack-root"
-    spack_root.mkdir()
-    home = tmp_path / "home"
-    home.mkdir()
-
-    set_home(str(home))
-
-    # Create ~/.spack with test files
-    dotspack = home / ".spack"
-    dotspack.mkdir()
-    created = create_dotspack_files(dotspack)
-
-    # Set expected new locations
-    new_config = home / ".config" / "spack"
-    new_state = home / ".local" / "state" / "spack"
-
-    # Create fresh SpackPaths object and patch the module
-    base_paths = SpackPathsBase(str(spack_root))
-    paths = SpackPaths(base_paths)
-    monkeypatch.setattr(spack.paths, "locations", paths)
-    monkeypatch.setattr(spack.paths_base, "locations", base_paths)
-
-    # Also need to patch the cmd.migrate module which has already imported these
-    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
-    monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
+    dotspack, created, new_config, new_state, paths = migrate_setup
 
     migrate()
 
