@@ -33,7 +33,6 @@ licensed_files_patterns = [
     r"^bin/spack_pwsh\.ps1$",
     r"^bin/sbang$",
     r"^bin/spack-python$",
-    r"^bin/haspywin\.py$",
     # all of spack core except unparse
     r"^lib/spack/spack/(?!vendor/|util/unparse|util/ctest_log_parser|test/util/unparse).*\.py$",
     r"^lib/spack/spack/.*\.sh$",

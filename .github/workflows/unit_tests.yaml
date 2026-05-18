@@ -247,7 +247,7 @@ jobs:
         python-version: '3.14'
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip pywin32 -r .github/workflows/requirements/unit_tests/requirements.txt
+          python -m pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
           python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
     - name: Create local develop
       run: |

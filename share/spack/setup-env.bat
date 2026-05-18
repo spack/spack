@@ -56,10 +56,6 @@ if defined py_path (
     set "PATH=%py_path%;%PATH%"
 )
 
-if defined py_exe (
-    "%py_exe%" "%SPACK_ROOT%\bin\haspywin.py"
-)
-
 if not defined EDITOR (
    set EDITOR=notepad
 )

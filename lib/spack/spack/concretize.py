@@ -191,7 +191,12 @@ def concretize_separately(
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug(), maxtaskperchild=1
+            _concretize_task,
+            args,
+            processes=num_procs,
+            debug=tty.is_debug(),
+            maxtaskperchild=1,
+            serialize_env=True,
         )
     ):
         ret.append((i, concrete))
