@@ -62,7 +62,7 @@ def create_dotspack_files(base_path):
         "test_repo_structure": {
             "repo.yaml": "repo:\n  namespace: test\n",
             "packages": {},  # directory
-        }
+        },
     }
 
 
@@ -92,7 +92,10 @@ def verify_files_copied(source_base, dest_base, created_files):
 
         if not dest_file.exists():
             print(f"Expected file does not exist: {dest_file}")
-            print(f"Files in {dest}: {list(dest.iterdir()) if dest.exists() else 'dir does not exist'}")
+            if dest.exists():
+                print(f"Files in {dest}: {list(dest.iterdir())}")
+            else:
+                print(f"{dest} does not exist")
             return False
 
         # Verify content matches
