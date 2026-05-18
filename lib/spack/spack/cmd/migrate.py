@@ -85,7 +85,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Migrate user config and package repositories from ~/.spack to new locations.
 
     This command migrates:
-    - User config files: ~/.spack/*.yaml -> ~/.config/spack/
+    - User config files: ~/.spack/...yaml -> ~/.config/spack/
     - Package repositories: ~/.spack/package_repos -> ~/.local/state/spack/package_repos
     """
     # Handle restore mode
