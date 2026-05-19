@@ -33,6 +33,7 @@ If issues are found, they are reported to stdout:
        in spack_repo/builtin/packages/lammps/package.py
 
 .. _sbom:
+
 Software Bill of Materials (SBOM)
 ==================================
 
