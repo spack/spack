@@ -20,8 +20,8 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
+import abc
 import codecs
-import fcntl
 import glob
 import io
 import json
@@ -32,6 +32,7 @@ import selectors
 import shlex
 import shutil
 import signal
+from socket import socket
 import sys
 import tempfile
 import termios
@@ -68,6 +69,7 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty.log as slog
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
@@ -88,6 +90,12 @@ from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
+
+
+IS_WINDOWS = sys.platform == "win32"
+
+if not IS_WINDOWS:
+    import fcntl
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -212,6 +220,14 @@ class ChildInfo(DatabaseAction):
         return exit_code
 
 
+def get_selectors() -> selectors.BaseSelector:
+    """Return a new selector for monitoring child process output."""
+    selector = selectors.DefaultSelector()
+    if IS_WINDOWS:
+        selector = slog.HybridWindowsSelector()
+    return selector
+
+
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
     """Send a state update message."""
     json.dump({"state": state}, state_pipe, separators=(",", ":"))
@@ -230,11 +246,27 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
+def read_from_key(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
+    """
+    Reads data from Unix (raw fds) or Windows (BufferedPipe/Sockets).
+    """
+    if hasattr(key.fileobj, "read"):
+        data = key.fileobj.read(max_size)
+        if isinstance(data, str):
+            return data.encode('utf-8')
+        return data
+
+    if hasattr(key.fileobj, "recv"):
+        return key.fileobj.recv(max_size)
+
+    return os.read(key.fd, max_size)
+
+
 def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
-    selector = selectors.DefaultSelector()
+    selector = get_selectors()
     selector.register(log_r, selectors.EVENT_READ)
     selector.register(control_r, selectors.EVENT_READ)
 
@@ -243,7 +275,7 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
             while True:
                 for key, _ in selector.select():
                     if key.fd == log_r:
-                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                        data = read_from_key(key, OUTPUT_BUFFER_SIZE)
                         if not data:  # EOF: exit the thread
                             return
                         log_file.write(data)
@@ -253,7 +285,7 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
                             parent.flush()
 
                     elif key.fd == control_r:
-                        control_data = os.read(control_r, 1)
+                        control_data = read_from_key(key, 1)
                         if not control_data:
                             return
                         else:
@@ -505,9 +537,18 @@ def worker_function(
 
     # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
     # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        #######
+        #######
+        #######
+        # not on Windows
     os.setpgid(0, 0)
 
     # Reset SIGTSTP to default in case the parent had a custom handler.
+            #######
+        #######
+        #######
+        # not on Windows
+        # need special handling for signals here
     signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
@@ -516,7 +557,17 @@ def worker_function(
         # __exit__ and finally blocks run after the child processes have stopped, meaning that we
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
+                #######
+        #######
+        #######
+        # not on Windows
+        # need special handling for Windows here
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+        #######
+        #######
+        #######
+        # not on Windows
         os.killpg(0, signal.SIGTERM)
 
         try:
@@ -527,6 +578,11 @@ def worker_function(
 
         raise KeyboardInterrupt("Installation interrupted")
 
+            #######
+        #######
+        #######
+        # not on Windows
+    # more special windows sauce
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
@@ -813,7 +869,7 @@ def _install(
             os.unlink(pkg.log_path)
         except OSError:
             pass
-        os.symlink(log_path, pkg.log_path)
+        fs.symlink(log_path, pkg.log_path)
 
         send_state("staging", state_stream)
 
@@ -898,9 +954,22 @@ class JobServer:
         elif type(fifo_config) is tuple:
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
-            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
-                self.r, self.w = r, w
-                return
+            if not IS_WINDOWS:
+                # Use fcntl on POSIX to validate the fds.
+                if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
+                    self.r, self.w = r, w
+                    return
+            else:
+                try:
+                    # fcntl is not available on Windows. Validate fds by
+                    # calling os.fstat which will raise on invalid fds.
+                    os.fstat(r)
+                    os.fstat(w)
+                    self.r, self.w = r, w
+                    return
+                except Exception:
+                    # Fall through to creating our own FIFO if validation fails.
+                    pass
 
         # No existing jobserver we can connect to: create a FIFO-based one.
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
@@ -2231,7 +2300,46 @@ class NullReportData(ReportData):
         pass
 
 
-class TerminalState:
+class BaseTerminalState(abc.ABC):
+    """Abstract base for TerminalState management classes"""
+    def __init__(
+        self,
+        selector,
+        build_status,
+        on_suspend: Optional[Callable[[], None]] = None,
+        on_resume: Optional[Callable[[], None]] = None,
+    ) -> None:
+        self.selector = selector
+        self.build_status = build_status
+        self.on_suspend = on_suspend
+        self.on_resume = on_resume
+
+    @abc.abstractmethod
+    def setup(self) -> None:
+        """Set up terminal for interactive TUI mode."""
+        pass
+
+    @abc.abstractmethod
+    def teardown(self) -> None:
+        """Restore original terminal settings."""
+        pass
+
+    @abc.abstractmethod
+    def enter_foreground(self) -> None:
+        """Restore interactive terminal mode."""
+        pass
+
+    @abc.abstractmethod
+    def enter_background(self) -> None:
+        """Suppress output and stop reading stdin."""
+        pass
+
+    @abc.abstractmethod
+    def handle_continue(self) -> None:
+        """Detect foreground/background state and adjust."""
+        pass
+
+class TerminalState(BaseTerminalState):
     """Manages terminal settings, stdin selector registration, and suspend/resume signals.
 
     Installs a SIGTSTP handler that restores the terminal before suspending and re-applies it
@@ -2377,6 +2485,118 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
                 os.killpg(pid, sig)
         except OSError:
             pass
+
+
+
+class ConsoleReader:
+    """Bridges blocking Windows console input to the Hybrid Selector via a socket pair."""
+    def __init__(self, selector: slog.HybridWindowsSelector):
+        self.selector = selector
+        self.rsock, self.wsock = socket.socketpair()
+        self.rsock.setblocking(False)
+        self.selector.register(self.rsock, selectors.EVENT_READ, "stdin")
+        self._running = True
+        self.thread = threading.Thread(target=self._read_console, daemon=True)
+        self.thread.start()
+
+    def _read_console(self):
+        while self._running:
+            try:
+                if msvcrt.kbhit():
+                    char = msvcrt.getch()
+                    # Catch special keys (arrows, etc) which return \x00 or \xe0 first
+                    if char in (b'\x00', b'\xe0'):
+                        char += msvcrt.getch()
+                    self.wsock.sendall(char)
+                else:
+                    time.sleep(0.01)
+            except Exception:
+                break
+
+    def close(self):
+        self._running = False
+        try:
+            self.selector.unregister(self.rsock)
+        except Exception:
+            pass
+        self.wsock.close()
+        self.rsock.close()
+
+
+class WindowsTerminalState(BaseTerminalState):
+    """Terminal State management class for Windows"""
+    def __init__(
+        self,
+        selector: slog.HybridWindowsSelector,
+        build_status,  # Replace with actual typing
+        on_suspend: Optional[Callable[[], None]] = None,
+        on_resume: Optional[Callable[[], None]] = None,
+    ) -> None:
+        self.selector = selector
+        self.build_status = build_status
+        self.on_suspend = on_suspend
+        self.on_resume = on_resume
+        
+        self.hStdin = GetStdHandle(STD_INPUT_HANDLE)
+        self.hStdout = GetStdHandle(STD_OUTPUT_HANDLE)
+        
+        self.old_stdin_settings = wintypes.DWORD()
+        self.old_stdout_settings = wintypes.DWORD()
+        
+        GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+        
+        self.console_reader = None
+
+    def setup(self) -> None:
+        """Set cbreak equivalent and enable ANSI sequences."""
+        # Enable VT100 ANSI escapes on stdout
+        new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        SetConsoleMode(self.hStdout, new_out_mode)
+
+        self.build_status.headless = True
+        self.enter_foreground()
+
+    def teardown(self) -> None:
+        """Restore console mode and shut down bridge."""
+        SetConsoleMode(self.hStdin, self.old_stdin_settings)
+        SetConsoleMode(self.hStdout, self.old_stdout_settings)
+
+        if self.console_reader:
+            self.console_reader.close()
+            self.console_reader = None
+
+    def enter_foreground(self) -> None:
+        """Restore interactive mode, spin up socket bridge if needed."""
+        if not self.build_status.headless:
+            return
+
+        GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        
+        # Disable line input and echo (simulate cbreak)
+        new_in_mode = self.old_stdin_settings.value & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT)
+        SetConsoleMode(self.hStdin, new_in_mode)
+
+        if sys.stdin.isatty() and not self.console_reader:
+            self.console_reader = ConsoleReader(self.selector)
+
+        self.build_status.headless = False
+        self.build_status.dirty = True
+
+    def enter_background(self) -> None:
+        """Stop processing console input."""
+        if self.console_reader:
+            self.console_reader.close()
+            self.console_reader = None
+        self.build_status.headless = True
+
+    def handle_continue(self) -> None:
+        self.enter_foreground()
+
+def _establish_terminal_state(*args) -> BaseTerminalState:
+    if IS_WINDOWS:
+        return WindowsTerminalState(*args)
+    return TerminalState(*args)
 
 
 class StdinReader:
@@ -2542,14 +2762,14 @@ class PackageInstaller:
     def _installer(self) -> None:
         spack.store.STORE.install_sbang()
         jobserver = JobServer(self.jobs)
-        selector = selectors.DefaultSelector()
+        selector = get_selectors()
 
         # Set up terminal handling (cbreak, signals, stdin registration)
-        terminal: Optional[TerminalState] = None
+        terminal: Optional[BaseTerminalState] = None
         stdin_reader: Optional[StdinReader] = None
         if sys.stdin.isatty():
             stdin_reader = StdinReader(sys.stdin.fileno())
-            terminal = TerminalState(
+            terminal = _establish_terminal_state(
                 selector,
                 self.build_status,
                 on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
