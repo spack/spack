@@ -30,12 +30,17 @@ Spack by default stores user_cache_path and the user config scope in
   location inside of their respective $spack directories
   (including after they pull this PR).
 - If a new clone starts writing into ~ and an old spack instance
-  git pulls this logic, it will still keep using its own $spack
-  directory for installs, environments, etc.
+  git pulls this logic, the old instance will still keep using its
+  own $spack directory for installs, environments, etc.
 - If an old spack instance pulls this PR and then sets any new-
   style location variable (an env var like SPACK_HOME, or a config
   variable like config:locations:data), spack assumes that it
-  should use new-style defaults.
+  should use new-style defaults for *all* types of data.
+  - e.g. setting STATE_HOME would make an older spack instance
+    use installs in ~/.local/share/spack/installs rather than
+    in $spack/opt/spack
+  - A user can avoid env vars messing with their older spack
+    install by adding config:locations:disable_env:true
 - Both old and new spack instances will use ~/.spack for config
   and as a user_cache_path if they detect it and if the new
   locations (~/.config/spack and ~/.local/state/spack) are not

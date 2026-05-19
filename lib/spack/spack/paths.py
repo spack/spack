@@ -381,9 +381,13 @@ class SpackPaths:
 
 
 def new_layout_enforced():
-    first = any(x.value in os.environ for x in Spack_vars.new_layout())
-    second = bool(config.get("config:locations"))
-    return first or second
+    cfg = config.get("config:locations", {})
+    for x in ["home", "data", "state", "cache"]:
+        if cfg.get(x, None):
+            return True
+
+    use_env = not bool(cfg.get("disable_env", False))
+    return use_env and any(x.value in os.environ for x in Spack_vars.new_layout())
 
 
 def detect_old_spack_layout(paths: paths_base.SpackPathsBase):
