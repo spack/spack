@@ -137,6 +137,9 @@ YamlConfigDict = Dict[str, Any]
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
 
+# placeholder object for unspecified default for get methods
+default_sigil = object()
+
 
 class ConfigScope:
     def __init__(self, name: str, included: bool = False) -> None:
@@ -757,7 +760,19 @@ class Configuration:
            }
 
         """
-        return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
+        merged_section, default_type =  self._get_config_memoized(
+            section, scope=scope, _merged_scope=_merged_scope
+        )
+
+        # no config files -- empty config.
+        if section not in merged_section:
+            return default_type
+
+        # take the top key off before returning.
+        ret = merged_section[section]
+        if isinstance(ret, dict):
+            ret = syaml.syaml_dict(ret)
+        return ret
 
     def deepcopy_as_builtin(
         self, section: str, scope: Optional[str] = None, *, line_info: bool = False
@@ -811,7 +826,7 @@ class Configuration:
 
     @lang.memoized
     def _get_config_memoized(
-        self, section: str, scope: Optional[str], _merged_scope: Optional[str]
+        self, section: str, scope: Optional[str], _merged_scope: Optional[str] = None
     ) -> YamlConfigDict:
         """Memoized helper for ``get_config()``.
 
@@ -865,17 +880,11 @@ class Configuration:
 
         self.updated_scopes_by_section[section] = updated_scopes
 
-        # no config files -- empty config.
-        if section not in merged_section:
-            return get_valid_type(section)
+        # Return the full dict including the section name so we can gracefuly handle defaults
+        # Also return the default type for the section so that calculation is memoized
+        return merged_section, get_valid_type(section)
 
-        # take the top key off before returning.
-        ret = merged_section[section]
-        if isinstance(ret, dict):
-            ret = syaml.syaml_dict(ret)
-        return ret
-
-    def get(self, path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+    def get(self, path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
         """Get a config section or a single value from one.
 
         Accepts a path syntax that allows us to grab nested config map
@@ -890,16 +899,20 @@ class Configuration:
         We use ``:`` as the separator, like YAML objects.
         """
         parts = process_config_path(path)
-        section = parts.pop(0)
+        section = parts[0]
 
-        value = self.get_config(section, scope=scope)
+        # We use the helper method here to handle defaults
+        value, default_type = self._get_config_memoized(section, scope=scope)
+
+        if section not in value and default is default_sigil:
+            return default_type
 
         while parts:
             key = parts.pop(0)
             # cannot use value.get(key, default) in case there is another part
             # and default is not a dict
             if key not in value:
-                return default
+                return default if default is not default_sigil else None
             value = value[key]
 
         return value
@@ -923,6 +936,10 @@ class Configuration:
         data = section_data
         while len(parts) > 1:
             key = parts.pop(0)
+            if key not in data:
+                # Put the key back to process later
+                parts.insert(0, key)
+                break
 
             if spack.schema.override(key):
                 new = type(data[key])()
@@ -936,6 +953,11 @@ class Configuration:
                 # reattach to parent object
                 data[key] = new
             data = new
+
+        # This only happens if the key wasn't present before
+        while len(parts) > 1:
+            leaf = parts.pop()
+            value = {leaf: value}
 
         if spack.schema.override(parts[0]):
             data.pop(parts[0], None)
@@ -1646,7 +1668,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
     CONFIG.set(path, new, scope)
 
 
-def get(path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
     """Module-level wrapper for ``Configuration.get()``."""
     return CONFIG.get(path, default, scope)
 
@@ -1710,7 +1732,6 @@ def change_or_add(
     config, then update the highest-priority config scope.
     """
     configs_by_section = matched_config(section_name)
-
     found = False
     for scope, section in configs_by_section:
         found = find_fn(section)
@@ -1881,9 +1902,15 @@ def get_valid_type(path):
         schema_path = jsonschema_error.schema_path
         schema_part = SECTION_SCHEMAS[section]
         for part in list(schema_path)[:-1]:
+            if part not in schema_part:
+                break
             schema_part = schema_part[part]
-        if "default" in schema_part:
-            return schema_part["default"]
+        else:
+            if "default" in schema_part:
+                default = schema_part["default"]
+                if isinstance(default, (dict, list)):
+                    default = default.copy()
+                return default
 
         # If there is no default, infer the type from the validator
         if jsonschema_error.validator == "type":
