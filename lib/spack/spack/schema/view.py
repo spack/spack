@@ -17,6 +17,7 @@ properties: Dict[str, Any] = {
     "view": {
         "description": "Environment filesystem view configuration for creating a directory with "
         "traditional structure where all files of installed packages are linked",
+        "default": True,
         "anyOf": [
             {
                 "type": "boolean",
