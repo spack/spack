@@ -575,15 +575,19 @@ class StreamWrapper:
         self.saved_stream_fd = os.dup(self.std_fd)
         self.redirect_fd = None
 
-    def redirect_stream(self, write_conn):
+    def redirect_stream(self, writer):
         """Redirect stdout to the given file descriptor."""
         self.flush()
         # Get fd for new stream
-        redirect_h = write_conn.fileno()
+        # new stream is file object
+        redirect_fd = writer.fileno()
+        # get windows file handle
+        redirect_h = msvcrt.get_osfhandle(redirect_fd)
+        # duplicate handle for local copy we own
         dup_redirect_h = dup_fh(redirect_h)
         os.set_handle_inheritable(redirect_h, True)
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
+        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(dup_redirect_h))
         os.dup2(self.redirect_fd, self.std_fd)
         setattr(
             sys,
@@ -657,7 +661,9 @@ class winlog:
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
 
-        self.read_p, self.write_p = multiprocessing.Pipe(duplex=False)
+        read_fd, write_fd = os.pipe()
+        self.read_p = os.fdopen(read_fd, "rb", buffering=0)
+        self.write_p = os.fdopen(write_fd, "wb", buffering=0)
 
         # Dup stdout so we can still write to it after redirection
         original_stdout_fd = sys.stdout.fileno()
@@ -697,7 +703,7 @@ class winlog:
 
     @staticmethod
     def _background_reader(
-        read,
+        read: io.FileIO,
         logfile: str,
         stdout: io.TextIOWrapper,
         append: bool,
@@ -710,7 +716,7 @@ class winlog:
         log_writer = open(logfile, mode=write_mode)
         try:
             while True:
-                data = read.recv_bytes(maxlength=4096)
+                data = read.read(4096)
                 if not data:
                     # the pipe is closed or otherwise inaccesible
                     return
