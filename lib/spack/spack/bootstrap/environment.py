@@ -42,7 +42,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def spack_dev_requirements(cls) -> List[str]:
         """Spack development requirements"""
-        return [pytest_root_spec(), ruff_root_spec(), mypy_root_spec()]
+        return [pytest_root_spec(), ruff_root_spec(), ty_root_spec()]
 
     @classmethod
     def environment_root(cls) -> pathlib.Path:
@@ -141,11 +141,6 @@ class BootstrapEnvironment(spack.environment.Environment):
         self.spack_yaml().write_text(template.render(context), encoding="utf-8")
 
 
-def mypy_root_spec() -> str:
-    """Return the root spec used to bootstrap mypy"""
-    return "py-mypy@0.900: ^py-mypy-extensions@:1.0"
-
-
 def pytest_root_spec() -> str:
     """Return the root spec used to bootstrap pytest"""
     return "py-pytest@6.2.4:"
@@ -154,6 +149,11 @@ def pytest_root_spec() -> str:
 def ruff_root_spec() -> str:
     """Return the root spec used to bootstrap ruff"""
     return "py-ruff@0.15.0"
+
+
+def ty_root_spec() -> str:
+    """Return the root spec used to bootstrap ty"""
+    return "ty@0.0.24"
 
 
 def dev_bootstrap_mirror_names() -> List[str]:

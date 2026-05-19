@@ -32,7 +32,7 @@ exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 #: Order in which tools should be run.
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["import", "ruff-format", "ruff-check", "mypy"]
+tool_names = ["import", "ruff-format", "ruff-check", "ty"]
 
 #: warnings to ignore in mypy
 mypy_ignores = [
@@ -291,6 +291,33 @@ def run_ruff(
     rewrite_and_print_output(output, root, working_dir, root_relative, pat, replacement)
 
     print_tool_result(f"ruff-{cmd}", returncode)
+    return returncode
+
+
+@tool("ty")
+def run_ty(file_list: List[Path], args):
+    """Run the ty tool"""
+    # ensure tool is configured
+    ty_cmd = tools["ty"].executable
+    if not ty_cmd:
+        tty.warn("Cannot execute requested tool: ty\nCannot find tool")
+        return -1
+    
+    # setup tool args/context
+    project = args.root
+    ty_args = ["check", "--project", str(project)]
+    if color.get_color_when():
+        ty_args += ["--color", "auto"]
+    files = (str(x) for x in file_list)
+
+    pat = re.compile("would reformat +(.*)")
+    replacement = "would reformat {0}"
+    returncode = 0
+    packed_args = (*ty_args,) + tuple(files)
+    output = ty_cmd(*packed_args, fail_on_error=False, output=str, error=str)
+    returncode |= ty_cmd.returncode
+    rewrite_and_print_output(output, args.root, args.initial_working_dir, args.root_relative, pat, replacement)
+    print_tool_result("ty", returncode)
     return returncode
 
 

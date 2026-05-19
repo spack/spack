@@ -18,8 +18,8 @@ dev = [
   "pytest-xdist",
   "click",
   "ruff",
-  "mypy",
   "vendoring",
+  "ty",
   "vermin",
 ]
 ci = ["pytest-cov", "codecov[toml]"]
@@ -162,11 +162,49 @@ module = [
   "pyristent",
   "pytest",
   "ruamel.yaml",
-  "six",
+  "six"
 ]
-follow_imports = "skip"
-follow_imports_for_stubs = true
 
+[tool.ty.src]
+include = [
+  # for some reason having an include seems to overwrite default behavior of searching from pyprojecttoml or root
+  "lib/spack",
+  # "var/spack/test_repos",
+]
+exclude = [
+  "lib/spack/spack/vendor",
+  # mypy files = ["lib/spack/spack/**/*.py"] never included docs/
+  "lib/spack/docs",
+]
+
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+  "boto3",
+  "boto3.*",
+  "botocore",
+  "botocore.*",
+  "google.**",
+  # sphinx is an optional doc-build dependency, not present in type-check env
+  "sphinx",
+  "sphinx.*",
+  # optional test dependencies
+  "pytest",
+  "_pytest",
+  "_pytest.*",
+  "xdist",
+  "mpi4py",
+  "mpi4py.*",
+  # mock package repos used in tests; accessed with # type: ignore[import] under mypy
+  "spack_repo.**",
+]
+
+[tool.ty.environment]
+extra-paths = [
+  "share/spack/qa/typings",
+]
+root = ["lib/spack"]
+python-version = "3.7"
 
 [tool.pyright]
 useLibraryCodeForTypes = true

@@ -31,7 +31,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 RUFF = which("ruff")
-MYPY = which("mypy")
+TY = which("ty")
 
 
 @pytest.fixture(autouse=True)
@@ -214,7 +214,7 @@ def test_fix_style(external_style_root):
 
 
 @pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
-@pytest.mark.skipif(not MYPY, reason="mypy is not installed.")
+@pytest.mark.skipif(not TY, reason="ty is not installed.")
 def test_external_root(external_style_root):
     """Ensure we can run in a separate root directory w/o configuration files."""
     tmp_path, py_file = external_style_root
@@ -286,7 +286,7 @@ def test_style_with_ruff_format(ruff_package_with_errors):
 
 
 def test_skip_tools():
-    output = style("--skip", "import,ruff-check,ruff-format,mypy")
+    output = style("--skip", "import,ruff-check,ruff-format,ty")
     assert "Nothing to run" in output
 
 
