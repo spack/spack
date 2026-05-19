@@ -904,7 +904,7 @@ class Configuration:
         # We use the helper method here to handle defaults
         value, default_type = self._get_config_memoized(section, scope=scope)
 
-        if section not in value and default is default_sigil:
+        if len(parts) == 1 and section not in value and default is default_sigil:
             return default_type
 
         while parts:
