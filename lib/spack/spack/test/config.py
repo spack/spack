@@ -2173,3 +2173,22 @@ def test_config_add_override_whole_section_existing(mock_low_high_config, write_
     (section_key,) = data.keys()
     assert section_key.override
     assert not data["upstreams"]
+
+
+def test_config_set_override_whole_section_existing(mock_low_high_config, write_config_file):
+    """Check if whole-section `spack config add` can convert
+    non-override to override (similar to previous test, except the
+    high config starts with an empty upstreams section that does not
+    use double-colon)"""
+    upstream_data_low = {
+        "upstreams": {"spack-instance-1": {"install_tree": "/path/to/upstream/install"}}
+    }
+    write_config_file("upstreams", upstream_data_low, "low")
+
+    upstream_data_high = {"upstreams": {}}
+    write_config_file("upstreams", upstream_data_high, "high")
+
+    spack.config.add("upstreams::{}", scope="high")
+
+    result = spack.config.get("upstreams")
+    assert result == {}
