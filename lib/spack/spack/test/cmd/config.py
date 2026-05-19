@@ -165,7 +165,7 @@ def test_config_scopes_path(mutable_config):
 
 
 def test_get_config_scope(mock_low_high_config):
-    assert config("get", "compilers").strip() == "compilers: {}"
+    assert config("get", "repos").strip() == "repos: {}"
 
 
 def test_get_config_roundtrip(mutable_config):
