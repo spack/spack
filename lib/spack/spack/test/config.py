@@ -2143,7 +2143,7 @@ def test_config_add_set_whole_section_empty(mock_low_high_config):
 
     # Verify it's written with override syntax in the file
     config_file = spack.config.CONFIG.get_config_filename("low", "upstreams")
-    with open(config_file) as f:
+    with open(config_file, encoding="utf-8") as f:
         data = syaml.load_config(f)
     (section_key,) = data.keys()
     assert section_key.override
@@ -2168,7 +2168,7 @@ def test_config_add_override_whole_section_existing(mock_low_high_config, write_
     assert result == {}
 
     config_file = spack.config.CONFIG.get_config_filename("high", "upstreams")
-    with open(config_file) as f:
+    with open(config_file, encoding="utf-8") as f:
         data = syaml.load_config(f)
     (section_key,) = data.keys()
     assert section_key.override
