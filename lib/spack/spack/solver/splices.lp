@@ -53,12 +53,3 @@ imposed_constraint(Hash, "virtual_on_edge", ParentName, SpliceName, VirtName) :-
   hash_attr(Hash, "virtual_on_edge", ParentName, DepName, VirtName),
   attr("splice_at_hash", node(ID, ParentName), node(SID, SpliceName), DepName, DepHash).
 
-% When a splice is taken, the parent depends on the splice node directly.
-attr("depends_on", ParentNode, node(SID, SpliceName), Type) :-
-  attr("hash", ParentNode, ParentHash),
-  hash_attr(ParentHash, "depends_on", ParentName, DepName, Type),
-  hash_attr(ParentHash, "hash", DepName, DepHash),
-  abi_splice_conditions_hold(_, node(SID, SpliceName), DepName, DepHash),
-  ParentHash != DepHash,
-  not imposed_constraint(ParentHash, "hash", DepName, DepHash).
-
