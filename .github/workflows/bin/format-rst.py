@@ -135,7 +135,7 @@ def _ruff_format(code: str) -> str:
     ruff has no python interface so we use subprocess
     and feed the code through stdin and read from stdout
     """
-    cmd = ["ruff", "format", "--line-lenght", "99", "-", ]
+    cmd = ["ruff", "format", "--line-length", "99", "-", ]
     try:
         result = subprocess.run(
             cmd,
