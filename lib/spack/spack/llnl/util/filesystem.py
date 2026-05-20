@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
+import ctypes
 import errno
 import fnmatch
 import glob
@@ -41,12 +42,11 @@ from spack.llnl.path import path_to_os_path, sanitize_win_longpath, system_path_
 from spack.llnl.util import lang, tty
 from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
 
-if sys.platform != "win32":
+if sys.platform == "win32":
+    from ctypes import wintypes
+else:
     import grp
     import pwd
-else:
-    import win32security
-    from win32file import CreateHardLink
 
 
 __all__ = [
@@ -201,18 +201,17 @@ def polite_filename(filename: str) -> str:
 
 if sys.platform == "win32":
 
-    def _getuid_win32() -> Union[str, int]:
+    def _getuid_win32() -> str:
         """Returns os getuid on non Windows
         On Windows returns 0 for admin users, login string otherwise
         This is in line with behavior from get_owner_uid which
         always returns the login string on Windows
         """
-        import ctypes
 
         # If not admin, use the string name of the login as a unique ID
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return os.getlogin()
-        return 0
+        return "ADMINISTRATORS"
 
     getuid = _getuid_win32
 else:
@@ -534,6 +533,129 @@ def exploding_archive_handler(tarball_container, stage):
         shutil.move(tarball_container, stage.source_path)
 
 
+@system_path_filter
+def get_windows_file_security(path: str) -> str:
+    if sys.platform == "win32":
+        # Validate path exists before calling API to get a clear Python error
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The system cannot find the path specified: '{path}'")
+
+        advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+        # SE_FILE_OBJECT applies to both files and directories
+        SE_FILE_OBJECT = 1
+        OWNER_SECURITY_INFO = 1
+        ERROR_SUCCESS = 0
+
+        # Describe LocalFree API
+        LocalFree = kernel32.LocalFree
+        LocalFree.argtypes = [wintypes.HLOCAL]
+        LocalFree.restype = wintypes.HLOCAL
+
+        # Describe GetNamedSecurityInfoW API
+        GetNamedSecurityInfo = advapi.GetNamedSecurityInfoW
+        GetNamedSecurityInfo.argtypes = [
+            wintypes.LPCWSTR,  # pObjectName (The path)
+            ctypes.c_int,  # ObjectType
+            wintypes.DWORD,  # SecurityInfo
+            ctypes.POINTER(wintypes.LPVOID),  # ppsidOwner
+            ctypes.POINTER(wintypes.LPVOID),  # ppsidGroup
+            ctypes.POINTER(wintypes.LPVOID),  # ppDacl
+            ctypes.POINTER(wintypes.LPVOID),  # ppSacl
+            ctypes.POINTER(wintypes.LPVOID),  # ppSecurityDescriptor
+        ]
+        GetNamedSecurityInfo.restype = wintypes.DWORD
+
+        # Describe LookupAccountSID API
+        LookupAccountSid = advapi.LookupAccountSidW
+        LookupAccountSid.argtypes = [
+            wintypes.LPCWSTR,  # lpSystemName
+            wintypes.LPVOID,  # Sid
+            wintypes.LPWSTR,  # Name
+            wintypes.LPDWORD,  # cchName
+            wintypes.LPWSTR,  # ReferencedDomainName
+            wintypes.LPDWORD,  # cchReferencedDomainName
+            ctypes.POINTER(ctypes.c_int),  # peUse
+        ]
+        LookupAccountSid.restype = ctypes.c_bool
+
+        p_sid_owner = wintypes.LPVOID()
+        psd = wintypes.LPVOID()
+
+        # Call GetNamedSecurityInfo directly with the path string
+        res = GetNamedSecurityInfo(
+            path,
+            SE_FILE_OBJECT,
+            OWNER_SECURITY_INFO,
+            ctypes.byref(p_sid_owner),
+            None,
+            None,
+            None,
+            ctypes.byref(psd),
+        )
+
+        if res != ERROR_SUCCESS:
+            raise ctypes.WinError(res, f"Failed to get security info for {path}")
+
+        try:
+            # establish vars for Lookup account sid return params
+            dwacct_name = wintypes.DWORD(0)
+            dw_domain_name = wintypes.DWORD(0)
+            e_use = ctypes.c_int()
+
+            # first call to lookup account SID to determine buffer sizes
+            success = LookupAccountSid(
+                None,
+                p_sid_owner,
+                None,
+                ctypes.byref(dwacct_name),
+                None,
+                ctypes.byref(dw_domain_name),
+                ctypes.byref(e_use),
+            )
+
+            # 122 is ERROR_INSUFFICIENT_BUFFER, which we expect
+            if not success:
+                err = ctypes.get_last_error()
+                # 122 is ERROR_INSUFFICIENT_BUFFER, which we want/expect!
+                if err != 122:
+                    raise ctypes.WinError(
+                        err, f"Unexpected error when obtaining buffer for : {path}"
+                    )
+
+            # create buffers
+            acct_name_buf = dwacct_name.value * wintypes.WCHAR
+            acct_name = acct_name_buf()
+            domain_name_buf = dw_domain_name.value * wintypes.WCHAR
+            domain_name = domain_name_buf()
+
+            # second call to fetch the actual names
+            success = LookupAccountSid(
+                None,
+                p_sid_owner,
+                acct_name,
+                ctypes.byref(dwacct_name),
+                domain_name,
+                ctypes.byref(dw_domain_name),
+                ctypes.byref(e_use),
+            )
+
+            if not success:
+                raise ctypes.WinError(
+                    ctypes.get_last_error(), f"Could not determine owner for : {path}"
+                )
+
+        finally:
+            # Free the security descriptor
+            if psd:
+                LocalFree(psd)
+
+        return acct_name.value
+    else:
+        raise RuntimeError("cannot determine Windows file security on non-Windows")
+
+
 @system_path_filter(arg_slice=slice(1))
 def get_owner_uid(path, err_msg=None) -> Union[str, int]:
     """Returns owner UID of path destination
@@ -560,10 +682,7 @@ def get_owner_uid(path, err_msg=None) -> Union[str, int]:
     if sys.platform != "win32":
         owner_uid = p_stat.st_uid
     else:
-        sid = win32security.GetFileSecurity(
-            path, win32security.OWNER_SECURITY_INFORMATION
-        ).GetSecurityDescriptorOwner()
-        owner_uid = win32security.LookupAccountSid(None, sid)[0]
+        owner_uid = get_windows_file_security(path)
     return owner_uid
 
 
@@ -1213,19 +1332,17 @@ def windows_sfn(path: os.PathLike):
         path: Path to be transformed into SFN (8.3 filename) format
     """
     # This should not be run-able on linux/macos
-    if sys.platform != "win32":
-        return path
-    path = str(path)
-    import ctypes
-
-    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    # Method with null values returns size of short path name
-    sz = k32.GetShortPathNameW(path, None, 0)
-    # stub Windows types TCHAR[LENGTH]
-    TCHAR_arr = ctypes.c_wchar * sz
-    ret_str = TCHAR_arr()
-    k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
-    return ret_str.value
+    if sys.platform == "win32":
+        path = str(path)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        # Method with null values returns size of short path name
+        sz = k32.GetShortPathNameW(path, None, 0)
+        # stub Windows types TCHAR[LENGTH]
+        TCHAR_arr = ctypes.c_wchar * sz
+        ret_str = TCHAR_arr()
+        k32.GetShortPathNameW(path, ctypes.byref(ret_str), sz)
+        return ret_str.value
+    return path
 
 
 @contextmanager
@@ -2991,23 +3108,23 @@ def _windows_is_junction(path: str) -> bool:
     Returns:
         bool - whether the path is a junction or not.
     """
-    if sys.platform != "win32" or os.path.islink(path) or os.path.isfile(path):
-        return False
+    if sys.platform == "win32":
+        if os.path.islink(path) or os.path.isfile(path):
+            return False
 
-    import ctypes.wintypes
+        get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
+        get_file_attributes.argtypes = (wintypes.LPWSTR,)
+        get_file_attributes.restype = wintypes.DWORD
 
-    get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
-    get_file_attributes.argtypes = (ctypes.wintypes.LPWSTR,)
-    get_file_attributes.restype = ctypes.wintypes.DWORD
+        invalid_file_attributes = 0xFFFFFFFF
+        reparse_point = 0x400
+        file_attr = get_file_attributes(str(path))
 
-    invalid_file_attributes = 0xFFFFFFFF
-    reparse_point = 0x400
-    file_attr = get_file_attributes(str(path))
+        if file_attr == invalid_file_attributes:
+            return False
 
-    if file_attr == invalid_file_attributes:
-        return False
-
-    return file_attr & reparse_point > 0
+        return file_attr & reparse_point > 0
+    return False
 
 
 @lang.memoized
@@ -3106,7 +3223,16 @@ def _windows_create_hard_link(path: str, link: str):
         raise SymlinkError(f"File path ({link}) is not a file. Cannot create hard link.")
     else:
         tty.debug(f"Creating hard link {link} pointing to {path}")
-        CreateHardLink(link, path)
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        CreateHardLink = k32.CreateHardLinkW
+        CreateHardLink.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_void_p]
+        CreateHardLink.restype = ctypes.c_bool
+        success = CreateHardLink(link, path, None)
+        if not success:
+            error_code = ctypes.GetLastError()
+            raise ctypes.WinError(
+                error_code, f"Failed to create hardlink for path {path} and link {link}"
+            )
 
 
 def _windows_readlink(path: str, *, dir_fd=None):

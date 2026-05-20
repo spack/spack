@@ -60,7 +60,13 @@ class Task:
 
 
 def imap_unordered(
-    f, list_of_args, *, processes: int, maxtaskperchild: Optional[int] = None, debug=False
+    f,
+    list_of_args,
+    *,
+    processes: int,
+    maxtaskperchild: Optional[int] = None,
+    debug=False,
+    serialize_env: bool = False,
 ):
     """Wrapper around multiprocessing.Pool.imap_unordered.
 
@@ -83,7 +89,7 @@ def imap_unordered(
 
     from spack.subprocess_context import GlobalStateMarshaler
 
-    marshaler = GlobalStateMarshaler()
+    marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
     with multiprocessing.Pool(
         processes, initializer=marshaler.restore, maxtasksperchild=maxtaskperchild
     ) as p:
@@ -107,22 +113,18 @@ class SequentialExecutor(concurrent.futures.Executor):
 
 
 def make_concurrent_executor(
-    jobs: Optional[int] = None, *, require_fork: bool = True
+    jobs: Optional[int] = None, *, serialize_env: bool = False
 ) -> concurrent.futures.Executor:
-    """Create a concurrent executor. If require_fork is True, then the executor is sequential
-    if the platform does not enable forking as the default start method. Effectively
-    require_fork=True makes the executor sequential in the current process on Windows, macOS, and
-    Linux from Python 3.14+ (which changes defaults)"""
+    """Create a concurrent executor.
 
-    if (
-        not ENABLE_PARALLELISM
-        or (require_fork and multiprocessing.get_start_method() != "fork")
-        or sys.version_info[:2] == (3, 6)
-    ):
+    If serialize_env is False (default), the active Spack environment is not transmitted to the
+    worker processes, which avoids the cost of pickling potentially large environment state."""
+
+    if not ENABLE_PARALLELISM or sys.version_info[:2] == (3, 6):
         return SequentialExecutor()
 
     from spack.subprocess_context import GlobalStateMarshaler
 
     jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
-    marshaler = GlobalStateMarshaler()
+    marshaler = GlobalStateMarshaler(serialize_env=serialize_env)
     return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)  # novermin
