@@ -1,6 +1,6 @@
-# Shared spack
+Shared spack
 
-## Moving Spack-generated artifacts outside of $spack
+# Moving Spack-generated artifacts outside of $spack
 
 The biggest blocker to creating a shared spack instance is that Spack
 will default to writing data into its own prefix. For new clones of
@@ -12,8 +12,9 @@ and into ~. This includes:
 3. cached downloads
 4. gpg keys
 5. where modules are generated
+6. licenses
 
-## XDG compliance
+# XDG compliance
 
 Spack by default stores user_cache_path and the user config scope in
 ~/.spack.
@@ -23,7 +24,7 @@ Spack by default stores user_cache_path and the user config scope in
 - For the data moving out of $spack described in the previous section,
   we want to move it into XDG-compliant locations
 
-## Old/new spack instance behavior: smoothing transition
+# Old/new spack instance behavior: smoothing transition
 
 - If no new spack clones are generated and only old spack clones
   exist, then each of them will continue using their old install
@@ -54,14 +55,29 @@ Spack by default stores user_cache_path and the user config scope in
     sets SPACK_USER_CACHE_PATH to ~/.spack) and does not warn
     in that case either.
 
-## Data categories with lots of data
+## General all-or-nothing behavior
+
+For items that used to live in $spack, they are generally all relocated
+together or not at all:
+
+- e.g. if the old default install tree in $spack/opt/spack contains
+  installs, then spack also expects to manage environments, gpg keys,
+  license files, and downloads in their old locations inside of
+  $spack
+- modules is an exception, they are automatically moved into $data_home
+  (new instances will generate modules in $data_home, and old instances
+  that pull these changes will start doing that as well)
+- The user config scope and the user_cache_path are also excluded from
+  this (they didn't live in $spack by default though)
+
+# Data categories with lots of data
 
 1-3 are large. Before this PR there were config options to relocate
 each of these individually (and those still take precedence). This
 PR offers additional mechanisms to set a single env var or config
 option in order to relocate all of them together.
 
-## New mechanisms for controlling data location
+# New mechanisms for controlling data location
 
 This is described in detail in where_spack_writes_data.rst (that
 section is focused on how Spack behaves going forward - questions
