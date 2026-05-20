@@ -1,5 +1,7 @@
 Shared spack
 
+This document is accurate up to commit b075d81b4e
+
 # Moving Spack-generated artifacts outside of $spack
 
 The biggest blocker to creating a shared spack instance is that Spack
@@ -79,3 +81,59 @@ This is described in detail in where_spack_writes_data.rst (that
 section is focused on how Spack behaves going forward - questions
 about how existing spack instances can keep using their old data
 is described here).
+
+# avoiding ~
+
+Before this PR, you could do
+
+```
+export SPACK_USER_CACHE_PATH=x
+export SPACK_DISABLE_LOCAL_CONFIG=1
+```
+
+and nothing would be read from or written to ~
+
+With this PR, that would not be enough. Some ways to do that here:
+
+- If you set `SPACK_HOME=x SPACK_USER_CONFIG_PATH=x/config`, everything
+  will be written to x
+- Or you can do `SPACK_HOME=x SPACK_DISABLE_LOCAL_CONFIG=1`
+- If you set SPACK_DATA_HOME or `config:locations:data` outside of ~,
+  this will relocate everything that takes up significant space (envs,
+  installs, cached downloads)
+
+To completely move everything, in an env you can do:
+
+```
+include:: []
+config:
+  locations:
+    home: x
+```
+
+Users who have write access to $spack can do
+
+```
+spack config --scope=spack edit include
+spack config --scope=spack add config:locations:home:x
+```
+
+# Crosstalk between spack instances
+
+* The misc. cache now includes a per-spack component (based on a hash
+  of the Spack root): `spack_instance_id`
+  * `config:misc_cache` still exists, so users can share a single
+    misc cache among multiple instances of spack
+* Ideally each individual spack would have a distinct highest-level
+  write scope, but for now they all share `~/.config/spack`
+
+# Admin management, pip-installed spack
+
+- If admins want to provide an upstream to users but avoid using it
+  themselves, they can use existing `include:` config in the `spack scope`:
+  - Include a scope that adds `upstreams:x` config
+    `when: SPACK_ADMIN not in env`
+  - Include a scope that adds `install_tree:root:x` config
+    `when: SPACK_ADMIN in env`
+  - As long as all admins make sure to define this env var, this will
+    satisfy [5a/b]
