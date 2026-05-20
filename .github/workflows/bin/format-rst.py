@@ -16,7 +16,6 @@ import subprocess
 import sys
 from typing import List
 
-import black
 from docutils import nodes
 from docutils.core import publish_doctree
 from docutils.parsers.rst import Directive, directives
@@ -135,15 +134,10 @@ def _ruff_format(code: str) -> str:
     ruff has no python interface so we use subprocess
     and feed the code through stdin and read from stdout
     """
-    cmd = ["ruff", "format", "--line-length", "99", "-", ]
+    cmd = ["ruff", "format", "--line-length", "99", "-"]
     try:
         result = subprocess.run(
-            cmd,
-            input=code,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            check=True
+            cmd, input=code, capture_output=True, text=True, encoding="utf-8", check=True
         )
     except FileNotFoundError:
         raise RuntimeError("Ruff formatting failed: The 'ruff' executable was not found.")
