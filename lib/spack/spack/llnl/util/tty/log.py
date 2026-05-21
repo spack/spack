@@ -5,6 +5,7 @@
 """Utility classes for logging the output of blocks of code."""
 
 import atexit
+import codecs
 import ctypes
 import errno
 import io
@@ -662,7 +663,7 @@ class winlog:
             raise RuntimeError("Can't re-enter the same log_output!")
 
         read_fd, write_fd = os.pipe()
-        self.read_p = os.fdopen(read_fd, "rb", buffering=0)
+        self.read_p = read_fd
         self.write_p = os.fdopen(write_fd, "wb", buffering=0)
 
         # Dup stdout so we can still write to it after redirection
@@ -703,7 +704,7 @@ class winlog:
 
     @staticmethod
     def _background_reader(
-        read: io.FileIO,
+        read: int,
         logfile: str,
         stdout: io.TextIOWrapper,
         append: bool,
@@ -711,45 +712,52 @@ class winlog:
         filter_fn: Optional[Callable],
     ):
         force_echo = False
-
         write_mode = "ab" if append else "wb"
         log_writer = open(logfile, mode=write_mode)
+
+        buffer = ""
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+
+        def process_message(message):
+            nonlocal force_echo
+            clean_line, num_controls = control.subn("", message)
+            log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
+            log_writer.flush()
+            if echo or force_echo:
+                output = clean_line
+                if filter_fn:
+                    output = filter_fn(output)
+                enc = stdout.encoding
+                if enc != "utf-8":
+                    output = output.encode(enc, "replace").decode(enc)
+                stdout.write(output)
+                stdout.flush()
+            if num_controls > 0:
+                controls = control.findall(message)
+                force_echo = force_echo_on(force_echo, controls)
+
         try:
             while True:
-                data = read.read(4096)
+                data = os.read(read, 4096)
                 if not data:
+                    buffer += decoder.decode(b"", final=True)
                     # the pipe is closed or otherwise inaccesible
-                    return
-                norm_data = data.decode(encoding="utf-8", errors="replace")
-                clean_line, num_controls = control.subn("", norm_data)
-
-                log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
-                log_writer.flush()
-                if echo or force_echo:
-                    output = clean_line
-                    if filter_fn:
-                        output = filter_fn(output)
-                    enc = stdout.encoding
-                    if enc != "utf-8":
-                        output = output.encode(enc, "replace").decode(enc)
-                    stdout.write(output)
-                    stdout.flush()
-                if num_controls > 0:
-                    controls = control.findall(norm_data)
-                    force_echo = force_echo_on(force_echo, controls)
-                if read.closed:
                     break
-
-        # swallow valid errors
-        except EOFError:
-            pass
-        except OSError:
-            pass
-        except BaseException as e:
+                buffer += decoder.decode(data)
+                while True:
+                    idx = buffer.find('\n')
+                    if idx == -1:
+                        break
+                    message = buffer[:idx + 1]
+                    buffer = buffer[idx + 1:]
+                    process_message(message)
+            if buffer:
+                process_message(buffer)
+        except Exception as e:
             tty.error(f"Exception in log writer thread! {e}", stream=stdout)
             traceback.print_exc(file=stdout)
         finally:
-            read.close()
+            os.close(read)
             log_writer.close()
             stdout.close()
 
