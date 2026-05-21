@@ -882,7 +882,7 @@ class Configuration:
 
         # Return the full dict including the section name so we can gracefuly handle defaults
         # Also return the default type for the section so that calculation is memoized
-        return merged_section, get_valid_type(section)
+        return merged_section, get_default_from_schema(section)
 
     def get(self, path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
         """Get a config section or a single value from one.
@@ -1646,7 +1646,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
             # We've nested further than existing config, so we need the
             # type information for validation to know how to handle bare
             # values appended to lists.
-            existing = get_valid_type(path)
+            existing = get_default_from_schema(path)
 
             # construct value from this point down
             for component in reversed(components[idx + 1 : -1]):
@@ -1868,7 +1868,7 @@ def _mark_internal(data, name):
     return d
 
 
-def get_valid_type(path):
+def get_default_from_schema(path):
     """Returns an instance of a type that will pass validation for path.
 
     The instance is created by calling the constructor with no arguments.
