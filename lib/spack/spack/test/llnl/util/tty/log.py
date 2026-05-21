@@ -190,15 +190,35 @@ def test_nested_logging_contexts(capfd, tmp_path):
 
 
 def test_logging_multibyte(capfd, tmp_path):
-    # one byte char (normal characters)
-    # two byte char (©)
-    # three byte char (€)
-    # four byte char (🐸)
-    test_string = "Build complete: 100% 🐸! €©"
+    # 🐸 is 4 bytes long.
+    # We want to force reads to slice it
+    
+    # Slice after 1 byte. 
+    pad_1 = "A" * 4095
+    str_1 = f"{pad_1}🐸!\n"
+
+    # Slice after 2 bytes.
+    pad_2 = "B" * 4094
+    str_2 = f"{pad_2}🐸!\n"
+
+    # Case 3: Slice after 3 bytes.
+    pad_3 = "C" * 4093
+    str_3 = f"{pad_3}🐸!\n"
+    
     with working_dir(str(tmp_path)):
         with log.log_output("foo.txt") as logger:
             with logger.force_echo():
-                print(test_string)
+                sys.stdout.write(str_1)
+                sys.stdout.flush()
+                
+                sys.stdout.write(str_2)
+                sys.stdout.flush()
+                
+                sys.stdout.write(str_3)
+                sys.stdout.flush()
+
         with open("foo.txt", "r", encoding="utf-8") as f:
-            assert f.read() == test_string + "\n"
-        assert capfd.readouterr()[0] == test_string + "\n"
+            file_content = f.read()
+            assert file_content == str_1 + str_2 + str_3
+            
+        assert capfd.readouterr()[0] == str_1 + str_2 + str_3
