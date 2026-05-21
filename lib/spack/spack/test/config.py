@@ -434,7 +434,8 @@ def test_config_set_beyond_existing(mutable_config):
 @pytest.mark.regression("52423")
 def test_config_section_defaults(mutable_config):
     view_default = spack.config.CONFIG.get("view")
-    assert view_default == spack.config.get_default_from_schema("view") == True
+    assert view_default == spack.config.get_default_from_schema("view")
+    assert view_default is True
 
     view_with_default = spack.config.get("view", default="my default")
     assert view_with_default == "my default"
