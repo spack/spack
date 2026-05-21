@@ -83,7 +83,8 @@ def replacements():
         "default_install_root": lambda: paths.default_install_location,
         "default_envs_root": lambda: paths.default_envs_path,
         "default_license_dir": lambda: paths.default_license_dir,
-        # TODO: for now need analogous values for gpg keys
+        "default_downloads_dir": lambda: paths.default_downloads_dir,
+        "default_modules_base": lambda: paths.default_modules_base,
         "data_home": lambda: paths.data_home,
         "cache_home": lambda: paths.cache_home,
         "state_home": lambda: paths.state_home,

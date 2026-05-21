@@ -80,7 +80,7 @@ config:
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
-  source_cache: $data_home/downloads
+  source_cache: $default_downloads_dir
 
 
   ## Directory where spack managed environments are created and stored

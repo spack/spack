@@ -216,6 +216,20 @@ class SpackPaths:
             return os.path.join(self.data_home, "licenses")
 
     @property
+    def default_modules_base(self):
+        if self.old_layout_detected:
+            return self.base.share_path
+        else:
+            return os.path.join(self.data_home)
+
+    @property
+    def default_downloads_dir(self):
+        if self.old_layout_detected:
+            return self.base.old_fetch_cache_path
+        else:
+            return os.path.join(self.data_home, "downloads")
+
+    @property
     def reports_path(self):
         #: junit, cdash, etc. reports about builds
         return os.path.join(self.state_home, "reports")

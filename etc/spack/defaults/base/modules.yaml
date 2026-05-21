@@ -33,8 +33,8 @@ modules:
   default:
     # Where to install modules
     roots:
-     tcl:    $data_home/modules
-     lmod:   $data_home/lmod
+     tcl:    $default_modules_base/modules
+     lmod:   $default_modules_base/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 

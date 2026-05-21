@@ -130,7 +130,7 @@ config:
     home: x
 ```
 
-Users who have write access to $spack can do
+Alternatively, users who have write access to $spack can do
 
 ```
 spack config --scope=spack edit include
