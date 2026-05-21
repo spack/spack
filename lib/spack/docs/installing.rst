@@ -138,7 +138,7 @@ You can also background builds:
 
 .. tip::
 
-   You don't need a new terminal or SSH session to keep a build running — just suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
+   You don't need a new terminal or SSH session to keep a build running --- just suspend it with ``Ctrl-Z`` and ``bg``, then continue working.
 
 
 Handling failures

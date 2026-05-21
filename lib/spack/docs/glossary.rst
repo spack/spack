@@ -298,7 +298,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`binary_caches`.
 
    OCI buildcache
-      A buildcache layered into an OCI registry (Docker Hub, GHCR, …) so
+      A buildcache layered into an OCI registry (Docker Hub, GHCR, ...) so
       binaries can be distributed alongside container images.
       See :ref:`binary_caches_oci`.
 
@@ -355,7 +355,7 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    hook
       A Python callback that runs at a defined point in the install lifecycle
-      (pre-install, post-install, pre-uninstall, …).
+      (pre-install, post-install, pre-uninstall, ...).
 
    module file
       A generated file (Lua for Lmod, TCL for environment-modules) that loads
@@ -433,7 +433,7 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    microarchitecture
       A specific CPU model recognized by ``archspec`` (``zen3``, ``skylake_avx512``,
-      ``neoverse_v2``, …) and used as the :term:`target` portion of an
+      ``neoverse_v2``, ...) and used as the :term:`target` portion of an
       :term:`architecture spec`.
       The concretizer can label nodes either with full microarchitectures or
       with generic families (``x86_64_v3``) via ``concretizer:targets:granularity``.
@@ -485,7 +485,7 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    submapping
       A ``pipelines.yaml`` section that selects CI build-job attributes
-      (tags, container image, …) per spec by matching ``spec.satisfies(...)``.
+      (tags, container image, ...) per spec by matching ``spec.satisfies(...)``.
       Processed bottom-up; ``match_behavior: first`` (default) applies the
       first match, ``merge`` overlays every matching block.
       See :doc:`pipelines`.

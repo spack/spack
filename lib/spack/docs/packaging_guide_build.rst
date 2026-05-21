@@ -640,7 +640,7 @@ Many build tools support parallel builds, including ``make`` and ``ninja``, as w
 
 As mentioned in :ref:`the previous section <running_build_executables>`, the ``gmake`` and ``ninja`` packages make their executables available as global functions, which you can use in your package class.
 By default these are invoked in jobserver-aware mode: ``make`` and ``ninja`` acquire :term:`build job` tokens from Spack's :term:`jobserver` (forwarded via ``MAKEFLAGS``) rather than spawning a fixed number of jobs each.
-As a packager, you typically don't need to pass ``-j`` when calling ``make()`` or ``ninja()`` — the jobserver handles concurrency for you.
+As a packager, you typically don't need to pass ``-j`` when calling ``make()`` or ``ninja()`` --- the jobserver handles concurrency for you.
 
 In certain cases however, you may want to force a specific package to build serially.
 If a package does not build properly in parallel, define ``parallel = False`` in your package class:

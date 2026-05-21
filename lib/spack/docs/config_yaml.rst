@@ -185,7 +185,7 @@ Be aware that this will reduce the reproducibility of builds.
 It defaults to the number of cores available to the process, capped at 16.
 
 Spack exposes this budget as a :term:`POSIX jobserver <jobserver>` and forwards it through ``MAKEFLAGS`` to every package's build environment.
-Child build tools (``make``, ``cmake``, ``ninja``, …) acquire tokens from the jobserver instead of spawning ``-j<N>`` jobs each, so the total number of in-flight compile jobs stays bounded — even when Spack builds several packages concurrently.
+Child build tools (``make``, ``cmake``, ``ninja``, ...) acquire tokens from the jobserver instead of spawning ``-j<N>`` jobs each, so the total number of in-flight compile jobs stays bounded --- even when Spack builds several packages concurrently.
 The effect is similar to a single top-level ``make -j<N>``, but it spans all packages rather than one at a time.
 
 If you work on a shared login node or have a strict ulimit, lower the default: setting ``build_jobs`` to 4 caps Spack at 4 concurrent build jobs across all packages.

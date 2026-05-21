@@ -28,7 +28,7 @@ Package Contributors
 
 Contributors submit changes to packages through PRs `Spack Package <https://github.com/spack/spack-packages>`_ repository Pull Requests (PRs).
 
-As a Contributor, you are **expected** to test your changes on **at least one platform** outside of Spack’s Continuous Integration (CI) checks.
+As a Contributor, you are **expected** to test your changes on **at least one platform** outside of Spack's Continuous Integration (CI) checks.
 
 .. note::
 
@@ -39,7 +39,7 @@ As a Contributor, you are **expected** to test your changes on **at least one pl
 Package Reviewers
 -----------------
 
-Anyone can review a PR so we encourage Spack’s community members to review and comment on those involving software in which they have expertise and/or interest.
+Anyone can review a PR so we encourage Spack's community members to review and comment on those involving software in which they have expertise and/or interest.
 
 As a Package Reviewer, you are **expected** to assess changes in PRs to the best of your ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
 
@@ -50,9 +50,9 @@ As a Package Reviewer, you are **expected** to assess changes in PRs to the best
 Maintainers (Package Owners)
 ----------------------------
 
-Maintainers are individuals (technically GitHub accounts) who appear in a package’s :ref:`maintainers` directive.
+Maintainers are individuals (technically GitHub accounts) who appear in a package's :ref:`maintainers` directive.
 These are people who have agreed to be notified of and given the opportunity to review changes to packages.
-They are, from a Spack package perspective, `Code Owners <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>`_ of the package, whether or not they “own” or work on the software that the package builds.
+They are, from a Spack package perspective, `Code Owners <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners>`_ of the package, whether or not they "own" or work on the software that the package builds.
 
 As a Maintainer, you are **expected**, when available, to:
 
@@ -64,7 +64,7 @@ See :ref:`build_success_reviews` for acceptable forms of build success confirmat
 
 .. note::
 
-   If at least one maintainer approves a PR -– and there are no objections from others -– then the PR can be merged by any of the :ref:`committers`.
+   If at least one maintainer approves a PR --- and there are no objections from others --- then the PR can be merged by any of the :ref:`committers`.
 
 .. index::
    single: committer
