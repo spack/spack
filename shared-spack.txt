@@ -1,6 +1,6 @@
 Shared spack
 
-This document is accurate up to commit b075d81b4e
+This document is accurate up to commit e48b8c104
 
 # Moving Spack-generated artifacts outside of $spack
 
@@ -69,9 +69,6 @@ together or not at all:
   installs, then spack also expects to manage environments, gpg keys,
   license files, and downloads in their old locations inside of
   $spack
-- modules is an exception, they are automatically moved into $data_home
-  (new instances will generate modules in $data_home, and old instances
-  that pull these changes will start doing that as well)
 - The user config scope and the user_cache_path are also excluded from
   this (they didn't live in $spack by default though)
 
@@ -110,9 +107,13 @@ export SPACK_USER_CACHE_PATH=x
 export SPACK_DISABLE_LOCAL_CONFIG=1
 ```
 
-and nothing would be read from or written to ~
+and nothing would be read from or written to ~.
 
-With this PR, that would not be enough. Some ways to do that here:
+For an older instance of spack that pulls this PR, this will also be
+sufficient to prevent writes into ~ (this depends on e48b8c104).
+
+For a fresh clone of spack using this PR, additional steps are
+required to avoid writing into ~:
 
 - If you set `SPACK_HOME=x SPACK_USER_CONFIG_PATH=x/config`, everything
   will be written to x
