@@ -423,6 +423,23 @@ packages_merge_high = {
 }
 
 
+@pytest.mark.regression("52423")
+def test_config_set_beyond_existing(mutable_config):
+    # no raised error is the primary test for this regression
+    # Needs to be for a repo that does not already exist for valid test
+    spack.config.CONFIG.set("repos:nonexistent", "foo")
+    assert spack.config.CONFIG.get("repos:nonexistent") == "foo"
+
+
+@pytest.mark.regression("52423")
+def test_config_section_defaults(mutable_config):
+    view_default = spack.config.CONFIG.get("view")
+    assert view_default == spack.config.get_default_from_schema("view") == True
+
+    view_with_default = spack.config.get("view", default="my default")
+    assert view_with_default == "my default"
+
+
 @pytest.mark.regression("7924")
 def test_merge_with_defaults(mock_low_high_config, write_config_file):
     """This ensures that specified preferences merge with defaults as
