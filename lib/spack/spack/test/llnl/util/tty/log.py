@@ -192,7 +192,7 @@ def test_nested_logging_contexts(capfd, tmp_path):
 def test_logging_multibyte(capfd, tmp_path):
     # one byte char (normal characters)
     # two byte char (©)
-    # three byte char (€) 
+    # three byte char (€)
     # four byte char (🐸)
     test_string = "Build complete: 100% 🐸! €©"
     with working_dir(str(tmp_path)):
@@ -200,5 +200,5 @@ def test_logging_multibyte(capfd, tmp_path):
             with logger.force_echo():
                 print(test_string)
         with open("foo.txt", "r", encoding="utf-8") as f:
-            assert f.read() == test_string +"\n"
+            assert f.read() == test_string + "\n"
         assert capfd.readouterr()[0] == test_string + "\n"

@@ -745,11 +745,11 @@ class winlog:
                     break
                 buffer += decoder.decode(data)
                 while True:
-                    idx = buffer.find('\n')
+                    idx = buffer.find("\n")
                     if idx == -1:
                         break
-                    message = buffer[:idx + 1]
-                    buffer = buffer[idx + 1:]
+                    message = buffer[: idx + 1]
+                    buffer = buffer[idx + 1 :]
                     process_message(message)
             if buffer:
                 process_message(buffer)
