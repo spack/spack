@@ -760,7 +760,7 @@ class Configuration:
            }
 
         """
-        merged_section, default_type =  self._get_config_memoized(
+        merged_section, default_type = self._get_config_memoized(
             section, scope=scope, _merged_scope=_merged_scope
         )
 
@@ -827,7 +827,7 @@ class Configuration:
     @lang.memoized
     def _get_config_memoized(
         self, section: str, scope: Optional[str], _merged_scope: Optional[str] = None
-    ) -> YamlConfigDict:
+    ) -> Tuple[YamlConfigDict, Any]:
         """Memoized helper for ``get_config()``.
 
         Note that the memoization cache for this function is cleared whenever
