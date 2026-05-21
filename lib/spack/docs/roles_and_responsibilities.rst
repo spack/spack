@@ -43,7 +43,9 @@ Anyone can review a PR so we encourage Spack’s community members to review and
 
 As a Package Reviewer, you are **expected** to assess changes in PRs to the best of your ability and knowledge with special consideration to the information contained in the :ref:`package-review-guide`.
 
-.. _package-maintainers:
+.. index::
+   single: package maintainer
+   :name: package-maintainers
 
 Maintainers (Package Owners)
 ----------------------------
@@ -64,7 +66,9 @@ See :ref:`build_success_reviews` for acceptable forms of build success confirmat
 
    If at least one maintainer approves a PR -– and there are no objections from others -– then the PR can be merged by any of the :ref:`committers`.
 
-.. _committers:
+.. index::
+   single: committer
+   :name: committers
 
 Committers
 ----------

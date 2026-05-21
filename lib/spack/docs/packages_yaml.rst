@@ -7,7 +7,10 @@
    :description lang=en:
       A guide to customizing package settings in Spack using the packages.yaml file, including configuring compilers, specifying external packages, package requirements, and permissions.
 
-.. _packages-config:
+.. index::
+   single: packages.yaml
+   single: external package
+   :name: packages-config
 
 Package Settings (packages.yaml)
 ================================
@@ -396,7 +399,10 @@ The ``implicit_rpaths`` field is filled in automatically by Spack when detecting
 In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
-.. _package-requirements:
+.. index::
+   single: requirement
+   single: require
+   :name: package-requirements
 
 Package Requirements
 --------------------
@@ -641,7 +647,10 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
    For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.
 
-.. _package-preferences:
+.. index::
+   single: preference
+   single: prefer
+   :name: package-preferences
 
 Package Preferences
 -------------------

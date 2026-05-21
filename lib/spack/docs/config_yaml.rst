@@ -3,11 +3,16 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _config-yaml:
-
 .. meta::
    :description lang=en:
       A detailed guide to the config.yaml file in Spack, which allows you to set core configuration options like installation paths, build parallelism, and trusted sources.
+
+.. index::
+   single: config.yaml
+   single: install_tree
+   single: build_jobs
+   single: connect_timeout
+   :name: config-yaml
 
 Spack Settings (config.yaml)
 ============================
@@ -176,18 +181,19 @@ Be aware that this will reduce the reproducibility of builds.
 ``build_jobs``
 --------------
 
-Unless overridden in a package or on the command line, Spack builds all packages in parallel.
-The default parallelism is equal to the number of cores available to the process, up to 16 (the default of ``build_jobs``).
-For a build system that uses Makefiles, ``spack install`` runs:
+``build_jobs`` sets the default total number of concurrent :term:`build jobs <build job>` when ``-j`` is not given on the command line.
+It defaults to the number of cores available to the process, capped at 16.
 
-- ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of cores available
-- ``make -j<ncores>``, when ``build_jobs`` is greater or equal to the number of cores available
+Spack exposes this budget as a :term:`POSIX jobserver <jobserver>` and forwards it through ``MAKEFLAGS`` to every package's build environment.
+Child build tools (``make``, ``cmake``, ``ninja``, …) acquire tokens from the jobserver instead of spawning ``-j<N>`` jobs each, so the total number of in-flight compile jobs stays bounded — even when Spack builds several packages concurrently.
+The effect is similar to a single top-level ``make -j<N>``, but it spans all packages rather than one at a time.
 
-If you work on a shared login node or have a strict ulimit, it may be necessary to set the default to a lower value.
-By setting ``build_jobs`` to 4, for example, commands like ``spack install`` will run ``make -j4`` instead of using every core.
-To build all software in serial, set ``build_jobs`` to 1.
+If you work on a shared login node or have a strict ulimit, lower the default: setting ``build_jobs`` to 4 caps Spack at 4 concurrent build jobs across all packages.
+Set ``build_jobs`` to 1 to build serially.
 
-Note that specifying the number of jobs on the command line always takes priority, so that ``spack install -j<n>`` always runs ``make -j<n>``, even when that exceeds the number of cores available.
+A ``-j<n>`` on the command line overrides ``build_jobs`` and is honored as-is, even when it exceeds the number of cores available.
+
+See :ref:`installing` for the full story, including the ``-p`` / ``--concurrent-packages`` flag and how to adjust parallelism dynamically while a build is running.
 
 ``ccache``
 --------------------

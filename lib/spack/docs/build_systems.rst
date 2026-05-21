@@ -7,7 +7,13 @@
    :description lang=en:
       An overview of the build systems supported by Spack, with links to detailed documentation for each system.
 
-.. _build-systems:
+.. index::
+   single: build system
+   single: CMakePackage
+   single: AutotoolsPackage
+   single: MesonPackage
+   single: PythonPackage
+   :name: build-systems
 
 Build Systems
 =============

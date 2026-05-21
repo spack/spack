@@ -7,7 +7,12 @@
    :description lang=en:
       Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
 
-.. _repositories:
+.. index::
+   single: repo
+   single: repository
+   single: repos.yaml
+   single: namespace
+   :name: repositories
 
 Package Repositories (repos.yaml)
 =================================
@@ -108,6 +113,8 @@ You can point Spack to a repository on your local filesystem:
      my_local_packages: /path/to/my_repository_root
 
 Here, ``/path/to/my_repository_root`` should be the directory containing that repository's ``repo.yaml`` and ``packages/`` subdirectory.
+
+.. index:: git repo
 
 Git-based Repositories
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -291,6 +298,8 @@ This accomplishes two things:
    The ``namespace`` defined in the package repository's ``repo.yaml`` is the **authoritative source** for the namespace.
    It is *not* derived from the local configuration in ``repos.yaml``.
    This means that the namespace is determined by the repository maintainer, not by the user or local configuration.
+
+.. index:: nested namespace
 
 Nested Namespaces for Organizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

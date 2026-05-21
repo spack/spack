@@ -39,7 +39,9 @@ The software may work after being installed, but due to changes on the system, m
 This section describes Spack's support for checks that can be performed during and after its installation.
 The former checks are referred to as ``build-time tests`` and the latter as ``stand-alone (or smoke) tests``.
 
-.. _build_time-tests:
+.. index::
+   single: build-time test
+   :name: build_time-tests
 
 Build-time tests
 ^^^^^^^^^^^^^^^^
@@ -77,7 +79,9 @@ You can also add checks to be performed after one or more installation phases.
    Build-time test failures result in a failed installation of the software.
 
 
-.. _sanity-checks:
+.. index::
+   single: sanity check
+   :name: sanity-checks
 
 Adding sanity checks
 """"""""""""""""""""
@@ -280,7 +284,9 @@ If the installation fails due to build-time test failures, then both logs will b
    $ cat /var/tmp/user/spack-stage/spack-stage-zlib-1.2.13-lxfsivs4htfdewxe7hbi2b3tekj4make/install-time-test-log.txt
 
 
-.. _cmd-spack-test:
+.. index::
+   single: stand-alone test
+   :name: cmd-spack-test
 
 Stand-alone tests
 ^^^^^^^^^^^^^^^^^

@@ -7,7 +7,11 @@
    :description lang=en:
       Discover how to configure compilers in Spack, whether by specifying them as externals, or by installing them with Spack.
 
-.. _compiler-config:
+.. index::
+   single: compiler
+   single: compiler wrapper
+   single: compilers.yaml
+   :name: compiler-config
 
 Configuring Compilers
 =====================

@@ -8,7 +8,11 @@
       Understand the Spack package signing process, which ensures data integrity for official packages from automated CI pipelines through cryptographic signing.
 
 
-.. _signing:
+.. index::
+   single: signing
+   single: GPG
+   single: signing key
+   :name: signing
 
 Spack Package Signing
 =====================
@@ -64,6 +68,8 @@ Each of these keys has signing sub-keys that are used exclusively for signing pa
 This can be confusing so for the purpose of this explanation we will refer to Root and Signing keys.
 Each key has a private and a public component as well as one or more identities and zero or more signatures.
 
+.. index:: intermediate CI key
+
 Intermediate CI Key
 -------------------
 
@@ -89,6 +95,8 @@ The *Root intermediate CI Private Key*\ is stripped out of the GPG key and store
 This allows the core development team to append revocation certificates to the GPG key and issue new sub-keys for use in the pipeline.
 It is our expectation that this will happen on a semi-regular basis.
 A corollary of this is that *this key should not be used to verify package integrity outside the internal CI process.*
+
+.. index:: reputational key
 
 Reputational Key
 ----------------

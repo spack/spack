@@ -7,7 +7,12 @@
    :description lang=en:
       A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
 
-.. _sec-specs:
+.. index::
+   single: spec
+   single: spec syntax
+   single: abstract spec
+   single: concrete spec
+   :name: sec-specs
 
 Spec Syntax
 ===========
@@ -118,7 +123,11 @@ You can put all the same modifiers on dependency specs that you would put on the
 That is, you can specify their versions, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 
-.. _sec-virtual-dependencies:
+.. index::
+   single: virtual package
+   single: virtual dependency
+   single: provider
+   :name: sec-virtual-dependencies
 
 Virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^
@@ -162,7 +171,13 @@ For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:
 
 Below are more details about the specifiers that you can add to specs.
 
-.. _version-specifier:
+.. index::
+   single: version
+   single: version specifier
+   single: version range
+   single: version list
+   single: @ (spec sigil)
+   :name: version-specifier
 
 Version specifier
 -----------------
@@ -216,6 +231,10 @@ For example:
 
 matches any version in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
+.. index::
+   single: git version
+   single: commit variant
+
 Git versions
 ^^^^^^^^^^^^
 
@@ -260,7 +279,11 @@ For example:
 
 Details about how versions are compared and how Spack determines if one version is less than another are discussed in the developer guide.
 
-.. _basic-variants:
+.. index::
+   single: variant
+   single: + (spec sigil)
+   single: ~ (spec sigil)
+   :name: basic-variants
 
 Variants
 --------
@@ -272,6 +295,9 @@ The variants available for a particular package are defined by the package autho
 ``spack info <package>`` will provide information on what build variants are available.
 
 There are different types of variants.
+
+.. index::
+   single: variant; boolean
 
 Boolean Variants
 ^^^^^^^^^^^^^^^^
@@ -289,6 +315,9 @@ and disabled with
 
    ~debug
 
+.. index::
+   single: variant; single-valued
+
 Single-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -304,6 +333,10 @@ or
 .. code-block:: spec
 
    compression=zstd
+
+.. index::
+   single: variant; multi-valued
+   single: := (spec sigil)
 
 Multi-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^
@@ -329,6 +362,11 @@ If the intent is to enable *only* the specified fabrics, then the:
 syntax should be used with the ``:=`` operator.
 
 
+.. index::
+   single: propagation
+   single: ++ (spec sigil)
+   single: == (spec sigil)
+
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -350,6 +388,15 @@ For example, for the ``stackstart`` variant:
 
 Spack also allows variants to be propagated from a package that does not have that variant.
 
+.. index::
+   single: compiler flags
+   single: cflags
+   single: cxxflags
+   single: cppflags
+   single: fflags
+   single: ldflags
+   single: ldlibs
+
 Compiler Flags
 --------------
 
@@ -367,7 +414,12 @@ The six compiler flags are injected in the same order as implicit make commands 
 If all flags are set, the order is ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
 
-.. _architecture_specifiers:
+.. index::
+   single: architecture spec
+   single: platform
+   single: target
+   single: os
+   :name: architecture_specifiers
 
 Architecture specifiers
 -----------------------
@@ -451,7 +503,13 @@ In the snippet above, for instance, the microarchitecture was demoted to ``haswe
 Finally, if Spack has no information to match the compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
 
-.. _sec-dependencies:
+.. index::
+   single: dependency
+   single: direct dependency
+   single: transitive dependency
+   single: % (spec sigil)
+   single: ^ (spec sigil)
+   :name: sec-dependencies
 
 Dependencies
 ------------
@@ -506,7 +564,9 @@ The ``mpileaks`` package in particular only needs MPI-1 commands, so any MPI imp
 If another package depends on ``mpi@2`` and you try to give it an insufficient MPI implementation (e.g., one that provides only ``mpi@:1``), then Spack will raise an error.
 Likewise, if you try to plug in some package that doesn't provide MPI, Spack will raise an error.
 
-.. _explicit-binding-virtuals:
+.. index::
+   single: virtual binding
+   :name: explicit-binding-virtuals
 
 Explicit binding of virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -528,6 +588,8 @@ Concretizing the spec above produces the following DAG:
 
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
+
+.. index:: edge attribute
 
 Dependency edge attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -587,6 +649,12 @@ For instance, the following command:
 tells Spack to install ``hdf5`` using Clang as the C and C++ compiler, and GCC as the Fortran compiler.
 It also tells Spack to propagate the same choices, as :ref:`strong preferences <package-strong-preferences>`,  to the runtime sub-DAG of ``hdf5``.
 Build tools are unaffected and can still prefer to use a different compiler.
+
+.. index::
+   single: spec hash
+   single: hash; spec
+   single: DAG hash
+   single: / (spec sigil)
 
 Specifying Specs by Hash
 ------------------------

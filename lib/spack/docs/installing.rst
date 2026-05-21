@@ -22,6 +22,8 @@ Before diving in, ensure you are familiar with :doc:`package_fundamentals` for b
    The TUI and GNU Make jobserver support are new in Spack 1.2.
    Spack supports the POSIX jobserver, Windows jobserver support will be added in a future release.
 
+.. index:: TUI
+
 Interactive terminal UI
 -----------------------
 
@@ -118,6 +120,8 @@ For best results on a cluster, it's recommended to limit per-process package-lev
 
    On Windows, due to a lack of file lock support, concurrent Spack processes are not guaranteed to function.
    On Windows, due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported.
+
+.. index:: non-interactive
 
 Non-interactive mode
 --------------------

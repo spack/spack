@@ -7,7 +7,13 @@
    :description lang=en:
       Learn how to configure and customize module file generation in Spack for Environment Modules and Lmod.
 
-.. _modules:
+.. index::
+   single: module file
+   single: modules.yaml
+   single: Lmod
+   single: TCL modules
+   single: environment modules
+   :name: modules
 
 Modules (modules.yaml)
 ======================
@@ -104,7 +110,9 @@ In general you can override or extend the default behavior by:
 Overriding callback APIs lets you express changes in the run-time environment that are needed to use the installed software properly, e.g. injecting variables from language interpreters into their extensions.
 Configuration rules and custom templates instead permit you to fine-tune the filesystem layout, content and creation of module files to meet site-specific conventions.
 
-.. _modules-yaml:
+.. index::
+   single: module set
+   :name: modules-yaml
 
 Configuration structure
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -171,7 +179,9 @@ Module layout
 By default, Spack encodes the package version, compiler, and a short hash into every module name to distinguish builds with different configurations.
 The options in this section let you change where module files are placed on the filesystem, how they are named, whether to arrange them in a hierarchy, and which version is the default.
 
-.. _modules-projections:
+.. index::
+   single: module projection
+   :name: modules-projections
 
 Naming and projections
 """"""""""""""""""""""
@@ -281,7 +291,9 @@ Spack populates module files from three sources:
 
 The options in this section let you control which dependencies are autoloaded, what environment variables are set and for which packages, and which module files are generated at all.
 
-.. _autoloading-dependencies:
+.. index::
+   single: autoloading
+   :name: autoloading-dependencies
 
 Autoloading and hiding dependencies
 """"""""""""""""""""""""""""""""""""
@@ -616,6 +628,8 @@ The output can be sourced directly using `process substitution <http://tldp.org/
 
    $ source <( spack module tcl loads --dependencies <spec> )
 
+
+.. index:: module prefix
 
 Module Prefixes
 ^^^^^^^^^^^^^^^
