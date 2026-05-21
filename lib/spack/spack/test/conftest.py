@@ -1412,13 +1412,16 @@ def mock_gnupghome(monkeypatch):
     # have to make our own tmp_path with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    short_name_tmpdir = tempfile.mkdtemp()
     try:
-        spack.util.gpg.init()
+        # We must manually set gnupghome here, else tests run in parallel
+        # will all fall back to the system default location and cause
+        # failures when multiple try to init the same location concurrently
+        spack.util.gpg.init(gnupghome=short_name_tmpdir)
     except spack.util.gpg.SpackGPGError:
         if not spack.util.gpg.GPG:
             pytest.skip("This test requires gpg")
 
-    short_name_tmpdir = tempfile.mkdtemp()
     with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
