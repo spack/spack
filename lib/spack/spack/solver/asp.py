@@ -905,6 +905,24 @@ class ErrorHandler:
         raise UnsatisfiableSpecError(msg)
 
 
+class SpecPrefHandler:
+    """Handles converting `no_spec_pref` predicates in a model into intelligible errors."""
+
+    def __init__(self, model):
+        self.model = model
+
+    def raise_if_prefs_violated(self):
+        """Raise an error if any spec preferences were violated in the solve."""
+        # extract attr(...) argument from no_spec_pref(Name, Attribute)
+        no_spec_prefs = [sym.arguments[1] for sym in self.model if sym.name == "no_spec_pref"]
+
+        # prepare to build specs
+        attrs = extract_args(no_spec_prefs)
+
+        # TODO: to get the right prefs in the solution we need to get rid of lockfile
+        # specs as inputs and instead use them as preferences.
+
+
 class PyclingoDriver:
     def __init__(self, conc_cache: Optional[ConcretizationCache] = None) -> None:
         """Driver for the Python clingo interface.
@@ -1095,6 +1113,8 @@ class PyclingoDriver:
             control_files.append("os_compatibility.lp")
         if setup.enable_splicing:
             control_files.append("splices.lp")
+
+        control_files.append("spec_prefs.lp")
 
         timer.start("setup")
         problem_builder = setup.setup(
@@ -1388,6 +1408,9 @@ class SpackSolverSetup:
 
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
+
+        # list of specs whose attributes we should try to match during solve
+        self.spec_prefs: Optional[Sequence[spack.spec.Spec]] = None
 
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
@@ -2886,6 +2909,17 @@ class SpackSolverSetup:
                 "    " + ", ".join(str(spec) for spec in impossible),
             )
 
+    def generate_spec_prefs(self):
+        for spec in self.spec_prefs:
+            # skip unreachable preferences
+            if spec.name not in self.pkgs:
+                continue
+
+            for clause in self.spec_clauses(spec, body=True):
+                self.gen.fact(fn.spec_pref(clause))
+
+            self.gen.newline()
+
     def setup(
         self,
         specs: Sequence[spack.spec.Spec],
@@ -2975,6 +3009,8 @@ class SpackSolverSetup:
         dev_specs: Tuple[spack.spec.Spec, ...] = ()
         env = ev.active_environment()
         if env:
+            # Calculate develop specs they will be used in addition to command line
+            # specs in determining known versions/targets/os
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
                     'dev_path="%s"'
@@ -2982,6 +3018,14 @@ class SpackSolverSetup:
                 )
                 for name, info in env.dev_specs.items()
             )
+
+            # Add spec preferences from lockfile if there is one. This causes the solver to
+            # try to stick to what the user *already* has in their environment, so as not
+            # to give surprising results on re-concretizations.
+            self.spec_prefs = env.concrete_roots()
+            if self.spec_prefs:
+                self.gen.h1("Spec preferences (based on old lockfile)")
+                self.generate_spec_prefs()
 
         specs = tuple(specs)  # ensure compatible types to add
 
@@ -3982,7 +4026,9 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._check_input_and_extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
+
         setup = SpackSolverSetup(tests=tests)
+
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(

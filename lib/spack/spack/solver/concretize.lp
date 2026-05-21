@@ -2102,6 +2102,17 @@ opt_criterion(310, "requirement weight").
     : requirement_penalty(PackageNode, Language, Group, Weight)
 }.
 
+% see spec_prefs.lp to understand how these criteria work.
+opt_criterion(122, "versions not in lockfile").
+opt_criterion(121, "variant values not in lockfile").
+opt_criterion(120, "other attributes not in lockfile").
+#minimize { 0@122: #true }.
+#minimize { 0@121: #true }.
+#minimize { 0@120: #true }.
+#minimize {
+    1@120+Priority,Attribute : no_spec_pref(Name, Attribute), spec_pref_priority(Name, Priority)
+}.
+
 % Try hard to reuse installed packages (i.e., minimize the number built)
 opt_criterion(120, "number of packages to build (vs. reuse)").
 #minimize { 0@120: #true }.
