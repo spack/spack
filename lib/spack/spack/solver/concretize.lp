@@ -33,8 +33,12 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
-% Auxiliary predicates: each projects away one or more arguments of an
-% existing predicate so it can be used in a negative body literal.
+% Anonymous variables that appear only in negative body literals like `not
+% foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
+% v6. Each predicate below is the explicit projection of an existing predicate
+% that replaces such a body literal elsewhere in the program, letting the same
+% encoding work on all supported clingo versions with no per-version flags.
+
 has_provider(VirtualNode) :- provider(_, VirtualNode).
 is_provider_of_virtual(ProviderNode, Virtual) :- provider(ProviderNode, node(_, Virtual)).
 any_provider_for(Provider, Virtual) :- provider(node(_, Provider), node(_, Virtual)).

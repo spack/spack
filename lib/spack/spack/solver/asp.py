@@ -68,15 +68,14 @@ from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
+from .compat import default_clingo_control, make_error_control
 from .core import (
     AspFunction,
     AspVar,
     NodeId,
     SourceContext,
-    default_clingo_control,
     extract_args,
     fn,
-    make_error_control,
     using_libc_compatibility,
 )
 from .input_analysis import create_counter, create_graph_analyzer
