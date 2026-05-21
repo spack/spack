@@ -601,7 +601,7 @@ class SpackCIConfig:
             option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
             if option == "append":
                 # Running this in CI relies on a guarentee from the calling context that there is
-                # only a single writter or the build cache view doesn't require a complete view
+                # only a single writer or the build cache view doesn't require a complete view
                 # after each append.
                 tty.warn("Using --append to update buildcache-destination mirror index view")
                 update_index_extra_args.extend(["-y", "--append"])
