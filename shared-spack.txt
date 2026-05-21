@@ -75,6 +75,25 @@ together or not at all:
 - The user config scope and the user_cache_path are also excluded from
   this (they didn't live in $spack by default though)
 
+## `spack migrate` command
+
+Simplest usage is if you are updating all spack instances to >= 1.2,
+in which case you can do:
+
+`spack migrate --clear`
+
+- Copies config files from ~/.spack into ~/.config
+- Copies package repositories from ~/.spack/package_repos into
+  ~/.local/state/spack/package_repos
+- Moves the entire ~/.spack directory into a backup location into
+  `$data_home/dotspack_backup`
+
+If it's descovered that this operation removed something from
+~/.spack that an older spack instance needs (i.e. you realized you can't
+update all your spack instances), then you can restore it with
+
+`spack migrate --restore-old-configs`
+
 # New mechanisms for controlling data location
 
 This is described in detail in where_spack_writes_data.rst (that
