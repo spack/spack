@@ -1264,7 +1264,7 @@ _spack_gpg() {
 _spack_gpg_trust() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1289,11 +1289,11 @@ _spack_gpg_create() {
 }
 
 _spack_gpg_list() {
-    SPACK_COMPREPLY="-h --help --trusted --signing"
+    SPACK_COMPREPLY="-h --help --fmt -f --trusted --signing"
 }
 
 _spack_gpg_init() {
-    SPACK_COMPREPLY="-h --help --from"
+    SPACK_COMPREPLY="-h --help --from -y --yes-to-all"
 }
 
 _spack_gpg_export() {
