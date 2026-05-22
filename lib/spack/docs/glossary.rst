@@ -31,6 +31,24 @@ For an alphabetic list of every documented keyword and environment variable, see
       A fully specified spec in which every field is fixed: an exact version, all variant values, a compiler, an architecture, and a concrete spec for every dependency in the :term:`DAG`.
       Concrete specs are what Spack actually installs; they are identified by a :term:`DAG hash`.
 
+   root spec
+   root
+      A spec the user requested directly: an argument to ``spack install`` or an entry in an :term:`environment`'s ``spack.yaml`` ``specs:`` list.
+      Roots are the starting points of concretization; everything else in the resulting :term:`DAG` is a dependency pulled in to satisfy a root.
+      Under ``concretizer:reuse:`` the ``roots:`` key controls whether roots themselves may be reused or must be solved fresh.
+
+   explicit
+   implicit
+      A property of an installed spec recorded in the :term:`database`.
+      A spec is *explicit* if it was requested directly (a ``spack install`` argument or an environment :term:`root spec <root>`); it is *implicit* if it was only installed as a dependency of something else.
+      Explicit installs are preserved by ``spack gc``; implicit installs become eligible for garbage collection once no installed spec depends on them.
+      ``spack mark -e/-i`` toggles the flag on an existing install, ``spack find --explicit`` / ``--implicit`` filters by it, and a :term:`spec group` with ``explicit: false`` installs its specs as implicit.
+
+   fresh
+      The concretizer policy of ignoring already-installed and cached specs and solving for the newest configuration allowed by the constraints.
+      Selected with ``spack install --fresh`` / ``spack concretize --fresh``; the opposite of :term:`reuse`.
+      ``--fresh-roots`` is a middle ground: solve :term:`root specs <root>` fresh while still reusing their dependencies.
+
    anonymous spec
       A spec without a package name, used to express constraints that should apply to any package (for example in ``packages.yaml``).
       See :ref:`anonymous_specs`.
@@ -182,9 +200,6 @@ For an alphabetic list of every documented keyword and environment variable, see
    manifest
       The ``spack.yaml`` file describing an :term:`environment`: the root specs, configuration overrides, and view settings.
       Concretizing the manifest produces the :term:`spack.lock` lockfile.
-
-   install manifest
-      The per-install ``install_manifest.json`` recording every file Spack laid down in a :term:`prefix`, used by ``spack verify`` and by buildcache relocation.
 
    DAG hash
       The cryptographic hash that identifies a :term:`concrete spec`.
