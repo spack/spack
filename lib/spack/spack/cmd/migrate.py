@@ -105,7 +105,7 @@ silence the warning.
 Other explicit uses of ~/.spack will also silence this warning
 (e.g. setting `config:locations:state:~/.spack`, or pointing
 the user scope's `path` to `~/.spack`).
-          
+
 TODO: IMO this could also suggest `spack migrate` (no --clear) to
 create a divergent cache/config (and once the new spack instance
 is isolated from ~/.spack, stop warning). I have to update the
