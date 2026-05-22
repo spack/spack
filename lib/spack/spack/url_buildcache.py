@@ -423,8 +423,7 @@ class URLBuildcacheEntry:
     @classmethod
     def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
         """Possibly verify clearsig, then extract contents and return as json"""
-        magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
-        if manifest_contents.startswith(magic_string):
+        if spack.util.gpg.is_clearsig(manifest_contents):
             if verify:
                 # Try to verify and raise if we fail
                 with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:

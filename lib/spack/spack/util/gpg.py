@@ -34,6 +34,14 @@ CLEARSIGN_FILE_REGEX = re.compile(
     re.MULTILINE | re.DOTALL,
 )
 
+#: PGP cleartext signature header
+PGP_CLEARSIG_HEADER = "-----BEGIN PGP SIGNED MESSAGE-----"
+
+
+def is_clearsig(data: str) -> bool:
+    """Check if data is wrapped in a cleartext signature"""
+    return data.startswith(PGP_CLEARSIG_HEADER)
+
 
 def extract_data_from_clearsig(data: str) -> str:
     """Extract data from a gpg cleartext signed file"""
