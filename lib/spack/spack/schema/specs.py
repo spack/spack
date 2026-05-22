@@ -6,10 +6,10 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/specs.py
    :lines: 14-
 """
+
 from typing import Any, Dict
 
-from .spec_list import spec_list_properties, spec_list_schema, group_name_and_deps
-
+from .spec_list import group_name_and_deps, spec_list_properties, spec_list_schema
 
 properties: Dict[str, Any] = {
     "specs": {

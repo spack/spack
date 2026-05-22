@@ -31,7 +31,7 @@ group_name_and_deps = {
         "type": "object",
         "description": "Top-most configuration scope for this group of specs",
         "additionalProperties": True,  # TODO: fix circular import
-#        "properties": {**ref_sections},
+        #        "properties": {**ref_sections},
     },
 }
 

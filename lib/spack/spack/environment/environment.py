@@ -1249,9 +1249,7 @@ class Environment:
 
         self.spec_lists = {}
         self.spec_lists.update(
-            parser.parse_definitions(
-                data=spack.config.CONFIG.get("definitions", [])
-            )
+            parser.parse_definitions(data=spack.config.CONFIG.get("definitions", []))
         )
 
         # TODO/50207: Fix this to handle grabbing specs though not clear yet
@@ -3324,11 +3322,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._user_specs[group].append(user_spec)
         self.changed = True
 
-    def _add_to_group(self, group: str, addition: str, specs_yaml: Dict) -> Dict:
+    def _add_to_group(self, group: str, addition: str, specs_yaml: Dict) -> None:
         """Find or create a new group in specs_yaml and add to it
 
         Does the yaml addition, not the in-memory addition"""
         specs_yaml = spack.config.CONFIG.get("specs", [], scope=self.scope_name)
+        assert isinstance(specs_yaml, list)
+
         group_entry = None
         for item in specs_yaml:
             if isinstance(item, dict) and item.get("group") == group:
@@ -3550,7 +3550,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def remove_default_view(self) -> None:
         """Removes the default view from the manifest file"""
         with self.use_config():
-            view_data = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
+            view_data: dict = spack.config.CONFIG.get("view", {}, scope=self.scope_name)
             if isinstance(view_data, collections.abc.Mapping):
                 view_data.pop(default_view_name)
                 spack.config.CONFIG.set("view", view_data)
@@ -3600,7 +3600,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
     def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        scope = self.env_config_scope
         spack.config.CONFIG.push_scope(
             self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
         )
