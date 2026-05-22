@@ -709,7 +709,8 @@ You could also have already trusted a key Spack knows about, or if no key is pre
 
 Optional.
 Only needed when using a ``buildcache-destination`` mirror that points at a build cache view.
-This option affects the behavior the ``reindex`` job (:ref:`rebuild_index`) can have the values ``force`` or ``append`` which mirror behavior described by ref:`cmd-spack-buildcache-update-view`.
+This option affects the behavior of the ``reindex`` job (:ref:`rebuild_index`) and can have the values ``force`` or ``append``.
+The behavior of each option is described in more detail by :ref:`cmd-spack-buildcache-update-view`.
 The default option is ``append`` because that is what is used by the Spack build farm.
 
 .. warning::
