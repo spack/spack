@@ -5,7 +5,6 @@
 """Utility classes for logging the output of blocks of code."""
 
 import atexit
-import codecs
 import ctypes
 import errno
 import io
@@ -737,7 +736,7 @@ class winlog:
             with open(logfile, mode=write_mode, encoding="utf-8") as log_writer:
                 for line in read_file:
                     process_message(line)
-            
+
         except Exception as e:
             tty.error(f"Exception in log writer thread! {e}", stream=stdout)
             traceback.print_exc(file=stdout)
