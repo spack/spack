@@ -87,26 +87,24 @@ def restore(args: argparse.Namespace) -> None:
 
 
 def i_need_old_spack():
+    # Note: I specifically recommend SPACK_USER_CACHE_PATH= rather
+    # than SPACK_STATE_HOME=..., because if a pre-1.2 instance *is*
+    # eventually updated, it would take the existence of
+    # SPACK_STATE_HOME as an indication to use new-style defaults
+    # for installs etc., and ignore existing installs in
+    # $spack/opt/spack
     print("""\
 If you're getting a warning about using resources in ~/.spack, and
 you have pre-1.2 Spack instances that cannot upgrade. Then it is
-recommended that both old and new instances use ~/.spack
+recommended that both old and new instances use ~/.spack for
+configs and the user cache path.
 
-In the new instance, you can do that by adding config:
+If a new instance sees SPACK_USER_CACHE_PATH=~/.spack, that will
+silence the warning.
 
-config:
-  locations:
-    state: ~/.spack
-
-or setting the SPACK_STATE_HOME/SPACK_USER_CACHE environment variable.
-
-Alternatively, you can set:
-
-include:
-  - name: "user"
-    path: "~/.spack/"
-
-(in etc/spack/include.yaml)
+Other explicit uses of ~/.spack will also silence this warning
+(e.g. setting `config:locations:state:~/.spack`, or pointing
+the user scope's `path` to `~/.spack`).
 """)
 
 
