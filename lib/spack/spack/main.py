@@ -933,6 +933,7 @@ def _warn_about_old_dotspack():
 
     # Don't warn if it doesn't exist
     if not os.path.exists(old_dotspack):
+        tty.debug("Skip .spack warning: no ~/.spack directory")
         return
 
     # Helper to check if old_dotspack is a prefix
@@ -948,6 +949,9 @@ def _warn_about_old_dotspack():
                 reasons.append(f"Used by config scope: {scope.name}")
             else:
                 # A config scope explicitly targets ~/.spack
+                tty.debug(
+                    f"Skip .spack warning: scope {scope.name} includes ~/.spack: {scope.path}"
+                )
                 return
 
     explicit_path = False
@@ -955,10 +959,20 @@ def _warn_about_old_dotspack():
         if spack.paths.locations.default_state_home_dot_spack:
             reasons.append("User cache path fallback")
         else:
+            tty.debug(
+                "Skip .spack warning:"
+                f" state_home includes .spack {spack.paths.locations.state_home}"
+            )
             explicit_path = True
     if uses_old_dotspack(spack.paths.locations.data_home):
+        tty.debug(
+            f"Skip .spack warning: data_home includes .spack {spack.paths.locations.data_home}"
+        )
         explicit_path = True
     if uses_old_dotspack(spack.paths.locations.cache_home):
+        tty.debug(
+            f"Skip .spack warning: cache_home includes .spack {spack.paths.locations.cache_home}"
+        )
         explicit_path = True
 
     if explicit_path:
