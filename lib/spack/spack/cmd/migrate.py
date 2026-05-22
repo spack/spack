@@ -44,6 +44,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="restore ~/.spack from backup location (after --clear)",
     )
+    subparser.add_argument(
+        "--i-need-old-spack",
+        action="store_true",
+        help="print help about mixing pre-1.2-Spack and Spack >= 1.2",
+    )
 
 
 def restore(args: argparse.Namespace) -> None:
@@ -81,6 +86,30 @@ def restore(args: argparse.Namespace) -> None:
     tty.msg("Restore complete!")
 
 
+def i_need_old_spack():
+    print("""\
+If you're getting a warning about using resources in ~/.spack, and
+you have pre-1.2 Spack instances that cannot upgrade. Then it is
+recommended that both old and new instances use ~/.spack
+
+In the new instance, you can do that by adding config:
+
+config:
+  locations:
+    state: ~/.spack
+
+or setting the SPACK_STATE_HOME/SPACK_USER_CACHE environment variable.
+
+Alternatively, you can set:
+
+include:
+  - name: "user"
+    path: "~/.spack/"
+
+(in etc/spack/include.yaml)
+""")
+
+
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Migrate user config and package repositories from ~/.spack to new locations.
 
@@ -88,6 +117,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     - User config files: ~/.spack/...yaml -> ~/.config/spack/
     - Package repositories: ~/.spack/package_repos -> ~/.local/state/spack/package_repos
     """
+    if args.i_need_old_spack:
+        i_need_old_spack()
+        return
+
     if args.restore:
         restore(args)
         return
