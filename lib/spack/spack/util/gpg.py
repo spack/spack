@@ -129,7 +129,10 @@ class GpgKeyTrust(enum.Enum):
 
 
 class GpgKeyAlgorithm(enum.Enum):
-    """Gpg Algormithms"""
+    """Gpg Algormithms
+
+    ref. https://www.iana.org/assignments/openpgp/openpgp.xhtml#openpgp-public-key-algorithms
+    """
 
     RSA = 1
     RSA_SO = 2
@@ -140,12 +143,30 @@ class GpgKeyAlgorithm(enum.Enum):
     ECDSA = 19
     ELGAMAL = 20
     DH = 21
+    EDDSA = 22
+    X25519 = 25
+    X448 = 26
+    ED25519 = 27
+    ED448 = 28
+    ML_DSA_65 = 30
+    ML_DSA_87 = 31
+    SLH_DSA_SHAKE_128S = 32
+    SLH_DSA_SHAKE_128F = 33
+    SLH_DSA_SHAKE_256S = 34
+    ML_KEM_786 = 35
+    ML_KEM_1024 = 36
+    UNKNOWN = 255
     LIBGCRYPT = 256
 
     @classmethod
     def _missing_(cls, value):
         if value > 255:
             return GpgKeyAlgorithm.LIBGCRYPT
+
+        # Note: 255 is currently unassigned
+        # use it as a catch all for anything not listed
+        if value == 255:
+            return GpgKeyAlgorithm.UNKNOWN
         return None
 
     def __str__(cls):
