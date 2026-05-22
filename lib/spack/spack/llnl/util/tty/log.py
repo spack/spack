@@ -733,7 +733,10 @@ class winlog:
 
         try:
             with open(logfile, mode=write_mode, encoding="utf-8") as log_writer:
-                for line in read_file:
+                while True:
+                    line = read_file.readline(4096)
+                    if not line:
+                        break
                     process_message(line)
 
         except Exception as e:
