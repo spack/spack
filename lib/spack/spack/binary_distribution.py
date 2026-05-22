@@ -648,7 +648,7 @@ def select_signing_key() -> str:
             "Use spack gpg init and spack gpg create"
             " to create a default key."
         )
-    return keys[0]
+    return str(keys[0])
 
 
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: str = ""):
@@ -2325,7 +2325,7 @@ def _get_keys(
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(key_blob_path)
+                spack.util.gpg.trust(key_blob_path, True)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:
@@ -2375,7 +2375,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(stage.save_filename)
+                spack.util.gpg.trust(stage.save_filename, True)
                 tty.debug("Added this key to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:

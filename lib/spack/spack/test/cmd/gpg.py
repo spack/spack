@@ -48,7 +48,6 @@ def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, mon
     else:
         spack.util.gpg.init(force=True)
         assert spack.util.gpg.GPG is not None
-        assert spack.util.gpg.GPGCONF is not None
 
 
 def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mutable_config):
@@ -63,7 +62,7 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
     MOCK_KEY = "B27095DEEF1787C3C8C85917DCA0241840A5DAE2"
 
     # Import the default key.
-    gpg("init", "--from", mock_gpg_keys_path)
+    gpg("init", "-y", "--from", mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.
@@ -90,7 +89,7 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
         "Spack testing 1",
         "spack@googlegroups.com",
     )
-    keyfp = spack.util.gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.signing_keys()[0].fpr
 
     # List the keys.
     # TODO: Test the output here.
@@ -147,7 +146,8 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
     assert out.count(keyfp) == 0
 
     # Trust the exported public key (keyfpr)
-    gpg("trust", str(export_path))
+    # Trust the exported key.
+    gpg("trust", "-y", str(export_path))
     out = gpg("list", "--signing")
     assert out.count("sec ") == 1
     assert out.count("pub ") == 2

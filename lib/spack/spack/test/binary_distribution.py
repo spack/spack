@@ -151,7 +151,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
 
         keys = spack.util.gpg.public_keys()
         assert len(keys) == 1
-        fpr = keys[0]
+        fpr = str(keys[0])
 
         spack.binary_distribution._url_push_keys(
             mirror, keys=[fpr], tmpdir=str(tmp_path), update_index=True
@@ -166,7 +166,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
 
         new_keys = spack.util.gpg.public_keys()
         assert len(new_keys) == 1
-        assert new_keys[0] == fpr
+        assert str(new_keys[0]) == fpr
 
 
 @pytest.mark.maybeslow
