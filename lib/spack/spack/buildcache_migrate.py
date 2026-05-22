@@ -16,8 +16,8 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
-import spack.util.parallel
 import spack.util.gpg
+import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
 

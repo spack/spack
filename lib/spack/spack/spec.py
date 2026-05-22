@@ -96,9 +96,9 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.gpg
 import spack.util.hash
 import spack.util.prefix
-import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
