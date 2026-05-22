@@ -2359,7 +2359,7 @@ complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -f -a im
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark packages as implicitly installed'
 
 # spack migrate
-set -g __fish_spack_optspecs_spack_migrate h/help dry-run clear clear-only replace restore-old-configs
+set -g __fish_spack_optspecs_spack_migrate h/help dry-run clear clear-only replace restore i-need-old-spack
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run
@@ -2370,8 +2370,10 @@ complete -c spack -n '__fish_spack_using_command migrate' -l clear-only -f -a cl
 complete -c spack -n '__fish_spack_using_command migrate' -l clear-only -d 'only move ~/.spack to backup without migrating files (useful after running migrate without --clear)'
 complete -c spack -n '__fish_spack_using_command migrate' -l replace -f -a replace
 complete -c spack -n '__fish_spack_using_command migrate' -l replace -d 'replace existing files in new locations (use with --clear if you forgot to use --clear on first run)'
-complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -f -a restore_old_configs
-complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-configs -d 'restore ~/.spack from backup location (after --clear)'
+complete -c spack -n '__fish_spack_using_command migrate' -l restore -f -a restore
+complete -c spack -n '__fish_spack_using_command migrate' -l restore -d 'restore ~/.spack from backup location (after --clear)'
+complete -c spack -n '__fish_spack_using_command migrate' -l i-need-old-spack -f -a i_need_old_spack
+complete -c spack -n '__fish_spack_using_command migrate' -l i-need-old-spack -d 'print help about mixing pre-1.2-Spack and Spack >= 1.2'
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum
