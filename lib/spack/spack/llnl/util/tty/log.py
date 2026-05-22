@@ -704,7 +704,7 @@ class winlog:
 
     @staticmethod
     def _background_reader(
-        read: int,
+        read_fd: int,
         logfile: str,
         stdout: io.TextIOWrapper,
         append: bool,
@@ -712,16 +712,13 @@ class winlog:
         filter_fn: Optional[Callable],
     ):
         force_echo = False
-        write_mode = "ab" if append else "wb"
-        log_writer = open(logfile, mode=write_mode)
-
-        buffer = ""
-        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        write_mode = "a" if append else "w"
+        read_file = os.fdopen(read_fd, "r", encoding="utf-8", errors="replace", buffering=1)
 
         def process_message(message):
             nonlocal force_echo
             clean_line, num_controls = control.subn("", message)
-            log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
+            log_writer.write(_strip(clean_line))
             log_writer.flush()
             if echo or force_echo:
                 output = clean_line
@@ -737,28 +734,15 @@ class winlog:
                 force_echo = force_echo_on(force_echo, controls)
 
         try:
-            while True:
-                data = os.read(read, 4096)
-                if not data:
-                    buffer += decoder.decode(b"", final=True)
-                    # the pipe is closed or otherwise inaccesible
-                    break
-                buffer += decoder.decode(data)
-                while True:
-                    idx = buffer.find("\n")
-                    if idx == -1:
-                        break
-                    message = buffer[: idx + 1]
-                    buffer = buffer[idx + 1 :]
-                    process_message(message)
-            if buffer:
-                process_message(buffer)
+            with open(logfile, mode=write_mode, encoding="utf-8") as log_writer:
+                for line in read_file:
+                    process_message(line)
+            
         except Exception as e:
             tty.error(f"Exception in log writer thread! {e}", stream=stdout)
             traceback.print_exc(file=stdout)
         finally:
-            os.close(read)
-            log_writer.close()
+            read_file.close()
             stdout.close()
 
 
