@@ -88,7 +88,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     - User config files: ~/.spack/...yaml -> ~/.config/spack/
     - Package repositories: ~/.spack/package_repos -> ~/.local/state/spack/package_repos
     """
-    # Handle restore mode
     if args.restore:
         restore(args)
         return
@@ -98,7 +97,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     new_state_location = os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
     backup_location = paths.dotspack_backup
 
-    # Handle --clear-only mode
     if args.clear_only:
         if not os.path.exists(old_location):
             tty.die(f"Old configuration location does not exist: {old_location}")
@@ -124,7 +122,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             tty.msg(f"Removing existing package repos: {new_package_repos}")
             shutil.rmtree(new_package_repos)
 
-    # Check if old location exists
     if not os.path.exists(old_location):
         tty.die(f"Old configuration location does not exist: {old_location}")
 
@@ -164,10 +161,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     new_package_repos = os.path.join(new_state_location, "package_repos")
 
     if os.path.exists(old_package_repos) and os.path.isdir(old_package_repos):
-        # Check if there's anything in it
         repos = os.listdir(old_package_repos)
         if repos:
-            # Check if new location already has package repositories
             if os.path.exists(new_package_repos):
                 existing_repos = os.listdir(new_package_repos)
                 if existing_repos:
