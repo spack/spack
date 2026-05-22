@@ -2218,7 +2218,11 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
     _config["concretizer"].update({"unify": False})
 
     with combined_env.manifest.use_config():
-        spack.config.CONFIG.set("concretizer", _config["concretizer"], scope=combined_env.manifest.env_config_scope.name)
+        spack.config.CONFIG.set(
+            "concretizer",
+            _config["concretizer"],
+            scope=combined_env.manifest.env_config_scope.name,
+        )
 
     return override_env
 

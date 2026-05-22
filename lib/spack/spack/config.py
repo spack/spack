@@ -79,7 +79,6 @@ from spack.util.spack_yaml import get_mark_from_yaml_data
 
 from .enums import ConfigScopePriority
 
-
 ScopeLike = Union["ConfigScope", "IncludedLockfile"]
 
 #: Dict from section names -> schema for that section
@@ -168,6 +167,7 @@ class ConfigScope:
         if self._included_scopes is None:
             self._read_included_scopes()
 
+        assert isinstance(self._included_scopes, list)
         tty.debug(
             f"{self.name} has {'' if len(self._included_scopes) else 'no '}"
             f"included scopes: {self._included_scopes}",
@@ -182,15 +182,15 @@ class ConfigScope:
             self._read_included_scopes()
         return self._included_lockfiles
 
-    def _read_included_scopes(self) -> List["ConfigScope"]:
+    def _read_included_scopes(self) -> None:
         """Memoized list of included scopes, in the order they appear in this scope."""
         self._included_scopes = []
-        self._included_lockfiles = []
+        self._included_lockfiles: List[IncludedLockfile] = []
 
         includes = self.get_includes()
         if includes:
             if "include" not in includes:
-                return self._included_scopes
+                return
 
             include_paths = [included_path(data) for data in includes["include"]]
             tty.debug(
@@ -537,8 +537,10 @@ class InternalConfigScope(ConfigScope):
 
 class IncludedLockfile:
     """This is a placeholder scope-like class for handling includes of lockfiles."""
+
     def __init__(self, path: str):
         self.path = path
+        self.name = self.path  # for compatibility with ConfigScope in debug printing
 
     def __eq__(self, other):
         return self.path == other.path
@@ -1112,7 +1114,7 @@ class OptionalInclude:
     optional: bool
     prefer_modify: bool
     remote: bool
-    _scopes: List[ConfigScope]
+    _scopes: List[ScopeLike]
 
     def __init__(self, entry: dict):
         self.name = entry.get("name", "")
@@ -1120,7 +1122,7 @@ class OptionalInclude:
         self.optional = entry.get("optional", False)
         self.prefer_modify = entry.get("prefer_modify", False)
         self.remote = False
-        self._scopes = []
+        self._scopes: List[ScopeLike] = []
 
     @staticmethod
     def _parent_scope_directory(parent_scope: Optional[ConfigScope]) -> Optional[str]:
@@ -1215,7 +1217,7 @@ class OptionalInclude:
 
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
-    ) -> ScopeLike:
+    ) -> Optional[ScopeLike]:
         """Instantiate a configuration scope for a configuration path.
 
         Args:
@@ -1425,9 +1427,9 @@ class IncludePath(OptionalInclude):
         # Ensure the explicit destination for a remote file is writable.
         base = self.destination or self.base_directory(self.path, parent_scope)
         if self.remote and base and os.path.isdir(base):
-            assert filesystem.can_write_to_dir(
-                self.destination
-            ), f"Cannot include {self.path}. Unable to write to {base}"
+            assert filesystem.can_write_to_dir(self.destination), (
+                f"Cannot include {self.path}. Unable to write to {base}"
+            )
 
         tty.debug(f"Local base directory for {self.path} is {base}")
         config_path = rfc_util.local_path(self.path, self.sha256, base)
@@ -1437,7 +1439,7 @@ class IncludePath(OptionalInclude):
 
         scope = self._scope(self.path, config_path, parent_scope)
         if scope is not None:
-            self._scopes = [scope]
+            self._scopes: List[ScopeLike] = [scope]
 
         return self._scopes
 
@@ -1526,10 +1528,7 @@ class GitIncludePaths(OptionalInclude):
                     tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
-                    msg = (
-                        f"Unable to initialize repository ({self.git}) under "
-                        f"{self.destination}"
-                    )
+                    msg = f"Unable to initialize repository ({self.git}) under {self.destination}"
                     if self.optional:
                         tty.warn(msg + ". Ignoring optional include.")
                     else:
@@ -1596,7 +1595,7 @@ class GitIncludePaths(OptionalInclude):
         if not destination:
             raise spack.error.ConfigError(f"Unable to cache the include: {self}")
 
-        scopes: List[ConfigScope] = []
+        scopes: List[ScopeLike] = []
         for path in self.paths:
             config_path = str(pathlib.Path(destination) / path)
             scope = self._scope(path, config_path, parent_scope)
@@ -1822,7 +1821,7 @@ def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) ->
     return CONFIG.get(path, default, scope)
 
 
-_set = set  #: save this before defining set -- maybe config.set was ill-advised :)
+_set: Callable = set  #: save this before defining set -- maybe config.set was ill-advised :)
 
 
 def set(path: str, value: Any, scope: Optional[str] = None) -> None:
