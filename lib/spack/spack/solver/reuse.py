@@ -168,7 +168,8 @@ def create_external_parser(
         raise ValueError(
             f"Unknown value for concretizer:externals:completion: {completion_mode!r}"
         )
-    return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
+    toolchains = spack.config.CONFIG.get_config("toolchains")
+    return ExternalSpecsParser(external_dicts, complete_node=complete_fn, toolchains=toolchains)
 
 
 SpecFiltersFactory = Callable[
