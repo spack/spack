@@ -35,7 +35,6 @@ For an alphabetic list of every documented keyword and environment variable, see
    root
       A spec the user requested directly: an argument to ``spack install`` or an entry in an :term:`environment`'s ``spack.yaml`` ``specs:`` list.
       Roots are the starting points of concretization; everything else in the resulting :term:`DAG` is a dependency pulled in to satisfy a root.
-      Under ``concretizer:reuse:`` the ``roots:`` key controls whether roots themselves may be reused or must be solved fresh.
 
    explicit
    implicit
@@ -392,12 +391,9 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    splice
    splicing
-      Replacing a dependency in a :term:`concrete spec` with a different, ABI-compatible spec that provides the same package or :term:`virtual package`.
-      A *transitive* splice also pulls in the replacement's own dependencies; an *intransitive* splice keeps the original root's dependencies.
-      Spliced specs retain a ``build_spec`` pointing at the unspliced original.
-      Splices are configured under ``concretizer:splice:`` (explicit) or via ``can_splice`` directives (automatic).
-      Most often used to swap a generic MPI from a public buildcache for a site-tuned one.
-      See :doc:`build_settings` and :ref:`automatic_splicing`.
+      Replacing a dependency in a :term:`concrete spec` with a different, ABI-compatible spec providing the same package or :term:`virtual package`.
+      Often used to swap a generic buildcache MPI for a site-tuned one.
+      See :ref:`splicing` and :ref:`abi_compatibility`.
 
    microarchitecture
       A specific CPU model recognized by ``archspec`` (``zen3``, ``skylake_avx512``, ``neoverse_v2``, ...) and used as the :term:`target` portion of an :term:`architecture spec`.

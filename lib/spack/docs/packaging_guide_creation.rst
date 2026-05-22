@@ -1643,8 +1643,8 @@ This allows packages to override variants in packages or build system classes fr
 It also allows a package to implement ``or`` semantics for a variant ``when`` clause by duplicating the variant definition.
 
 .. index::
-   single: depends_on (directive)
-   single: dependency
+   single: dependency; in package.py
+   single: depends_on
    :name: dependencies
 
 Dependencies
@@ -2121,7 +2121,8 @@ This means that language dependencies translate to one or more compiler packages
 
 
 .. index::
-   single: conflicts (directive)
+   single: conflict; in package.py
+   single: conflicts
    :name: packaging_conflicts
 
 Conflicts
@@ -2173,7 +2174,8 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
 
 
 .. index::
-   single: requires (directive)
+   single: requirement; in package.py
+   single: requires
    :name: packaging_requires
 
 Requires

@@ -252,6 +252,9 @@ This method's conciseness comes with a strict requirement: each dependency must 
 This makes the approach suitable for simple or temporary configurations.
 In larger, more dynamic environments, however, it can become a maintenance challenge, as adding new external packages over time may require frequent updates to existing specs to preserve their uniqueness.
 
+.. index::
+   single: dependency; in config
+
 Dependencies using YAML configuration
 """""""""""""""""""""""""""""""""""""
 
@@ -400,7 +403,7 @@ In addition, paths from ``extra_rpaths`` are added as library search paths for t
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
 .. index::
-   single: requirement
+   single: requirement; in config
    single: require
    :name: package-requirements
 
@@ -601,7 +604,10 @@ For instance with a configuration like:
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
-.. _package-strong-preferences:
+.. index::
+   single: conflict; in config
+   single: strong preference
+   :name: package-strong-preferences
 
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
