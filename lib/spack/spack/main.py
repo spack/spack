@@ -976,6 +976,8 @@ def _warn_about_old_dotspack():
     msg += (
         "\nIf all spack instances are >= 1.2, you can use"
         " `spack migrate --clear` to silence this warning"
+        "\nIf not, run `spack migrate --i-need-old-spack` to"
+        " see what manual steps you can take to silence this warning"
     )
     tty.warn(msg)
 
