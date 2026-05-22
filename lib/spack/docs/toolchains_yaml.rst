@@ -174,7 +174,7 @@ Limitations
 Toolchain definitions may only use direct dependencies (``%``).
 Transitive dependencies (``^``) are not allowed.
 
-Toolchains cannot be used in external spec definitions in :ref:`packages.yaml <packages-yaml-externals>`.
+Toolchains cannot be used in external spec definitions in :ref:`packages.yaml <sec-external-packages>`.
 Consider a ``gcc-15`` toolchain defined as:
 
 .. code-block:: yaml
