@@ -123,6 +123,48 @@ For an alphabetic list of every documented keyword and environment variable, see
       A single ``depends_on`` may carry multiple types.
       See :ref:`dependency-types`.
 
+   direct dependency
+      A dependency that appears in a package's own ``depends_on`` declarations, i.e. one edge away in the :term:`DAG`.
+      In :doc:`spec_syntax` the ``%`` sigil constrains direct dependencies (``hdf5 %gcc@15``); contrast with :term:`transitive dependency`.
+
+   transitive dependency
+      A dependency reachable through one or more intermediate packages, i.e. a dependency of a dependency.
+      The ``^`` sigil constrains transitive dependencies (``hdf5 ^hwloc+cuda``).
+      A view's ``link: run`` / ``link: all`` options pull in :term:`root spec <root>` transitive dependencies of the corresponding :term:`types <dependency type>`.
+
+   phase
+   install phase
+   build phase
+      One step of a :term:`build system`'s install lifecycle.
+      The ordered list lives in the builder's ``phases`` attribute, for example ``("configure", "build", "install")`` for autotools or ``("build", "install")`` for ruby gems.
+      Each phase is a method on the builder class and can be overridden, replaced, or wrapped with ``run_before`` / ``run_after``.
+      *Install phase* names the specific ``install`` step (and, by extension, post-install hooks attached to it); *build phase* is used loosely for any phase in the lifecycle.
+      See :ref:`overriding-phases`.
+
+   build environment
+      The shell environment Spack constructs for a package's build: ``PATH``, compiler wrappers, ``CC`` / ``CXX`` / ``F77`` / ``FC``, ``CPATH``, ``LIBRARY_PATH``, ``CMAKE_PREFIX_PATH``, jobserver ``MAKEFLAGS``, and any variables set by ``setup_build_environment`` or by dependencies' ``setup_dependent_build_environment``.
+      ``spack build-env <spec>`` prints it; passing a shell as the command (``spack build-env <spec> sh``) drops you into it, and ``--dump`` / ``--pickle`` write it to a file.
+
+   module set
+      A named block under ``modules:`` in ``modules.yaml`` that produces its own collection of module files with its own install root, naming scheme, and inclusion rules.
+      The default set is called ``default``; module commands target it unless ``--name <set>`` is given.
+      See :ref:`modules-yaml`.
+
+   build cache index
+      A JSON manifest in a :term:`buildcache` listing every binary it contains together with their hashes and dependencies.
+      The concretizer downloads it (or its OCI-manifest equivalent) to decide which binaries are eligible for :term:`reuse` without fetching every individual spec.
+      Refreshed with ``spack buildcache update-index`` and ``spack buildcache push --update-index``; see :ref:`binary_caches`.
+
+   spack instance
+      A Spack installation itself, addressable in config as ``$spack``.
+      In the context of :term:`chained install trees <chained install tree>`, "upstream instance" is often used informally to refer to that instance's :term:`store`.
+
+   standalone test
+   stand-alone test
+      A test defined by a package's ``test_*`` methods and executed *after* installation by ``spack test run`` against an installed :term:`prefix`.
+      Distinct from build-time tests run during the ``check`` :term:`build phase` of an autotools/cmake build.
+      See :ref:`cmd-spack-test` and the testing section of the packaging guide.
+
    patch
       A source patch applied to a package before configuring.
       Declared with the ``patch(...)`` directive; see :ref:`patching`.
@@ -190,8 +232,8 @@ For an alphabetic list of every documented keyword and environment variable, see
       Backed by a :term:`database` that indexes every install.
 
    prefix
-      The installation directory of a single concrete spec.
-      Typically ``$store/<arch>/<compiler>/<name>-<version>-<hash>``.
+      The installation directory of a single concrete spec inside the :term:`store`.
+      The default layout is ``<platform>-<target>/<name>-<version>-<hash>`` relative to the store root.
 
    database
       The JSON-backed index of every installed spec in the :term:`store`.
@@ -219,7 +261,7 @@ For an alphabetic list of every documented keyword and environment variable, see
       An environment stored in Spack's environment directory and addressed by name (``spack env activate myenv``).
 
    anonymous environment
-      An environment activated by directory path (``spack env activate -d /some/path``).
+      An environment activated by directory path (``spack env activate ./my-env``).
       Not registered under a name.
 
    spack.yaml
@@ -341,7 +383,11 @@ For an alphabetic list of every documented keyword and environment variable, see
       See :doc:`containers`.
 
    chained install tree
-      A read-only upstream :term:`store` mounted into a downstream Spack installation so its installs can be reused.
+      A read-only :term:`upstream` :term:`store` mounted into a downstream Spack installation so its installs can be reused.
+      See :doc:`chain`.
+
+   upstream
+      Another :term:`spack instance` whose :term:`store` is registered (via ``upstreams.yaml``) as a read-only source of installed packages for the local instance.
       See :doc:`chain`.
 
    splice
@@ -360,7 +406,7 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    provenance
       Recorded information about how an install was produced: the source checksum or git commit, the compiler and its flags, the patches applied, and any develop-source path.
-      Spack tracks provenance in the :term:`install manifest`, in the :term:`SBOM`, and in spec metadata such as the ``commit`` variant for git-based versions and the ``dev_path`` variant for develop specs.
+      Spack tracks provenance in the per-install ``install_manifest.json``, in the :term:`SBOM`, and in spec metadata such as the ``commit`` variant for git-based versions and the ``dev_path`` variant for develop specs.
 
    deprecate
    deprecation
@@ -371,17 +417,12 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    SBOM
       A Software Bill of Materials emitted by Spack in SPDX-2.3 format for every installation.
-      Written under ``<prefix>/.spack/sbom/`` and meeting NTIA minimum elements; the ``supplier`` package attribute names the responsible organization or individual.
+      Written under ``<prefix>/.spack/sbom/`` and meets NTIA minimum elements.
       See :ref:`sbom`.
 
    mixin
       A package base class that contributes variants, dependencies, and helper methods without being a full :term:`build system` on its own.
       :class:`~spack_repo.builtin.build_systems.cuda.CudaPackage`, :class:`~spack_repo.builtin.build_systems.rocm.ROCmPackage`, and :class:`~spack_repo.builtin.build_systems.sourceforge.SourceforgePackage` are typical examples, combined with a concrete build system via multiple inheritance.
-
-   submapping
-      A ``pipelines.yaml`` section that selects CI build-job attributes (tags, container image, ...) per spec by matching ``spec.satisfies(...)``.
-      Processed bottom-up; ``match_behavior: first`` (default) applies the first match, ``merge`` overlays every matching block.
-      See :doc:`pipelines`.
 
    non-redistributable
       A package whose source or binaries may not be republished, expressed with the ``redistribute(source=False, binary=False, when=...)`` directive.
