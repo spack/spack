@@ -137,6 +137,7 @@ YamlConfigDict = Dict[str, Any]
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
 
+
 #: configurable config vars -- these cannot be used by include paths
 #: nor by other paths that can affect config values
 CONFIGURABLE_VARS = (
@@ -151,6 +152,9 @@ CONFIGURABLE_VARS = (
 )
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
+# placeholder object for unspecified default for get methods
+default_sigil = object()
 
 
 class ConfigScope:
@@ -773,7 +777,19 @@ class Configuration:
            }
 
         """
-        return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
+        merged_section, default_type = self._get_config_memoized(
+            section, scope=scope, _merged_scope=_merged_scope
+        )
+
+        # no config files -- empty config.
+        if section not in merged_section:
+            return default_type
+
+        # take the top key off before returning.
+        ret = merged_section[section]
+        if isinstance(ret, dict):
+            ret = syaml.syaml_dict(ret)
+        return ret
 
     def deepcopy_as_builtin(
         self, section: str, scope: Optional[str] = None, *, line_info: bool = False
@@ -827,8 +843,8 @@ class Configuration:
 
     @lang.memoized
     def _get_config_memoized(
-        self, section: str, scope: Optional[str], _merged_scope: Optional[str]
-    ) -> YamlConfigDict:
+        self, section: str, scope: Optional[str], _merged_scope: Optional[str] = None
+    ) -> Tuple[YamlConfigDict, Any]:
         """Memoized helper for ``get_config()``.
 
         Note that the memoization cache for this function is cleared whenever
@@ -881,17 +897,11 @@ class Configuration:
 
         self.updated_scopes_by_section[section] = updated_scopes
 
-        # no config files -- empty config.
-        if section not in merged_section:
-            return syaml.syaml_dict()
+        # Return the full dict including the section name so we can gracefuly handle defaults
+        # Also return the default type for the section so that calculation is memoized
+        return merged_section, get_default_from_schema(section)
 
-        # take the top key off before returning.
-        ret = merged_section[section]
-        if isinstance(ret, dict):
-            ret = syaml.syaml_dict(ret)
-        return ret
-
-    def get(self, path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+    def get(self, path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
         """Get a config section or a single value from one.
 
         Accepts a path syntax that allows us to grab nested config map
@@ -906,16 +916,20 @@ class Configuration:
         We use ``:`` as the separator, like YAML objects.
         """
         parts = process_config_path(path)
-        section = parts.pop(0)
+        section = parts[0]
 
-        value = self.get_config(section, scope=scope)
+        # We use the helper method here to handle defaults
+        value, default_type = self._get_config_memoized(section, scope=scope)
+
+        if len(parts) == 1 and section not in value and default is default_sigil:
+            return default_type
 
         while parts:
             key = parts.pop(0)
             # cannot use value.get(key, default) in case there is another part
             # and default is not a dict
             if key not in value:
-                return default
+                return default if default is not default_sigil else None
             value = value[key]
 
         return value
@@ -939,6 +953,10 @@ class Configuration:
         data = section_data
         while len(parts) > 1:
             key = parts.pop(0)
+            if key not in data:
+                # Put the key back to process later
+                parts.insert(0, key)
+                break
 
             if spack.schema.override(key):
                 new = type(data[key])()
@@ -952,6 +970,11 @@ class Configuration:
                 # reattach to parent object
                 data[key] = new
             data = new
+
+        # This only happens if the key wasn't present before
+        while len(parts) > 1:
+            leaf = parts.pop()
+            value = {leaf: value}
 
         if spack.schema.override(parts[0]):
             data.pop(parts[0], None)
@@ -1676,7 +1699,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
             # We've nested further than existing config, so we need the
             # type information for validation to know how to handle bare
             # values appended to lists.
-            existing = get_valid_type(path)
+            existing = get_default_from_schema(path)
 
             # construct value from this point down
             for component in reversed(components[idx + 1 : -1]):
@@ -1698,7 +1721,7 @@ def add(fullpath: str, scope: Optional[str] = None) -> None:
     CONFIG.set(path, new, scope)
 
 
-def get(path: str, default: Optional[Any] = None, scope: Optional[str] = None) -> Any:
+def get(path: str, default: Any = default_sigil, scope: Optional[str] = None) -> Any:
     """Module-level wrapper for ``Configuration.get()``."""
     return CONFIG.get(path, default, scope)
 
@@ -1762,7 +1785,6 @@ def change_or_add(
     config, then update the highest-priority config scope.
     """
     configs_by_section = matched_config(section_name)
-
     found = False
     for scope, section in configs_by_section:
         found = find_fn(section)
@@ -1899,7 +1921,7 @@ def _mark_internal(data, name):
     return d
 
 
-def get_valid_type(path):
+def get_default_from_schema(path):
     """Returns an instance of a type that will pass validation for path.
 
     The instance is created by calling the constructor with no arguments.
@@ -1928,6 +1950,22 @@ def get_valid_type(path):
         validate(test_data, SECTION_SCHEMAS[section])
     except (ConfigFormatError, AttributeError) as e:
         jsonschema_error = e.validation_error
+
+        # Try to get the type from the default value
+        schema_path = jsonschema_error.schema_path
+        schema_part = SECTION_SCHEMAS[section]
+        for part in list(schema_path)[:-1]:
+            if part not in schema_part:
+                break
+            schema_part = schema_part[part]
+        else:
+            if "default" in schema_part:
+                default = schema_part["default"]
+                if isinstance(default, (dict, list)):
+                    default = default.copy()
+                return default
+
+        # If there is no default, infer the type from the validator
         if jsonschema_error.validator == "type":
             return types[jsonschema_error.validator_value]()
         elif jsonschema_error.validator in ("anyOf", "oneOf"):

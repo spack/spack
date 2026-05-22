@@ -22,6 +22,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
+import spack.hooks.sbom_generate
 import spack.installer
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
@@ -234,13 +235,17 @@ def test_install_overwrite(
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
 
-    # Ignore manifest and install times
+    # Ignore manifest, install times, and sbom
     manifest = os.path.join(
         spec.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
-    ignores = [manifest, spec.package.times_log_path]
+    ignores = [
+        manifest,
+        spec.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3"),
+    ]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -305,13 +310,18 @@ def test_install_overwrite_multiple(
     install("--fake", "libdwarf")
     install("--fake", "cmake")
 
+    # Ignore manifest, install times, and sbom
     ld_manifest = os.path.join(
         libdwarf.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+    ld_ignores = [
+        ld_manifest,
+        libdwarf.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(libdwarf, "spdx-2.3"),
+    ]
 
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
@@ -322,7 +332,11 @@ def test_install_overwrite_multiple(
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    cm_ignores = [cm_manifest, cmake.package.times_log_path]
+    cm_ignores = [
+        cm_manifest,
+        cmake.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(cmake, "spdx-2.3"),
+    ]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 

@@ -842,6 +842,33 @@ def test_extra_rpaths_is_set(
         assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
 
 
+@pytest.mark.parametrize(
+    "keep_werror,expected_keep,expected_replace",
+    [
+        ("all", "-Werror*", ""),
+        ("specific", None, "-Werror-|-Wno-error= -Werror|-Wno-error"),
+        ("none", "", "-Werror-|-Wno-error= -Werror|-Wno-error"),
+    ],
+)
+def test_add_werror_handling(keep_werror, expected_keep, expected_replace):
+    """`_add_werror_handling` translates the `config:flags:keep_werror` setting into the
+    SPACK_COMPILER_FLAGS_KEEP / SPACK_COMPILER_FLAGS_REPLACE env vars consumed by the
+    external compiler wrapper. Behavior of the wrapper itself is tested in the
+    spack-packages compiler-wrapper repo.
+    """
+    env = EnvironmentModifications()
+    spack.build_environment._add_werror_handling(keep_werror, env)
+
+    values = {m.name: m.value for m in env if m.name.startswith("SPACK_COMPILER_FLAGS_")}
+
+    if expected_keep is None:
+        # "specific" uses a set, so order of the two keep patterns is not stable
+        assert set(values["SPACK_COMPILER_FLAGS_KEEP"].split("|")) == {"-Werror-*", "-Werror=*"}
+    else:
+        assert values["SPACK_COMPILER_FLAGS_KEEP"] == expected_keep
+    assert values["SPACK_COMPILER_FLAGS_REPLACE"] == expected_replace
+
+
 class _TestProcess:
     calls: Dict[str, int] = collections.defaultdict(int)
     terminated = False

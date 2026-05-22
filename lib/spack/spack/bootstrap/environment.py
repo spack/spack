@@ -130,11 +130,11 @@ class BootstrapEnvironment(spack.environment.Environment):
         template = env.get_template("bootstrap/spack.yaml")
         context = {
             "python_spec": f"{spec_for_current_python()}+ctypes",
-            "python_prefix": sys.exec_prefix,
+            "python_prefix": pathlib.Path(sys.exec_prefix).as_posix(),
             "architecture": spack.vendor.archspec.cpu.host().family,
-            "environment_path": self.environment_root(),
+            "environment_path": self.environment_root().as_posix(),
             "environment_specs": self.spack_dev_requirements(),
-            "store_path": store_path(),
+            "store_path": pathlib.Path(store_path()).as_posix(),
             "bootstrap_mirrors": dev_bootstrap_mirror_names(),
         }
         self.environment_root().mkdir(parents=True, exist_ok=True)

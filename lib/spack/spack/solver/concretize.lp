@@ -33,6 +33,50 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
+% Anonymous variables that appear only in negative body literals like `not
+% foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
+% v6. Each predicate below is the explicit projection of an existing predicate
+% that replaces such a body literal elsewhere in the program, letting the same
+% encoding work on all supported clingo versions with no per-version flags.
+
+has_provider(VirtualNode) :- provider(_, VirtualNode).
+is_provider_of_virtual(ProviderNode, Virtual) :- provider(ProviderNode, node(_, Virtual)).
+any_provider_for(Provider, Virtual) :- provider(node(_, Provider), node(_, Virtual)).
+any_reused_provider_for(Provider, Virtual) :- reused_provider(node(_, Provider), node(_, Virtual)).
+provides_language(ProviderNode, Language) :- provider(ProviderNode, node(_, Language)).
+has_provider_weight_config(Virtual, Provider) :- provider_weight_from_config(Virtual, Provider, _).
+virtual_has_incoming_edges(Virtual) :- attr("virtual_on_incoming_edges", _, Virtual).
+virtual_is_a_root(Virtual) :- attr("virtual_root", node(_, Virtual)).
+has_virtual_on_edge_to(ParentNode, ChildPkg, Virtual) :- attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
+pkg_has_virtual_on_any_edge(PackageNode, Virtual) :- attr("virtual_on_edge", PackageNode, _, Virtual).
+
+node_has_namespace(PackageNode) :- attr("namespace", PackageNode, _).
+node_has_namespace_set(PackageNode) :- attr("namespace_set", PackageNode, _).
+in_unification_set(PackageNode) :- unification_set(_, PackageNode).
+has_condition_set_node(PackageNode, A1) :- condition_set(PackageNode, node(_, A1)).
+has_imposed_node(PackageNode, A1) :- imposed_nodes(PackageNode, node(_, A1)).
+is_a_subcondition(ConditionID) :- subcondition(ConditionID, _).
+has_a_subcondition(ConditionID) :- subcondition(_, ConditionID).
+has_requirement_conditional(Package, X) :- requirement_conditional(Package, X, _).
+has_requirement_message(Package, X) :- requirement_message(Package, X, _).
+
+node_has_any_compiler(PackageNode) :- node_compiler(_, PackageNode).
+pkg_has_any_compiler(PkgName) :- node_compiler(_, node(_, PkgName)).
+compiler_used_as_lib(PkgName, Hash) :- compiler_used_as_a_library(node(_, PkgName), Hash).
+
+has_concrete_build_dep(ParentNode, BuildDep) :- attr("concrete_build_dependency", ParentNode, BuildDep, _).
+is_self_build_req(PackageNode) :- self_build_requirement(_, PackageNode).
+hash_is_assigned(Hash) :- attr("hash", _, Hash).
+hash_imposes_node_flag(Hash, Pkg, FlagType, Flag) :- imposed_constraint(Hash, "node_flag", Pkg, node_flag(FlagType, Flag, _, _)).
+
+pkg_has_variant(PackageNode, Variant) :- node_has_variant(PackageNode, Variant, _).
+node_has_variant_value(PackageNode, Variant) :- attr("variant_value", PackageNode, Variant, _).
+has_pkg_yaml_variant_default(Package, VName) :- variant_default_value_from_packages_yaml(Package, VName, _).
+has_cli_variant_default(Package, VName) :- attr("variant_default_value_from_cli", node(min_dupe_id, Package), VName, _).
+has_variant_penalty_fact(Pkg, VID, Val) :- pkg_fact(Pkg, variant_penalty(VID, Val, _)).
+pkg_has_literal_flag_set(PackageNode, FlagType) :- attr("node_flag_set", PackageNode, node_flag(FlagType, _, _, "literal")).
+has_target_weight(PackageNode) :- node_target_weight(PackageNode, _).
+
 % Integrity constraints on DAG nodes
 :- attr("root", PackageNode), not attr("node", PackageNode).
 :- attr("version", PackageNode, _), not attr("node", PackageNode), not attr("virtual_node", PackageNode).
@@ -45,7 +89,7 @@ duplicate_penalty(node(ID1, Package), 1, "version")
 :- attr("node_flag", PackageNode, _), not attr("node", PackageNode).
 :- attr("depends_on", ParentNode, _, _), not attr("node", ParentNode).
 :- attr("depends_on", _, ChildNode, _), not attr("node", ChildNode).
-:- attr("virtual_node", VirtualNode), not provider(_, VirtualNode).
+:- attr("virtual_node", VirtualNode), not has_provider(VirtualNode).
 :- provider(_, VirtualNode), not attr("virtual_node", VirtualNode).
 :- provider(PackageNode, _), not attr("node", PackageNode).
 :- node_has_variant(PackageNode, _, _), not attr("node", PackageNode).
@@ -60,7 +104,7 @@ duplicate_penalty(node(ID1, Package), 1, "version")
 
 % Namespaces are statically assigned by a package fact if not otherwise set
 error(100, "{0} does not have a namespace", Package) :- attr("node", node(ID, Package)),
-   not attr("namespace", node(ID, Package), _).
+   not node_has_namespace(node(ID, Package)).
 
 error(100, "{0} cannot come from both {1} and {2} namespaces", Package, NS1, NS2) :- attr("node", node(ID, Package)),
    attr("namespace", node(ID, Package), NS1),
@@ -70,7 +114,7 @@ error(100, "{0} cannot come from both {1} and {2} namespaces", Package, NS1, NS2
 attr("namespace", node(ID, Package), Namespace) :- attr("namespace_set", node(ID, Package), Namespace).
 attr("namespace", node(ID, Package), Namespace)
   :- attr("node", node(ID, Package)),
-     not attr("namespace_set", node(ID, Package), _),
+     not node_has_namespace_set(node(ID, Package)),
      pkg_fact(Package, namespace(Namespace)).
 
 % Rules on "unification sets", i.e. on sets of nodes allowing a single configuration of any given package
@@ -128,23 +172,23 @@ compute_closure(node(ID, Package), "linkrun")  :-
 
 attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", PackageNode, DependencyNode, "link"),
-  not provider(DependencyNode, node(_, Language)) : language(Language);
+  not provides_language(DependencyNode, Language) : language(Language);
   compute_closure(PackageNode, "linkrun").
 
 attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", PackageNode, DependencyNode, "run"),
-  not provider(DependencyNode, node(_, Language)) : language(Language);
+  not provides_language(DependencyNode, Language) : language(Language);
   compute_closure(PackageNode, "linkrun").
 
 attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", ParentNode, DependencyNode, "link"),
-  not provider(DependencyNode, node(_, Language)) : language(Language);
+  not provides_language(DependencyNode, Language) : language(Language);
   attr("closure", PackageNode, ParentNode, "linkrun"),
   compute_closure(PackageNode, "linkrun").
 
 attr("closure", PackageNode, DependencyNode, "linkrun") :-
   attr("depends_on", ParentNode, DependencyNode, "run"),
-  not provider(DependencyNode, node(_, Language)) : language(Language);
+  not provides_language(DependencyNode, Language) : language(Language);
   attr("closure", PackageNode, ParentNode, "linkrun"),
   compute_closure(PackageNode, "linkrun").
 
@@ -171,7 +215,7 @@ related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 :- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package).
 
 % Each node must belong to at least one unification set
-:- attr("node", PackageNode), not unification_set(_, PackageNode).
+:- attr("node", PackageNode), not in_unification_set(PackageNode).
 
 % Cannot have a node with an ID, if lower ID of the same package are not used
 :- attr("node", node(ID1, Package)),
@@ -269,11 +313,14 @@ attr_single_value("node_platform").
 attr_single_value("node_os").
 attr_single_value("node_target").
 
+node_has_single_value_attr(node(ID, Package), Attribute) :-
+  attr(Attribute, node(ID, Package), _).
+
 % Error when no attribute is selected
 error(10000, no_value_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
      attr_single_value(Attribute),
-     not attr(Attribute, node(ID, Package), _).
+     not node_has_single_value_attr(node(ID, Package), Attribute).
 
 % Error when multiple attr need to be selected
 error(100, multiple_values_error, Attribute, Package)
@@ -427,7 +474,7 @@ condition_nodes(PackageNode, node(X, A1))
 
 cannot_hold(TriggerID, PackageNode)
   :- condition_packages(TriggerID, A1),
-     not condition_set(PackageNode, node(_, A1)),
+     not has_condition_set_node(PackageNode, A1),
      trigger_real_node(TriggerID, PackageNode),
      attr("node", PackageNode).
 
@@ -565,7 +612,7 @@ trigger_and_effect(Package, TriggerID, EffectID) :- trigger_and_effect(Package, 
 
 % Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- not subcondition(ConditionID, _),
+  :- not is_a_subcondition(ConditionID),
      trigger_and_effect(Package, ConditionID, TriggerID, EffectID),
      trigger_requestor_node(TriggerID, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
@@ -601,8 +648,8 @@ imposed_nodes(PackageNode, node(X, A1))
      condition_set(PackageNode, node(X, A1)),
      attr("hash", PackageNode, ConditionID).
 
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not condition_set(PackageNode, node(_, A1)).
-:- imposed_packages(ID, A1), impose(ID, PackageNode), not imposed_nodes(PackageNode, node(_, A1)).
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not has_condition_set_node(PackageNode, A1).
+:- imposed_packages(ID, A1), impose(ID, PackageNode), not has_imposed_node(PackageNode, A1).
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)).
@@ -652,7 +699,7 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
 :- attr("direct_dependency", ParentNode, node_requirement("virtual_on_incoming_edges", ChildPkg, Virtual)),
-   not attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
+   not has_virtual_on_edge_to(ParentNode, ChildPkg, Virtual).
 
 % If the parent is built, then we have a build_requirement on another node. For concrete nodes,
 % we don't since we are trimming their build dependencies.
@@ -661,7 +708,7 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 :- attr("direct_dependency", ParentNode, node_requirement("node", BuildDependency)),
    concrete_build_requirement(ParentNode, BuildDependency),
    concrete(ParentNode),
-   not attr("concrete_build_dependency", ParentNode, BuildDependency, _).
+   not has_concrete_build_dep(ParentNode, BuildDependency).
 
 :- attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, Constraint)),
    concrete_build_requirement(ParentNode, BuildDependency),
@@ -678,12 +725,12 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 compiler_from_reuse(Hash, DependencyPackage) :-
   attr("concrete_build_dependency", ParentNode, DependencyPackage, Hash),
   attr("virtual_on_build_edge", ParentNode, DependencyPackage, Virtual),
-  not node_compiler(_, ParentNode),
+  not node_has_any_compiler(ParentNode),
   language(Virtual).
 
 compiler_penalty_from_reuse(Hash) :-
   compiler_from_reuse(Hash, DependencyPackage),
-  not node_compiler(_, node(_, DependencyPackage)),
+  not pkg_has_any_compiler(DependencyPackage),
   % We don't want to give penalties if we're just installing binaries
   will_build_packages().
 
@@ -806,7 +853,7 @@ error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
 % For a spec like `hdf5 %cxx` we need to ensure that the virtual is needed on a direct edge
 error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
   :- attr("direct_dependency", node(ID, Package), node_requirement("virtual_node", Virtual)),
-     not attr("virtual_on_edge", node(ID, Package), _, Virtual).
+     not pkg_has_virtual_on_any_edge(node(ID, Package), Virtual).
 
 % Reconstruct virtual dependencies for reused specs
 attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual)
@@ -840,7 +887,7 @@ attr("uses_virtual", PackageNode, Virtual) :-
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
    attr("node_flag", node(ID, Package), node_flag(FlagType, Flag, _, _)),
-   not imposed_constraint(Hash, "node_flag", Package, node_flag(FlagType, Flag, _, _)).
+   not hash_imposes_node_flag(Hash, Package, FlagType, Flag).
 
 % we cannot have two nodes with the same hash
 :- attr("hash", PackageNode1, Hash), attr("hash", PackageNode2, Hash), PackageNode1 < PackageNode2.
@@ -866,7 +913,7 @@ concrete(PackageNode) :- attr("hash", PackageNode, _), attr("node", PackageNode)
 :- concrete(PackageNode),
    depends_on(PackageNode, DependencyNode),
    not concrete(DependencyNode),
-   not abi_splice_conditions_hold(_, DependencyNode, _, _).
+   not any_splice_holds_for(DependencyNode).
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
@@ -1017,8 +1064,8 @@ attr("depends_on", PackageNode, ProviderNode, Type) :- virtual_on_edge(PackageNo
 % If a virtual node is in the answer set, it must be either a virtual root,
 % or used somewhere
 :- attr("virtual_node", node(_, Virtual)),
-   not attr("virtual_on_incoming_edges", _, Virtual),
-   not attr("virtual_root", node(_, Virtual)).
+   not virtual_has_incoming_edges(Virtual),
+   not virtual_is_a_root(Virtual).
 
 attr("virtual_on_incoming_edges", ProviderNode, Virtual)
   :- attr("virtual_on_edge", _, ProviderNode, Virtual).
@@ -1042,7 +1089,7 @@ error(100, "'{0}' cannot be a provider for the '{1}' virtual", Package, Virtual)
 
 error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
-     not provider(_, node(X, Virtual)).
+     not has_provider(node(X, Virtual)).
 
 error(100, "Cannot select a single provider for virtual '{0}'", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
@@ -1071,7 +1118,7 @@ virtual_condition_holds(ID, node(ProviderID, Provider), Virtual) :-
 do_not_impose(EffectID, node(X, Package))
   :- virtual_condition_holds(ID, node(X, Package), Virtual),
      pkg_fact(Package, condition_effect(ID, EffectID)),
-     not provider(node(X, Package), node(_, Virtual)).
+     not is_provider_of_virtual(node(X, Package), Virtual).
 
 % Choose the provider among root specs, if possible
 :- provider(ProviderNode, node(min_dupe_id, Virtual)),
@@ -1101,7 +1148,7 @@ provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), Weight)
 % Any non-configured provider has a default weight of 100
 provider_weight(node(ProviderID, Provider), node(VirtualID, Virtual), 100)
   :- provider(node(ProviderID, Provider), node(VirtualID, Virtual)),
-     not provider_weight_from_config(Virtual, Provider, _).
+     not has_provider_weight_config(Virtual, Provider).
 
 % do not warn if generated program contains none of these.
 #defined virtual/1.
@@ -1123,7 +1170,7 @@ error(1000, "Cannot build {0}, since it is configured `buildable:false` and no e
 % Account for compiler annotation on externals
 :- not attr("root", ExternalNode),
    attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
-   not node_compiler(_, node(_, Compiler)).
+   not pkg_has_any_compiler(Compiler).
 
 1 { attr("node_version_satisfies", node(X, Compiler), Constraint) : node_compiler(_, node(X, Compiler)) }
   :- not attr("root", ExternalNode),
@@ -1152,7 +1199,7 @@ trigger_node(ID, node(PackageID, Package), node(VirtualID, Virtual)) :- pkg_fact
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
   requirement_group(Package, X),
-  not requirement_conditional(Package, X, _).
+  not has_requirement_conditional(Package, X).
 
 activate_requirement(node(ID, Package), X) :-
   package_in_dag(node(ID, Package)),
@@ -1199,7 +1246,7 @@ requirement_group_satisfied(node(ID, Package), GroupID) :-
 requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
   requirement_group_member(ConditionID, Package, GroupID),
   condition_holds(ConditionID, node(X, Package)),
-  not subcondition(_, ConditionID).
+  not has_a_subcondition(ConditionID).
 
 requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
   requirement_group_member(ConditionID, Package, GroupID),
@@ -1250,8 +1297,8 @@ required_provider(Provider, Virtual)
 
 error(1, "Cannot use {1} for the {0} virtual, but that is required", Virtual, Provider) :-
    required_provider(Provider, Virtual),
-   not reused_provider(node(_, Provider), node(_, Virtual)),
-   not provider(node(_, Provider), node(_, Virtual)).
+   not any_reused_provider_for(Provider, Virtual),
+   not any_provider_for(Provider, Virtual).
 
 % TODO: the following choice rule allows the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
@@ -1304,7 +1351,7 @@ requirement_penalty(PackageNode, Language, Group, W) :-
 error(60000, "cannot satisfy a requirement for package '{0}'.", Package) :-
   activate_requirement(node(ID, Package), X),
   requirement_group(Package, X),
-  not requirement_message(Package, X, _),
+  not has_requirement_message(Package, X),
   not requirement_group_satisfied(node(ID, Package), X).
 
 
@@ -1369,13 +1416,13 @@ node_has_variant(PackageNode, Name, SelectedVariantID) :-
 variant_default_value(node(ID, Package), VariantName, Value) :-
   node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
-  not variant_default_value_from_packages_yaml(Package, VariantName, _),
-  not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
+  not has_pkg_yaml_variant_default(Package, VariantName),
+  not has_cli_variant_default(Package, VariantName).
 
 variant_default_value(node(ID, Package), VariantName, Value) :-
   node_has_variant(node(ID, Package), VariantName, _),
   variant_default_value_from_packages_yaml(Package, VariantName, Value),
-  not attr("variant_default_value_from_cli", node(min_dupe_id, Package), VariantName, _).
+  not has_cli_variant_default(Package, VariantName).
 
 variant_default_value(node(ID, Package), VariantName, Value) :-
     node_has_variant(node(ID, Package), VariantName, _),
@@ -1388,7 +1435,7 @@ possible_variant_penalty(VariantID, Value, Penalty) :- pkg_fact(Package, variant
 % for instance those defined implicitly by a validator.
 possible_variant_penalty(VariantID, Value, 100) :-
     pkg_fact(Package, variant_possible_value(VariantID, Value)),
-    not pkg_fact(Package, variant_penalty(VariantID, Value, _)).
+    not has_variant_penalty_fact(Package, VariantID, Value).
 
 variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     node_has_variant(node(NodeID, Package), Variant, VariantID),
@@ -1398,7 +1445,7 @@ variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     % variants set explicitly from a directive don't count as non-default
     not attr("variant_set", node(NodeID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
-    not propagate(node(NodeID, Package), variant_value(Variant, Value, _)).
+    not propagated_variant_value(node(NodeID, Package), Variant, Value).
 
 % -- Associate the definition's possible values with the node
 variant_possible_value(node(ID, Package), VariantName, Value) :-
@@ -1445,13 +1492,13 @@ attr("variant_selected", PackageNode, Variant, Value, VariantType, VariantID) :-
 % a variant cannot be set if it is not a variant on the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_set", node(ID, Package), Variant),
-     not node_has_variant(node(ID, Package), Variant, _),
+     not pkg_has_variant(node(ID, Package), Variant),
      build(node(ID, Package)).
 
 % a variant cannot take on a value if it is not a variant of the package
 error(100, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
   :- attr("variant_value", node(ID, Package), Variant, _),
-     not node_has_variant(node(ID, Package), Variant, _),
+     not pkg_has_variant(node(ID, Package), Variant),
      build(node(ID, Package)).
 
 % at most one variant value for single-valued variants.
@@ -1468,7 +1515,7 @@ error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant
   :- attr("node", node(ID, Package)),
      node_has_variant(node(ID, Package), Variant, _),
      build(node(ID, Package)),
-     not attr("variant_value", node(ID, Package), Variant, _).
+     not node_has_variant_value(node(ID, Package), Variant).
 
 % if a variant is set to anything, it is considered 'set'.
 attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Variant, _).
@@ -1527,7 +1574,7 @@ variant_default_not_used(node(ID, Package), Variant, Value)
      node_has_variant(node(ID, Package), Variant, VariantID),
      variant_type(VariantID, VariantType), VariantType == "multi",
      not attr("variant_value", node(ID, Package), Variant, Value),
-     not propagate(node(ID, Package), variant_value(Variant, Value, _)),
+     not propagated_variant_value(node(ID, Package), Variant, Value),
      % variant set explicitly don't count for this metric
      not attr("variant_set", node(ID, Package), Variant, Value),
      attr("node", node(ID, Package)).
@@ -1587,6 +1634,17 @@ propagate(ChildNode, PropagatedAttribute) :-
   propagate(ParentNode, PropagatedAttribute),
   depends_on(ParentNode, ChildNode).
 
+% Project the source-tag (and value, respectively) out of propagate/2 explicitly.
+% clingo v5 grounded `propagate(N, variant_value(V, Val, _))` via an internal
+% #p_propagate projection auxiliary; clingo v6's --project-anonymous does the
+% syntactic `_` -> `*` rewrite but skips the auxiliary, leaving `*` as a literal
+% constant that never matches concrete sources derived through recursion.
+propagated_variant_value(PackageNode, Variant, Value) :-
+  propagate(PackageNode, variant_value(Variant, Value, Source)).
+
+self_propagated_variant(PackageNode, Variant) :-
+  propagate(PackageNode, variant_value(Variant, AnyValue, PackageNode)).
+
 propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
   propagate(ParentNode, PropagatedAttribute, edge_types(DepType1, DepType2)),
   depends_on(ParentNode, ChildNode),
@@ -1602,19 +1660,19 @@ propagate(ChildNode, PropagatedAttribute, edge_types(DepType1, DepType2)) :-
 
 % If a variant is propagated, and can be accepted, set its value
 attr("variant_value", PackageNode, Variant, Value) :-
-  propagate(PackageNode, variant_value(Variant, Value, _)),
+  propagated_variant_value(PackageNode, Variant, Value),
   node_has_variant(PackageNode, Variant, _),
   variant_possible_value(PackageNode, Variant, Value).
 
 % If a variant is propagated, we cannot have extraneous values
 variant_is_propagated(PackageNode, Variant) :-
   attr("variant_value", PackageNode, Variant, Value),
-  propagate(PackageNode, variant_value(Variant, Value, _)),
+  propagated_variant_value(PackageNode, Variant, Value),
   not attr("variant_set", PackageNode, Variant).
 
 :- variant_is_propagated(PackageNode, Variant),
    attr("variant_value", PackageNode, Variant, Value),
-   not propagate(PackageNode, variant_value(Variant, Value, _)).
+   not propagated_variant_value(PackageNode, Variant, Value).
 
 error(100, "{0} and {1} cannot both propagate variant '{2}' to the shared dependency: {3}",
   Package1, Package2, Variant, Dependency) :-
@@ -1625,7 +1683,7 @@ error(100, "{0} and {1} cannot both propagate variant '{2}' to the shared depend
   propagate(node(Z, Dependency), variant_value(Variant, Value2, node(Y, Package2))),
   % Package1 and Package2 and their values are different
   Package1 > Package2,  Value1 != Value2,
-  not propagate(node(Z, Dependency), variant_value(Variant, _, node(Z, Dependency))).
+  not self_propagated_variant(node(Z, Dependency), Variant).
 
 % Cannot propagate the same variant from two different packages if one is a dependency of the other
 error(100, "{0} and {1} cannot both propagate variant '{2}'", Package1, Package2, Variant) :-
@@ -1665,7 +1723,7 @@ node_compiler(node(X, Package), node(Y, Compiler), Language) :-
 
 propagated_flag(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), SourceNode) :-
   propagate(node(PackageID, Package), node_flag(FlagType, Flag, FlagGroup, Source), _),
-  not attr("node_flag_set", node(PackageID, Package), node_flag(FlagType, _, _, "literal")),
+  not pkg_has_literal_flag_set(node(PackageID, Package), FlagType),
   % Same compilers as propagation source
   node_compiler(node(PackageID, Package), CompilerNode, Language) : node_compiler(SourceNode, CompilerNode, Language);
   attr("propagate", SourceNode, node_flag(FlagType, Flag, FlagGroup, Source), _),
@@ -1749,7 +1807,7 @@ unification_set_compiler("root", CompilerNode, Language) :-
 % root unification set are reused.
 unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
     reused_node_compiler(node(ID, Package), node(CompilerHash, Compiler), Language),
-    not attr("hash", _, CompilerHash),
+    not hash_is_assigned(CompilerHash),
     no_compiler_mixing(Language),
     not allow_mixing(Package),
     unification_set("root", node(ID, Package)).
@@ -1896,7 +1954,7 @@ node_target_weight(PackageNode, MinWeight)
     target(Target),
     MinWeight = #min { Weight : target_weight(Target, Weight) }.
 
-:- attr("node_target", PackageNode, Target), not node_target_weight(PackageNode, _).
+:- attr("node_target", PackageNode, Target), not has_target_weight(PackageNode).
 
 % compatibility rules for targets among nodes
 node_target_match(ParentNode, DependencyNode)
@@ -1979,7 +2037,7 @@ avoid_link_dependency(Hash, DepName) :-
   not hash_attr(Hash, "depends_on", PackageName, DepName, "run"),
   hash_attr(Hash, "hash", DepName, DepHash),
   compiler_package(PackageName),
-  not compiler_used_as_a_library(node(_, PackageName), Hash).
+  not compiler_used_as_lib(PackageName, Hash).
 
 % When a compiler is not used as a library, its transitive run-type dependencies are unified in the
 % build environment (they appear in PATH etc.), but their pure link-type dependencies are NOT. This
@@ -1990,7 +2048,7 @@ avoid_link_dependency(Hash, DepName) :-
 % Base case: direct run dep of a non-library compiler
 compiler_non_lib_run_dep(DepHash, DepName) :-
   compiler_package(CompilerName),
-  not compiler_used_as_a_library(node(_, CompilerName), CompilerHash),
+  not compiler_used_as_lib(CompilerName, CompilerHash),
   hash_attr(CompilerHash, "depends_on", CompilerName, DepName, "run"),
   hash_attr(CompilerHash, "hash", DepName, DepHash).
 
@@ -2006,29 +2064,35 @@ avoid_link_dependency(DepHash, LinkDepName) :-
   hash_attr(DepHash, "depends_on", DepName, LinkDepName, "link"),
   not hash_attr(DepHash, "depends_on", DepName, LinkDepName, "run").
 
+% Auxiliary splice predicates (project away unused arguments).
+any_splice_holds_for(DepNode) :- abi_splice_conditions_hold(_, DepNode, _, _).
+any_splice_holds_for_hash(ChildName, ChildHash) :- abi_splice_conditions_hold(_, _, ChildName, ChildHash).
+splice_at_hash_exists(DepName, DepHash) :- attr("splice_at_hash", _, _, DepName, DepHash).
+any_splice_at_hash_for_dep(DepName) :- attr("splice_at_hash", _, _, DepName, _).
+
 % Without splicing, we simply recover the exact semantics
 imposed_constraint(ParentHash, "hash", ChildName, ChildHash) :-
   hash_attr(ParentHash, "hash", ChildName, ChildHash),
   ChildHash != ParentHash,
   not avoid_link_dependency(ParentHash, ChildName),
-  not abi_splice_conditions_hold(_, _, ChildName, ChildHash).
+  not any_splice_holds_for_hash(ChildName, ChildHash).
 
 imposed_constraint(Hash, "depends_on", PackageName, DepName, Type) :-
   hash_attr(Hash, "depends_on", PackageName, DepName, Type),
   hash_attr(Hash, "hash", DepName, DepHash),
   not avoid_link_dependency(Hash, DepName),
-  not attr("splice_at_hash", _, _, DepName, DepHash).
+  not splice_at_hash_exists(DepName, DepHash).
 
 imposed_constraint(Hash, "virtual_on_edge", PackageName, DepName, VirtName) :-
   hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
   not avoid_link_dependency(Hash, DepName),
-  not attr("splice_at_hash", _, _, DepName,_).
+  not any_splice_at_hash_for_dep(DepName).
 
 imposed_constraint(Hash, "virtual_node", VirtName) :-
   hash_attr(Hash, "virtual_on_edge", PackageName, DepName, VirtName),
   hash_attr(Hash, "virtual_node", VirtName),
   not avoid_link_dependency(Hash, DepName),
-  not attr("splice_at_hash", _, _, DepName,_).
+  not any_splice_at_hash_for_dep(DepName).
 
 
 % Rules pertaining to attr("splice_at_hash") and abi_splice_conditions_hold will
@@ -2109,7 +2173,7 @@ opt_criterion(120, "number of packages to build (vs. reuse)").
 
 opt_criterion(110, "number of nodes from the same package").
 #minimize { 0@110: #true }.
-#minimize { ID@110,Package : attr("node", node(ID, Package)), not self_build_requirement(_, node(ID, Package)) }.
+#minimize { ID@110,Package : attr("node", node(ID, Package)), not is_self_build_req(node(ID, Package)) }.
 #minimize { ID@110,Package : attr("virtual_node", node(ID, Package)) }.
 #defined optimize_for_reuse/0.
 

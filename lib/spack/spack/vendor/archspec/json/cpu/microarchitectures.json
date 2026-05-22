@@ -2431,7 +2431,6 @@
         "fma",
         "fsgsbase",
         "gfni",
-        "ibrs_enhanced",
         "mmx",
         "movbe",
         "movdir64b",
@@ -3556,6 +3555,212 @@
       },
       "cpupart": "0xd49"
     },
+    "ampere1": {
+      "from": [
+        "neoverse_n1",
+        "armv8.6a"
+      ],
+      "vendor": "Ampere",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint",
+        "i8mm",
+        "bf16",
+        "rng",
+        "bti",
+        "ecv"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "9.0:10.4.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "10.5:10.99",
+            "flags": "-mcpu=ampere1"
+          },
+          {
+            "versions": "11.0:11.2.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "11.3:11.99",
+            "flags": "-mcpu=ampere1"
+          },
+          {
+            "versions": "12.0:12.0.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "12.1:12.99",
+            "flags": "-mcpu=ampere1"
+          },
+          {
+            "versions": "13:",
+            "flags": "-mcpu=ampere1"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "10:",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "16:",
+            "flags": "-mcpu=ampere1"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "22:",
+            "flags": "-mcpu=neoverse-n1"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "22.5:",
+            "name": "neoverse-n1",
+            "flags": "-tp {name}"
+          }
+        ]
+      },
+      "cpupart": "0xac3"
+    },
+    "ampere1a": {
+      "from": [
+        "neoverse_n1",
+        "armv8.6a"
+      ],
+      "vendor": "Ampere",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "sm3",
+        "sm4",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint",
+        "i8mm",
+        "bf16",
+        "rng",
+        "bti",
+        "ecv"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "9.0:10.4.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "10.5:10.99",
+            "flags": "-mcpu=ampere1a"
+          },
+          {
+            "versions": "11.0:11.3.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "11.4:11.99",
+            "flags": "-mcpu=ampere1a"
+          },
+          {
+            "versions": "12.0:12.2.99",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "12.3:12.99",
+            "flags": "-mcpu=ampere1a"
+          },
+          {
+            "versions": "13:",
+            "flags": "-mcpu=ampere1a"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "10:",
+            "flags": "-mcpu=neoverse-n1"
+          },
+          {
+            "versions": "16:",
+            "flags": "-mcpu=ampere1"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "22:",
+            "flags": "-mcpu=neoverse-n1"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "22.5:",
+            "name": "neoverse-n1",
+            "flags": "-tp {name}"
+          }
+        ]
+      },
+      "cpupart": "0xac4"
+    },
     "m1": {
       "from": [
         "armv8.4a"
@@ -3600,6 +3805,10 @@
           {
             "versions": "8.0:",
             "flags": "-march=armv8.4-a -mtune=generic"
+          },
+          {
+            "versions": "15.1:",
+            "flags": "-mcpu=apple-m1"
           }
         ],
         "clang": [
@@ -3672,8 +3881,12 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "8.0:",
-            "flags": "-march=armv8.5-a -mtune=generic"
+            "versions": "10.1:",
+            "flags": "-march=armv8.6-a -mtune=generic"
+          },
+          {
+            "versions": "15.1:",
+            "flags": "-mcpu=apple-m2"
           }
         ],
         "clang": [
@@ -3754,8 +3967,12 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "8.0:",
-            "flags": "-march=armv8.5-a -mtune=generic"
+            "versions": "10.1:",
+            "flags": "-march=armv8.6-a -mtune=generic"
+          },
+          {
+            "versions": "15.1:",
+            "flags": "-mcpu=apple-m3"
           }
         ],
         "clang": [
@@ -3840,6 +4057,12 @@
         "sme2"
       ],
       "compilers": {
+        "gcc": [
+          {
+            "versions": "14.1:",
+            "flags": "-march=armv9.2-a+sme2 -fno-tree-vectorize -fno-tree-slp-vectorize -mtune=generic"
+          }
+        ],
         "clang": [
           {
             "versions": "9.0:12.0",
@@ -3960,6 +4183,27 @@
           }
         ]
       }
+    },
+    "x60": {
+      "from": [
+        "riscv64"
+      ],
+      "vendor": "SpacemiT",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14:",
+            "flags": "-march=rv64imafdcv_zicbom_zicboz_zicntr_zicond_zicsr_zifencei_zihintpause_zihpm_zfh_zfhmin_zca_zcd_zba_zbb_zbc_zbs_zkt_zve32f_zve32x_zve64d_zve64f_zve64x_zvfh_zvfhmin_zvkt_sscofpmf_sstc_svinval_svnapot_svpbmt"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "21.0:",
+            "flags": "-march=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zmmul1p0_zaamo1p0_zalrsc1p0_zca1p0_zcd1p0"
+          }
+        ]
+      }
     }
   },
   "feature_aliases": {
@@ -4038,7 +4282,8 @@
       "0x61": "Apple",
       "0x66": "Faraday",
       "0x68": "HXT",
-      "0x69": "Intel"
+      "0x69": "Intel",
+      "0xc0": "Ampere"
     },
     "darwin_flags": {
       "sse4.1": "sse4_1",

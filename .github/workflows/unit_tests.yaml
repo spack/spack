@@ -188,10 +188,48 @@ jobs:
         spack bootstrap disable github-actions-v2
         spack bootstrap status
         spack solve zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/core.py
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-cffi
+        path: coverage
+        include-hidden-files: true
+  # Test for the clingo based solver (using the development clingo v6 from Test PyPI).
+  # clingo v6 is still pre-release; allow this job to fail without blocking the workflow.
+  clingo-v6:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: '3.13'
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          sudo apt-get -y install coreutils gfortran graphviz gnupg2
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
+          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
+          pip install --upgrade --pre --extra-index-url https://test.pypi.org/simple clingo
+    - name: Run unit tests (full suite with coverage)
+      env:
+          COVERAGE: true
+          COVERAGE_FILE: coverage/.coverage-clingo-v6
+      run: |
+        . share/spack/setup-env.sh
+        spack bootstrap disable spack-install
+        spack bootstrap disable github-actions-v0.6
+        spack bootstrap disable github-actions-v2
+        spack bootstrap status
+        spack solve zlib
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+      with:
+        name: coverage-clingo-v6
         path: coverage
         include-hidden-files: true
   # Run unit tests on MacOS
