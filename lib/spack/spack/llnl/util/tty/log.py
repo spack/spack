@@ -585,7 +585,6 @@ class StreamWrapper:
         redirect_h = msvcrt.get_osfhandle(redirect_fd)
         # duplicate handle for local copy we own
         dup_redirect_h = dup_fh(redirect_h)
-        os.set_handle_inheritable(redirect_h, True)
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
         kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(dup_redirect_h))
         os.dup2(self.redirect_fd, self.std_fd)
