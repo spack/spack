@@ -40,13 +40,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "if you forgot to use --clear on first run)",
     )
     subparser.add_argument(
-        "--restore-old-configs",
+        "--restore",
         action="store_true",
         help="restore ~/.spack from backup location (after --clear)",
     )
 
 
-def restore_old_configs(args: argparse.Namespace) -> None:
+def restore(args: argparse.Namespace) -> None:
     """Restore ~/.spack from backup location."""
     old_location = os.path.expanduser("~/.spack")
 
@@ -89,8 +89,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     - Package repositories: ~/.spack/package_repos -> ~/.local/state/spack/package_repos
     """
     # Handle restore mode
-    if args.restore_old_configs:
-        restore_old_configs(args)
+    if args.restore:
+        restore(args)
         return
 
     old_location = os.path.expanduser("~/.spack")
