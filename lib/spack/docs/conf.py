@@ -108,6 +108,18 @@ sphinx_apidoc(
     ]
 )
 
+# Ensure that the page rank of the handwritten pages is higher than those of
+# generated ones, by marking the auto-generated hub pages as orphans so their
+# toctrees. This avoid that they show up in the side bar on every page.
+# Users still reach these pages via the package_api page and via :mod:
+# cross-references.
+for _orphan in ("spack.rst", "spack_repo.rst", "spack_repo.builtin.rst"):
+    with open(_orphan, "r", encoding="utf-8") as _f:
+        _content = _f.read()
+    if not _content.lstrip().startswith(":orphan:"):
+        with open(_orphan, "w", encoding="utf-8") as _f:
+            _f.write(":orphan:\n\n" + _content)
+
 
 class NoWhitespaceHtmlFormatter(HtmlFormatter):
     """HTML formatter that suppresses redundant span elements for Text.Whitespace tokens."""
