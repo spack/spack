@@ -950,17 +950,15 @@ def _warn_about_old_dotspack():
                 # A config scope explicitly targets ~/.spack
                 return
 
-    from spack.paths import locations as paths
-
     explicit_path = False
-    if uses_old_dotspack(paths.state_home):
-        if paths.default_state_home_dot_spack:
+    if uses_old_dotspack(spack.paths.locations.state_home):
+        if spack.paths.locations.default_state_home_dot_spack:
             reasons.append("User cache path fallback")
         else:
             explicit_path = True
-    if uses_old_dotspack(paths.data_home):
+    if uses_old_dotspack(spack.paths.locations.data_home):
         explicit_path = True
-    if uses_old_dotspack(paths.cache_home):
+    if uses_old_dotspack(spack.paths.locations.cache_home):
         explicit_path = True
 
     if explicit_path:
