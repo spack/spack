@@ -337,7 +337,7 @@ def read(name):
     """Get an environment with the supplied name."""
     validate_env_name(name)
     if not exists(name):
-        raise SpackEnvironmentError("could not read environment '%s'" % name)
+        raise SpackEnvironmentError("no such environment '%s'" % name)
     return Environment(root(name))
 
 
@@ -412,9 +412,10 @@ def create_in_dir(
 
         if include_concrete is not None:
             # Validate included concrete envs
-            included_concrete_env_paths = [as_env_dir(e) for e in include_concrete]
-            validate_included_envs_exists(included_concrete_env_paths)
-            validate_included_envs_concrete(included_concrete_env_paths)
+            set_included_envs_to_env_paths(include_concrete)
+            validate_included_envs_exists(include_concrete)
+            validate_included_envs_concrete(include_concrete)
+
             # Add unmodified paths to the config
             manifest.set_include_concrete(include_concrete)
 
