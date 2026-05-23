@@ -130,20 +130,22 @@ class TestSpackNewScopeContent:
             cfg = spack.config.create()
 
             # Check that config.get returns XDG-compliant paths
+            # Note: cfg.get() returns raw values; variable substitution happens in paths.py
             user_cache_path = cfg.get("config:user_cache_path")
-            assert user_cache_path is not None
-            assert ".local/state/spack" in user_cache_path
+            expected_cache = str(m["home"] / ".local" / "state" / "spack")
+            assert user_cache_path == expected_cache
 
             # Check that install_tree uses XDG location
             install_tree_root = cfg.get("config:install_tree:root")
-            assert install_tree_root is not None
-            assert ".local/share/spack/installs" in install_tree_root
+            expected_installs = str(m["home"] / ".local" / "share" / "spack" / "installs")
+            assert install_tree_root == expected_installs
 
-            # Check that reports_path uses variable substitution
-            # (Note: This will be substituted when retrieved, but we can verify the base path)
+            # Derived paths use variable substitution
             reports_path = cfg.get("config:reports_path")
-            assert reports_path is not None
-            assert "reports" in reports_path
+            assert reports_path == "$user_cache_path/reports"
+
+            # Verify that the spack-new scope was actually created
+            assert (m["etc_path"] / "spack-new").exists()
 
     def test_old_style_paths_when_dotspack_exists(self, mock_spack_paths):
         """Test that ~/.spack existence triggers old-style paths."""
@@ -160,10 +162,9 @@ class TestSpackNewScopeContent:
             user_cache_path = cfg.get("config:user_cache_path")
             assert user_cache_path == str(dotspack)
 
-            # Derived paths should reference user_cache_path
+            # Derived paths should use variable substitution
             reports_path = cfg.get("config:reports_path")
-            assert reports_path is not None
-            assert "reports" in reports_path
+            assert reports_path == "$user_cache_path/reports"
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""
@@ -179,21 +180,19 @@ class TestSpackNewScopeContent:
 
             # Should use ~/.spack
             user_cache_path = cfg.get("config:user_cache_path")
-            assert ".spack" in user_cache_path
+            expected_cache = str(m["home"] / ".spack")
+            assert user_cache_path == expected_cache
 
-            # Should point to old locations in $spack
-            # Note: Variable substitution will have already happened by the time we get() them
+            # Should point to old locations in $spack using variables
+            # cfg.get() returns raw values; variable substitution happens in paths.py
             gpg_path = cfg.get("config:gpg_path")
-            assert gpg_path is not None
-            assert "opt/spack/gpg" in gpg_path
+            assert gpg_path == "$spack/opt/spack/gpg"
 
             install_tree_root = cfg.get("config:install_tree:root")
-            assert install_tree_root is not None
-            assert "opt/spack" in install_tree_root
+            assert install_tree_root == "$spack/opt/spack"
 
             source_cache = cfg.get("config:source_cache")
-            assert source_cache is not None
-            assert "var/spack/cache" in source_cache
+            assert source_cache == "$spack/var/spack/cache"
 
 
 class TestOldLayoutDetection:
