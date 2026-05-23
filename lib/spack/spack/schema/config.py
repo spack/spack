@@ -258,6 +258,34 @@ properties: Dict[str, Any] = {
                     },
                 },
             },
+            "user_cache_path": {
+                "type": "string",
+                "description": "Base directory for user cache and state data",
+            },
+            "reports_path": {
+                "type": "string",
+                "description": "Directory for junit, cdash, etc. reports about builds",
+            },
+            "default_monitor_path": {
+                "type": "string",
+                "description": "Directory for spack monitor analysis output",
+            },
+            "user_repos_cache_path": {
+                "type": "string",
+                "description": "Directory for git repositories fetched to compare commits to versions",
+            },
+            "package_repos_path": {
+                "type": "string",
+                "description": "Default location where remote package repositories are cloned",
+            },
+            "gpg_path": {
+                "type": "string",
+                "description": "Directory for GPG keyrings and trust databases",
+            },
+            "gpg_keys_path": {
+                "type": "string",
+                "description": "Directory for GPG keys",
+            },
         },
     }
 }

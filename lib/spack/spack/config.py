@@ -148,6 +148,7 @@ class ConfigScope:
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
+        self.backwards_compat_fallback = False
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -1263,6 +1264,7 @@ class IncludePath(OptionalInclude):
     path: str
     sha256: str
     destination: Optional[str]
+    backwards_compat_fallback: bool
 
     def __init__(self, entry: dict):
         # circular dependencies
@@ -1274,7 +1276,21 @@ class IncludePath(OptionalInclude):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = spack.util.path.substitute_path_variables(path)
+        new_path = spack.util.path.substitute_path_variables(path)
+
+        # Check for backwards_compat fallback path
+        backwards_compat = entry.get("backwards_compat", None)
+        old_path = None
+        if backwards_compat:
+            old_path = spack.util.path.substitute_path_variables(backwards_compat)
+
+        # Use old path if it exists and new path doesn't
+        self.backwards_compat_fallback = False
+        if old_path and os.path.exists(old_path) and not os.path.exists(new_path):
+            self.path = old_path
+            self.backwards_compat_fallback = True
+        else:
+            self.path = new_path
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1325,6 +1341,8 @@ class IncludePath(OptionalInclude):
 
         scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
+            if self.backwards_compat_fallback:
+                scope.backwards_compat_fallback = True
             self._scopes = [scope]
 
         return self._scopes
@@ -1546,6 +1564,155 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
+def _dir_is_occupied(path, except_for=None):
+    """Check if a directory exists and contains files other than those in except_for."""
+    path = pathlib.Path(path)
+    except_for = except_for or set()
+    if not path.is_dir():
+        return False
+    for p in path.iterdir():
+        if p.name not in except_for:
+            return True
+    return False
+
+
+def _detect_old_spack_layout():
+    """Detect if this Spack instance is using old-style in-$spack paths."""
+    old_paths = [
+        (os.path.join(spack.paths.prefix, "opt", "spack"), {"gpg"}),
+        (os.path.join(spack.paths.var_path, "environments"), set()),
+        (os.path.join(spack.paths.var_path, "cache"), set()),
+        (os.path.join(spack.paths.prefix, "opt", "spack", "gpg"), set()),
+        (os.path.join(spack.paths.var_path, "gpg"), {"README.md"}),
+        (os.path.join(spack.paths.etc_path, "licenses"), set()),
+    ]
+    for path, exclusions in old_paths:
+        if _dir_is_occupied(path, except_for=exclusions):
+            return True
+    return False
+
+
+def _get_xdg_compliant_paths():
+    """Return XDG-compliant path configurations.
+
+    If ~/.spack exists and ~/.local/state/spack doesn't, point user_cache_path
+    to ~/.spack for backwards compatibility.
+    """
+    home = os.path.expanduser("~")
+    state_home = os.path.join(home, ".local", "state", "spack")
+    data_home = os.path.join(home, ".local", "share", "spack")
+    cache_home = os.path.join(home, ".cache", "spack")
+    dotspack = os.path.join(home, ".spack")
+
+    # Check if we should use ~/.spack for backwards compatibility
+    if os.path.exists(dotspack) and not os.path.exists(state_home):
+        user_cache_path = dotspack
+    else:
+        user_cache_path = state_home
+
+    return {
+        "config": {
+            "user_cache_path": user_cache_path,
+            "reports_path": os.path.join(user_cache_path, "reports"),
+            "default_monitor_path": os.path.join(user_cache_path, "reports", "monitor"),
+            "user_repos_cache_path": os.path.join(user_cache_path, "git_repos"),
+            "package_repos_path": os.path.join(user_cache_path, "package_repos"),
+            "gpg_path": os.path.join(data_home, "gpg"),
+            "gpg_keys_path": os.path.join(user_cache_path, "gpg"),
+            "install_tree": {"root": os.path.join(data_home, "installs")},
+            "license_dir": os.path.join(data_home, "licenses"),
+            "misc_cache": os.path.join(cache_home, spack.paths.spack_instance_id, "cache"),
+            "source_cache": os.path.join(cache_home, "source"),
+        }
+    }
+
+
+def _get_old_style_paths():
+    """Return old-style in-$spack path configurations."""
+    home = os.path.expanduser("~")
+    return {
+        "config": {
+            "user_cache_path": os.path.join(home, ".spack"),
+            "reports_path": os.path.join(home, ".spack", "reports"),
+            "default_monitor_path": os.path.join(home, ".spack", "reports", "monitor"),
+            "user_repos_cache_path": os.path.join(home, ".spack", "git_repos"),
+            "package_repos_path": os.path.join(home, ".spack", "package_repos"),
+            "gpg_path": os.path.join(spack.paths.prefix, "opt", "spack", "gpg"),
+            "gpg_keys_path": os.path.join(spack.paths.var_path, "gpg"),
+            "install_tree": {"root": os.path.join(spack.paths.prefix, "opt", "spack")},
+            "license_dir": os.path.join(spack.paths.etc_path, "licenses"),
+            "misc_cache": os.path.join(home, ".spack", spack.paths.spack_instance_id, "cache"),
+            "source_cache": os.path.join(spack.paths.var_path, "cache"),
+        }
+    }
+
+
+def _initialize_spack_new_scope():
+    """Initialize etc/spack-new scope if needed.
+
+    Creates the spack-new scope with appropriate config if:
+    - It doesn't exist
+    - ~/.spack doesn't exist
+    - $spack is writable
+
+    Returns the path to spack-new if created/exists, None otherwise.
+    """
+    spack_new_path = os.path.join(spack.paths.etc_path, "spack-new")
+
+    # If it already exists, just return it
+    if os.path.exists(spack_new_path):
+        return spack_new_path
+
+    # Check if ~/.spack exists - if so, don't auto-create
+    dotspack = os.path.join(os.path.expanduser("~"), ".spack")
+    if os.path.exists(dotspack):
+        return None
+
+    # Check if $spack is writable
+    if not os.access(spack.paths.etc_path, os.W_OK):
+        return None
+
+    # Determine which config to use
+    if _detect_old_spack_layout():
+        config_data = _get_old_style_paths()
+    else:
+        config_data = _get_xdg_compliant_paths()
+
+    # Create the directory and write config
+    try:
+        filesystem.mkdirp(spack_new_path)
+        config_file = os.path.join(spack_new_path, "config.yaml")
+        with open(config_file, "w") as f:
+            syaml.dump_config(config_data, stream=f, default_flow_style=False)
+        return spack_new_path
+    except (OSError, IOError) as e:
+        # If we can't write, just continue without it
+        tty.debug(f"Could not create spack-new scope: {e}")
+        return None
+
+
+def _check_and_warn_dotspack():
+    """Check if ~/.spack exists and warn user about migration."""
+    home = os.path.expanduser("~")
+    dotspack = os.path.join(home, ".spack")
+    new_config_home = os.path.join(home, ".config", "spack")
+    new_state_home = os.path.join(home, ".local", "state", "spack")
+
+    # Only warn if ~/.spack exists but new locations don't
+    if os.path.exists(dotspack) and not os.path.exists(new_state_home):
+        # Check if user is explicitly using ~/.spack via env var
+        if os.getenv("SPACK_USER_CACHE_PATH") == dotspack:
+            return
+
+        tty.warn(
+            "Found legacy configuration directory ~/.spack.\n"
+            "  Consider migrating to XDG-compliant locations:\n"
+            f"    Config: {new_config_home}\n"
+            f"    State:  {new_state_home}\n"
+            "  Run 'spack migrate' to perform the migration."
+        )
+
+
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
@@ -1560,6 +1727,16 @@ def create_incremental() -> Generator[Configuration, None, None]:
         (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
     yield cfg
+
+    # Initialize spack-new scope if conditions are met
+    spack_new_path = _initialize_spack_new_scope()
+    if spack_new_path:
+        # Add spack-new at a lower priority than spack
+        # This scope is dynamically created and contains default paths
+        yield from cfg.push_scope_incremental(
+            DirectoryConfigScope("spack-new", spack_new_path, writable=False),
+            priority=ConfigScopePriority.CONFIG_FILES
+        )
 
     # Initial topmost scope is spack (the config scope in the spack instance).
     # It includes the user, site, and system scopes. Environments and command
@@ -1583,6 +1760,10 @@ def create_incremental() -> Generator[Configuration, None, None]:
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
+
+    # Check for legacy ~/.spack and warn if needed
+    _check_and_warn_dotspack()
+    yield cfg
 
 
 def create() -> Configuration:

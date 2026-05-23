@@ -68,11 +68,11 @@ mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 # fetch cache for downloaded files
 default_fetch_cache_path = os.path.join(var_path, "cache")
 
-# GPG paths.
-gpg_keys_path = os.path.join(var_path, "gpg")
+# GPG paths - declared here but will be initialized later after defining helper functions
+gpg_keys_path = None
+gpg_path = None
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 
 #: Not a location itself, but used for when Spack instances
@@ -90,32 +90,119 @@ spack_instance_id = hash.b32_hash(spack_root)[:7]
 # You can override the top-level directory (the user cache path) by
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
+
+
+def _get_config_value(key, default):
+    """Helper to get config values, avoiding circular imports."""
+    try:
+        import spack.config
+        value = spack.config.get(key, default)
+        return value
+    except (ImportError, Exception):
+        # During bootstrap or if config isn't ready, use default
+        return default
+
+
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
+    """Get user_cache_path from config or environment."""
+    # First check environment variable (for backwards compatibility)
+    env_path = os.getenv("SPACK_USER_CACHE_PATH")
+    if env_path:
+        return os.path.expanduser(env_path)
+
+    # Then check config
+    config_path = _get_config_value("config:user_cache_path", None)
+    if config_path:
+        return config_path
+
+    # Fall back to old default
+    return os.path.expanduser("~%s.spack" % os.sep)
 
 
-user_cache_path = str(PurePath(_get_user_cache_path()))
+def _get_user_cache_path_cached():
+    """Cached version of user_cache_path."""
+    if not hasattr(_get_user_cache_path_cached, "_cached"):
+        _get_user_cache_path_cached._cached = str(PurePath(_get_user_cache_path()))
+    return _get_user_cache_path_cached._cached
+
+
+def _get_reports_path():
+    """Get reports_path from config or compute default."""
+    config_path = _get_config_value("config:reports_path", None)
+    if config_path:
+        return config_path
+    return os.path.join(_get_user_cache_path_cached(), "reports")
+
+
+def _get_default_monitor_path():
+    """Get default_monitor_path from config or compute default."""
+    config_path = _get_config_value("config:default_monitor_path", None)
+    if config_path:
+        return config_path
+    return os.path.join(_get_reports_path(), "monitor")
+
+
+def _get_user_repos_cache_path():
+    """Get user_repos_cache_path from config or compute default."""
+    config_path = _get_config_value("config:user_repos_cache_path", None)
+    if config_path:
+        return config_path
+    return os.path.join(_get_user_cache_path_cached(), "git_repos")
+
+
+def _get_package_repos_path():
+    """Get package_repos_path from config or compute default."""
+    config_path = _get_config_value("config:package_repos_path", None)
+    if config_path:
+        return config_path
+    return os.path.join(_get_user_cache_path_cached(), "package_repos")
+
+
+def _get_gpg_path():
+    """Get gpg_path from config or compute default."""
+    config_path = _get_config_value("config:gpg_path", None)
+    if config_path:
+        return config_path
+    # Old default was in opt/spack/gpg
+    return os.path.join(opt_path, "spack", "gpg")
+
+
+def _get_gpg_keys_path():
+    """Get gpg_keys_path from config or compute default."""
+    config_path = _get_config_value("config:gpg_keys_path", None)
+    if config_path:
+        return config_path
+    # Old default was in var/spack/gpg
+    return os.path.join(var_path, "gpg")
+
+
+# These are computed lazily to allow config to be loaded first
+user_cache_path = str(PurePath(_get_user_cache_path_cached()))
 
 #: junit, cdash, etc. reports about builds
-reports_path = os.path.join(user_cache_path, "reports")
+reports_path = _get_reports_path()
 
 #: installation test (spack test) output
 default_test_path = os.path.join(user_cache_path, "test")
 
 #: spack monitor analysis directories
-default_monitor_path = os.path.join(reports_path, "monitor")
+default_monitor_path = _get_default_monitor_path()
 
 #: git repositories fetched to compare commits to versions
-user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
+user_repos_cache_path = _get_user_repos_cache_path()
 
 #: default location where remote package repositories are cloned
-package_repos_path = os.path.join(user_cache_path, "package_repos")
+package_repos_path = _get_package_repos_path()
 
 #: bootstrap store for bootstrapping clingo and other tools
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
 default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
+
+# Initialize GPG paths now that helper functions are defined
+gpg_path = _get_gpg_path()
+gpg_keys_path = _get_gpg_keys_path()
 
 # Below paths pull configuration from the host environment.
 #

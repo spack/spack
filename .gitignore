@@ -19,6 +19,8 @@ CLAUDE.md
 /etc/spack/*
 !/etc/spack/defaults
 !/etc/spack/site/README.md
+# spack-new is a dynamically created scope
+/etc/spack-new
 
 ###########################
 # Coding agent state
