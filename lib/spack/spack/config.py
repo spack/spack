@@ -104,36 +104,62 @@ _ALL_SCHEMAS: Dict[str, Any] = {
     spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema,
 }
 
+#: Global paths object used by config initialization helpers
+#: Defaults to spack.paths but can be overridden for testing
+_paths = spack.paths
+
 #: Path to the main configuration scope
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
-#: Hard-coded default values for some key configuration options.
-#: This ensures that Spack will still work even if config.yaml in
-#: the defaults scope is removed.
-CONFIG_DEFAULTS = {
-    "config": {
-        "debug": False,
-        "connect_timeout": 10,
-        "verify_ssl": True,
-        "checksum": True,
-        "dirty": False,
-        "build_jobs": min(16, cpus_available()),
-        "build_stage": "$tempdir/spack-stage",
-        "license_dir": spack.paths.default_license_dir,
-        # Old-style path defaults for backwards compatibility
-        # These are used when no spack-new scope exists (e.g., read-only centralized install
-        # updated from pre-1.2) and ensure pre-1.2 behavior is maintained
-        # Derived paths use $user_cache_path so they relocate together
-        "user_cache_path": os.path.expanduser("~/.spack"),
-        "reports_path": "$user_cache_path/reports",
-        "default_monitor_path": "$user_cache_path/reports/monitor",
-        "user_repos_cache_path": "$user_cache_path/git_repos",
-        "package_repos_path": "$user_cache_path/package_repos",
-        "gpg_path": "$spack/opt/spack/gpg",
-        "gpg_keys_path": "$spack/var/spack/gpg",
-    },
-    "concretizer": {"externals": {"completion": "default_variants"}},
-}
+
+def _get_config_defaults():
+    """Return hard-coded default values for key configuration options.
+
+    This is computed lazily to allow testing with different paths.
+    Ensures Spack works even if config.yaml in defaults scope is removed.
+    """
+    return {
+        "config": {
+            "debug": False,
+            "connect_timeout": 10,
+            "verify_ssl": True,
+            "checksum": True,
+            "dirty": False,
+            "build_jobs": min(16, cpus_available()),
+            "build_stage": "$tempdir/spack-stage",
+            "license_dir": _paths.default_license_dir,
+            # Old-style path defaults for backwards compatibility
+            # These are used when no spack-new scope exists (e.g., read-only centralized install
+            # updated from pre-1.2) and ensure pre-1.2 behavior is maintained
+            # Derived paths use $user_cache_path so they relocate together
+            "user_cache_path": os.path.expanduser("~/.spack"),
+            "reports_path": "$user_cache_path/reports",
+            "default_monitor_path": "$user_cache_path/reports/monitor",
+            "user_repos_cache_path": "$user_cache_path/git_repos",
+            "package_repos_path": "$user_cache_path/package_repos",
+            "gpg_path": "$spack/opt/spack/gpg",
+            "gpg_keys_path": "$spack/var/spack/gpg",
+        },
+        "concretizer": {"externals": {"completion": "default_variants"}},
+    }
+
+
+@contextlib.contextmanager
+def override_paths(mock_paths):
+    """Context manager to temporarily override the global _paths object.
+
+    Used primarily for testing.
+
+    Args:
+        mock_paths: Object with same interface as spack.paths
+    """
+    global _paths
+    old_paths = _paths
+    _paths = mock_paths
+    try:
+        yield
+    finally:
+        _paths = old_paths
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
@@ -1587,15 +1613,11 @@ def _dir_is_occupied(path, except_for=None):
     return False
 
 
-def _detect_old_spack_layout(_paths=None):
+def _detect_old_spack_layout():
     """Detect if this Spack instance is using old-style in-$spack paths.
 
-    Args:
-        _paths: Optional paths object (for testing). Defaults to spack.paths.
+    Uses the global _paths object, which can be overridden for testing.
     """
-    if _paths is None:
-        _paths = spack.paths
-
     empty_set = frozenset()
     old_paths = [
         (os.path.join(_paths.prefix, "opt", "spack"), {"gpg"}),
@@ -1611,7 +1633,7 @@ def _detect_old_spack_layout(_paths=None):
     return False
 
 
-def _get_xdg_compliant_paths(_paths=None):
+def _get_xdg_compliant_paths():
     """Return XDG-compliant path configurations.
 
     If ~/.spack exists and ~/.local/state/spack doesn't, point user_cache_path
@@ -1620,12 +1642,8 @@ def _get_xdg_compliant_paths(_paths=None):
     Uses variable substitution ($user_cache_path, etc.) so that setting one
     variable automatically relocates derived paths.
 
-    Args:
-        _paths: Optional paths object (for testing). Defaults to spack.paths.
+    Uses the global _paths object, which can be overridden for testing.
     """
-    if _paths is None:
-        _paths = spack.paths
-
     home = os.path.expanduser("~")
     state_home = os.path.join(home, ".local", "state", "spack")
     data_home = os.path.join(home, ".local", "share", "spack")
@@ -1655,18 +1673,14 @@ def _get_xdg_compliant_paths(_paths=None):
     }
 
 
-def _get_old_style_paths(_paths=None):
+def _get_old_style_paths():
     """Return old-style in-$spack path configurations.
 
     Uses variable substitution ($user_cache_path, $spack) so that setting one
     variable automatically relocates derived paths.
 
-    Args:
-        _paths: Optional paths object (for testing). Defaults to spack.paths.
+    Uses the global _paths object, which can be overridden for testing.
     """
-    if _paths is None:
-        _paths = spack.paths
-
     home = os.path.expanduser("~")
     return {
         "config": {
@@ -1685,7 +1699,7 @@ def _get_old_style_paths(_paths=None):
     }
 
 
-def _initialize_spack_new_scope(_paths=None):
+def _initialize_spack_new_scope():
     """Initialize etc/spack-new scope if needed.
 
     Creates the spack-new scope with appropriate config if:
@@ -1695,14 +1709,10 @@ def _initialize_spack_new_scope(_paths=None):
     If ~/.spack exists OR old-style in-spack paths are detected,
     uses old-style path configuration. Otherwise uses XDG-compliant paths.
 
-    Args:
-        _paths: Optional paths object (for testing). Defaults to spack.paths.
+    Uses the global _paths object, which can be overridden for testing.
 
     Returns the path to spack-new if created/exists, None otherwise.
     """
-    if _paths is None:
-        _paths = spack.paths
-
     spack_new_path = os.path.join(_paths.etc_path, "spack-new")
 
     # If it already exists, just return it
@@ -1718,10 +1728,10 @@ def _initialize_spack_new_scope(_paths=None):
     # - If ~/.spack exists, use old-style config
     # - Otherwise, use XDG-compliant config
     dotspack = os.path.join(os.path.expanduser("~"), ".spack")
-    if _detect_old_spack_layout(_paths) or os.path.exists(dotspack):
-        config_data = _get_old_style_paths(_paths)
+    if _detect_old_spack_layout() or os.path.exists(dotspack):
+        config_data = _get_old_style_paths()
     else:
-        config_data = _get_xdg_compliant_paths(_paths)
+        config_data = _get_xdg_compliant_paths()
 
     # Create the directory and write config
     try:
@@ -1746,7 +1756,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # Default scopes are builtins and the default scope within the Spack instance.
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
-        (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", CONFIG_DEFAULTS)),
+        (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", _get_config_defaults())),
         (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
     )
     yield cfg

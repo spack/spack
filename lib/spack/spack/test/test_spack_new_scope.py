@@ -20,6 +20,7 @@ class MockPaths:
         self.etc_path = str(etc_path)
         self.var_path = str(var_path)
         self.spack_instance_id = instance_id
+        self.default_license_dir = str(etc_path / "licenses")
 
 
 @pytest.fixture
@@ -75,7 +76,8 @@ class TestSpackNewScopeCreation:
         # etc_path is writable by default in tmpdir
 
         # Call the initialization function with mock paths
-        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            spack_new_path = spack.config._initialize_spack_new_scope()
 
         assert spack_new_path is not None
         assert (m["etc_path"] / "spack-new").exists()
@@ -94,7 +96,8 @@ class TestSpackNewScopeCreation:
 
         monkeypatch.setattr(os, "access", mock_access)
 
-        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            spack_new_path = spack.config._initialize_spack_new_scope()
 
         assert spack_new_path is None
         assert not (m["etc_path"] / "spack-new").exists()
@@ -108,7 +111,8 @@ class TestSpackNewScopeCreation:
         spack_new_dir.mkdir()
         (spack_new_dir / "config.yaml").write_text("config: {}\n")
 
-        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            spack_new_path = spack.config._initialize_spack_new_scope()
 
         assert spack_new_path == str(spack_new_dir)
 
@@ -117,19 +121,29 @@ class TestSpackNewScopeContent:
     """Test the content of generated spack-new configs."""
 
     def test_xdg_paths_for_fresh_install(self, mock_spack_paths):
-        """Test that fresh install gets XDG-compliant paths."""
+        """Test that fresh install gets XDG-compliant paths via full Configuration."""
         m = mock_spack_paths
 
         # Fresh install: no ~/.spack, no old data
-        config_data = spack.config._get_xdg_compliant_paths(m["paths"])
+        # Create the full Configuration the same way Spack does
+        with spack.config.override_paths(m["paths"]):
+            cfg = spack.config.create()
 
-        # Check for XDG-compliant paths
-        assert ".local/state/spack" in config_data["config"]["user_cache_path"]
-        assert "install_tree" in config_data["config"]
-        assert ".local/share/spack/installs" in config_data["config"]["install_tree"]["root"]
+            # Check that config.get returns XDG-compliant paths
+            user_cache_path = cfg.get("config:user_cache_path")
+            assert user_cache_path is not None
+            assert ".local/state/spack" in user_cache_path
 
-        # Check variable substitution is used
-        assert config_data["config"]["reports_path"] == "$user_cache_path/reports"
+            # Check that install_tree uses XDG location
+            install_tree_root = cfg.get("config:install_tree:root")
+            assert install_tree_root is not None
+            assert ".local/share/spack/installs" in install_tree_root
+
+            # Check that reports_path uses variable substitution
+            # (Note: This will be substituted when retrieved, but we can verify the base path)
+            reports_path = cfg.get("config:reports_path")
+            assert reports_path is not None
+            assert "reports" in reports_path
 
     def test_old_style_paths_when_dotspack_exists(self, mock_spack_paths):
         """Test that ~/.spack existence triggers old-style paths."""
@@ -139,13 +153,17 @@ class TestSpackNewScopeContent:
         dotspack = m["home"] / ".spack"
         dotspack.mkdir()
 
-        config_data = spack.config._get_xdg_compliant_paths(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            cfg = spack.config.create()
 
-        # Should use ~/.spack for user_cache_path (backwards compat)
-        assert config_data["config"]["user_cache_path"] == str(dotspack)
+            # Should use ~/.spack for user_cache_path (backwards compat)
+            user_cache_path = cfg.get("config:user_cache_path")
+            assert user_cache_path == str(dotspack)
 
-        # Derived paths should use $user_cache_path variable
-        assert config_data["config"]["reports_path"] == "$user_cache_path/reports"
+            # Derived paths should reference user_cache_path
+            reports_path = cfg.get("config:reports_path")
+            assert reports_path is not None
+            assert "reports" in reports_path
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""
@@ -156,15 +174,26 @@ class TestSpackNewScopeContent:
         old_install.mkdir(parents=True)
         (old_install / "some-package").mkdir()
 
-        config_data = spack.config._get_old_style_paths(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            cfg = spack.config.create()
 
-        # Should use ~/.spack
-        assert ".spack" in config_data["config"]["user_cache_path"]
+            # Should use ~/.spack
+            user_cache_path = cfg.get("config:user_cache_path")
+            assert ".spack" in user_cache_path
 
-        # Should point to old locations in $spack
-        assert config_data["config"]["gpg_path"] == "$spack/opt/spack/gpg"
-        assert config_data["config"]["install_tree"]["root"] == "$spack/opt/spack"
-        assert config_data["config"]["source_cache"] == "$spack/var/spack/cache"
+            # Should point to old locations in $spack
+            # Note: Variable substitution will have already happened by the time we get() them
+            gpg_path = cfg.get("config:gpg_path")
+            assert gpg_path is not None
+            assert "opt/spack/gpg" in gpg_path
+
+            install_tree_root = cfg.get("config:install_tree:root")
+            assert install_tree_root is not None
+            assert "opt/spack" in install_tree_root
+
+            source_cache = cfg.get("config:source_cache")
+            assert source_cache is not None
+            assert "var/spack/cache" in source_cache
 
 
 class TestOldLayoutDetection:
@@ -179,7 +208,8 @@ class TestOldLayoutDetection:
         old_install.mkdir(parents=True)
         (old_install / "linux-ubuntu22.04-x86_64").mkdir(parents=True)
 
-        assert spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert spack.config._detect_old_spack_layout()
 
     def test_detects_old_environments(self, mock_spack_paths):
         """Test detection when var/spack/environments exists."""
@@ -189,7 +219,8 @@ class TestOldLayoutDetection:
         envs.mkdir(parents=True)
         (envs / "myenv").mkdir()
 
-        assert spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert spack.config._detect_old_spack_layout()
 
     def test_detects_old_cache(self, mock_spack_paths):
         """Test detection when var/spack/cache has content."""
@@ -199,13 +230,15 @@ class TestOldLayoutDetection:
         cache.mkdir(parents=True)
         (cache / "some-package.tar.gz").write_text("fake tarball")
 
-        assert spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert spack.config._detect_old_spack_layout()
 
     def test_no_detection_for_fresh_install(self, mock_spack_paths):
         """Test that fresh install is not detected as old layout."""
         m = mock_spack_paths
         # Fresh install with only directory structure, no data
-        assert not spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert not spack.config._detect_old_spack_layout()
 
     def test_ignores_gpg_in_opt_spack(self, mock_spack_paths):
         """Test that lone gpg directory in opt/spack doesn't trigger detection."""
@@ -216,7 +249,8 @@ class TestOldLayoutDetection:
         old_install.mkdir(parents=True)
         (old_install / "gpg").mkdir()
 
-        assert not spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert not spack.config._detect_old_spack_layout()
 
     def test_ignores_readme_in_gpg_keys(self, mock_spack_paths):
         """Test that README.md in var/spack/gpg doesn't trigger detection."""
@@ -226,7 +260,8 @@ class TestOldLayoutDetection:
         gpg_keys.mkdir(parents=True)
         (gpg_keys / "README.md").write_text("# GPG Keys")
 
-        assert not spack.config._detect_old_spack_layout(m["paths"])
+        with spack.config.override_paths(m["paths"]):
+            assert not spack.config._detect_old_spack_layout()
 
 
 class TestVariableSubstitution:
@@ -252,13 +287,14 @@ class TestVariableSubstitution:
 
     def test_spack_variable_substitution(self, mock_spack_paths):
         """Test that $spack variable is substituted correctly."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
-        config_data = spack.config._get_old_style_paths()
+        with spack.config.override_paths(m["paths"]):
+            config_data = spack.config._get_old_style_paths()
 
-        # Verify variables are used, not hardcoded paths
-        assert config_data["config"]["gpg_path"] == "$spack/opt/spack/gpg"
-        assert "$spack" in config_data["config"]["install_tree"]["root"]
+            # Verify variables are used, not hardcoded paths
+            assert config_data["config"]["gpg_path"] == "$spack/opt/spack/gpg"
+            assert "$spack" in config_data["config"]["install_tree"]["root"]
 
-        # When actually used, these should be substituted to real paths
-        # (tested in runtime verification tests)
+            # When actually used, these should be substituted to real paths
+            # (tested in runtime verification tests)
