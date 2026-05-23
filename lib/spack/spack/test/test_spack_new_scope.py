@@ -13,11 +13,21 @@ import spack.config
 import spack.paths
 
 
+class MockPaths:
+    """Simple mock object for spack.paths in tests."""
+    def __init__(self, spack_root, etc_path, var_path, instance_id="test123"):
+        self.prefix = str(spack_root)
+        self.etc_path = str(etc_path)
+        self.var_path = str(var_path)
+        self.spack_instance_id = instance_id
+
+
 @pytest.fixture
 def mock_spack_paths(tmp_path, monkeypatch):
-    """Mock spack.paths to use temporary directories for testing.
+    """Create a MockPaths object with temporary directories for testing.
 
     Returns a dict with:
+        - paths: MockPaths object to pass to functions
         - spack_root: temporary spack root
         - home: temporary home directory
         - etc_path: $spack_root/etc/spack
@@ -34,12 +44,6 @@ def mock_spack_paths(tmp_path, monkeypatch):
     var_path.mkdir(parents=True)
     home.mkdir()
 
-    # Mock spack.paths attributes
-    monkeypatch.setattr(spack.paths, "prefix", str(spack_root))
-    monkeypatch.setattr(spack.paths, "etc_path", str(etc_path))
-    monkeypatch.setattr(spack.paths, "var_path", str(var_path))
-    monkeypatch.setattr(spack.paths, "spack_instance_id", "test123")
-
     # Mock home directory expansion
     def mock_expanduser(path):
         if path.startswith("~"):
@@ -48,7 +52,11 @@ def mock_spack_paths(tmp_path, monkeypatch):
 
     monkeypatch.setattr(os.path, "expanduser", mock_expanduser)
 
+    # Create MockPaths object
+    paths = MockPaths(spack_root, etc_path, var_path)
+
     return {
+        "paths": paths,
         "spack_root": spack_root,
         "home": home,
         "etc_path": etc_path,
@@ -61,46 +69,46 @@ class TestSpackNewScopeCreation:
 
     def test_created_for_fresh_install_writable(self, mock_spack_paths):
         """Test that spack-new is created for a fresh install when spack is writable."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Fresh install: no ~/.spack, no old data in $spack
         # etc_path is writable by default in tmpdir
 
-        # Call the initialization function directly
-        spack_new_path = spack.config._initialize_spack_new_scope()
+        # Call the initialization function with mock paths
+        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
 
         assert spack_new_path is not None
-        assert (paths["etc_path"] / "spack-new").exists()
-        assert (paths["etc_path"] / "spack-new" / "config.yaml").exists()
+        assert (m["etc_path"] / "spack-new").exists()
+        assert (m["etc_path"] / "spack-new" / "config.yaml").exists()
 
     def test_not_created_when_not_writable(self, mock_spack_paths, monkeypatch):
         """Test that spack-new is NOT created when $spack/etc is not writable."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Mock os.access to return False for write check
         original_access = os.access
         def mock_access(path, mode):
-            if str(path) == str(paths["etc_path"]) and mode == os.W_OK:
+            if str(path) == str(m["etc_path"]) and mode == os.W_OK:
                 return False
             return original_access(path, mode)
 
         monkeypatch.setattr(os, "access", mock_access)
 
-        spack_new_path = spack.config._initialize_spack_new_scope()
+        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
 
         assert spack_new_path is None
-        assert not (paths["etc_path"] / "spack-new").exists()
+        assert not (m["etc_path"] / "spack-new").exists()
 
     def test_already_exists_returns_path(self, mock_spack_paths):
         """Test that if spack-new already exists, we just return its path."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Pre-create spack-new
-        spack_new_dir = paths["etc_path"] / "spack-new"
+        spack_new_dir = m["etc_path"] / "spack-new"
         spack_new_dir.mkdir()
         (spack_new_dir / "config.yaml").write_text("config: {}\n")
 
-        spack_new_path = spack.config._initialize_spack_new_scope()
+        spack_new_path = spack.config._initialize_spack_new_scope(m["paths"])
 
         assert spack_new_path == str(spack_new_dir)
 
@@ -110,10 +118,10 @@ class TestSpackNewScopeContent:
 
     def test_xdg_paths_for_fresh_install(self, mock_spack_paths):
         """Test that fresh install gets XDG-compliant paths."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Fresh install: no ~/.spack, no old data
-        config_data = spack.config._get_xdg_compliant_paths()
+        config_data = spack.config._get_xdg_compliant_paths(m["paths"])
 
         # Check for XDG-compliant paths
         assert ".local/state/spack" in config_data["config"]["user_cache_path"]
@@ -123,15 +131,15 @@ class TestSpackNewScopeContent:
         # Check variable substitution is used
         assert config_data["config"]["reports_path"] == "$user_cache_path/reports"
 
-    def test_old_style_paths_when_dotspack_exists(self, mock_spack_paths, monkeypatch):
+    def test_old_style_paths_when_dotspack_exists(self, mock_spack_paths):
         """Test that ~/.spack existence triggers old-style paths."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Create ~/.spack to simulate existing installation
-        dotspack = paths["home"] / ".spack"
+        dotspack = m["home"] / ".spack"
         dotspack.mkdir()
 
-        config_data = spack.config._get_xdg_compliant_paths()
+        config_data = spack.config._get_xdg_compliant_paths(m["paths"])
 
         # Should use ~/.spack for user_cache_path (backwards compat)
         assert config_data["config"]["user_cache_path"] == str(dotspack)
@@ -141,14 +149,14 @@ class TestSpackNewScopeContent:
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Simulate old layout: create old install path with data
-        old_install = paths["spack_root"] / "opt" / "spack"
+        old_install = m["spack_root"] / "opt" / "spack"
         old_install.mkdir(parents=True)
         (old_install / "some-package").mkdir()
 
-        config_data = spack.config._get_old_style_paths()
+        config_data = spack.config._get_old_style_paths(m["paths"])
 
         # Should use ~/.spack
         assert ".spack" in config_data["config"]["user_cache_path"]
@@ -164,60 +172,61 @@ class TestOldLayoutDetection:
 
     def test_detects_old_install_path(self, mock_spack_paths):
         """Test detection when opt/spack has installs."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Create old install with some content (not just gpg dir)
-        old_install = paths["spack_root"] / "opt" / "spack"
+        old_install = m["spack_root"] / "opt" / "spack"
         old_install.mkdir(parents=True)
         (old_install / "linux-ubuntu22.04-x86_64").mkdir(parents=True)
 
-        assert spack.config._detect_old_spack_layout()
+        assert spack.config._detect_old_spack_layout(m["paths"])
 
     def test_detects_old_environments(self, mock_spack_paths):
         """Test detection when var/spack/environments exists."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
-        envs = paths["var_path"] / "environments"
+        envs = m["var_path"] / "environments"
         envs.mkdir(parents=True)
         (envs / "myenv").mkdir()
 
-        assert spack.config._detect_old_spack_layout()
+        assert spack.config._detect_old_spack_layout(m["paths"])
 
     def test_detects_old_cache(self, mock_spack_paths):
         """Test detection when var/spack/cache has content."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
-        cache = paths["var_path"] / "cache"
+        cache = m["var_path"] / "cache"
         cache.mkdir(parents=True)
         (cache / "some-package.tar.gz").write_text("fake tarball")
 
-        assert spack.config._detect_old_spack_layout()
+        assert spack.config._detect_old_spack_layout(m["paths"])
 
     def test_no_detection_for_fresh_install(self, mock_spack_paths):
         """Test that fresh install is not detected as old layout."""
+        m = mock_spack_paths
         # Fresh install with only directory structure, no data
-        assert not spack.config._detect_old_spack_layout()
+        assert not spack.config._detect_old_spack_layout(m["paths"])
 
     def test_ignores_gpg_in_opt_spack(self, mock_spack_paths):
         """Test that lone gpg directory in opt/spack doesn't trigger detection."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
         # Create only gpg dir (should be ignored)
-        old_install = paths["spack_root"] / "opt" / "spack"
+        old_install = m["spack_root"] / "opt" / "spack"
         old_install.mkdir(parents=True)
         (old_install / "gpg").mkdir()
 
-        assert not spack.config._detect_old_spack_layout()
+        assert not spack.config._detect_old_spack_layout(m["paths"])
 
     def test_ignores_readme_in_gpg_keys(self, mock_spack_paths):
         """Test that README.md in var/spack/gpg doesn't trigger detection."""
-        paths = mock_spack_paths
+        m = mock_spack_paths
 
-        gpg_keys = paths["var_path"] / "gpg"
+        gpg_keys = m["var_path"] / "gpg"
         gpg_keys.mkdir(parents=True)
         (gpg_keys / "README.md").write_text("# GPG Keys")
 
-        assert not spack.config._detect_old_spack_layout()
+        assert not spack.config._detect_old_spack_layout(m["paths"])
 
 
 class TestVariableSubstitution:

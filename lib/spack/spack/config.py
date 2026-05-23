@@ -1587,16 +1587,23 @@ def _dir_is_occupied(path, except_for=None):
     return False
 
 
-def _detect_old_spack_layout():
-    """Detect if this Spack instance is using old-style in-$spack paths."""
+def _detect_old_spack_layout(_paths=None):
+    """Detect if this Spack instance is using old-style in-$spack paths.
+
+    Args:
+        _paths: Optional paths object (for testing). Defaults to spack.paths.
+    """
+    if _paths is None:
+        _paths = spack.paths
+
     empty_set = frozenset()
     old_paths = [
-        (os.path.join(spack.paths.prefix, "opt", "spack"), {"gpg"}),
-        (os.path.join(spack.paths.var_path, "environments"), empty_set),
-        (os.path.join(spack.paths.var_path, "cache"), empty_set),
-        (os.path.join(spack.paths.prefix, "opt", "spack", "gpg"), empty_set),
-        (os.path.join(spack.paths.var_path, "gpg"), {"README.md"}),
-        (os.path.join(spack.paths.etc_path, "licenses"), empty_set),
+        (os.path.join(_paths.prefix, "opt", "spack"), {"gpg"}),
+        (os.path.join(_paths.var_path, "environments"), empty_set),
+        (os.path.join(_paths.var_path, "cache"), empty_set),
+        (os.path.join(_paths.prefix, "opt", "spack", "gpg"), empty_set),
+        (os.path.join(_paths.var_path, "gpg"), {"README.md"}),
+        (os.path.join(_paths.etc_path, "licenses"), empty_set),
     ]
     for path, exclusions in old_paths:
         if _dir_is_occupied(path, except_for=exclusions):
@@ -1604,7 +1611,7 @@ def _detect_old_spack_layout():
     return False
 
 
-def _get_xdg_compliant_paths():
+def _get_xdg_compliant_paths(_paths=None):
     """Return XDG-compliant path configurations.
 
     If ~/.spack exists and ~/.local/state/spack doesn't, point user_cache_path
@@ -1612,7 +1619,13 @@ def _get_xdg_compliant_paths():
 
     Uses variable substitution ($user_cache_path, etc.) so that setting one
     variable automatically relocates derived paths.
+
+    Args:
+        _paths: Optional paths object (for testing). Defaults to spack.paths.
     """
+    if _paths is None:
+        _paths = spack.paths
+
     home = os.path.expanduser("~")
     state_home = os.path.join(home, ".local", "state", "spack")
     data_home = os.path.join(home, ".local", "share", "spack")
@@ -1636,18 +1649,24 @@ def _get_xdg_compliant_paths():
             "gpg_keys_path": "$user_cache_path/gpg",
             "install_tree": {"root": f"{data_home}/installs"},
             "license_dir": f"{data_home}/licenses",
-            "misc_cache": f"{cache_home}/{spack.paths.spack_instance_id}/cache",
+            "misc_cache": f"{cache_home}/{_paths.spack_instance_id}/cache",
             "source_cache": f"{cache_home}/source",
         }
     }
 
 
-def _get_old_style_paths():
+def _get_old_style_paths(_paths=None):
     """Return old-style in-$spack path configurations.
 
     Uses variable substitution ($user_cache_path, $spack) so that setting one
     variable automatically relocates derived paths.
+
+    Args:
+        _paths: Optional paths object (for testing). Defaults to spack.paths.
     """
+    if _paths is None:
+        _paths = spack.paths
+
     home = os.path.expanduser("~")
     return {
         "config": {
@@ -1660,13 +1679,13 @@ def _get_old_style_paths():
             "gpg_keys_path": "$spack/var/spack/gpg",
             "install_tree": {"root": "$spack/opt/spack"},
             "license_dir": "$spack/etc/spack/licenses",
-            "misc_cache": f"$user_cache_path/{spack.paths.spack_instance_id}/cache",
+            "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
             "source_cache": "$spack/var/spack/cache",
         }
     }
 
 
-def _initialize_spack_new_scope():
+def _initialize_spack_new_scope(_paths=None):
     """Initialize etc/spack-new scope if needed.
 
     Creates the spack-new scope with appropriate config if:
@@ -1676,16 +1695,22 @@ def _initialize_spack_new_scope():
     If ~/.spack exists OR old-style in-spack paths are detected,
     uses old-style path configuration. Otherwise uses XDG-compliant paths.
 
+    Args:
+        _paths: Optional paths object (for testing). Defaults to spack.paths.
+
     Returns the path to spack-new if created/exists, None otherwise.
     """
-    spack_new_path = os.path.join(spack.paths.etc_path, "spack-new")
+    if _paths is None:
+        _paths = spack.paths
+
+    spack_new_path = os.path.join(_paths.etc_path, "spack-new")
 
     # If it already exists, just return it
     if os.path.exists(spack_new_path):
         return spack_new_path
 
     # Check if $spack is writable
-    if not os.access(spack.paths.etc_path, os.W_OK):
+    if not os.access(_paths.etc_path, os.W_OK):
         return None
 
     # Determine which config to use:
@@ -1693,10 +1718,10 @@ def _initialize_spack_new_scope():
     # - If ~/.spack exists, use old-style config
     # - Otherwise, use XDG-compliant config
     dotspack = os.path.join(os.path.expanduser("~"), ".spack")
-    if _detect_old_spack_layout() or os.path.exists(dotspack):
-        config_data = _get_old_style_paths()
+    if _detect_old_spack_layout(_paths) or os.path.exists(dotspack):
+        config_data = _get_old_style_paths(_paths)
     else:
-        config_data = _get_xdg_compliant_paths()
+        config_data = _get_xdg_compliant_paths(_paths)
 
     # Create the directory and write config
     try:
