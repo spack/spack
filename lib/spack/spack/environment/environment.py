@@ -313,6 +313,7 @@ def active(name):
 
 def is_env_dir(path):
     """Whether a directory contains a spack environment."""
+    path = substitute_path_variables(path)
     return os.path.isdir(path) and os.path.exists(os.path.join(path, manifest_name))
 
 
@@ -587,7 +588,7 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-        if not os.path.exists(os.path.join(env_path, lockfile_name)):
+        if not os.path.exists(os.path.join(as_env_dir(env_path), lockfile_name)):
             non_concrete_envs.add(environment_name(env_path))
 
     if non_concrete_envs:
