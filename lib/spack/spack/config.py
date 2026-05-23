@@ -1578,13 +1578,14 @@ def _dir_is_occupied(path, except_for=None):
 
 def _detect_old_spack_layout():
     """Detect if this Spack instance is using old-style in-$spack paths."""
+    empty_set = frozenset()
     old_paths = [
         (os.path.join(spack.paths.prefix, "opt", "spack"), {"gpg"}),
-        (os.path.join(spack.paths.var_path, "environments"), set()),
-        (os.path.join(spack.paths.var_path, "cache"), set()),
-        (os.path.join(spack.paths.prefix, "opt", "spack", "gpg"), set()),
+        (os.path.join(spack.paths.var_path, "environments"), empty_set),
+        (os.path.join(spack.paths.var_path, "cache"), empty_set),
+        (os.path.join(spack.paths.prefix, "opt", "spack", "gpg"), empty_set),
         (os.path.join(spack.paths.var_path, "gpg"), {"README.md"}),
-        (os.path.join(spack.paths.etc_path, "licenses"), set()),
+        (os.path.join(spack.paths.etc_path, "licenses"), empty_set),
     ]
     for path, exclusions in old_paths:
         if _dir_is_occupied(path, except_for=exclusions):
@@ -1652,8 +1653,10 @@ def _initialize_spack_new_scope():
 
     Creates the spack-new scope with appropriate config if:
     - It doesn't exist
-    - ~/.spack doesn't exist
     - $spack is writable
+
+    If ~/.spack exists OR old-style in-spack paths are detected,
+    uses old-style path configuration. Otherwise uses XDG-compliant paths.
 
     Returns the path to spack-new if created/exists, None otherwise.
     """
@@ -1663,17 +1666,16 @@ def _initialize_spack_new_scope():
     if os.path.exists(spack_new_path):
         return spack_new_path
 
-    # Check if ~/.spack exists - if so, don't auto-create
-    dotspack = os.path.join(os.path.expanduser("~"), ".spack")
-    if os.path.exists(dotspack):
-        return None
-
     # Check if $spack is writable
     if not os.access(spack.paths.etc_path, os.W_OK):
         return None
 
-    # Determine which config to use
-    if _detect_old_spack_layout():
+    # Determine which config to use:
+    # - If old-style paths in $spack exist, use old-style config
+    # - If ~/.spack exists, use old-style config
+    # - Otherwise, use XDG-compliant config
+    dotspack = os.path.join(os.path.expanduser("~"), ".spack")
+    if _detect_old_spack_layout() or os.path.exists(dotspack):
         config_data = _get_old_style_paths()
     else:
         config_data = _get_xdg_compliant_paths()
@@ -1689,28 +1691,6 @@ def _initialize_spack_new_scope():
         # If we can't write, just continue without it
         tty.debug(f"Could not create spack-new scope: {e}")
         return None
-
-
-def _check_and_warn_dotspack():
-    """Check if ~/.spack exists and warn user about migration."""
-    home = os.path.expanduser("~")
-    dotspack = os.path.join(home, ".spack")
-    new_config_home = os.path.join(home, ".config", "spack")
-    new_state_home = os.path.join(home, ".local", "state", "spack")
-
-    # Only warn if ~/.spack exists but new locations don't
-    if os.path.exists(dotspack) and not os.path.exists(new_state_home):
-        # Check if user is explicitly using ~/.spack via env var
-        if os.getenv("SPACK_USER_CACHE_PATH") == dotspack:
-            return
-
-        tty.warn(
-            "Found legacy configuration directory ~/.spack.\n"
-            "  Consider migrating to XDG-compliant locations:\n"
-            f"    Config: {new_config_home}\n"
-            f"    State:  {new_state_home}\n"
-            "  Run 'spack migrate' to perform the migration."
-        )
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
@@ -1760,10 +1740,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
-
-    # Check for legacy ~/.spack and warn if needed
-    _check_and_warn_dotspack()
-    yield cfg
 
 
 def create() -> Configuration:

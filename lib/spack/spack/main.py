@@ -920,6 +920,61 @@ def add_command_line_scopes(
         cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
+def _warn_about_old_dotspack():
+    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+    old_dotspack = os.path.expanduser("~/.spack")
+
+    # Don't warn if it doesn't exist
+    if not os.path.exists(old_dotspack):
+        tty.debug("Skip .spack warning: no ~/.spack directory")
+        return
+
+    # Don't warn if new locations already exist
+    new_state_home = os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
+    if os.path.exists(new_state_home):
+        tty.debug("Skip .spack warning: new state location already exists")
+        return
+
+    # Helper to check if old_dotspack is a prefix
+    def uses_old_dotspack(path):
+        if not path:
+            return False
+        return path == old_dotspack or path.startswith(old_dotspack + os.sep)
+
+    # Check if user explicitly set SPACK_USER_CACHE_PATH to ~/.spack
+    if os.getenv("SPACK_USER_CACHE_PATH") == old_dotspack:
+        tty.debug("Skip .spack warning: SPACK_USER_CACHE_PATH explicitly set to ~/.spack")
+        return
+
+    # Check if user explicitly configured ~/.spack (not just the default)
+    # The "user" scope defaults to ~/.spack if SPACK_USER_CONFIG_PATH is not set
+    # We only skip the warning if it was explicitly set
+    user_config_env = os.getenv("SPACK_USER_CONFIG_PATH")
+
+    for scope in spack.config.CONFIG.scopes.values():
+        if hasattr(scope, "path") and uses_old_dotspack(scope.path):
+            # Skip if this is a backwards-compat fallback (auto-generated)
+            if getattr(scope, "backwards_compat_fallback", False):
+                continue
+            # If it's the user scope with default path, we SHOULD warn
+            if scope.name == "user" and user_config_env is None:
+                continue  # Don't skip warning - it's just the default
+            # For other scopes or explicitly configured user scope, don't warn
+            if scope.name != "spack-new":
+                tty.debug(f"Skip .spack warning: explicitly configured in scope {scope.name}")
+                return
+
+    # Warn about migration
+    new_config_home = os.path.join(os.path.expanduser("~"), ".config", "spack")
+    tty.warn(
+        "Found legacy configuration directory ~/.spack.\n"
+        "  Consider migrating to XDG-compliant locations:\n"
+        f"    Config: {new_config_home}\n"
+        f"    State:  {new_state_home}\n"
+        "  Run 'spack migrate' to perform the migration."
+    )
+
+
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -1044,7 +1099,9 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        _warn_about_old_dotspack()
+        return result
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
