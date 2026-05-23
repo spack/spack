@@ -1578,7 +1578,7 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
 def _dir_is_occupied(path, except_for=None):
     """Check if a directory exists and contains files other than those in except_for."""
     path = pathlib.Path(path)
-    except_for = except_for or set()
+    except_for = except_for if except_for is not None else frozenset()
     if not path.is_dir():
         return False
     for p in path.iterdir():
