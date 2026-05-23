@@ -93,10 +93,16 @@ spack_instance_id = hash.b32_hash(spack_root)[:7]
 
 
 def _get_config_value(key, default):
-    """Helper to get config values, avoiding circular imports."""
+    """Helper to get config values, avoiding circular imports.
+
+    Applies variable substitution ($user_cache_path, $spack, etc.) to the value.
+    """
     try:
         import spack.config
+        import spack.util.path
         value = spack.config.get(key, default)
+        if value and isinstance(value, str):
+            value = spack.util.path.substitute_path_variables(value)
         return value
     except (ImportError, Exception):
         # During bootstrap or if config isn't ready, use default

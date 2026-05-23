@@ -120,6 +120,17 @@ CONFIG_DEFAULTS = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "license_dir": spack.paths.default_license_dir,
+        # Old-style path defaults for backwards compatibility
+        # These are used when no spack-new scope exists (e.g., read-only centralized install
+        # updated from pre-1.2) and ensure pre-1.2 behavior is maintained
+        # Derived paths use $user_cache_path so they relocate together
+        "user_cache_path": os.path.expanduser("~/.spack"),
+        "reports_path": "$user_cache_path/reports",
+        "default_monitor_path": "$user_cache_path/reports/monitor",
+        "user_repos_cache_path": "$user_cache_path/git_repos",
+        "package_repos_path": "$user_cache_path/package_repos",
+        "gpg_path": "$spack/opt/spack/gpg",
+        "gpg_keys_path": "$spack/var/spack/gpg",
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }
@@ -1598,6 +1609,9 @@ def _get_xdg_compliant_paths():
 
     If ~/.spack exists and ~/.local/state/spack doesn't, point user_cache_path
     to ~/.spack for backwards compatibility.
+
+    Uses variable substitution ($user_cache_path, etc.) so that setting one
+    variable automatically relocates derived paths.
     """
     home = os.path.expanduser("~")
     state_home = os.path.join(home, ".local", "state", "spack")
@@ -1614,36 +1628,40 @@ def _get_xdg_compliant_paths():
     return {
         "config": {
             "user_cache_path": user_cache_path,
-            "reports_path": os.path.join(user_cache_path, "reports"),
-            "default_monitor_path": os.path.join(user_cache_path, "reports", "monitor"),
-            "user_repos_cache_path": os.path.join(user_cache_path, "git_repos"),
-            "package_repos_path": os.path.join(user_cache_path, "package_repos"),
-            "gpg_path": os.path.join(data_home, "gpg"),
-            "gpg_keys_path": os.path.join(user_cache_path, "gpg"),
-            "install_tree": {"root": os.path.join(data_home, "installs")},
-            "license_dir": os.path.join(data_home, "licenses"),
-            "misc_cache": os.path.join(cache_home, spack.paths.spack_instance_id, "cache"),
-            "source_cache": os.path.join(cache_home, "source"),
+            "reports_path": "$user_cache_path/reports",
+            "default_monitor_path": "$user_cache_path/reports/monitor",
+            "user_repos_cache_path": "$user_cache_path/git_repos",
+            "package_repos_path": "$user_cache_path/package_repos",
+            "gpg_path": f"{data_home}/gpg",
+            "gpg_keys_path": "$user_cache_path/gpg",
+            "install_tree": {"root": f"{data_home}/installs"},
+            "license_dir": f"{data_home}/licenses",
+            "misc_cache": f"{cache_home}/{spack.paths.spack_instance_id}/cache",
+            "source_cache": f"{cache_home}/source",
         }
     }
 
 
 def _get_old_style_paths():
-    """Return old-style in-$spack path configurations."""
+    """Return old-style in-$spack path configurations.
+
+    Uses variable substitution ($user_cache_path, $spack) so that setting one
+    variable automatically relocates derived paths.
+    """
     home = os.path.expanduser("~")
     return {
         "config": {
             "user_cache_path": os.path.join(home, ".spack"),
-            "reports_path": os.path.join(home, ".spack", "reports"),
-            "default_monitor_path": os.path.join(home, ".spack", "reports", "monitor"),
-            "user_repos_cache_path": os.path.join(home, ".spack", "git_repos"),
-            "package_repos_path": os.path.join(home, ".spack", "package_repos"),
-            "gpg_path": os.path.join(spack.paths.prefix, "opt", "spack", "gpg"),
-            "gpg_keys_path": os.path.join(spack.paths.var_path, "gpg"),
-            "install_tree": {"root": os.path.join(spack.paths.prefix, "opt", "spack")},
-            "license_dir": os.path.join(spack.paths.etc_path, "licenses"),
-            "misc_cache": os.path.join(home, ".spack", spack.paths.spack_instance_id, "cache"),
-            "source_cache": os.path.join(spack.paths.var_path, "cache"),
+            "reports_path": "$user_cache_path/reports",
+            "default_monitor_path": "$user_cache_path/reports/monitor",
+            "user_repos_cache_path": "$user_cache_path/git_repos",
+            "package_repos_path": "$user_cache_path/package_repos",
+            "gpg_path": "$spack/opt/spack/gpg",
+            "gpg_keys_path": "$spack/var/spack/gpg",
+            "install_tree": {"root": "$spack/opt/spack"},
+            "license_dir": "$spack/etc/spack/licenses",
+            "misc_cache": f"$user_cache_path/{spack.paths.spack_instance_id}/cache",
+            "source_cache": "$spack/var/spack/cache",
         }
     }
 
