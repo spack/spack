@@ -15,7 +15,6 @@ import pathlib
 import tempfile
 from typing import List, Tuple
 
-import spack.concretize
 import spack.sandbox
 import spack.store
 from spack.new_installer import _enable_sandbox
@@ -137,7 +136,10 @@ class MockSandbox(spack.sandbox.Sandbox):
 
 
 def test_enable_sandbox_paths(
-    default_mock_concretization, monkeypatch, temporary_store: spack.store.Store, tmp_path: pathlib.Path
+    default_mock_concretization,
+    monkeypatch,
+    temporary_store: spack.store.Store,
+    tmp_path: pathlib.Path,
 ):
     """Test that _enable_sandbox in new_installer calls allow_read/allow_write correctly."""
     mock_sandbox = MockSandbox()
