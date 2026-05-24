@@ -5,8 +5,8 @@
 # sensible defaults out of the box. Spack maintainers should edit this
 # file to keep it current.
 #
-# Users can override these settings by defining their
-# own instance of this config (see https://spack.readthedocs.io/en/latest/configuration.html).
+# Users can override these settings in their own configuration files.
+# See https://spack.readthedocs.io/en/latest/configuration.html.
 # -------------------------------------------------------------------------
 modules:
   prefix_inspections:
