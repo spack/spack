@@ -160,6 +160,15 @@ class TestSpackNewScopeContent:
             expected_envs = str(m["home"] / ".local" / "share" / "spack" / "environments")
             assert environments_root == expected_envs
 
+            # Check source cache is in data_home/downloads
+            source_cache = cfg.get("config:source_cache")
+            expected_source = str(m["home"] / ".local" / "share" / "spack" / "downloads")
+            assert source_cache == expected_source
+
+            # Check misc cache uses variable substitution
+            misc_cache = cfg.get("config:misc_cache")
+            assert misc_cache == "$user_cache_path/test123/cache"
+
             # Verify that the spack-new scope was actually created
             assert (m["etc_path"] / "spack-new").exists()
 
@@ -192,6 +201,25 @@ class TestSpackNewScopeContent:
             # Environments should use old-style path
             environments_root = cfg.get("config:environments_root")
             assert environments_root == "$spack/var/spack/environments"
+
+    def test_spack_user_cache_path_env_var(self, mock_spack_paths, monkeypatch):
+        """Test that SPACK_USER_CACHE_PATH env var overrides default."""
+        m = mock_spack_paths
+
+        # Set SPACK_USER_CACHE_PATH environment variable
+        custom_cache = m["home"] / "custom" / "cache"
+        monkeypatch.setenv("SPACK_USER_CACHE_PATH", str(custom_cache))
+
+        with spack.config.override_paths(m["paths"]):
+            cfg = spack.config.create()
+
+            # Should use the env var path
+            user_cache_path = cfg.get("config:user_cache_path")
+            assert user_cache_path == str(custom_cache)
+
+            # Derived paths should use variable substitution
+            reports_path = cfg.get("config:reports_path")
+            assert reports_path == "$user_cache_path/reports"
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""

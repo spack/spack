@@ -1648,11 +1648,14 @@ def _get_xdg_compliant_paths():
     home = os.path.expanduser("~")
     state_home = os.path.join(home, ".local", "state", "spack")
     data_home = os.path.join(home, ".local", "share", "spack")
-    cache_home = os.path.join(home, ".cache", "spack")
     dotspack = os.path.join(home, ".spack")
 
+    # Check environment variable first
+    env_cache_path = os.getenv("SPACK_USER_CACHE_PATH")
+    if env_cache_path:
+        user_cache_path = os.path.expanduser(env_cache_path)
     # Check if we should use ~/.spack for backwards compatibility
-    if os.path.exists(dotspack) and not os.path.exists(state_home):
+    elif os.path.exists(dotspack) and not os.path.exists(state_home):
         user_cache_path = dotspack
     else:
         user_cache_path = state_home
@@ -1669,8 +1672,8 @@ def _get_xdg_compliant_paths():
             "gpg_keys_path": "$user_cache_path/gpg",
             "install_tree": {"root": f"{data_home}/installs"},
             "license_dir": f"{data_home}/licenses",
-            "misc_cache": f"{cache_home}/{_paths.spack_instance_id}/cache",
-            "source_cache": f"{cache_home}/source",
+            "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
+            "source_cache": f"{data_home}/downloads",
         },
         "modules": {
             "default": {"roots": {"tcl": f"{data_home}/modules", "lmod": f"{data_home}/lmod"}}
