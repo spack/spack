@@ -5783,8 +5783,12 @@ def get_host_environment() -> Dict[str, Any]:
 
 def eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
+    import spack.paths  # local import to avoid cycle at module load
+
     valid_variables = get_host_environment()
-    valid_variables.update({"re": re, "env": os.environ})
+    valid_variables.update(
+        {"re": re, "env": os.environ, "layout_detected": spack.paths.detect_layout}
+    )
     return eval(string, valid_variables)
 
 

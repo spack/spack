@@ -423,6 +423,27 @@ def detect_old_spack_layout(paths: paths_base.SpackPathsBase):
     return False
 
 
+def detect_layout(scheme):
+    """True if ``scheme`` is the active layout (``"old"`` or ``"xdg"``).
+
+    Used by ``etc/spack/defaults/include.yaml`` to choose which scheme
+    yaml to include. Honors "unilateral override" semantics: if the user
+    has set any new-style location knob (SPACK_DATA_HOME, SPACK_HOME,
+    config:locations:*), the xdg scheme is selected even when legacy
+    $spack-local data is present, so partial overrides don't produce a
+    split layout.
+
+    Note: at include-time the user/site/system scopes are not yet on the
+    config stack, so the config:locations:* check here only sees the
+    _builtin defaults (which don't set them). Env vars are the practical
+    override mechanism at this layer.
+    """
+    if scheme not in ("old", "xdg"):
+        raise ValueError(f"unknown layout scheme: {scheme!r} (expected 'old' or 'xdg')")
+    is_old = detect_old_spack_layout(paths_base.locations) and not new_layout_enforced()
+    return is_old if scheme == "old" else not is_old
+
+
 locations = SpackPaths(paths_base.locations)
 
 
