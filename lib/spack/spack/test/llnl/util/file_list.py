@@ -8,8 +8,8 @@ import sys
 
 import pytest
 
+import spack.paths
 from spack.llnl.util.filesystem import HeaderList, LibraryList, find_headers, find_libraries
-from spack.paths import locations as paths
 
 
 @pytest.fixture()
@@ -240,7 +240,7 @@ class TestHeaderList:
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(paths.test_path, "data", "directory_search")
+search_dir = os.path.join(spack.paths.test_path, "data", "directory_search")
 
 
 @pytest.mark.parametrize(

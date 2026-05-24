@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 
 import spack.cmd.blame
+import spack.paths
 import spack.util.spack_json as sjson
 from spack.cmd.blame import ensure_full_history, git_prefix, package_repo_root
 from spack.llnl.util.filesystem import mkdirp, working_dir
 from spack.main import SpackCommand, SpackCommandError
-from spack.paths import locations as paths
 from spack.repo import RepoDescriptors
 from spack.util.executable import ProcessError
 
@@ -40,7 +40,7 @@ def test_blame_by_percent(mock_packages):
 
 def test_blame_file():
     """Sanity check the blame command to make sure it works."""
-    with working_dir(paths.prefix):
+    with working_dir(spack.paths.prefix):
         out = blame(os.path.join("bin", "spack"))
     assert "LAST_COMMIT" in out
     assert "AUTHOR" in out
@@ -72,7 +72,7 @@ def test_blame_file_outside_spack_repo(tmp_path: Path):
 
 def test_blame_spack_not_git_clone(override_path):
     """Ensure attempt to get blame when spack not a git clone fails."""
-    non_git_dir = os.path.join(paths.prefix, "..")
+    non_git_dir = os.path.join(spack.paths.prefix, "..")
     override_path("prefix", non_git_dir)
 
     with pytest.raises(SpackCommandError):
@@ -82,7 +82,7 @@ def test_blame_spack_not_git_clone(override_path):
 
 def test_blame_json(mock_packages):
     """Ensure that we can output json as a blame."""
-    with working_dir(paths.prefix):
+    with working_dir(spack.paths.prefix):
         out = blame("--json", "mpich")
 
     # Test loading the json, and top level keys

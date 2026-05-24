@@ -57,6 +57,7 @@ import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.spec
@@ -91,7 +92,6 @@ from spack.oci.oci import (
     upload_manifest_with_retry,
 )
 from spack.package_prefs import get_package_dir_permissions, get_package_group
-from spack.paths import locations as paths
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
 from spack.util.executable import which
@@ -564,7 +564,7 @@ def get_buildinfo_dict(spec):
     return {
         "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
         "buildpath": spack.store.STORE.layout.root,
-        "spackprefix": paths.prefix,
+        "spackprefix": spack.paths.prefix,
         "relative_prefix": os.path.relpath(spec.prefix, spack.store.STORE.layout.root),
         # "relocate_textfiles": [],
         # "relocate_binaries": [],

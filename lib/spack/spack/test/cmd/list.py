@@ -8,10 +8,10 @@ import pathlib
 import pytest
 
 import spack.cmd.list
+import spack.paths
 import spack.repo
 import spack.util.git
 from spack.main import SpackCommand
-from spack.paths import locations as paths
 from spack.test.conftest import RepoBuilder
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
@@ -212,8 +212,8 @@ def test_list_count():
 
 def test_list_repos():
     with spack.repo.use_repositories(
-        os.path.join(paths.test_repos_path, "spack_repo", "builtin_mock"),
-        os.path.join(paths.test_repos_path, "spack_repo", "builder_test"),
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builtin_mock"),
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test"),
     ):
         total_pkgs = len(list().strip().split())
         mock_pkgs = len(list("-r", "builtin_mock").strip().split())

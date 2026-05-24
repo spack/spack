@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Set, Union
 
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
+import spack.paths
 import spack.repo
 import spack.util.git
 from spack.cmd.common.spec_strings import (
@@ -19,7 +20,6 @@ from spack.cmd.common.spec_strings import (
     _spec_str_fix_handler,
 )
 from spack.llnl.util.filesystem import working_dir
-from spack.paths import locations as paths
 from spack.util.executable import Executable, which
 
 description = "runs source code style checks on spack"
@@ -27,7 +27,7 @@ section = "developer"
 level = "long"
 
 #: List of paths to exclude from checks -- relative to spack root
-exclude_paths = [os.path.relpath(paths.vendor_path, paths.prefix)]
+exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 
 #: Order in which tools should be run.
 #: The list maps an executable name to a method to ensure the tool is
@@ -80,7 +80,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None) ->
         root (str): use this directory instead of the Spack prefix.
     """
     if root is None:
-        root = paths.prefix
+        root = spack.paths.prefix
 
     git = spack.util.git.git(required=True)
 
@@ -244,7 +244,7 @@ def print_tool_result(tool, returncode):
 @tool("ruff-check", cmd="ruff")
 def ruff_check(file_list, args):
     """Run the ruff-check command. Handles config and non generic ruff argument logic"""
-    cmd_args = ["--config", os.path.join(paths.prefix, "pyproject.toml"), "--quiet"]
+    cmd_args = ["--config", os.path.join(spack.paths.prefix, "pyproject.toml"), "--quiet"]
     if args.fix:
         cmd_args += ["--fix", "--no-unsafe-fixes"]
     else:
@@ -257,7 +257,7 @@ def ruff_check(file_list, args):
 @tool("ruff-format", cmd="ruff")
 def ruff_format(file_list, args):
     """Run the ruff format command"""
-    cmd_args = ["--config", os.path.join(paths.prefix, "pyproject.toml"), "--quiet"]
+    cmd_args = ["--config", os.path.join(spack.paths.prefix, "pyproject.toml"), "--quiet"]
     if not args.fix:
         cmd_args += ["--check", "--diff"]
     return run_ruff(
@@ -303,7 +303,7 @@ def run_mypy(file_list, args):
     # always run with config from running spack prefix
     common_mypy_args = [
         "--config-file",
-        os.path.join(paths.prefix, "pyproject.toml"),
+        os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
     mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
@@ -516,10 +516,10 @@ def style(parser, args):
 
     # ensure that the config files we need actually exist in the spack prefix.
     # assertions b/c users should not ever see these errors -- they're checked in CI.
-    assert (Path(paths.prefix) / "pyproject.toml").is_file()
+    assert (Path(spack.paths.prefix) / "pyproject.toml").is_file()
 
     # validate spack root if the user provided one
-    args.root = Path(args.root).resolve() if args.root else Path(paths.prefix)
+    args.root = Path(args.root).resolve() if args.root else Path(spack.paths.prefix)
     spack_script = args.root / "bin" / "spack"
     if not spack_script.exists():
         tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)

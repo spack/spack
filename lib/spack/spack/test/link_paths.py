@@ -8,18 +8,18 @@ import sys
 import pytest
 
 import spack.compilers.libraries
+import spack.paths
 from spack.compilers.libraries import parse_non_system_link_dirs
-from spack.paths import locations as paths
 
 drive = ""
 if sys.platform == "win32":
-    match = re.search(r"[A-Za-z]:", paths.test_path)
+    match = re.search(r"[A-Za-z]:", spack.paths.test_path)
     if match:
         drive = match.group()
 root = drive + os.sep
 
 #: directory with sample compiler data
-datadir = os.path.join(paths.test_path, "data", "compiler_verbose_output")
+datadir = os.path.join(spack.paths.test_path, "data", "compiler_verbose_output")
 
 
 @pytest.fixture(autouse=True)
@@ -199,6 +199,6 @@ def test_obscure_parsing_rules():
 
     # TODO: add a comment explaining why this happens
     if sys.platform == "win32":
-        paths.remove(os.path.join(root, "second", "path"))
+        spack.paths.remove(os.path.join(root, "second", "path"))
 
     check_link_paths("obscure-parsing-rules.txt", paths)

@@ -13,10 +13,10 @@ import spack.cmd.test
 import spack.concretize
 import spack.config
 import spack.install_test
+import spack.paths
 from spack.install_test import TestStatus
 from spack.llnl.util.filesystem import copy_tree, working_dir
 from spack.main import SpackCommand
-from spack.paths import locations as paths
 
 install = SpackCommand("install")
 spack_test = SpackCommand("test")
@@ -226,7 +226,7 @@ def test_read_old_results(mock_packages, mock_test_stage):
     #   spack install printing-package
     #   spack test run --alias printpkg printing-package
 
-    test_data_src = os.path.join(paths.test_path, "data", "test", "test_stage")
+    test_data_src = os.path.join(spack.paths.test_path, "data", "test", "test_stage")
 
     # Copy the old test data into the mock stage directory
     copy_tree(test_data_src, mock_test_stage)

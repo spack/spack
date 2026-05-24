@@ -9,10 +9,10 @@ import pytest
 import spack.cmd.diff
 import spack.concretize
 import spack.main
+import spack.paths
 import spack.repo
 import spack.util.spack_json as sjson
 import spack.version
-from spack.paths import locations as paths
 
 install_cmd = spack.main.SpackCommand("install")
 diff_cmd = spack.main.SpackCommand("diff")
@@ -33,7 +33,7 @@ find_cmd = spack.main.SpackCommand("find")
 
 @pytest.fixture
 def test_repo(config):
-    builder_test_path = os.path.join(paths.test_repos_path, "spack_repo", "diff")
+    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "diff")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 

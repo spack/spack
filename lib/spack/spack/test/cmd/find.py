@@ -15,6 +15,7 @@ import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -22,7 +23,6 @@ import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
-from spack.paths import locations as paths
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
 
@@ -471,7 +471,7 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(
 @pytest.fixture
 def test_repo(mock_stage):
     with spack.repo.use_repositories(
-        os.path.join(paths.test_repos_path, "spack_repo", "find")
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
     ) as mock_packages_repo:
         yield mock_packages_repo
 

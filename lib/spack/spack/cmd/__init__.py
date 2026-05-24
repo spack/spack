@@ -20,6 +20,7 @@ import spack.error
 import spack.extensions
 import spack.llnl.string
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.spec_parser
@@ -32,7 +33,6 @@ from spack.llnl.util.filesystem import join_path
 from spack.llnl.util.lang import attr_setdefault, index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
-from spack.paths import locations as paths
 from spack.paths_base import locations as paths_base
 
 from ..enums import InstallRecordStatus
@@ -581,7 +581,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
 
 def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
-    return is_git_repo(paths.prefix)
+    return is_git_repo(spack.paths.prefix)
 
 
 def is_git_repo(path):

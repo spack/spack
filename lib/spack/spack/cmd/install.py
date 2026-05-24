@@ -13,6 +13,7 @@ import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
 import spack.llnl.util.filesystem as fs
+import spack.paths
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -20,7 +21,6 @@ from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
 from spack.llnl.string import plural
 from spack.llnl.util import tty
-from spack.paths import locations as paths
 
 description = "build and install packages"
 section = "build"
@@ -230,7 +230,7 @@ def default_log_file(spec):
     the corresponding directory if not present
     """
     basename = spec.format_path("test-{name}-{version}-{hash}.xml")
-    dirname = fs.os.path.join(paths.reports_path, "junit")
+    dirname = fs.os.path.join(spack.paths.reports_path, "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 

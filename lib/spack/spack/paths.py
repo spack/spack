@@ -12,6 +12,8 @@ dependencies.
 import itertools
 import os
 import pathlib
+import sys as _sys
+import types as _types
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
@@ -448,3 +450,20 @@ def restore(bundled_state):
     locations._cache_home = bundled_state["cache_home"]
     locations.old_layout_detected = bundled_state["old_layout_detected"]
     locations._new_layout_enforced = bundled_state["new_layout_enforced"]
+
+
+# Module shim: lets callers keep using `spack.paths.X` for any attribute on
+# `locations` (e.g. `spack.paths.gpg_path`), which itself delegates to
+# `paths_base.locations` for static attributes (e.g. `spack.paths.prefix`).
+# Uses a sys.modules swap because Spack still supports Python 3.6, which
+# predates PEP 562 (module-level `__getattr__`). When 3.6 support is dropped,
+# replace this block with a plain
+# `def __getattr__(name): return getattr(locations, name)`.
+class _PathsModule(_types.ModuleType):
+    def __getattr__(self, name):
+        return getattr(locations, name)
+
+
+_shim = _PathsModule(__name__)
+_shim.__dict__.update(_sys.modules[__name__].__dict__)
+_sys.modules[__name__] = _shim

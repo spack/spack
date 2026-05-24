@@ -15,11 +15,11 @@ import spack.cmd
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.main
+import spack.paths
 import spack.platforms
 from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
-from spack.paths import locations as paths
 
 description = "list available spack commands"
 section = "config"
@@ -36,14 +36,14 @@ update_completion_args: Dict[str, Dict[str, Any]] = {
     "bash": {
         "aliases": True,
         "format": "bash",
-        "header": os.path.join(paths.share_path, "bash", "spack-completion.bash"),
-        "update": os.path.join(paths.share_path, "spack-completion.bash"),
+        "header": os.path.join(spack.paths.share_path, "bash", "spack-completion.bash"),
+        "update": os.path.join(spack.paths.share_path, "spack-completion.bash"),
     },
     "fish": {
         "aliases": True,
         "format": "fish",
-        "header": os.path.join(paths.share_path, "fish", "spack-completion.fish"),
-        "update": os.path.join(paths.share_path, "spack-completion.fish"),
+        "header": os.path.join(spack.paths.share_path, "fish", "spack-completion.fish"),
+        "update": os.path.join(spack.paths.share_path, "spack-completion.fish"),
     },
 }
 

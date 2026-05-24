@@ -10,11 +10,11 @@ import spack
 import spack.cmd
 import spack.config
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.util.git
 import spack.util.gpg
 from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import working_dir
-from spack.paths import locations as paths
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"
@@ -25,7 +25,7 @@ level = "long"
 # tutorial configuration parameters
 tutorial_branch = "releases/v1.1"
 tutorial_mirror = "file:///mirror"
-tutorial_key = os.path.join(paths.share_path, "keys", "tutorial.pub")
+tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
 # configs to remove
 rm_configs = [
@@ -83,6 +83,6 @@ def tutorial(parser, args):
     # that follows (exacerbated by the various lazy singletons we use)
     tty.msg(f"Ensuring we're on the {tutorial_branch} branch")
     git = spack.util.git.git(required=True)
-    with working_dir(paths.prefix):
+    with working_dir(spack.paths.prefix):
         git("checkout", tutorial_branch)
     # NO CODE BEYOND HERE

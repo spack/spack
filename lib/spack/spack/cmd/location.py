@@ -9,11 +9,11 @@ import spack.builder
 import spack.cmd
 import spack.environment as ev
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.repo
 import spack.stage
 import spack.store
 from spack.cmd.common import arguments
-from spack.paths import locations as paths
 
 description = "print out locations of packages and spack directories"
 section = "query"
@@ -107,11 +107,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def location(parser, args):
     if args.module_dir:
-        print(paths.module_path)
+        print(spack.paths.module_path)
         return
 
     if args.spack_root:
-        print(paths.prefix)
+        print(spack.paths.prefix)
         return
 
     if args.install_root:

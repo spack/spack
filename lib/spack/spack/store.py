@@ -33,11 +33,11 @@ import spack.directory_layout
 import spack.error
 import spack.llnl.util.lang
 import spack.package_prefs
+import spack.paths
 import spack.spec
 import spack.util.path
 from spack.llnl.util import filesystem as fs
 from spack.llnl.util import tty
-from spack.paths import locations as paths
 
 
 def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
@@ -84,7 +84,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     else:
         unpadded_root = install_tree.get("root", None)
         if not unpadded_root:
-            unpadded_root = paths.default_install_location
+            unpadded_root = spack.paths.default_install_location
 
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
@@ -215,7 +215,7 @@ class Store:
 
         sbang_path = os.path.join(self.unpadded_root, "bin", "sbang")
         try:
-            if filecmp.cmp(sbang_path, paths.sbang_script):
+            if filecmp.cmp(sbang_path, spack.paths.sbang_script):
                 return  # installed and up to date
         except FileNotFoundError:
             pass
@@ -239,7 +239,7 @@ class Store:
         # to ensure we don't delete a file created by another process in the except block.
         sbang_tmp_file = open(sbang_tmp_path, "xb")
         try:
-            with open(paths.sbang_script, "rb") as src, sbang_tmp_file as dst:
+            with open(spack.paths.sbang_script, "rb") as src, sbang_tmp_file as dst:
                 shutil.copyfileobj(src, dst)
                 os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
                 if group_name:

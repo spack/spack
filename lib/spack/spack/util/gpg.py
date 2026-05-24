@@ -10,9 +10,9 @@ from typing import List
 
 import spack.error
 import spack.llnl.util.filesystem
+import spack.paths
 import spack.util.executable
 import spack.version
-from spack.paths import locations as paths
 
 #: Executable instance for "gpg", initialized lazily
 GPG = None
@@ -59,7 +59,7 @@ def init(gnupghome=None, force=False):
     # Set the value of GNUPGHOME to be used in this module
     GNUPGHOME = gnupghome or os.getenv("SPACK_GNUPGHOME")
     if not GNUPGHOME:
-        GNUPGHOME = paths.gpg_path
+        GNUPGHOME = spack.paths.gpg_path
 
     # Set the executable objects for "gpg" and "gpgconf"
     with spack.bootstrap.ensure_bootstrap_configuration():

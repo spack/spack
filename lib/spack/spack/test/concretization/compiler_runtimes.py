@@ -11,11 +11,11 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
+import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import ViewDescriptor
-from spack.paths import locations as paths
 from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
 from spack.solver.runtimes import external_config_with_implicit_externals
 from spack.version import Version
@@ -42,7 +42,7 @@ def _concretize_with_reuse(*, root_str, reused_str, config):
 
 @pytest.fixture
 def runtime_repo(mutable_config):
-    repo = os.path.join(paths.test_repos_path, "spack_repo", "compiler_runtime_test")
+    repo = os.path.join(spack.paths.test_repos_path, "spack_repo", "compiler_runtime_test")
     with spack.repo.use_repositories(repo) as mock_repo:
         yield mock_repo
 

@@ -7,7 +7,7 @@ import os
 import shutil
 
 import spack.llnl.util.tty as tty
-from spack.paths import locations as paths
+import spack.paths
 from spack.paths_base import locations as paths_base
 
 description = "migrate user config and cache from old to new locations"
@@ -56,9 +56,9 @@ def restore(args: argparse.Namespace) -> None:
     old_location = os.path.expanduser("~/.spack")
 
     # Check both the current backup location and the default one
-    backup_locations = [paths.dotspack_backup]
-    default_backup = os.path.join(paths.default_data_home, "dotspack_backup")
-    if default_backup != paths.dotspack_backup:
+    backup_locations = [spack.paths.dotspack_backup]
+    default_backup = os.path.join(spack.paths.default_data_home, "dotspack_backup")
+    if default_backup != spack.paths.dotspack_backup:
         backup_locations.append(default_backup)
 
     # Find which backup location exists
@@ -131,7 +131,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     old_location = os.path.expanduser("~/.spack")
     new_config_location = paths_base.user_config_path
     new_state_location = os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
-    backup_location = paths.dotspack_backup
+    backup_location = spack.paths.dotspack_backup
 
     if args.clear_only:
         if not os.path.exists(old_location):

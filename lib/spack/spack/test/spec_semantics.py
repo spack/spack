@@ -11,6 +11,7 @@ import spack.deptypes as dt
 import spack.directives
 import spack.llnl.util.lang
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.solver.asp
 import spack.spec
@@ -21,7 +22,6 @@ import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.llnl.util.tty.color import colorize
-from spack.paths import locations as paths
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import (
     InvalidVariantValueError,
@@ -1006,7 +1006,7 @@ class TestSpecSemantics:
         ]
 
         other_segments = [
-            ("{spack_root}", paths.spack_root),
+            ("{spack_root}", spack.paths.spack_root),
             ("{spack_install}", spack.store.STORE.layout.root),
         ]
 

@@ -39,6 +39,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -56,7 +57,6 @@ from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import copy_tree, islink, readlink, symlink
 from spack.llnl.util.lang import stable_partition
 from spack.llnl.util.link_tree import ConflictingSpecsError
-from spack.paths import locations as paths
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_filter import SpecFilter
@@ -102,7 +102,7 @@ _default_env_path = None
 def default_env_path():
     global _default_env_path
     if not _default_env_path:
-        _default_env_path = paths.default_envs_path
+        _default_env_path = spack.paths.default_envs_path
     return _default_env_path
 
 

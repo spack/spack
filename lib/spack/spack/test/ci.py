@@ -14,9 +14,9 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.llnl.util.filesystem as fs
+import spack.paths
 import spack.repo as repo
 import spack.util.git
-from spack.paths import locations as paths
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.version import Version
@@ -190,7 +190,7 @@ def test_pipeline_dag(config, repo_builder: RepoBuilder):
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 def test_import_signing_key(mock_gnupghome):
-    signing_key_dir = paths.mock_gpg_keys_path
+    signing_key_dir = spack.paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, "package-signing-key")
     with open(signing_key_path, encoding="utf-8") as fd:
         signing_key = fd.read()
@@ -204,7 +204,9 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
 
     url = "https://www.nosuchurlexists.itsfake/artifacts.zip"
     working_dir = tmp_path / "repro"
-    test_artifacts_path = os.path.join(paths.test_path, "data", "ci", "gitlab", "artifacts.zip")
+    test_artifacts_path = os.path.join(
+        spack.paths.test_path, "data", "ci", "gitlab", "artifacts.zip"
+    )
 
     def _urlopen_OK(*args, **kwargs):
         with open(test_artifacts_path, "rb") as f:
@@ -267,7 +269,7 @@ def test_setup_spack_repro_version(
     spack_dir = repro_dir / "spack"
     spack_dir.mkdir(parents=True)
 
-    prefix_save = paths.prefix
+    prefix_save = spack.paths.prefix
     override_path("prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)

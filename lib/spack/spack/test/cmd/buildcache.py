@@ -22,13 +22,13 @@ import spack.environment as ev
 import spack.error
 import spack.main
 import spack.mirrors.mirror
+import spack.paths
 import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import copy_tree, find, getuid
 from spack.llnl.util.lang import nullcontext
-from spack.paths import locations as paths
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
@@ -564,7 +564,7 @@ def test_push_without_build_deps(
 def v2_buildcache_layout(tmp_path: pathlib.Path):
     def _layout(signedness: str = "signed"):
         source_path = str(
-            pathlib.Path(paths.test_path) / "data" / "mirrors" / "v2_layout" / signedness
+            pathlib.Path(spack.paths.test_path) / "data" / "mirrors" / "v2_layout" / signedness
         )
         test_mirror_path = tmp_path / "mirror"
         copy_tree(source_path, test_mirror_path)

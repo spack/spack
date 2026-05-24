@@ -15,17 +15,17 @@ import pytest
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.paths
 import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
 from spack.llnl.util.filesystem import working_dir
-from spack.paths import locations as paths
 from spack.version import Version
 
 
 def _create_url(relative_url):
-    web_data_path = os.path.join(paths.test_path, "data", "web")
+    web_data_path = os.path.join(spack.paths.test_path, "data", "web")
     return url_util.path_to_file_url(os.path.join(web_data_path, relative_url))
 
 

@@ -19,6 +19,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -31,7 +32,6 @@ from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.llnl.util.filesystem import mkdirp, working_dir
-from spack.paths import locations as paths
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 
@@ -477,7 +477,7 @@ def test_ci_rebuild_missing_config(tmp_path: pathlib.Path, working_env, mutable_
 
 
 def _signing_key():
-    signing_key_path = pathlib.Path(paths.mock_gpg_keys_path) / "package-signing-key"
+    signing_key_path = pathlib.Path(spack.paths.mock_gpg_keys_path) / "package-signing-key"
     return signing_key_path.read_text()
 
 
@@ -1100,7 +1100,9 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch, override_path):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
     override_path("prefix", mock_git_repo)
-    fake_env_path = os.path.join(paths.prefix, os.path.sep.join(("no", "such", "env", "path")))
+    fake_env_path = os.path.join(
+        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
+    )
     assert ci.stack_changed(fake_env_path) is True
 
 

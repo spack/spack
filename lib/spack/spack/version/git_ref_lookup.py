@@ -9,12 +9,12 @@ from typing import Dict, Optional, Tuple
 
 import spack.caches
 import spack.fetch_strategy
+import spack.paths
 import spack.repo
 import spack.util.executable
 import spack.util.hash
 import spack.util.spack_json as sjson
 from spack.llnl.util.filesystem import mkdirp, working_dir
-from spack.paths import locations as paths
 
 from .common import VersionLookupError
 from .lookup import AbstractRefLookup
@@ -122,7 +122,7 @@ class GitRefLookup(AbstractRefLookup):
         known version prior to the commit, as well as the distance from that version
         to the commit in the git repo. Those values are used to compare Version objects.
         """
-        pathlib_dest = Path(paths.user_repos_cache_path) / self.repository_uri
+        pathlib_dest = Path(spack.paths.user_repos_cache_path) / self.repository_uri
         dest = str(pathlib_dest)
 
         # prepare a cache for the repository

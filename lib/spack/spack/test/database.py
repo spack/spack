@@ -35,6 +35,7 @@ import spack.deptypes as dt
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -43,7 +44,6 @@ import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
 from spack.llnl.util.tty.colify import colify
-from spack.paths import locations as paths
 from spack.schema.database_index import schema
 from spack.test.conftest import RepoBuilder
 from spack.util.executable import Executable
@@ -1350,7 +1350,7 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """
-    test_path = pathlib.Path(paths.test_path)
+    test_path = pathlib.Path(spack.paths.test_path)
     zipfile = test_path / "data" / "database" / "index.json.v7_v8.json.gz"
     with gzip.open(str(zipfile), "rt", encoding="utf-8") as f:
         data = json.load(f)

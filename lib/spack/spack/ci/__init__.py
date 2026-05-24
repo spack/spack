@@ -26,6 +26,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
@@ -38,7 +39,6 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.llnl.util.tty.color import cescape, colorize
-from spack.paths import locations as paths
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 
 from .common import (
@@ -741,11 +741,11 @@ def download_and_extract_artifacts(url: str, work_dir: str) -> str:
 def get_spack_info():
     """If spack is running from a git repo, return the most recent git log
     entry, otherwise, return a string containing the spack version."""
-    git_path = os.path.join(paths.prefix, ".git")
+    git_path = os.path.join(spack.paths.prefix, ".git")
     if os.path.exists(git_path):
         git = spack.util.git.git()
         if git:
-            with fs.working_dir(paths.prefix):
+            with fs.working_dir(spack.paths.prefix):
                 git_log = git("log", "-1", output=str, error=os.devnull, fail_on_error=False)
 
             return git_log
@@ -780,12 +780,12 @@ def setup_spack_repro_version(
     tty.info(f"checkout_commit: {checkout_commit}")
     tty.info(f"merge_commit: {merge_commit}")
 
-    dot_git_path = os.path.join(paths.prefix, ".git")
+    dot_git_path = os.path.join(spack.paths.prefix, ".git")
     if not os.path.exists(dot_git_path):
         tty.error("Unable to find the path to your local spack clone")
         return False
 
-    spack_git_path = paths.prefix
+    spack_git_path = spack.paths.prefix
 
     git = spack.util.git.git()
     if not git:

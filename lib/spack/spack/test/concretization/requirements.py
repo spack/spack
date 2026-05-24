@@ -10,6 +10,7 @@ import spack.config
 import spack.error
 import spack.installer
 import spack.package_base
+import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
@@ -18,7 +19,6 @@ import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
 from spack.installer import PackageInstaller
-from spack.paths import locations as paths
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
 from spack.solver.runtimes import external_config_with_implicit_externals
@@ -33,7 +33,7 @@ def update_packages_config(conf_str):
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(paths.test_repos_path) / "spack_repo" / "requirements_test"
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "requirements_test"
     with spack.repo.use_repositories(str(repo_dir)) as mock_packages_repo:
         yield mock_packages_repo
 

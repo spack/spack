@@ -43,6 +43,7 @@ import spack.environment
 import spack.error
 import spack.llnl.util.filesystem
 import spack.llnl.util.tty as tty
+import spack.paths
 import spack.projections as proj
 import spack.schema
 import spack.schema.environment
@@ -56,7 +57,6 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
-from spack.paths import locations as paths
 
 
 #: config section for this file
@@ -213,7 +213,7 @@ def root_path(name, module_set_name):
     # Root folders where the various module files should be written
     roots = spack.config.get(f"modules:{module_set_name}:roots", {})
 
-    path = roots.get(name, os.path.join(paths.data_home, name))
+    path = roots.get(name, os.path.join(spack.paths.data_home, name))
 
     return spack.util.path.canonicalize_path(path)
 
