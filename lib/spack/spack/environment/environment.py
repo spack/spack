@@ -94,15 +94,22 @@ lockfile_name = "spack.lock"
 env_subdir_name = ".spack-env"
 
 
-def env_root_path() -> str:
-    """Resolve config:environments_root with substitutions and ~ expansion.
+def default_env_path() -> str:
+    """Default for ``config:environments_root`` when no scope sets it.
 
-    The base default scope sets this to ``$data_home/environments``; tests
-    using a stripped-down config may leave it unset, so fall back to the
-    same expression here.
+    The base default scope sets the config key to ``$data_home/environments``;
+    this function is the runtime equivalent. Tests that mock the
+    environments directory monkeypatch this function (see the
+    ``mutable_mock_env_path`` fixture).
     """
-    root = spack.config.get("config:environments_root") or "$data_home/environments"
-    return spack.util.path.canonicalize_path(root)
+    return spack.util.path.canonicalize_path("$data_home/environments")
+
+
+def env_root_path() -> str:
+    """Resolve config:environments_root with substitutions and ~ expansion."""
+    return spack.util.path.canonicalize_path(
+        spack.config.get("config:environments_root", default=default_env_path())
+    )
 
 
 def environment_name(path: Union[str, pathlib.Path]) -> str:
