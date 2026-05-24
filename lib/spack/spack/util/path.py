@@ -64,6 +64,9 @@ def replacements():
     paths = spack.paths.locations
     arch = architecture()
 
+    def xdg_or_default(var, default):
+        return os.environ.get(var) or os.path.expanduser(default)
+
     replace = {
         "spack": lambda: spack.paths_base.locations.prefix,
         "user": lambda: get_user(),
@@ -80,15 +83,16 @@ def replacements():
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
         "user_cache_path": lambda: paths.user_cache_path,
-        "default_install_root": lambda: paths.default_install_location,
-        "default_envs_root": lambda: paths.default_envs_path,
-        "default_license_dir": lambda: paths.default_license_dir,
-        "default_downloads_dir": lambda: paths.default_downloads_dir,
-        "default_modules_base": lambda: paths.default_modules_base,
         "data_home": lambda: paths.data_home,
         "cache_home": lambda: paths.cache_home,
         "state_home": lambda: paths.state_home,
         "spack_home": lambda: paths.spack_home,
+        # XDG base-dir env vars with their spec defaults. Used by the xdg
+        # scheme yaml so $XDG_*_HOME is respected without forcing all of
+        # paths.py through Python. See etc/spack/defaults/xdg/config.yaml.
+        "xdg_data_home": lambda: xdg_or_default("XDG_DATA_HOME", "~/.local/share"),
+        "xdg_state_home": lambda: xdg_or_default("XDG_STATE_HOME", "~/.local/state"),
+        "xdg_cache_home": lambda: xdg_or_default("XDG_CACHE_HOME", "~/.cache"),
     }
 
     return replace
@@ -176,14 +180,16 @@ def substitute_config_variables(path):
 
     - $env                  The active Spack environment.
     - $spack                The Spack instance's prefix
+    - $spack_home           Base for spack's user-level data; defaults to ``~``
     - $tempdir              Default temporary directory returned by tempfile.gettempdir()
     - $user                 The current user's username
-    - $default_install_root Where installs go by default
-    - $default_envs_root    Where environments are managed by default
-    - $data_home            SPACK_DATA_HOME, XDG_DATA_HOME, or its default
-    - $cache_home           SPACK_CACHE_HOME, XDG_CACHE_HOME, or its default
-    - $state_home           SPACK_STATE_HOME, XDG_STATE_HOME, or its default
+    - $data_home            SPACK_DATA_HOME, config:locations:data, XDG_DATA_HOME, or default
+    - $cache_home           SPACK_CACHE_HOME, config:locations:cache, XDG_CACHE_HOME, or default
+    - $state_home           SPACK_STATE_HOME, config:locations:state, XDG_STATE_HOME, or default
     - $user_cache_path      The user cache directory (same as state_home)
+    - $xdg_data_home        $XDG_DATA_HOME or ``~/.local/share`` (no ``/spack`` suffix)
+    - $xdg_state_home       $XDG_STATE_HOME or ``~/.local/state``
+    - $xdg_cache_home       $XDG_CACHE_HOME or ``~/.cache``
     - $spack_instance_id    Hash that distinguishes Spack instances on the filesystem
     - $architecture         The spack architecture triple for the current system
     - $arch                 The spack architecture triple for the current system

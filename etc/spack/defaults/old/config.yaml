@@ -1,0 +1,27 @@
+# -------------------------------------------------------------------------
+# Legacy `$spack`-local layout defaults.
+#
+# Selected by `etc/spack/defaults/include.yaml` when an existing Spack
+# instance has installs, environments, gpg keys, etc. under `$spack`. Keeps
+# everything in those legacy locations so pulling a newer Spack into an old
+# clone is non-disruptive.
+#
+# The four `config:locations:*` keys give the rest of the default config
+# (which uses `$data_home`, `$state_home`, `$cache_home` substitutions) a
+# coherent answer for old layout — but old layout doesn't actually share a
+# single root, so individual path keys below override the substitutions
+# directly.
+# -------------------------------------------------------------------------
+config:
+  locations:
+    home: ~
+    data: $spack
+    state: ~/.spack
+    cache: $spack/var
+
+  install_tree:
+    root: $spack/opt/spack
+
+  environments_root: $spack/var/spack/environments
+  license_dir: $spack/etc/spack/licenses
+  source_cache: $spack/var/cache

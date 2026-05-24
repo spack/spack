@@ -1,0 +1,17 @@
+# -------------------------------------------------------------------------
+# XDG-compliant layout defaults.
+#
+# Selected by `etc/spack/defaults/include.yaml` when no legacy `$spack`-local
+# data is detected. Sets the four `config:locations:*` keys that the rest of
+# the default config uses via `$data_home`, `$state_home`, and `$cache_home`
+# substitutions.
+#
+# Spack-specific env vars (SPACK_DATA_HOME etc.) still override these at
+# runtime; XDG env vars are picked up here via the `$xdg_*_home` subs.
+# -------------------------------------------------------------------------
+config:
+  locations:
+    home: ~
+    data: $xdg_data_home/spack
+    state: $xdg_state_home/spack
+    cache: $xdg_cache_home/spack
