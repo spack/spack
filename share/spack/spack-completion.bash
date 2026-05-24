@@ -961,11 +961,15 @@ _spack_debug() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="report"
+        SPACK_COMPREPLY="report paths"
     fi
 }
 
 _spack_debug_report() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_debug_paths() {
     SPACK_COMPREPLY="-h --help"
 }
 
