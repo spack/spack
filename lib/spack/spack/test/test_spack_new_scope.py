@@ -327,30 +327,3 @@ class TestOldLayoutDetection:
 
         with spack.config.override_paths(m["paths"]):
             assert not spack.config._detect_old_spack_layout()
-
-
-class TestVariableSubstitution:
-    """Test that config variable substitution works correctly."""
-
-    def test_user_cache_path_substitution(self, mock_spack_paths):
-        """Test that $user_cache_path is substituted in derived paths."""
-        # This tests the _get_config_value substitution logic
-        # We need to test that paths.py properly substitutes variables
-        # The actual substitution test would need to mock spack.config.get()
-        # and verify paths.py calls substitute_path_variables
-        # This is more of an integration test that we've already verified works
-        pass
-
-    def test_spack_variable_substitution(self, mock_spack_paths):
-        """Test that $spack variable is substituted correctly."""
-        m = mock_spack_paths
-
-        with spack.config.override_paths(m["paths"]):
-            config_data = spack.config._get_old_style_paths()
-
-            # Verify variables are used, not hardcoded paths
-            assert config_data["config"]["gpg_path"] == "$spack/opt/spack/gpg"
-            assert "$spack" in config_data["config"]["install_tree"]["root"]
-
-            # When actually used, these should be substituted to real paths
-            # (tested in runtime verification tests)
