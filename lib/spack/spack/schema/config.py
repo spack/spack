@@ -77,6 +77,10 @@ properties: Dict[str, Any] = {
             },
             "locations": {
                 "type": "object",
+                "description": "Roots for Spack's user-level data. Used by "
+                "$data_home/$state_home/$cache_home/$spack_home substitutions. "
+                "Defaults come from the active layout scheme yaml "
+                "(etc/spack/defaults/{old,xdg}/config.yaml).",
                 "properties": {
                     "home": {"type": "string"},
                     "data": {"type": "string"},
@@ -85,6 +89,11 @@ properties: Dict[str, Any] = {
                     "disable_env": {"type": "boolean"},
                 },
                 "additionalProperties": False,
+            },
+            "gpg_path": {"type": "string", "description": "Directory holding Spack's gpg keyring"},
+            "gpg_keys_path": {
+                "type": "string",
+                "description": "Directory of pre-imported public keys",
             },
             "install_hash_length": {
                 "type": "integer",

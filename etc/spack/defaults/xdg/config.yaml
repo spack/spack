@@ -11,7 +11,7 @@
 # -------------------------------------------------------------------------
 config:
   locations:
-    home: ~
+    home: "~"
     data: $xdg_data_home/spack
     state: $xdg_state_home/spack
     cache: $xdg_cache_home/spack

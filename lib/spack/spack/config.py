@@ -146,8 +146,6 @@ CONFIGURABLE_VARS = (
     "cache_home",
     "data_home",
     "spack_home",
-    "default_envs_root",
-    "default_install_root",
     "user_cache_path",
 )
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)

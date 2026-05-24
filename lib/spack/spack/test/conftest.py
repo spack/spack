@@ -1979,7 +1979,6 @@ def mutable_mock_env_path(tmp_path: Path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
     mock_path = tmp_path / "mock-env-path"
     mutable_config.set("config:environments_root", str(mock_path))
-    monkeypatch.setattr(ev.environment, "default_env_path", LazyValue(str(mock_path)))
     return mock_path
 
 

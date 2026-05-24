@@ -13,12 +13,12 @@ config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
-    # If set to a non-default value, this setting has precedence.
-    # This default value tells spack to
-    # * Prefer $data_home/installs
-    # * The old install location is $spack/opt/spack: Spack will use this old
-    #   location if the new location is empty and the old one isn't
-    root: $default_install_root
+    # If layout_detected("old"), this is overridden to $spack/opt/spack by
+    # etc/spack/defaults/old/config.yaml (the scheme yaml chosen by
+    # defaults/include.yaml when legacy data is present in $spack).
+    # Otherwise $data_home resolves to ~/.local/share/spack (or
+    # $XDG_DATA_HOME/spack, $SPACK_DATA_HOME, etc.).
+    root: $data_home/installs
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
@@ -34,8 +34,9 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
-  # Directory where licenses should be located
-  license_dir: $default_license_dir
+  # Directory where licenses should be located.
+  # Overridden to $spack/etc/spack/licenses by the old-layout scheme yaml.
+  license_dir: $data_home/licenses
 
   # Temporary locations Spack can try to use for builds.
   #
@@ -80,16 +81,18 @@ config:
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
-  source_cache: $default_downloads_dir
+  # Overridden to $spack/var/cache by the old-layout scheme yaml.
+  source_cache: $data_home/downloads
+
+  # Directories Spack uses for its gpg keyring and pre-imported public keys.
+  # Overridden to $spack-local paths by the old-layout scheme yaml.
+  gpg_path: $data_home/gpg
+  gpg_keys_path: $data_home/gpg-keys
 
 
-  ## Directory where spack managed environments are created and stored
-  # If set to a non-default value, this setting has precedence.
-  # This default value tells spack to: 
-  # * Prefer $data_home/environments
-  # * The old location for envs is $spack/var/spack/environments: Spack will
-  #   use this old location if the new location is empty and the old one isn't
-  environments_root: $default_envs_root
+  ## Directory where spack managed environments are created and stored.
+  # Overridden to $spack/var/spack/environments by the old-layout scheme yaml.
+  environments_root: $data_home/environments
 
 
   # Cache directory for miscellaneous files, like the package index.

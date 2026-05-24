@@ -55,11 +55,14 @@ def restore(args: argparse.Namespace) -> None:
     """Restore ~/.spack from backup location."""
     old_location = os.path.expanduser("~/.spack")
 
-    # Check both the current backup location and the default one
+    # Check both the current backup location and the XDG default. The XDG
+    # default is checked even when the active scheme is "old", because the
+    # backup may have been written by a previous xdg-scheme run before the
+    # user reverted (e.g. by `git pull`-ing an older Spack).
     backup_locations = [spack.paths.dotspack_backup]
-    default_backup = os.path.join(spack.paths.default_data_home, "dotspack_backup")
-    if default_backup != spack.paths.dotspack_backup:
-        backup_locations.append(default_backup)
+    xdg_default_backup = os.path.expanduser("~/.local/share/spack/dotspack_backup")
+    if xdg_default_backup != spack.paths.dotspack_backup:
+        backup_locations.append(xdg_default_backup)
 
     # Find which backup location exists
     backup_location = None

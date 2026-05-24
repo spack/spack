@@ -39,7 +39,6 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -95,22 +94,13 @@ lockfile_name = "spack.lock"
 env_subdir_name = ".spack-env"
 
 
-#: default path where environments are stored in the spack tree
-_default_env_path = None
-
-
-def default_env_path():
-    global _default_env_path
-    if not _default_env_path:
-        _default_env_path = spack.paths.default_envs_path
-    return _default_env_path
-
-
 def env_root_path() -> str:
-    """Override default root path if the user specified it"""
-    return spack.util.path.canonicalize_path(
-        spack.config.get("config:environments_root", default=default_env_path())
-    )
+    """Resolve config:environments_root with substitutions and ~ expansion.
+
+    Always set by the active layout scheme yaml
+    (etc/spack/defaults/{old,xdg}/config.yaml via base).
+    """
+    return spack.util.path.canonicalize_path(spack.config.get("config:environments_root"))
 
 
 def environment_name(path: Union[str, pathlib.Path]) -> str:

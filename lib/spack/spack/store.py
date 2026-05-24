@@ -82,10 +82,9 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
 
         projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get("root", None)
-        if not unpadded_root:
-            unpadded_root = spack.paths.default_install_location
-
+        # config:install_tree:root is always set by the active layout
+        # scheme yaml (etc/spack/defaults/{old,xdg}/config.yaml via base).
+        unpadded_root = install_tree["root"]
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)

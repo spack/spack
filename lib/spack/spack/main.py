@@ -956,7 +956,13 @@ def _warn_about_old_dotspack():
 
     explicit_path = False
     if uses_old_dotspack(spack.paths.locations.state_home):
-        if spack.paths.locations.default_state_home_dot_spack:
+        # state_home is ~/.spack: distinguish "default from the old-layout
+        # scheme yaml" (warn) from "user explicitly pointed an env var
+        # there" (don't warn).
+        env_override = any(
+            v in os.environ for v in ("SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME", "SPACK_HOME")
+        )
+        if not env_override:
             reasons.append("User cache path fallback")
         else:
             tty.debug(

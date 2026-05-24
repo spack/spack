@@ -14,9 +14,9 @@
 # -------------------------------------------------------------------------
 config:
   locations:
-    home: ~
+    home: "~"
     data: $spack
-    state: ~/.spack
+    state: "~/.spack"
     cache: $spack/var
 
   install_tree:
@@ -25,3 +25,5 @@ config:
   environments_root: $spack/var/spack/environments
   license_dir: $spack/etc/spack/licenses
   source_cache: $spack/var/cache
+  gpg_path: $spack/opt/spack/gpg
+  gpg_keys_path: $spack/var/gpg
