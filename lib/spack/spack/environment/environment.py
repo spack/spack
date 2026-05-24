@@ -97,10 +97,12 @@ env_subdir_name = ".spack-env"
 def env_root_path() -> str:
     """Resolve config:environments_root with substitutions and ~ expansion.
 
-    Always set by the active layout scheme yaml
-    (etc/spack/defaults/{old,xdg}/config.yaml via base).
+    The base default scope sets this to ``$data_home/environments``; tests
+    using a stripped-down config may leave it unset, so fall back to the
+    same expression here.
     """
-    return spack.util.path.canonicalize_path(spack.config.get("config:environments_root"))
+    root = spack.config.get("config:environments_root") or "$data_home/environments"
+    return spack.util.path.canonicalize_path(root)
 
 
 def environment_name(path: Union[str, pathlib.Path]) -> str:
