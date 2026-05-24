@@ -1,159 +1,146 @@
 Shared spack
+============
 
-This document is accurate up to commit e48b8c104
+This document captures the design decisions behind moving Spack's mutable
+state out of $spack so the prefix can be treated as immutable (apt/pip
+installable, multi-user readable). The implementation is described in
+lib/spack/docs/where_spack_writes_data.rst.
 
-# Moving Spack-generated artifacts outside of $spack
+# What's moving out of $spack
 
-The biggest blocker to creating a shared spack instance is that Spack
-will default to writing data into its own prefix. For new clones of
-Spack, this PR moves all generated files out of the cloned directory
-and into ~. This includes:
+For new clones, the following are written under the user's home directory
+in XDG-compliant locations instead of inside the Spack prefix:
 
-1. installs
-2. where environments are stored
-3. cached downloads
-4. gpg keys
-5. where modules are generated
-6. licenses
+1. installs           -> $data_home/installs        (default ~/.local/share/spack/installs)
+2. environments       -> $data_home/environments
+3. cached downloads   -> $data_home/downloads
+4. gpg keys           -> $data_home/gpg, gpg-keys
+5. modules            -> $data_home
+6. licenses           -> $data_home/licenses
 
-# XDG compliance
+Existing clones with data already in $spack continue to use those legacy
+locations. The decision is made once, at startup, by the layout *scheme*.
 
-Spack by default stores user_cache_path and the user config scope in
+# Layout schemes
+
+`etc/spack/defaults/include.yaml` includes one of two scheme yamls based
+on `layout_detected("old")` (a helper exposed to include `when:` clauses
+by spack.spec.eval_conditional):
+
+- `etc/spack/defaults/old/config.yaml`  — selected when legacy data exists
+  in $spack/opt, $spack/var/spack/environments, $spack/var/cache, etc.
+  Sets install_tree:root, environments_root, license_dir, source_cache,
+  gpg_path, gpg_keys_path to their $spack-local paths, plus
+  config:locations:* for general substitutions.
+
+- `etc/spack/defaults/xdg/config.yaml` — selected otherwise. Just sets
+  config:locations:{home,data,state,cache} using $xdg_*_home
+  substitutions; base/config.yaml's $data_home-relative defaults then
+  resolve to the right XDG paths.
+
+The schemes are pulled in EARLIER in defaults/include.yaml than
+defaults/base/config.yaml, giving them higher priority — they override
+base for paths that diverge between layouts.
+
+# Unilateral override
+
+`layout_detected("old")` returns False (forces xdg) if any of the
+following env vars is set: SPACK_DATA_HOME, SPACK_STATE_HOME,
+SPACK_CACHE_HOME, SPACK_HOME. Reason: setting one of these is an
+intentional opt-in to the new layout; defaulting back to old anyway
+would produce a split state where data goes new but envs/installs stay
+in $spack.
+
+config:locations:* set in user/site/system scopes does NOT force the
+scheme (those scopes aren't loaded at include-evaluation time). They
+still override individual values once loaded.
+
+# Override priority
+
+In order from highest to lowest:
+
+1. SPACK_DATA_HOME / SPACK_STATE_HOME / SPACK_CACHE_HOME / SPACK_HOME
+   env vars (env-var, also forces scheme).
+2. Specific config keys: config:install_tree:root,
+   config:environments_root, config:license_dir, config:source_cache,
+   config:gpg_path, config:gpg_keys_path — set in any scope.
+3. config:locations:{home,data,state,cache} — redirects everything that
+   uses $data_home etc. substitutions.
+4. The active scheme yaml's defaults.
+
+User/system config paths bootstrap the config system and are not
+themselves in config. They are controlled by SPACK_USER_CONFIG_PATH,
+SPACK_SYSTEM_CONFIG_PATH, and SPACK_DISABLE_LOCAL_CONFIG, exactly as
+before.
+
+# Path substitutions
+
+Available in any string-valued config field:
+
+- $data_home / $state_home / $cache_home / $spack_home — read
+  config:locations:* with the env-var overrides applied
+- $xdg_data_home / $xdg_state_home / $xdg_cache_home — $XDG_*_HOME or
+  the freedesktop default (with no /spack suffix). Used in the xdg
+  scheme yaml.
+- $user_cache_path — legacy alias for $state_home
+- $spack, $spack_instance_id — instance-specific; unchanged
+
+# Diagnostic: spack debug paths
+
+Prints active scheme, each resolved home with its source (env var?
+config? which scope?), and every config-driven path with raw template
+and resolved value. Replaces the per-command warnings the previous
+attempt emitted; users hit this once when something looks wrong, not on
+every invocation.
+
+# Migration: spack migrate
+
+`spack migrate` copies config from ~/.spack to ~/.config/spack and moves
+package repos from ~/.spack/package_repos to
+~/.local/state/spack/package_repos.
+
+`spack migrate --clear` additionally moves the entire ~/.spack into a
+backup at ~/.local/share/spack/dotspack_backup. The backup location is
+pinned to the XDG default and does NOT follow SPACK_DATA_HOME /
+config:locations:data — the backup is a one-time migration artifact,
+not legacy state to preserve, and shouldn't move around if the user
+later redirects $data_home.
+
+`spack migrate --restore` reverses --clear from that fixed location.
+
+`spack migrate --i-need-old-spack` prints guidance for users who have
+older Spack instances that can't upgrade and need to keep using
 ~/.spack.
 
-- We want new spack instances to start using XDG-compliant locations
-  for these
-- For the data moving out of $spack described in the previous section,
-  we want to move it into XDG-compliant locations
+# Avoiding ~
 
-# Old/new spack instance behavior: smoothing transition
+To prevent any writes into $HOME from a new clone:
 
-- If no new spack clones are generated and only old spack clones
-  exist, then each of them will continue using their old install
-  location inside of their respective $spack directories
-  (including after they pull this PR).
-- If a new clone starts placing installed packages in ~, and an
-  old spack instance git pulls this logic, the old instance will
-  still keep using its own $spack directory for installs,
-  environments, etc.
-- If an old spack instance pulls this PR and then sets any new-
-  style location variable (an env var like SPACK_HOME, or a config
-  variable like config:locations:data), spack assumes that it
-  should use new-style defaults for *all* types of data.
-  - e.g. if an older spack instance git pulls this logic and
-    sees that SPACK_STATE_HOME is set, then it will use installs
-    in ~/.local/share/spack/installs rather than in $spack/opt/spack
-    (even though STATE_HOME does not control where installs are
-    placed)
-  - A user can avoid env vars messing with their older spack
-    install by adding config:locations:disable_env:true
-- Both old and new spack instances will use ~/.spack for config
-  and as a user_cache_path if they detect it and if the new
-  locations (~/.config/spack and ~/.local/state/spack) are not
-  detected
-- A warning will be generated when ~/.spack is detected, telling
-  the user to run `spack migrate` (a new command provided with
-  this PR).
-  - However, this PR also contains logic to detect when the user
-    is explicitly using ~/.spack (e.g. if a config scope
-    explicitly targets ~/.spack as a backup, or if a user
-    sets SPACK_USER_CACHE_PATH to ~/.spack) and does not warn
-    in that case either.
+- SPACK_HOME=x SPACK_USER_CONFIG_PATH=x/config  (everything to x)
+- or SPACK_HOME=x SPACK_DISABLE_LOCAL_CONFIG=1
+- or `config:locations:home: x` in an env's `spack.yaml` (with
+  `include: []` to avoid pulling in user config)
 
-## General all-or-nothing behavior
+The pre-1.2 isolation incantation still works for old instances that
+pull this code:
 
-For items that used to live in $spack, they are generally all relocated
-together or not at all:
+- SPACK_USER_CACHE_PATH=x SPACK_DISABLE_LOCAL_CONFIG=1
 
-- e.g. if the old default install tree in $spack/opt/spack contains
-  installs, then spack also expects to manage environments, gpg keys,
-  license files, and downloads in their old locations inside of
-  $spack
-- The user config scope and the user_cache_path are also excluded from
-  this (they didn't live in $spack by default though)
+# Crosstalk between Spack instances
 
-## `spack migrate` command
+* The misc. cache key (config:misc_cache) includes $spack_instance_id
+  (a hash of the Spack root), so co-installed Spack instances have
+  separate misc caches by default. Override config:misc_cache to share
+  one.
+* Multiple Spack instances all writing to ~/.config/spack is still
+  possible — admins who want isolation between instances should set
+  config:locations:* in a site/system scope.
 
-Simplest usage is if you are updating all spack instances to >= 1.2,
-in which case you can do:
+# Admin management, pip-installed Spack
 
-`spack migrate --clear`
-
-- Copies config files from ~/.spack into ~/.config
-- Copies package repositories from ~/.spack/package_repos into
-  ~/.local/state/spack/package_repos
-- Moves the entire ~/.spack directory into a backup location into
-  `$data_home/dotspack_backup`
-
-If it's descovered that this operation removed something from
-~/.spack that an older spack instance needs (i.e. you realized you can't
-update all your spack instances), then you can restore it with
-
-`spack migrate --restore-old-configs`
-
-# New mechanisms for controlling data location
-
-This is described in detail in where_spack_writes_data.rst (that
-section is focused on how Spack behaves going forward - questions
-about how existing spack instances can keep using their old data
-is described here).
-
-# avoiding ~
-
-Before this PR, you could do
-
-```
-export SPACK_USER_CACHE_PATH=x
-export SPACK_DISABLE_LOCAL_CONFIG=1
-```
-
-and nothing would be read from or written to ~.
-
-For an older instance of spack that pulls this PR, this will also be
-sufficient to prevent writes into ~ (this depends on e48b8c104).
-
-For a fresh clone of spack using this PR, additional steps are
-required to avoid writing into ~:
-
-- If you set `SPACK_HOME=x SPACK_USER_CONFIG_PATH=x/config`, everything
-  will be written to x
-- Or you can do `SPACK_HOME=x SPACK_DISABLE_LOCAL_CONFIG=1`
-- If you set SPACK_DATA_HOME or `config:locations:data` outside of ~,
-  this will relocate everything that takes up significant space (envs,
-  installs, cached downloads)
-
-To completely move everything, in an env you can do:
-
-```
-include:: []
-config:
-  locations:
-    home: x
-```
-
-Alternatively, users who have write access to $spack can do
-
-```
-spack config --scope=spack edit include
-spack config --scope=spack add config:locations:home:x
-```
-
-# Crosstalk between spack instances
-
-* The misc. cache now includes a per-spack component (based on a hash
-  of the Spack root): `spack_instance_id`
-  * `config:misc_cache` still exists, so users can share a single
-    misc cache among multiple instances of spack
-* Ideally each individual spack would have a distinct highest-level
-  write scope, but for now they all share `~/.config/spack`
-
-# Admin management, pip-installed spack
-
-- If admins want to provide an upstream to users but avoid using it
-  themselves, they can use existing `include:` config in the `spack scope`:
-  - Include a scope that adds `upstreams:x` config
-    `when: SPACK_ADMIN not in env`
-  - Include a scope that adds `install_tree:root:x` config
-    `when: SPACK_ADMIN in env`
-  - As long as all admins make sure to define this env var, this will
-    satisfy [5a/b]
+- Admins can ship users an upstream + a curated set of config via
+  `include:` in the `spack` scope, using `when: SPACK_ADMIN not in env`
+  / `when: SPACK_ADMIN in env` to distinguish admin from user runs.
+- A pip-installed Spack works as long as $spack (the install prefix) is
+  not written to. Read-only prefixes are now the default; users land in
+  the xdg scheme automatically.

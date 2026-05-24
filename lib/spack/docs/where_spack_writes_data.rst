@@ -9,59 +9,85 @@
 
 .. _where_spack_writes_data:
 
-Controlling where spack writes data
+Controlling where Spack writes data
 ===================================
 
-A fresh checkout of spack will not write anything into the ``$spack`` prefix; instead, all data is placed under the user's home directory.
-You can control this in the following ways:
+A fresh checkout of Spack writes nothing into the ``$spack`` prefix; all data goes under the user's home directory in XDG-compliant locations.
+A Spack instance that was installed before this layout — where data lived under ``$spack/opt``, ``$spack/var``, etc. — keeps using those legacy locations, so existing installs and environments are not disrupted.
 
-* Redirect everything with environment variables: set ``SPACK_HOME`` and one of ``SPACK_USER_CONFIG_PATH`` or ``SPACK_DISABLE_LOCAL_CONFIG=1``
-* Or redirect everything with config:
+Spack picks one of two *layout schemes* at startup:
 
-  * set ``config:locations:home``
-  * Update the ``user`` config scope with ``spack config --scope=spack edit include``
-* Or redirect installs, environments, and cached downloads (everything that takes up significant space) by setting ``SPACK_DATA_HOME``
-* Or use finer-grained configuration settings, for example:
+* **xdg**: data under ``~/.local/share/spack``, state under ``~/.local/state/spack``, cache under ``~/.cache/spack``.
+* **old**: installs in ``$spack/opt/spack``, environments in ``$spack/var/spack/environments``, license files in ``$spack/etc/spack/licenses``, etc. — i.e. the pre-1.2 layout.
 
-  * ``config:install_tree:root`` to control where installs go
-  * ``config:build_stage`` to control where builds are staged
+The scheme is chosen by ``etc/spack/defaults/include.yaml`` using a ``when:`` clause that calls :func:`spack.paths.detect_layout`.
+The included yaml — ``etc/spack/defaults/old/config.yaml`` or ``etc/spack/defaults/xdg/config.yaml`` — sets ``config:locations:*`` (and, for old, the install_tree/environments/etc. paths that don't share a single root).
+Everything else flows through normal config: ``config:install_tree:root`` is ``$data_home/installs``, environments root is ``$data_home/environments``, gpg lives at ``$data_home/gpg``, and so on.
 
-In the absence of any Spack-specific settings, Spack will respect [XDG](https://specifications.freedesktop.org/basedir/latest/) environment variables controlling the home directory for specific types of data.
+You can see the active scheme and where each path came from with::
 
-Spack's older layout, and pulling newer versions of Spack
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    spack debug paths
 
-Spack previously stored many important pieces of data in the Spack prefix:
+Sample output::
 
-* Installs in ``$spack/opt/spack``
-* Environments in ``$spack/var/spack/environments``
-* GPG keys in ``$spack/opt/spack/gpg``
+    layout scheme: xdg (no legacy $spack-local data)
 
-If Spack detects this old layout in use, it will continue to use it.
-Targeted config settings like ``config:install_tree:root`` will override this, but not other environment variables or general configuration (i.e. anything described below this section).
+    homes:
+      $data_home             /home/alice/.local/share/spack
+        config:locations:data (scope: defaults:xdg)
+      $state_home            /home/alice/.local/state/spack
+        config:locations:state (scope: defaults:xdg)
+      ...
 
-.. _config-file-data-variables:
+    config-driven paths:
+      config:install_tree:root /home/alice/.local/share/spack/installs
+        $data_home/installs  [scope: defaults:base]
+      ...
 
-Spack-specific variables controlling data location
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How to override
+---------------
 
-Files generated and used by spack are organized roughly into four categories:
+In order of priority (highest first):
 
-* Persistent, large quantities of data (e.g. installs and environments)
-* Temporary (or assumed temporary) large quantities of data (e.g. stages for installs)
-* Persistent caches/indices used by spack to speed up its commands (small quantities of data)
-* The configuration files themselves
+1. **Env vars** for individual homes — ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, ``SPACK_CACHE_HOME``, or ``SPACK_HOME`` (which sets all three via XDG-style subpaths). Any of these also *forces the xdg scheme* even when legacy ``$spack`` data is present, so a partial override never produces a split layout.
 
-The corresponding variables that describe where this data is placed are:
+2. **Specific config keys** for individual paths — set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
 
-* ``$data_home``
-* ``$cache_home``
-* ``$state_home`` (also known as ``$user_cache_path``)
-* Config file locations are an exception: they can only be controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>`
+3. **Layout roots** — set ``config:locations:{home,data,state,cache}`` to redirect everything that uses the corresponding substitution.
 
-You can refer to these variables when configuring locations for stages, misc cache, etc.
+Config locations themselves — ``user_config_path``, ``system_config_path``, the entry-point ``include.yaml`` — are NOT in config (they bootstrap config). Override them with ``SPACK_USER_CONFIG_PATH``, ``SPACK_SYSTEM_CONFIG_PATH``, or ``SPACK_DISABLE_LOCAL_CONFIG``.
 
-The following table may help visualize where spack puts all the files it may generate:
+Path substitutions
+------------------
+
+Config values can reference these in any string field:
+
+* ``$data_home``        — typically ``~/.local/share/spack`` (xdg) or ``$spack`` (old)
+* ``$state_home``       — typically ``~/.local/state/spack`` (xdg) or ``~/.spack`` (old)
+* ``$cache_home``       — typically ``~/.cache/spack``
+* ``$spack_home``       — base for spack's user-level data; defaults to ``~``
+* ``$xdg_data_home``    — ``$XDG_DATA_HOME`` if set, else ``~/.local/share`` (no ``/spack`` suffix)
+* ``$xdg_state_home``   — ``$XDG_STATE_HOME`` if set, else ``~/.local/state``
+* ``$xdg_cache_home``   — ``$XDG_CACHE_HOME`` if set, else ``~/.cache``
+* ``$user_cache_path``  — alias for ``$state_home`` (legacy)
+* ``$spack``            — the Spack instance's prefix
+* ``$spack_instance_id`` — hash distinguishing co-installed Spack instances
+
+The ``$xdg_*_home`` substitutions are used by the xdg scheme yaml so the layout respects XDG env vars without baking that resolution into Python.
+
+Migrating from the old layout
+-----------------------------
+
+If you have a ``~/.spack`` directory from before 1.2, you'll see a one-time warning. Run::
+
+    spack migrate --clear
+
+to copy your config into ``~/.config/spack`` and move ``~/.spack`` to a backup at ``~/.local/share/spack/dotspack_backup``. (The backup location is fixed; it does not move when you set ``SPACK_DATA_HOME``.) Use ``spack migrate --restore`` to undo.
+
+If you have older Spack instances that can't be upgraded and need ``~/.spack`` to stick around, see ``spack migrate --i-need-old-spack``.
+
+The location table
+------------------
 
 +----------------+-----------+--------------------+------------+--------------------+
 |                | data_home | state_home         | cache_home | somewhere_else     |
@@ -87,52 +113,12 @@ The following table may help visualize where spack puts all the files it may gen
 | config files   |           |                    |            | x [#wheretable-3]_ |
 +----------------+-----------+--------------------+------------+--------------------+
 
-.. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available
-.. [#wheretable-2] ``cache_home`` is modeled after `$XDG_CACHE_HOME <https://specifications.freedesktop.org/basedir/latest/>`_.
-                   Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out.
-                   Spack caches are intended to be longer-lived, so they live in ``state_home`` instead.
-.. [#wheretable-3] as discussed elsewhere in this section, user-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
-                   For the locations of other config scopes and how to write to them instead, see :ref:`configuration scopes <configuration-scopes>`.
-
-Each of these variables are the *default* (fallback) for data in their category: more-specific data in that category may have config that overrides these defaults.
-For example while build stages would reasonably be placed in ``$cache_home``, Spack's default configuration sets ``config:build_stage`` to the user's tempdir.
-Any configuration controlling location that is more-specific than the above variables will always take precedence (e.g. ``config:install_tree:root``).
-
-Each of these variables can be set with config or with environment variables.
-For example ``$data_home`` evaluates to one of the following (highest-priority first):
-
-#. ``SPACK_DATA_HOME`` env var if that is set
-#. Under ``SPACK_HOME`` env var; for ``$data_home``, it is ``$SPACK_HOME/.local/share/spack``
-#. ``config:locations:data``
-#. Under ``config:locations:home``; for ``$data_home`` it is ``$spack_home/.local/share/spack``
-#. ``XDG_DATA_HOME/spack`` if XDG_DATA_HOME is set
-#. Under the default for ``XDG_DATA_HOME``: ``~/.local/share/spack``
-
-``config:locations:home`` / ``SPACK_HOME`` can be used to control all 3 of ``data_home``, ``cache_home``, and ``state_home``.
-They are placed relative to this directory (``$spack_home``):
-
-* ``data_home`` is placed in ``$spack_home/.local/share/spack`` (as described above).
-* ``state_home`` is placed in ``$spack_home/.local/state/spack``.
-* ``cache_home`` is placed in ``$spack_home/.cache/spack``.
-
-Location of installs and environments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Of particular interest is where the environments and installs are placed by Spack, because these can take up a lot of space.
-These are controlled by ``$data_home``.
-Older installs of spack placed these within ``$spack``, and fallback scheme in these cases is augmented to prefer these old locations if no data is detected in the corresponding new locations:
-
-* ``$default_install_root``: the location where installs go by default.
-  Overridden by ``config:install_tree:root``.
-  Prefers ``$data_home/installs``, but if there are no installs there and there are installs in the old location ``$spack/opt/spack``, then the old location will be used.
-* ``$default_envs_root``: the location where environments are managed by default.
-  Overridden by ``config:environments_root``.
-  Prefers ``$data_home/envs`` but if there are no envs there and there are envs in the old location ``$spack/var/spack/environments``, then the old location will be used.
+.. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
+.. [#wheretable-2] ``cache_home`` is modeled after ``$XDG_CACHE_HOME``. Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out; misc cache is intended to be longer-lived, so it lives in ``state_home`` instead.
+.. [#wheretable-3] User-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
 
 References
-^^^^^^^^^^
-
-For more on this, see:
+----------
 
 * :ref:`include.yaml <include-yaml>`
 * :ref:`config.yaml <config-yaml>`
