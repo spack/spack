@@ -108,6 +108,11 @@ _ALL_SCHEMAS: Dict[str, Any] = {
 #: Defaults to spack.paths but can be overridden for testing
 _paths = spack.paths
 
+#: XDG-compliant relative paths from home directory
+XDG_RELATIVE_STATE_HOME = os.path.join(".local", "state", "spack")
+XDG_RELATIVE_DATA_HOME = os.path.join(".local", "share", "spack")
+XDG_RELATIVE_CACHE_HOME = os.path.join(".cache", "spack")
+
 #: Path to the main configuration scope
 CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
 
@@ -1646,8 +1651,8 @@ def _get_xdg_compliant_paths():
     Uses the global _paths object, which can be overridden for testing.
     """
     home = os.path.expanduser("~")
-    state_home = os.path.join(home, ".local", "state", "spack")
-    data_home = os.path.join(home, ".local", "share", "spack")
+    state_home = os.path.join(home, XDG_RELATIVE_STATE_HOME)
+    data_home = os.path.join(home, XDG_RELATIVE_DATA_HOME)
     dotspack = os.path.join(home, ".spack")
 
     # Check environment variable first

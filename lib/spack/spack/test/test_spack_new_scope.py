@@ -134,12 +134,12 @@ class TestSpackNewScopeContent:
             # Check that config.get returns XDG-compliant paths
             # Note: cfg.get() returns raw values; variable substitution happens in paths.py
             user_cache_path = cfg.get("config:user_cache_path")
-            expected_cache = str(m["home"] / ".local" / "state" / "spack")
+            expected_cache = str(m["home"] / spack.config.XDG_RELATIVE_STATE_HOME)
             assert user_cache_path == expected_cache
 
             # Check that install_tree uses XDG location
             install_tree_root = cfg.get("config:install_tree:root")
-            expected_installs = str(m["home"] / ".local" / "share" / "spack" / "installs")
+            expected_installs = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "installs")
             assert install_tree_root == expected_installs
 
             # Derived paths use variable substitution
@@ -148,21 +148,21 @@ class TestSpackNewScopeContent:
 
             # Check modules are in XDG locations
             tcl_root = cfg.get("modules:default:roots:tcl")
-            expected_tcl = str(m["home"] / ".local" / "share" / "spack" / "modules")
+            expected_tcl = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "modules")
             assert tcl_root == expected_tcl
 
             lmod_root = cfg.get("modules:default:roots:lmod")
-            expected_lmod = str(m["home"] / ".local" / "share" / "spack" / "lmod")
+            expected_lmod = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "lmod")
             assert lmod_root == expected_lmod
 
             # Check environments are in XDG data location
             environments_root = cfg.get("config:environments_root")
-            expected_envs = str(m["home"] / ".local" / "share" / "spack" / "environments")
+            expected_envs = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "environments")
             assert environments_root == expected_envs
 
             # Check source cache is in data_home/downloads
             source_cache = cfg.get("config:source_cache")
-            expected_source = str(m["home"] / ".local" / "share" / "spack" / "downloads")
+            expected_source = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "downloads")
             assert source_cache == expected_source
 
             # Check misc cache uses variable substitution
