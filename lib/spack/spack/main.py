@@ -929,10 +929,26 @@ def _warn_about_old_dotspack():
         tty.debug("Skip .spack warning: no ~/.spack directory")
         return
 
-    # Don't warn if new locations already exist
+    # Don't warn if new XDG locations already exist (indicates migration happened)
     new_state_home = os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
+    new_config_home = os.path.join(os.path.expanduser("~"), ".config", "spack")
     if os.path.exists(new_state_home):
         tty.debug("Skip .spack warning: new state location already exists")
+        return
+    if os.path.exists(new_config_home):
+        tty.debug("Skip .spack warning: new config location already exists")
+        return
+
+    # Don't warn if config:user_cache_path is explicitly set anywhere
+    user_cache_path_config = spack.config.get("config:user_cache_path", default=None)
+    if user_cache_path_config is not None:
+        tty.debug("Skip .spack warning: config:user_cache_path is explicitly configured")
+        return
+
+    # Check if user explicitly set SPACK_USER_CACHE_PATH to ~/.spack
+    env_cache_path = os.getenv("SPACK_USER_CACHE_PATH")
+    if env_cache_path and os.path.expanduser(env_cache_path) == old_dotspack:
+        tty.debug("Skip .spack warning: SPACK_USER_CACHE_PATH explicitly set to ~/.spack")
         return
 
     # Helper to check if old_dotspack is a prefix
@@ -941,12 +957,7 @@ def _warn_about_old_dotspack():
             return False
         return path == old_dotspack or path.startswith(old_dotspack + os.sep)
 
-    # Check if user explicitly set SPACK_USER_CACHE_PATH to ~/.spack
-    if os.getenv("SPACK_USER_CACHE_PATH") == old_dotspack:
-        tty.debug("Skip .spack warning: SPACK_USER_CACHE_PATH explicitly set to ~/.spack")
-        return
-
-    # Check if user explicitly configured ~/.spack (not just the default)
+    # Check if user explicitly configured ~/.spack in a scope path
     # The "user" scope defaults to ~/.spack if SPACK_USER_CONFIG_PATH is not set
     # We only skip the warning if it was explicitly set
     user_config_env = os.getenv("SPACK_USER_CONFIG_PATH")
@@ -965,7 +976,6 @@ def _warn_about_old_dotspack():
                 return
 
     # Warn about migration
-    new_config_home = os.path.join(os.path.expanduser("~"), ".config", "spack")
     tty.warn(
         "Found legacy configuration directory ~/.spack.\n"
         "  Consider migrating to XDG-compliant locations:\n"

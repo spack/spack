@@ -131,11 +131,10 @@ class TestSpackNewScopeContent:
         with spack.config.override_paths(m["paths"]):
             cfg = spack.config.create()
 
-            # Check that config.get returns XDG-compliant paths
-            # Note: cfg.get() returns raw values; variable substitution happens in paths.py
-            user_cache_path = cfg.get("config:user_cache_path")
-            expected_cache = str(m["home"] / spack.config.XDG_RELATIVE_STATE_HOME)
-            assert user_cache_path == expected_cache
+            # Check that user_cache_path is NOT in spack-new (determined by paths.py)
+            # spack-new should not set user_cache_path so it can be explicitly configured
+            user_cache_path_in_config = cfg.get("config:user_cache_path", default=None)
+            assert user_cache_path_in_config is None
 
             # Check that install_tree uses XDG location
             install_tree_root = cfg.get("config:install_tree:root")
@@ -183,9 +182,9 @@ class TestSpackNewScopeContent:
         with spack.config.override_paths(m["paths"]):
             cfg = spack.config.create()
 
-            # Should use ~/.spack for user_cache_path (backwards compat)
-            user_cache_path = cfg.get("config:user_cache_path")
-            assert user_cache_path == str(dotspack)
+            # user_cache_path should NOT be set in spack-new config
+            user_cache_path_in_config = cfg.get("config:user_cache_path", default=None)
+            assert user_cache_path_in_config is None
 
             # Derived paths should use variable substitution
             reports_path = cfg.get("config:reports_path")
@@ -213,9 +212,9 @@ class TestSpackNewScopeContent:
         with spack.config.override_paths(m["paths"]):
             cfg = spack.config.create()
 
-            # Should use the env var path
-            user_cache_path = cfg.get("config:user_cache_path")
-            assert user_cache_path == str(custom_cache)
+            # SPACK_USER_CACHE_PATH doesn't write to config, so config shouldn't have it
+            user_cache_path_in_config = cfg.get("config:user_cache_path", default=None)
+            assert user_cache_path_in_config is None
 
             # Derived paths should use variable substitution
             reports_path = cfg.get("config:reports_path")
@@ -233,10 +232,9 @@ class TestSpackNewScopeContent:
         with spack.config.override_paths(m["paths"]):
             cfg = spack.config.create()
 
-            # Should use ~/.spack
-            user_cache_path = cfg.get("config:user_cache_path")
-            expected_cache = str(m["home"] / ".spack")
-            assert user_cache_path == expected_cache
+            # user_cache_path should NOT be set in spack-new config
+            user_cache_path_in_config = cfg.get("config:user_cache_path", default=None)
+            assert user_cache_path_in_config is None
 
             # Should point to old locations in $spack using variables
             # cfg.get() returns raw values; variable substitution happens in paths.py

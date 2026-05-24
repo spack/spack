@@ -133,11 +133,8 @@ def _get_config_defaults():
             "build_jobs": min(16, cpus_available()),
             "build_stage": "$tempdir/spack-stage",
             "license_dir": _paths.default_license_dir,
-            # Old-style path defaults for backwards compatibility
-            # These are used when no spack-new scope exists (e.g., read-only centralized install
-            # updated from pre-1.2) and ensure pre-1.2 behavior is maintained
-            # Derived paths use $user_cache_path so they relocate together
-            "user_cache_path": os.path.expanduser("~/.spack"),
+            # Derived paths use $user_cache_path variable substitution
+            # user_cache_path itself is determined by paths.py based on environment/what exists
             "reports_path": "$user_cache_path/reports",
             "default_monitor_path": "$user_cache_path/reports/monitor",
             "user_repos_cache_path": "$user_cache_path/git_repos",
@@ -1655,19 +1652,8 @@ def _get_xdg_compliant_paths():
     data_home = os.path.join(home, XDG_RELATIVE_DATA_HOME)
     dotspack = os.path.join(home, ".spack")
 
-    # Check environment variable first
-    env_cache_path = os.getenv("SPACK_USER_CACHE_PATH")
-    if env_cache_path:
-        user_cache_path = os.path.expanduser(env_cache_path)
-    # Check if we should use ~/.spack for backwards compatibility
-    elif os.path.exists(dotspack) and not os.path.exists(state_home):
-        user_cache_path = dotspack
-    else:
-        user_cache_path = state_home
-
     return {
         "config": {
-            "user_cache_path": user_cache_path,
             "reports_path": "$user_cache_path/reports",
             "default_monitor_path": "$user_cache_path/reports/monitor",
             "user_repos_cache_path": "$user_cache_path/git_repos",
@@ -1694,10 +1680,8 @@ def _get_old_style_paths():
 
     Uses the global _paths object, which can be overridden for testing.
     """
-    home = os.path.expanduser("~")
     return {
         "config": {
-            "user_cache_path": os.path.join(home, ".spack"),
             "reports_path": "$user_cache_path/reports",
             "default_monitor_path": "$user_cache_path/reports/monitor",
             "user_repos_cache_path": "$user_cache_path/git_repos",

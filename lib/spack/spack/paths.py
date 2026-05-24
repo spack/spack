@@ -111,8 +111,14 @@ def _get_config_value(key, default):
 
 
 def _get_user_cache_path():
-    """Get user_cache_path from config or environment."""
-    # First check environment variable (for backwards compatibility)
+    """Get user_cache_path from config or environment.
+
+    Priority order:
+    1. SPACK_USER_CACHE_PATH environment variable
+    2. config:user_cache_path from config files
+    3. Intelligent default based on what directories exist
+    """
+    # First check environment variable
     env_path = os.getenv("SPACK_USER_CACHE_PATH")
     if env_path:
         return os.path.expanduser(env_path)
@@ -122,8 +128,26 @@ def _get_user_cache_path():
     if config_path:
         return config_path
 
-    # Fall back to old default
-    return os.path.expanduser("~%s.spack" % os.sep)
+    # Determine default based on what exists
+    home = os.path.expanduser("~")
+    dotspack = os.path.join(home, ".spack")
+    xdg_state_home = os.path.join(home, ".local", "state", "spack")
+
+    # If old-style spack layout detected in $spack, use ~/.spack
+    # (Check is done here to avoid circular imports with config module)
+    try:
+        import spack.config
+        if spack.config._detect_old_spack_layout():
+            return dotspack
+    except (ImportError, AttributeError):
+        pass  # During early initialization, detection may not be available
+
+    # If ~/.spack exists and new location doesn't, use ~/.spack for backwards compat
+    if os.path.exists(dotspack) and not os.path.exists(xdg_state_home):
+        return dotspack
+
+    # Otherwise use XDG-compliant default
+    return xdg_state_home
 
 
 def _get_user_cache_path_cached():
