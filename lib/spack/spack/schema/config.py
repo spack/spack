@@ -272,7 +272,9 @@ properties: Dict[str, Any] = {
             },
             "user_repos_cache_path": {
                 "type": "string",
-                "description": "Directory for git repositories fetched to compare commits to versions",
+                "description": (
+                    "Directory for git repositories fetched to compare commits to versions"
+                ),
             },
             "package_repos_path": {
                 "type": "string",
@@ -282,10 +284,7 @@ properties: Dict[str, Any] = {
                 "type": "string",
                 "description": "Directory for GPG keyrings and trust databases",
             },
-            "gpg_keys_path": {
-                "type": "string",
-                "description": "Directory for GPG keys",
-            },
+            "gpg_keys_path": {"type": "string", "description": "Directory for GPG keys"},
         },
     }
 }

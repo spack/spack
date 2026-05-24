@@ -100,6 +100,7 @@ def _get_config_value(key, default):
     try:
         import spack.config
         import spack.util.path
+
         value = spack.config.get(key, default)
         if value and isinstance(value, str):
             value = spack.util.path.substitute_path_variables(value)

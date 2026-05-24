@@ -5,7 +5,6 @@
 """Test automatic creation and behavior of the spack-new config scope."""
 
 import os
-from unittest import mock
 
 import pytest
 
@@ -15,6 +14,7 @@ import spack.paths
 
 class MockPaths:
     """Simple mock object for spack.paths in tests."""
+
     def __init__(self, spack_root, etc_path, var_path, instance_id="test123"):
         self.prefix = str(spack_root)
         self.etc_path = str(etc_path)
@@ -90,6 +90,7 @@ class TestSpackNewScopeCreation:
 
         # Mock os.access to return False for write check
         original_access = os.access
+
         def mock_access(path, mode):
             if str(path) == str(m["etc_path"]) and mode == os.W_OK:
                 return False
@@ -294,15 +295,6 @@ class TestVariableSubstitution:
         """Test that $user_cache_path is substituted in derived paths."""
         # This tests the _get_config_value substitution logic
         # We need to test that paths.py properly substitutes variables
-
-        # Create a minimal config with variables
-        config_data = {
-            "config": {
-                "user_cache_path": "/custom/cache",
-                "reports_path": "$user_cache_path/reports"
-            }
-        }
-
         # The actual substitution test would need to mock spack.config.get()
         # and verify paths.py calls substitute_path_variables
         # This is more of an integration test that we've already verified works

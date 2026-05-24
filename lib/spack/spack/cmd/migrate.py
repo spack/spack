@@ -30,7 +30,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--backup",
         type=str,
-        help="specify custom backup location for ~/.spack (default: ~/.local/share/spack/dotspack_backup)",
+        help=(
+            "specify custom backup location for ~/.spack "
+            "(default: ~/.local/share/spack/dotspack_backup)"
+        ),
     )
 
 
@@ -64,7 +67,6 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     # Track what we'll migrate
     migrations = []
-    errors = []
 
     # 1. Check for config files to migrate (*.yaml and *.yml files in ~/.spack/)
     config_files = []
@@ -190,6 +192,4 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         shutil.move(old_location, backup_location)
         tty.msg(f"\nBackup complete! Original ~/.spack moved to {backup_location}")
     else:
-        tty.msg(
-            f"\nNote: ~/.spack still exists. Use --clear to move it to a backup location."
-        )
+        tty.msg("\nNote: ~/.spack still exists. Use --clear to move it to a backup location.")

@@ -161,6 +161,7 @@ def override_paths(mock_paths):
     finally:
         _paths = old_paths
 
+
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
 SCOPES_METAVAR = "{defaults,system,site,user,command_line} or env:ENVIRONMENT"
@@ -1671,12 +1672,7 @@ def _get_xdg_compliant_paths():
             "source_cache": f"{cache_home}/source",
         },
         "modules": {
-            "default": {
-                "roots": {
-                    "tcl": f"{data_home}/modules",
-                    "lmod": f"{data_home}/lmod",
-                }
-            }
+            "default": {"roots": {"tcl": f"{data_home}/modules", "lmod": f"{data_home}/lmod"}}
         },
     }
 
@@ -1706,10 +1702,7 @@ def _get_old_style_paths():
         },
         "modules": {
             "default": {
-                "roots": {
-                    "tcl": "$spack/share/spack/modules",
-                    "lmod": "$spack/share/spack/lmod",
-                }
+                "roots": {"tcl": "$spack/share/spack/modules", "lmod": "$spack/share/spack/lmod"}
             }
         },
     }
@@ -1757,13 +1750,17 @@ def _initialize_spack_new_scope():
         if "config" in config_data:
             config_file = os.path.join(spack_new_path, "config.yaml")
             with open(config_file, "w") as f:
-                syaml.dump_config({"config": config_data["config"]}, stream=f, default_flow_style=False)
+                syaml.dump_config(
+                    {"config": config_data["config"]}, stream=f, default_flow_style=False
+                )
 
         # Write modules.yaml
         if "modules" in config_data:
             modules_file = os.path.join(spack_new_path, "modules.yaml")
             with open(modules_file, "w") as f:
-                syaml.dump_config({"modules": config_data["modules"]}, stream=f, default_flow_style=False)
+                syaml.dump_config(
+                    {"modules": config_data["modules"]}, stream=f, default_flow_style=False
+                )
 
         return spack_new_path
     except (OSError, IOError) as e:
@@ -1794,7 +1791,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
         # This scope is dynamically created and contains default paths
         yield from cfg.push_scope_incremental(
             DirectoryConfigScope("spack-new", spack_new_path, writable=False),
-            priority=ConfigScopePriority.CONFIG_FILES
+            priority=ConfigScopePriority.CONFIG_FILES,
         )
 
     # Initial topmost scope is spack (the config scope in the spack instance).
