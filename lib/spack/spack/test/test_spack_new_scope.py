@@ -155,6 +155,11 @@ class TestSpackNewScopeContent:
             expected_lmod = str(m["home"] / ".local" / "share" / "spack" / "lmod")
             assert lmod_root == expected_lmod
 
+            # Check environments are in XDG data location
+            environments_root = cfg.get("config:environments_root")
+            expected_envs = str(m["home"] / ".local" / "share" / "spack" / "environments")
+            assert environments_root == expected_envs
+
             # Verify that the spack-new scope was actually created
             assert (m["etc_path"] / "spack-new").exists()
 
@@ -183,6 +188,10 @@ class TestSpackNewScopeContent:
 
             lmod_root = cfg.get("modules:default:roots:lmod")
             assert lmod_root == "$spack/share/spack/lmod"
+
+            # Environments should use old-style path
+            environments_root = cfg.get("config:environments_root")
+            assert environments_root == "$spack/var/spack/environments"
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""
@@ -218,6 +227,10 @@ class TestSpackNewScopeContent:
 
             lmod_root = cfg.get("modules:default:roots:lmod")
             assert lmod_root == "$spack/share/spack/lmod"
+
+            # Environments should use old-style path
+            environments_root = cfg.get("config:environments_root")
+            assert environments_root == "$spack/var/spack/environments"
 
 
 class TestOldLayoutDetection:
