@@ -4858,7 +4858,7 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(mock_packages):
+def test_concrete_specs_skip_prechecks(config, mock_packages):
     """Test that concrete specs are not checked for unknown versions and dependencies."""
 
     specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
@@ -4954,7 +4954,7 @@ def test_penalties_for_variant_defined_by_function(
     assert s.satisfies(expected)
 
 
-def test_default_values_used_if_subset_required_by_dependent(mock_packages):
+def test_default_values_used_if_subset_required_by_dependent(config, mock_packages):
     """If a dependent requires *at least* a subset of default values of a multi-valued variant of
     a dependency, that should not influence concretization; the default values should be used."""
     # multivalue-variant-multi-defaults-dependent requires myvariant=bar without baz.
