@@ -82,6 +82,7 @@ class TestSpackNewScopeCreation:
         assert spack_new_path is not None
         assert (m["etc_path"] / "spack-new").exists()
         assert (m["etc_path"] / "spack-new" / "config.yaml").exists()
+        assert (m["etc_path"] / "spack-new" / "modules.yaml").exists()
 
     def test_not_created_when_not_writable(self, mock_spack_paths, monkeypatch):
         """Test that spack-new is NOT created when $spack/etc is not writable."""
@@ -144,6 +145,15 @@ class TestSpackNewScopeContent:
             reports_path = cfg.get("config:reports_path")
             assert reports_path == "$user_cache_path/reports"
 
+            # Check modules are in XDG locations
+            tcl_root = cfg.get("modules:default:roots:tcl")
+            expected_tcl = str(m["home"] / ".local" / "share" / "spack" / "modules")
+            assert tcl_root == expected_tcl
+
+            lmod_root = cfg.get("modules:default:roots:lmod")
+            expected_lmod = str(m["home"] / ".local" / "share" / "spack" / "lmod")
+            assert lmod_root == expected_lmod
+
             # Verify that the spack-new scope was actually created
             assert (m["etc_path"] / "spack-new").exists()
 
@@ -165,6 +175,13 @@ class TestSpackNewScopeContent:
             # Derived paths should use variable substitution
             reports_path = cfg.get("config:reports_path")
             assert reports_path == "$user_cache_path/reports"
+
+            # Modules should still use old-style paths (same as defaults)
+            tcl_root = cfg.get("modules:default:roots:tcl")
+            assert tcl_root == "$spack/share/spack/modules"
+
+            lmod_root = cfg.get("modules:default:roots:lmod")
+            assert lmod_root == "$spack/share/spack/lmod"
 
     def test_old_style_paths_for_old_layout(self, mock_spack_paths):
         """Test old-style config when old data exists in $spack."""
@@ -193,6 +210,13 @@ class TestSpackNewScopeContent:
 
             source_cache = cfg.get("config:source_cache")
             assert source_cache == "$spack/var/spack/cache"
+
+            # Modules should use old-style paths
+            tcl_root = cfg.get("modules:default:roots:tcl")
+            assert tcl_root == "$spack/share/spack/modules"
+
+            lmod_root = cfg.get("modules:default:roots:lmod")
+            assert lmod_root == "$spack/share/spack/lmod"
 
 
 class TestOldLayoutDetection:

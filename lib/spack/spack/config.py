@@ -1669,7 +1669,15 @@ def _get_xdg_compliant_paths():
             "license_dir": f"{data_home}/licenses",
             "misc_cache": f"{cache_home}/{_paths.spack_instance_id}/cache",
             "source_cache": f"{cache_home}/source",
-        }
+        },
+        "modules": {
+            "default": {
+                "roots": {
+                    "tcl": f"{data_home}/modules",
+                    "lmod": f"{data_home}/lmod",
+                }
+            }
+        },
     }
 
 
@@ -1695,7 +1703,15 @@ def _get_old_style_paths():
             "license_dir": "$spack/etc/spack/licenses",
             "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
             "source_cache": "$spack/var/spack/cache",
-        }
+        },
+        "modules": {
+            "default": {
+                "roots": {
+                    "tcl": "$spack/share/spack/modules",
+                    "lmod": "$spack/share/spack/lmod",
+                }
+            }
+        },
     }
 
 
@@ -1733,12 +1749,22 @@ def _initialize_spack_new_scope():
     else:
         config_data = _get_xdg_compliant_paths()
 
-    # Create the directory and write config
+    # Create the directory and write config files
     try:
         filesystem.mkdirp(spack_new_path)
-        config_file = os.path.join(spack_new_path, "config.yaml")
-        with open(config_file, "w") as f:
-            syaml.dump_config(config_data, stream=f, default_flow_style=False)
+
+        # Write config.yaml
+        if "config" in config_data:
+            config_file = os.path.join(spack_new_path, "config.yaml")
+            with open(config_file, "w") as f:
+                syaml.dump_config({"config": config_data["config"]}, stream=f, default_flow_style=False)
+
+        # Write modules.yaml
+        if "modules" in config_data:
+            modules_file = os.path.join(spack_new_path, "modules.yaml")
+            with open(modules_file, "w") as f:
+                syaml.dump_config({"modules": config_data["modules"]}, stream=f, default_flow_style=False)
+
         return spack_new_path
     except (OSError, IOError) as e:
         # If we can't write, just continue without it
