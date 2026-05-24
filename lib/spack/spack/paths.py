@@ -137,6 +137,7 @@ def _get_user_cache_path():
     # (Check is done here to avoid circular imports with config module)
     try:
         import spack.config
+
         if spack.config._detect_old_spack_layout():
             return dotspack
     except (ImportError, AttributeError):

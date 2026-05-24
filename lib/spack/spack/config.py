@@ -1648,9 +1648,7 @@ def _get_xdg_compliant_paths():
     Uses the global _paths object, which can be overridden for testing.
     """
     home = os.path.expanduser("~")
-    state_home = os.path.join(home, XDG_RELATIVE_STATE_HOME)
     data_home = os.path.join(home, XDG_RELATIVE_DATA_HOME)
-    dotspack = os.path.join(home, ".spack")
 
     return {
         "config": {
