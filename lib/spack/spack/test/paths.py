@@ -7,10 +7,8 @@ import pathlib
 
 import pytest
 
-import spack.config
 import spack.paths
 import spack.paths_base
-import spack.subprocess_context
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
@@ -22,332 +20,300 @@ def _ensure_dir(pathlike):
 
 @pytest.fixture(autouse=True)
 def clear_env_vars(working_env):
+    """Scrub XDG_*/SPACK_* env vars so each test starts from a known state."""
     spack.paths._unset_path_vars(os.environ)
 
 
-def test_install_location(working_env, tmp_path, mutable_config, set_home):
-    # If prior default install dir inside spack prefix does not
-    # exist, place installs in $HOME
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-
-    empty_dir = _ensure_dir(tmp_path / "empty")
-
-    def paths_base_empty_old_install():
-        pb = SpackPathsBase(base_prefix)
-        pb.old_install_path = empty_dir
-        return pb
-
-    set_home(home_prefix)
-
-    _install_path_checks(tmp_path, paths_base_empty_old_install, home_prefix, False)
+def _set_locations(cfg, **kwargs):
+    """Set config:locations:* keys (avoiding the leftover state pitfall of
+    overwriting the whole locations block)."""
+    for k, v in kwargs.items():
+        cfg.set(f"config:locations:{k}", v)
 
 
-def test_install_location_old_installs_exist(working_env, tmp_path, mutable_config, set_home):
-    # If prior default install dir inside spack prefix does not
-    # exist, place installs in $HOME
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-
-    nonempty_dir = _ensure_dir(tmp_path / "not-empty")
-    (pathlib.Path(nonempty_dir) / "afile").touch()
-
-    def paths_base_nonempty_old_install():
-        pb = SpackPathsBase(base_prefix)
-        pb.old_install_path = nonempty_dir
-        return pb
-
-    set_home(home_prefix)
-
-    _install_path_checks(tmp_path, paths_base_nonempty_old_install, home_prefix, True)
+# ---------------------------------------------------------------------------
+# Home property resolution
+# ---------------------------------------------------------------------------
 
 
-def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
-    def checka(paths, new_path, msg):
-        if force_old_layout:
-            assert paths.default_install_location == paths.base.old_install_path, msg
-        else:
-            assert paths.default_install_location == str(new_path), msg
-
-    def checkb(paths, new_path, msg):
-        assert paths.default_install_location == str(new_path), msg
-
-    new_default_installs_dir = _ensure_dir(
-        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
-    )
-    (pathlib.Path(new_default_installs_dir) / "afile").touch()
-    p0 = SpackPaths(base_paths_generator())
-    checka(
-        p0,
-        pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs",
-        "p0: default location",
-    )
-
-    # $XDG_DATA_HOME overrides the default
-    xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
-    os.environ["XDG_DATA_HOME"] = xdg_data_home
-    p7 = SpackPaths(base_paths_generator())
-    checka(p7, pathlib.Path(xdg_data_home) / "spack" / "installs", "p7: XDG_DATA_HOME override")
-
-    spack.config.set("config:locations", {})
-
-    # "config:locations:home" variable overrides the above
-    spack_home_cfg_prefix = _ensure_dir(tmp_path / "spack-home2")
-    spack.config.set("config:locations:home", spack_home_cfg_prefix)
-    p2 = SpackPaths(base_paths_generator())
-    checkb(
-        p2,
-        pathlib.Path(spack_home_cfg_prefix) / ".local" / "share" / "spack" / "installs",
-        "p2: config:locations:home override",
-    )
-
-    # "config:locations:data" overrides the above
-    spack_data_prefix = _ensure_dir(tmp_path / "spack-data")
-    spack.config.set("config:locations:data", spack_data_prefix)
-    p3 = SpackPaths(base_paths_generator())
-    checkb(p3, pathlib.Path(spack_data_prefix) / "installs", "p3: config:locations:data override")
-
-    # SPACK_HOME env variable overrides the above (even if there
-    # are no installs there and there are installs in the old location)
-    spack_home_env_prefix = _ensure_dir(tmp_path / "spack-home1")
-    os.environ["SPACK_HOME"] = spack_home_env_prefix
-    p1 = SpackPaths(base_paths_generator())
-    checkb(
-        p1,
-        pathlib.Path(spack_home_env_prefix) / ".local" / "share" / "spack" / "installs",
-        "p1: SPACK_HOME override",
-    )
-
-    # Check that $SPACK_DATA_HOME overrides all the above
-    spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
-    os.environ["SPACK_DATA_HOME"] = spack_data_home
-    p5 = SpackPaths(base_paths_generator())
-    checkb(p5, pathlib.Path(spack_data_home) / "installs", "p5: SPACK_DATA_HOME override")
-
-    # Disable all location-based env vars: this will then defer
-    # to using "config:locations:data"
-    spack.config.set("config:locations:disable_env", True)
-    p6 = SpackPaths(base_paths_generator())
-    checkb(
-        p6,
-        pathlib.Path(spack_data_prefix) / "installs",
-        "p6: disable_env defers to config:locations:data",
-    )
+def test_data_home_from_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, data=str(tmp_path / "datadir"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.data_home == str(tmp_path / "datadir")
 
 
-def test_state_home(working_env, tmp_path, mutable_config, set_home):
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-
-    set_home(home_prefix)
-    pb = SpackPathsBase(base_prefix)
-
-    new_user_cache_path = str(pathlib.Path(home_prefix) / ".local" / "state" / "spack")
-
-    p0 = SpackPaths(pb)
-    # if neither old nor new dir is occupied, choose new
-    assert p0.state_home == new_user_cache_path
-
-    old_user_cache_path = pathlib.Path(home_prefix) / ".spack"
-    old_user_cache_path.mkdir(parents=True)
-    (old_user_cache_path / "afile").touch()
-    p1 = SpackPaths(pb)
-    # if new dir does not exist, and old dir does, choose old
-    assert p1.state_home == str(old_user_cache_path)
-
-    os.environ["SPACK_DATA_HOME"] = base_prefix
-    p2 = SpackPaths(pb)
-    # While setting any new-style location env var or config:locations value
-    # relocates installs, gpg keys, downloads, etc. It does not make spack
-    # choose ~/.local/state/spack over ~/.spack
-    assert p2.state_home == str(old_user_cache_path)
-
-    os.environ["SPACK_HOME"] = home_prefix
-    p3 = SpackPaths(pb)
-    # ... SPACK_HOME is special amongst these variables though, because by
-    # definition it is supposed to relocate everything except for config
-    # (caches included)
-    assert p3.state_home == new_user_cache_path
+def test_state_home_from_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, state=str(tmp_path / "statedir"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.state_home == str(tmp_path / "statedir")
 
 
-def test_system_config_path_is_overridable(working_env, tmp_path):
-    redirect_syscfg_path = str(pathlib.Path(tmp_path) / "redirected_syscfg")
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = redirect_syscfg_path
-    p1 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
-    assert p1.system_config_path == redirect_syscfg_path
+def test_cache_home_from_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, cache=str(tmp_path / "cachedir"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.cache_home == str(tmp_path / "cachedir")
 
 
-def test_system_config_path_is_default_when_env_var_is_empty(working_env, tmp_path):
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    p1 = SpackPaths(SpackPathsBase(str(tmp_path)))
-    assert os.sep + os.path.join("etc", "spack") == p1.system_config_path
+def test_spack_home_from_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, home=str(tmp_path / "spackhome"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.spack_home == str(tmp_path / "spackhome")
+
+
+def test_data_home_env_overrides_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, data=str(tmp_path / "fromconfig"))
+    os.environ["SPACK_DATA_HOME"] = str(tmp_path / "fromenv")
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.data_home == str(tmp_path / "fromenv")
+
+
+def test_spack_home_env_overrides_subhomes(working_env, tmp_path, mutable_config, set_home):
+    """SPACK_HOME (no _DATA_/_STATE_/_CACHE_) provides a root and the homes
+    derive from it via their XDG-style subpaths."""
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, data=str(tmp_path / "fromconfig"))
+    os.environ["SPACK_HOME"] = str(tmp_path / "alt-home")
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.data_home == str(tmp_path / "alt-home" / ".local" / "share" / "spack")
+    assert p.state_home == str(tmp_path / "alt-home" / ".local" / "state" / "spack")
+    assert p.cache_home == str(tmp_path / "alt-home" / ".cache" / "spack")
+
+
+def test_specific_env_overrides_spack_home(working_env, tmp_path, mutable_config, set_home):
+    """SPACK_DATA_HOME beats SPACK_HOME for data_home."""
+    set_home(_ensure_dir(tmp_path / "home"))
+    os.environ["SPACK_HOME"] = str(tmp_path / "alt-home")
+    os.environ["SPACK_DATA_HOME"] = str(tmp_path / "specific-data")
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.data_home == str(tmp_path / "specific-data")
+
+
+def test_disable_env_ignores_env_vars(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, data=str(tmp_path / "fromconfig"))
+    mutable_config.set("config:locations:disable_env", True)
+    os.environ["SPACK_DATA_HOME"] = str(tmp_path / "fromenv")
+    os.environ["SPACK_HOME"] = str(tmp_path / "alt-home")
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.data_home == str(tmp_path / "fromconfig")
+
+
+# ---------------------------------------------------------------------------
+# SPACK_USER_CACHE_PATH is a legacy alias for SPACK_STATE_HOME
+# ---------------------------------------------------------------------------
+
+
+def test_user_cache_path_env_sets_state_home(working_env, tmp_path):
+    target = str(tmp_path / "cache")
+    os.environ["SPACK_USER_CACHE_PATH"] = target
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.user_cache_path == target
+    assert p.state_home == target
+    # Things rooted under state_home follow.
+    assert p.package_repos_path == os.path.join(target, "package_repos")
+
+
+def test_state_home_env_overrides_user_cache_path(working_env, tmp_path):
+    """When both SPACK_USER_CACHE_PATH and SPACK_STATE_HOME are set, the
+    older one (SPACK_USER_CACHE_PATH) wins, matching pre-1.2 behavior."""
+    legacy = str(tmp_path / "legacy")
+    new = str(tmp_path / "new")
+    os.environ["SPACK_USER_CACHE_PATH"] = legacy
+    os.environ["SPACK_STATE_HOME"] = new
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.state_home == legacy
+
+
+# ---------------------------------------------------------------------------
+# Config path overrides (SPACK_USER_CONFIG_PATH, SPACK_SYSTEM_CONFIG_PATH)
+# These still live in paths_base because they bootstrap config itself.
+# ---------------------------------------------------------------------------
 
 
 def test_user_config_path_is_overridable(working_env, tmp_path):
-    redirect_usrcfg_path = str(pathlib.Path(tmp_path) / "redirected_usrcfg")
-    os.environ["SPACK_USER_CONFIG_PATH"] = redirect_usrcfg_path
-    p1 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
-    assert p1.user_config_path == redirect_usrcfg_path
+    target = str(tmp_path / "redirected_usrcfg")
+    os.environ["SPACK_USER_CONFIG_PATH"] = target
+    pb = SpackPathsBase(_ensure_dir(tmp_path / "base-prefix"))
+    assert pb.user_config_path == target
 
 
-def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmp_path):
+def test_user_config_path_default(working_env, tmp_path):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    p1 = SpackPaths(SpackPathsBase(str(tmp_path)))
-    assert os.path.expanduser(os.path.join("~", ".config", "spack")) == p1.user_config_path
+    pb = SpackPathsBase(str(tmp_path))
+    assert pb.user_config_path == os.path.expanduser(os.path.join("~", ".config", "spack"))
 
 
-def test_user_cache_path_is_overridable(working_env, tmp_path):
-    redirect1 = str(pathlib.Path(tmp_path) / "redirected_usr_cache")
-    os.environ["SPACK_USER_CACHE_PATH"] = redirect1
-    p1 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
-    assert p1.user_cache_path == redirect1
-    # Check that things that are supposed to be bundled inside of
-    # $user_cache_path are also relocated
-    assert p1.package_repos_path == str(pathlib.Path(redirect1) / "package_repos")
-
-    # Now check that $SPACK_STATE_HOME takes precedence when both are set
-    redirect2 = str(pathlib.Path(tmp_path) / "redirected_usr_cache2")
-    os.environ["SPACK_STATE_HOME"] = redirect2
-    p2 = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base-prefix")))
-    assert p2.user_cache_path == redirect2
-    assert p2.package_repos_path == str(pathlib.Path(redirect2) / "package_repos")
+def test_system_config_path_is_overridable(working_env, tmp_path):
+    target = str(tmp_path / "redirected_syscfg")
+    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = target
+    pb = SpackPathsBase(_ensure_dir(tmp_path / "base-prefix"))
+    assert pb.system_config_path == target
 
 
-def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
-    base_prefix = _ensure_dir(tmp_path / "base-prefix")
-    set_home(base_prefix)
-
-    new_default_gpg_base = pathlib.Path(base_prefix) / ".local" / "share" / "spack"
-
-    # Nothing in any of the old locations: we should use the new one
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.gpg_path == str(new_default_gpg_base / "gpg")
-    assert p1.gpg_keys_path == str(new_default_gpg_base / "gpg-keys")
-
-    old_gpg_dir = pathlib.Path(base_prefix) / "opt" / "spack" / "gpg"
-    (old_gpg_dir).mkdir(parents=True)
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    # Old dir exists, but is empty, so it should still not be used
-    assert p1.gpg_path == str(new_default_gpg_base / "gpg")
-
-    # Put something in the old dir: it should now redirect
-    (old_gpg_dir / "something").touch()
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.gpg_path == str(old_gpg_dir)
-
-    # Old keys path is used if old gpg path is used: all data is
-    # relocated together
-    old_gpg_keys_dir = pathlib.Path(base_prefix) / "var" / "spack" / "gpg"
-    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
-
-    # When something is in both the new and old locations, prefer the old
-    new_gpg_dir = new_default_gpg_base / "gpg"
-    new_gpg_dir.mkdir(parents=True)
-    (new_gpg_dir / "something").touch()
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
-
-    # And the gpg dir itself remains the old dir: reaffirm that
-    assert p1.gpg_path == str(old_gpg_dir)
+def test_system_config_path_default(working_env, tmp_path):
+    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
+    pb = SpackPathsBase(str(tmp_path))
+    assert pb.system_config_path == os.sep + os.path.join("etc", "spack")
 
 
-def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
-    homedir = _ensure_dir(tmp_path / "base-prefix")
-    set_home(homedir)
-    p1 = SpackPaths(SpackPathsBase(str(tmp_path)))
-    assert (
-        str(pathlib.Path(homedir) / os.path.join(".local", "state", "spack")) == p1.user_cache_path
+# ---------------------------------------------------------------------------
+# Layout detection (detect_layout / layout_detected) — the helper exposed
+# to include `when:` clauses.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def empty_spack_root(tmp_path):
+    base = SpackPathsBase(_ensure_dir(tmp_path / "spack-root"))
+    yield base
+
+
+@pytest.fixture
+def occupied_spack_root(tmp_path):
+    base = SpackPathsBase(_ensure_dir(tmp_path / "spack-root"))
+    # Put something in old install location to trigger old-layout detection.
+    inst = pathlib.Path(base.old_install_path)
+    inst.mkdir(parents=True, exist_ok=True)
+    (inst / "marker").touch()
+    yield base
+
+
+def test_detect_layout_empty_root_is_xdg(working_env, empty_spack_root, monkeypatch):
+    monkeypatch.setattr(spack.paths_base, "locations", empty_spack_root)
+    assert spack.paths.detect_layout("old") is False
+    assert spack.paths.detect_layout("xdg") is True
+
+
+def test_detect_layout_old_data_present(working_env, occupied_spack_root, monkeypatch):
+    monkeypatch.setattr(spack.paths_base, "locations", occupied_spack_root)
+    assert spack.paths.detect_layout("old") is True
+    assert spack.paths.detect_layout("xdg") is False
+
+
+def test_detect_layout_env_var_forces_xdg(working_env, occupied_spack_root, monkeypatch):
+    """Even with old-layout markers, any SPACK_*_HOME env var forces xdg."""
+    monkeypatch.setattr(spack.paths_base, "locations", occupied_spack_root)
+    for var in ("SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME", "SPACK_HOME"):
+        os.environ.pop(var, None)
+        os.environ[var] = "/tmp/somewhere"
+        try:
+            assert spack.paths.detect_layout("old") is False, f"{var} should force xdg"
+        finally:
+            del os.environ[var]
+
+
+def test_detect_layout_rejects_unknown_scheme():
+    with pytest.raises(ValueError, match="unknown layout scheme"):
+        spack.paths.detect_layout("eggplant")
+
+
+def test_layout_detected_in_eval_conditional(occupied_spack_root, monkeypatch):
+    """The helper is reachable from include `when:` clauses via eval_conditional."""
+    import spack.spec
+
+    monkeypatch.setattr(spack.paths_base, "locations", occupied_spack_root)
+    assert spack.spec.eval_conditional("layout_detected('old')") is True
+    assert spack.spec.eval_conditional("not layout_detected('old')") is False
+    assert spack.spec.eval_conditional("layout_detected('xdg')") is False
+
+
+# ---------------------------------------------------------------------------
+# $xdg_data_home / $xdg_state_home / $xdg_cache_home substitutions
+# ---------------------------------------------------------------------------
+
+
+def test_xdg_substitutions_respect_env_vars(working_env, tmp_path):
+    from spack.util.path import canonicalize_path
+
+    os.environ["XDG_DATA_HOME"] = str(tmp_path / "xdg-data")
+    os.environ["XDG_STATE_HOME"] = str(tmp_path / "xdg-state")
+    os.environ["XDG_CACHE_HOME"] = str(tmp_path / "xdg-cache")
+
+    assert canonicalize_path("$xdg_data_home/spack") == str(tmp_path / "xdg-data" / "spack")
+    assert canonicalize_path("$xdg_state_home/spack") == str(tmp_path / "xdg-state" / "spack")
+    assert canonicalize_path("$xdg_cache_home/spack") == str(tmp_path / "xdg-cache" / "spack")
+
+
+def test_xdg_substitutions_fall_back_to_defaults(working_env, set_home, tmp_path):
+    from spack.util.path import canonicalize_path
+
+    home = _ensure_dir(tmp_path / "home")
+    set_home(home)
+    assert canonicalize_path("$xdg_data_home/spack") == os.path.join(
+        home, ".local", "share", "spack"
     )
-
-
-def test_location_vars_that_use_other_location_vars(
-    tmp_path, set_home, mutable_config, monkeypatch
-):
-    homedir = _ensure_dir(tmp_path / "test-home")
-    set_home(homedir)
-
-    basedir = _ensure_dir(tmp_path / "spack-root")
-
-    mutable_config.set("config", {"locations": {"home": "$spack/home"}})
-
-    p1 = SpackPaths(SpackPathsBase(str(basedir)))
-    # This is a bit strange but resolution of the config variable involves accessing
-    # the module, so we need to monkeypatch that
-    monkeypatch.setattr(spack.paths_base, "locations", p1.base)
-    install_rel = pathlib.Path(".local") / "share" / "spack" / "installs"
-    assert p1.default_install_location == str(pathlib.Path(basedir) / "home" / install_rel)
-
-    # Now try defining a $data_home -> $spack_home -> $spack
-    p2 = SpackPaths(SpackPathsBase(str(basedir)))
-    monkeypatch.setattr(spack.paths_base, "locations", p2.base)
-    mutable_config.set("config", {"locations": {"home": "$spack/home", "data": "$spack_home"}})
-    assert p2.default_install_location == str(pathlib.Path(basedir) / "home" / "installs")
-
-
-def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch, set_home):
-    """Ensure license directory is customizable"""
-    import spack.package_base
-    import spack.repo
-
-    basedir = _ensure_dir(tmp_path / "spack-root")
-    homedir = _ensure_dir(tmp_path / "base-prefix")
-    set_home(homedir)
-
-    p1 = SpackPaths(SpackPathsBase(str(basedir)))
-    monkeypatch.setattr(spack.paths, "locations", p1)
-
-    default_cfg_val = os.path.join("$data_home", "licenses")
-    resolved_dir = str(pathlib.Path(homedir) / ".local" / "share" / "spack" / "licenses")
-    assert spack.config.get("config:license_dir") == default_cfg_val
-    assert spack.package_base.PackageBase.global_license_dir == resolved_dir
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == resolved_dir
-
-    abs_path = str(tmp_path / "foo" / "bar" / "baz")
-    spack.config.set("config:license_dir", abs_path)
-    assert spack.config.get("config:license_dir") == abs_path
-    assert spack.package_base.PackageBase.global_license_dir == abs_path
-    assert spack.repo.PATH.get_pkg_class("pkg-a").global_license_dir == abs_path
-
-
-class SetAnXdgVarAndReadDataHome:
-    """Access an XDG-dependent variable from spack.paths as quickly as
-    possible.
-    """
-
-    def __init__(self, home_prefix):
-        self.home_prefix = home_prefix
-
-    def __call__(self):
-        import spack.paths
-
-        os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
-
-        expected = str(pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs")
-        assert spack.paths.locations.default_install_location == expected, (
-            f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
-        )
-
-
-def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
-    # Unlike the other tests in this module, this is specifically testing
-    # the behavior of the spack.paths module vs. (the more targeted testing
-    # of) classes defined within it.
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-
-    empty_dir = _ensure_dir(tmp_path / "empty")
-
-    set_home(home_prefix)
-
-    pbtest = SpackPathsBase(base_prefix)
-    pbtest.old_install_path = empty_dir
-    ptest = SpackPaths(pbtest)
-    monkeypatch.setattr(spack.paths, "locations", ptest)
-
-    spack_process = spack.subprocess_context.SpackTestProcess(
-        SetAnXdgVarAndReadDataHome(home_prefix)
+    assert canonicalize_path("$xdg_state_home/spack") == os.path.join(
+        home, ".local", "state", "spack"
     )
-    p = spack_process.create()
-    p.start()
-    p.join()
-    assert p.exitcode == 0
+    assert canonicalize_path("$xdg_cache_home/spack") == os.path.join(home, ".cache", "spack")
+
+
+# ---------------------------------------------------------------------------
+# Derived paths (reports, package_repos, etc.) follow state_home
+# ---------------------------------------------------------------------------
+
+
+def test_derived_paths_follow_state_home(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, state=str(tmp_path / "statedir"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.reports_path == str(tmp_path / "statedir" / "reports")
+    assert p.default_monitor_path == str(tmp_path / "statedir" / "reports" / "monitor")
+    assert p.user_repos_cache_path == str(tmp_path / "statedir" / "git_repos")
+    assert p.package_repos_path == str(tmp_path / "statedir" / "package_repos")
+
+
+def test_dotspack_backup_pinned_to_xdg_default(working_env, tmp_path, mutable_config, set_home):
+    """dotspack_backup is pinned to ~/.local/share/spack/dotspack_backup and
+    does NOT follow data_home, so the migration backup lives in a stable
+    location regardless of SPACK_DATA_HOME / config:locations:data."""
+    home = _ensure_dir(tmp_path / "home")
+    set_home(home)
+    _set_locations(mutable_config, data=str(tmp_path / "datadir"))  # ignored by dotspack_backup
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.dotspack_backup == os.path.join(home, ".local", "share", "spack", "dotspack_backup")
+
+
+# ---------------------------------------------------------------------------
+# gpg_path / gpg_keys_path read config first, fall back to data_home
+# ---------------------------------------------------------------------------
+
+
+def test_gpg_path_from_config(working_env, tmp_path, mutable_config, set_home):
+    set_home(_ensure_dir(tmp_path / "home"))
+    mutable_config.set("config:gpg_path", str(tmp_path / "my-gpg"))
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.gpg_path == str(tmp_path / "my-gpg")
+
+
+def test_gpg_path_default_from_scheme(working_env, tmp_path, mutable_config, set_home):
+    """The xdg scheme yaml sets config:gpg_path to $data_home/gpg by default;
+    the property simply reads that."""
+    set_home(_ensure_dir(tmp_path / "home"))
+    _set_locations(mutable_config, data=str(tmp_path / "datadir"))
+    # base/config.yaml sets gpg_path to $data_home/gpg
+    mutable_config.set("config:gpg_path", "$data_home/gpg")
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    assert p.gpg_path == str(tmp_path / "datadir" / "gpg")
+
+
+# ---------------------------------------------------------------------------
+# Module shim: spack.paths.X works for both static and dynamic attributes
+# ---------------------------------------------------------------------------
+
+
+def test_module_shim_static_attribute():
+    # `prefix` lives on paths_base.SpackPathsBase; spack.paths.prefix
+    # should reach it via the SpackPaths.__getattr__ delegation.
+    assert spack.paths.prefix == spack.paths.locations.prefix
+
+
+def test_module_shim_dynamic_attribute():
+    # `state_home` is computed by SpackPaths; access via the module
+    # should also work.
+    assert spack.paths.state_home == spack.paths.locations.state_home

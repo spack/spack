@@ -51,8 +51,7 @@ def migrate_setup(tmp_path, set_home, monkeypatch, mutable_config):
     monkeypatch.setattr(spack.paths, "locations", paths)
     monkeypatch.setattr(spack.paths_base, "locations", base_paths)
 
-    # Also need to patch the cmd.migrate module which has already imported these
-    monkeypatch.setattr(spack.cmd.migrate, "paths", paths)
+    # cmd.migrate imports `paths_base` directly; patch that too.
     monkeypatch.setattr(spack.cmd.migrate, "paths_base", base_paths)
 
     yield (dotspack, created, new_config, new_state, paths)

@@ -213,9 +213,11 @@ class SpackPaths:
     @property
     def dotspack_backup(self):
         #: backup location for old ~/.spack directory during migration.
-        # Lives under data_home regardless of scheme — the backup is a
-        # one-time migration artifact, not legacy state to preserve.
-        return os.path.join(self.data_home, "dotspack_backup")
+        # Pinned to the XDG default (~/.local/share/spack/dotspack_backup)
+        # rather than the active scheme's data_home, because the backup is
+        # a one-time migration artifact and shouldn't move around when the
+        # user sets SPACK_DATA_HOME or config:locations:data.
+        return os.path.join(os.path.expanduser("~"), _RELATIVE_DATA, "spack", "dotspack_backup")
 
     @property
     def gpg_path(self):
