@@ -11,7 +11,10 @@ configuration system behaves.  The scopes set up here are:
 #. ``spack`` in ``$spack/etc/spack`` - controls all built-in spack scopes,
    except default
 #. ``defaults`` in ``$spack/etc/spack/defaults``  - defaults that Spack
-   needs to function
+   needs to function. ``defaults/include.yaml`` conditionally pulls in
+   one of ``defaults/old/`` or ``defaults/xdg/`` (the layout *scheme*)
+   based on ``layout_detected("old")``; see
+   :func:`spack.paths.detect_layout`.
 
 Important functions in this module are:
 
