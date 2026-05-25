@@ -59,7 +59,7 @@ For example:
 
    config:
      install_tree:
-       root: $default_install_root
+       root: $data_home/installs
        projections:
          all: "{name}/{version}/{hash:16}"
 

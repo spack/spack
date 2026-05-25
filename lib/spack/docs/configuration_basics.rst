@@ -45,7 +45,7 @@ Here is an example ``config.yaml`` file:
 
    config:
      install_tree:
-       root: $default_install_root
+       root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
@@ -319,7 +319,7 @@ If your configurations look like this:
 
    config:
      install_tree:
-       root: $default_install_root
+       root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
@@ -541,8 +541,6 @@ The following are additional special variables that describe locations where spa
 * ``$state_home``
 * ``$cache_home``
 * ``$spack_home``
-* ``$default_install_root``
-* ``$default_envs_root``
 
 These are described in more detail in :ref:`config-file-data-variables`.
 
@@ -608,14 +606,14 @@ For example, to see the fully merged ``config.yaml``, you can type:
      dirty: false
      build_jobs: 8
      install_tree:
-       root: $default_install_root
+       root: $data_home/installs
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      build_stage:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
-     source_cache: $default_download_root
+     source_cache: $data_home/downloads
      misc_cache: $state_home/$spack_instance_id/cache
      locks: true
 
@@ -657,7 +655,7 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $default_download_root
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 

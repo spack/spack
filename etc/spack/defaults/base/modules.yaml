@@ -31,10 +31,11 @@ modules:
 
   # These are configurations for the module set named "default"
   default:
-    # Where to install modules
+    # Where to install modules. Overridden to $spack/share/spack/{modules,lmod}
+    # by the old-layout scheme yaml.
     roots:
-     tcl:    $default_modules_base/modules
-     lmod:   $default_modules_base/lmod
+     tcl:    $data_home/modules
+     lmod:   $data_home/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 
