@@ -1369,7 +1369,7 @@ def test_ambiguous_hash(mutable_database):
     # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = spack.concretize.concretize_one("pkg-a")
     x2 = x1.copy()
-    x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._hash = "xxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
@@ -1378,12 +1378,12 @@ def test_ambiguous_hash(mutable_database):
     mutable_database.add(x2)
 
     # ambiguity in first hash character
-    s1 = SpecParser("/x").next_spec()
+    s1 = SpecParser("/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
         s1.lookup_hash()
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("pkg-a/x").next_spec()
+    s2 = SpecParser("pkg-a/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
         s2.lookup_hash()
 
