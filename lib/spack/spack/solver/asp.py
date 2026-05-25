@@ -44,6 +44,7 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.error
+import spack.externals_config
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.package_base
@@ -73,8 +74,8 @@ from .compat import default_clingo_control, make_error_control
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .reuse import ReusableSpecsSelector, SpecFiltersFactory, create_external_parser
-from .runtimes import RuntimePropertyRecorder, all_libcs, external_config_with_implicit_externals
+from .reuse import ReusableSpecsSelector, SpecFiltersFactory
+from .runtimes import RuntimePropertyRecorder, all_libcs
 from .versions import Provenance
 
 GitOrStandardVersion = Union[vn.GitVersion, vn.StandardVersion]
@@ -2921,7 +2922,9 @@ class SpackSolverSetup:
 
         reuse = reuse or []
         if packages_with_externals is None:
-            packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+            packages_with_externals = (
+                spack.externals_config.external_config_with_implicit_externals(spack.config.CONFIG)
+            )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
 
@@ -3914,11 +3917,15 @@ class Solver:
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
 
         # Compute packages configuration with implicit externals once and reuse it
-        self.packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+        self.packages_with_externals = (
+            spack.externals_config.external_config_with_implicit_externals(spack.config.CONFIG)
+        )
         completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(
             configuration=spack.config.CONFIG,
-            external_parser=create_external_parser(self.packages_with_externals, completion_mode),
+            external_parser=spack.externals_config.create_external_parser(
+                self.packages_with_externals, completion_mode
+            ),
             factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
         )

@@ -25,6 +25,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.externals_config
 import spack.hash_types as ht
 import spack.llnl.util.lang
 import spack.package_base
@@ -36,7 +37,6 @@ import spack.solver.asp
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
-import spack.solver.runtimes
 import spack.spec
 import spack.spec_filter
 import spack.util.file_cache
@@ -44,10 +44,10 @@ import spack.util.hash
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.installer import PackageInstaller
 from spack.solver.asp import Result
-from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
-from spack.solver.runtimes import external_config_with_implicit_externals
+from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
@@ -3299,7 +3299,7 @@ def test_filtering_reused_specs(
     """Tests that we can select which specs are to be reused, using constraints as filters"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
         mutable_config
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
@@ -3340,7 +3340,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
-    packages_with_externals = spack.solver.runtimes.external_config_with_implicit_externals(
+    packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
         mutable_config
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")

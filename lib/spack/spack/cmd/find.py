@@ -17,9 +17,8 @@ import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.llnl.util.tty.color import colorize
-from spack.solver.reuse import create_external_parser
-from spack.solver.runtimes import external_config_with_implicit_externals
 
 from ..enums import InstallRecordStatus
 
