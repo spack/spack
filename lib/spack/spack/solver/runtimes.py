@@ -165,6 +165,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = when_spec.lookup_hash()
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 

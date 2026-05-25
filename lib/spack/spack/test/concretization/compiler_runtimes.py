@@ -203,3 +203,40 @@ def test_runtimes_are_not_reused_if_compiler_not_used(runtime_repo, mutable_conf
     assert gcc.satisfies("@9") and not gcc.satisfies("@10")
     # Same gcc used for both languages
     assert root["c"] == root["cxx"]
+
+
+@pytest.mark.regression("52375")
+def test_multiple_intel_oneapi_compilers_versions(mutable_config, runtime_repo):
+    """Tests that multiple installed versions of intel-oneapi-compilers don't interfere with each
+    other during concretization.
+    """
+    # Configure two external versions of intel-oneapi-compilers, each depending on a different gcc.
+    extra_attributes = {"compilers": {"c": "/usr/bin/icx", "cxx": "/usr/bin/icpx"}}
+    mutable_config.set(
+        "packages:intel-oneapi-compilers",
+        {
+            "externals": [
+                {
+                    "spec": "intel-oneapi-compilers@1.0",
+                    "prefix": "/fake/v1",
+                    "extra_attributes": extra_attributes,
+                    "dependencies": [{"spec": "gcc@9.4.0", "deptypes": "build"}],
+                },
+                {
+                    "spec": "intel-oneapi-compilers@2.0",
+                    "prefix": "/fake/v2",
+                    "extra_attributes": extra_attributes,
+                    "dependencies": [{"spec": "gcc@10.2.1", "deptypes": "build"}],
+                },
+            ],
+            "buildable": False,
+        },
+    )
+
+    pkga_v1 = spack.concretize.concretize_one("pkg-a %c,cxx=intel-oneapi-compilers@1.0")
+    assert pkga_v1.satisfies("%intel-oneapi-runtime@1.0"), pkga_v1.tree()
+    assert pkga_v1["intel-oneapi-runtime"].satisfies("%gcc-runtime@9.4.0"), pkga_v1.tree()
+
+    pkga_v2 = spack.concretize.concretize_one("pkg-a %c,cxx=intel-oneapi-compilers@2.0")
+    assert pkga_v2.satisfies("%intel-oneapi-runtime@2.0")
+    assert pkga_v2["intel-oneapi-runtime"].satisfies("%gcc-runtime@10.2.1"), pkga_v2.tree()

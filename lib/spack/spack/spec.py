@@ -1548,6 +1548,27 @@ def _satisfies_edge(lhs: "DependencySpec", rhs: "DependencySpec", resolve_virtua
     return lhs.spec._provides_virtual(rhs.spec)
 
 
+def _matching_external_specs(spec: "Spec") -> List["Spec"]:
+    """Return configured externals from packages.yaml that match spec by abstract hash.
+
+    Externals are parsed the same way the solver does, so dag hashes line up.
+    """
+    import spack.config
+    from spack.externals_config import (
+        create_external_parser,
+        external_config_with_implicit_externals,
+    )
+
+    config = spack.config.CONFIG
+    try:
+        packages_with_externals = external_config_with_implicit_externals(config)
+        completion_mode = config.get("concretizer:externals:completion")
+        parser = create_external_parser(packages_with_externals, completion_mode)
+    except spack.error.SpackError:
+        return []
+    return parser.query(spec)
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
@@ -2300,16 +2321,17 @@ class Spec:
 
     def _lookup_hash(self):
         """Lookup just one spec with an abstract hash, returning a spec from the the environment,
-        store, or finally, binary caches."""
+        store, binary caches, or configured externals."""
         from spack.binary_distribution import BinaryCacheQuery
         from spack.environment import active_environment
         from spack.store import STORE
 
         active_env = active_environment()
 
-        # First env, then store, then binary cache
+        # First env, then store, then binary cache, then configured externals
         matches = (
             (active_env.all_matching_specs(self) if active_env else [])
+            or _matching_external_specs(self)
             or STORE.db.query(self, installed=InstallRecordStatus.ANY)
             or BinaryCacheQuery(True)(self)
         )

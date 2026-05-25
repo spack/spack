@@ -18,6 +18,11 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
+from spack.externals import (
+    ExternalSpecsParser,
+    complete_variants_and_architecture,
+    extract_dicts_from_configuration,
+)
 from spack.spec_parser import (
     UNIX_FILENAME,
     WINDOWS_FILENAME,
@@ -1812,3 +1817,14 @@ def test_parse_multiple_edge_attributes(input_args, expected):
     s, *_ = spack.cmd.parse_specs(input_args)
     for c in expected:
         assert s.satisfies(c)
+
+
+@pytest.mark.regression("52375")
+def test_external_spec_hash_can_be_looked_up(config, mock_packages):
+    """Tests that the hash of an external can be successfully looked up."""
+    packages_yaml = config.deepcopy_as_builtin("packages")
+    externals_dict = extract_dicts_from_configuration(packages_yaml)
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    abstract_hashes = [f"{x.name}/{x.dag_hash()[:5]}" for x in parser.all_specs()]
+
+    assert all(spack.spec.Spec(x).lookup_hash() for x in abstract_hashes)
