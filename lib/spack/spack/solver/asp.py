@@ -70,15 +70,7 @@ from spack.spec import EMPTY_SPEC
 from spack.util.compression import GZipFileType
 
 from .compat import default_clingo_control, make_error_control
-from .core import (
-    AspFunction,
-    AspVar,
-    NodeId,
-    SourceContext,
-    extract_args,
-    fn,
-    using_libc_compatibility,
-)
+from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory, create_external_parser
@@ -1065,7 +1057,7 @@ class PyclingoDriver:
         control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
-        if using_libc_compatibility():
+        if spack.platforms.using_libc_compatibility():
             control_files.append("libc_compatibility.lp")
         else:
             control_files.append("os_compatibility.lp")
@@ -2306,7 +2298,7 @@ class SpackSolverSetup:
                 clauses.append(fn.attr("virtual_on_incoming_edges", name, virtual))
 
         # If the spec is external and concrete, we allow all the libcs on the system
-        if spec.external and spec.concrete and using_libc_compatibility():
+        if spec.external and spec.concrete and spack.platforms.using_libc_compatibility():
             clauses.append(fn.attr("needs_libc", name))
             for libc in self.libcs:
                 clauses.append(fn.attr("compatible_libc", name, libc.name, libc.version))
@@ -2973,7 +2965,7 @@ class SpackSolverSetup:
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
-        if using_libc_compatibility():
+        if spack.platforms.using_libc_compatibility():
             for libc in self.libcs:
                 self.gen.fact(fn.host_libc(libc.name, libc.version))
 
@@ -3131,7 +3123,7 @@ class SpackSolverSetup:
                     description=f"Add compiler wrapper when using {compiler.name} for {language}",
                 )
 
-            if not using_libc_compatibility():
+            if not spack.platforms.using_libc_compatibility():
                 continue
 
             current_libc = None
@@ -3420,7 +3412,7 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
 
     # Compilers defined in configuration
     for c in spack.compilers.config.all_compilers_from(configuration):
-        if using_libc_compatibility() and not c_compiler_runs(c):
+        if spack.platforms.using_libc_compatibility() and not c_compiler_runs(c):
             rejected.add(c)
             try:
                 compiler = c.extra_attributes["compilers"]["c"]
@@ -3433,7 +3425,10 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
 
             continue
 
-        if using_libc_compatibility() and not CompilerPropertyDetector(c).default_libc():
+        if (
+            spack.platforms.using_libc_compatibility()
+            and not CompilerPropertyDetector(c).default_libc()
+        ):
             rejected.add(c)
             warnings.warn(
                 f"cannot detect libc from {c}. The compiler will not be used "

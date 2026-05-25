@@ -7,12 +7,13 @@ from typing import Any, Dict, Set, Tuple
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
 
-from .core import SourceContext, fn, using_libc_compatibility
+from .core import SourceContext, fn
 from .versions import Provenance
 
 
@@ -290,7 +291,7 @@ def external_config_with_implicit_externals(
     _normalize_packages_yaml(packages_yaml)
 
     # Add externals for libc from compilers on Linux
-    if not using_libc_compatibility():
+    if not spack.platforms.using_libc_compatibility():
         return packages_yaml
 
     seen = set()

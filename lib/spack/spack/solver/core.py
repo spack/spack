@@ -5,7 +5,6 @@
 
 from typing import Any, NamedTuple, Optional, Tuple
 
-import spack.platforms
 from spack.llnl.util import lang
 
 from .compat import symbol_name, symbol_string
@@ -152,8 +151,3 @@ class SourceContext:
         # in that case).
         self.source = "none" if source is None else source
         self.wrap_node_requirement: Optional[bool] = None
-
-
-def using_libc_compatibility() -> bool:
-    """Returns True if we are currently using libc compatibility"""
-    return spack.platforms.host().name == "linux"

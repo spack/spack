@@ -106,9 +106,7 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
-    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", _true)
-    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", _true)
-    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.platforms, "using_libc_compatibility", _true)
 
 
 @pytest.fixture(
@@ -2784,7 +2782,7 @@ packages:
     def test_cannot_reuse_host_incompatible_libc(self):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
-        if not spack.solver.core.using_libc_compatibility():
+        if not spack.platforms.using_libc_compatibility():
             pytest.skip("This test requires libc nodes")
 
         # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
