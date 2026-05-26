@@ -580,7 +580,7 @@ def test_v2_etag_fetching_304():
                 url,
                 304,
                 "Not Modified",
-                hdrs={},  # type: ignore[arg-type]
+                hdrs={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 fp=None,  # type: ignore[arg-type]
             )
         assert False, "Should not fetch {}".format(url)
@@ -604,7 +604,7 @@ def test_v2_etag_fetching_200():
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             return urllib.response.addinfourl(
                 io.BytesIO(b"Result"),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -631,7 +631,7 @@ def test_v2_etag_fetching_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             fp=None,
         )
 
@@ -654,7 +654,7 @@ def test_v2_default_index_fetch_200():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(  # type: ignore[arg-type]
                 io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
+                headers={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -662,7 +662,7 @@ def test_v2_default_index_fetch_200():
         elif url.endswith(INDEX_JSON_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -695,7 +695,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
         if url.endswith(INDEX_JSON_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -726,7 +726,7 @@ def test_v2_default_index_not_modified():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
+                headers={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -751,7 +751,7 @@ def test_v2_default_index_invalid_hash_file(index_json):
     def urlopen(request: urllib.request.Request):
         return urllib.response.addinfourl(
             io.BytesIO(),
-            headers={},  # type: ignore[arg-type]
+            headers={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             url=request.get_full_url(),
             code=200,
         )
@@ -775,7 +775,7 @@ def test_v2_default_index_json_404():
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
+                headers={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -785,7 +785,7 @@ def test_v2_default_index_json_404():
                 url,
                 code=404,
                 msg="Not Found",
-                hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 fp=None,
             )
 
@@ -1243,7 +1243,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
         nonlocal fetched
         fetched = True
 
-    @property  # type: ignore
+    @property
     def save_filename_patch(stage):
         return str(index_blob_path)
 
@@ -1277,7 +1277,7 @@ def test_etag_fetching_304():
                 url,
                 304,
                 "Not Modified",
-                hdrs={},  # type: ignore[arg-type]
+                hdrs={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 fp=None,  # type: ignore[arg-type]
             )
         assert False, "Unexpected request {}".format(url)
@@ -1303,7 +1303,7 @@ def test_etag_fetching_200(mock_index):
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             return urllib.response.addinfourl(
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -1333,7 +1333,7 @@ def test_etag_fetching_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             fp=None,
         )
 
@@ -1356,7 +1356,7 @@ def test_default_index_fetch_200(mock_index):
         if url.endswith(INDEX_MANIFEST_FILE):
             return urllib.response.addinfourl(  # type: ignore[arg-type]
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )
@@ -1388,7 +1388,7 @@ def test_default_index_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             fp=None,
         )
 
@@ -1411,7 +1411,7 @@ def test_default_index_not_modified(mock_index):
         if url.endswith(INDEX_MANIFEST_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={},  # type: ignore[arg-type]
+                headers={},  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                 url=url,
                 code=200,
             )

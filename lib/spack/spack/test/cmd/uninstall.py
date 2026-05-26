@@ -160,23 +160,23 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database_store):
     db = mutable_database_store.db
     # this is the spec to be removed
     callpath_spec = db.query_one("callpath ^mpich")
-    dag_hash = callpath_spec.dag_hash()
+    dag_hash = callpath_spec.dag_hash()  # ty: ignore[unresolved-attribute]
 
     # ensure can look up by hash and that it's a dependent of mpileaks
     def validate_callpath_spec(installed):
         assert installed is True or installed is False
 
         specs = db.get_by_hash(dag_hash, installed=installed)
-        assert len(specs) == 1 and specs[0] == callpath_spec
+        assert len(specs) == 1 and specs[0] == callpath_spec  # ty: ignore[invalid-argument-type, not-subscriptable]
 
         specs = db.get_by_hash(dag_hash[:7], installed=installed)
-        assert len(specs) == 1 and specs[0] == callpath_spec
+        assert len(specs) == 1 and specs[0] == callpath_spec  # ty: ignore[invalid-argument-type, not-subscriptable]
 
         specs = db.get_by_hash(dag_hash, installed=InstallRecordStatus.ANY)
-        assert len(specs) == 1 and specs[0] == callpath_spec
+        assert len(specs) == 1 and specs[0] == callpath_spec  # ty: ignore[invalid-argument-type, not-subscriptable]
 
         specs = db.get_by_hash(dag_hash[:7], installed=InstallRecordStatus.ANY)
-        assert len(specs) == 1 and specs[0] == callpath_spec
+        assert len(specs) == 1 and specs[0] == callpath_spec  # ty: ignore[invalid-argument-type, not-subscriptable]
 
         specs = db.get_by_hash(dag_hash, installed=not installed)
         assert specs is None
@@ -185,7 +185,7 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database_store):
         assert specs is None
 
         mpileaks_spec = db.query_one("mpileaks ^mpich")
-        assert callpath_spec in mpileaks_spec
+        assert callpath_spec in mpileaks_spec  # ty: ignore[unsupported-operator]
 
         spec = db.query_one("callpath ^mpich", installed=installed)
         assert spec == callpath_spec

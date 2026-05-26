@@ -233,7 +233,7 @@ def with_artificial_edges(specs):
     from spack.spec import DependencySpec
 
     return deque(
-        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
+        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)  # ty: ignore[invalid-argument-type]
         for s in specs
     )
 
@@ -435,7 +435,7 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
             if in_edge_count[child_id] == 0:
                 if not all_edges and should_yield:
                     yield edge
-                queue.append(key(edge.spec))
+                queue.append(key(edge.spec))  # ty: ignore[invalid-argument-type]
 
 
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.

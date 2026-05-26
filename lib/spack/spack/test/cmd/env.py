@@ -624,7 +624,7 @@ def test_env_modifications_error_on_activate(
     pkg = mock_packages.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
-    ev.shell.activate(e)
+    ev.shell.activate(e)  # ty: ignore[possibly-missing-submodule]
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
@@ -640,7 +640,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    ev.shell.activate(e).apply_modifications(env_variables)
+    ev.shell.activate(e).apply_modifications(env_variables)  # ty: ignore[possibly-missing-submodule]
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
@@ -2231,7 +2231,7 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
         }
     # Disable unification in these tests to avoid confusing reuse due to unification using an
     # include concrete spec vs reuse due to the reuse configuration
-    _config["concretizer"].update({"unify": False})
+    _config["concretizer"].update({"unify": False})  # ty: ignore[no-matching-overload]
 
     combined_env.manifest.configuration.update(_config)
     combined_env.manifest.changed = True
@@ -3014,7 +3014,7 @@ def test_stack_combinatorial_view(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() and current_dir.is_dir()
 
 
@@ -3027,7 +3027,7 @@ def test_stack_view_select(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() is spec.satisfies("target=x86_64")
 
 
@@ -3040,7 +3040,7 @@ def test_stack_view_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() is not spec.satisfies("callpath")
 
 
@@ -3057,7 +3057,7 @@ def test_stack_view_select_and_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() is (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3077,7 +3077,7 @@ def test_view_link_roots(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             expected_exists = spec in test.roots() and (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3159,7 +3159,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() == (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3298,7 +3298,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
@@ -4655,7 +4655,7 @@ spack:
 
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             # no specs will exist in the included view projection
-            base_dir = view_dir / f"{spec.architecture.target}"
+            base_dir = view_dir / f"{spec.architecture.target}"  # ty: ignore[unresolved-attribute]
             included_dir = base_dir / f"{spec.name}-{spec.version}-from-view"
             assert not included_dir.exists()
 
@@ -4663,7 +4663,7 @@ spack:
             # are also not cmake (excluded in the environment view) should exist
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"  # ty: ignore[unresolved-attribute]
             assert current_dir.exists() is not (
                 spec.satisfies("cmake") or spec.satisfies("target=core2")
             )

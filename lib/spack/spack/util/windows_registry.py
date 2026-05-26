@@ -203,6 +203,10 @@ class WindowsRegistryView:
     the root key used to instantiate this class.
     """
 
+    key: str
+    root: object
+    _reg: object
+
     def __init__(self, key, root_key=HKEY.HKEY_CURRENT_USER):
         """Constructs a Windows Registry entrypoint to key provided
         root_key should be an already open root key or an hkey constant if provided
@@ -246,7 +250,7 @@ class WindowsRegistryView:
 
     def _load_key(self):
         try:
-            self._reg = self.root.get_subkey(self.key)
+            self._reg = self.root.get_subkey(self.key)  # ty: ignore[unresolved-attribute]
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
                 self._reg = -1

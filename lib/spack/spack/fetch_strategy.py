@@ -39,7 +39,10 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional, Type
+from typing import TYPE_CHECKING, Callable, List, Mapping, Optional, Type
+
+if TYPE_CHECKING:
+    import spack.stage
 
 import spack.config
 import spack.error
@@ -105,7 +108,7 @@ class FetchStrategy:
         # The stage is initialized late, so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self.stage = None
+        self.stage: Optional["spack.stage.Stage"] = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop("no_cache", False)
@@ -430,7 +433,7 @@ class URLFetchStrategy(FetchStrategy):
     @_needs_stage
     def _fetch_urllib(self, url, chunk_size=65536, retries=5):
         """Fetch a URL using urllib, with retries on transient errors and progress reporting."""
-        save_file = self.stage.save_filename
+        save_file = self.stage.save_filename  # ty: ignore[unresolved-attribute]
         part_file = save_file + ".part"
 
         request = urllib.request.Request(
@@ -480,9 +483,9 @@ class URLFetchStrategy(FetchStrategy):
     def _fetch_curl(self, url, config_args=[]):
         save_file = None
         partial_file = None
-        if self.stage.save_filename:
-            save_file = self.stage.save_filename
-            partial_file = self.stage.save_filename + ".part"
+        if self.stage.save_filename:  # ty: ignore[unresolved-attribute]
+            save_file = self.stage.save_filename  # ty: ignore[unresolved-attribute]
+            partial_file = self.stage.save_filename + ".part"  # ty: ignore[unresolved-attribute]
         tty.verbose(f"Fetching {url}")
         if partial_file:
             save_args = [
@@ -510,7 +513,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
-        with working_dir(self.stage.path):
+        with working_dir(self.stage.path):  # ty: ignore[unresolved-attribute]
             headers = curl(*curl_args, output=str, fail_on_error=False)
 
         if curl.returncode != 0:
@@ -531,11 +534,11 @@ class URLFetchStrategy(FetchStrategy):
         if save_file and (partial_file is not None):
             fs.rename(partial_file, save_file)
 
-    @property  # type: ignore # decorated properties unsupported in mypy
+    @property  # decorated properties unsupported in mypy
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        return self.stage.archive_file
+        return self.stage.archive_file  # ty: ignore[unresolved-attribute]
 
     @property
     def cachable(self):
@@ -546,12 +549,12 @@ class URLFetchStrategy(FetchStrategy):
         if not self.expand_archive:
             tty.debug(
                 "Staging unexpanded archive {0} in {1}".format(
-                    self.archive_file, self.stage.source_path
+                    self.archive_file, self.stage.source_path  # ty: ignore[unresolved-attribute]
                 )
             )
-            if not self.stage.expanded:
-                mkdirp(self.stage.source_path)
-            dest = os.path.join(self.stage.source_path, os.path.basename(self.archive_file))
+            if not self.stage.expanded:  # ty: ignore[unresolved-attribute]
+                mkdirp(self.stage.source_path)  # ty: ignore[unresolved-attribute]
+            dest = os.path.join(self.stage.source_path, os.path.basename(self.archive_file))  # ty: ignore[unresolved-attribute]
             shutil.move(self.archive_file, dest)
             return
 
@@ -566,8 +569,8 @@ class URLFetchStrategy(FetchStrategy):
         if not self.extension:
             self.extension = spack.util.url.determine_url_file_extension(self.url)
 
-        if self.stage.expanded:
-            tty.debug("Source already staged to %s" % self.stage.source_path)
+        if self.stage.expanded:  # ty: ignore[unresolved-attribute]
+            tty.debug("Source already staged to %s" % self.stage.source_path)  # ty: ignore[unresolved-attribute]
             return
 
         decompress = decompressor_for(self.archive_file, self.extension)
@@ -607,8 +610,8 @@ class URLFetchStrategy(FetchStrategy):
             )
 
         # Remove everything but the archive from the stage
-        for filename in os.listdir(self.stage.path):
-            abspath = os.path.join(self.stage.path, filename)
+        for filename in os.listdir(self.stage.path):  # ty: ignore[unresolved-attribute]
+            abspath = os.path.join(self.stage.path, filename)  # ty: ignore[unresolved-attribute]
             if abspath != self.archive_file:
                 shutil.rmtree(abspath, ignore_errors=True)
 
@@ -635,7 +638,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             raise NoCacheError(f"No cache of {path}")
 
         # remove old symlink if one is there.
-        filename = self.stage.save_filename
+        filename = self.stage.save_filename  # ty: ignore[unresolved-attribute]
         if os.path.lexists(filename):
             os.remove(filename)
 
@@ -663,7 +666,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        file = self.stage.save_filename
+        file = self.stage.save_filename  # ty: ignore[unresolved-attribute]
 
         if os.path.lexists(file):
             os.remove(file)
@@ -699,7 +702,7 @@ class VCSFetchStrategy(FetchStrategy):
         super().__init__(**kwargs)
 
         # Set a URL based on the type of fetch strategy.
-        self.url = kwargs.get(self.url_attr, None)
+        self.url = kwargs.get(self.url_attr, None)  # ty: ignore[no-matching-overload]
         if not self.url:
             raise ValueError(f"{self.__class__} requires {self.url_attr} argument.")
 
@@ -717,11 +720,11 @@ class VCSFetchStrategy(FetchStrategy):
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
         assert spack.util.url.extension_from_path(destination) == "tar.gz"
-        assert self.stage.source_path.startswith(self.stage.path)
+        assert self.stage.source_path.startswith(self.stage.path)  # ty: ignore[unresolved-attribute]
         # We need to prepend this dir name to every entry of the tarfile
-        top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
+        top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))  # ty: ignore[unresolved-attribute]
 
-        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(
+        with working_dir(self.stage.source_path), spack.util.archive.gzip_compressed_tarfile(  # ty: ignore[unresolved-attribute]
             destination
         ) as (tar, _, _):
             spack.util.archive.reproducible_tarfile_from_prefix(
@@ -778,7 +781,7 @@ class GoFetchStrategy(VCSFetchStrategy):
     def fetch(self):
         tty.debug("Getting go resource: {0}".format(self.url))
 
-        with working_dir(self.stage.path):
+        with working_dir(self.stage.path):  # ty: ignore[unresolved-attribute]
             try:
                 os.mkdir("go")
             except OSError:
@@ -795,12 +798,12 @@ class GoFetchStrategy(VCSFetchStrategy):
         tty.debug("Source fetched with %s is already expanded." % self.url_attr)
 
         # Move the directory to the well-known stage source path
-        repo_root = _ensure_one_stage_entry(self.stage.path)
-        shutil.move(repo_root, self.stage.source_path)
+        repo_root = _ensure_one_stage_entry(self.stage.path)  # ty: ignore[unresolved-attribute]
+        shutil.move(repo_root, self.stage.source_path)  # ty: ignore[unresolved-attribute]
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             self.go("clean")
 
     def __str__(self):
@@ -932,8 +935,8 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug(f"Already fetched {self.stage.source_path}")
+        if self.stage.expanded:  # ty: ignore[unresolved-attribute]
+            tty.debug(f"Already fetched {self.stage.source_path}")  # ty: ignore[unresolved-attribute]
             return
 
         self._clone_src()
@@ -962,7 +965,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     def _clone_src(self) -> None:
         """Clone a repository to a path using git."""
         # Default to spack source path
-        dest = self.stage.source_path
+        dest = self.stage.source_path  # ty: ignore[unresolved-attribute]
         tty.debug(f"Cloning git repository: {self._repo_info()}")
 
         depth = None if self.get_full_repo else 1
@@ -994,7 +997,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             repo_name = get_single_file(".")
             kwargs["dest"] = repo_name
             if not self.skip_checkout:
-                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
+                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)  # ty: ignore[invalid-argument-type]
 
             if self.stage:
                 self.stage.srcdir = repo_name
@@ -1002,7 +1005,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         return
 
     def submodule_operations(self):
-        dest = self.stage.source_path
+        dest = self.stage.source_path  # ty: ignore[unresolved-attribute]
         git = self.git
 
         if self.submodules_delete:
@@ -1037,7 +1040,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             co_args = ["checkout", "."]
             clean_args = ["clean", "-f"]
             if spack.config.CONFIG.get("config:debug"):
@@ -1125,8 +1128,8 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self.stage.expanded:  # ty: ignore[unresolved-attribute]
+            tty.debug("Already fetched {0}".format(self.stage.source_path))  # ty: ignore[unresolved-attribute]
             return
 
         tty.debug("Checking out CVS repository: {0}".format(self.url))
@@ -1143,12 +1146,12 @@ class CvsFetchStrategy(VCSFetchStrategy):
             self.cvs(*args)
             # Rename repo
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self.stage.srcdir = repo_name  # ty: ignore[invalid-assignment]
+            shutil.move(repo_name, self.stage.source_path)  # ty: ignore[unresolved-attribute]
 
     def _remove_untracked_files(self):
         """Removes untracked files in a CVS repository."""
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             status = self.cvs("-qn", "update", output=str)
             for line in status.split("\n"):
                 if re.match(r"^[?]", line):
@@ -1162,7 +1165,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             self.cvs("update", "-C", ".")
 
     def __str__(self):
@@ -1218,8 +1221,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self.stage.expanded:  # ty: ignore[unresolved-attribute]
+            tty.debug("Already fetched {0}".format(self.stage.source_path))  # ty: ignore[unresolved-attribute]
             return
 
         tty.debug("Checking out subversion repository: {0}".format(self.url))
@@ -1232,12 +1235,12 @@ class SvnFetchStrategy(VCSFetchStrategy):
         with temp_cwd():
             self.svn(*args)
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self.stage.srcdir = repo_name  # ty: ignore[invalid-assignment]
+            shutil.move(repo_name, self.stage.source_path)  # ty: ignore[unresolved-attribute]
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             status = self.svn("status", "--no-ignore", output=str)
             self.svn("status", "--no-ignore")
             for line in status.split("\n"):
@@ -1255,7 +1258,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def reset(self):
         self._remove_untracked_files()
-        with working_dir(self.stage.source_path):
+        with working_dir(self.stage.source_path):  # ty: ignore[unresolved-attribute]
             self.svn("revert", ".", "-R")
 
     def __str__(self):
@@ -1314,26 +1317,26 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self.cache_enabled and bool(self.revision)
+        return self.cache_enabled and bool(self.revision)  # ty: ignore[unresolved-attribute]
 
     def source_id(self):
-        return self.revision
+        return self.revision  # ty: ignore[unresolved-attribute]
 
     def mirror_id(self):
-        if self.revision:
+        if self.revision:  # ty: ignore[unresolved-attribute]
             repo_path = urllib.parse.urlparse(self.url).path
-            result = os.path.sep.join(["hg", repo_path, self.revision])
+            result = os.path.sep.join(["hg", repo_path, self.revision])  # ty: ignore[unresolved-attribute]
             return result
 
     @_needs_stage
     def fetch(self):
-        if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+        if self.stage.expanded:  # ty: ignore[unresolved-attribute]
+            tty.debug("Already fetched {0}".format(self.stage.source_path))  # ty: ignore[unresolved-attribute]
             return
 
         args = []
-        if self.revision:
-            args.append("at revision %s" % self.revision)
+        if self.revision:  # ty: ignore[unresolved-attribute]
+            args.append("at revision %s" % self.revision)  # ty: ignore[unresolved-attribute]
         tty.debug("Cloning mercurial repository: {0} {1}".format(self.url, args))
 
         args = ["clone"]
@@ -1341,29 +1344,29 @@ class HgFetchStrategy(VCSFetchStrategy):
         if not spack.config.CONFIG.get("config:verify_ssl"):
             args.append("--insecure")
 
-        if self.revision:
-            args.extend(["-r", self.revision])
+        if self.revision:  # ty: ignore[unresolved-attribute]
+            args.extend(["-r", self.revision])  # ty: ignore[unresolved-attribute]
 
         args.extend([self.url])
 
         with temp_cwd():
             self.hg(*args)
             repo_name = get_single_file(".")
-            self.stage.srcdir = repo_name
-            shutil.move(repo_name, self.stage.source_path)
+            self.stage.srcdir = repo_name  # ty: ignore[invalid-assignment]
+            shutil.move(repo_name, self.stage.source_path)  # ty: ignore[unresolved-attribute]
 
     def archive(self, destination):
         super().archive(destination, exclude=".hg")
 
     @_needs_stage
     def reset(self):
-        with working_dir(self.stage.path):
-            source_path = self.stage.source_path
+        with working_dir(self.stage.path):  # ty: ignore[unresolved-attribute]
+            source_path = self.stage.source_path  # ty: ignore[unresolved-attribute]
             scrubbed = "scrubbed-source-tmp"
 
             args = ["clone"]
-            if self.revision:
-                args += ["-r", self.revision]
+            if self.revision:  # ty: ignore[unresolved-attribute]
+                args += ["-r", self.revision]  # ty: ignore[unresolved-attribute]
             args += [source_path, scrubbed]
             self.hg(*args)
 
@@ -1436,11 +1439,11 @@ class FetchAndVerifyExpandedFile(URLFetchStrategy):
         super().expand()
 
         # Ensure a single patch file.
-        src_dir = self.stage.source_path
+        src_dir = self.stage.source_path  # ty: ignore[unresolved-attribute]
         files = os.listdir(src_dir)
 
         if len(files) != 1:
-            raise ChecksumError(self, f"Expected a single file in {src_dir}.")
+            raise ChecksumError(self, f"Expected a single file in {src_dir}.")  # ty: ignore[invalid-argument-type]
 
         verify_checksum(
             os.path.join(src_dir, files[0]), self.expanded_sha256, self.url, self._effective_url
@@ -1511,7 +1514,7 @@ def check_pkg_attributes(pkg):
     """
     # a single package cannot have URL attributes for multiple VCS fetch
     # strategies *unless* they are the same attribute.
-    conflicts = set([s.url_attr for s in all_strategies if hasattr(pkg, s.url_attr)])
+    conflicts = set([s.url_attr for s in all_strategies if hasattr(pkg, s.url_attr)])  # ty: ignore[invalid-argument-type]
 
     # URL isn't a VCS fetch method. We can use it with a VCS method.
     conflicts -= set(["url"])
@@ -1519,7 +1522,7 @@ def check_pkg_attributes(pkg):
     if len(conflicts) > 1:
         raise FetcherConflict(
             "Package %s cannot specify %s together. Pick at most one."
-            % (pkg.name, comma_and(quote(conflicts)))
+            % (pkg.name, comma_and(quote(conflicts)))  # ty: ignore[invalid-argument-type]
         )
 
 
@@ -1539,7 +1542,7 @@ def _check_version_attributes(fetcher, pkg, version):
         legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
         raise FetcherConflict(
             "%s version '%s' has extra arguments: %s"
-            % (pkg.name, version, comma_and(quote(extra))),
+            % (pkg.name, version, comma_and(quote(extra))),  # ty: ignore[invalid-argument-type]
             "Valid arguments for a %s fetcher are: \n    %s"
             % (fetcher.url_attr, comma_and(quote(legal_attrs))),
         )
@@ -1688,7 +1691,7 @@ def _for_package_version(pkg, version=None):
     # if a version's optional attributes imply a particular fetch
     # strategy, and we have the `url_attr`, then use that strategy.
     for fetcher in all_strategies:
-        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":
+        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == "url":  # ty: ignore[invalid-argument-type]
             optionals = fetcher.optional_attrs
             if optionals and any(a in args for a in optionals):
                 _check_version_attributes(fetcher, pkg, version)
@@ -1698,7 +1701,7 @@ def _for_package_version(pkg, version=None):
     # on the package.  This prefers URL vs. VCS, b/c URLFetchStrategy is
     # defined first in this file.
     for fetcher in all_strategies:
-        if hasattr(pkg, fetcher.url_attr):
+        if hasattr(pkg, fetcher.url_attr):  # ty: ignore[invalid-argument-type]
             _check_version_attributes(fetcher, pkg, version)
             return _from_merged_attrs(fetcher, pkg, version)
 

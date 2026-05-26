@@ -261,7 +261,7 @@ def lazy_lt(lseq, rseq):
         if right is None:
             return False
 
-        return left < right
+        return left < right  # ty: ignore[unsupported-operator]
 
     return False  # if equal, return False
 
@@ -617,7 +617,7 @@ def pretty_string_to_date(date_str: str, now: Optional[datetime] = None) -> date
     pretty_regex = re.compile(r"(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago")
 
     def _n_xxx_ago(x):
-        how_many, time_period = pretty_regex.search(x).groups()
+        how_many, time_period = pretty_regex.search(x).groups()  # ty: ignore[unresolved-attribute]
 
         how_many = 1 if how_many == "a" else int(how_many)
 
@@ -842,6 +842,7 @@ def load_module_from_file(module_name, module_path):
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
 
     spec = importlib.util.spec_from_file_location(module_name, module_path)
+    assert spec is not None
     module = importlib.util.module_from_spec(spec)
     # The module object needs to exist in sys.modules before the
     # loader executes the module code.
@@ -849,7 +850,7 @@ def load_module_from_file(module_name, module_path):
     # See https://docs.python.org/3/reference/import.html#loading
     sys.modules[spec.name] = module
     try:
-        spec.loader.exec_module(module)
+        spec.loader.exec_module(module)  # ty: ignore[unresolved-attribute]
     except BaseException:
         try:
             del sys.modules[spec.name]

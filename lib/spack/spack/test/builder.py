@@ -132,7 +132,7 @@ def test_monkey_patching_wrapped_pkg():
     builder = spack.builder.create(s.package)
     assert s.package.run_tests is False
     assert builder.pkg.run_tests is False
-    assert builder.pkg_with_dispatcher.run_tests is False
+    assert builder.pkg_with_dispatcher.run_tests is False  # ty: ignore[unresolved-attribute]
 
     s.package.run_tests = True
     assert builder.pkg.run_tests is True
@@ -148,7 +148,7 @@ def test_monkey_patching_test_log_file():
 
     s.package.tester.test_log_file = "/some/file"
     assert builder.pkg.tester.test_log_file == "/some/file"
-    assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"
+    assert builder.pkg_with_dispatcher.tester.test_log_file == "/some/file"  # ty: ignore[unresolved-attribute]
 
 
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
@@ -182,11 +182,11 @@ def test_mixins_with_builders(working_env):
     builder = spack.builder.create(s.package)
 
     # Check that callbacks added by the mixin are in the list
-    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)
-    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)
+    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)  # ty: ignore[unresolved-attribute]
+    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)  # ty: ignore[unresolved-attribute]
 
     # Check that callback from the GenericBuilder are in the list too
-    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
+    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)  # ty: ignore[unresolved-attribute]
 
 
 def test_reading_api_v20_attributes():

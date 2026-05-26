@@ -116,7 +116,7 @@ def location(parser, args):
         if args.location_env is None:
             # Get current environment path
             spack.cmd.require_active_env(args.subparser)
-            path = active_environment().path
+            path = active_environment().path  # ty: ignore[unresolved-attribute]
         else:
             # Get path of requested environment
             if not ev.exists(args.location_env):
@@ -143,7 +143,7 @@ def location(parser, args):
 
     if args.repo is not False:
         if args.repo is None:
-            print(spack.repo.PATH.first_repo().root)
+            print(spack.repo.PATH.first_repo().root)  # ty: ignore[unresolved-attribute]
             return
         try:
             print(spack.repo.PATH.get_repo(args.repo).root)
@@ -191,7 +191,7 @@ def location(parser, args):
         if hasattr(builder, "build_directory"):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
+            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))  # ty: ignore[no-matching-overload]
             return
 
         # Otherwise assume in-source builds

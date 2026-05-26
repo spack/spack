@@ -60,7 +60,7 @@ def log_parse(parser, args):
     input = args.file
     if args.file == "-":
         input = io.TextIOWrapper(
-            sys.stdin.buffer, encoding="utf-8", errors="replace", closefd=False
+            sys.stdin.buffer, encoding="utf-8", errors="replace", closefd=False  # ty: ignore[unknown-argument]
         )
 
     if args.width is not None:

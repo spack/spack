@@ -324,8 +324,8 @@ def test_package_deprecated_version(mock_packages: RepoPath, mock_fetch, mock_st
     spec = Spec("deprecated-versions")
     pkg_cls = mock_packages.get_pkg_class(spec.name)
 
-    assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
-    assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")
+    assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")  # ty: ignore[invalid-argument-type]
+    assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")  # ty: ignore[invalid-argument-type]
 
 
 def test_package_can_have_sparse_checkout_properties(

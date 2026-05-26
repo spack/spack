@@ -337,13 +337,13 @@ class RequirementParser:
                 # validate specs from YAML first, and fail with line numbers if parsing fails.
                 raw_strs = list(constraints)
                 constraints = [
-                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)
+                    self._parse_and_expand(constraint, named=kind == RequirementKind.VIRTUAL)  # ty: ignore[invalid-argument-type]
                     for constraint in raw_strs
                 ]
-                _check_unknown_targets(raw_strs, constraints)
-                _check_unknown_virtuals_on_edges(raw_strs, constraints)
+                _check_unknown_targets(raw_strs, constraints)  # ty: ignore[invalid-argument-type]
+                _check_unknown_virtuals_on_edges(raw_strs, constraints)  # ty: ignore[invalid-argument-type]
                 when_str = requirement.get("when")
-                when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
+                when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC  # ty: ignore[invalid-argument-type]
 
                 constraints = [
                     x
@@ -359,7 +359,7 @@ class RequirementParser:
                         policy=policy,
                         requirements=constraints,
                         kind=kind,
-                        message=requirement.get("message"),
+                        message=requirement.get("message"),  # ty: ignore[invalid-argument-type]
                         condition=when,
                         origin=RequirementOrigin.REQUIRE_YAML,
                     )

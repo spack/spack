@@ -67,7 +67,7 @@ def maintainers_to_packages(users=None):
     for name in spack.repo.PATH.all_package_names():
         cls = spack.repo.PATH.get_pkg_class(name)
         for user in cls.maintainers:
-            lower_users = [u.lower() for u in users]
+            lower_users = [u.lower() for u in users]  # ty: ignore[not-iterable]
             if not users or user.lower() in lower_users:
                 user_to_pkgs[user].append(cls.name)
 

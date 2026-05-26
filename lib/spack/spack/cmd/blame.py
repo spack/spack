@@ -155,7 +155,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
     for _, desc in descriptors.items():
         # Handle the remote case, whose destination is by definition the git root
         if hasattr(desc, "destination"):
-            repo_dest = pathlib.Path(desc.destination)
+            repo_dest = pathlib.Path(desc.destination)  # ty: ignore[invalid-argument-type]
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
 
@@ -164,7 +164,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
 
         # Handle the local repository case, making sure it's a spack repository.
         if hasattr(desc, "path"):
-            repo_path = pathlib.Path(desc.path)
+            repo_path = pathlib.Path(desc.path)  # ty: ignore[invalid-argument-type]
             if "spack_repo" in repo_path.parts:
                 prefix = git_prefix(repo_path)
 
@@ -251,7 +251,7 @@ def blame(parser, args):
 
     # Make sure we can get the full/known blame even when the repository
     # is remote.
-    ensure_full_history(prefix, args.package_or_file)
+    ensure_full_history(prefix, args.package_or_file)  # ty: ignore[invalid-argument-type]
 
     # Get blame information for the path EVEN when it is located in a different
     # spack repository (e.g., spack/spack-packages) or a different git
@@ -261,7 +261,7 @@ def blame(parser, args):
         options = ["blame"]
 
         # ignore the great black reformatting of 2022
-        ignore_file = prefix / ".git-blame-ignore-revs"
+        ignore_file = prefix / ".git-blame-ignore-revs"  # ty: ignore[unsupported-operator]
         if ignore_file.exists():
             options.extend(["--ignore-revs-file", str(ignore_file)])
 

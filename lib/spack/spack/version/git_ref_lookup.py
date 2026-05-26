@@ -73,7 +73,7 @@ class GitRefLookup(AbstractRefLookup):
         if not self._pkg:
             try:
                 pkg = spack.repo.PATH.get_pkg_class(self.pkg_name)
-                pkg.git
+                pkg.git  # ty: ignore[unresolved-attribute]
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
             self._pkg = pkg

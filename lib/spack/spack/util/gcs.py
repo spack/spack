@@ -89,12 +89,12 @@ class GCSBucket:
 
     def get_blob(self, blob_path):
         if self.exists():
-            return self.bucket.get_blob(blob_path)
+            return self.bucket.get_blob(blob_path)  # ty: ignore[unresolved-attribute]
         return None
 
     def blob(self, blob_path):
         if self.exists():
-            return self.bucket.blob(blob_path)
+            return self.bucket.blob(blob_path)  # ty: ignore[unresolved-attribute]
         return None
 
     def get_all_blobs(self, recursive: bool = True, relative: bool = True) -> List[str]:
@@ -113,7 +113,7 @@ class GCSBucket:
         blob_list: List[str] = []
 
         if self.exists():
-            all_blobs = self.bucket.list_blobs(prefix=self.prefix)
+            all_blobs = self.bucket.list_blobs(prefix=self.prefix)  # ty: ignore[unresolved-attribute]
 
             base_dirs = len(self.prefix.split("/")) + 1
 

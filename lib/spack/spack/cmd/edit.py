@@ -168,9 +168,9 @@ def edit(parser, args):
         if names:
             paths = [locate_build_system(n, repo) for n in names]
         else:
-            paths = [default_repo.build_systems_path]
+            paths = [default_repo.build_systems_path]  # ty: ignore[unresolved-attribute]
         spack.util.editor.editor(*paths)
         return
 
-    paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]
+    paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]  # ty: ignore[unresolved-attribute]
     spack.util.editor.editor(*paths)

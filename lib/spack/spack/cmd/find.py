@@ -230,7 +230,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = spack.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.util.lang.pretty_string_to_date(date)  # ty: ignore[invalid-assignment]
 
     return q_args
 

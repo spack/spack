@@ -195,7 +195,7 @@ class DirectiveDictDescriptor:
 
         # Populate these dictionaries by running all directives that modify them
         for directive_name in self.directives_to_run:
-            directives = objtype._directives_to_be_executed.get(directive_name)
+            directives = objtype._directives_to_be_executed.get(directive_name)  # ty: ignore[unresolved-attribute]
             if directives:
                 for directive in directives:
                     directive(objtype)
@@ -257,8 +257,8 @@ class directive:
         self.dicts = tuple(dicts)
 
     def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
-        directive_names.append(decorated_function.__name__)
-        DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
+        directive_names.append(decorated_function.__name__)  # ty: ignore[unresolved-attribute]
+        DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)  # ty: ignore[unresolved-attribute]
 
         @functools.wraps(decorated_function)
         def _wrapper(*args, **_kwargs):
@@ -275,7 +275,7 @@ class directive:
             if DirectiveMeta._when_constraints_stack:
                 if not self.supports_when:
                     raise DirectiveError(
-                        f'directive "{decorated_function.__name__}" cannot be used within a '
+                        f'directive "{decorated_function.__name__}" cannot be used within a '  # ty: ignore[unresolved-attribute]
                         '"when" context since it does not support a "when=" argument'
                     )
                 if "when" in kwargs:
@@ -291,7 +291,7 @@ class directive:
 
             result = decorated_function(*args, **kwargs)
 
-            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(result)
+            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(result)  # ty: ignore[unresolved-attribute, invalid-argument-type]
 
             # wrapped function returns same result as original so that we can nest directives
             return result

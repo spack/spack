@@ -74,7 +74,7 @@ def test_write_test_result(mock_packages, mock_test_stage):
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
     results_file = test_suite.results_file
-    test_suite.write_test_result(spec, result)
+    test_suite.write_test_result(spec, result)  # ty: ignore[invalid-argument-type]
 
     with open(results_file, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -187,7 +187,7 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
 
     add_suite("libdwarf")
     suite = spack.install_test.get_test_suite(name)
-    assert suite.alias == name
+    assert suite.alias == name  # ty: ignore[unresolved-attribute]
 
     add_suite("libelf")
     with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
@@ -213,7 +213,7 @@ def test_test_functions_pkgless(mock_packages, install_mockery, ensure_debug, ca
     out = capfd.readouterr()
     assert len(fns) == 2, "Expected two test functions"
     for f in fns:
-        assert f[1].__name__ in ["test_echo", "test_skip"]
+        assert f[1].__name__ in ["test_echo", "test_skip"]  # ty: ignore[unresolved-attribute]
     assert "virtual does not appear to have a package file" in out[1]
 
 
@@ -248,7 +248,7 @@ def test_package_copy_test_files_fails(mock_packages):
 
     # Try without a package
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.copy_test_files(None, vspec)
+        spack.install_test.copy_test_files(None, vspec)  # ty: ignore[invalid-argument-type]
     assert "without a package" in str(exc_info)
 
     # Try with a package without a test suite
@@ -256,18 +256,18 @@ def test_package_copy_test_files_fails(mock_packages):
     pkg = MyPackage("SomePackage", vspec, None)
 
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.copy_test_files(pkg, vspec)
+        spack.install_test.copy_test_files(pkg, vspec)  # ty: ignore[invalid-argument-type]
     assert "test suite is missing" in str(exc_info)
 
 
 def test_package_copy_test_files_skips(mock_packages, ensure_debug, capfd):
     """Confirm copy_test_files errors as expected if no package class found."""
     # Try with a non-concrete spec and package with a test suite
-    MockSuite = collections.namedtuple("TestSuite", ["specs"])
+    MockSuite = collections.namedtuple("TestSuite", ["specs"])  # ty: ignore[mismatched-type-name]
     MyPackage = collections.namedtuple("MyPackage", ["name", "spec", "test_suite"])
     vspec = spack.spec.Spec("something")
     pkg = MyPackage("SomePackage", vspec, MockSuite([]))
-    spack.install_test.copy_test_files(pkg, vspec)
+    spack.install_test.copy_test_files(pkg, vspec)  # ty: ignore[invalid-argument-type]
     out = capfd.readouterr()[1]
     assert "skipping test data copy" in out
     assert "no package class found" in out
@@ -277,7 +277,7 @@ def test_process_test_parts(mock_packages):
     """Confirm process_test_parts fails as expected without package or test_suite."""
     # Try without a package
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.process_test_parts(None, [])
+        spack.install_test.process_test_parts(None, [])  # ty: ignore[invalid-argument-type]
     assert "without a package" in str(exc_info)
 
     # Try with a package without a test suite
@@ -285,7 +285,7 @@ def test_process_test_parts(mock_packages):
     pkg = MyPackage("SomePackage", None)
 
     with pytest.raises(spack.install_test.TestSuiteError) as exc_info:
-        spack.install_test.process_test_parts(pkg, [])
+        spack.install_test.process_test_parts(pkg, [])  # ty: ignore[invalid-argument-type]
     assert "test suite is missing" in str(exc_info)
 
 
@@ -528,4 +528,4 @@ def test_packagetest_fails(mock_packages):
     s = spack.spec.Spec("pkg-a")
     pkg = MyPackage(s)
     with pytest.raises(ValueError, match="require a concrete package"):
-        spack.install_test.PackageTest(pkg)
+        spack.install_test.PackageTest(pkg)  # ty: ignore[invalid-argument-type]

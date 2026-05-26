@@ -525,10 +525,10 @@ class TagIndexer(Indexer):
         self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkgs_fullname: Set[str]):
-        self.index.update_packages({p.split(".")[-1] for p in pkgs_fullname}, self.repository)
+        self.index.update_packages({p.split(".")[-1] for p in pkgs_fullname}, self.repository)  # ty: ignore[unresolved-attribute]
 
     def write(self, stream):
-        self.index.to_json(stream)
+        self.index.to_json(stream)  # ty: ignore[unresolved-attribute]
 
 
 class ProviderIndexer(Indexer):
@@ -546,11 +546,11 @@ class ProviderIndexer(Indexer):
         )
         non_virtual_pkgs_fullname = {p for p in pkgs_fullname if not is_virtual(p.split(".")[-1])}
         non_virtual_pkgs_names = {p.split(".")[-1] for p in non_virtual_pkgs_fullname}
-        self.index.remove_providers(non_virtual_pkgs_names)
-        self.index.update_packages(non_virtual_pkgs_fullname)
+        self.index.remove_providers(non_virtual_pkgs_names)  # ty: ignore[unresolved-attribute]
+        self.index.update_packages(non_virtual_pkgs_fullname)  # ty: ignore[unresolved-attribute]
 
     def write(self, stream):
-        self.index.to_json(stream)
+        self.index.to_json(stream)  # ty: ignore[unresolved-attribute]
 
 
 class PatchIndexer(Indexer):
@@ -559,7 +559,7 @@ class PatchIndexer(Indexer):
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
 
-    def needs_update(self):
+    def needs_update(self):  # ty: ignore[invalid-method-override]
         # TODO: patches can change under a package and we should handle
         # TODO: it, but we currently punt. This should be refactored to
         # TODO: check whether patches changed each time a package loads,
@@ -570,10 +570,10 @@ class PatchIndexer(Indexer):
         self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
-        self.index.to_json(stream)
+        self.index.to_json(stream)  # ty: ignore[unresolved-attribute]
 
     def update(self, pkgs_fullname: Set[str]):
-        self.index.update_packages(pkgs_fullname)
+        self.index.update_packages(pkgs_fullname)  # ty: ignore[unresolved-attribute]
 
 
 class RepoIndex:

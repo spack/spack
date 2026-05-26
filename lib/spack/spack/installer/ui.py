@@ -16,6 +16,7 @@ from typing import Callable, Dict, Generator, List, NamedTuple, Optional, Union,
 
 import spack.config
 import spack.util.tty.color
+from spack.util.ctest_log_parser import LogEvent
 from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
@@ -453,7 +454,7 @@ class TerminalUI(InstallerUI):
         if not build_info.log_path or not os.path.exists(build_info.log_path):
             return
         errors, warnings, tail_event = parse_log_events(build_info.log_path, tail=20)
-        events = [*errors, *warnings]
+        events: List[LogEvent] = [*errors, *warnings]
         if tail_event is not None:
             events.append(tail_event)
         if events:

@@ -245,7 +245,7 @@ class DetectablePackageMeta(type):
                 return ""
 
             # Register the class as a detectable package
-            detectable_packages[cls.namespace].append(cls.name)
+            detectable_packages[cls.namespace].append(cls.name)  # ty: ignore[unresolved-attribute]
 
             # Attach function implementations to the detectable class
             default = False
@@ -258,7 +258,7 @@ class DetectablePackageMeta(type):
                     'the package "{0}" in the "{1}" repo needs to define'
                     ' the "determine_version" method to be detectable'
                 )
-                NotImplementedError(msg.format(cls.name, cls.namespace))
+                NotImplementedError(msg.format(cls.name, cls.namespace))  # ty: ignore[unresolved-attribute]
 
             if default and not hasattr(cls, "determine_variants"):
                 cls.determine_variants = determine_variants
@@ -596,6 +596,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: By default do not run tests within package's install()
     run_tests: bool = False
 
+    #: Set by the installer to stop installation before/at a specific phase
+    stop_before_phase: Optional[str] = None
+    last_phase: Optional[str] = None
+
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable: bool = False
 
@@ -723,32 +727,32 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classmethod
     def dependency_names(cls):
-        return _subkeys(cls.dependencies)
+        return _subkeys(cls.dependencies)  # ty: ignore[invalid-argument-type]
 
     @classmethod
     def dependencies_by_name(cls, when: bool = False):
-        return _by_subkey(cls.dependencies, when=when)
+        return _by_subkey(cls.dependencies, when=when)  # ty: ignore[invalid-argument-type]
 
     # Accessors for variants
     # External code working with Variants should go through the methods below
 
     @classmethod
     def variant_names(cls) -> List[str]:
-        return _subkeys(cls.variants)
+        return _subkeys(cls.variants)  # ty: ignore[invalid-argument-type]
 
     @classmethod
     def has_variant(cls, name) -> bool:
-        return _has_subkey(cls.variants, name)
+        return _has_subkey(cls.variants, name)  # ty: ignore[invalid-argument-type]
 
     @classmethod
     def num_variant_definitions(cls) -> int:
         """Total number of variant definitions in this class so far."""
-        return _num_definitions(cls.variants)
+        return _num_definitions(cls.variants)  # ty: ignore[invalid-argument-type]
 
     @classmethod
     def variant_definitions(cls, name: str) -> List[Tuple[spack.spec.Spec, spack.variant.Variant]]:
         """Iterator over (when_spec, Variant) for all variant definitions for a particular name."""
-        return _definitions(cls.variants, name)
+        return _definitions(cls.variants, name)  # ty: ignore[invalid-argument-type]
 
     @classmethod
     def variant_items(cls) -> Iterable[Tuple[spack.spec.Spec, Dict[str, spack.variant.Variant]]]:
@@ -822,7 +826,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for base in cls.__mro__:
+        for base in cls.__mro__:  # ty: ignore[unresolved-attribute]
             if not spack.repo.is_package_module(base.__module__):
                 break
             fullnames.append(base.fullname)
@@ -842,7 +846,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             elif module.startswith(spack.repo.PKG_MODULE_PREFIX_V2):
                 version = (2, 0)
             else:
-                raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")
+                raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")  # ty: ignore[unresolved-attribute]
 
             if version < (2, 0):
                 # spack.pkg.builtin.package_name.
@@ -1774,7 +1778,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if has_patch_fun:
             try:
                 with fsys.working_dir(self.stage.source_path):
-                    self.patch()
+                    self.patch()  # ty: ignore[call-top-callable]
                 tty.msg("Ran patch() for {0}".format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
@@ -2298,11 +2302,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         urls: List[str] = []
         if hasattr(self, "url") and self.url:
-            urls.append(self.url)
+            urls.append(self.url)  # ty: ignore[invalid-argument-type]
 
         # fetch from first entry in urls to save time
         if hasattr(self, "urls") and self.urls:
-            urls.append(self.urls[0])
+            urls.append(self.urls[0])  # ty: ignore[not-subscriptable]
 
         for args in self.versions.values():
             if "url" in args:

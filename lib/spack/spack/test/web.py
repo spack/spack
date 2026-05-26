@@ -74,10 +74,10 @@ class MockS3Client:
         if "Body" in kwargs:
             kwargs["Body"] = kwargs["Body"].read()
 
-        self.put_object_calls.append((args, kwargs))
+        self.put_object_calls.append((args, kwargs))  # ty: ignore[invalid-argument-type]
 
     def upload_file(self, *args, **kwargs):
-        self.upload_file_calls.append((args, kwargs))
+        self.upload_file_calls.append((args, kwargs))  # ty: ignore[invalid-argument-type]
 
     def get_paginator(self, *args, **kwargs):
         return MockPaginator()
@@ -496,7 +496,7 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
         call_count += 1
         if call_count <= num_errors:
             raise urllib.error.HTTPError(
-                url="https://example.com", code=error_code, msg="err", hdrs={}, fp=None
+                url="https://example.com", code=error_code, msg="err", hdrs={}, fp=None  # ty: ignore[invalid-argument-type]
             )
         return "ok"
 
@@ -594,7 +594,7 @@ def test_retry_on_transient_error_reuse(mock_sleep):
         call_count += 1
         if call_count % 2 != 0:
             raise urllib.error.HTTPError(
-                url="https://example.com", code=503, msg="err", hdrs={}, fp=None
+                url="https://example.com", code=503, msg="err", hdrs={}, fp=None  # ty: ignore[invalid-argument-type]
             )
         return "ok"
 

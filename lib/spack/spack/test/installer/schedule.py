@@ -1170,7 +1170,7 @@ def test_cache_miss_expands_build_deps(
 def test_nodes_to_roots():
     """Independent roots don't reach each other's exclusive nodes."""
     # A - B and C - D are disconnected graphs, A, B and C are "roots".
-    specs = create_dag(nodes=["A", "B", "C", "D"], edges=[("A", "B", "all"), ("C", "D", "all")])
+    specs = create_dag(nodes=["A", "B", "C", "D"], edges=[("A", "B", "all"), ("C", "D", "all")])  # ty: ignore[invalid-argument-type]
     a, b, c, d = specs["A"], specs["B"], specs["C"], specs["D"]
     node_to_roots = _node_to_roots([a, b, c])
     assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])
@@ -1181,7 +1181,7 @@ def test_nodes_to_roots():
 
 def test_nodes_to_roots_shared_dependency():
     """A dependency shared by two roots is attributed to both."""
-    specs = create_dag(nodes=["A", "B", "C"], edges=[("A", "C", "all"), ("B", "C", "all")])
+    specs = create_dag(nodes=["A", "B", "C"], edges=[("A", "C", "all"), ("B", "C", "all")])  # ty: ignore[invalid-argument-type]
     a, b, c = specs["A"], specs["B"], specs["C"]
     node_to_roots = _node_to_roots([a, b])
     assert node_to_roots[a.dag_hash()] == frozenset([a.dag_hash()])

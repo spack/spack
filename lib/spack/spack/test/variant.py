@@ -418,7 +418,7 @@ class TestVariantMapTest:
         # Value with invalid type
         a = VariantMap()
         with pytest.raises(TypeError):
-            a["foo"] = 2
+            a["foo"] = 2  # ty: ignore[invalid-assignment]
 
         # Duplicate variant
         a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))

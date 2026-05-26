@@ -40,7 +40,7 @@ def _mock_repo(root, namespace):
     """
     repodir = py.path.local(root) if isinstance(root, str) else root
     repodir.ensure(spack.repo.packages_dir_name, dir=True)
-    yaml = repodir.join("repo.yaml")
+    yaml = repodir.join(pathlib.Path("repo.yaml"))
     yaml.write(
         f"""
 repo:
@@ -115,19 +115,19 @@ def test_install_msg(monkeypatch):
     install_msg = "Installing {0}".format(name)
 
     monkeypatch.setattr(tty, "_debug", 0)
-    assert inst.install_msg(name, pid, None) == install_msg
+    assert inst.install_msg(name, pid, None) == install_msg  # ty: ignore[invalid-argument-type]
 
     install_status = inst.InstallStatus(1)
     expected = "{0} [0/1]".format(install_msg)
     assert inst.install_msg(name, pid, install_status) == expected
 
     monkeypatch.setattr(tty, "_debug", 1)
-    assert inst.install_msg(name, pid, None) == install_msg
+    assert inst.install_msg(name, pid, None) == install_msg  # ty: ignore[invalid-argument-type]
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
     expected = "{0}: {1}".format(pid, install_msg)
-    assert inst.install_msg(name, pid, None) == expected
+    assert inst.install_msg(name, pid, None) == expected  # ty: ignore[invalid-argument-type]
 
 
 def test_install_from_cache_errors(install_mockery):
@@ -721,13 +721,13 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch):
 
     # Drop one of the specs so its task is missing before _complete_task
     popped_task = installer._pop_ready_task()
-    assert inst.package_id(popped_task.pkg.spec) not in installer.build_tasks
+    assert inst.package_id(popped_task.pkg.spec) not in installer.build_tasks  # ty: ignore[unresolved-attribute]
 
     monkeypatch.setattr(task, "complete", _missing)
-    installer._complete_task(task, None)
+    installer._complete_task(task, None)  # ty: ignore[invalid-argument-type]
 
     # Ensure the dropped task/spec was added back by _install_task
-    assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
+    assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks  # ty: ignore[unresolved-attribute]
 
 
 def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capfd):
@@ -772,7 +772,7 @@ def test_requeue_task(install_mockery, capfd):
     # temporarily set tty debug messages on so we can test output
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
-    installer._requeue_task(task, None)
+    installer._requeue_task(task, None)  # ty: ignore[invalid-argument-type]
     tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
@@ -964,7 +964,7 @@ def _install_fail_my_build_exception(installer, task, install_status, **kwargs):
     if task.pkg.name == "pkg-a":
         raise MyBuildException("mock internal package build error for pkg-a")
     else:
-        _old_complete_task(installer, task, install_status)
+        _old_complete_task(installer, task, install_status)  # ty: ignore[call-non-callable]
 
 
 def test_install_fail_single(install_mockery, mock_fetch, monkeypatch):
@@ -1336,7 +1336,7 @@ def test_print_install_test_log_failures(
 
 def test_build_request_errors(install_mockery, mock_packages):
     with pytest.raises(ValueError, match="must be a package"):
-        inst.BuildRequest("abc", {})
+        inst.BuildRequest("abc", {})  # ty: ignore[invalid-argument-type]
 
     spec = spack.spec.Spec("trivial-install-test-package")
     pkg_cls = mock_packages.get_pkg_class(spec.name)
@@ -1411,23 +1411,23 @@ def test_build_task_errors(install_mockery, mock_packages):
     # The value of the request argument is expected to not be checked.
     for pkg in [None, "abc"]:
         with pytest.raises(TypeError, match="must be a package"):
-            inst.BuildTask(pkg, None)
+            inst.BuildTask(pkg, None)  # ty: ignore[invalid-argument-type]
 
     with pytest.raises(ValueError, match="must have a concrete spec"):
-        inst.BuildTask(pkg_cls(spec), None)
+        inst.BuildTask(pkg_cls(spec), None)  # ty: ignore[invalid-argument-type]
 
     # Using a concretized package now means the request argument is checked.
     spec = spack.concretize.concretize_one(spec)
     assert spec.concrete
 
     with pytest.raises(TypeError, match="is not a valid build request"):
-        inst.BuildTask(spec.package, None)
+        inst.BuildTask(spec.package, None)  # ty: ignore[invalid-argument-type]
 
     # Using a valid package and spec, the next check is the status argument.
     request = inst.BuildRequest(spec.package, {})
 
     with pytest.raises(TypeError, match="is not a valid build status"):
-        inst.BuildTask(spec.package, request, status="queued")
+        inst.BuildTask(spec.package, request, status="queued")  # ty: ignore[invalid-argument-type]
 
     # Now we can check that build tasks cannot be create when the status
     # indicates the task is/should've been removed.
@@ -1436,7 +1436,7 @@ def test_build_task_errors(install_mockery, mock_packages):
 
     # Also make sure to not accept an incompatible installed argument value.
     with pytest.raises(TypeError, match="'installed' be a 'set', not 'str'"):
-        inst.BuildTask(spec.package, request, installed="mpileaks")
+        inst.BuildTask(spec.package, request, installed="mpileaks")  # ty: ignore[invalid-argument-type]
 
 
 def test_build_task_basics(install_mockery):
@@ -1453,7 +1453,7 @@ def test_build_task_basics(install_mockery):
     # Ensure flagging installed works as expected
     assert len(task.uninstalled_deps) > 0
     assert task.dependencies == task.uninstalled_deps
-    task.flag_installed(task.dependencies)
+    task.flag_installed(task.dependencies)  # ty: ignore[invalid-argument-type]
     assert len(task.uninstalled_deps) == 0
     assert task.priority == 0
 

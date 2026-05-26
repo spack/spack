@@ -58,7 +58,7 @@ def test_direct_installed_dependencies(mock_packages, database):
 
     lines = [line for line in out.strip().split("\n") if line and not line.startswith("--")]
     hashes = {re.split(r"\s+", line)[0] for line in lines}
-    expected = {s.dag_hash(7) for s in root.dependencies()}
+    expected = {s.dag_hash(7) for s in root.dependencies()}  # ty: ignore[unresolved-attribute]
 
     assert expected == hashes
 
@@ -72,6 +72,6 @@ def test_transitive_installed_dependencies(mock_packages, database):
 
     lines = [line for line in out.strip().split("\n") if line and not line.startswith("--")]
     hashes = {re.split(r"\s+", line)[0] for line in lines}
-    expected = {s.dag_hash(7) for s in root.traverse(root=False)}
+    expected = {s.dag_hash(7) for s in root.traverse(root=False)}  # ty: ignore[unresolved-attribute]
 
     assert expected == hashes

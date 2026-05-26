@@ -42,7 +42,7 @@ def _show_patch(sha256):
         data = patches.get(sha256)
 
     color.cprint("@c{%s}" % sha256)
-    for package, rec in data.items():
+    for package, rec in data.items():  # ty: ignore[unresolved-attribute]
         owner = rec["owner"]
 
         if "relative_path" in rec:

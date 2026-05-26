@@ -40,7 +40,7 @@ kind of like the graph git shows with ``git log --graph``, e.g.
 
 import enum
 import sys
-from typing import List, Optional, Set, TextIO, Tuple
+from typing import Dict, List, Optional, Set, TextIO, Tuple
 
 import spack.deptypes as dt
 import spack.spec
@@ -87,19 +87,21 @@ class AsciiGraph:
         # See spack.util.tty.color for details on color characters.
         self.colors = "rgbmcyRGBMCY"
 
-        # Internal vars are used in the graph() function and are initialized there
-        self._name_to_color = None  # Node name to color
-        self._out = None  # Output stream
-        self._frontier = None  # frontier
-        self._prev_state = None  # State of previous line
-        self._prev_index = None  # Index of expansion point of prev line
-        self._pos = None
+        # Internal vars used in write() and initialized there before any helper is called
+        self._name_to_color: Optional[Dict[str, str]] = None
+        self._out: Optional[spack.llnl.util.tty.color.ColorStream] = None  # ty: ignore[possibly-missing-submodule]
+        self._frontier: Optional[List[List[str]]] = None
+        self._prev_state: Optional[_GraphLineState] = None
+        self._prev_index: Optional[int] = None
+        self._pos: Optional[int] = None
 
     def _indent(self):
+        assert self._out is not None
         self._out.write(self.indent * " ")
 
     def _write_edge(self, string, index, sub=0):
         """Write a colored edge to the output stream."""
+        assert self._out is not None and self._frontier is not None and self._name_to_color is not None
         # Ignore empty frontier entries (they're just collapsed)
         if not self._frontier[index]:
             return
@@ -107,7 +109,7 @@ class AsciiGraph:
         edge = f"@{self._name_to_color[name]}{{{string}}}"
         self._out.write(edge)
 
-    def _connect_deps(self, i, deps, label=None):
+    def _connect_deps(self, i, deps, label: str = ""):
         """Connect dependencies to existing edges in the frontier.
 
         ``deps`` are to be inserted at position i in the
@@ -129,6 +131,7 @@ class AsciiGraph:
         frontier grew).
 
         """
+        assert self._frontier is not None
         if len(deps) == 1 and deps in self._frontier:
             j = self._frontier.index(deps)
 
@@ -163,17 +166,18 @@ class AsciiGraph:
 
         return False
 
-    def _set_state(self, state, index, label=None):
+    def _set_state(self, state, index, label: str = ""):
         self._prev_state = state
         self._prev_index = index
 
         if self.debug:
+            assert self._out is not None
             self._out.write(" " * 20)
             self._out.write(f"{str(self._prev_state) if self._prev_state else '':<20}")
             self._out.write(f"{str(label) if label else '':<20}")
             self._out.write(f"{self._frontier}")
 
-    def _back_edge_line(self, prev_ends, end, start, collapse, label=None):
+    def _back_edge_line(self, prev_ends, end, start, collapse, label: str = ""):
         """Write part of a backwards edge in the graph.
 
         Writes single- or multi-line backward edges in an ascii graph.
@@ -215,8 +219,11 @@ class AsciiGraph:
 
         """
 
+        assert self._out is not None and self._frontier is not None and self._pos is not None
+
         def advance(to_pos, edges):
             """Write edges up to <to_pos>."""
+            assert self._pos is not None
             for i in range(self._pos, to_pos):
                 for e in edges():
                     self._write_edge(*e)
@@ -252,6 +259,7 @@ class AsciiGraph:
 
     def _node_line(self, index, node):
         """Writes a line with a node at index."""
+        assert self._out is not None and self._frontier is not None
         self._indent()
         for c in range(index):
             self._write_edge("| ", c)
@@ -267,6 +275,7 @@ class AsciiGraph:
 
     def _collapse_line(self, index):
         """Write a collapsing line after a node was added at index."""
+        assert self._out is not None and self._frontier is not None
         self._indent()
         for c in range(index):
             self._write_edge("| ", c)
@@ -278,6 +287,7 @@ class AsciiGraph:
 
     def _merge_right_line(self, index):
         """Edge at index is same as edge to right.  Merge directly with '\'"""
+        assert self._out is not None and self._frontier is not None
         self._indent()
         for c in range(index):
             self._write_edge("| ", c)
@@ -290,6 +300,7 @@ class AsciiGraph:
         self._out.write("\n")
 
     def _expand_right_line(self, index):
+        assert self._out is not None and self._frontier is not None
         self._indent()
         for c in range(index):
             self._write_edge("| ", c)

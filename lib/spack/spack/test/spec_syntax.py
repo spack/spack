@@ -1221,7 +1221,7 @@ def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
         result = parser.next_spec()
-        expand_toolchains(result, toolchain)
+        expand_toolchains(result, toolchain)  # ty: ignore[invalid-argument-type]
         assert expected == str(result)
 
 
@@ -1279,22 +1279,22 @@ def test_spec_by_hash(database, monkeypatch, config):
 
     hash_str = f"/{mpileaks.dag_hash()}"
     parsed_spec = SpecParser(hash_str).next_spec()
-    spack.hash_lookup.replace_hash(parsed_spec)
+    spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
     assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(short_hash_str).next_spec()
-    spack.hash_lookup.replace_hash(parsed_spec)
+    spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
     assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
     parsed_spec = SpecParser(name_version_and_hash).next_spec()
-    spack.hash_lookup.replace_hash(parsed_spec)
+    spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
     assert parsed_spec == mpileaks
 
     b_hash = f"/{b.dag_hash()}"
     parsed_spec = SpecParser(b_hash).next_spec()
-    spack.hash_lookup.replace_hash(parsed_spec)
+    spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
     assert parsed_spec == b
 
 
@@ -1308,26 +1308,26 @@ def test_dep_spec_by_hash(database, config):
     assert "zmpi" in mpileaks_zmpi
 
     mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi").next_spec()
-    spack.hash_lookup.replace_hash(mpileaks_hash_fake)
-    assert "fake" in mpileaks_hash_fake
-    assert mpileaks_hash_fake["fake"] == fake
-    assert "zmpi" in mpileaks_hash_fake
-    assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake)  # ty: ignore[invalid-argument-type]
+    assert "fake" in mpileaks_hash_fake  # ty: ignore[unsupported-operator]
+    assert mpileaks_hash_fake["fake"] == fake  # ty: ignore[not-subscriptable]
+    assert "zmpi" in mpileaks_hash_fake  # ty: ignore[unsupported-operator]
+    assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")  # ty: ignore[not-subscriptable]
 
     mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}").next_spec()
-    spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)
-    assert "zmpi" in mpileaks_hash_zmpi
-    assert mpileaks_hash_zmpi["zmpi"] == zmpi
+    spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)  # ty: ignore[invalid-argument-type]
+    assert "zmpi" in mpileaks_hash_zmpi  # ty: ignore[unsupported-operator]
+    assert mpileaks_hash_zmpi["zmpi"] == zmpi  # ty: ignore[not-subscriptable]
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
     ).next_spec()
-    spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)
-    assert "zmpi" in mpileaks_hash_fake_and_zmpi
-    assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
+    spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)  # ty: ignore[invalid-argument-type]
+    assert "zmpi" in mpileaks_hash_fake_and_zmpi  # ty: ignore[unsupported-operator]
+    assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi  # ty: ignore[not-subscriptable]
 
-    assert "fake" in mpileaks_hash_fake_and_zmpi
-    assert mpileaks_hash_fake_and_zmpi["fake"] == fake
+    assert "fake" in mpileaks_hash_fake_and_zmpi  # ty: ignore[unsupported-operator]
+    assert mpileaks_hash_fake_and_zmpi["fake"] == fake  # ty: ignore[not-subscriptable]
 
 
 @pytest.mark.db
@@ -1370,7 +1370,7 @@ def test_ambiguous_hash(mutable_database):
     # This is a very sketchy as manually setting hashes easily breaks invariants
     x1 = spack.concretize.concretize_one("pkg-a")
     x2 = x1.copy()
-    x1._hash = "xxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    x1._hash = "xxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"  # ty: ignore[unresolved-attribute]
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
@@ -1381,12 +1381,12 @@ def test_ambiguous_hash(mutable_database):
     # ambiguity in first hash character
     s1 = SpecParser("/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        spack.hash_lookup.lookup_hash(s1)
+        spack.hash_lookup.lookup_hash(s1)  # ty: ignore[invalid-argument-type]
 
     # ambiguity in first hash character AND spec name
     s2 = SpecParser("pkg-a/xxx").next_spec()
     with pytest.raises(spack.spec.AmbiguousHashError):
-        spack.hash_lookup.lookup_hash(s2)
+        spack.hash_lookup.lookup_hash(s2)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.db
@@ -1397,15 +1397,15 @@ def test_invalid_hash(database, config):
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}").next_spec()
-        spack.hash_lookup.replace_hash(parsed_spec)
+        spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}").next_spec()
-        spack.hash_lookup.replace_hash(parsed_spec)
+        spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}").next_spec()
-        spack.hash_lookup.replace_hash(parsed_spec)
+        spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
 
 
 def test_invalid_hash_dep(database, config):
@@ -1428,7 +1428,7 @@ def test_nonexistent_hash(database, config):
 
     with pytest.raises(spack.spec.InvalidHashError):
         parsed_spec = SpecParser(f"/{no_such_hash}").next_spec()
-        spack.hash_lookup.replace_hash(parsed_spec)
+        spack.hash_lookup.replace_hash(parsed_spec)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(
@@ -1444,8 +1444,8 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
     spec1_concrete = spack.concretize.concretize_one(spec1)
     spec2_concrete = spack.concretize.concretize_one(spec2)
 
-    spec1_concrete._hash = "spec1"
-    spec2_concrete._hash = "spec2"
+    spec1_concrete._hash = "spec1"  # ty: ignore[unresolved-attribute]
+    spec2_concrete._hash = "spec2"  # ty: ignore[unresolved-attribute]
 
     monkeypatch.setattr(
         spack.binary_distribution,
@@ -1724,7 +1724,7 @@ def test_compare_abstract_specs():
 
     for a, b in itertools.product(specs, repeat=2):
         # Check that we can compare without raising an error
-        assert a <= b or b < a
+        assert a <= b or b < a  # ty: ignore[unsupported-operator]
 
 
 @pytest.mark.parametrize(
@@ -1761,17 +1761,17 @@ def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
     rhs = SpecParser(rhs_str).next_spec()
     intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
-    assert lhs.intersects(rhs) is intersect
-    assert rhs.intersects(lhs) is intersect
-    assert lhs.satisfies(rhs) is lhs_sat_rhs
-    assert rhs.satisfies(lhs) is rhs_sat_lhs
+    assert lhs.intersects(rhs) is intersect  # ty: ignore[invalid-argument-type, unresolved-attribute]
+    assert rhs.intersects(lhs) is intersect  # ty: ignore[invalid-argument-type, unresolved-attribute]
+    assert lhs.satisfies(rhs) is lhs_sat_rhs  # ty: ignore[invalid-argument-type, unresolved-attribute]
+    assert rhs.satisfies(lhs) is rhs_sat_lhs  # ty: ignore[invalid-argument-type, unresolved-attribute]
 
 
 @pytest.mark.regression("32471")
 @pytest.mark.parametrize("spec_str", ["target=x86_64", "os=redhat6", "target=x86_64:"])
 def test_platform_is_none_if_not_present(spec_str):
     s = SpecParser(spec_str).next_spec()
-    assert s.architecture.platform is None, s
+    assert s.architecture.platform is None, s  # ty: ignore[unresolved-attribute]
 
 
 def test_parse_one_or_raise_error_message():

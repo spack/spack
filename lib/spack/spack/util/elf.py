@@ -217,22 +217,22 @@ def parse_program_headers(f: BinaryIO, elf: ElfFile) -> None:
         # Skip segments of size 0; we don't distinguish between missing segment and
         # empty segments. I've see an empty PT_DYNAMIC section for an ELF file that
         # contained debug data.
-        if ph.p_filesz == 0:  # type: ignore
+        if ph.p_filesz == 0:
             continue
 
         # For PT_LOAD entries: Save offsets and virtual addrs of the loaded ELF segments
         # This way we can map offsets by virtual address to offsets in the file.
-        if ph.p_type == ELF_CONSTANTS.PT_LOAD:  # type: ignore
-            elf.pt_load.append((ph.p_offset, ph.p_vaddr))  # type: ignore
+        if ph.p_type == ELF_CONSTANTS.PT_LOAD:
+            elf.pt_load.append((ph.p_offset, ph.p_vaddr))
 
-        elif ph.p_type == ELF_CONSTANTS.PT_INTERP:  # type: ignore
-            elf.pt_interp_p_offset = ph.p_offset  # type: ignore
-            elf.pt_interp_p_filesz = ph.p_filesz  # type: ignore
+        elif ph.p_type == ELF_CONSTANTS.PT_INTERP:
+            elf.pt_interp_p_offset = ph.p_offset
+            elf.pt_interp_p_filesz = ph.p_filesz
             elf.has_pt_interp = True
 
-        elif ph.p_type == ELF_CONSTANTS.PT_DYNAMIC:  # type: ignore
-            elf.pt_dynamic_p_offset = ph.p_offset  # type: ignore
-            elf.pt_dynamic_p_filesz = ph.p_filesz  # type: ignore
+        elif ph.p_type == ELF_CONSTANTS.PT_DYNAMIC:
+            elf.pt_dynamic_p_offset = ph.p_offset
+            elf.pt_dynamic_p_filesz = ph.p_filesz
             elf.has_pt_dynamic = True
 
     # The linker sorts PT_LOAD segments by vaddr, but let's do it just to be sure, since
@@ -604,7 +604,7 @@ def _get_rpath_substitution(
         match = regex.match(old_rpath)
         if match:
             changed = True
-            rpaths[i] = substitutions[match.group()] + old_rpath[match.end() :]
+            rpaths[i] = substitutions[match.group()] + old_rpath[match.end() :]  # ty: ignore[not-subscriptable]
 
     # Nothing to replace!
     if not changed:
@@ -612,7 +612,7 @@ def _get_rpath_substitution(
 
     return UpdateCStringAction(
         old_value=elf.dt_rpath_str,
-        new_value=b":".join(rpaths),
+        new_value=b":".join(rpaths),  # ty: ignore[invalid-argument-type]
         # The rpath is at a given offset in the string table used by the dynamic section.
         offset=elf.pt_dynamic_strtab_offset + elf.rpath_strtab_offset,
     )

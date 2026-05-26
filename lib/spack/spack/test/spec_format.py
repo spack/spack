@@ -171,7 +171,7 @@ def test_architecture_target_highlight(config, mock_packages):
         color=True,
         architecture_style_fn=_always_arch(PartStyle.HIGHLIGHT),
     )
-    expected = colorize(f"{HIGHLIGHT_COLOR} target={s.architecture.target}@.", color=True)
+    expected = colorize(f"{HIGHLIGHT_COLOR} target={s.architecture.target}@.", color=True)  # ty: ignore[unresolved-attribute]
     assert result == expected
 
 
@@ -181,7 +181,7 @@ def test_architecture_os_dim(config, mock_packages):
     result = s.format(
         "{ os=architecture.os}", color=True, architecture_style_fn=_always_arch(PartStyle.DIM)
     )
-    expected = colorize(f"{DIM_COLOR} os={s.architecture.os}@.", color=True)
+    expected = colorize(f"{DIM_COLOR} os={s.architecture.os}@.", color=True)  # ty: ignore[unresolved-attribute]
     assert result == expected
 
 

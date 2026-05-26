@@ -973,7 +973,7 @@ def _exists_in_buildcache(
 def prefixes_to_relocate(spec):
     prefixes = [s.prefix for s in specs_to_relocate(spec)]
     prefixes.append(spack.hooks.sbang.sbang_install_path())
-    prefixes.append(str(spack.store.STORE.layout.root))
+    prefixes.append(str(spack.store.STORE.layout.root))  # ty: ignore[invalid-argument-type]
     return prefixes
 
 
@@ -2099,7 +2099,7 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
     if binary_distribution is None:
         raise ValueError("Tarball is not a Spack package, missing binary_distribution file")
 
-    pkg_path = pathlib.PurePosixPath(binary_distribution).parent.parent
+    pkg_path = pathlib.PurePosixPath(binary_distribution).parent.parent  # ty: ignore[invalid-argument-type]
 
     # Even the most ancient Spack version has required to list the dir of the package itself, so
     # guard against broken tarballs where `path.parent.parent` is empty.
@@ -2641,7 +2641,7 @@ class DefaultIndexHandlerV2(IndexHandler):
         url_index_hash = url_util.join(self.url, "build_cache", "index.json.hash")
         try:
             with self.urlopen(
-                urllib.request.Request(url_index_hash, headers=self.headers)
+                urllib.request.Request(url_index_hash, headers=self.headers)  # ty: ignore[invalid-argument-type]
             ) as response:
                 remote_hash = response.read(64)
         except OSError:
@@ -2664,7 +2664,7 @@ class DefaultIndexHandlerV2(IndexHandler):
         url_index = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
 
         try:
-            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
+            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))  # ty: ignore[invalid-argument-type]
         except OSError as e:
             raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
 
@@ -2714,7 +2714,7 @@ class EtagIndexHandlerV2(IndexHandler):
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.code == 304:
                 # Not modified; that means fresh.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
             raise FetchIndexError(f"Could not fetch index {url}", e) from e
@@ -2812,7 +2812,7 @@ class DefaultIndexHandler(IndexHandler):
 
         try:
             response = self.urlopen(
-                urllib.request.Request(url_index_manifest, headers=self.headers)
+                urllib.request.Request(url_index_manifest, headers=self.headers)  # ty: ignore[invalid-argument-type]
             )
         except OSError as e:
             raise FetchIndexError(
@@ -2874,7 +2874,7 @@ class EtagIndexHandler(IndexHandler):
         try:
             response = self.urlopen(urllib.request.Request(manifest_url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.code == 304:
                 # The remote manifest has not been modified, i.e. the index we
                 # already have is the freshest there is.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)

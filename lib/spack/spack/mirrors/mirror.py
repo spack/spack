@@ -134,11 +134,11 @@ class Mirror:
 
     @property
     def binary(self) -> bool:
-        return isinstance(self._data, str) or self._data.get("binary", True)
+        return bool(isinstance(self._data, str) or self._data.get("binary", True))
 
     @property
     def source(self) -> bool:
-        return isinstance(self._data, str) or self._data.get("source", True)
+        return bool(isinstance(self._data, str) or self._data.get("source", True))
 
     @property
     def signed(self) -> bool:
@@ -147,13 +147,13 @@ class Mirror:
         if is_oci_url(self.fetch_url):
             return False
 
-        return isinstance(self._data, str) or self._data.get("signed", True)
+        return bool(isinstance(self._data, str) or self._data.get("signed", True))
 
     @property
     def autopush(self) -> bool:
         if isinstance(self._data, str):
             return False
-        return self._data.get("autopush", False)
+        return bool(self._data.get("autopush", False))
 
     def include_binary(self, direction: str) -> List[str]:
         return self._get_value("include_binary", direction) or []
@@ -325,7 +325,7 @@ class Mirror:
             if set_url:
                 self._data[direction] = set_url
                 return True
-            self._data[direction] = {}
+            self._data[direction] = {}  # ty: ignore[invalid-assignment]
 
         entry = self._data[direction]
 
@@ -338,9 +338,9 @@ class Mirror:
                 return True
 
             # Otherwise promote to a dict
-            self._data[direction] = {"url": entry}
+            self._data[direction] = {"url": entry}  # ty: ignore[invalid-assignment]
 
-        return self._update_connection_dict(self._data[direction], data, top_level=False)
+        return self._update_connection_dict(self._data[direction], data, top_level=False)  # ty: ignore[invalid-argument-type]
 
     def _get_value(self, attribute: str, direction: str) -> Any:
         """Returns the most specific value for a given attribute (either push/fetch or global)"""
@@ -468,7 +468,7 @@ class MirrorCollection(Mapping[str, Mirror]):
             if mirrors is not None
             else spack.config.CONFIG.get_config("mirrors", scope=scope).items()
         )
-        mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
+        mirror_gen = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 
         def _filter(m: Mirror):
             if source is not None and m.source != source:
@@ -479,7 +479,7 @@ class MirrorCollection(Mapping[str, Mirror]):
                 return False
             return True
 
-        self._mirrors = {m.name: m for m in mirrors if _filter(m)}
+        self._mirrors: Dict[str, Mirror] = {m.name: m for m in mirror_gen if _filter(m)}
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, MirrorCollection):

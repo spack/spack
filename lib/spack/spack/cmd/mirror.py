@@ -376,7 +376,7 @@ def mirror_remove(args):
             return
 
     if not removed:
-        tty.die(f"No mirror with name {name} in {comma_or(scopes)} scope")
+        tty.die(f"No mirror with name {name} in {comma_or(scopes)} scope")  # ty: ignore[invalid-argument-type]
 
 
 def _configure_mirror(args):
@@ -604,7 +604,7 @@ def process_mirror_stats(present, mirrored, error):
     )
     if error:
         tty.error("Failed downloads:")
-        colify.colify(s.cformat("{name}{@version}") for s in error)
+        colify.colify(s.cformat("{name}{@version}") for s in error)  # ty: ignore[invalid-argument-type]
         sys.exit(1)
 
 

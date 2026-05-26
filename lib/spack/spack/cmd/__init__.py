@@ -547,7 +547,7 @@ def display_specs(specs, args=None, **kwargs):
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):
-            colify((f[0] for f in formatted), indent=indent, output=output)
+            colify((f[0] for f in formatted), indent=indent, output=output)  # ty: ignore[invalid-argument-type]
             return ""
 
         # otherwise, we'll print specs one by one

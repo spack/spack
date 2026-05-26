@@ -56,7 +56,7 @@ def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
         for old_prefix in prefix_iteration_order:
             new_prefix = prefix_to_prefix[old_prefix]
             if orig_rpath.startswith(old_prefix):
-                new_rpath = re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
+                new_rpath = re.sub(re.escape(old_prefix), new_prefix, orig_rpath)  # ty: ignore[invalid-argument-type]
                 paths_to_paths[orig_rpath] = new_rpath
                 break
         else:
@@ -66,14 +66,14 @@ def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
         for old_prefix in prefix_iteration_order:
             new_prefix = prefix_to_prefix[old_prefix]
             if idpath.startswith(old_prefix):
-                paths_to_paths[idpath] = re.sub(re.escape(old_prefix), new_prefix, idpath)
+                paths_to_paths[idpath] = re.sub(re.escape(old_prefix), new_prefix, idpath)  # ty: ignore[invalid-argument-type]
                 break
 
     for dep in deps:
         for old_prefix in prefix_iteration_order:
             new_prefix = prefix_to_prefix[old_prefix]
             if dep.startswith(old_prefix):
-                paths_to_paths[dep] = re.sub(re.escape(old_prefix), new_prefix, dep)
+                paths_to_paths[dep] = re.sub(re.escape(old_prefix), new_prefix, dep)  # ty: ignore[invalid-argument-type]
                 break
 
         if dep.startswith("@"):

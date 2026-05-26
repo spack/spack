@@ -169,15 +169,15 @@ def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
                 current_str = node.value
             else:
                 continue
-        elif isinstance(node, ast.Str):
+        elif isinstance(node, ast.Str):  # ty: ignore[deprecated]
             current_str = node.s
         else:
             continue
-        if not IS_PROBABLY_COMPILER.search(current_str):
+        if not IS_PROBABLY_COMPILER.search(current_str):  # ty: ignore[no-matching-overload]
             continue
-        new = _spec_str_format(current_str)
+        new = _spec_str_format(current_str)  # ty: ignore[invalid-argument-type]
         if new is not None:
-            handler(path, node.lineno, node.col_offset, current_str, new)
+            handler(path, node.lineno, node.col_offset, current_str, new)  # ty: ignore[unresolved-attribute, invalid-argument-type]
 
 
 def _spec_str_json_and_yaml(path: str, data: dict, handler: SpecStrHandler) -> None:

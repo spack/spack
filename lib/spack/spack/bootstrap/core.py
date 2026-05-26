@@ -229,7 +229,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 
     def try_import(self, module: str, abstract_spec_str: str) -> bool:
         info: QueryInfo
-        test_fn, info = functools.partial(_try_import_from_store, module), {}
+        test_fn, info = functools.partial(_try_import_from_store, module), {}  # ty: ignore[invalid-assignment]
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             return True
 
@@ -242,7 +242,7 @@ class BuildcacheBootstrapper(Bootstrapper):
 
     def try_search_path(self, executables: Tuple[str], abstract_spec_str: str) -> bool:
         info: QueryInfo
-        test_fn, info = functools.partial(_executables_in_store, executables), {}
+        test_fn, info = functools.partial(_executables_in_store, executables), {}  # ty: ignore[invalid-assignment]
         if test_fn(query_spec=abstract_spec_str, query_info=info):
             self.last_search = info
             return True

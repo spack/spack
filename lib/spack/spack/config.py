@@ -202,6 +202,8 @@ class ConfigScope:
             _names |= scope.transitive_includes(_names=_names)
         return _names
 
+    path: str  # defined by DirectoryConfigScope and SingleFileScope; not present on all subclasses
+
     def get_section_filename(self, section: str) -> str:
         raise NotImplementedError
 
@@ -522,7 +524,7 @@ class Configuration:
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
-        return next(self.scopes.reversed_values())  # type: ignore
+        return next(self.scopes.reversed_values())
 
     @_config_mutator
     def push_scope_incremental(
@@ -665,8 +667,8 @@ class Configuration:
 
     def get_config_filename(self, scope: str, section: str) -> str:
         """For some scope and section, get the name of the configuration file."""
-        scope = self._validate_scope(scope)
-        return scope.get_section_filename(section)
+        scope_obj = self._validate_scope(scope)
+        return scope_obj.get_section_filename(section)
 
     @_config_mutator
     def clear_caches(self) -> None:
@@ -711,19 +713,19 @@ class Configuration:
             raise RuntimeError(msg)
 
         _validate_section_name(section)  # validate section name
-        scope = self._validate_scope(scope)  # get ConfigScope object
+        scope_obj = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section]
+        need_comment_copy = section in scope_obj.sections and scope_obj.sections[section]
         if need_comment_copy:
-            comments = syaml.extract_comments(scope.sections[section][section])
+            comments = syaml.extract_comments(scope_obj.sections[section][section])
 
         # read only the requested section's data.
-        scope.sections[section] = syaml.syaml_dict({section: update_data})
+        scope_obj.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            syaml.set_comments(scope.sections[section][section], data_comments=comments)
+            syaml.set_comments(scope_obj.sections[section][section], data_comments=comments)
 
-        scope._write_section(section)
+        scope_obj._write_section(section)
 
     def get_config(
         self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
@@ -1354,7 +1356,7 @@ class OptionalInclude:
 
     def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
-        # enforced by type checking but those can always be # type: ignore'd
+        # enforced by type checking but those can always be suppressed with type: ignore
         assert isinstance(parent_scope, ConfigScope), (
             f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"  # noqa: E501
         )
@@ -1768,7 +1770,7 @@ def validate(
         spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         if hasattr(e.instance, "lc"):
-            line_number = e.instance.lc.line + 1
+            line_number = e.instance.lc.line + 1  # ty: ignore[unresolved-attribute]
         else:
             line_number = None
         raise ConfigFormatError(e, data, filename, line_number) from e
@@ -1831,8 +1833,8 @@ def _mark_internal(data, name):
         d = syaml.syaml_type(data)
 
     if syaml.markable(d):
-        d._start_mark = syaml.name_mark(name)
-        d._end_mark = syaml.name_mark(name)
+        d._start_mark = syaml.name_mark(name)  # ty: ignore[invalid-assignment]
+        d._end_mark = syaml.name_mark(name)  # ty: ignore[invalid-assignment]
 
     return d
 
@@ -1863,9 +1865,9 @@ def get_default_from_schema(path):
         test_data = {component: test_data}
 
     try:
-        validate(test_data, SECTION_SCHEMAS[section])
+        validate(test_data, SECTION_SCHEMAS[section])  # ty: ignore[invalid-argument-type]
     except (ConfigFormatError, AttributeError) as e:
-        jsonschema_error = e.validation_error
+        jsonschema_error = e.validation_error  # ty: ignore[unresolved-attribute]
 
         # Try to get the type from the default value
         schema_path = jsonschema_error.schema_path
@@ -2141,7 +2143,7 @@ def use_configuration(
 
 def _normalize_input(entry: Union[ScopeWithOptionalPriority, str]) -> ScopeWithPriority:
     if isinstance(entry, tuple):
-        return entry
+        return entry  # ty: ignore[invalid-return-type]
 
     default_priority = ConfigScopePriority.CONFIG_FILES
     if isinstance(entry, ConfigScope):
@@ -2333,8 +2335,8 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
     # relative to that path.
     filename = None
     if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
-        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
+        filename = os.path.dirname(path._start_mark.name)  # ty: ignore[unresolved-attribute]
+        assert path._start_mark.name == path._end_mark.name  # ty: ignore[unresolved-attribute]
 
     path = substitute_path_variables(path)
 

@@ -413,7 +413,7 @@ def cescape(string: str) -> str:
 
 
 class ColorStream:
-    def __init__(self, stream: io.IOBase, color: Optional[bool] = None) -> None:
+    def __init__(self, stream: Union[io.IOBase, IO[str]], color: Optional[bool] = None) -> None:
         self._stream = stream
         self._color = color
 

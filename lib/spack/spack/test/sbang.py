@@ -419,8 +419,8 @@ def test_sbang_handles_non_utf8_files(tmp_path: pathlib.Path):
 
 @pytest.fixture
 def shebang_limits_system_8_spack_16():
-    system_limit, sbang.system_shebang_limit = sbang.system_shebang_limit, 8
-    spack_limit, sbang.spack_shebang_limit = sbang.spack_shebang_limit, 16
+    system_limit, sbang.system_shebang_limit = sbang.system_shebang_limit, 8  # ty: ignore[invalid-assignment]
+    spack_limit, sbang.spack_shebang_limit = sbang.spack_shebang_limit, 16  # ty: ignore[invalid-assignment]
     yield
     sbang.system_shebang_limit = system_limit
     sbang.spack_shebang_limit = spack_limit

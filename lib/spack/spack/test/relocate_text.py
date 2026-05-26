@@ -12,7 +12,7 @@ from spack import relocate_text
 def test_text_relocation_regex_is_safe():
     # Test whether prefix regex is properly escaped
     string = b"This does not match /a/, but this does: /[a-z]/."
-    assert relocate_text.utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
+    assert relocate_text.utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"  # ty: ignore[unresolved-attribute]
 
 
 def test_utf8_paths_to_single_binary_regex():
@@ -24,15 +24,15 @@ def test_utf8_paths_to_single_binary_regex():
 
     # Match first
     string = b"contains both /first/path/subdir and /second/path/sub"
-    assert regex.search(string).group(0) == b"/first/path/subdir"
+    assert regex.search(string).group(0) == b"/first/path/subdir"  # ty: ignore[unresolved-attribute]
 
     # Match second
     string = b"contains both /not/first/path/subdir but /second/path/subdir"
-    assert regex.search(string).group(0) == b"/second/path/subdir"
+    assert regex.search(string).group(0) == b"/second/path/subdir"  # ty: ignore[unresolved-attribute]
 
     # Match "unsafe" dir name
     string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
-    assert regex.search(string).group(0) == b"/safe/[a-z]/file"
+    assert regex.search(string).group(0) == b"/safe/[a-z]/file"  # ty: ignore[unresolved-attribute]
 
 
 def test_ordered_replacement():

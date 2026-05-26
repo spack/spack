@@ -108,7 +108,7 @@ def test_all_orders_traverse_the_same_nodes(direction, deptype, abstract_specs_d
     kwargs = {"root": True, "direction": direction, "deptype": deptype, "cover": "nodes"}
 
     def nodes(order):
-        s = traverse.traverse_nodes(specs, order=order, **kwargs)
+        s = traverse.traverse_nodes(specs, order=order, **kwargs)  # ty: ignore[no-matching-overload]
         return sorted(list(s))
 
     assert nodes("pre") == nodes("post") == nodes("breadth") == nodes("topo")
@@ -125,7 +125,7 @@ def test_all_orders_traverse_the_same_edges(direction, root, deptype, abstract_s
     kwargs = {"root": root, "direction": direction, "deptype": deptype, "cover": "edges"}
 
     def edges(order):
-        s = traverse.traverse_edges(specs, order=order, **kwargs)
+        s = traverse.traverse_edges(specs, order=order, **kwargs)  # ty: ignore[no-matching-overload]
         return sorted(list(s))
 
     assert edges("pre") == edges("post") == edges("breadth") == edges("topo")

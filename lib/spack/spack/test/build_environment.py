@@ -319,7 +319,7 @@ def test_load_external_modules_error(working_env, monkeypatch):
 
     # Test that load_external_modules raises ModuleLoadError
     with pytest.raises(spack.util.module_cmd.ModuleLoadError):
-        spack.build_environment.load_external_modules(context)
+        spack.build_environment.load_external_modules(context)  # ty: ignore[invalid-argument-type]
 
 
 def test_external_config_env(mock_packages, mutable_config: Configuration, working_env):
@@ -958,7 +958,7 @@ def test_build_process_timeout(mock_build_process, runtime, timeout, expected_ca
     """Tests that we make the correct function calls in different timeout scenarios."""
     mock_build_process(runtime=runtime)
     process = spack.build_environment.start_build_process(
-        pkg=None, function=None, kwargs={}, timeout=timeout
+        pkg=None, function=None, kwargs={}, timeout=timeout  # ty: ignore[invalid-argument-type]
     )
     _ = spack.build_environment.complete_build_process(process)
 

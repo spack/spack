@@ -44,7 +44,7 @@ class Token:
     def __str__(self):
         parts = [self.kind, self.value]
         if self.subvalues:
-            parts += [self.subvalues]
+            parts += [self.subvalues]  # ty: ignore[unsupported-operator]
         return f"({', '.join(f'`{p}`' for p in parts)})"
 
     def __eq__(self, other):

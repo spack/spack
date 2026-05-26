@@ -180,7 +180,7 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     kwargs = {"overwrite": [s.dag_hash()]}
 
     with pytest.raises(Exception):
-        PackageInstaller([s.package], explicit=True, **kwargs).install()
+        PackageInstaller([s.package], explicit=True, **kwargs).install()  # ty: ignore[invalid-argument-type]
 
     assert temporary_store.db.installed(s.package.spec)
     assert os.path.exists(s.prefix)
@@ -563,8 +563,8 @@ def test_install_error():
         raise InstallError(msg, long_msg=long_msg)
     except Exception as exc:
         assert exc.__class__.__name__ == "InstallError"
-        assert exc.message == msg
-        assert exc.long_message == long_msg
+        assert exc.message == msg  # ty: ignore[unresolved-attribute]
+        assert exc.long_message == long_msg  # ty: ignore[unresolved-attribute]
 
 
 @pytest.mark.disable_clean_stage_check

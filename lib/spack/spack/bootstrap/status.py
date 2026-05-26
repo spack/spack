@@ -4,7 +4,10 @@
 """Query the status of bootstrapping on this machine"""
 
 import sys
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
+
+if TYPE_CHECKING:
+    import spack.spec
 
 import spack.util.executable
 

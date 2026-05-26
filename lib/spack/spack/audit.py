@@ -710,7 +710,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         build_system_names = {
             v.value if isinstance(v, spack.variant.ConditionalValue) else v
             for _, variant in pkg_cls.variant_definitions("build_system")
-            for v in variant.values
+            for v in variant.values  # ty: ignore[not-iterable]
         }
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 

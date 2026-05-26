@@ -472,7 +472,7 @@ def _process_binary_cache_tarball(
             )
 
         if hasattr(pkg, "_post_buildcache_install_hook"):
-            pkg._post_buildcache_install_hook()
+            pkg._post_buildcache_install_hook()  # ty: ignore[call-non-callable]
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, explicit=explicit)
@@ -552,7 +552,7 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
             # Locate the dependency package in the install tree and find
             # its provenance information.
             source = spack.store.STORE.layout.build_packages_path(node)
-            source_repo_root = os.path.join(source, node.namespace)
+            source_repo_root = os.path.join(source, node.namespace)  # ty: ignore[no-matching-overload]
 
             # If there's no provenance installed for the package, skip it.
             # If it's external, skip it because it either:
@@ -574,10 +574,10 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
                 tty.warn(f"Warning: Couldn't copy in provenance for {node.name}")
 
         # Create a destination repository
-        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api
-        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path
+        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api  # ty: ignore[invalid-argument-type]
+        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path  # ty: ignore[no-matching-overload]
         repo = spack.repo.create_or_construct(
-            repo_root, namespace=node.namespace, package_api=pkg_api
+            repo_root, namespace=node.namespace, package_api=pkg_api  # ty: ignore[invalid-argument-type]
         )
 
         # Get the location of the package in the dest repo.
@@ -1248,7 +1248,7 @@ class BuildTask(Task):
         pkg, pkg_id = self.pkg, self.pkg_id
 
         tests = install_args.get("tests")
-        pkg.run_tests = tests is True or tests and pkg.name in tests
+        pkg.run_tests = bool(tests is True or tests and pkg.name in tests)
 
         # Use the binary cache to install if requested,
         # save result to be handled in BuildTask.complete()
@@ -1292,7 +1292,7 @@ class BuildTask(Task):
         assert self.started or self.no_op, (
             "Can't call `poll()` before `start()` or identified no-operation task"
         )
-        return self.no_op or self.success_result or self.error_result or self.process_handle.poll()
+        return self.no_op or self.success_result or self.error_result or self.process_handle.poll()  # ty: ignore[unresolved-attribute]
 
     def succeed(self):
         self.record.succeed()
@@ -1300,7 +1300,7 @@ class BuildTask(Task):
         # delete the temporary backup for an overwrite
         # see spack.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
-            shutil.rmtree(self.tmpdir, ignore_errors=True)
+            shutil.rmtree(self.tmpdir, ignore_errors=True)  # ty: ignore[invalid-argument-type]
 
     def fail(self, inner_exception):
         self.record.fail(inner_exception)
@@ -1313,7 +1313,7 @@ class BuildTask(Task):
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)
-            os.rename(self.backup_dir, self.pkg.prefix)
+            os.rename(self.backup_dir, self.pkg.prefix)  # ty: ignore[invalid-argument-type]
         except Exception as outer_exception:
             raise fs.CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
@@ -1358,7 +1358,7 @@ class BuildTask(Task):
 
         try:
             # Check if the task's child process has completed
-            spack.package_base.PackageBase._verbose = self.process_handle.complete()
+            spack.package_base.PackageBase._verbose = self.process_handle.complete()  # ty: ignore[unresolved-attribute]
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=self.explicit)
@@ -2223,8 +2223,8 @@ class PackageInstaller:
         self.installed.add(pkg_id)
 
         # Update affected dependents
-        dependent_ids = dependent_ids or get_dependent_ids(pkg.spec)
-        for dep_id in set(dependent_ids):
+        dep_id_set: Set[str] = dependent_ids or set(get_dependent_ids(pkg.spec))
+        for dep_id in dep_id_set:
             tty.debug(f"Removing {pkg_id} from {dep_id}'s uninstalled dependencies.")
             if dep_id in self.build_tasks:
                 # Ensure the dependent's uninstalled dependencies are
@@ -2392,7 +2392,7 @@ class PackageInstaller:
                 f"to {str(exc)}: Requeuing to install from source."
             )
             # this overrides a full method, which is ugly.
-            task.install_policy = "source_only"  # type: ignore[misc]
+            task.install_policy = "source_only"  # ty: ignore[invalid-assignment]
             self._requeue_task(task, install_status)
             return None
 
@@ -2415,7 +2415,7 @@ class PackageInstaller:
             # Best effort installs suppress the exception and mark the
             # package as a failure.
             if not isinstance(exc, spack.error.SpackError) or not exc.printed:  # type: ignore[union-attr] # noqa: E501
-                exc.printed = True  # type: ignore[union-attr]
+                exc.printed = True  # ty: ignore[invalid-assignment]
                 # SpackErrors can be printed by the build process or at
                 # lower levels -- skip printing if already printed.
                 # TODO: sort out this and SpackError.print_context()

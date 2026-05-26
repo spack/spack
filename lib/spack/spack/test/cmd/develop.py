@@ -262,7 +262,7 @@ class TestDevelop:
 def _git_commit_list(git_repo_dir):
     git = spack.util.git.git()
     with fs.working_dir(git_repo_dir):
-        output = git("log", "--pretty=format:%h", "-n", "20", output=str)
+        output = git("log", "--pretty=format:%h", "-n", "20", output=str)  # ty: ignore[call-non-callable]
     return output.strip().split()
 
 

@@ -34,12 +34,12 @@ def compare_hash_sans_name(repo, eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
     pkg_cls1 = repo.get_pkg_class(spec1.name)
     content1 = content1.replace(pkg_cls1.__name__, "TestPackage")
-    hash1 = pkg_cls1(spec1).content_hash(content=content1)
+    hash1 = pkg_cls1(spec1).content_hash(content=content1)  # ty: ignore[invalid-argument-type]
 
     content2 = ph.canonical_source(spec2)
     pkg_cls2 = repo.get_pkg_class(spec2.name)
     content2 = content2.replace(pkg_cls2.__name__, "TestPackage")
-    hash2 = pkg_cls2(spec2).content_hash(content=content2)
+    hash2 = pkg_cls2(spec2).content_hash(content=content2)  # ty: ignore[invalid-argument-type]
 
     assert (hash1 == hash2) == eq
 

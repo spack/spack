@@ -130,7 +130,7 @@ def test_editor_precedence(good_exe, gvim_exe, vim_exe, bad_exe):
 
 def test_find_exe_from_env_var_no_editor():
     if "FOO" in os.environ:
-        os.environ.unset("FOO")
+        os.environ.unset("FOO")  # ty: ignore[unresolved-attribute]
     assert ed._find_exe_from_env_var("FOO") == (None, [])
 
 

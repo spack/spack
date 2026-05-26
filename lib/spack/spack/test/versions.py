@@ -67,12 +67,12 @@ def assert_ver_eq(a, b):
 
 def assert_in(needle, haystack):
     """Asserts that 'needle' is in 'haystack'."""
-    assert ver(needle) in ver(haystack)
+    assert ver(needle) in ver(haystack)  # ty: ignore[unsupported-operator]
 
 
 def assert_not_in(needle, haystack):
     """Asserts that 'needle' is not in 'haystack'."""
-    assert ver(needle) not in ver(haystack)
+    assert ver(needle) not in ver(haystack)  # ty: ignore[unsupported-operator]
 
 
 def assert_canonical(canonical_list, version_list):
@@ -555,8 +555,8 @@ def test_formatted_strings():
 
 
 def test_dotted_numeric_string():
-    assert Version("1a2b3").dotted_numeric_string == "1.0.2.0.3"
-    assert Version("1a2b3alpha4").dotted_numeric_string == "1.0.2.0.3.0.4"
+    assert Version("1a2b3").dotted_numeric_string == "1.0.2.0.3"  # ty: ignore[unresolved-attribute]
+    assert Version("1a2b3alpha4").dotted_numeric_string == "1.0.2.0.3.0.4"  # ty: ignore[unresolved-attribute]
 
 
 def test_up_to():
@@ -621,16 +621,16 @@ def test_str_and_hash_version_range():
 )
 def test_stringify_version(version_str):
     v = Version(version_str)
-    v.string = None
+    v.string = None  # ty: ignore[invalid-assignment]
     assert str(v) == version_str
 
-    v.string = None
-    assert v.string == version_str
+    v.string = None  # ty: ignore[invalid-assignment]
+    assert v.string == version_str  # ty: ignore[unresolved-attribute]
 
 
 def test_len():
     a = Version("1.2.3.4")
-    assert len(a) == len(a.version[0])
+    assert len(a) == len(a.version[0])  # ty: ignore[unresolved-attribute]
     assert len(a) == 4
     b = Version("2018.0")
     assert len(b) == 2
@@ -763,7 +763,7 @@ def test_git_branch_with_slash():
 
     v = spack.version.from_string("git.feature/bar")
     assert isinstance(v, GitVersion)
-    v.attach_lookup(MockLookup())
+    v.attach_lookup(MockLookup())  # ty: ignore[invalid-argument-type]
 
     # Create a version range
     test_number_version = spack.version.from_string("1.2")
@@ -791,7 +791,7 @@ def test_version_git_vs_base(string, git):
 
 def test_version_range_nonempty():
     assert Version("1.2.9") in VersionRange("1.2.0", "1.2")
-    assert Version("1.1.1") in ver("1.0:1")
+    assert Version("1.1.1") in ver("1.0:1")  # ty: ignore[unsupported-operator]
 
 
 def test_empty_version_range_raises():
@@ -812,7 +812,7 @@ def test_version_wrong_idx_type():
     """Ensure exception raised if attempt to use non-integer index."""
     v = Version("1.1")
     with pytest.raises(TypeError):
-        v["0:"]
+        v["0:"]  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.regression("29170")
@@ -824,7 +824,7 @@ def test_version_range_satisfies_means_nonempty_intersection():
 
 
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
-    v = VersionList([Version("3.1"), VersionRange(Version("3.1.1"), Version("3.1.2"))])
+    v = VersionList([Version("3.1"), VersionRange(Version("3.1.1"), Version("3.1.2"))])  # ty: ignore[invalid-argument-type]
     assert not v.concrete
 
 
@@ -868,9 +868,9 @@ def test_git_versions_store_ref_requests(git_ref, std_version):
 def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     v = Version(vstring)
     v_equivalent = Version(eq_vstring)
-    assert v.is_commit == is_commit
-    assert not v._ref_lookup
-    assert v_equivalent == v.ref_version
+    assert v.is_commit == is_commit  # ty: ignore[unresolved-attribute]
+    assert not v._ref_lookup  # ty: ignore[unresolved-attribute]
+    assert v_equivalent == v.ref_version  # ty: ignore[unresolved-attribute]
 
 
 @pytest.mark.parametrize(
@@ -1128,4 +1128,4 @@ def test_semver_regex(tag, expected):
     if expected is None:
         assert result is None
     else:
-        assert result.group() == expected
+        assert result.group() == expected  # ty: ignore[unresolved-attribute]

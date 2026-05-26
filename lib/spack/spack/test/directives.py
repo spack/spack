@@ -118,8 +118,8 @@ def test_license_directive(config, mock_packages: RepoPath, package_name, expect
 
 def test_duplicate_exact_range_license():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
-    package.name = "test_package"
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}  # ty: ignore[invalid-assignment]
+    package.name = "test_package"  # ty: ignore[invalid-assignment]
 
     msg = (
         r"test_package is specified as being licensed as MIT when \+foo, but it is also "
@@ -127,13 +127,13 @@ def test_duplicate_exact_range_license():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+foo")
+        spack.directives._execute_license(package, "MIT", "+foo")  # ty: ignore[invalid-argument-type]
 
 
 def test_overlapping_duplicate_licenses():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
-    package.name = "test_package"
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}  # ty: ignore[invalid-assignment]
+    package.name = "test_package"  # ty: ignore[invalid-assignment]
 
     msg = (
         r"test_package is specified as being licensed as MIT when \+bar, but it is also "
@@ -141,7 +141,7 @@ def test_overlapping_duplicate_licenses():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._execute_license(package, "MIT", "+bar")
+        spack.directives._execute_license(package, "MIT", "+bar")  # ty: ignore[invalid-argument-type]
 
 
 def test_version_type_validation():
@@ -154,11 +154,11 @@ def test_version_type_validation():
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), ver=3.10, kwargs={})
+        spack.directives._execute_version(package(name="python"), ver=3.10, kwargs={})  # ty: ignore[invalid-argument-type]
 
     # Try passing a bogus type; it's just that we want a nice error message
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._execute_version(package(name="python"), ver={}, kwargs={})
+        spack.directives._execute_version(package(name="python"), ver={}, kwargs={})  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(
@@ -194,11 +194,11 @@ def test_redistribute_override_when():
         disable_redistribute = {}
 
     cls = MockPackage
-    spack.directives._execute_redistribute(cls, source=False, binary=None, when="@1.0")
+    spack.directives._execute_redistribute(cls, source=False, binary=None, when="@1.0")  # ty: ignore[invalid-argument-type]
     spec_key = spack.directives._make_when_spec("@1.0")
     assert not cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
-    spack.directives._execute_redistribute(cls, source=None, binary=False, when="@1.0")
+    spack.directives._execute_redistribute(cls, source=None, binary=False, when="@1.0")  # ty: ignore[invalid-argument-type]
     assert cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
 

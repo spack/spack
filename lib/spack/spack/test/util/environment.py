@@ -26,7 +26,7 @@ def test_is_system_path():
     assert envutil.is_system_path(sys_path)
     assert not envutil.is_system_path("/nonsense_path/bin")
     assert not envutil.is_system_path("")
-    assert not envutil.is_system_path(None)
+    assert not envutil.is_system_path(None)  # ty: ignore[invalid-argument-type]
 
 
 if sys.platform == "win32":

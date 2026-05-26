@@ -16,7 +16,7 @@ from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
 from .color import cescape, clen, cprint, cwrite
 
 # Globals
-_debug = 0
+_debug: int = 0
 _verbose = False
 _stacktrace = False
 _timestamp = False

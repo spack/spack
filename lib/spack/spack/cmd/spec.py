@@ -231,7 +231,7 @@ def spec(parser, args):
         for idx, result in enumerate(
             solver.solve_in_rounds(
                 specs,
-                out=output,
+                out=output,  # ty: ignore[invalid-argument-type]
                 timers=args.timers,
                 stats=args.stats,
                 allow_deprecated=allow_deprecated,

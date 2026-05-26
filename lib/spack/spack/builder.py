@@ -164,9 +164,9 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
     # with the same name is defined in the Package, it will override this definition
     # (when _ForwardToBaseBuilder is initialized)
     for method_name in (
-        base_cls.phases  # type: ignore
-        + package_methods(base_cls)  # type: ignore
-        + package_long_methods(base_cls)  # type: ignore
+        base_cls.phases
+        + package_methods(base_cls)
+        + package_long_methods(base_cls)
         + ("setup_build_environment", "setup_dependent_build_environment")
     ):
         setattr(_ForwardToBaseBuilder, method_name, forward_method_to_getattr(method_name))
@@ -177,7 +177,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
 
         return __forward
 
-    for attribute_name in package_attributes(base_cls):  # type: ignore
+    for attribute_name in package_attributes(base_cls):
         setattr(
             _ForwardToBaseBuilder,
             attribute_name,
@@ -219,7 +219,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     """Given a package object with an associated concrete spec,
     return the name of its build system."""
     try:
-        return pkg.spec.variants["build_system"].value
+        return pkg.spec.variants["build_system"].value  # ty: ignore[invalid-return-type]
     except KeyError as e:
         # We are reading an old spec without the build_system variant
         if hasattr(pkg, "default_buildsystem"):
@@ -234,7 +234,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
 class BuilderMeta(
     spack.phase_callbacks.PhaseCallbacksMeta,
     spack.multimethod.MultiMethodMeta,
-    type(collections.abc.Sequence),  # type: ignore
+    type(collections.abc.Sequence),
 ):
     pass
 

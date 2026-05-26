@@ -63,7 +63,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
 
     # rewrite the hash
     old_hash, new_hash = env.concretized_roots[0].hash, "abc"
-    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
+    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     env.concretized_roots[0].hash = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -76,7 +76,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     hashes = [x.hash for x in read_in.concretized_roots]
     assert hashes
     assert hashes[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
+    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     assert _hash == new_hash
 
 

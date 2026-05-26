@@ -129,23 +129,23 @@ module_index:
     mock_db = MockDb(dbs, {s1.dag_hash(): "d0", s2.dag_hash(): "d1", s3.dag_hash(): "d0"})
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    m1 = upstream_index.upstream_module(s1, "tcl")
-    assert m1.path == "/path/to/a"
+    m1 = upstream_index.upstream_module(s1, "tcl")  # ty: ignore[invalid-argument-type]
+    assert m1.path == "/path/to/a"  # ty: ignore[unresolved-attribute]
 
     # No modules are defined for the DB associated with s2
-    assert not upstream_index.upstream_module(s2, "tcl")
+    assert not upstream_index.upstream_module(s2, "tcl")  # ty: ignore[invalid-argument-type]
 
     # Modules are defined for the index associated with s1, but none are
     # defined for the requested type
-    assert not upstream_index.upstream_module(s1, "lmod")
+    assert not upstream_index.upstream_module(s1, "lmod")  # ty: ignore[invalid-argument-type]
 
     # A module is registered with a DB and the associated module index has
     # modules of the specified type defined, but not for the requested spec
-    assert not upstream_index.upstream_module(s3, "tcl")
+    assert not upstream_index.upstream_module(s3, "tcl")  # ty: ignore[invalid-argument-type]
 
     # The spec isn't recorded as installed in any of the DBs
     with pytest.raises(spack.error.SpackError):
-        upstream_index.upstream_module(s4, "tcl")
+        upstream_index.upstream_module(s4, "tcl")  # ty: ignore[invalid-argument-type]
 
 
 def test_get_module_upstream(monkeypatch):
@@ -168,9 +168,9 @@ module_index:
     monkeypatch.setattr(spack.store, "STORE", types.SimpleNamespace(db=mock_db))
     try:
         old_index = spack.modules.common.upstream_module_index
-        spack.modules.common.upstream_module_index = upstream_index
+        spack.modules.common.upstream_module_index = upstream_index  # ty: ignore[invalid-assignment]
 
-        m1_path = spack.modules.get_module("tcl", s1, True)
+        m1_path = spack.modules.get_module("tcl", s1, True)  # ty: ignore[invalid-argument-type]
         assert m1_path == "/path/to/a"
     finally:
         spack.modules.common.upstream_module_index = old_index

@@ -41,6 +41,7 @@ from typing import (
     TextIO,
     Tuple,
     Union,
+    cast,
     overload,
 )
 
@@ -158,7 +159,7 @@ if sys.version_info < (3, 7, 4):
 
         # We must copy extended attributes before the file is (potentially)
         # chmod()'ed read-only, otherwise setxattr() will error with -EACCES.
-        shutil._copyxattr(src, dst, follow_symlinks=follow)
+        shutil._copyxattr(src, dst, follow_symlinks=follow)  # ty: ignore[unresolved-attribute]
 
         try:
             lookup("chmod")(dst, mode, follow_symlinks=follow)
@@ -184,7 +185,7 @@ if sys.version_info < (3, 7, 4):
                 else:
                     raise
 
-    shutil.copystat = copystat
+    shutil.copystat = copystat  # ty: ignore[invalid-assignment]
 
 
 def polite_path(components: Iterable[str]):
@@ -483,7 +484,7 @@ def change_sed_delimiter(old_delim: str, new_delim: str, *filenames: str) -> Non
 
     repl = r"s@\1@\2@g"
     repl = repl.replace("@", new_delim)
-    filenames = path_to_os_path(*filenames)
+    filenames = path_to_os_path(*filenames)  # ty: ignore[invalid-assignment]
     for f in filenames:
         filter_file(whole_lines, repl, f)
         filter_file(single_quoted, "'%s'" % repl, f)
@@ -1002,7 +1003,7 @@ def mkdirp(
             mkdirp -- default value is ``"args"``
     """
     default_perms = default_perms or "args"
-    paths = path_to_os_path(*paths)
+    paths = path_to_os_path(*paths)  # ty: ignore[invalid-assignment]
     for path in paths:
         if not os.path.exists(path):
             try:
@@ -1353,7 +1354,7 @@ def temp_cwd(ignore_cleanup_errors=False):
         if sys.platform == "win32":
             kwargs["ignore_errors"] = False
             kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
-        shutil.rmtree(tmp_dir, **kwargs)
+        shutil.rmtree(tmp_dir, **kwargs)  # ty: ignore[invalid-argument-type]
 
 
 @system_path_filter
@@ -1770,7 +1771,9 @@ def safe_remove(*files_or_dirs):
     # Sort them so that shorter paths like "/foo/bar" come before
     # nested paths like "/foo/bar/baz.yaml". This simplifies the
     # handling of temporary copies below
-    sorted_matches = sorted([os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=len)
+    sorted_matches = cast(
+        List[str], sorted([os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=len)
+    )
 
     # Copy files and directories in a temporary location
     removed, dst_root = {}, tempfile.mkdtemp()

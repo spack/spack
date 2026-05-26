@@ -24,7 +24,6 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.lock
 import spack.util.parallel
-import spack.util.path as sup
 import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
@@ -214,9 +213,9 @@ def _mirror_roots():
     mirrors = spack.config.CONFIG.get("mirrors")
     return [
         (
-            sup.substitute_path_variables(root)
+            spack.config.substitute_path_variables(root)
             if root.endswith(os.sep)
-            else sup.substitute_path_variables(root) + os.sep
+            else spack.config.substitute_path_variables(root) + os.sep
         )
         for root in mirrors.values()
     ]
@@ -242,7 +241,7 @@ class AbstractStage(abc.ABC):
         # TODO: temporary stage area in _stage_root.
         self.name = name
         if name is None:
-            self.name = stage_prefix + next(tempfile._get_candidate_names())
+            self.name = stage_prefix + next(tempfile._get_candidate_names())  # ty: ignore[unresolved-attribute]
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -687,7 +686,7 @@ class Stage(AbstractStage):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)
+        spack.caches.FETCH_CACHE.store(self.fetcher, self.mirror_layout.path)  # ty: ignore[unresolved-attribute]
 
     def cache_mirror(
         self,

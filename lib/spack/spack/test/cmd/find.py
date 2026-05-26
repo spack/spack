@@ -86,12 +86,12 @@ def test_query_arguments():
     assert q_args["install_tree"] == "all"
 
     # Check that explicit works correctly
-    args.explicit = True
+    args.explicit = True  # ty: ignore[unresolved-attribute]
     q_args = query_arguments(args)
     assert q_args["explicit"] is True
 
-    args.explicit = False
-    args.implicit = True
+    args.explicit = False  # ty: ignore[unresolved-attribute]
+    args.implicit = True  # ty: ignore[unresolved-attribute]
     q_args = query_arguments(args)
     assert q_args["explicit"] is False
 

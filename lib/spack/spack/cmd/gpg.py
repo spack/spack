@@ -207,7 +207,7 @@ def gpg_publish(args):
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
         spack.binary_distribution._url_push_keys(
-            mirror, keys=args.keys, tmpdir=tmpdir, update_index=args.update_index
+            mirror, keys=args.keys, tmpdir=tmpdir, update_index=args.update_index  # ty: ignore[invalid-argument-type]
         )
 
 

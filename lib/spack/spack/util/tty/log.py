@@ -38,7 +38,7 @@ if sys.platform == "win32":
 try:
     import termios
 except ImportError:
-    termios = None  # type: ignore[assignment]
+    termios = None  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format

@@ -193,6 +193,7 @@ allowed-unresolved-imports = [
   "_pytest",
   "_pytest.*",
   "xdist",
+  "py",
   "mpi4py",
   "mpi4py.*",
   # mock package repos used in tests; accessed with # type: ignore[import] under mypy

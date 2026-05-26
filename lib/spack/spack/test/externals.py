@@ -352,7 +352,7 @@ def test_external_spec_single_valued_variant_type_is_corrected(config):
     externals_dict = [
         {"spec": "dual-cmake-autotools@1.0 build_system=autotools", "prefix": "/usr/dual"}
     ]
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)  # ty: ignore[invalid-argument-type]
     specs = parser.all_specs()
     assert len(specs) == 1
     spec = specs[0]
@@ -372,7 +372,7 @@ def test_external_spec_multi_valued_variant_is_not_changed(config):
     """
     # Package.py prescribes a single-valued variant in this case
     externals_dict = [{"spec": "variant-values@1.0 v=foo,bar", "prefix": "/usr/variant-values"}]
-    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)
+    parser = ExternalSpecsParser(externals_dict, complete_node=complete_variants_and_architecture)  # ty: ignore[invalid-argument-type]
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")

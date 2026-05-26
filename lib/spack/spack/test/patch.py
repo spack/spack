@@ -208,10 +208,10 @@ def test_patch_mixed_versions_subset_constraint(mock_packages, config):
     an x.y version.
     """
     spec1 = spack.concretize.concretize_one("patch@1.0.1")
-    assert biz_sha256 in spec1.variants["patches"].value
+    assert biz_sha256 in spec1.variants["patches"].value  # ty: ignore[unsupported-operator]
 
     spec2 = spack.concretize.concretize_one("patch@=1.0")
-    assert biz_sha256 not in spec2.variants["patches"].value
+    assert biz_sha256 not in spec2.variants["patches"].value  # ty: ignore[unsupported-operator]
 
 
 def test_patch_order(mock_packages, config):
@@ -490,9 +490,9 @@ def test_patch_no_file():
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
     fp = FakePackage("fake-package", "test", "fake-package")
     with pytest.raises(ValueError, match="FilePatch:"):
-        spack.patch.FilePatch(fp, "nonexistent_file", 0, "")
+        spack.patch.FilePatch(fp, "nonexistent_file", 0, "")  # ty: ignore[invalid-argument-type]
 
-    patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
+    patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")  # ty: ignore[invalid-argument-type]
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
         spack.patch.apply_patch(Stage("https://example.com/foo.patch").source_path, patch.path)
@@ -505,10 +505,10 @@ def test_patch_no_sha256():
     url = url_util.path_to_file_url("foo.tgz")
     match = "Compressed patches require 'archive_sha256' and patch 'sha256' attributes: file://"
     with pytest.raises(spack.error.PatchDirectiveError, match=match):
-        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="")
+        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="")  # ty: ignore[invalid-argument-type]
     match = "URL patches require a sha256 checksum"
     with pytest.raises(spack.error.PatchDirectiveError, match=match):
-        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="abc")
+        spack.patch.UrlPatch(fp, url, sha256="", archive_sha256="abc")  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize("level", [-1, 0.0, "1"])
@@ -517,14 +517,14 @@ def test_invalid_level(level):
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace"])
     fp = FakePackage("fake-package", "test")
     with pytest.raises(ValueError, match="Patch level needs to be a non-negative integer."):
-        spack.patch.Patch(fp, "nonexistent_file", level, "")
+        spack.patch.Patch(fp, "nonexistent_file", level, "")  # ty: ignore[invalid-argument-type]
 
 
 def test_equality():
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
     fp = FakePackage("fake-package", "test", "fake-package")
-    patch1 = spack.patch.UrlPatch(fp, "nonexistent_url1", sha256="abc")
-    patch2 = spack.patch.UrlPatch(fp, "nonexistent_url2", sha256="def")
+    patch1 = spack.patch.UrlPatch(fp, "nonexistent_url1", sha256="abc")  # ty: ignore[invalid-argument-type]
+    patch2 = spack.patch.UrlPatch(fp, "nonexistent_url2", sha256="def")  # ty: ignore[invalid-argument-type]
     assert patch1 == patch1
     assert patch1 != patch2
     assert patch1 != "not a patch"

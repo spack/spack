@@ -191,7 +191,7 @@ class CDashHandler:
             "--cdash-upload-url",
             win_quote(self.upload_url),
             "--cdash-build",
-            win_quote(self.build_name()),
+            win_quote(self.build_name()),  # ty: ignore[invalid-argument-type]
             "--cdash-site",
             win_quote(self.site),
             "--cdash-buildstamp",
@@ -216,7 +216,7 @@ class CDashHandler:
         tty.debug(f"Using CDash build name ({env_build_name}) from the environment")
         return env_build_name
 
-    @property  # type: ignore
+    @property
     def build_stamp(self):
         """Returns the CDash build stamp.
 
@@ -234,7 +234,7 @@ class CDashHandler:
         tty.debug(f"Generated new build stamp ({build_stamp})")
         return build_stamp
 
-    @property  # type: ignore
+    @property
     @memoized
     def project_enc(self):
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")
@@ -729,7 +729,7 @@ class SpackCIConfig:
                     # Create request for this job
                     query = job_query(job)
                     request = Request(
-                        endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
+                        endpoint_url._replace(query=query).geturl(), headers=header, method="GET"  # ty: ignore[invalid-argument-type]
                     )
                     try:
                         with _urlopen(request) as response:

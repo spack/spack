@@ -1485,7 +1485,7 @@ class SpackSolverSetup:
     ) -> List[AspFunction]:
         name = spec.name or name
         assert name, "Internal Error: spec with no name occurred. Please file an issue."
-        target = spec.architecture.target
+        target = spec.architecture.target  # ty: ignore[unresolved-attribute]
 
         # Check if the target is a concrete target
         if str(target) in spack.vendor.archspec.cpu.TARGETS:
@@ -2182,7 +2182,7 @@ class SpackSolverSetup:
         package_targets = self.target_specs_cache[:]
         package_targets.sort(key=key_fn)
         for i, preferred in enumerate(package_targets):
-            self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))
+            self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))  # ty: ignore[unresolved-attribute]
 
     def spec_clauses(
         self,
@@ -2557,7 +2557,7 @@ class SpackSolverSetup:
             if not allow_deprecated and version in self.deprecated_versions[s.name]:
                 continue
 
-            self.possible_versions[s.name][version].append(origin)
+            self.possible_versions[s.name][version].append(origin)  # ty: ignore[invalid-argument-type]
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -2627,7 +2627,7 @@ class SpackSolverSetup:
         candidate_targets = []
         for x in self.possible_graph.candidate_targets():
             if all(
-                self.possible_graph.unreachable(pkg_name=pkg_name, when_spec=f"target={x}")
+                self.possible_graph.unreachable(pkg_name=pkg_name, when_spec=f"target={x}")  # ty: ignore[invalid-argument-type]
                 for pkg_name in self.pkgs
             ):
                 tty.debug(f"[{__name__}] excluding target={x}, cause no package can use it")
@@ -2659,7 +2659,7 @@ class SpackSolverSetup:
 
         platform = spack.platforms.host()
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
-        best_targets = {uarch.family.name}
+        best_targets = {uarch.family.name}  # ty: ignore[unresolved-attribute]
         for compiler in self.possible_compilers:
             supported, unsupported = self._supported_targets(
                 compiler.name, compiler.version, candidate_targets
@@ -2671,7 +2671,7 @@ class SpackSolverSetup:
 
             if supported:
                 self.gen.fact(
-                    fn.target_supported(compiler.name, compiler.version, uarch.family.name)
+                    fn.target_supported(compiler.name, compiler.version, uarch.family.name)  # ty: ignore[unresolved-attribute]
                 )
 
             for target in unsupported:
@@ -3015,7 +3015,7 @@ class SpackSolverSetup:
         self.possible_compilers = list(candidate_compilers)
 
         # TODO: warning is because mypy doesn't know Spec supports rich comparison via decorator
-        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]
+        self.possible_compilers.sort()  # type: ignore[call-arg,call-overload]  # ty: ignore[invalid-argument-type]
 
         self.compiler_mixing()
 
@@ -3033,7 +3033,7 @@ class SpackSolverSetup:
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
-                self.explicitly_required_namespaces[node.name] = node.namespace
+                self.explicitly_required_namespaces[node.name] = node.namespace  # ty: ignore[invalid-assignment]
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
@@ -3179,7 +3179,7 @@ class SpackSolverSetup:
                 pass
             else:
                 if hasattr(compiler_cls, "runtime_constraints"):
-                    compiler_cls.runtime_constraints(spec=compiler, pkg=recorder)
+                    compiler_cls.runtime_constraints(spec=compiler, pkg=recorder)  # ty: ignore[call-non-callable]
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 
@@ -3364,7 +3364,7 @@ class SpackSolverSetup:
                 # If concrete an not yet defined, conditionally define it, like we do for specs
                 # from the command line.
                 if not require_checksum or _is_checksummed_git_version(v):
-                    self.possible_versions[name][v].append(Provenance.PACKAGE_REQUIREMENT)
+                    self.possible_versions[name][v].append(Provenance.PACKAGE_REQUIREMENT)  # ty: ignore[invalid-argument-type]
 
     def _specs_from_requires(self, pkg_name, section):
         """Collect specs from a requirement rule"""

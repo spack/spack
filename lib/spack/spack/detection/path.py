@@ -167,7 +167,7 @@ def libraries_in_ld_and_system_library_path(
         search_paths = list(filter(os.path.isdir, search_paths))
 
     # Make use we don't doubly list /usr/lib and /lib etc
-    search_paths = dedupe_paths(search_paths)
+    search_paths = dedupe_paths(search_paths)  # ty: ignore[invalid-argument-type]
 
     try:
         host_compat = elf_utils.get_elf_compat(sys.executable)
@@ -226,7 +226,7 @@ class Finder:
     def default_path_hints(self) -> List[str]:
         return []
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:  # ty: ignore[possibly-missing-submodule]
         """Returns the list of patterns used to match candidate files.
 
         Args:
@@ -252,7 +252,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path  # ty: ignore[possibly-missing-submodule]
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -358,7 +358,7 @@ class ExecutablesFinder(Finder):
     def default_path_hints(self) -> List[str]:
         return spack.util.environment.get_path("PATH")
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:  # ty: ignore[possibly-missing-submodule]
         result = []
         if hasattr(pkg, "executables") and hasattr(pkg, "platform_executables"):
             result = pkg.platform_executables()
@@ -384,7 +384,7 @@ class LibrariesFinder(Finder):
     DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths
     """
 
-    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:
+    def search_patterns(self, *, pkg: Type["spack.package_base.PackageBase"]) -> List[str]:  # ty: ignore[possibly-missing-submodule]
         result = []
         if hasattr(pkg, "libraries"):
             result = pkg.libraries
@@ -396,11 +396,11 @@ class LibrariesFinder(Finder):
             if sys.platform != "win32"
             else libraries_in_windows_paths(path_hints=paths)
         )
-        patterns = [re.compile(x) for x in patterns]
+        patterns = [re.compile(x) for x in patterns]  # ty: ignore[invalid-assignment]
         result = []
         for compiled_re in patterns:
             for path, exe in libraries_by_path.items():
-                if compiled_re.search(exe):
+                if compiled_re.search(exe):  # ty: ignore[unresolved-attribute]
                     result.append(path)
         return result
 

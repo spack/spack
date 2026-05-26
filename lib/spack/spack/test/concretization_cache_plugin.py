@@ -82,7 +82,7 @@ def _count_lookups(cache_cls):
         _stats["hits" if result is not None else "misses"] += 1
         return result, statistics
 
-    fetch._spack_cache_counted = True
+    fetch._spack_cache_counted = True  # ty: ignore[unresolved-attribute]
     cache_cls.fetch = fetch
 
 

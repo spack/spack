@@ -38,7 +38,10 @@ class syaml_list(list):
 
 
 class syaml_str(str):
-    pass
+    # These attributes are set dynamically to mark YAML override/merge directives
+    override: bool
+    prepend: bool
+    append: bool
 
 
 class syaml_int(int):
@@ -215,7 +218,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
     regular Python equivalents, instead of ugly YAML pyobjects.
     """
 
-    def ignore_aliases(self, _data):
+    def ignore_aliases(self, _data):  # ty: ignore[invalid-method-override]
         """Make the dumper NEVER print YAML aliases."""
         return True
 
@@ -232,7 +235,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
 
 
 class SafeRepresenter(representer.RoundTripRepresenter):
-    def ignore_aliases(self, _data):
+    def ignore_aliases(self, _data):  # ty: ignore[invalid-method-override]
         """Make the dumper NEVER print YAML aliases."""
         return True
 
@@ -334,8 +337,8 @@ class LineAnnotationEmitter(emitter.Emitter):
 
     def process_scalar(self):
         super().process_scalar()
-        if marked(self.event.value):
-            self.saved = self.event.value
+        if marked(self.event.value):  # ty: ignore[unresolved-attribute]
+            self.saved = self.event.value  # ty: ignore[unresolved-attribute]
 
     def write_line_break(self, data=None):
         super().write_line_break(data)

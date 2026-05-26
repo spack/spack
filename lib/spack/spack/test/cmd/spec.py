@@ -54,7 +54,7 @@ def test_spec_concretizer_args(mutable_database):
 
     # get the hash of mpileaks^zmpi
     mpileaks_zmpi = mutable_database.query_one("mpileaks^zmpi")
-    h = mpileaks_zmpi.dag_hash()[:7]
+    h = mpileaks_zmpi.dag_hash()[:7]  # ty: ignore[unresolved-attribute]
 
     output = spec("--fresh", "-l", "mpileaks")
     assert h not in output
@@ -225,9 +225,9 @@ def test_spec_unification_from_cli(
 
     db = mutable_database
     spec_lookup = {
-        "mpileaks_mpich": db.query_one("mpileaks ^mpich").dag_hash(),
-        "mpileaks_zmpi": db.query_one("mpileaks ^zmpi").dag_hash(),
-        "dyninst": db.query_one("dyninst").dag_hash(),
+        "mpileaks_mpich": db.query_one("mpileaks ^mpich").dag_hash(),  # ty: ignore[unresolved-attribute]
+        "mpileaks_zmpi": db.query_one("mpileaks ^zmpi").dag_hash(),  # ty: ignore[unresolved-attribute]
+        "dyninst": db.query_one("dyninst").dag_hash(),  # ty: ignore[unresolved-attribute]
     }
 
     hashes = [f"/{spec_lookup[name]}" for name in spec_hash_args]
@@ -256,7 +256,7 @@ def test_buildcache_status_fn_marks_absent_spec(
 def test_buildcache_status_fn_installed_not_overridden(mutable_database):
     """Tests that an installed spec stays installed even if its hash is in the cache."""
     s = mutable_database.query_one("mpileaks^mpich")
-    assert mutable_database.install_status(s) == spack.spec.InstallStatus.installed
+    assert mutable_database.install_status(s) == spack.spec.InstallStatus.installed  # ty: ignore[invalid-argument-type]
 
-    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
-    assert status_fn(s) == spack.spec.InstallStatus.installed
+    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})  # ty: ignore[unresolved-attribute]
+    assert status_fn(s) == spack.spec.InstallStatus.installed  # ty: ignore[invalid-argument-type]

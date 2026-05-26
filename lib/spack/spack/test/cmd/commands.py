@@ -256,7 +256,7 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 
     # make a mock completion file missing the --update-completion argument
     real_args = spack.cmd.commands.update_completion_args
-    shutil.copy(real_args[shell]["header"], mock_args[shell]["header"])
+    shutil.copy(real_args[shell]["header"], mock_args[shell]["header"])  # ty: ignore[no-matching-overload]
     with open(real_args[shell]["update"], encoding="utf-8") as old:
         old_file = old.read()
         with open(mock_args[shell]["update"], "w", encoding="utf-8") as mock:

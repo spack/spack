@@ -1617,6 +1617,9 @@ class Spec:
         # whether the spec is concrete or not; set at the end of concretization
         self._concrete = False
 
+        # package hash for concrete specs; set when loading from dict or after concretization
+        self._package_hash: Optional[str] = None
+
         # External detection details that can be set by internal Spack calls
         # in the constructor.
         self._external_path = external_path
@@ -1658,7 +1661,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.util.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]  # ty: ignore[invalid-argument-type]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2458,7 +2461,7 @@ class Spec:
         # Annotations
         d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
         if self.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
+            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)  # ty: ignore[invalid-assignment]
 
         return d
 
@@ -3075,7 +3078,7 @@ class Spec:
         if (
             sarch is not None
             and oarch is not None
-            and not self.architecture.intersects(other.architecture)
+            and not sarch.intersects(oarch)
         ):
             raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
@@ -3096,7 +3099,7 @@ class Spec:
 
         sarch, oarch = self.architecture, other.architecture
         if sarch is not None and oarch is not None:
-            changed |= self.architecture.constrain(other.architecture)
+            changed |= sarch.constrain(oarch)
         elif oarch is not None:
             self.architecture = oarch
             changed = True
@@ -3393,7 +3396,7 @@ class Spec:
 
                 # Recursive case: `^zlib %gcc`
                 if not rhs_edge.spec.concrete and rhs_edge.spec._dependencies:
-                    stack.append((lhs_edge.spec, rhs_edge.spec))
+                    stack.append((lhs_edge.spec, rhs_edge.spec))  # ty: ignore[invalid-argument-type]
 
         return True
 
@@ -3931,7 +3934,7 @@ class Spec:
 
             # the node_ids dict generates consistent ids based on BFS traversal order
             # these are used to identify edges later
-            node_ids = collections.defaultdict(lambda: len(node_ids))
+            node_ids = collections.defaultdict(lambda: len(node_ids))  # ty: ignore[invalid-argument-type]
             node_ids[id(self)]  # self is 0
             for spec in l1_specs:
                 node_ids[id(spec)]  # l1 starts at 1
@@ -3966,6 +3969,7 @@ class Spec:
                 return
 
             # level 1 edges all start with zero
+            assert sorted_l1_edges is not None
             for i, edge in enumerate(sorted_l1_edges, start=1):
                 yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.when)
 
@@ -4575,15 +4579,21 @@ class Spec:
 
     @property
     def platform(self):
-        return self.architecture.platform
+        arch = self.architecture
+        assert arch is not None
+        return arch.platform
 
     @property
     def os(self):
-        return self.architecture.os
+        arch = self.architecture
+        assert arch is not None
+        return arch.os
 
     @property
     def target(self):
-        return self.architecture.target
+        arch = self.architecture
+        assert arch is not None
+        return arch.target
 
     @property
     def build_spec(self):
@@ -4911,14 +4921,16 @@ class Spec:
             changed = True
 
         if mutator.architecture:
-            if mutator.platform and mutator.platform != self.architecture.platform:
-                self.architecture.platform = mutator.platform
+            arch = self.architecture
+            assert arch is not None
+            if mutator.platform and mutator.platform != arch.platform:
+                arch.platform = mutator.platform
                 changed = True
-            if mutator.os and mutator.os != self.architecture.os:
-                self.architecture.os = mutator.os
+            if mutator.os and mutator.os != arch.os:
+                arch.os = mutator.os
                 changed = True
-            if mutator.target and mutator.target != self.architecture.target:
-                self.architecture.target = mutator.target
+            if mutator.target and mutator.target != arch.target:
+                arch.target = mutator.target
                 changed = True
 
         if changed and rehash:
@@ -5038,7 +5050,10 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map containing variant instances. New values can be added only
     if the key is not already present."""
 
-    def __setitem__(self, name, vspec):
+    #: Back-reference to the owning Spec, set after construction
+    spec: Optional["Spec"]
+
+    def __setitem__(self, name: str, vspec: vt.VariantValue) -> None:  # ty: ignore[invalid-method-override]
         # Raise a TypeError if vspec is not of the right type
         if not isinstance(vspec, vt.VariantValue):
             raise TypeError(
@@ -5307,7 +5322,7 @@ class SpecfileReaderBase(abc.ABC):
     def from_node_dict(cls, node):
         spec = Spec()
 
-        name, node = cls.name_and_data(node)
+        name, node = cls.name_and_data(node)  # ty: ignore[unresolved-attribute]
         for h in ht.HASHES:
             setattr(spec, h.attr, node.get(h.name, None))
 
@@ -5670,7 +5685,7 @@ class LazySpecCache(collections.defaultdict):
         super().__init__(Spec)
 
     def __missing__(self, key):
-        value = self.default_factory(key)
+        value = self.default_factory(key)  # ty: ignore[call-non-callable, too-many-positional-arguments]
         self[key] = value
         return value
 

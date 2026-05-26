@@ -170,7 +170,7 @@ class ChildInfo:
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"
         if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
-            self.proc.close()
+            self.proc.close()  # ty: ignore[call-non-callable]
         return exit_code
 
 

@@ -816,13 +816,13 @@ class TestSpecDag:
 
     def test_canonical_deptype(self):
         # special values
-        assert dt.canonicalize(all) == dt.ALL
+        assert dt.canonicalize(all) == dt.ALL  # ty: ignore[invalid-argument-type]
         assert dt.canonicalize("all") == dt.ALL
 
         with pytest.raises(ValueError):
-            dt.canonicalize(None)
+            dt.canonicalize(None)  # ty: ignore[invalid-argument-type]
         with pytest.raises(ValueError):
-            dt.canonicalize([None])
+            dt.canonicalize([None])  # ty: ignore[invalid-argument-type]
 
         # everything in all_types is canonical
         for v in dt.ALL_TYPES:

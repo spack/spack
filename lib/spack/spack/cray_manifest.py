@@ -179,9 +179,9 @@ def spec_from_entry(entry):
         setattr(spec, ht.attr, entry["hash"])
 
     spec._concrete = True
-    spec._hashes_final = True
+    spec._hashes_final = True  # ty: ignore[unresolved-attribute]
     spec.external_path = entry["prefix"]
-    spec.origin = "external-db"
+    spec.origin = "external-db"  # ty: ignore[unresolved-attribute]
     spec.namespace = pkg_cls.namespace
     spack.spec.Spec.ensure_valid_variants(spec)
 

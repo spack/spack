@@ -49,7 +49,7 @@ class WindowsOs(OperatingSystem):
         if root:
             try:
                 extra_args = {"encoding": "mbcs", "errors": "strict"}
-                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
+                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin  # ty: ignore[no-matching-overload]
                     [
                         os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
                         "-prerelease",

@@ -764,7 +764,7 @@ def test_keys_are_ordered(configuration_dir):
 
     data = config_scope.get_section("modules")
 
-    prefix_inspections = data["modules"]["prefix_inspections"]
+    prefix_inspections = data["modules"]["prefix_inspections"]  # ty: ignore[not-subscriptable]
 
     for actual, expected in zip(prefix_inspections, expected_order):
         assert actual == expected
@@ -1744,21 +1744,21 @@ def test_included_path_string_no_parent_path(
     assert isinstance(included_scopes[0], spack.config.SingleFileScope)
     destination = include.destination
     curr_dir = os.getcwd()
-    assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
+    assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]  # ty: ignore[no-matching-overload]
 
 
 def test_included_path_substitution():
     # check a straight path substitution
     entry = {"path": "$user_cache_path/path/to/config.yaml"}
     include = spack.config.included_path(entry)
-    assert spack.paths.user_cache_path in include.path
+    assert spack.paths.user_cache_path in include.path  # ty: ignore[unresolved-attribute]
 
     # check path through an environment variable
     path = "/path/to/project/packages.yaml"
     os.environ["SPACK_TEST_PATH_SUB"] = path
     entry = {"name": "vartest", "path": "$SPACK_TEST_PATH_SUB"}
     include = spack.config.included_path(entry)
-    assert path in include.path
+    assert path in include.path  # ty: ignore[unresolved-attribute]
 
 
 def test_included_path_conditional_bad_when(
@@ -1855,7 +1855,7 @@ def test_included_path_git_substitutions():
     os.environ["SPACK_TEST_URL_SUB"] = url
     entry["git"] = "$SPACK_TEST_URL_SUB"
     include = spack.config.included_path(entry)
-    assert include.git == url, "Expected git url environment var substitution"
+    assert include.git == url, "Expected git url environment var substitution"  # ty: ignore[unresolved-attribute]
 
 
 @pytest.mark.parametrize(
@@ -1965,7 +1965,7 @@ def test_included_path_url_temp_dest(mock_low_high_config):
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
         destination = include.base_directory(entry["path"], parent_scope=scope)
-        dest_dir = str(pathlib.Path(destination).parent)
+        dest_dir = str(pathlib.Path(destination).parent)  # ty: ignore[invalid-argument-type]
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
 
@@ -1986,7 +1986,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
         destination = include.base_directory(entry["git"], parent_scope=scope)
-        dest_dir = str(pathlib.Path(destination).parent)
+        dest_dir = str(pathlib.Path(destination).parent)  # ty: ignore[invalid-argument-type]
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
 
@@ -2031,7 +2031,7 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
         include.scopes(parent_scope)
 
     # set up invalid option failure
-    include.branch = ""  # type: ignore[union-attr]
+    include.branch = ""  # type: ignore[union-attr]  # ty: ignore[invalid-assignment]
     with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
         include.scopes(parent_scope)
 

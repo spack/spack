@@ -224,7 +224,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
     """
     out = install("--show-log-on-error", "build-error", fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.pkg.name == "build-error"
+    assert install.error.pkg.name == "build-error"  # ty: ignore[unresolved-attribute]
 
     assert "Installing build-error" in out
     assert "See build log for details:" in out
@@ -411,7 +411,7 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, i
     if installer_variant == "old":
         assert isinstance(install.error, spack.build_environment.ChildError)
         assert install.error.name == exc_typename
-        assert install.error.pkg.name == "raiser"
+        assert install.error.pkg.name == "raiser"  # ty: ignore[unresolved-attribute]
 
     files = list(tmp_path.iterdir())
     filename = tmp_path / "test.xml"

@@ -76,7 +76,7 @@ def stage(parser, args):
         env = active_environment()
         if not env:
             args.subparser.error("requires a spec or an active environment")
-        return _stage_env(env, filter)
+        return _stage_env(env, filter)  # ty: ignore[invalid-argument-type]
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
 

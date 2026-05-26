@@ -361,7 +361,7 @@ class WindowsKitExternalPaths:
             return []
         kit_root_reg = re.compile(r"KitsRoot[0-9]+")
         root_paths = []
-        for kit_root in filter(kit_root_reg.match, reg.get_values().keys()):
+        for kit_root in filter(kit_root_reg.match, reg.get_values().keys()):  # ty: ignore[no-matching-overload]
             root_paths.extend(
                 WindowsKitExternalPaths.find_windows_kit_lib_paths(reg.get_value(kit_root).value)
             )
@@ -375,7 +375,7 @@ class WindowsKitExternalPaths:
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows",
             root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
         )
-        for key in filter(sdk_regex.match, [x.name for x in windows_reg.get_subkeys()]):
+        for key in filter(sdk_regex.match, [x.name for x in windows_reg.get_subkeys()]):  # ty: ignore[no-matching-overload]
             reg = windows_reg.get_subkey(key)
             sdk_paths.extend(
                 WindowsKitExternalPaths.find_windows_kit_lib_paths(
@@ -412,7 +412,7 @@ def find_win32_additional_install_paths() -> List[str]:
     return windows_search_ext
 
 
-def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
+def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:  # ty: ignore[possibly-missing-submodule]
     """Given a package, attempts to compute its Windows program files location,
     and returns the list of best guesses.
 
@@ -432,7 +432,7 @@ def compute_windows_program_path_for_package(pkg: "spack.package_base.PackageBas
     ]
 
 
-def compute_windows_user_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:
+def compute_windows_user_path_for_package(pkg: "spack.package_base.PackageBase") -> List[str]:  # ty: ignore[possibly-missing-submodule]
     """Given a package attempt to compute its user scoped
     install location, return list of potential locations based
     on common heuristics. For more info on Windows user specific

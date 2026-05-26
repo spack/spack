@@ -135,7 +135,7 @@ class SpecMultiMethod:
         # information within `SpecMultiMethod`, because it is not
         # associated with the package class.
         for cls in package_or_builder_self.__class__.__mro__[1:]:
-            superself = cls.__dict__.get(self.__name__, None)
+            superself = cls.__dict__.get(self.__name__, None)  # ty: ignore[unresolved-attribute]
 
             if isinstance(superself, SpecMultiMethod):
                 # Check parent multimethod for method for spec.
@@ -147,7 +147,7 @@ class SpecMultiMethod:
 
         raise NoSuchMethodError(
             type(package_or_builder_self),
-            self.__name__,
+            self.__name__,  # ty: ignore[unresolved-attribute]
             package_or_builder_self.spec,
             [m[0] for m in self.method_list],
         )

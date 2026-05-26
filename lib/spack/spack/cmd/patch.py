@@ -28,7 +28,7 @@ def patch(parser, args):
         env = active_environment()
         if not env:
             args.subparser.error("requires a spec or an active environment")
-        return _patch_env(env)
+        return _patch_env(env)  # ty: ignore[invalid-argument-type]
 
     if args.no_checksum:
         spack.config.CONFIG.set("config:checksum", False, scope="command_line")

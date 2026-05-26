@@ -123,7 +123,7 @@ class GlobalStateMarshaler:
             from spack.util.s3 import s3_client_cache
 
             web.urlopen._instance = None
-            opener.urlopen._instance = None
+            opener.urlopen._instance = None  # ty: ignore[unresolved-attribute]
             s3_client_cache.clear()
             return
         spack.config.CONFIG = self.config
@@ -133,7 +133,7 @@ class GlobalStateMarshaler:
         spack.paths.spack_working_dir = self.spack_working_dir
         if self.gnupg_home:
             spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
-            spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
+            spack.util.gpg.GNUPGHOME = str(spack.util.gpg.GPG.home)
         self.test_patches.restore()
         if self.env:
             self.env.activate()

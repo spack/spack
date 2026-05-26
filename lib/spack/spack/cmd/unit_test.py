@@ -8,13 +8,16 @@ import io
 import os
 import re
 import sys
+import types
+from typing import Optional
 
 import spack.extensions
 
+pytest: Optional[types.ModuleType] = None
 try:
     import pytest
 except ImportError:
-    pytest = None  # type: ignore
+    pass
 
 import spack.paths
 import spack.util.filesystem
@@ -111,6 +114,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def do_list(args, extra_args):
     """Print a lists of tests than what pytest offers."""
+    if pytest is None:
+        return
 
     def colorize(c, prefix):
         if isinstance(prefix, tuple):

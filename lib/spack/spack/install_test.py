@@ -306,7 +306,7 @@ class PackageTest:
         with spack.util.tty.log.threadlog(
             self.test_log_file, echo=verbose, append=True
         ) as self._logger:
-            with self.logger.force_echo():  # type: ignore[union-attr]
+            with self.logger.force_echo():  # type: ignore[union-attr]  # ty: ignore[unresolved-attribute]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 
             # use debug print levels for log file to record commands
@@ -410,7 +410,7 @@ class PackageTest:
         """The total number of (checked) test parts."""
         try:
             # New in Python 3.10
-            total = self.counts.total()  # type: ignore[attr-defined]
+            total = self.counts.total()  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
         except AttributeError:
             nums = [n for _, n in self.counts.items()]
             total = sum(nums)
@@ -587,7 +587,7 @@ def test_function_names(pkg: "PackageObjectOrClass", add_virtuals: bool = False)
         ValueError: occurs if pkg is not a package class
     """
     fns = test_functions(pkg, add_virtuals)
-    return [f"{cls_name}.{fn.__name__}" for (cls_name, fn) in fns]
+    return [f"{cls_name}.{fn.__name__}" for (cls_name, fn) in fns]  # ty: ignore[unresolved-attribute]
 
 
 def test_functions(
@@ -675,7 +675,7 @@ def process_test_parts(
             for _, test_fn in tests:
                 with test_part(
                     pkg,
-                    test_fn.__name__,
+                    test_fn.__name__,  # ty: ignore[unresolved-attribute]
                     purpose=getattr(test_fn, "__doc__"),
                     work_dir=work_dir,
                     verbose=verbose,
@@ -824,7 +824,7 @@ def write_test_summary(counts: "Counter"):
     summary = [f"{n} {s.lower()}" for s, n in counts.items() if n > 0]
     try:
         # New in Python 3.10
-        total = counts.total()  # type: ignore[attr-defined]
+        total = counts.total()  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     except AttributeError:
         nums = [n for _, n in counts.items()]
         total = sum(nums)

@@ -390,7 +390,7 @@ def _execute_depends_on(
             _execute_patch(dependency, url_or_filename=patch)
         else:
             assert callable(patch), f"Invalid patch argument: {patch!r}"
-            patch(dependency)
+            patch(dependency)  # ty: ignore[call-top-callable]
 
 
 @directive("disable_redistribute")
@@ -791,7 +791,7 @@ def _execute_variant(
     # variants are stored by condition then by name (so only the last variant of a
     # given name takes precedence *per condition*).
     # NOTE: variant defaults and values can conflict if when conditions overlap.
-    variants_by_name = pkg.variants.setdefault(when_spec, {})  # type: ignore[arg-type]
+    variants_by_name = pkg.variants.setdefault(when_spec, {})  # type: ignore[arg-type]  # ty: ignore[no-matching-overload]
     variants_by_name[name] = spack.variant.Variant(
         name=name,
         default=default,

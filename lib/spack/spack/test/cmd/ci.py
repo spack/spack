@@ -2070,7 +2070,7 @@ def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_version
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
-    assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list)  # ty: ignore[invalid-argument-type]
 
     out, err = capfd.readouterr()
     for version in versions:
@@ -2085,7 +2085,7 @@ def test_ci_validate_standard_versions_invalid(
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
     version_list = [spack.version.Version(v) for v in versions]
 
-    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False  # ty: ignore[invalid-argument-type]
 
     out, err = capfd.readouterr()
     for version in versions:
@@ -2109,7 +2109,7 @@ def test_ci_validate_git_versions_valid(
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
 
-    assert spack.cmd.ci.validate_git_versions(pkg, version_list)
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list)  # ty: ignore[invalid-argument-type]
 
     out, err = capfd.readouterr()
     for version in version_list:
@@ -2133,7 +2133,7 @@ def test_ci_validate_git_versions_bad_tag(
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
 
-    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False  # ty: ignore[invalid-argument-type]
 
     out, err = capfd.readouterr()
     for version in version_list:
@@ -2161,7 +2161,7 @@ def test_ci_validate_git_versions_invalid(
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
 
-    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False  # ty: ignore[invalid-argument-type]
 
     out, err = capfd.readouterr()
     for version in version_list:

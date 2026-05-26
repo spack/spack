@@ -152,7 +152,7 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
             if self.allow_unresolved(lib):
                 continue
             for rpath in rpaths:
-                candidate = os.path.join(rpath, lib)
+                candidate = os.path.join(rpath, lib)  # ty: ignore[no-matching-overload]
                 if candidate_matches(parsed_elf, candidate):
                     resolved[lib] = candidate
                     break
@@ -161,13 +161,13 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
 
         # Check if directly opened libs are compatible
         for lib in direct_libs:
-            if candidate_matches(parsed_elf, lib):
-                resolved[lib] = lib
+            if candidate_matches(parsed_elf, lib):  # ty: ignore[invalid-argument-type]
+                resolved[lib] = lib  # ty: ignore[invalid-assignment]
             else:
                 unresolved.append(lib)
 
         if unresolved or relative_rpaths:
-            self.problems[rel_path] = Problem(resolved, unresolved, relative_rpaths)
+            self.problems[rel_path] = Problem(resolved, unresolved, relative_rpaths)  # ty: ignore[invalid-argument-type]
 
     def visit_symlinked_file(self, root: str, rel_path: str, depth: int) -> None:
         pass

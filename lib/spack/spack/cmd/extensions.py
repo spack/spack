@@ -85,7 +85,7 @@ def extensions(parser, args):
         else:
             tty.msg(spec.cshort_spec)
             tty.msg("%d extensions:" % len(extensions))
-            colify(ext.name for ext in extensions)
+            colify(ext.name for ext in extensions)  # ty: ignore[invalid-argument-type]
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.

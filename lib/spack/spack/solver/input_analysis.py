@@ -410,7 +410,7 @@ class Counter:
             return
         self._compute_cache_values()
 
-    def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:
+    def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:  # ty: ignore[possibly-missing-submodule]
         """Emit facts associated with the possible packages"""
         raise NotImplementedError("must be implemented by derived classes")
 
@@ -425,7 +425,7 @@ class NoDuplicatesCounter(Counter):
         )
         self._possible_virtuals.update(virtuals)
 
-    def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:
+    def possible_packages_facts(self, gen: "spack.solver.asp.ProblemInstanceBuilder", fn) -> None:  # ty: ignore[possibly-missing-submodule]
         gen.h2("Maximum number of nodes (packages)")
         for package_name in sorted(self.possible_dependencies()):
             gen.fact(fn.max_dupes(package_name, 1))

@@ -322,11 +322,11 @@ def ci_rebuild(args):
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = os.environ.get("CI_PROJECT_DIR")
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
-    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
-    job_test_dir = os.path.join(ci_project_dir, job_test_dir)
-    repro_dir = os.path.join(ci_project_dir, repro_dir)
-    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+    pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)  # ty: ignore[no-matching-overload]
+    job_log_dir = os.path.join(ci_project_dir, job_log_dir)  # ty: ignore[no-matching-overload]
+    job_test_dir = os.path.join(ci_project_dir, job_test_dir)  # ty: ignore[no-matching-overload]
+    repro_dir = os.path.join(ci_project_dir, repro_dir)  # ty: ignore[no-matching-overload]
+    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)  # ty: ignore[no-matching-overload]
 
     # Debug print some of the key environment variables we should have received
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))

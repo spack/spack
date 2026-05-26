@@ -132,7 +132,7 @@ class Variant:
             # supplying a type means any value *of that type*
             def isa_type(v):
                 try:
-                    values(v)
+                    values(v)  # ty: ignore[call-non-callable]
                     return True
                 except ValueError:
                     return False
@@ -286,6 +286,8 @@ class VariantValue:
     concrete: bool
     type: VariantType
     _values: ValueType
+    # set dynamically on patch variants after concretization
+    _patches_in_order_of_appearance: List[str]
 
     slots = ("name", "propagate", "concrete", "type", "_values")
 
@@ -509,7 +511,7 @@ class VariantValueRemoval(VariantValue):
     """Indicator class for Spec.mutate to remove a variant"""
 
     def __init__(self, name):
-        super().__init__(VariantType.INDICATOR, name, (None,))
+        super().__init__(VariantType.INDICATOR, name, (None,))  # ty: ignore[invalid-argument-type]
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

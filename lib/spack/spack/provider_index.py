@@ -173,7 +173,7 @@ class ProviderIndex:
             lambda vpkg, pset: [vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list
         )
 
-        sjson.dump({"provider_index": {"providers": provider_list}}, stream)
+        sjson.dump({"provider_index": {"providers": provider_list}}, stream)  # ty: ignore[invalid-argument-type]
 
     def merge(self, other):
         """Merge another provider index into this one.

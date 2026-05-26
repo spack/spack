@@ -1428,7 +1428,7 @@ class Environment:
                 raise SpackEnvironmentError(f"Unable to find env at {env_path}")
 
             env = Environment(env_path)
-            self.included_concrete_spec_data[env_path] = {"roots": [], "concrete_specs": {}}
+            self.included_concrete_spec_data[env_path] = {"roots": [], "concrete_specs": {}}  # ty: ignore[invalid-assignment]
 
             # Copy unique root specs from env
             for root_dict in env._concrete_roots_dict():
@@ -1439,7 +1439,7 @@ class Environment:
             # Copy unique concrete specs from env
             for dag_hash, spec_details in env._concrete_specs_dict().items():
                 if dag_hash not in concrete_hash_seen:
-                    self.included_concrete_spec_data[env_path]["concrete_specs"].update(
+                    self.included_concrete_spec_data[env_path]["concrete_specs"].update(  # ty: ignore[unresolved-attribute]
                         {dag_hash: spec_details}
                     )
                     concrete_hash_seen.add(dag_hash)
@@ -1447,7 +1447,7 @@ class Environment:
             # Copy transitive include data
             transitive = env.included_concrete_spec_data
             if transitive:
-                self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive
+                self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive  # ty: ignore[invalid-assignment]
 
         self.unify_specs()
         self.write()
@@ -2282,7 +2282,7 @@ class Environment:
 
     def _concrete_specs_dict(self):
         concrete_specs = {}
-        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
+        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):  # ty: ignore[invalid-argument-type]
             spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
             # Assumes no legacy formats, since this was just created.
             spec_dict[ht.dag_hash.name] = s.dag_hash()
@@ -2551,7 +2551,7 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        namespace: str = spec_node.namespace
+        namespace: str = spec_node.namespace  # ty: ignore[invalid-assignment]
         repository = spack.repo.create_or_construct(
             root=os.path.join(self.repos_path, namespace),
             namespace=namespace,

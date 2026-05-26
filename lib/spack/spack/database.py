@@ -653,11 +653,11 @@ class Database:
 
     def write_transaction(self):
         """Get a write lock context manager for use in a ``with`` block."""
-        return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
+        return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)  # ty: ignore[invalid-argument-type]
 
     def read_transaction(self):
         """Get a read lock context manager for use in a ``with`` block."""
-        return self._read_transaction_impl(self.lock, acquire=self._read)
+        return self._read_transaction_impl(self.lock, acquire=self._read)  # ty: ignore[invalid-argument-type]
 
     def try_write_transaction(self) -> lk.TryWriteTransaction:
         """Non-blocking variant of :meth:`write_transaction`: the context manager yields True if
@@ -872,7 +872,7 @@ class Database:
         else:
             installs = self._handle_current_version_read(check, db)
 
-        spec_reader = reader(self.db_version)
+        spec_reader = reader(self.db_version)  # ty: ignore[invalid-argument-type]
 
         def invalid_record(hash_key, error):
             return CorruptDatabaseError(
@@ -996,7 +996,7 @@ class Database:
                 self._data = {}
                 self._installed_prefixes = set()
 
-        with lk.WriteTransaction(self.lock, acquire=_read_suppress_error, release=self._write):
+        with lk.WriteTransaction(self.lock, acquire=_read_suppress_error, release=self._write):  # ty: ignore[invalid-argument-type]
             old_installed_prefixes, self._installed_prefixes = self._installed_prefixes, set()
             old_data, self._data = self._data, {}
             try:
@@ -1281,7 +1281,7 @@ class Database:
                 ref_count=0,
                 explicit=explicit,
                 installation_time=installation_time,
-                origin=None if not hasattr(spec, "origin") else spec.origin,
+                origin=None if not hasattr(spec, "origin") else spec.origin,  # ty: ignore[invalid-argument-type]
             )
 
             # Connect dependencies from the DB to the new copy.

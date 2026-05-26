@@ -159,10 +159,10 @@ def lock_dir(lock_test_directory):
         pytest.skip("skipping local tmp directory for MPI test.")
 
     tempdir = None
-    if not mpi or comm.rank == 0:
+    if not mpi or comm.rank == 0:  # ty: ignore[unresolved-attribute]
         tempdir = tempfile.mkdtemp(dir=parent)
     if mpi:
-        tempdir = comm.bcast(tempdir)
+        tempdir = comm.bcast(tempdir)  # ty: ignore[unresolved-attribute]
 
     yield tempdir
 
@@ -171,11 +171,11 @@ def lock_dir(lock_test_directory):
         # remove the directory while other processes try to re-create the
         # lock.  This will give errno 39: directory not empty.  Use a
         # barrier to ensure everyone is done first.
-        comm.barrier()
+        comm.barrier()  # ty: ignore[unresolved-attribute]
 
-    if not mpi or comm.rank == 0:
+    if not mpi or comm.rank == 0:  # ty: ignore[unresolved-attribute]
         make_writable(tempdir)
-        shutil.rmtree(tempdir)
+        shutil.rmtree(tempdir)  # ty: ignore[invalid-argument-type]
 
 
 @pytest.fixture
@@ -186,7 +186,7 @@ def private_lock_path(lock_dir):
     """
     lock_file = os.path.join(lock_dir, "lockfile")
     if mpi:
-        lock_file += ".%s" % comm.rank
+        lock_file += ".%s" % comm.rank  # ty: ignore[unresolved-attribute]
 
     yield lock_file
 
@@ -208,7 +208,7 @@ def lock_path(lock_dir):
 
 
 def test_poll_interval_generator():
-    interval_iter = iter(lk.Lock._poll_interval_generator(_wait_times=[1, 2, 3]))
+    interval_iter = iter(lk.Lock._poll_interval_generator(_wait_times=[1, 2, 3]))  # ty: ignore[invalid-argument-type]
     intervals = [next(interval_iter) for i in range(100)]
     assert intervals == [1] * 20 + [2] * 40 + [3] * 40
 
@@ -241,13 +241,13 @@ def mpi_multiproc_test(*functions):
     skip tests if there are too few processes to run them.
     """
     procs = len(functions)
-    if procs > comm.size:
+    if procs > comm.size:  # ty: ignore[unresolved-attribute]
         pytest.skip("requires at least %d MPI processes" % procs)
 
-    comm.Barrier()  # barrier before each MPI test
+    comm.Barrier()  # ty: ignore[unresolved-attribute]  # barrier before each MPI test
 
-    include = comm.rank < len(functions)
-    subcomm = comm.Split(include)
+    include = comm.rank < len(functions)  # ty: ignore[unresolved-attribute]
+    subcomm = comm.Split(include)  # ty: ignore[unresolved-attribute]
 
     class subcomm_barrier:
         """Stand-in for multiproc barrier for MPI-parallel jobs."""
@@ -264,10 +264,10 @@ def mpi_multiproc_test(*functions):
             # early and it loses the nice pytest output, but at least it
             # gets use a stacktrace on the processes that failed.
             traceback.print_exc()
-            comm.Abort()
+            comm.Abort()  # ty: ignore[unresolved-attribute]
     subcomm.Free()
 
-    comm.Barrier()  # barrier after each MPI test.
+    comm.Barrier()  # ty: ignore[unresolved-attribute]  # barrier after each MPI test.
 
 
 #: ``multiproc_test()`` should be called by tests below.
@@ -631,22 +631,22 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"  # ty: ignore[unresolved-attribute]
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"  # ty: ignore[unresolved-attribute]
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"  # ty: ignore[unresolved-attribute]
 
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
+    assert not lock.backend._file_ref.fh.closed  # ty: ignore[unresolved-attribute]  # recycle the file handle for next lock
 
 
 def test_release_write_downgrades_to_shared(private_lock_path):
@@ -694,7 +694,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
-        assert lock.backend._file_ref.fh.mode == "rb"
+        assert lock.backend._file_ref.fh.mode == "rb"  # ty: ignore[unresolved-attribute]
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
@@ -1204,8 +1204,8 @@ class LockDebugOutput:
             # p1 takes write lock and writes pid/host to file
             barrier.wait()  # ------------------------------------ 1
 
-        assert lock.backend.pid == p1_pid
-        assert lock.backend.host == self.host
+        assert lock.backend.pid == p1_pid  # ty: ignore[unresolved-attribute]
+        assert lock.backend.host == self.host  # ty: ignore[unresolved-attribute]
 
         # wait for p2 to verify contents of file
         barrier.wait()  # ---------------------------------------- 2
@@ -1215,11 +1215,11 @@ class LockDebugOutput:
 
         # verify pid/host info again
         with lk.ReadTransaction(lock):
-            assert lock.backend.old_pid == p1_pid
-            assert lock.backend.old_host == self.host
+            assert lock.backend.old_pid == p1_pid  # ty: ignore[unresolved-attribute]
+            assert lock.backend.old_host == self.host  # ty: ignore[unresolved-attribute]
 
-            assert lock.backend.pid == p2_pid
-            assert lock.backend.host == self.host
+            assert lock.backend.pid == p2_pid  # ty: ignore[unresolved-attribute]
+            assert lock.backend.host == self.host  # ty: ignore[unresolved-attribute]
 
         barrier.wait()  # ---------------------------------------- 4
 
@@ -1237,18 +1237,18 @@ class LockDebugOutput:
 
         # verify that p1 wrote information to lock file
         with lk.ReadTransaction(lock):
-            assert lock.backend.pid == p1_pid
-            assert lock.backend.host == self.host
+            assert lock.backend.pid == p1_pid  # ty: ignore[unresolved-attribute]
+            assert lock.backend.host == self.host  # ty: ignore[unresolved-attribute]
 
         barrier.wait()  # ---------------------------------------- 2
 
         # take a write lock on the file and verify pid/host info
         with lk.WriteTransaction(lock):
-            assert lock.backend.old_pid == p1_pid
-            assert lock.backend.old_host == self.host
+            assert lock.backend.old_pid == p1_pid  # ty: ignore[unresolved-attribute]
+            assert lock.backend.old_host == self.host  # ty: ignore[unresolved-attribute]
 
-            assert lock.backend.pid == p2_pid
-            assert lock.backend.host == self.host
+            assert lock.backend.pid == p2_pid  # ty: ignore[unresolved-attribute]
+            assert lock.backend.host == self.host  # ty: ignore[unresolved-attribute]
 
             barrier.wait()  # ------------------------------------ 3
 

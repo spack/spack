@@ -105,13 +105,13 @@ def test_url_summary(mock_packages):
 
     # make sure it agrees with the actual command.
     out = url("summary")
-    out_total_urls = int(re.search(r"Total URLs found:\s*(\d+)", out).group(1))
+    out_total_urls = int(re.search(r"Total URLs found:\s*(\d+)", out).group(1))  # ty: ignore[unresolved-attribute]
     assert out_total_urls == total_urls
 
-    out_correct_names = int(re.search(r"Names correctly parsed:\s*(\d+)", out).group(1))
+    out_correct_names = int(re.search(r"Names correctly parsed:\s*(\d+)", out).group(1))  # ty: ignore[unresolved-attribute]
     assert out_correct_names == correct_names
 
-    out_correct_versions = int(re.search(r"Versions correctly parsed:\s*(\d+)", out).group(1))
+    out_correct_versions = int(re.search(r"Versions correctly parsed:\s*(\d+)", out).group(1))  # ty: ignore[unresolved-attribute]
     assert out_correct_versions == correct_versions
 
 

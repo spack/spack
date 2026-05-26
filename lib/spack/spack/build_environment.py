@@ -836,7 +836,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
 
 def _extract_dtags_arg(env_by_name: Dict[str, ModificationList], *, var_name: str) -> str:
     try:
-        enable_new_dtags = env_by_name[var_name][0].value  # type: ignore[union-attr]
+        enable_new_dtags = env_by_name[var_name][0].value  # type: ignore[union-attr]  # ty: ignore[unresolved-attribute]
     except (KeyError, IndexError, AttributeError):
         enable_new_dtags = ""
     return enable_new_dtags
@@ -1228,8 +1228,8 @@ def _setup_pkg_and_run(
                 pass
         elif context == "test":
             logfile = os.path.join(
-                pkg.test_suite.stage,  # type: ignore[union-attr]
-                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]
+                pkg.test_suite.stage,  # type: ignore[union-attr]  # ty: ignore[unresolved-attribute]
+                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]  # ty: ignore[unresolved-attribute]
             )
 
         error_msg = str(e)
@@ -1671,7 +1671,7 @@ def write_log_summary(out, log_type, log, last=None):
 
         # If errors are found, only display errors
         out.write("\n%s found in %s log:\n" % (plural(nerr, "error"), log_type))
-        out.write(make_log_context(errors))
+        out.write(make_log_context(errors))  # ty: ignore[invalid-argument-type]
     elif nwar > 0:
         if last and nwar > last:
             warnings = warnings[-last:]
@@ -1679,7 +1679,7 @@ def write_log_summary(out, log_type, log, last=None):
 
         # If no errors are found but warnings are, display warnings
         out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
-        out.write(make_log_context(warnings))
+        out.write(make_log_context(warnings))  # ty: ignore[invalid-argument-type]
 
 
 class ModuleChangePropagator:

@@ -201,7 +201,7 @@ def pkg_grep(args, unknown_args):
     )
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)
+    groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)  # ty: ignore[invalid-argument-type]
 
     # You can force GNU grep to show filenames on every line with -H, but not POSIX grep.
     # POSIX grep only shows filenames when you're grepping 2 or more files.  Since we

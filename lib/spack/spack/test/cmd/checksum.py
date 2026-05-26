@@ -129,7 +129,7 @@ def test_checksum_interactive_filter():
     # Filter effectively by 1:1.0, then checksum.
     input = input_from_commands("f", "@1:", "f", "@:1.0", "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
@@ -146,7 +146,7 @@ def test_checksum_interactive_return_from_filter_prompt():
     # Enter and then exit filter subcommand.
     input = input_from_commands("f", None, "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
@@ -166,7 +166,7 @@ def test_checksum_interactive_quit_returns_none():
     input = input_from_commands("f", "@1:", "q", "y")
     assert (
         interactive_version_filter(
-            {
+            {  # ty: ignore[invalid-argument-type]
                 Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
                 Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
                 Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
@@ -182,7 +182,7 @@ def test_checksum_interactive_reset_resets():
     # before reset)
     input = input_from_commands("f", "@1:", "r", "f", ":0", "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
             Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
@@ -196,7 +196,7 @@ def test_checksum_interactive_ask_each():
     # entry, which is 1.0.1.
     input = input_from_commands("f", "@1:", "a", "n", "y", "n")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0.1"): "https://www.example.com/pkg-1.0.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
@@ -211,7 +211,7 @@ def test_checksum_interactive_quit_from_ask_each():
     # should still include the last item at which ask each stopped.
     input = input_from_commands("a", "n", "y", None, "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
             Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
@@ -228,7 +228,7 @@ def test_checksum_interactive_nothing_left():
     input = input_from_commands("f", "@2", "c")
     assert (
         interactive_version_filter(
-            {
+            {  # ty: ignore[invalid-argument-type]
                 Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
                 Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
                 Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
@@ -243,12 +243,12 @@ def test_checksum_interactive_new_only():
     # The 1.0 version is known already, and should be dropped on `n`.
     input = input_from_commands("n", "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
             Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
         },
-        known_versions=[Version("1.0")],
+        known_versions=[Version("1.0")],  # ty: ignore[invalid-argument-type]
         input=input,
     ) == {
         Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
@@ -260,7 +260,7 @@ def test_checksum_interactive_top_n():
     """Test integers select top n versions"""
     input = input_from_commands("2", "c")
     assert interactive_version_filter(
-        {
+        {  # ty: ignore[invalid-argument-type]
             Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz",
             Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz",
             Version("0.9"): "https://www.example.com/pkg-0.9.tar.gz",
@@ -276,7 +276,7 @@ def test_checksum_interactive_unrecognized_command():
     """Unrecognized commands should be ignored"""
     input = input_from_commands("-1", "0", "hello", "c")
     v = {Version("1.1"): "https://www.example.com/pkg-1.1.tar.gz"}
-    assert interactive_version_filter(v.copy(), input=input) == v
+    assert interactive_version_filter(v.copy(), input=input) == v  # ty: ignore[invalid-argument-type]
 
 
 def test_checksum_versions(mock_packages: RepoPath, can_fetch_versions, monkeypatch):
@@ -306,7 +306,7 @@ def test_checksum_deprecated_version(mock_packages, can_fetch_versions):
 def test_checksum_url(mock_packages, config):
     pkg_cls = mock_packages.get_pkg_class("zlib")
     with pytest.raises(spack.error.SpecSyntaxError):
-        spack_checksum(f"{pkg_cls.url}")
+        spack_checksum(f"{pkg_cls.url}")  # ty: ignore[unresolved-attribute]
 
 
 def test_checksum_verification_fails(config, mock_packages, capfd, can_fetch_versions):

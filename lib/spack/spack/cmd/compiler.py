@@ -92,7 +92,7 @@ def compiler_find(args):
         filename = spack.config.CONFIG.get_config_filename(args.scope, "packages")
         tty.msg(f"Added {n:d} new compiler{s} to {filename}")
         compiler_strs = sorted(f"{spec.name}@{spec.versions}" for spec in new_compilers)
-        colify(reversed(compiler_strs), indent=4)
+        colify(reversed(compiler_strs), indent=4)  # ty: ignore[invalid-argument-type]
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
@@ -110,7 +110,7 @@ def compiler_remove(args):
     if not args.all and len(candidates) > 1:
         tty.error(f"multiple compilers match the spec '{args.compiler_spec}':")
         print()
-        colify(compiler_strs, indent=4)
+        colify(compiler_strs, indent=4)  # ty: ignore[invalid-argument-type]
         print()
         print(
             "Either use a stricter spec to select only one, or use `spack compiler remove -a`"
@@ -121,7 +121,7 @@ def compiler_remove(args):
     remover.flush()
     tty.msg("The following compilers have been removed:")
     print()
-    colify(compiler_strs, indent=4)
+    colify(compiler_strs, indent=4)  # ty: ignore[invalid-argument-type]
     print()
 
 
@@ -184,7 +184,7 @@ def compiler_list(args):
     compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
     if not sys.stdout.isatty():
-        for c in sorted(compilers):  # type: ignore
+        for c in sorted(compilers):
             print(c.format("{name}@{version}"))
         return
 
@@ -226,7 +226,7 @@ def compiler_list(args):
         cname = f"{spack.spec.COMPILER_COLOR}{{{name}}} {os_str}"
         tty.hline(colorize(cname), char="-")
         result = {colorize(status_fn(c).value) + c.format("{name}@{version}") for c in compilers}
-        colify(reversed(sorted(result)))
+        colify(list(reversed(sorted(result))))
 
 
 def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:

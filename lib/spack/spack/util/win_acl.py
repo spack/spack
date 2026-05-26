@@ -315,7 +315,7 @@ class AccessControlEntry:
         if val is None:
             self._flags = []
         elif isinstance(val, list):
-            self._flags = val  # type: ignore[assignment]  # List[AceFlags] widens safely
+            self._flags = val  # ty: ignore[invalid-assignment]  # List[AceFlags] widens safely
         else:
             self._flags = [val]
 
@@ -390,13 +390,13 @@ class TOKEN_USER(ctypes.Structure):
 TOKEN_QUERY = 0x0008
 
 
-_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # type: ignore[attr-defined]
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
-_WinError = ctypes.WinError  # type: ignore[attr-defined]
-_get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
+_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # ty: ignore[unresolved-attribute]
+_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # ty: ignore[unresolved-attribute]
+_WinError = ctypes.WinError  # ty: ignore[unresolved-attribute]
+_get_last_error = ctypes.get_last_error  # ty: ignore[unresolved-attribute]
 
 
-def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # type: ignore[name-defined]
+def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # ty: ignore[unresolved-attribute]
     """Set argtypes/restype on a DLL function and return it."""
     fn = getattr(dll, name)
     fn.argtypes = argtypes
@@ -573,7 +573,7 @@ class _SddlHelper:
         # Spack never generates such ACEs and write-back preserves the OS SACL intact.
         return AccessControlEntry(
             ace_type=AceType.from_sddl(parts[0]),
-            flags=_SddlHelper._map_flags(parts[1], AceFlags),  # type: ignore[arg-type]
+            flags=_SddlHelper._map_flags(parts[1], AceFlags),  # ty: ignore[invalid-argument-type]
             rights=_SddlHelper._map_rights(parts[2]) if parts[2] else None,
             obj_guid=parts[3] if parts[3] else None,
             inh_obj_guid=parts[4] if parts[4] else None,
@@ -586,7 +586,7 @@ class _SddlHelper:
         if not flag_str:
             return flags
         for chunk in (flag_str[i : i + 2] for i in range(0, len(flag_str), 2)):
-            for member in enum_cls:  # type: ignore[attr-defined]
+            for member in enum_cls:  # ty: ignore[not-iterable]
                 if member.value == chunk:
                     flags.append(member)
                     break

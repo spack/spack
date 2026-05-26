@@ -1071,7 +1071,7 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
             )
     else:
         if spec.namespace:
-            repo = spack.repo.PATH.get_repo(spec.namespace)
+            repo = spack.repo.PATH.get_repo(spec.namespace)  # ty: ignore[invalid-argument-type]
         else:
             _repo = spack.repo.PATH.first_repo()
             assert _repo is not None, "No package repository found"

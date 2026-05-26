@@ -226,7 +226,7 @@ class InMemoryOCIRegistry(DummyServer):
         assert req.data is not None
 
         if hasattr(req.data, "read"):
-            return req.data.read()
+            return req.data.read()  # ty: ignore[call-non-callable]
         elif isinstance(req.data, bytes):
             return req.data
 

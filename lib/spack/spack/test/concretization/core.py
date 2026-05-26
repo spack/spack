@@ -645,7 +645,7 @@ spack:
             for s in spec.traverse(root=False, deptype=("link", "run")):
                 if s.external:
                     continue
-                assert s.architecture.target == spec.architecture.target
+                assert s.architecture.target == spec.architecture.target  # ty: ignore[unresolved-attribute]
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('pkg-a cflags="-O -foo-flag foo-val" platform=test %gcc')
@@ -1156,7 +1156,7 @@ spack:
             "packages", {"gcc": {"externals": [compiler_factory(spec=f"{compiler_spec}")]}}
         )
         s = spack.concretize.concretize_one(spec)
-        assert str(s.architecture.target) == str(expected)
+        assert str(s.architecture.target) == str(expected)  # ty: ignore[unresolved-attribute]
 
     @pytest.mark.not_on_windows("Not supported on Windows (yet)")
     @pytest.mark.usefixtures("mock_targets")
@@ -1191,7 +1191,7 @@ spack:
         # The preferred compiler is kept and the target is downgraded, instead of
         # switching to llvm to reach a better target.
         assert s.satisfies("%c=gcc@4.4.7")
-        assert str(s.architecture.target) == str(core2)
+        assert str(s.architecture.target) == str(core2)  # ty: ignore[unresolved-attribute]
 
     @pytest.mark.parametrize(
         "constraint,expected", [("%gcc@10.2", "@=10.2.1"), ("%gcc@10.2:", "@=10.2.1")]
@@ -1651,7 +1651,7 @@ spack:
     )
     def test_mv_variants_disjoint_sets_from_spec(self, spec_str, variant_name, expected_values):
         s = spack.concretize.concretize_one(spec_str)
-        assert set(expected_values) == set(s.variants[variant_name].value)
+        assert set(expected_values) == set(s.variants[variant_name].value)  # ty: ignore[invalid-argument-type]
 
     @pytest.mark.regression("22533")
     def test_mv_variants_disjoint_sets_from_packages_yaml(self, mutable_config: Configuration):
@@ -1664,7 +1664,7 @@ spack:
         mutable_config.set("packages", external_mvapich2)
 
         s = spack.concretize.concretize_one("mvapich2")
-        assert set(s.variants["file_systems"].value) == set(["ufs", "nfs"])
+        assert set(s.variants["file_systems"].value) == set(["ufs", "nfs"])  # ty: ignore[invalid-argument-type]
 
     @pytest.mark.regression("22596")
     def test_external_with_non_default_variant_as_dependency(self):
@@ -1994,7 +1994,7 @@ spack:
     def test_best_effort_coconcretize(self, specs, checks):
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
-        solver.reuse = False
+        solver.reuse = False  # ty: ignore[unresolved-attribute]
         concrete_specs = set()
         for result in solver.solve_in_rounds(specs):
             for s in result.specs:
@@ -2038,7 +2038,7 @@ spack:
         """Test package preferences during coconcretization."""
         specs = [Spec(s) for s in specs]
         solver = spack.solver.asp.Solver()
-        solver.reuse = False
+        solver.reuse = False  # ty: ignore[unresolved-attribute]
         concrete_specs = {}
         for result in solver.solve_in_rounds(specs):
             concrete_specs.update(result.specs_by_input)
@@ -2052,7 +2052,7 @@ spack:
     def test_solve_in_rounds_all_unsolved(self, monkeypatch, mock_packages):
         specs = [Spec(x) for x in ["libdwarf%gcc", "libdwarf%clang"]]
         solver = spack.solver.asp.Solver()
-        solver.reuse = False
+        solver.reuse = False  # ty: ignore[unresolved-attribute]
 
         simulate_unsolved_property = [(x, None) for x in specs]
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
@@ -2319,7 +2319,7 @@ spack:
         other_os = s.copy()
         mock_os = "ubuntu2204"
         other_os.architecture = spack.spec.ArchSpec(
-            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
+            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))  # ty: ignore[unresolved-attribute]
         )
         reusable_specs = [other_os]
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
@@ -2413,8 +2413,8 @@ spack:
             mpi_spec = spack.concretize.concretize_one("mpi")
             assert mpi_spec.name != "multi-provider-mpi"
 
-        external_conf["mpi"]["require"] = "multi-provider-mpi"
-        mutable_config.set("packages", external_conf)
+        external_conf["mpi"]["require"] = "multi-provider-mpi"  # ty: ignore[invalid-assignment]
+        spack.config.set("packages", external_conf)
 
         with mutable_config.override("concretizer:reuse", True):
             mpi_spec = spack.concretize.concretize_one("mpi")
@@ -3444,7 +3444,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
     )
-    specs = selector.reusable_specs(["mpileaks"])
+    specs = selector.reusable_specs(["mpileaks"])  # ty: ignore[invalid-argument-type]
     assert len(specs) == expected_length
 
     # Compiler wrapper is not reused, as it might have changed from previous installations
@@ -4611,8 +4611,8 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     # serialization refuses spliced specs, and must clean up any force-cached hashes
     with pytest.raises(spack.solver.asp.SpliceSerializationError):
         spack.solver.asp.spec_dict_to_json({nid: root})
-    assert abstract_dep._hash is None
-    assert root._hash is None
+    assert abstract_dep._hash is None  # ty: ignore[unresolved-attribute]
+    assert root._hash is None  # ty: ignore[unresolved-attribute]
 
     result = Result(specs=[Spec("pkg-a")])
     result.answers = [(0, 0, {nid: root})]
@@ -4722,7 +4722,7 @@ def test_concretization_cache_reapplies_patches_on_hit(
     # First solve: populate the cache. patch@1.0 has foo.patch and baz.patch.
     spec1 = spack.concretize.concretize_one("patch@1.0")
     assert "patches" in spec1.variants
-    initial_sha256s = frozenset(spec1.variants["patches"].value)
+    initial_sha256s = frozenset(spec1.variants["patches"].value)  # ty: ignore[invalid-argument-type]
 
     # Simulate a recipe change: wrap _inject_patches_variant to inject an extra sha256,
     # as if a new patch directive had been added to the package.
@@ -4749,7 +4749,7 @@ def test_concretization_cache_reapplies_patches_on_hit(
     spec2 = spack.concretize.concretize_one("patch@1.0")
 
     assert "patches" in spec2.variants
-    new_sha256s = frozenset(spec2.variants["patches"].value)
+    new_sha256s = frozenset(spec2.variants["patches"].value)  # ty: ignore[invalid-argument-type]
 
     # The new patch must appear (post_process_concretization_result re-ran on hit).
     assert EXTRA_SHA256 in new_sha256s, "Expected the new patch to be injected on a cache hit"

@@ -1101,7 +1101,7 @@ class TestSpecSemantics:
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
-        variant = spack.directives.variant.__wrapped__
+        variant = spack.directives.variant.__wrapped__  # ty: ignore[unresolved-attribute]
 
         class Pkg:
             name = "PKG"
@@ -1141,9 +1141,9 @@ class TestSpecSemantics:
 
         # Check that we can still access each member through
         # the architecture attribute
-        assert "test" in spec.architecture
-        assert "debian" in spec.architecture
-        assert "x86_64" in spec.architecture
+        assert "test" in spec.architecture  # ty: ignore[unsupported-operator]
+        assert "debian" in spec.architecture  # ty: ignore[unsupported-operator]
+        assert "x86_64" in spec.architecture  # ty: ignore[unsupported-operator]
 
         # Check that we forward the platform and os attribute correctly
         assert spec.platform == "test"
@@ -1347,8 +1347,8 @@ class TestSpecSemantics:
         dep = spack.concretize.concretize_one("splice-h+foo")
 
         # monkeypatch hashes so we can test that they are cached
-        spec._hash = "aaaaaa"
-        dep._hash = "bbbbbb"
+        spec._hash = "aaaaaa"  # ty: ignore[unresolved-attribute]
+        dep._hash = "bbbbbb"  # ty: ignore[unresolved-attribute]
         spec["splice-h"]._hash = "cccccc"
         spec["splice-z"]._hash = "dddddd"
         dep["splice-z"]._hash = "eeeeee"
@@ -1851,7 +1851,7 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
     delattr(bottom, "_package_hash")
 
     dummy_hash = "zd4m26eis2wwbvtyfiliar27wkcv3ehk"
-    bottom._hash = dummy_hash
+    bottom._hash = dummy_hash  # ty: ignore[unresolved-attribute]
 
     # add it to an abstract spec as a dependency
     top = Spec("dt-diamond")
@@ -2162,7 +2162,7 @@ def test_equality_discriminate_on_propagation(lhs, rhs):
 
 
 def test_comparison_multivalued_variants():
-    assert Spec("x=a") < Spec("x=a,b") < Spec("x==a,b") < Spec("x==a,b,c")
+    assert Spec("x=a") < Spec("x=a,b") < Spec("x==a,b") < Spec("x==a,b,c")  # ty: ignore[unsupported-operator]
 
 
 @pytest.mark.parametrize(
@@ -2192,10 +2192,10 @@ def test_spec_ordering(specs_in_expected_order):
 
     for i in range(len(specs_in_expected_order) - 1):
         lhs, rhs = specs_in_expected_order[i : i + 2]
-        assert lhs <= rhs
-        assert (lhs < rhs and lhs != rhs) or lhs == rhs
-        assert rhs >= lhs
-        assert (rhs > lhs and rhs != lhs) or rhs == lhs
+        assert lhs <= rhs  # ty: ignore[unsupported-operator]
+        assert (lhs < rhs and lhs != rhs) or lhs == rhs  # ty: ignore[unsupported-operator]
+        assert rhs >= lhs  # ty: ignore[unsupported-operator]
+        assert (rhs > lhs and rhs != lhs) or rhs == lhs  # ty: ignore[unsupported-operator]
 
 
 EMPTY_VER = vn.VersionList(":")

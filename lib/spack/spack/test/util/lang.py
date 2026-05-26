@@ -121,7 +121,7 @@ def test_pretty_string_to_date_delta(now, delta, pretty_string):
 )
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
-    t2 = spack.util.lang.pretty_string_to_date(pretty_string, now)
+    t2 = spack.util.lang.pretty_string_to_date(pretty_string)
     assert t1 == t2
 
 
@@ -221,16 +221,16 @@ def test_key_ordering():
 
     assert a != b
 
-    assert a < b
-    assert b > a
+    assert a < b  # ty: ignore[unsupported-operator]
+    assert b > a  # ty: ignore[unsupported-operator]
 
-    assert a <= b
-    assert b >= a
+    assert a <= b  # ty: ignore[unsupported-operator]
+    assert b >= a  # ty: ignore[unsupported-operator]
 
-    assert a <= a
-    assert a <= a2
-    assert b >= b
-    assert b >= b2
+    assert a <= a  # ty: ignore[unsupported-operator]
+    assert a <= a2  # ty: ignore[unsupported-operator]
+    assert b >= b  # ty: ignore[unsupported-operator]
+    assert b >= b2  # ty: ignore[unsupported-operator]
 
     assert hash(a) != hash(b)
     assert hash(a) == hash(a)

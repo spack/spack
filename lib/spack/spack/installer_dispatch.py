@@ -53,9 +53,9 @@ def create_installer(
         spack.sandbox.get_sandbox()
 
     if use_old_installer:
-        from spack.old_installer import PackageInstaller  # type: ignore
+        from spack.old_installer import PackageInstaller
     else:
-        from spack.installer import PackageInstaller  # type: ignore
+        from spack.installer import PackageInstaller
 
     return PackageInstaller(
         packages,

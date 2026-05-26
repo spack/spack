@@ -107,7 +107,7 @@ def checksum(parser, args):
 
     # Add preferred version if requested (todo: exclude git versions)
     if args.preferred:
-        versions.append(preferred_version(pkg))
+        versions.append(preferred_version(pkg))  # ty: ignore[invalid-argument-type]
 
     # Store a dict of the form version -> URL
     url_dict: Dict[StandardVersion, str] = {}

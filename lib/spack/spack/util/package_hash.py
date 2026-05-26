@@ -28,7 +28,7 @@ else:
 
     def unused_string(node: ast.AST) -> bool:
         """Criteria for unassigned body strings."""
-        return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)
+        return isinstance(node, ast.Expr) and isinstance(node.value, ast.Str)  # ty: ignore[deprecated]
 
 
 class RemoveDocstrings(ast.NodeTransformer):
@@ -193,9 +193,9 @@ class TagMultiMethods(ast.NodeVisitor):
 
         def _get_when_condition(self, node: ast.expr) -> Optional[Any]:
             """Extract the first argument of a @when decorator."""
-            if isinstance(node, ast.Str):
+            if isinstance(node, ast.Str):  # ty: ignore[deprecated]
                 return node.s
-            elif isinstance(node, ast.NameConstant):
+            elif isinstance(node, ast.NameConstant):  # ty: ignore[deprecated]
                 return node.value
             return None
 
@@ -357,7 +357,7 @@ def package_hash(spec: spack.spec.Spec, source: Optional[bytes] = None) -> str:
         source: Optionally provide a string to read python code from.
 
     """
-    source = canonical_source(spec, filter_multimethods=True, source=source)
+    source = canonical_source(spec, filter_multimethods=True, source=source)  # ty: ignore[invalid-assignment]
     return spack.util.hash.b32_hash(source)
 
 

@@ -157,10 +157,10 @@ def format_deptype(depflag: int) -> str:
 
 
 class DependencyFormatter(Formatter):
-    def format_name(self, dep: spack.dependency.Dependency) -> str:
+    def format_name(self, dep: spack.dependency.Dependency) -> str:  # ty: ignore[invalid-method-override]
         return dep.spec._long_spec(color=color.get_color_when())
 
-    def format_values(self, dep: spack.dependency.Dependency) -> str:
+    def format_values(self, dep: spack.dependency.Dependency) -> str:  # ty: ignore[invalid-method-override]
         return str(format_deptype(dep.depflag))
 
 
@@ -280,7 +280,7 @@ def print_tags(pkg: PackageBase, args: Namespace) -> None:
     color.cprint("")
     color.cprint(section_title("Tags: "))
     if hasattr(pkg, "tags"):
-        tags = sorted(pkg.tags)
+        tags = sorted(pkg.tags)  # ty: ignore[invalid-argument-type]
         colify(tags, indent=4)
     else:
         color.cprint("    None")
@@ -489,9 +489,9 @@ def print_by_name(
     def unconditional_first(definition: Any) -> SupportsRichComparison:
         spec = getattr(definition, "spec", None)
         if spec:
-            return (spec != spack.spec.Spec(spec.name), spec)
+            return (spec != spack.spec.Spec(spec.name), spec)  # ty: ignore[invalid-return-type]
         else:
-            return getattr(definition, "name", None)  # type: ignore[return-value]
+            return getattr(definition, "name", None)  # type: ignore[return-value]  # ty: ignore[invalid-return-type]
 
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
         for when, definition in sorted(
@@ -536,12 +536,12 @@ def print_definitions(
 
 
 class VariantFormatter(Formatter):
-    def format_name(self, variant: spack.variant.Variant) -> str:
+    def format_name(self, variant: spack.variant.Variant) -> str:  # ty: ignore[invalid-method-override]
         return color.colorize(
             f"@c{{{variant.name}}} @C{{[{_fmt_variant_value(variant.default)}]}}"
         )
 
-    def format_values(self, variant: spack.variant.Variant) -> str:
+    def format_values(self, variant: spack.variant.Variant) -> str:  # ty: ignore[invalid-method-override]
         values = (
             [variant.values]
             if not isinstance(variant.values, (tuple, list, spack.variant.DisjointSetsOfValues))
@@ -553,7 +553,7 @@ class VariantFormatter(Formatter):
 
         return color.colorize(f"@c{{{', '.join(_fmt_variant_value(v) for v in sorted_values)}}}")
 
-    def format_description(self, variant: spack.variant.Variant) -> str:
+    def format_description(self, variant: spack.variant.Variant) -> str:  # ty: ignore[invalid-method-override]
         return variant.description
 
 

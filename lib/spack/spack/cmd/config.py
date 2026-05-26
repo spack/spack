@@ -301,8 +301,8 @@ def config_edit(args):
     if args.print_file:
         print(config_file)
     else:
-        fs.mkdirp(os.path.dirname(config_file))
-        editor(config_file)
+        fs.mkdirp(os.path.dirname(config_file))  # ty: ignore[no-matching-overload]
+        editor(config_file)  # ty: ignore[invalid-argument-type]
 
 
 def config_list(args):
@@ -394,7 +394,7 @@ def config_add(args):
     This is a stateful operation that edits the config files."""
     if not (args.file or args.path):
         tty.error("No changes requested. Specify a file or value.")
-        setup_parser.add_parser.print_help()
+        setup_parser.add_parser.print_help()  # ty: ignore[unresolved-attribute]
         exit(1)
 
     scope, section = _get_scope_and_section(args)

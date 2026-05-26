@@ -147,7 +147,7 @@ def clingo_library() -> Any:
     (e.g. when ``raise_if_errors`` feeds a model from the main solve into a second control).
     """
     clingo()  # ensure the clingo module is importable / bootstrapped
-    return importlib.import_module("clingo.core").Library()
+    return importlib.import_module("clingo.core").Library()  # ty: ignore[unresolved-attribute]
 
 
 def symbol_name(sym: Any) -> Optional[str]:
@@ -206,10 +206,11 @@ class _ClingoV6Control:
     via :func:`default_clingo_control` / :func:`make_error_control`."""
 
     __slots__ = ("_control",)
+    _control: Any  # clingo 6 Control; stubs don't cover this API
 
     def __init__(self, options: Tuple[str, ...] = ()) -> None:
         control_mod = importlib.import_module("clingo.control")
-        self._control = control_mod.Control(clingo_library(), list(options))
+        self._control = control_mod.Control(clingo_library(), list(options))  # ty: ignore[invalid-argument-type]
 
     def add(self, name: str, parameters: Tuple[str, ...], program: str) -> None:
         # Spack only ever adds the implicit "base" part without parameters.

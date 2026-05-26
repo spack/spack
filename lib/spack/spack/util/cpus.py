@@ -14,6 +14,6 @@ def cpus_available():
     using spack through Slurm or container runtimes.
     """
     try:
-        return len(os.sched_getaffinity(0))  # novermin
+        return len(os.sched_getaffinity(0))  # novermin  # ty: ignore[unresolved-attribute]
     except Exception:
         return multiprocessing.cpu_count()

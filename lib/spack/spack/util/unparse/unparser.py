@@ -1293,15 +1293,15 @@ else:
 
     def _is_int_literal(node: ast.AST) -> bool:
         """Check if a node represents a literal int."""
-        return isinstance(node, ast.Num) and isinstance(node.n, int)
+        return isinstance(node, ast.Num) and isinstance(node.n, int)  # ty: ignore[deprecated]
 
     def _is_str_literal(node: ast.AST) -> bool:
         """Check if a node represents a literal str."""
-        return isinstance(node, ast.Str)
+        return isinstance(node, ast.Str)  # ty: ignore[deprecated]
 
     def _get_str_literal_value(node: ast.AST) -> Optional[str]:
         """Get the string value of a literal str node."""
-        return node.s if isinstance(node, ast.Str) else None
+        return node.s if isinstance(node, ast.Str) else None  # ty: ignore[deprecated, invalid-return-type]
 
 
 if sys.version_info >= (3, 14):

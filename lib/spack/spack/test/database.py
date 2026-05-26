@@ -529,8 +529,8 @@ def test_016_roundtrip_spliced_spec(mutable_database):
     _, spec_record = mutable_database.query_by_spec_hash(spec.dag_hash())
     _, buildspec_record = mutable_database.query_by_spec_hash(spec.build_spec.dag_hash())
 
-    assert spec_record.spec == spec
-    assert spec_record.spec.build_spec == spec.build_spec
+    assert spec_record.spec == spec  # ty: ignore[unresolved-attribute]
+    assert spec_record.spec.build_spec == spec.build_spec  # ty: ignore[unresolved-attribute]
     assert buildspec_record  # buildspec needs to be recorded in db
 
 
@@ -557,11 +557,11 @@ def test_try_write_transaction(mutable_database, monkeypatch):
     spec = db.query_one("mpileaks ^zmpi")
     with db.try_write_transaction() as acquired:
         assert acquired
-        db._remove(spec)
+        db._remove(spec)  # ty: ignore[invalid-argument-type]
 
     db._state_is_inconsistent = True  # force re-read from disk
     with db.read_transaction():
-        assert db.query_local_by_spec_hash(spec.dag_hash()) is None
+        assert db.query_local_by_spec_hash(spec.dag_hash()) is None  # ty: ignore[unresolved-attribute]
 
     monkeypatch.setattr(db.lock, "try_acquire_write", lambda: False)
     with db.try_write_transaction() as acquired:

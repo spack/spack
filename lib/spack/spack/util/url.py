@@ -103,12 +103,12 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
     try:
         # NOTE: we temporarily modify urllib internals so s3 and gs schemes are treated like http.
         # This is non-portable, and may be forward incompatible with future cpython versions.
-        urllib.parse.uses_netloc = [*old_netloc, "s3", "gs", "oci", "oci+http"]  # type: ignore
-        urllib.parse.uses_relative = [*old_relative, "s3", "gs", "oci", "oci+http"]  # type: ignore
+        urllib.parse.uses_netloc = [*old_netloc, "s3", "gs", "oci", "oci+http"]
+        urllib.parse.uses_relative = [*old_relative, "s3", "gs", "oci", "oci+http"]
         return urllib.parse.urljoin(base, "/".join(components), **kwargs)
     finally:
-        urllib.parse.uses_netloc = old_netloc  # type: ignore
-        urllib.parse.uses_relative = old_relative  # type: ignore
+        urllib.parse.uses_netloc = old_netloc
+        urllib.parse.uses_relative = old_relative
 
 
 def default_download_filename(url: str) -> str:

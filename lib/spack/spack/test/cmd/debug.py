@@ -23,7 +23,7 @@ def test_report():
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
     assert spack.spack_version in out
-    assert spack.get_spack_commit() in out
+    assert spack.get_spack_commit() in out  # ty: ignore[unsupported-operator]
     assert platform.python_version() in out
     assert str(architecture) in out
 
@@ -36,7 +36,7 @@ def test_get_builtin_repo_info_local_repo(mock_git_version_info, monkeypatch):
         return {"builtin": spack.repo.LocalRepoDescriptor("builtin", path)}
 
     monkeypatch.setattr(spack.repo.RepoDescriptors, "from_config", _from_config)
-    assert path in spack.cmd.debug._get_builtin_repo_info()
+    assert path in spack.cmd.debug._get_builtin_repo_info()  # ty: ignore[unsupported-operator]
 
 
 def test_get_builtin_repo_info_unsupported_type(mock_git_version_info, monkeypatch):

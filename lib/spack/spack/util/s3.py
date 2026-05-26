@@ -58,7 +58,7 @@ def get_s3_session(url, method="fetch"):
 
     # Did we already create a client for this? Then return it.
     if key in s3_client_cache:
-        return s3_client_cache[key]
+        return s3_client_cache[key]  # ty: ignore[invalid-argument-type]
 
     # Otherwise, create it.
     s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
@@ -72,7 +72,7 @@ def get_s3_session(url, method="fetch"):
     client.ClientError = ClientError
 
     # Cache the client.
-    s3_client_cache[key] = client
+    s3_client_cache[key] = client  # ty: ignore[invalid-assignment]
     return client
 
 
@@ -137,10 +137,10 @@ class WrapStream(BufferedReader):
         super().__init__(raw)
 
     def detach(self):
-        self.raw = None
+        self.raw = None  # ty: ignore[invalid-assignment]
 
     def read(self, *args, **kwargs):
-        return self.raw.read(*args, **kwargs)
+        return self.raw.read(*args, **kwargs)  # ty: ignore[unresolved-attribute]
 
     def __getattr__(self, key):
         return getattr(self.raw, key)

@@ -268,7 +268,7 @@ class CDash(Reporter):
                 f.write(t.render(report_data))
             self.upload(phase_report)
 
-    def build_report(self, report_dir, specs):
+    def build_report(self, report_dir, specs):  # ty: ignore[invalid-method-override]
         # Do an initial scan to determine if we are generating reports for more
         # than one package. When we're only reporting on a single package we
         # do not explicitly include the package's name in the CDash build name.
@@ -357,7 +357,7 @@ class CDash(Reporter):
 
         self.report_test_data(report_dir, package, phases, report_data)
 
-    def test_report(self, report_dir, specs):
+    def test_report(self, report_dir, specs):  # ty: ignore[invalid-method-override]
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
         for spec in specs:
@@ -391,7 +391,7 @@ class CDash(Reporter):
         package = {"name": spec.name, "id": spec.dag_hash(), "result": "skipped", "stdout": output}
         self.test_report_for_package(report_dir, package, duration=0.0)
 
-    def concretization_report(self, report_dir, msg):
+    def concretization_report(self, report_dir, msg):  # ty: ignore[invalid-method-override]
         self.buildname = self.base_buildname
         report_data = self.initialize_report(report_dir)
         report_data["update"] = {}
@@ -446,7 +446,7 @@ class CDash(Reporter):
             url = "{0}&{1}".format(self.cdash_upload_url, encoded_params)
             request = Request(url, data=f, method="PUT")
             request.add_header("Content-Type", "text/xml")
-            request.add_header("Content-Length", os.path.getsize(filename))
+            request.add_header("Content-Length", os.path.getsize(filename))  # ty: ignore[invalid-argument-type]
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:

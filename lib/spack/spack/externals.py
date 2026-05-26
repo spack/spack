@@ -86,7 +86,7 @@ def complete_architecture(node: spack.spec.Spec) -> None:
         node.architecture.complete_with_defaults()
     else:
         node.constrain(spack.spec.Spec.default_arch())
-        node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
+        node.architecture.target = spack.archspec.HOST_TARGET_FAMILY  # ty: ignore[invalid-assignment]
 
     node.namespace = spack.repo.PATH.repo_for_pkg(node.name).namespace
     for flag_type in spack.spec.FlagMap.valid_compiler_flags():

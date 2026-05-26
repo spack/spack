@@ -212,7 +212,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # Create a list of subcommand actions. Argparse internals are nasty!
         # Note: you can only call _get_subactions() once.  Even nastier!
         if not hasattr(self, "actions"):
-            self.actions = self._subparsers._actions[-1]._get_subactions()
+            self.actions = self._subparsers._actions[-1]._get_subactions()  # ty: ignore[unresolved-attribute]
 
         # make a set of commands not yet added.
         remaining = set(spack.cmd.all_commands())
@@ -567,8 +567,8 @@ def setup_main_options(args):
     # errors raised by spack.config.
 
     if args.debug or args.backtrace:
-        spack.error.debug = True
-        spack.error.SHOW_BACKTRACE = True
+        spack.error.debug = True  # ty: ignore[invalid-assignment]
+        spack.error.SHOW_BACKTRACE = True  # ty: ignore[invalid-assignment]
 
     if args.debug:
         spack.config.CONFIG.set("config:debug", True, scope="command_line")
@@ -943,7 +943,7 @@ def _main(argv=None):
     # configuration. This doesn't include much -- setting up the parser,
     # restoring some key environment variables, very simple CLI options, etc.
     # ------------------------------------------------------------------------
-    warnings.showwarning = showwarning
+    warnings.showwarning = showwarning  # ty: ignore[invalid-assignment]
 
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
@@ -992,11 +992,11 @@ def _main(argv=None):
         if env_format_error:
             # Allow command to continue without env in case it is `spack config edit`
             # All other cases will raise in `finish_parse_and_run`
-            spack.environment.environment._active_environment_error = env_format_error
+            spack.environment.environment._active_environment_error = env_format_error  # ty: ignore[invalid-assignment]
             return
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
-        env.manifest.prepare_config_scope()
+        env.manifest.prepare_config_scope()  # ty: ignore[unresolved-attribute]
         spack.environment.environment.set_active_environment(env)
 
     # add the environment

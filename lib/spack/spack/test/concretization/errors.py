@@ -98,7 +98,7 @@ def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
         (spack.spec.Spec("baz+z"), None),
     ]
     spack.main._handle_solver_bug(
-        spack.solver.asp.OutputDoesNotSatisfyInputError(input_to_output), root=tmp_path, out=log
+        spack.solver.asp.OutputDoesNotSatisfyInputError(input_to_output), root=tmp_path, out=log  # ty: ignore[invalid-argument-type]
     )
 
     output = log.getvalue()

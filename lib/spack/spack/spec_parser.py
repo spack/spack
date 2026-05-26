@@ -194,13 +194,16 @@ class TokenContext:
 
     __slots__ = "token_stream", "current_token", "next_token", "pushed_tokens"
 
+    current_token: Optional[Token]
+    next_token: Optional[Token]
+
     def __init__(self, token_stream: Iterator[Token]):
         self.token_stream = token_stream
         self.current_token = None
         self.next_token = None  # the next token to be read
 
         # if not empty, back of list is front of stream, and we pop from here instead.
-        self.pushed_tokens: List[Token] = []
+        self.pushed_tokens: List[Optional[Token]] = []
 
         self.advance()
 
@@ -221,7 +224,7 @@ class TokenContext:
             return True
         return False
 
-    def push_front(self, token=Token):
+    def push_front(self, token: Token) -> None:
         """Push a token onto the front of the stream. Enables a bit of lookahead."""
         self.pushed_tokens.append(self.next_token)  # back of list is front of stream
         self.next_token = token
@@ -272,7 +275,7 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
 
     subvalues = context.current_token.subvalues
     if not subvalues:
-        return ()
+        return ()  # ty: ignore[invalid-return-type]
 
     # build a token for the substitute that we can put back on the stream
     pkg = subvalues["substitute"]
@@ -338,6 +341,7 @@ class SpecParser:
             else:
                 break
 
+            assert self.ctx.current_token is not None
             is_direct = self.ctx.current_token.value[0] == "%"
             propagation = PropagationPolicy.NONE
             if is_direct and self.ctx.current_token.value.startswith("%%"):
@@ -352,7 +356,7 @@ class SpecParser:
                 edge_properties = {"virtuals": virtuals, "depflag": 0}
 
             edge_properties["direct"] = is_direct
-            edge_properties["propagation"] = propagation
+            edge_properties["propagation"] = propagation  # ty: ignore[invalid-assignment]
 
             dependency = self._parse_node(root_spec)
 

@@ -225,7 +225,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
     assert len(found_install) == 1
 
     def _urlopen_500(*args, **kwargs):
-        raise HTTPError(url, 500, "Internal Server Error", {}, None)
+        raise HTTPError(url, 500, "Internal Server Error", {}, None)  # ty: ignore[invalid-argument-type]
 
     monkeypatch.setattr(ci, "urlopen", _urlopen_500)
 
@@ -472,7 +472,7 @@ def test_ci_run_standalone_tests_missing_requirements(working_env, config, capfd
     assert "Job spec is required" in err
 
     args = {"job_spec": spack.concretize.concretize_one("printing-package")}
-    ci.run_standalone_tests(**args)
+    ci.run_standalone_tests(**args)  # ty: ignore[invalid-argument-type]
     err = capfd.readouterr()[1]
     assert "Reproduction directory is required" in err
 

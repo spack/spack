@@ -194,6 +194,10 @@ class VersionType(SupportsRichComparison):
         """Return a VersionType containing self and other."""
         raise NotImplementedError
 
+    def isdevelop(self) -> bool:
+        """Whether this version is a develop-like version (e.g. @develop, @master)."""
+        raise NotImplementedError
+
     def __hash__(self) -> int:
         raise NotImplementedError
 
@@ -672,7 +676,7 @@ class GitVersion(ConcreteVersion):
 
     def __lt__(self, other: object) -> bool:
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) < (other.ref_version, other.ref)
+            return (self.ref_version, self.ref) < (other.ref_version, other.ref)  # ty: ignore[unsupported-operator]
         if isinstance(other, StandardVersion):
             # GitVersion at equal ref version is larger than StandardVersion
             return self.ref_version < other
@@ -682,7 +686,7 @@ class GitVersion(ConcreteVersion):
 
     def __le__(self, other: object) -> bool:
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)
+            return (self.ref_version, self.ref) <= (other.ref_version, other.ref)  # ty: ignore[unsupported-operator]
         if isinstance(other, StandardVersion):
             # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparison.
             return self.ref_version < other
@@ -693,7 +697,7 @@ class GitVersion(ConcreteVersion):
 
     def __ge__(self, other: object) -> bool:
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)
+            return (self.ref_version, self.ref) >= (other.ref_version, other.ref)  # ty: ignore[unsupported-operator]
         if isinstance(other, StandardVersion):
             # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
             return self.ref_version >= other
@@ -703,7 +707,7 @@ class GitVersion(ConcreteVersion):
 
     def __gt__(self, other: object) -> bool:
         if isinstance(other, GitVersion):
-            return (self.ref_version, self.ref) > (other.ref_version, other.ref)
+            return (self.ref_version, self.ref) > (other.ref_version, other.ref)  # ty: ignore[unsupported-operator]
         if isinstance(other, StandardVersion):
             # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use >= here.
             return self.ref_version >= other
@@ -962,7 +966,7 @@ class VersionList(VersionType):
         elif isinstance(vlist, Iterable):
             self.versions = []
             for v in vlist:
-                self.add(ver(v))
+                self.add(ver(v))  # ty: ignore[invalid-argument-type]
 
         else:
             raise TypeError(f"Cannot construct VersionList from {type(vlist)}")
