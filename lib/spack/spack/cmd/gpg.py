@@ -112,12 +112,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     publish.set_defaults(func=gpg_publish, subparser=publish)
 
     # Deprecated
-    verify = subparsers.add_parser("verify", help=gpg_verify.__doc__, deprecated=True)
+    verify = subparsers.add_parser("verify", help=gpg_verify.__doc__)
     arguments.add_common_arguments(verify, ["installed_spec"])
     verify.add_argument("signature", type=str, nargs="?", help="the signature file")
     verify.set_defaults(func=gpg_verify, subparser=verify)
 
-    sign = subparsers.add_parser("sign", help=gpg_sign.__doc__, deprecated=True)
+    sign = subparsers.add_parser("sign", help=gpg_sign.__doc__)
     sign.add_argument(
         "--output", metavar="DEST", type=str, help="the directory to place signatures"
     )
