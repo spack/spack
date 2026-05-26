@@ -41,3 +41,8 @@ class OperatingSystem:
 
     def to_dict(self):
         return {"name": self.name, "version": self.version}
+
+    @classmethod
+    def from_json(cls, data):
+        """Create an OperatingSystem from JSON data."""
+        return cls(data["name"], data["version"])

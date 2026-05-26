@@ -171,6 +171,9 @@ def create_external_parser(
     return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
+_simulate_reusable = None
+
+
 SpecFiltersFactory = Callable[
     [Callable[[spack.spec.Spec], bool], spack.config.Configuration], List[SpecFilter]
 ]
@@ -303,6 +306,8 @@ class ReusableSpecsSelector:
         result = []
         for reuse_source in self.reuse_sources:
             result.extend(reuse_source.selected_specs())
+        if _simulate_reusable:
+            result.extend(_simulate_reusable)
         # If we only want to reuse dependencies, remove the root specs
         if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
             result = [spec for spec in result if not any(root in spec for root in specs)]

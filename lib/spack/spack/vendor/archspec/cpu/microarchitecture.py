@@ -4,12 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Types and functions to manage information on CPU microarchitectures."""
 import functools
-import platform
 import re
 import sys
 import warnings
 from typing import IO, Any, Dict, List, Optional, Set, Tuple, Union
 
+from . import platform
 from . import schema
 from .alias import FEATURE_ALIASES
 from .schema import LazyDictionary
@@ -415,6 +415,14 @@ def _known_microarchitectures():
 
 #: Dictionary of known micro-architectures
 TARGETS = LazyDictionary(_known_microarchitectures)
+
+# platforms/__init__ effectively "freezes" targets when it imports them, so
+# we need a way to rearrange things under the hood: this is based on breaking
+# into the LazyDictionary object defined in schema
+def module_reinitialize():
+    global TARGETS
+    TARGETS._data = None
+    TARGETS.factory = _known_microarchitectures
 
 
 class ArchspecError(Exception):

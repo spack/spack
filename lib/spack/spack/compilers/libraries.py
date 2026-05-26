@@ -139,6 +139,8 @@ def _parse_link_paths(string):
 class CompilerPropertyDetector:
     """Detects compiler properties of a given compiler spec. Useful for compiler wrappers."""
 
+    _simulated_libc = None
+
     def __init__(self, compiler_spec: spack.spec.Spec):
         assert compiler_spec.concrete, "only concrete compiler specs are allowed"
         self.spec = compiler_spec
@@ -234,6 +236,12 @@ class CompilerPropertyDetector:
 
     def default_libc(self) -> Optional[spack.spec.Spec]:
         """Determine libc targeted by the compiler from link line"""
+
+        if CompilerPropertyDetector._simulated_libc:
+            return CompilerPropertyDetector._simulated_libc.get(
+                self.spec.format("{name}@{version}"), None
+            )
+
         # technically this should be testing the target platform of the compiler, but we don't have
         # that, so stick to host platform for now.
         if sys.platform in ("darwin", "win32"):

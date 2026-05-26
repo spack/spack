@@ -25,6 +25,11 @@ class Darwin(Platform):
     def detect(cls):
         return "darwin" in py_platform.system().lower()
 
+    @classmethod
+    def from_json(cls, data):
+        """Instantiate from serialized data generated with ``Platform.to_json``"""
+        return Platform.from_json_base(cls, data)
+
     def setup_platform_environment(self, pkg, env):
         """Specify deployment target based on target OS version.
 
