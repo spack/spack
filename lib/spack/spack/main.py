@@ -944,11 +944,10 @@ def _warn_about_old_dotspack():
     reasons = []
     for scope in spack.config.CONFIG.scopes.values():
         if hasattr(scope, "path") and uses_old_dotspack(scope.path):
-            # Explicitly configured via a config scope, don't warn
             if scope.backwards_compat_fallback:
                 reasons.append(f"Used by config scope: {scope.name}")
             else:
-                # A config scope explicitly targets ~/.spack
+                # A config scope explicitly targets ~/.spack: don't warn
                 tty.debug(
                     f"Skip .spack warning: scope {scope.name} includes ~/.spack: {scope.path}"
                 )
@@ -984,13 +983,32 @@ def _warn_about_old_dotspack():
         for reason in reasons:
             msg += f"\n\t{reason}"
     else:
-        msg += " - it is not currently used by this spack instance."
-    msg += (
-        "\nIf all spack instances are >= 1.2, you can use"
-        " `spack migrate --clear` to silence this warning"
-        "\nIf not, run `spack migrate --i-need-old-spack` to"
-        " see what manual steps you can take to silence this warning"
-    )
+        # If we aren't using ~/.spack at all, that means the user has
+        # run a mitigation like creating ~/.config/spack with
+        # `spack migrate`
+        return
+    msg += """
+If all spack instances are >= 1.2, you can use
+
+  spack migrate --clear
+
+to silence this warning (and you can stop reading).
+
+If you need both pre-1.2 and 1.2+ instances, you can run
+
+  spack migrate
+
+(without --clear) this will create a copy of the user config and
+package repo for 1.2+ instances to use; that is usually fine, but
+pre-1.2 instances and 1.2+ instances will have divergent config and
+packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).
+
+You can run
+
+  spack migrate --i-need-old-spack
+
+for more info (including examples of what "divergence" means).
+"""
     tty.warn(msg)
 
 

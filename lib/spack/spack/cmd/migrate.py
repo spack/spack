@@ -95,9 +95,26 @@ def i_need_old_spack():
     # $spack/opt/spack
     print("""\
 If you're getting a warning about using resources in ~/.spack, and
-you have pre-1.2 Spack instances that cannot upgrade. Then it is
-recommended that both old and new instances use ~/.spack for
-configs and the user cache path.
+you have pre-1.2 Spack instances that cannot upgrade, you can run
+
+  spack migrate
+
+(without --clear). This will create a copy of the user config and
+package repo for 1.2+ instances to use; that is usually fine, but
+pre-1.2 instances and 1.2+ instances will have divergent config and
+packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).
+          
+Examples of divergence:
+
+- pre-1.2 and 1.2 instances may have different notions of what
+  compilers are available: (this is generally addressed by making
+  sure to run `spack compiler add` for at least one instance of
+  each category).
+- `spack repo --update`: if run in a pre-1.2 instance, will not
+  affect 1.2+ instances.
+
+You can avoid this divergence issue by forcing new spack instances
+to also use ~/.spack (which will silence this warning).
 
 If a new instance sees SPACK_USER_CACHE_PATH=~/.spack, that will
 silence the warning.
@@ -105,11 +122,6 @@ silence the warning.
 Other explicit uses of ~/.spack will also silence this warning
 (e.g. setting `config:locations:state:~/.spack`, or pointing
 the user scope's `path` to `~/.spack`).
-
-TODO: IMO this could also suggest `spack migrate` (no --clear) to
-create a divergent cache/config (and once the new spack instance
-is isolated from ~/.spack, stop warning). I have to update the
-warn logic to accept this though (which is easy).
 """)
 
 
