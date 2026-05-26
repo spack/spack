@@ -158,6 +158,15 @@ ERROR_OPERATION_ABORTED = 995
 ERROR_INVALID_HANDLE = 6
 ERROR_HANDLE_EOF = 38
 READ_BUFFER_SIZE = 65536
+STD_INPUT_HANDLE = -10
+STD_OUTPUT_HANDLE = -11
+ENABLE_PROCESSED_INPUT = 0x0001
+ENABLE_LINE_INPUT = 0x0002
+ENABLE_ECHO_INPUT = 0x0004
+ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # For stdout
+
+INVALID_HANDLE_VALUE = wintypes.HANDLE(-1).value
+
 
 class OVERLAPPED(ctypes.Structure):
     _fields_ = [
@@ -208,6 +217,19 @@ PeekNamedPipe.restype = wintypes.BOOL
 CloseHandle = kernel32.CloseHandle
 CloseHandle.argtypes = [HANDLE]
 CloseHandle.restype = wintypes.BOOL
+
+
+GetStdHandle = kernel32.GetStdHandle
+GetStdHandle.argtypes = [wintypes.DWORD]
+GetStdHandle.restype = wintypes.HANDLE
+
+GetConsoleMode = kernel32.GetConsoleMode
+GetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.LPDWORD]
+GetConsoleMode.restype = wintypes.BOOL
+
+SetConsoleMode = kernel32.SetConsoleMode
+SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+SetConsoleMode.restype = wintypes.BOOL
 
 
 class BufferedPipe:

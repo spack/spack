@@ -22,9 +22,12 @@ of logs), and for output from the build process."""
 
 import abc
 import codecs
+from ctypes import wintypes
+import ctypes
 import glob
 import io
 import json
+import msvcrt
 import multiprocessing
 import os
 import re
@@ -2496,19 +2499,27 @@ class ConsoleReader:
         self.rsock.setblocking(False)
         self.selector.register(self.rsock, selectors.EVENT_READ, "stdin")
         self._running = True
+        self._last_size = shutil.get_terminal_size()
         self.thread = threading.Thread(target=self._read_console, daemon=True)
         self.thread.start()
 
-    def _read_console(self):
+    def _read_console_and_poll_size(self):
         while self._running:
             try:
+                # 1. Read Keystrokes
                 if msvcrt.kbhit():
                     char = msvcrt.getch()
-                    # Catch special keys (arrows, etc) which return \x00 or \xe0 first
                     if char in (b'\x00', b'\xe0'):
                         char += msvcrt.getch()
-                    self.wsock.sendall(char)
+                    self.stdin_wsock.sendall(char)
                 else:
+                    # 2. Poll for Resizes
+                    current_size = shutil.get_terminal_size()
+                    if current_size != self._last_size:
+                        self._last_size = current_size
+                        # Spoof the Unix SIGWINCH behavior!
+                        self.sigwinch_wsock.sendall(b"\x00")
+                    
                     time.sleep(0.01)
             except Exception:
                 break
@@ -2537,48 +2548,61 @@ class WindowsTerminalState(BaseTerminalState):
         self.on_suspend = on_suspend
         self.on_resume = on_resume
         
-        self.hStdin = GetStdHandle(STD_INPUT_HANDLE)
-        self.hStdout = GetStdHandle(STD_OUTPUT_HANDLE)
+        self.hStdin = slog.GetStdHandle(slog.STD_INPUT_HANDLE)
+        self.hStdout = slog.GetStdHandle(slog.STD_OUTPUT_HANDLE)
         
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
         
-        GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+        slog.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        slog.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+
+        self.stdin_r, self.stdin_w = socket.socketpair()
+        self.stdin_r.setblocking(False)
         
+        # 2. Create the fake SIGWINCH sockets
+        self.sigwinch_r, self.sigwinch_w = socket.socketpair()
+        self.sigwinch_r.setblocking(False)
+
         self.console_reader = None
 
     def setup(self) -> None:
-        """Set cbreak equivalent and enable ANSI sequences."""
         # Enable VT100 ANSI escapes on stdout
-        new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        SetConsoleMode(self.hStdout, new_out_mode)
+        new_out_mode = self.old_stdout_settings.value | slog.ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        slog.SetConsoleMode(self.hStdout, new_out_mode)
+
+        # Register the fake sigwinch pipe with the exact same name Unix uses
+        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
 
         self.build_status.headless = True
         self.enter_foreground()
 
     def teardown(self) -> None:
         """Restore console mode and shut down bridge."""
-        SetConsoleMode(self.hStdin, self.old_stdin_settings)
-        SetConsoleMode(self.hStdout, self.old_stdout_settings)
+        slog.SetConsoleMode(self.hStdin, self.old_stdin_settings)
+        slog.SetConsoleMode(self.hStdout, self.old_stdout_settings)
 
         if self.console_reader:
             self.console_reader.close()
             self.console_reader = None
+            
+        for fd in (self.stdin_r, self.sigwinch_r):
+            if fd in self.selector.get_map():
+                self.selector.unregister(fd)
+            fd.close()
 
     def enter_foreground(self) -> None:
-        """Restore interactive mode, spin up socket bridge if needed."""
         if not self.build_status.headless:
             return
 
-        GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        
-        # Disable line input and echo (simulate cbreak)
-        new_in_mode = self.old_stdin_settings.value & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT)
-        SetConsoleMode(self.hStdin, new_in_mode)
+        slog.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        new_in_mode = self.old_stdin_settings.value & ~(slog.ENABLE_LINE_INPUT | slog.ENABLE_ECHO_INPUT)
+        slog.SetConsoleMode(self.hStdin, new_in_mode)
 
+        # Register stdin and start the polling thread
         if sys.stdin.isatty() and not self.console_reader:
-            self.console_reader = ConsoleReader(self.selector)
+            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
+            self.console_reader = ConsoleReader(self.stdin_w, self.sigwinch_w)
 
         self.build_status.headless = False
         self.build_status.dirty = True
@@ -2593,10 +2617,10 @@ class WindowsTerminalState(BaseTerminalState):
     def handle_continue(self) -> None:
         self.enter_foreground()
 
-def _establish_terminal_state(*args) -> BaseTerminalState:
+def _establish_terminal_state(*args, **kwargs) -> BaseTerminalState:
     if IS_WINDOWS:
-        return WindowsTerminalState(*args)
-    return TerminalState(*args)
+        return WindowsTerminalState(*args, **kwargs)
+    return TerminalState(*args, **kwargs)
 
 
 class StdinReader:
@@ -2835,7 +2859,7 @@ class PackageInstaller:
                     terminal.enter_foreground()
 
                 for key, _ in events:
-                    data = key.data
+                    data = read_from_key(key)
                     if isinstance(data, FdInfo):
                         # Child output (logs and state updates)
                         child_info = self.running_builds[data.pid]
@@ -2847,6 +2871,13 @@ class PackageInstaller:
                             finished_pids.append(data.pid)
                     elif data == "stdin":
                         stdin_ready = True
+                        if IS_WINDOWS:
+                            # no sigwinch (or other useful signals) on Win
+                            # so we fake it manually and process as part of stdin
+                            if ConsoleReader.RESIZE_EVENT_PAYLOAD in data:
+                                # Strip it out so it doesn't get rendered as text
+                                data = data.replace(ConsoleReader.RESIZE_EVENT_PAYLOAD, b"")
+                                self.build_status.on_resize()
                     elif data == "sigwinch":
                         assert terminal is not None
                         os.read(terminal.sigwinch_r, 64)  # drain the pipe
