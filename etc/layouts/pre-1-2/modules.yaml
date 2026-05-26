@@ -1,0 +1,6 @@
+# Old-style module paths
+modules:
+  default:
+    roots:
+      tcl: $spack/share/spack/modules
+      lmod: $spack/share/spack/lmod

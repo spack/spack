@@ -1,0 +1,15 @@
+# Old-style layout used when ~/.spack exists or old data detected in $spack
+# This maintains compatibility with existing Spack installations
+config:
+  reports_path: $user_cache_path/reports
+  default_monitor_path: $user_cache_path/reports/monitor
+  user_repos_cache_path: $user_cache_path/git_repos
+  package_repos_path: $user_cache_path/package_repos
+  environments_root: $spack/var/spack/environments
+  gpg_path: $spack/opt/spack/gpg
+  gpg_keys_path: $spack/var/spack/gpg
+  install_tree:
+    root: $spack/opt/spack
+  license_dir: $spack/etc/spack/licenses
+  misc_cache: $user_cache_path/$spack_instance_id/cache
+  source_cache: $spack/var/spack/cache

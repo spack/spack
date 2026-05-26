@@ -1,0 +1,15 @@
+# XDG-compliant layout for Spack 1.2+
+# Used for fresh installations without ~/.spack or old data in $spack
+config:
+  reports_path: $user_cache_path/reports
+  default_monitor_path: $user_cache_path/reports/monitor
+  user_repos_cache_path: $user_cache_path/git_repos
+  package_repos_path: $user_cache_path/package_repos
+  environments_root: $xdg_data_home/spack/environments
+  gpg_path: $xdg_data_home/spack/gpg
+  gpg_keys_path: $user_cache_path/gpg
+  install_tree:
+    root: $xdg_data_home/spack/installs
+  license_dir: $xdg_data_home/spack/licenses
+  misc_cache: $user_cache_path/$spack_instance_id/cache
+  source_cache: $xdg_data_home/spack/downloads

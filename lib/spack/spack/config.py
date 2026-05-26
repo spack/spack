@@ -1636,72 +1636,6 @@ def _detect_old_spack_layout():
     return False
 
 
-def _get_xdg_compliant_paths():
-    """Return XDG-compliant path configurations.
-
-    If ~/.spack exists and ~/.local/state/spack doesn't, point user_cache_path
-    to ~/.spack for backwards compatibility.
-
-    Uses variable substitution ($user_cache_path, etc.) so that setting one
-    variable automatically relocates derived paths.
-
-    Uses the global _paths object, which can be overridden for testing.
-    """
-    return {
-        "config": {
-            "reports_path": "$user_cache_path/reports",
-            "default_monitor_path": "$user_cache_path/reports/monitor",
-            "user_repos_cache_path": "$user_cache_path/git_repos",
-            "package_repos_path": "$user_cache_path/package_repos",
-            "environments_root": "$xdg_data_home/spack/environments",
-            "gpg_path": "$xdg_data_home/spack/gpg",
-            "gpg_keys_path": "$user_cache_path/gpg",
-            "install_tree": {"root": "$xdg_data_home/spack/installs"},
-            "license_dir": "$xdg_data_home/spack/licenses",
-            "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
-            "source_cache": "$xdg_data_home/spack/downloads",
-        },
-        "modules": {
-            "default": {
-                "roots": {
-                    "tcl": "$xdg_data_home/spack/modules",
-                    "lmod": "$xdg_data_home/spack/lmod",
-                }
-            }
-        },
-    }
-
-
-def _get_old_style_paths():
-    """Return old-style in-$spack path configurations.
-
-    Uses variable substitution ($user_cache_path, $spack) so that setting one
-    variable automatically relocates derived paths.
-
-    Uses the global _paths object, which can be overridden for testing.
-    """
-    return {
-        "config": {
-            "reports_path": "$user_cache_path/reports",
-            "default_monitor_path": "$user_cache_path/reports/monitor",
-            "user_repos_cache_path": "$user_cache_path/git_repos",
-            "package_repos_path": "$user_cache_path/package_repos",
-            "environments_root": "$spack/var/spack/environments",
-            "gpg_path": "$spack/opt/spack/gpg",
-            "gpg_keys_path": "$spack/var/spack/gpg",
-            "install_tree": {"root": "$spack/opt/spack"},
-            "license_dir": "$spack/etc/spack/licenses",
-            "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
-            "source_cache": "$spack/var/spack/cache",
-        },
-        "modules": {
-            "default": {
-                "roots": {"tcl": "$spack/share/spack/modules", "lmod": "$spack/share/spack/lmod"}
-            }
-        },
-    }
-
-
 def _initialize_spack_new_scope():
     """Initialize etc/spack-new scope if needed.
 
@@ -1726,35 +1660,27 @@ def _initialize_spack_new_scope():
     if not os.access(_paths.etc_path, os.W_OK):
         return None
 
-    # Determine which config to use:
-    # - If old-style paths in $spack exist, use old-style config
-    # - If ~/.spack exists, use old-style config
-    # - Otherwise, use XDG-compliant config
-    dotspack = os.path.join(os.path.expanduser("~"), ".spack")
-    if _detect_old_spack_layout() or os.path.exists(dotspack):
-        config_data = _get_old_style_paths()
-    else:
-        config_data = _get_xdg_compliant_paths()
+    # Determine which layout to use
+    # - If old-style paths in $spack exist, use pre-1-2 layout
+    # - Otherwise, use 1-2 (XDG-compliant) layout
+    import shutil
 
-    # Create the directory and write config files
+    if _detect_old_spack_layout():
+        layout_name = "pre-1-2"
+    else:
+        layout_name = "1-2"
+
+    layout_dir = os.path.join(_paths.prefix, "etc", "layouts", layout_name)
+
+    # Create the directory and copy layout files
     try:
         filesystem.mkdirp(spack_new_path)
 
-        # Write config.yaml
-        if "config" in config_data:
-            config_file = os.path.join(spack_new_path, "config.yaml")
-            with open(config_file, "w") as f:
-                syaml.dump_config(
-                    {"config": config_data["config"]}, stream=f, default_flow_style=False
-                )
-
-        # Write modules.yaml
-        if "modules" in config_data:
-            modules_file = os.path.join(spack_new_path, "modules.yaml")
-            with open(modules_file, "w") as f:
-                syaml.dump_config(
-                    {"modules": config_data["modules"]}, stream=f, default_flow_style=False
-                )
+        # Copy config.yaml and modules.yaml
+        for filename in ["config.yaml", "modules.yaml"]:
+            src = os.path.join(layout_dir, filename)
+            dst = os.path.join(spack_new_path, filename)
+            shutil.copy2(src, dst)
 
         return spack_new_path
     except (OSError, IOError) as e:

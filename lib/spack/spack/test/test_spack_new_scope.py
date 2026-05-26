@@ -34,6 +34,8 @@ def mock_spack_paths(tmp_path, monkeypatch):
         - etc_path: $spack_root/etc/spack
         - var_path: $spack_root/var/spack
     """
+    import shutil
+
     spack_root = tmp_path / "spack"
     home = tmp_path / "home"
     etc_path = spack_root / "etc" / "spack"
@@ -44,6 +46,14 @@ def mock_spack_paths(tmp_path, monkeypatch):
     (etc_path / "defaults").mkdir()
     var_path.mkdir(parents=True)
     home.mkdir()
+
+    # Copy layout files from real spack into mock spack root
+    import pathlib
+
+    real_layouts = pathlib.Path(spack.paths.prefix) / "etc" / "layouts"
+    mock_layouts = spack_root / "etc" / "layouts"
+    if real_layouts.exists():
+        shutil.copytree(real_layouts, mock_layouts)
 
     # Mock home directory expansion
     def mock_expanduser(path):
@@ -161,13 +171,17 @@ class TestSpackNewScopeContent:
 
             # Check misc cache uses variable substitution
             misc_cache = cfg.get("config:misc_cache")
-            assert misc_cache == "$user_cache_path/test123/cache"
+            assert misc_cache == "$user_cache_path/$spack_instance_id/cache"
 
             # Verify that the spack-new scope was actually created
             assert (m["etc_path"] / "spack-new").exists()
 
-    def test_old_style_paths_when_dotspack_exists(self, mock_spack_paths):
-        """Test that ~/.spack existence triggers old-style paths."""
+    def test_xdg_paths_even_when_dotspack_exists(self, mock_spack_paths):
+        """Test that ~/.spack existence alone doesn't trigger old-style paths.
+
+        Only actual data in $spack should trigger old-style paths.
+        ~/.spack existence only affects the warning in main.py.
+        """
         m = mock_spack_paths
 
         # Create ~/.spack to simulate existing installation
@@ -185,16 +199,16 @@ class TestSpackNewScopeContent:
             reports_path = cfg.get("config:reports_path")
             assert reports_path == "$user_cache_path/reports"
 
-            # Modules should still use old-style paths (same as defaults)
+            # Should use XDG paths even with ~/.spack present (no data in $spack)
             tcl_root = cfg.get("modules:default:roots:tcl")
-            assert tcl_root == "$spack/share/spack/modules"
+            assert tcl_root == "$xdg_data_home/spack/modules"
 
             lmod_root = cfg.get("modules:default:roots:lmod")
-            assert lmod_root == "$spack/share/spack/lmod"
+            assert lmod_root == "$xdg_data_home/spack/lmod"
 
-            # Environments should use old-style path
+            # Environments should use XDG path
             environments_root = cfg.get("config:environments_root")
-            assert environments_root == "$spack/var/spack/environments"
+            assert environments_root == "$xdg_data_home/spack/environments"
 
     def test_spack_user_cache_path_env_var(self, mock_spack_paths, monkeypatch):
         """Test that SPACK_USER_CACHE_PATH env var overrides default."""
