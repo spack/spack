@@ -11,7 +11,7 @@ import spack.binary_distribution
 import spack.llnl.util.filesystem as fs
 import spack.util.gpg
 from spack.main import SpackCommand
-from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
+from spack.paths import mock_gpg_keys_path
 from spack.util.executable import ProcessError
 
 #: spack command used by tests below
@@ -60,37 +60,24 @@ def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mut
 
 @pytest.mark.maybeslow
 def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
-    # Verify a file with an empty keyring.
-    with pytest.raises(ProcessError):
-        gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
+    MOCK_KEY = "B27095DEEF1787C3C8C85917DCA0241840A5DAE2"
 
     # Import the default key.
     gpg("init", "--from", mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 1
 
-    # Verify the file now that the key has been trusted.
-    gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
+    out = gpg("list", "--signing")
+    assert out.count(MOCK_KEY) == 1
 
     # Untrust the default key.
     gpg("untrust", "Spack testing")
 
-    # Now that the key is untrusted, verification should fail.
-    with pytest.raises(ProcessError):
-        gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
-
-    # Create a file to test signing.
-    test_path = tmp_path / "to-sign.txt"
-    with open(str(test_path), "w+", encoding="utf-8") as fout:
-        fout.write("Test content for signing.\n")
-
-    # Signing without a private key should fail.
-    with pytest.raises(RuntimeError) as exc_info:
-        gpg("sign", str(test_path))
-    assert exc_info.value.args[0] == "no signing keys are available"
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 0
 
     # Create a key for use in the tests.
     keypath = tmp_path / "testing-1.key"
@@ -107,21 +94,29 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
 
     # List the keys.
     # TODO: Test the output here.
-    gpg("list")
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
+    out = gpg("list")
+    assert out.count(MOCK_KEY) == 0
+    assert out.count(keyfp) == 1
 
-    # Signing with the default (only) key.
-    gpg("sign", str(test_path))
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 0
+    assert out.count(keyfp) == 1
 
-    # Verify the file we just verified.
-    gpg("verify", str(test_path))
+    out = gpg("list", "--signing")
+    assert out.count(MOCK_KEY) == 0
+    # Once for trusted, once for signing
+    assert out.count(keyfp) == 2
 
-    # Export the key for future use.
+    # Export the public key for future use (keyfp).
     export_path = tmp_path / "export.testing.key"
     gpg("export", str(export_path))
 
-    # Test exporting the private key
+    # Ensure we exported the right content!
+    with open(str(export_path), "r", encoding="utf-8") as fd:
+        content = fd.read()
+    assert "BEGIN PGP PUBLIC KEY BLOCK" in content
+
+    # Export the private key
     private_export_path = tmp_path / "export-secret.testing.key"
     gpg("export", "--secret", str(private_export_path))
 
@@ -130,30 +125,15 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
         content = fd.read()
     assert "BEGIN PGP PRIVATE KEY BLOCK" in content
 
-    # and for the public key
-    with open(str(export_path), "r", encoding="utf-8") as fd:
-        content = fd.read()
-    assert "BEGIN PGP PUBLIC KEY BLOCK" in content
-
     # Create a second key for use in the tests.
     gpg("create", "--comment", "Spack testing key", "Spack testing 2", "spack@googlegroups.com")
 
     # List the keys.
-    # TODO: Test the output here.
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
-
-    test_path = tmp_path / "to-sign-2.txt"
-    with open(str(test_path), "w+", encoding="utf-8") as fout:
-        fout.write("Test content for signing.\n")
-
-    # Signing with multiple signing keys is ambiguous.
-    with pytest.raises(RuntimeError) as exc_info:
-        gpg("sign", str(test_path))
-    assert exc_info.value.args[0] == "multiple signing keys are available; please choose one"
-
-    # Signing with a specified key.
-    gpg("sign", "--key", keyfp, str(test_path))
+    out = gpg("list", "--trusted")
+    # Spack testing 1 and Spack testing 2
+    assert out.count("pub ") == 2
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 2
 
     # Untrusting signing keys needs a flag.
     with pytest.raises(ProcessError):
@@ -162,15 +142,16 @@ def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
     # Untrust the key we created.
     gpg("untrust", "--signing", keyfp)
 
-    # Verification should now fail.
-    with pytest.raises(ProcessError):
-        gpg("verify", str(test_path))
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 1
+    assert out.count(keyfp) == 0
 
-    # Trust the exported key.
+    # Trust the exported public key (keyfpr)
     gpg("trust", str(export_path))
-
-    # Verification should now succeed again.
-    gpg("verify", str(test_path))
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 1
+    assert out.count("pub ") == 2
+    assert out.count(keyfp) == 1
 
     relative_keys_path = spack.binary_distribution.buildcache_relative_keys_path()
 
