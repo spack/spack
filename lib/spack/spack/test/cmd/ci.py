@@ -119,22 +119,31 @@ def ci_generate_test(
     Additional positional arguments will be added to the 'spack generate' call.
     """
 
-    def _func(spack_yaml_content, *args, fail_on_error=True):
-        spack_yaml = tmp_path / "spack.yaml"
-        spack_yaml.write_text(spack_yaml_content)
-        ev.create("test", init_file=spack_yaml, with_view=False)
-        outputfile = tmp_path / ".gitlab-ci.yml"
-        with ev.read("test"):
-            output = ci_cmd(
-                "generate", "--output-file", str(outputfile), *args, fail_on_error=fail_on_error
-            )
+    def _func(spack_yaml_content, *args, fail_on_error=True, raise_on_error=True):
+        try:
+            spack_yaml = tmp_path / "spack.yaml"
+            spack_yaml.write_text(spack_yaml_content)
+            ev.create("test", init_file=spack_yaml, with_view=False)
+            outputfile = tmp_path / ".gitlab-ci.yml"
+            with ev.read("test"):
+                output = ci_cmd(
+                    "generate",
+                    "--output-file",
+                    str(outputfile),
+                    *args,
+                    fail_on_error=fail_on_error,
+                )
 
-        return spack_yaml, outputfile, output
+            return spack_yaml, outputfile, output
+        except ci.SpackCIError as e:
+            if raise_on_error:
+                raise e
+            return None, None, e
 
     return _func
 
 
-@pytest.mark.parametrize("with_view", (False, True, "append", "force"))
+@pytest.mark.parametrize("with_view", (False, True, "append", "force", "invalid_view_mode"))
 def test_ci_generate_with_env(
     ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, with_view
 ):
@@ -148,7 +157,7 @@ def test_ci_generate_with_env(
         if isinstance(with_view, str):
             os.environ["SPACK_CI_BUILDCACHE_VIEW"] = with_view
 
-    spack_yaml, outputfile, _ = ci_generate_test(
+    spack_yaml, outputfile, output = ci_generate_test(
         f"""\
 spack:
   definitions:
@@ -194,7 +203,14 @@ spack:
 """,
         "--artifacts-root",
         str(tmp_path / "my_artifacts_root"),
+        raise_on_error=False,
     )
+
+    if with_view == "invalid_view_mode":
+        assert isinstance(output, ci.SpackCIError)
+        assert "SPACK_CI_BUILDCACHE_VIEW=invalid_view_mode" in str(output)
+        return
+
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert "workflow" in yaml_contents
