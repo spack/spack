@@ -338,9 +338,7 @@ class CheckXdgVarInChildProc:
 
         # Verify that $xdg_data_home resolves to parent's value, not child's
         resolved = spack.util.path.substitute_config_variables("$xdg_data_home")
-        assert resolved == self.parent_xdg_data, (
-            f"Expected {self.parent_xdg_data}\nGot {resolved}"
-        )
+        assert resolved == self.parent_xdg_data, f"Expected {self.parent_xdg_data}\nGot {resolved}"
 
 
 def test_child_proc_sanity_xdg_based_paths(tmp_path, working_env):
