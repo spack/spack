@@ -103,7 +103,7 @@ you have pre-1.2 Spack instances that cannot upgrade, you can run
 package repo for 1.2+ instances to use; that is usually fine, but
 pre-1.2 instances and 1.2+ instances will have divergent config and
 packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).
-          
+
 Examples of divergence:
 
 - pre-1.2 and 1.2 instances may have different notions of what
