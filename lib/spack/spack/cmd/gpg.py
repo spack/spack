@@ -204,7 +204,7 @@ def gpg_publish(args):
 
 def gpg_sign(args):
     """sign a package"""
-    raise NotImplementedError(
+    args.subparser.error(
         "This command has been deprecated as it no longer applies to any supported build cache. "
         "Use `gpg --detach-sign` instead"
     )
@@ -212,7 +212,7 @@ def gpg_sign(args):
 
 def gpg_verify(args):
     """verify a signed package"""
-    raise NotImplementedError(
+    args.subparser.error(
         "This command has been deprecated as it no longer applies to any supported build cache. "
         "Use `gpg --verify` instead"
     )
