@@ -1257,16 +1257,7 @@ _spack_gpg() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="verify trust untrust sign create list init export publish"
-    fi
-}
-
-_spack_gpg_verify() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        _installed_packages
+        SPACK_COMPREPLY="trust untrust create list init export publish verify sign"
     fi
 }
 
@@ -1285,15 +1276,6 @@ _spack_gpg_untrust() {
         SPACK_COMPREPLY="-h --help --signing"
     else
         _keys
-    fi
-}
-
-_spack_gpg_sign() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --output --key --clearsign"
-    else
-        _installed_packages
     fi
 }
 
@@ -1329,6 +1311,24 @@ _spack_gpg_publish() {
         SPACK_COMPREPLY="-h --help -d --directory -m --mirror-name --mirror-url --update-index --rebuild-index"
     else
         _keys
+    fi
+}
+
+_spack_gpg_verify() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _installed_packages
+    fi
+}
+
+_spack_gpg_sign() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --output --key --clearsign"
+    else
+        _installed_packages
     fi
 }
 

@@ -1965,23 +1965,17 @@ complete -c spack -n '__fish_spack_using_command gc' -s y -l yes-to-all -d 'assu
 
 # spack gpg
 set -g __fish_spack_optspecs_spack_gpg h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a verify -d 'verify a signed package'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a trust -d 'add a key to the keyring'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a untrust -d 'remove a key from the keyring'
-complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a sign -d 'sign a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a create -d 'create a new key'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a list -d 'list keys available in the keyring'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a init -d 'add the default keys to the keyring'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a export -d 'export a gpg key, optionally including secret key'
 complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a publish -d 'publish public keys to a build cache'
+complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a verify -d 'verify a signed package'
+complete -c spack -n '__fish_spack_using_command_pos 0 gpg' -f -a sign -d 'sign a package'
 complete -c spack -n '__fish_spack_using_command gpg' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command gpg' -s h -l help -d 'show this help message and exit'
-
-# spack gpg verify
-set -g __fish_spack_optspecs_spack_gpg_verify h/help
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg verify' -f -a '(__fish_spack_installed_specs)'
-complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -d 'show this help message and exit'
 
 # spack gpg trust
 set -g __fish_spack_optspecs_spack_gpg_trust h/help
@@ -1996,18 +1990,6 @@ complete -c spack -n '__fish_spack_using_command gpg untrust' -s h -l help -f -a
 complete -c spack -n '__fish_spack_using_command gpg untrust' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command gpg untrust' -l signing -f -a signing
 complete -c spack -n '__fish_spack_using_command gpg untrust' -l signing -d 'allow untrusting signing keys'
-
-# spack gpg sign
-set -g __fish_spack_optspecs_spack_gpg_sign h/help output= key= clearsign
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg sign' -f -a '(__fish_spack_installed_specs)'
-complete -c spack -n '__fish_spack_using_command gpg sign' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command gpg sign' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command gpg sign' -l output -r -f -a output
-complete -c spack -n '__fish_spack_using_command gpg sign' -l output -r -d 'the directory to place signatures'
-complete -c spack -n '__fish_spack_using_command gpg sign' -l key -r -f -a key
-complete -c spack -n '__fish_spack_using_command gpg sign' -l key -r -d 'the key to use for signing'
-complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -f -a clearsign
-complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -d 'if specified, create a clearsign signature'
 
 # spack gpg create
 set -g __fish_spack_optspecs_spack_gpg_create h/help comment= expires= export= export-secret=
@@ -2059,6 +2041,24 @@ complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -
 complete -c spack -n '__fish_spack_using_command gpg publish' -l mirror-url -r -d 'URL of the mirror where keys will be published'
 complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command gpg publish' -l update-index -l rebuild-index -d 'regenerate buildcache key index after publishing key(s)'
+
+# spack gpg verify
+set -g __fish_spack_optspecs_spack_gpg_verify h/help
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg verify' -f -a '(__fish_spack_installed_specs)'
+complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command gpg verify' -s h -l help -d 'show this help message and exit'
+
+# spack gpg sign
+set -g __fish_spack_optspecs_spack_gpg_sign h/help output= key= clearsign
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 gpg sign' -f -a '(__fish_spack_installed_specs)'
+complete -c spack -n '__fish_spack_using_command gpg sign' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command gpg sign' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command gpg sign' -l output -r -f -a output
+complete -c spack -n '__fish_spack_using_command gpg sign' -l output -r -d 'the directory to place signatures'
+complete -c spack -n '__fish_spack_using_command gpg sign' -l key -r -f -a key
+complete -c spack -n '__fish_spack_using_command gpg sign' -l key -r -d 'the key to use for signing'
+complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -f -a clearsign
+complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -d 'if specified, create a clearsign signature'
 
 # spack graph
 set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype=
