@@ -55,11 +55,8 @@ def restore(args: argparse.Namespace) -> None:
     """Restore ~/.spack from backup location."""
     old_location = os.path.expanduser("~/.spack")
 
-    # Check both the current backup location and the default one
+    # Check the backup location
     backup_locations = [paths.dotspack_backup]
-    default_backup = os.path.join(paths.default_data_home, "dotspack_backup")
-    if default_backup != paths.dotspack_backup:
-        backup_locations.append(default_backup)
 
     # Find which backup location exists
     backup_location = None

@@ -1,4 +1,16 @@
 include:
+  # old layout configuration (pre-1.2 style paths)
+  - name: "old-layout"
+    path: "$spack/etc/spack/old-layout"
+    optional: true
+    when: 'old_layout_detected()'
+
+  # XDG layout configuration (1.2+ style paths)
+  - name: "xdg-layout"
+    path: "$spack/etc/spack/xdg-layout"
+    optional: true
+    when: 'not old_layout_detected()'
+
   # user configuration scope
   - name: "user"
     path_override_env_var: SPACK_USER_CONFIG_PATH

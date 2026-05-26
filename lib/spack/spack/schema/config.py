@@ -269,6 +269,11 @@ properties: Dict[str, Any] = {
                     },
                 },
             },
+            "gpg_path": {
+                "type": "string",
+                "description": "Directory for GPG keyrings and trust databases",
+            },
+            "gpg_keys_path": {"type": "string", "description": "Directory for GPG keys"},
         },
     }
 }

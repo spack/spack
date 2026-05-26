@@ -100,10 +100,6 @@ class SpackPaths:
         self._data_home = None
         self._cache_home = None
 
-        self.default_data_home = os.path.join(
-            os.path.expanduser("~"), SpackPaths.relative_data_home, "spack"
-        )
-
         self.old_layout_detected = detect_old_spack_layout(base)
         self._new_layout_enforced = None
 
@@ -190,44 +186,6 @@ class SpackPaths:
     def user_cache_path(self):
         return self.state_home
 
-    @property
-    def default_install_location(self):
-        return self._decide_old_or_new_location(
-            self.base.old_install_path,
-            os.path.join(self.data_home, "installs"),
-            os.path.join(self.default_data_home, "installs"),
-            self.data_home_provenance,
-        )
-
-    @property
-    def default_envs_path(self):
-        return self._decide_old_or_new_location(
-            self.base.old_envs_path,
-            os.path.join(self.data_home, "environments"),
-            os.path.join(self.default_data_home, "environments"),
-            self.data_home_provenance,
-        )
-
-    @property
-    def default_license_dir(self):
-        if self.old_layout_detected:
-            return self.base.old_licenses_path
-        else:
-            return os.path.join(self.data_home, "licenses")
-
-    @property
-    def default_modules_base(self):
-        if self.old_layout_detected:
-            return self.base.share_path
-        else:
-            return os.path.join(self.data_home)
-
-    @property
-    def default_downloads_dir(self):
-        if self.old_layout_detected:
-            return self.base.old_fetch_cache_path
-        else:
-            return os.path.join(self.data_home, "downloads")
 
     @property
     def reports_path(self):
@@ -273,21 +231,27 @@ class SpackPaths:
 
     @property
     def gpg_path(self):
-        return self._decide_old_or_new_location(
-            self.base.old_gpg_path,
-            os.path.join(self.data_home, "gpg"),
-            os.path.join(self.default_data_home, "gpg"),
-            self.data_home_provenance,
-        )
+        # Config values are set by layout-specific includes
+        config_path = config.get("config:gpg_path", None)
+        if config_path:
+            import spack.util.path
+
+            return spack.util.path.canonicalize_path(config_path)
+
+        # Fallback if no config set
+        return os.path.join(self.data_home, "gpg")
 
     @property
     def gpg_keys_path(self):
-        return self._decide_old_or_new_location(
-            self.base.old_gpg_keys_path,
-            os.path.join(self.data_home, "gpg-keys"),
-            os.path.join(self.default_data_home, "gpg-keys"),
-            self.data_home_provenance,
-        )
+        # Config values are set by layout-specific includes
+        config_path = config.get("config:gpg_keys_path", None)
+        if config_path:
+            import spack.util.path
+
+            return spack.util.path.canonicalize_path(config_path)
+
+        # Fallback if no config set
+        return os.path.join(self.data_home, "gpg-keys")
 
     def __getattr__(self, name):
         # Things that aren't sensitive to import cycles can import the
@@ -383,15 +347,6 @@ class SpackPaths:
 
         return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
-    def _decide_old_or_new_location(
-        self, old_location, new_location, default_new_location, provenance
-    ):
-        if self.new_layout_enforced:
-            return new_location
-        if self.old_layout_detected:
-            return old_location
-        else:
-            return new_location
 
 
 def new_layout_enforced():

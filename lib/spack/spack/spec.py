@@ -5767,8 +5767,14 @@ def get_host_environment() -> Dict[str, Any]:
 
 def eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
+    import spack.paths  # local import to avoid cycle at module load
+
+    # Wrapper function to check old layout without requiring arguments in when conditions
+    def old_layout_detected():
+        return spack.paths.detect_old_spack_layout(spack.paths.locations.base)
+
     valid_variables = get_host_environment()
-    valid_variables.update({"re": re, "env": os.environ})
+    valid_variables.update({"re": re, "env": os.environ, "old_layout_detected": old_layout_detected})
     return eval(string, valid_variables)
 
 
