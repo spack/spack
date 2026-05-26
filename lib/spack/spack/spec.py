@@ -2298,32 +2298,6 @@ class Spec:
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
-    def lookup_hash(self):
-        """Given a spec with an abstract hash, return a copy of the spec with all properties and
-        dependencies by looking up the hash in the environment, store, or finally, binary caches.
-        This is non-destructive."""
-        warnings.warn(
-            "Spec.lookup_hash() is deprecated; use spack.hash_lookup.lookup_hash(spec) instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        import spack.hash_lookup
-
-        return spack.hash_lookup.lookup_hash(self)
-
-    def replace_hash(self):
-        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
-        by looking up the hash in the environment, store, or finally, binary caches.
-        This is destructive."""
-        warnings.warn(
-            "Spec.replace_hash() is deprecated; use spack.hash_lookup.replace_hash(spec) instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        import spack.hash_lookup
-
-        spack.hash_lookup.replace_hash(self)
-
     def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
 
