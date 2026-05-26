@@ -36,6 +36,11 @@ class Cxlmemsim(Package):
         default=False,
         description="Build and launch x86_64 QEMU through Rosetta on macOS",
     )
+    variant(
+        "slirp",
+        default=True,
+        description="Enable QEMU libslirp user-mode networking for QEMU_NET=user launchers",
+    )
     variant("rdma", default=False, description="Enable RDMA transport support")
     variant(
         "tools",
@@ -80,6 +85,7 @@ class Cxlmemsim(Package):
         depends_on("meson@1.1.0:", type="build")
         depends_on("python@3.8:", type="build")
         depends_on("glib@2.66:", type=("build", "link"))
+        depends_on("libslirp", type=("build", "link"), when="+slirp")
         depends_on("pixman@0.21.8:", type=("build", "link"))
         depends_on("zlib", type=("build", "link"))
 
@@ -190,8 +196,8 @@ class Cxlmemsim(Package):
             "--disable-sdl",
             "--disable-gtk",
             "--disable-vnc",
-            "--disable-slirp",
         ]
+        configure_args.append("--enable-slirp" if "+slirp" in spec else "--disable-slirp")
 
         if spec.satisfies("platform=darwin"):
             configure_args.append("--disable-kvm")
@@ -627,19 +633,50 @@ start_cxlmemsim_server
 qemu_cmd=("${{QEMU_BINARY}}")
 accel_args=()
 network_args=()
+
+qemu_supports_netdev() {{
+    local backend="$1"
+    local help
+    help="$("${{qemu_cmd[@]}}" -netdev help 2>&1 || true)"
+    grep -qx "${{backend}}" <<<"${{help}}"
+}}
+
 if [[ "$(uname -s)" == "Darwin" ]]; then
     if [[ "${{QEMU_USE_ROSETTA:-{rosetta_default}}}" == "1" ]]; then
         qemu_cmd=(arch -x86_64 "${{QEMU_BINARY}}")
     fi
     accel_args=("-accel" "${{QEMU_ACCEL:-{accel_default}}}")
-    if [[ "${{QEMU_NET:-none}}" == "user" ]]; then
-        network_args=("-netdev" "user,id=net0" "-device" "virtio-net-pci,netdev=net0,mac=${{MAC_ADDR}}")
-    elif [[ "${{QEMU_NET:-none}}" == "none" ]]; then
-        network_args=("-nic" "none")
-    elif [[ "${{QEMU_NET:-none}}" != "none" ]]; then
-        echo "error: unsupported Darwin QEMU_NET=${{QEMU_NET}}" >&2
-        exit 1
-    fi
+    case "${{QEMU_NET:-none}}" in
+        user)
+            if qemu_supports_netdev user; then
+                network_args=("-netdev" "user,id=net0" "-device" "virtio-net-pci,netdev=net0,mac=${{MAC_ADDR}}")
+            else
+                echo "warning: QEMU_NET=user requested, but ${{QEMU_BINARY}} was built without libslirp/user networking; using -nic none" >&2
+                echo "warning: for guest networking, rebuild this QEMU with slirp or use an explicitly configured tap/vmnet backend" >&2
+                network_args=("-nic" "none")
+            fi
+            ;;
+        none)
+            network_args=("-nic" "none")
+            ;;
+        tap)
+            network_args=("-netdev" "tap,id=net0,ifname=${{TAP_IFACE}},script=no,downscript=no")
+            network_args+=("-device" "virtio-net-pci,netdev=net0,mac=${{MAC_ADDR}}")
+            ;;
+        vmnet-host|vmnet-shared|vmnet-bridged)
+            if qemu_supports_netdev "${{QEMU_NET}}"; then
+                network_args=("-netdev" "${{QEMU_NET}},id=net0" "-device" "virtio-net-pci,netdev=net0,mac=${{MAC_ADDR}}")
+            else
+                echo "error: ${{QEMU_BINARY}} does not support QEMU_NET=${{QEMU_NET}}" >&2
+                exit 1
+            fi
+            ;;
+        *)
+            echo "error: unsupported Darwin QEMU_NET=${{QEMU_NET}}" >&2
+            echo "supported values: none, user, tap, vmnet-host, vmnet-shared, vmnet-bridged" >&2
+            exit 1
+            ;;
+    esac
 else
     accel_args=("${{QEMU_ACCEL_ARG:---enable-kvm}}")
     network_args=("-netdev" "tap,id=net0,ifname=${{TAP_IFACE}},script=no,downscript=no")
