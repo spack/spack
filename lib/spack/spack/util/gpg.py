@@ -6,12 +6,13 @@ import errno
 import functools
 import os
 import re
-from typing import List
+from typing import Any, Dict, List
 
 import spack.error
 import spack.llnl.util.filesystem
 import spack.paths
 import spack.util.executable
+import spack.util.spack_json as sjson
 import spack.version
 
 #: Executable instance for "gpg", initialized lazily
@@ -22,6 +23,37 @@ GPGCONF = None
 SOCKET_DIR = None
 #: GNUPGHOME environment variable in the context of this Python module
 GNUPGHOME = None
+
+#: Regular expression to pull spec contents out of clearsigned signature
+#: file.
+CLEARSIGN_FILE_REGEX = re.compile(
+    (
+        r"^-----BEGIN PGP SIGNED MESSAGE-----"
+        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
+    ),
+    re.MULTILINE | re.DOTALL,
+)
+
+#: PGP cleartext signature header
+PGP_CLEARSIG_HEADER = "-----BEGIN PGP SIGNED MESSAGE-----"
+
+
+def is_clearsig(data: str) -> bool:
+    """Check if data is wrapped in a cleartext signature"""
+    return data.startswith(PGP_CLEARSIG_HEADER)
+
+
+def extract_data_from_clearsig(data: str) -> str:
+    """Extract data from a gpg cleartext signed file"""
+    m = CLEARSIGN_FILE_REGEX.search(data)
+    if m:
+        return m.group(1)
+    return data
+
+
+def extract_json_from_clearsig(data) -> Dict[Any, Any]:
+    """Extract data from a gpg cleartext signed file as json"""
+    return sjson.load(extract_data_from_clearsig(data))
 
 
 def clear():

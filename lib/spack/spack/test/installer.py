@@ -651,9 +651,9 @@ def false(*args, **kwargs):
     return False
 
 
-def test_rewire_task_no_tarball(monkeypatch, mock_packages):
-    spec = spack.concretize.concretize_one("splice-t")
-    dep = spack.concretize.concretize_one("splice-h+foo")
+def test_rewire_task_no_tarball(default_mock_concretization, monkeypatch):
+    spec = default_mock_concretization("splice-t")
+    dep = default_mock_concretization("splice-h+foo")
     out = spec.splice(dep)
 
     rewire_task = inst.RewireTask(out.package, inst.BuildRequest(out.package, {}))

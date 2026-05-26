@@ -34,8 +34,10 @@ import os
 import os.path
 import pathlib
 import re
+import shutil
 import sys
 import tempfile
+import warnings
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
@@ -166,7 +168,7 @@ class ConfigScope:
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
                     if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
                     if included_scope not in self._included_scopes:
@@ -1388,6 +1390,9 @@ class GitIncludePaths(OptionalInclude):
             parent_scope: enclosing scope
 
         Returns: destination path if cloned or ``None``
+
+        Raises:
+            ConfigError: unable to create or clone the git repo
         """
         if self.fetched():
             tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
@@ -1398,17 +1403,12 @@ class GitIncludePaths(OptionalInclude):
         assert destination, f"{self} requires a local cache directory"
         tty.debug(f"Cloning {self.git} into {destination}")
 
-        with filesystem.working_dir(destination, create=True):
-            if not os.path.exists(".git"):
-                try:
+        try:
+            with filesystem.working_dir(destination, create=True):
+                if not os.path.exists(".git"):
                     tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
-                except spack.util.executable.ProcessError as e:
-                    raise spack.error.ConfigError(
-                        f"Unable to initialize repository ({self.git}) under {destination}: {e}"
-                    )
 
-            try:
                 if self.commit:
                     tty.debug(f"Pulling commit {self.commit}")
                     spack.util.git.pull_checkout_commit(self.commit)
@@ -1429,14 +1429,16 @@ class GitIncludePaths(OptionalInclude):
                 else:
                     raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
 
-            except spack.util.executable.ProcessError as e:
-                raise spack.error.ConfigError(
-                    f"Unable to check out repository ({self}) in {destination}: {e}"
-                )
+        except spack.util.executable.ProcessError as e:
+            # Cleanup the destination if it exists
+            shutil.rmtree(destination, ignore_errors=True)
 
-            # only set the destination on successful clone/checkout
-            self.destination = destination
-            return self.destination
+            msg = f"Unable to check out repository ({self}) in {destination}: {e}"
+            raise spack.error.ConfigError(msg) from e
+
+        # only set the destination on successful clone/checkout
+        self.destination = destination
+        return self.destination
 
     def fetched(self) -> bool:
         return bool(self.destination) and os.path.exists(
