@@ -248,6 +248,14 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
                         tty.msg(f"    - {item}")
         return
 
+    # First create the new user spack config and user cache dirs
+    os.makedirs(new_config_location, exist_ok=True)
+    os.makedirs(new_state_location, exist_ok=True)
+
+    # TODO: it's worth noting that if there are no migrations here, then
+    # while ~/.spack may exist, it does not appear to contain anything
+    # worth using, and --clear would generally be safe (one exception
+    # is if a user maintains their own scopes under ~/.spack that)
     if migrations:
         for migration_type, items, src, dst in migrations:
             # Ensure destination directory exists

@@ -139,7 +139,7 @@ class SpackPaths:
 
             if env_state_home() or cfg_state_home():
                 self._state_home = state_home
-            elif dir_is_occupied(state_home):
+            elif os.path.exists(state_home):
                 self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
                 self._state_home = self.base.old_default_dot_spack
