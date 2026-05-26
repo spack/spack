@@ -1990,7 +1990,7 @@ def test_included_path_git_errs(mock_low_high_config, monkeypatch, redirect_stat
 
     monkeypatch.setattr(spack.util.git, "init_git_repo", _failing_init)
 
-    with pytest.raises(spack.error.ConfigError, match="Unable to initialize"):
+    with pytest.raises(spack.error.ConfigError, match="Unable to check out"):
         include.scopes(parent_scope)
 
     # fail in git config (so use default remote) *and* git checkout

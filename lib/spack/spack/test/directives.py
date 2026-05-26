@@ -173,7 +173,7 @@ def test_version_type_validation():
         ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(mock_packages, spec_str, distribute_src, distribute_bin):
+def test_redistribute_directive(config, mock_packages, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
     assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
