@@ -542,7 +542,7 @@ class Gpg:
             gpg_args.append("--with-colons")
 
         # Get list of keys from keyring
-        return self.gpg(*gpg_args, "--fingerprint", *fprs, output=str)
+        return self.gpg(*gpg_args, *fprs, output=str)
 
     def keys(self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC):
         return _parse_gpg_output(self._list_keys(*fprs, colons=True, ktype=ktype))
