@@ -21,6 +21,7 @@ import spack.llnl.util.tty.color
 import spack.stage
 import spack.util.path
 import spack.util.spack_yaml
+import spack.util.url
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
@@ -234,7 +235,7 @@ def _list(args):
             for key, value in source.get("info", {}).items():
                 if key == "url":
                     if spack.util.url.is_path_instead_of_url(value) and not os.path.isabs(value):
-                        value =  os.path.normpath(os.path.join(source["metadata"], value))
+                        value = os.path.normpath(os.path.join(source["metadata"], value))
                 info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
             if len(info_lines) > 1:
                 fmt("  Info", "".join(info_lines))
