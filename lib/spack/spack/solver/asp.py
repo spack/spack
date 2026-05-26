@@ -47,6 +47,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
+import spack.hash_lookup
 import spack.hash_types as ht
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
@@ -1996,7 +1997,7 @@ class SpackSolverSetup:
 
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
-                spec.replace_hash()
+                spack.hash_lookup.replace_hash(spec)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
@@ -3853,7 +3854,7 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
 
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
-                    replacement.replace_hash()
+                    spack.hash_lookup.replace_hash(replacement)
                 current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
@@ -3978,7 +3979,7 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
         """
-        specs = [s.lookup_hash() for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
@@ -4029,7 +4030,7 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
-        specs = [s.lookup_hash() for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)

@@ -8,6 +8,7 @@ import sys
 
 import spack.cmd
 import spack.environment as ev
+import spack.hash_lookup
 import spack.llnl.util.tty as tty
 import spack.solver.asp as asp
 import spack.util.spack_json as sjson
@@ -214,7 +215,7 @@ def diff(parser, args):
     specs = []
     for spec in spack.cmd.parse_specs(args.specs):
         # If the spec has a hash, check it before disambiguating
-        spec.replace_hash()
+        spack.hash_lookup.replace_hash(spec)
         if spec.concrete:
             specs.append(spec)
         else:

@@ -12,6 +12,7 @@ import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
+import spack.hash_lookup
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
@@ -241,7 +242,7 @@ def concretize_one(
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spec.lookup_hash()
+    spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
         return spec.copy()

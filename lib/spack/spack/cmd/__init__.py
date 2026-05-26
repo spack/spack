@@ -18,6 +18,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.hash_lookup
 import spack.llnl.string
 import spack.llnl.util.tty as tty
 import spack.paths
@@ -213,7 +214,8 @@ def _concretize_spec_pairs(
     ):
         # Get all the concrete specs
         ret = [
-            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
             for abstract, concrete in to_concretize
         ]
 
