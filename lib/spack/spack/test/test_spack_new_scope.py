@@ -343,7 +343,7 @@ class CheckXdgVarInChildProc:
         )
 
 
-def test_child_proc_sanity_xdg_based_paths(tmp_path):
+def test_child_proc_sanity_xdg_based_paths(tmp_path, working_env):
     """Test that child process uses parent's frozen XDG paths, not its own environment."""
     import spack.subprocess_context
 
@@ -351,14 +351,10 @@ def test_child_proc_sanity_xdg_based_paths(tmp_path):
     parent_xdg_data = str(tmp_path / "parent-data")
     os.environ["XDG_DATA_HOME"] = parent_xdg_data
 
-    try:
-        spack_process = spack.subprocess_context.SpackTestProcess(
-            CheckXdgVarInChildProc(parent_xdg_data)
-        )
-        p = spack_process.create()
-        p.start()
-        p.join()
-        assert p.exitcode == 0
-    finally:
-        # Clean up env var
-        os.environ.pop("XDG_DATA_HOME", None)
+    spack_process = spack.subprocess_context.SpackTestProcess(
+        CheckXdgVarInChildProc(parent_xdg_data)
+    )
+    p = spack_process.create()
+    p.start()
+    p.join()
+    assert p.exitcode == 0
