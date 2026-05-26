@@ -1647,25 +1647,27 @@ def _get_xdg_compliant_paths():
 
     Uses the global _paths object, which can be overridden for testing.
     """
-    home = os.path.expanduser("~")
-    data_home = os.path.join(home, XDG_RELATIVE_DATA_HOME)
-
     return {
         "config": {
             "reports_path": "$user_cache_path/reports",
             "default_monitor_path": "$user_cache_path/reports/monitor",
             "user_repos_cache_path": "$user_cache_path/git_repos",
             "package_repos_path": "$user_cache_path/package_repos",
-            "environments_root": f"{data_home}/environments",
-            "gpg_path": f"{data_home}/gpg",
+            "environments_root": "$xdg_data_home/spack/environments",
+            "gpg_path": "$xdg_data_home/spack/gpg",
             "gpg_keys_path": "$user_cache_path/gpg",
-            "install_tree": {"root": f"{data_home}/installs"},
-            "license_dir": f"{data_home}/licenses",
+            "install_tree": {"root": "$xdg_data_home/spack/installs"},
+            "license_dir": "$xdg_data_home/spack/licenses",
             "misc_cache": f"$user_cache_path/{_paths.spack_instance_id}/cache",
-            "source_cache": f"{data_home}/downloads",
+            "source_cache": "$xdg_data_home/spack/downloads",
         },
         "modules": {
-            "default": {"roots": {"tcl": f"{data_home}/modules", "lmod": f"{data_home}/lmod"}}
+            "default": {
+                "roots": {
+                    "tcl": "$xdg_data_home/spack/modules",
+                    "lmod": "$xdg_data_home/spack/lmod",
+                }
+            }
         },
     }
 

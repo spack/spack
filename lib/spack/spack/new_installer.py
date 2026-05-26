@@ -356,6 +356,9 @@ class GlobalState:
         self.spack_working_dir = spack.paths.spack_working_dir
 
     def restore(self):
+        import spack.util.path
+        spack.util.path.freeze()
+
         if multiprocessing.get_start_method() == "fork":
             # In the forking case we must erase SSL contexts.
             from spack.oci import opener

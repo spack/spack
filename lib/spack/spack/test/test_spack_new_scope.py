@@ -136,33 +136,28 @@ class TestSpackNewScopeContent:
             user_cache_path_in_config = cfg.get("config:user_cache_path", default=None)
             assert user_cache_path_in_config is None
 
-            # Check that install_tree uses XDG location
-            install_tree_root = cfg.get("config:install_tree:root")
-            expected_installs = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "installs")
-            assert install_tree_root == expected_installs
-
             # Derived paths use variable substitution
             reports_path = cfg.get("config:reports_path")
             assert reports_path == "$user_cache_path/reports"
 
-            # Check modules are in XDG locations
+            # Check that XDG paths use $xdg_data_home variable
             tcl_root = cfg.get("modules:default:roots:tcl")
-            expected_tcl = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "modules")
-            assert tcl_root == expected_tcl
+            assert tcl_root == "$xdg_data_home/spack/modules"
 
             lmod_root = cfg.get("modules:default:roots:lmod")
-            expected_lmod = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "lmod")
-            assert lmod_root == expected_lmod
+            assert lmod_root == "$xdg_data_home/spack/lmod"
 
-            # Check environments are in XDG data location
+            # Check environments use $xdg_data_home
             environments_root = cfg.get("config:environments_root")
-            expected_envs = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "environments")
-            assert environments_root == expected_envs
+            assert environments_root == "$xdg_data_home/spack/environments"
 
-            # Check source cache is in data_home/downloads
+            # Check source cache uses $xdg_data_home
             source_cache = cfg.get("config:source_cache")
-            expected_source = str(m["home"] / spack.config.XDG_RELATIVE_DATA_HOME / "downloads")
-            assert source_cache == expected_source
+            assert source_cache == "$xdg_data_home/spack/downloads"
+
+            # Check install_tree uses $xdg_data_home
+            install_tree_root = cfg.get("config:install_tree:root")
+            assert install_tree_root == "$xdg_data_home/spack/installs"
 
             # Check misc cache uses variable substitution
             misc_cache = cfg.get("config:misc_cache")
@@ -325,3 +320,45 @@ class TestOldLayoutDetection:
 
         with spack.config.override_paths(m["paths"]):
             assert not spack.config._detect_old_spack_layout()
+
+
+class CheckXdgVarInChildProc:
+    """Callable that modifies XDG_DATA_HOME in child and verifies parent's frozen value is used."""
+
+    def __init__(self, parent_xdg_data):
+        self.parent_xdg_data = parent_xdg_data
+
+    def __call__(self):
+        import os
+
+        import spack.util.path
+
+        # Child process sets different XDG_DATA_HOME
+        os.environ["XDG_DATA_HOME"] = "/different/child/data"
+
+        # Verify that $xdg_data_home resolves to parent's value, not child's
+        resolved = spack.util.path.substitute_config_variables("$xdg_data_home")
+        assert resolved == self.parent_xdg_data, (
+            f"Expected {self.parent_xdg_data}\nGot {resolved}"
+        )
+
+
+def test_child_proc_sanity_xdg_based_paths(tmp_path):
+    """Test that child process uses parent's frozen XDG paths, not its own environment."""
+    import spack.subprocess_context
+
+    # Set parent's XDG_DATA_HOME
+    parent_xdg_data = str(tmp_path / "parent-data")
+    os.environ["XDG_DATA_HOME"] = parent_xdg_data
+
+    try:
+        spack_process = spack.subprocess_context.SpackTestProcess(
+            CheckXdgVarInChildProc(parent_xdg_data)
+        )
+        p = spack_process.create()
+        p.start()
+        p.join()
+        assert p.exitcode == 0
+    finally:
+        # Clean up env var
+        os.environ.pop("XDG_DATA_HOME", None)

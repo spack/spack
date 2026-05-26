@@ -54,7 +54,33 @@ NOMATCH = object()
 
 
 # Substitutions to perform
+#: Frozen replacement values for use in subprocesses
+#: Set by freeze() to prevent child process env vars from affecting path resolution
+_frozen_replacements = None
+
+
+def freeze():
+    """Freeze current path variable replacements for use in subprocesses.
+
+    This prevents child processes from having their environment variables
+    (like XDG_DATA_HOME, XDG_STATE_HOME) affect path resolution in parent.
+    Called before spawning build subprocesses.
+    """
+    global _frozen_replacements
+    if _frozen_replacements is None:
+        _frozen_replacements = {key: func() for key, func in replacements().items()}
+
+
 def replacements():
+    """Return dict of path variable names to their replacement functions or values.
+
+    If freeze() has been called, returns the frozen values.
+    Otherwise returns fresh lambda functions that compute values on demand.
+    """
+    # If frozen, return the frozen values as lambdas
+    if _frozen_replacements is not None:
+        return {key: (lambda v=val: v) for key, val in _frozen_replacements.items()}
+
     # break circular imports
     import spack
     import spack.environment as ev
@@ -62,12 +88,34 @@ def replacements():
 
     arch = architecture()
 
+    # XDG variables: resolve from env or use defaults
+    def xdg_data_home():
+        xdg = os.environ.get("XDG_DATA_HOME")
+        if xdg:
+            return xdg
+        return os.path.join(os.path.expanduser("~"), ".local", "share")
+
+    def xdg_state_home():
+        xdg = os.environ.get("XDG_STATE_HOME")
+        if xdg:
+            return xdg
+        return os.path.join(os.path.expanduser("~"), ".local", "state")
+
+    def xdg_cache_home():
+        xdg = os.environ.get("XDG_CACHE_HOME")
+        if xdg:
+            return xdg
+        return os.path.join(os.path.expanduser("~"), ".cache")
+
     return {
         "spack": lambda: spack.paths.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
+        "xdg_data_home": xdg_data_home,
+        "xdg_state_home": xdg_state_home,
+        "xdg_cache_home": xdg_cache_home,
         "architecture": lambda: arch,
         "arch": lambda: arch,
         "platform": lambda: arch.platform,
