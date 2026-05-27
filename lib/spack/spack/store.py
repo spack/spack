@@ -190,10 +190,16 @@ class Store:
         self.upstreams = upstreams
         self.lock_cfg = lock_cfg
         self.layout = spack.directory_layout.DirectoryLayout(
-            root, projections=projections, hash_length=hash_length
+            self.root, projections=projections, hash_length=hash_length
         )
+        # For backwards compatibility: if the database exists in the old location (root),
+        # use it; otherwise, use the new location (unpadded_root)
+        if os.path.exists(os.path.join(self.root, spack.database._DB_DIRNAME)):
+            self.metadata_root = self.root
+        else:
+            self.metadata_root = self.unpadded_root
         self.db = spack.database.Database(
-            root, upstream_dbs=upstreams, lock_cfg=lock_cfg, layout=self.layout
+            self.metadata_root, upstream_dbs=upstreams, lock_cfg=lock_cfg, layout=self.layout
         )
 
         timeout_format_str = (
@@ -202,9 +208,9 @@ class Store:
         tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
 
         self.prefix_locker = spack.database.SpecLocker(
-            spack.database.prefix_lock_path(root), lock_cfg=lock_cfg
+            spack.database.prefix_lock_path(self.metadata_root), lock_cfg=lock_cfg
         )
-        self.failure_tracker = spack.database.FailureTracker(self.root, lock_cfg=lock_cfg)
+        self.failure_tracker = spack.database.FailureTracker(self.metadata_root, lock_cfg=lock_cfg)
 
     def has_padding(self) -> bool:
         """Returns True if the store layout includes path padding."""
