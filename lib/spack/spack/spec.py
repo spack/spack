@@ -5547,26 +5547,36 @@ def wire_spec_nodes(
     This is the part of SpecfileV2 and onwards that wires up specs, based on hashes in
     JSON spec data.
 
+    Raises:
+        MissingSpecHashError: if a node references a hash not present in ``nodes``.
     """
     # Pass 1: Create a single lookup dictionary by hash
     specs_by_hash = {node[hash_type]: reader.from_node_dict(node) for node in nodes}
 
     # Pass 2: Finish construction of all DAG edges (including build specs)
     for node in nodes:
-        node_hash = node[hash_type]
-        node_spec = specs_by_hash[node_hash]
+        node_spec = specs_by_hash[node[hash_type]]
 
-        for _, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
+        for dname, dhash, dtype, _, virtuals, direct in reader.dependencies_from_node_dict(node):
+            dep_spec = specs_by_hash.get(dhash)
+            if dep_spec is None:
+                raise MissingSpecHashError(
+                    f"node '{node['name']}' references missing dep hash {dname}/{dhash}"
+                )
             node_spec._add_dependency(
-                specs_by_hash[dhash],
-                depflag=dt.canonicalize(dtype),
-                virtuals=virtuals,
-                direct=direct,
+                dep_spec, depflag=dt.canonicalize(dtype), virtuals=virtuals, direct=direct
             )
 
         if "build_spec" in node.keys():
-            _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node, hash_type=hash_type)
-            node_spec._build_spec = specs_by_hash[bhash]
+            bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
+                node, hash_type=hash_type
+            )
+            build_spec = specs_by_hash.get(bhash)
+            if build_spec is None:
+                raise MissingSpecHashError(
+                    f"node '{node['name']}' references missing build_spec hash {bname}/{bhash}"
+                )
+            node_spec._build_spec = build_spec
 
     return specs_by_hash
 
@@ -6054,6 +6064,10 @@ class InvalidEdgeError(spack.error.SpecError):
 
 class SpecMutationError(spack.error.SpecError):
     """Raised when a mutation is attempted with invalid attributes."""
+
+
+class MissingSpecHashError(spack.error.SpecError):
+    """Raised when a serialized spec node references a hash not present in a node list."""
 
 
 class _ImmutableSpec(Spec):

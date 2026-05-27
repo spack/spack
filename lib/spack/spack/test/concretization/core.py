@@ -4458,17 +4458,83 @@ def test_result_roundtrip(mock_packages, config, specs):
     assert roundtrip == result
 
 
+@pytest.mark.parametrize(
+    "spec_str", ["hdf5", "hdf5^zmpi", "pkg-with-zlib-dep", "hypre^openblas-with-lapack"]
+)
+def test_spec_dict_roundtrip(mock_packages, config, spec_str):
+    """spec_dict_to_json/from_json preserves SpecDict shape and the full reachable graph.
+
+    Builds a SpecDict that holds only the root as a named entry -- transitive deps live
+    in the root's in-memory DAG but aren't separate NodeId entries. This mirrors how
+    reused specs appear in a SpecDict (pure build deps come along on the in-memory spec
+    but never become solver nodes), and is the case that triggered the original
+    dangling-hash bug in wire_spec_nodes.
+    """
+    spec = spack.concretize.concretize_one(spec_str)
+    nid = spack.solver.asp.SpecBuilder.make_node(pkg=spec.name)
+    spec_dict = {nid: spec}
+
+    roundtrip = spack.solver.asp.spec_dict_from_json(spack.solver.asp.spec_dict_to_json(spec_dict))
+
+    # SpecDict shape is preserved exactly (no synthetic NodeIds leak into the dict)
+    assert list(roundtrip.keys()) == [nid]
+
+    # Every spec reachable from the original is reachable from the roundtripped value,
+    # even though only the root was a SpecDict entry. This is the regression target:
+    # transitive deps must still be wired up through the root's edges.
+    original_hashes = {s.dag_hash() for s in spec.traverse()}
+    roundtrip_hashes = {s.dag_hash() for s in roundtrip[nid].traverse()}
+    assert original_hashes == roundtrip_hashes
+
+    # Deep equality on the root spec
+    assert roundtrip[nid] == spec
+
+
+@pytest.fixture
+def enable_reuse():
+    with spack.config.override("concretizer:reuse", True):
+        yield
+
+
+@pytest.mark.parametrize(
+    "spec,reused_dep",
+    [
+        # fresh solves
+        ("hdf5", None),
+        ("hdf5^zmpi", None),
+        ("zmpi", None),
+        ("pkg-with-zlib-dep", None),
+        ("hypre^openblas-with-lapack", None),
+        # simple link dep reuse
+        ("pkg-with-zlib-dep", "zlib"),
+        # self reuse, no compiler-wrapper
+        ("zlib", "zlib"),
+        # self reuse, with compiler-wrapper
+        ("hdf5", "hdf5"),
+        ("zmpi", "zmpi"),
+        # reuse deps with compiler-wrapper
+        ("hdf5^zmpi", "zmpi"),
+        ("hypre^openblas-with-lapack", "openblas-with-lapack"),
+    ],
+)
 def test_concretization_cache_roundtrip(
-    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+    spec, reused_dep, mock_packages, use_concretization_cache, monkeypatch, mutable_config, request
 ):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
 
     assert spack.config.get("concretizer:concretization_cache:enable")
 
+    # when reusing, install the requested dependency and enable reuse for the solve
+    if reused_dep:
+        request.getfixturevalue("install_mockery")
+        dep = spack.concretize.concretize_one(reused_dep)
+        PackageInstaller([dep.package], fake=True, explicit=True).install()
+        request.getfixturevalue("enable_reuse")
+
     # run one standard concretization to populate the cache and the setup method
     # memoization
-    h = spack.concretize.concretize_one("hdf5")
+    h = spack.concretize.concretize_one(spec)
 
     # ASP output should be stable, concretizing the same spec
     # should have the same problem output
@@ -4488,10 +4554,11 @@ def test_concretization_cache_roundtrip(
 
     monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _ensure_no_store)
     monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", _ensure_cache_hits)
+
     # ensure subsequent concretizations of the same spec produce the same spec
     # object
-    for _ in range(5):
-        hdf5 = spack.concretize.concretize_one("hdf5")
+    for _ in range(3):
+        hdf5 = spack.concretize.concretize_one(spec)
 
         assert h.to_json(pretty=True) == hdf5.to_json(pretty=True)
         assert h == hdf5

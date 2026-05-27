@@ -313,11 +313,19 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
         if not spec.concrete:
             spec._cached_hash(ht.dag_hash, force=True)
 
+    # Specs are keyed in spec_dict by their solver-assigned NodeId, but reused concrete
+    # specs may have transitive dependencies or build_specs that do not have a NodeId.
+    # Make a dictionary preserving the NodeIds from input.
+    node_id_for: Dict[int, NodeId] = {id(spec): nid for nid, spec in spec_dict.items()}
+
+    # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
+    # to the serialized entires either a) with their original NodeId, or b) with None if they
+    # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
     entries = []
-    for (id, pkg), spec in spec_dict.items():
-        node = spec.to_node_dict()
-        node["hash"] = spec.dag_hash()
-        entries.append((id, pkg, node))
+    for dep in spack.traverse.traverse_nodes(list(spec_dict.values()), key=lambda s: s.dag_hash()):
+        node = dep.to_node_dict()
+        node["hash"] = dep.dag_hash()
+        entries.append((node_id_for.get(id(dep)), node))
 
     # Clear the hashes cached above, as they will need to be recomputed after post-concretization.
     # They're only used here as keys for reading and writing spec DAGs.
@@ -337,14 +345,12 @@ def spec_dict_from_json(data: Dict) -> SpecDict:
         raise ValueError(f"Invalid spec dict data: {data}")
 
     reader = spack.spec.specfile_reader_for_version(spec_version)
-    node_ids_by_hash = {node["hash"]: (id, pkg) for id, pkg, node in entries}
-    nodes = [node for _, _, node in entries]
-
+    nodes = [node for _, node in entries]
     specs_by_hash = spack.spec.wire_spec_nodes(nodes, "hash", reader)
-    return {
-        NodeId(id, pkg): specs_by_hash[dag_hash]
-        for dag_hash, (id, pkg) in node_ids_by_hash.items()
-    }
+
+    # Anonymous nodes (nid=None) are reachable transitively through named roots' edges, and
+    # are handled by wire_spec_nodes() above. Skip them here to preserve SpecDict on round-trip.
+    return {NodeId(*nid): specs_by_hash[node["hash"]] for nid, node in entries if nid is not None}
 
 
 class Result:
@@ -657,9 +663,15 @@ class ConcretizationCache:
             self._remove_entry(cache_path)
             return None, None
 
+        results = cache_content.get("results")
+        if results is None:
+            # malformed cache dictionary
+            self._remove_entry(cache_path)
+            return None, None
+
         try:
-            result = Result.from_dict(cache_content["results"])
-        except (KeyError, ValueError, spack.error.SpecSyntaxError):
+            result = Result.from_dict(results)
+        except (KeyError, TypeError, ValueError, spack.error.SpecSyntaxError):
             # valid JSON but spec data is malformed or incompatible
             self._remove_entry(cache_path)
             return None, None
