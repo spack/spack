@@ -24,6 +24,19 @@ def _ensure_dir(pathlike):
     return str(pathlike)
 
 
+def _setup_layout_configs(base_path):
+    """Copy layout config files from real spack into a mock spack prefix."""
+    src_base = os.path.join(_real_spack_prefix, "etc", "spack")
+    dst_base = os.path.join(base_path, "etc", "spack")
+    os.makedirs(dst_base, exist_ok=True)
+
+    for layout in ["old-layout", "xdg-layout"]:
+        src = os.path.join(src_base, layout)
+        dst = os.path.join(dst_base, layout)
+        if os.path.exists(src) and not os.path.exists(dst):
+            shutil.copytree(src, dst)
+
+
 @pytest.fixture(autouse=True)
 def clear_env_vars(working_env):
     spack.paths._unset_path_vars(os.environ)
@@ -77,22 +90,9 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
     import spack.util.path
 
-    def setup_layout_configs(base_path):
-        """Copy layout config files into the mock spack prefix."""
-        src_base = os.path.join(_real_spack_prefix, "etc", "spack")
-        dst_base = os.path.join(base_path, "etc", "spack")
-        os.makedirs(dst_base, exist_ok=True)
-
-        # Copy layout directories
-        for layout in ["old-layout", "xdg-layout"]:
-            src = os.path.join(src_base, layout)
-            dst = os.path.join(dst_base, layout)
-            if os.path.exists(src) and not os.path.exists(dst):
-                shutil.copytree(src, dst)
-
     def checka(paths, new_path, msg):
         # Copy layout configs into mock spack prefix
-        setup_layout_configs(paths.base.prefix)
+        _setup_layout_configs(paths.base.prefix)
         # Update global paths and create new configuration to pick up layout detection
         spack.paths.locations = paths
         spack.paths_base.locations = paths.base
@@ -105,7 +105,7 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
 
     def checkb(paths, new_path, msg):
         # Copy layout configs into mock spack prefix
-        setup_layout_configs(paths.base.prefix)
+        _setup_layout_configs(paths.base.prefix)
         # Update global paths and create new configuration to pick up layout detection
         spack.paths.locations = paths
         spack.paths_base.locations = paths.base
@@ -259,14 +259,7 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     set_home(base_prefix)
 
     # Copy layout configs into mock spack prefix
-    src_base = os.path.join(_real_spack_prefix, "etc", "spack")
-    dst_base = os.path.join(base_prefix, "etc", "spack")
-    os.makedirs(dst_base, exist_ok=True)
-    for layout in ["old-layout", "xdg-layout"]:
-        src = os.path.join(src_base, layout)
-        dst = os.path.join(dst_base, layout)
-        if os.path.exists(src) and not os.path.exists(dst):
-            shutil.copytree(src, dst)
+    _setup_layout_configs(base_prefix)
 
     new_default_gpg_base = pathlib.Path(base_prefix) / ".local" / "share" / "spack"
 
@@ -329,23 +322,11 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
 def test_location_vars_that_use_other_location_vars(tmp_path, set_home, monkeypatch):
     import spack.util.path
 
-    def setup_layout_configs(base_path):
-        """Copy layout config files into the mock spack prefix."""
-        src_base = os.path.join(_real_spack_prefix, "etc", "spack")
-        dst_base = os.path.join(base_path, "etc", "spack")
-        os.makedirs(dst_base, exist_ok=True)
-
-        for layout in ["old-layout", "xdg-layout"]:
-            src = os.path.join(src_base, layout)
-            dst = os.path.join(dst_base, layout)
-            if os.path.exists(src) and not os.path.exists(dst):
-                shutil.copytree(src, dst)
-
     homedir = _ensure_dir(tmp_path / "test-home")
     set_home(homedir)
 
     basedir = _ensure_dir(tmp_path / "spack-root")
-    setup_layout_configs(basedir)
+    _setup_layout_configs(basedir)
 
     p1 = SpackPaths(SpackPathsBase(str(basedir)))
     # This is a bit strange but resolution of the config variable involves accessing
