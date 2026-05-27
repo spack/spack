@@ -29,6 +29,18 @@ def clear_env_vars(working_env):
     spack.paths._unset_path_vars(os.environ)
 
 
+@pytest.fixture(autouse=True)
+def restore_paths():
+    """Save and restore spack.paths locations to prevent test pollution"""
+    saved_locations = spack.paths.locations
+    saved_base_locations = spack.paths_base.locations
+    saved_config = spack.config.CONFIG
+    yield
+    spack.paths.locations = saved_locations
+    spack.paths_base.locations = saved_base_locations
+    spack.config.CONFIG = saved_config
+
+
 def test_install_location(working_env, tmp_path, mutable_config, set_home):
     # If prior default install dir inside spack prefix does not
     # exist, place installs in $HOME
@@ -246,38 +258,63 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmp_path, set_home):
     base_prefix = _ensure_dir(tmp_path / "base-prefix")
     set_home(base_prefix)
 
+    # Copy layout configs into mock spack prefix
+    src_base = os.path.join(_real_spack_prefix, "etc", "spack")
+    dst_base = os.path.join(base_prefix, "etc", "spack")
+    os.makedirs(dst_base, exist_ok=True)
+    for layout in ["old-layout", "xdg-layout"]:
+        src = os.path.join(src_base, layout)
+        dst = os.path.join(dst_base, layout)
+        if os.path.exists(src) and not os.path.exists(dst):
+            shutil.copytree(src, dst)
+
     new_default_gpg_base = pathlib.Path(base_prefix) / ".local" / "share" / "spack"
 
     # Nothing in any of the old locations: we should use the new one
     p1 = SpackPaths(SpackPathsBase(base_prefix))
+    # Update global paths so config.get() works correctly
+    spack.paths.locations = p1
+    spack.paths_base.locations = p1.base
+    # Create fresh config to pick up layout detection
+    spack.config.CONFIG = spack.config.create()
+
     assert p1.gpg_path == str(new_default_gpg_base / "gpg")
     assert p1.gpg_keys_path == str(new_default_gpg_base / "gpg-keys")
 
     old_gpg_dir = pathlib.Path(base_prefix) / "opt" / "spack" / "gpg"
     (old_gpg_dir).mkdir(parents=True)
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
+    p2 = SpackPaths(SpackPathsBase(base_prefix))
+    spack.paths.locations = p2
+    spack.paths_base.locations = p2.base
+    spack.config.CONFIG = spack.config.create()
     # Old dir exists, but is empty, so it should still not be used
-    assert p1.gpg_path == str(new_default_gpg_base / "gpg")
+    assert p2.gpg_path == str(new_default_gpg_base / "gpg")
 
     # Put something in the old dir: it should now redirect
     (old_gpg_dir / "something").touch()
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.gpg_path == str(old_gpg_dir)
+    p3 = SpackPaths(SpackPathsBase(base_prefix))
+    spack.paths.locations = p3
+    spack.paths_base.locations = p3.base
+    spack.config.CONFIG = spack.config.create()
+    assert p3.gpg_path == str(old_gpg_dir)
 
     # Old keys path is used if old gpg path is used: all data is
     # relocated together
     old_gpg_keys_dir = pathlib.Path(base_prefix) / "var" / "spack" / "gpg"
-    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
+    assert p3.gpg_keys_path == str(old_gpg_keys_dir)
 
     # When something is in both the new and old locations, prefer the old
     new_gpg_dir = new_default_gpg_base / "gpg"
     new_gpg_dir.mkdir(parents=True)
     (new_gpg_dir / "something").touch()
-    p1 = SpackPaths(SpackPathsBase(base_prefix))
-    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
+    p4 = SpackPaths(SpackPathsBase(base_prefix))
+    spack.paths.locations = p4
+    spack.paths_base.locations = p4.base
+    spack.config.CONFIG = spack.config.create()
+    assert p4.gpg_keys_path == str(old_gpg_keys_dir)
 
     # And the gpg dir itself remains the old dir: reaffirm that
-    assert p1.gpg_path == str(old_gpg_dir)
+    assert p4.gpg_path == str(old_gpg_dir)
 
 
 def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
@@ -356,8 +393,15 @@ def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch
     homedir = _ensure_dir(tmp_path / "base-prefix")
     set_home(homedir)
 
+    # Copy mock packages repo to test directory
+    src_mock_packages = os.path.join(_real_spack_prefix, "var", "spack", "test_repos")
+    dst_mock_packages = os.path.join(basedir, "var", "spack", "test_repos")
+    if os.path.exists(src_mock_packages):
+        shutil.copytree(src_mock_packages, dst_mock_packages)
+
     p1 = SpackPaths(SpackPathsBase(str(basedir)))
     monkeypatch.setattr(spack.paths, "locations", p1)
+    monkeypatch.setattr(spack.paths_base, "locations", p1.base)
 
     default_cfg_val = os.path.join("$data_home", "licenses")
     resolved_dir = str(pathlib.Path(homedir) / ".local" / "share" / "spack" / "licenses")
