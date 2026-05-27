@@ -84,7 +84,9 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     else:
         unpadded_root = install_tree.get("root", None)
         if not unpadded_root:
-            unpadded_root = paths.default_install_location
+            # Fallback to data_home/installs if no root is configured
+            # (layout includes should normally set this)
+            unpadded_root = os.path.join(paths.data_home, "installs")
 
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 

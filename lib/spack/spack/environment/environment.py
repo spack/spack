@@ -102,7 +102,9 @@ _default_env_path = None
 def default_env_path():
     global _default_env_path
     if not _default_env_path:
-        _default_env_path = paths.default_envs_path
+        # Fallback to data_home/environments if not configured
+        # (layout includes should normally set config:environments_root)
+        _default_env_path = os.path.join(paths.data_home, "environments")
     return _default_env_path
 
 

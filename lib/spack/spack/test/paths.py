@@ -4,6 +4,7 @@
 
 import os
 import pathlib
+import shutil
 
 import pytest
 
@@ -18,6 +19,26 @@ from spack.paths_base import SpackPathsBase
 def _ensure_dir(pathlike):
     pathlike.mkdir(parents=True, exist_ok=True)
     return str(pathlike)
+
+
+@pytest.fixture(scope="module")
+def layout_scopes(tmp_path_factory):
+    """Copy layout scope directories so tests use the real include.yaml and layout configs."""
+    tmp_spack_etc = tmp_path_factory.mktemp("spack_etc")
+
+    # Copy include.yaml
+    src_include = os.path.join(spack.paths.prefix, "etc", "spack", "include.yaml")
+    dst_include = tmp_spack_etc / "include.yaml"
+    shutil.copy2(src_include, dst_include)
+
+    # Copy layout scope directories
+    for layout in ["old-layout", "xdg-layout"]:
+        src_layout = os.path.join(spack.paths.prefix, "etc", "spack", layout)
+        if os.path.exists(src_layout):
+            dst_layout = tmp_spack_etc / layout
+            shutil.copytree(src_layout, dst_layout)
+
+    return tmp_spack_etc
 
 
 @pytest.fixture(autouse=True)
@@ -63,14 +84,26 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 
 
 def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
+    import spack.util.path
+
     def checka(paths, new_path, msg):
+        # Update global paths and create new configuration to pick up layout detection
+        spack.paths.locations = paths
+        spack.paths_base.locations = paths.base
+        cfg = spack.config.create()
+        install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
         if force_old_layout:
-            assert paths.default_install_location == paths.base.old_install_path, msg
+            assert install_root == paths.base.old_install_path, msg
         else:
-            assert paths.default_install_location == str(new_path), msg
+            assert install_root == str(new_path), msg
 
     def checkb(paths, new_path, msg):
-        assert paths.default_install_location == str(new_path), msg
+        # Update global paths and create new configuration to pick up layout detection
+        spack.paths.locations = paths
+        spack.paths_base.locations = paths.base
+        cfg = spack.config.create()
+        install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
+        assert install_root == str(new_path), msg
 
     new_default_installs_dir = _ensure_dir(
         pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
@@ -263,6 +296,8 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
 def test_location_vars_that_use_other_location_vars(
     tmp_path, set_home, mutable_config, monkeypatch
 ):
+    import spack.util.path
+
     homedir = _ensure_dir(tmp_path / "test-home")
     set_home(homedir)
 
@@ -275,13 +310,19 @@ def test_location_vars_that_use_other_location_vars(
     # the module, so we need to monkeypatch that
     monkeypatch.setattr(spack.paths_base, "locations", p1.base)
     install_rel = pathlib.Path(".local") / "share" / "spack" / "installs"
-    assert p1.default_install_location == str(pathlib.Path(basedir) / "home" / install_rel)
+    # Create new config to pick up layout detection
+    cfg = spack.config.create()
+    install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
+    assert install_root == str(pathlib.Path(basedir) / "home" / install_rel)
 
     # Now try defining a $data_home -> $spack_home -> $spack
     p2 = SpackPaths(SpackPathsBase(str(basedir)))
     monkeypatch.setattr(spack.paths_base, "locations", p2.base)
     mutable_config.set("config", {"locations": {"home": "$spack/home", "data": "$spack_home"}})
-    assert p2.default_install_location == str(pathlib.Path(basedir) / "home" / "installs")
+    # Create new config to pick up layout detection
+    cfg = spack.config.create()
+    install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
+    assert install_root == str(pathlib.Path(basedir) / "home" / "installs")
 
 
 def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch, set_home):
@@ -323,9 +364,10 @@ class SetAnXdgVarAndReadDataHome:
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
         expected = str(pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs")
-        assert spack.paths.locations.default_install_location == expected, (
-            f"Expected {expected}\nGot {spack.paths.locations.default_install_location}"
-        )
+        # Create new config to pick up layout detection
+        cfg = spack.config.create()
+        install_root = cfg.get("config:install_tree:root")
+        assert install_root == expected, f"Expected {expected}\nGot {install_root}"
 
 
 def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):

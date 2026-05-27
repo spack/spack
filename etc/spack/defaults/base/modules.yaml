@@ -32,9 +32,10 @@ modules:
   # These are configurations for the module set named "default"
   default:
     # Where to install modules
+    # Layout-specific includes (old-layout or xdg-layout) set this value.
     roots:
-     tcl:    $default_modules_base/modules
-     lmod:   $default_modules_base/lmod
+     tcl:    $data_home/modules
+     lmod:   $data_home/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 
