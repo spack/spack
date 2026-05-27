@@ -1969,8 +1969,6 @@ class ScheduleResult(NamedTuple):
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
     #: Actions to mark already installed specs explicit in the DB.
     to_mark_explicit: List[MarkExplicitAction]
-    #: Extra read locks to retain (e.g. on build_spec prefixes for spliced specs).
-    extra_read_locks: List[spack.util.lock.Lock]
 
 
 def schedule_builds(
@@ -2018,15 +2016,12 @@ def schedule_builds(
     to_start: List[Tuple[str, spack.util.lock.Lock]] = []
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
     to_mark_explicit: List[MarkExplicitAction] = []
-    extra_read_locks: List[spack.util.lock.Lock] = []
     blocked = True
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
     if not db.lock.try_acquire_read():
-        return ScheduleResult(
-            blocked, to_start, newly_installed, to_mark_explicit, extra_read_locks
-        )
+        return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
     try:
         db._read()  # refresh in-memory snapshot under the read lock
@@ -2104,19 +2099,6 @@ def schedule_builds(
                         f"Cannot install {spec}: prefix {spec.prefix} already exists"
                     )
 
-            # For spliced specs, ensure a lock is held on build_spec to prevent concurrent
-            # uninstall while the child reads from it.
-            if spec.build_spec is not spec:
-                bs_lock = prefix_locker.lock(spec.build_spec)
-                # If the lock is already held (build_spec was built by us and its write lock
-                # is pending downgrade, or already downgraded to read), skip acquisition.
-                if not bs_lock._writes and not bs_lock._reads:
-                    if not bs_lock.try_acquire_read():
-                        lock.release_write()
-                        idx += 1
-                        continue
-                    extra_read_locks.append(bs_lock)
-
             # Acquire a jobserver token if needed. The first (implicit) job needs no token.
             if needs_jobserver_token and not jobserver.acquire(1):
                 lock.release_write()
@@ -2130,7 +2112,7 @@ def schedule_builds(
     finally:
         db.lock.release_read()
 
-    return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit, extra_read_locks)
+    return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
 
 def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:
@@ -2942,7 +2924,6 @@ class PackageInstaller:
         )
         blocked = result.blocked
         database_actions.extend(result.to_mark_explicit)
-        retained_read_locks.extend(result.extra_read_locks)
         # Specs installed by another process.
         for dag_hash, spec, lock in result.newly_installed:
             retained_read_locks.append(lock)
