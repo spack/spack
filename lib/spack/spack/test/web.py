@@ -511,7 +511,7 @@ def test_retry_on_transient_error_non_oserror(mock_sleep):
 
 def test_retry(monkeypatch, mock_sleep):
 
-    retry = spack.util.web.Retry(total=5, backoff_factor=1.0e-4, backoff_jitter=1.0e-9, backoff_max=1)
+    retry = spack.util.web.Retry(total=5, backoff_factor=1.0, backoff_jitter=1.0, backoff_max=1)
 
     # No early exit
     count = 0
@@ -521,7 +521,7 @@ def test_retry(monkeypatch, mock_sleep):
 
     assert count == 5
     assert retry.count == 5
-    assert mock_sleep.count  == 4
+    assert mock_sleep.count == 4
 
     retry.reset()
     assert retry.count == 0
@@ -538,7 +538,7 @@ def test_retry(monkeypatch, mock_sleep):
 
     assert count == 5
     assert retry.count == 4
-    assert mock_sleep.count  == 8
+    assert mock_sleep.count == 8
 
     retry.reset()
 

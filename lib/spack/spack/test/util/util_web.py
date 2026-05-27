@@ -3,7 +3,3 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test Spack's Web utility functions."""
-
-from spack.util.web import Retry
-
-import pytest

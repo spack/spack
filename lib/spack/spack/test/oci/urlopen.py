@@ -15,6 +15,7 @@ from urllib.request import Request
 import pytest
 
 import spack.mirrors.mirror
+import spack.util.web
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import (
     copy_missing_layers,

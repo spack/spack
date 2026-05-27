@@ -59,6 +59,9 @@ class Retry:
         self.backoff_jitter = backoff_jitter
         self.backoff_max = backoff_max
 
+        assert self.backoff_max > 0, "Maximum backoff must be a positive value"
+        assert self.total >= 0, "Retry total cannot be negative"
+
     def is_last_attempt(self):
         """Return if this the retry counter is on last attempt"""
         return self.count == self.total - 1
@@ -122,6 +125,7 @@ def retry_on_transient_error(
     f: Callable[_P, _R], retry: Optional[Retry] = None
 ) -> Callable[_P, _R]:
     """Retry a function on transient HTTP/network errors with exponential backoff."""
+
     @functools.wraps(f)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         _retry = retry or Retry()
