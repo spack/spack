@@ -67,6 +67,7 @@ jobs:
           git --version
           . .github/workflows/bin/setup_git.sh
     - name: Bootstrap clingo
+      if: ${{ matrix.concretizer == 'clingo' }}
       env:
           SPACK_PYTHON: python
       run: |
@@ -250,8 +251,6 @@ jobs:
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows

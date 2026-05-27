@@ -46,7 +46,7 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack -d solve zlib
+          spack solve zlib
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:
@@ -171,8 +171,6 @@ jobs:
         run: |
           Remove-Item -Path (Get-Command gpg).Path
           Remove-Item -Path (Get-Command file).Path
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
       - name: Bootstrap clingo
         run: |
           ./share/spack/setup-env.ps1
