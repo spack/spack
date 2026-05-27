@@ -15,30 +15,13 @@ import spack.subprocess_context
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
+# Save the real spack prefix before tests override spack.paths.locations
+_real_spack_prefix = spack.paths_base.locations.prefix
+
 
 def _ensure_dir(pathlike):
     pathlike.mkdir(parents=True, exist_ok=True)
     return str(pathlike)
-
-
-@pytest.fixture(scope="module")
-def layout_scopes(tmp_path_factory):
-    """Copy layout scope directories so tests use the real include.yaml and layout configs."""
-    tmp_spack_etc = tmp_path_factory.mktemp("spack_etc")
-
-    # Copy include.yaml
-    src_include = os.path.join(spack.paths.prefix, "etc", "spack", "include.yaml")
-    dst_include = tmp_spack_etc / "include.yaml"
-    shutil.copy2(src_include, dst_include)
-
-    # Copy layout scope directories
-    for layout in ["old-layout", "xdg-layout"]:
-        src_layout = os.path.join(spack.paths.prefix, "etc", "spack", layout)
-        if os.path.exists(src_layout):
-            dst_layout = tmp_spack_etc / layout
-            shutil.copytree(src_layout, dst_layout)
-
-    return tmp_spack_etc
 
 
 @pytest.fixture(autouse=True)
@@ -86,7 +69,22 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
     import spack.util.path
 
+    def setup_layout_configs(base_path):
+        """Copy layout config files into the mock spack prefix."""
+        src_base = os.path.join(_real_spack_prefix, "etc", "spack")
+        dst_base = os.path.join(base_path, "etc", "spack")
+        os.makedirs(dst_base, exist_ok=True)
+
+        # Copy layout directories
+        for layout in ["old-layout", "xdg-layout"]:
+            src = os.path.join(src_base, layout)
+            dst = os.path.join(dst_base, layout)
+            if os.path.exists(src) and not os.path.exists(dst):
+                shutil.copytree(src, dst)
+
     def checka(paths, new_path, msg):
+        # Copy layout configs into mock spack prefix
+        setup_layout_configs(paths.base.prefix)
         # Update global paths and create new configuration to pick up layout detection
         spack.paths.locations = paths
         spack.paths_base.locations = paths.base
@@ -98,6 +96,8 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
             assert install_root == str(new_path), msg
 
     def checkb(paths, new_path, msg):
+        # Copy layout configs into mock spack prefix
+        setup_layout_configs(paths.base.prefix)
         # Update global paths and create new configuration to pick up layout detection
         spack.paths.locations = paths
         spack.paths_base.locations = paths.base
@@ -298,10 +298,23 @@ def test_location_vars_that_use_other_location_vars(
 ):
     import spack.util.path
 
+    def setup_layout_configs(base_path):
+        """Copy layout config files into the mock spack prefix."""
+        src_base = os.path.join(_real_spack_prefix, "etc", "spack")
+        dst_base = os.path.join(base_path, "etc", "spack")
+        os.makedirs(dst_base, exist_ok=True)
+
+        for layout in ["old-layout", "xdg-layout"]:
+            src = os.path.join(src_base, layout)
+            dst = os.path.join(dst_base, layout)
+            if os.path.exists(src) and not os.path.exists(dst):
+                shutil.copytree(src, dst)
+
     homedir = _ensure_dir(tmp_path / "test-home")
     set_home(homedir)
 
     basedir = _ensure_dir(tmp_path / "spack-root")
+    setup_layout_configs(basedir)
 
     mutable_config.set("config", {"locations": {"home": "$spack/home"}})
 
@@ -360,13 +373,14 @@ class SetAnXdgVarAndReadDataHome:
 
     def __call__(self):
         import spack.paths
+        import spack.util.path
 
         os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
 
         expected = str(pathlib.Path(self.home_prefix) / ".local" / "share" / "spack" / "installs")
         # Create new config to pick up layout detection
         cfg = spack.config.create()
-        install_root = cfg.get("config:install_tree:root")
+        install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
         assert install_root == expected, f"Expected {expected}\nGot {install_root}"
 
 
@@ -376,6 +390,16 @@ def test_child_proc_sanity_xdg_based_paths(tmp_path, set_home, monkeypatch):
     # of) classes defined within it.
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
+
+    # Copy layout configs into mock spack prefix
+    src_base = os.path.join(_real_spack_prefix, "etc", "spack")
+    dst_base = os.path.join(base_prefix, "etc", "spack")
+    os.makedirs(dst_base, exist_ok=True)
+    for layout in ["old-layout", "xdg-layout"]:
+        src = os.path.join(src_base, layout)
+        dst = os.path.join(dst_base, layout)
+        if os.path.exists(src) and not os.path.exists(dst):
+            shutil.copytree(src, dst)
 
     empty_dir = _ensure_dir(tmp_path / "empty")
 
