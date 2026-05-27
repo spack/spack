@@ -18,7 +18,7 @@ into the intermediate representation.
 import re
 import uuid
 import warnings
-from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -197,6 +197,7 @@ class ExternalSpecsParser:
         *,
         complete_node: Callable[[spack.spec.Spec], None] = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
+        toolchains: Optional[Dict] = None,
     ):
         """Initializes a class to manage and process external specifications in ``packages.yaml``.
 
@@ -205,6 +206,7 @@ class ExternalSpecsParser:
             complete_node: a callable that completes a node with missing variants, targets, etc.
                 Defaults to `complete_architecture`.
             allow_nonexisting: whether to allow non-existing packages. Defaults to True.
+            toolchains: optional toolchain definitions to expand in external specs.
 
         Raises:
             spack.repo.UnknownPackageError: if a package does not exist,
@@ -215,6 +217,7 @@ class ExternalSpecsParser:
         self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}
         self.nodes: List[spack.spec.Spec] = []
         self.allow_nonexisting = allow_nonexisting
+        self.toolchains = toolchains
         # Fill the data structures above (can be done lazily)
         self.complete_node = complete_node
         self._parse()
@@ -346,6 +349,7 @@ class ExternalSpecsParser:
 
     def _parse_all_nodes(self) -> None:
         """Parses all the nodes from the external dicts but doesn't add any edge."""
+        toolchain_errors: List[str] = []
         for external_dict in self.external_dicts:
             line_info = _line_info(external_dict)
             try:
@@ -359,6 +363,17 @@ class ExternalSpecsParser:
                 continue
             except ExternalSpecError as e:
                 warnings.warn(f"{e}{line_info}")
+                continue
+
+            has_toolchain_error = False
+            if self.toolchains:
+                for edge in node.edges_to_dependencies():
+                    if edge.spec.name in self.toolchains:
+                        msg = f"  {node.cformat()} uses toolchain {edge.spec.cformat()}{line_info}"
+                        toolchain_errors.append(msg)
+                        has_toolchain_error = True
+
+            if has_toolchain_error:
                 continue
 
             package_exists = spack.repo.PATH.exists(node.name)
@@ -400,6 +415,12 @@ class ExternalSpecsParser:
             self.specs_by_external_id[eid] = spec_and_config
             self.specs_by_name.setdefault(node.name, []).append(spec_and_config)
             self.nodes.append(node)
+
+        if toolchain_errors:
+            raise ExternalSpecError(
+                "toolchains are not supported in external spec definitions:\n"
+                + "\n".join(toolchain_errors)
+            )
 
     def get_specs_for_package(self, package_name: str) -> List[spack.spec.Spec]:
         """Returns the external specs for a given package name."""

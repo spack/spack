@@ -372,3 +372,21 @@ def test_external_spec_multi_valued_variant_is_not_changed():
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")
+
+
+def test_toolchain_in_external_spec_raises_error():
+    """Toolchain references in external specs are not supported; all offending entries reported."""
+    externals_dict = [
+        {"spec": "gmake@1.0 %my_toolchain", "prefix": "/usr/gmake"},
+        {"spec": "gcc@12.0", "prefix": "/usr/gcc"},
+        {"spec": "cmake@3.0 %my_toolchain", "prefix": "/usr/cmake"},
+    ]
+    toolchains = {"my_toolchain": "%c=gcc"}
+
+    with pytest.raises(ExternalSpecError) as exc_info:
+        ExternalSpecsParser(externals_dict, toolchains=toolchains)
+    error_message = str(exc_info.value)
+
+    assert "gmake" in error_message
+    assert "cmake" in error_message
+    assert "my_toolchain" in error_message

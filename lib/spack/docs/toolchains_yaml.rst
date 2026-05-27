@@ -168,7 +168,45 @@ Without toolchains, it would be difficult to enforce compilers directly, because
 * ``hdf5~cxx+fortran`` depends on C and Fortran, but not C++
 * ``py-scipy`` depends on C, C++, and Fortran
 
-.. note::
+Limitations
+-----------
 
-   Toolchains are currently limited to using only direct dependencies (``%``) in their definition.
-   Transitive dependencies are not allowed.
+Toolchain definitions may only use direct dependencies (``%``).
+Transitive dependencies (``^``) are not allowed.
+
+Toolchains cannot be used in external spec definitions in :ref:`packages.yaml <sec-external-packages>`.
+Consider a ``gcc-15`` toolchain defined as:
+
+.. code-block:: yaml
+   :caption: ``~/.spack/toolchains.yaml``
+
+   toolchains:
+     gcc-15:
+     - spec: "%c=gcc@15"
+       when: "%c"
+     - spec: "%cxx=gcc@15"
+       when: "%cxx"
+     - spec: "%fortran=gcc@15"
+       when: "%fortran"
+
+An entry like:
+
+.. code-block:: yaml
+
+   packages:
+     zlib-ng:
+       externals:
+       - spec: zlib-ng@3.3.3 %gcc-15
+         prefix: /usr
+
+will raise an error.
+External specs describe pre-built software, so the conditional nature of toolchains does not apply: there is no build step during which to evaluate ``when:`` conditions.
+Use the explicit compiler form instead:
+
+.. code-block:: yaml
+
+   packages:
+     zlib-ng:
+       externals:
+       - spec: zlib-ng@3.3.3 %c=gcc@15
+         prefix: /usr
