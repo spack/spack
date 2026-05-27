@@ -35,12 +35,9 @@ def test_install_location(working_env, tmp_path, mutable_config, set_home):
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
 
-    empty_dir = _ensure_dir(tmp_path / "empty")
-
+    # Don't create anything at the old install path - it should be empty/nonexistent
     def paths_base_empty_old_install():
-        pb = SpackPathsBase(base_prefix)
-        pb.old_install_path = empty_dir
-        return pb
+        return SpackPathsBase(base_prefix)
 
     set_home(home_prefix)
 
@@ -48,18 +45,17 @@ def test_install_location(working_env, tmp_path, mutable_config, set_home):
 
 
 def test_install_location_old_installs_exist(working_env, tmp_path, mutable_config, set_home):
-    # If prior default install dir inside spack prefix does not
-    # exist, place installs in $HOME
+    # If prior default install dir inside spack prefix exists and has content,
+    # use old layout (keep using that location)
     base_prefix = _ensure_dir(tmp_path / "spack-root")
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
 
-    nonempty_dir = _ensure_dir(tmp_path / "not-empty")
-    (pathlib.Path(nonempty_dir) / "afile").touch()
+    # Put a file in the actual old install location (base_prefix/opt/spack)
+    old_install_dir = _ensure_dir(pathlib.Path(base_prefix) / "opt" / "spack")
+    (pathlib.Path(old_install_dir) / "afile").touch()
 
     def paths_base_nonempty_old_install():
-        pb = SpackPathsBase(base_prefix)
-        pb.old_install_path = nonempty_dir
-        return pb
+        return SpackPathsBase(base_prefix)
 
     set_home(home_prefix)
 
