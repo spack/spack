@@ -216,9 +216,9 @@ For an alphabetic list of every documented keyword and environment variable, see
       The concretizer must satisfy it or fail.
       See :ref:`package-requirements`.
 
-   preference
-      A soft constraint declared with ``prefer:`` (or via ``packages:all:`` ordering).
-      Used as a tiebreaker; the concretizer may ignore it if it cannot be met.
+   strong preference
+      A soft constraint declared in ``packages.yaml`` under ``prefer:``.
+      The concretizer tries to satisfy it, but may ignore it if it cannot be met.
       See :ref:`package-preferences`.
 
    toolchain
