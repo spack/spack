@@ -90,53 +90,53 @@ def test_install_location_old_installs_exist(working_env, tmp_path, mutable_conf
 def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_layout):
     import spack.util.path
 
-    def checka(paths, new_path, msg):
-        # Copy layout configs into mock spack prefix
+    def setup_mock_env(paths):
+        """Set up mock environment for a SpackPaths object."""
         _setup_layout_configs(paths.base.prefix)
-        # Update global paths and create new configuration to pick up layout detection
         spack.paths.locations = paths
         spack.paths_base.locations = paths.base
         cfg = spack.config.create()
-        install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
+        spack.config.CONFIG = cfg
+
+    def check_install_root(paths, expected_new_path, msg):
+        """Check that install_tree:root resolves correctly.
+
+        If force_old_layout is True, always expects old_install_path regardless of expected_new_path.
+        Otherwise, expects expected_new_path.
+        """
+        install_root = spack.util.path.substitute_config_variables(
+            spack.config.get("config:install_tree:root")
+        )
         if force_old_layout:
             assert install_root == paths.base.old_install_path, msg
         else:
-            assert install_root == str(new_path), msg
-
-    def checkb(paths, new_path, msg):
-        # Copy layout configs into mock spack prefix
-        _setup_layout_configs(paths.base.prefix)
-        # Update global paths and create new configuration to pick up layout detection
-        spack.paths.locations = paths
-        spack.paths_base.locations = paths.base
-        cfg = spack.config.create()
-        install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
-        assert install_root == str(new_path), msg
+            assert install_root == str(expected_new_path), msg
 
     new_default_installs_dir = _ensure_dir(
         pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs"
     )
     (pathlib.Path(new_default_installs_dir) / "afile").touch()
     p0 = SpackPaths(base_paths_generator())
-    checka(
+    setup_mock_env(p0)
+    check_install_root(
         p0,
         pathlib.Path(home_prefix) / ".local" / "share" / "spack" / "installs",
-        "p0: default location",
+        "p0: default location"
     )
 
     # $XDG_DATA_HOME overrides the default
     xdg_data_home = _ensure_dir(tmp_path / "xdg_data_home")
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p7 = SpackPaths(base_paths_generator())
-    checka(p7, pathlib.Path(xdg_data_home) / "spack" / "installs", "p7: XDG_DATA_HOME override")
-
-    spack.config.set("config:locations", {})
+    setup_mock_env(p7)
+    check_install_root(p7, pathlib.Path(xdg_data_home) / "spack" / "installs", "p7: XDG_DATA_HOME override")
 
     # "config:locations:home" variable overrides the above
     spack_home_cfg_prefix = _ensure_dir(tmp_path / "spack-home2")
-    spack.config.set("config:locations:home", spack_home_cfg_prefix)
     p2 = SpackPaths(base_paths_generator())
-    checka(
+    setup_mock_env(p2)
+    spack.config.set("config:locations:home", spack_home_cfg_prefix)
+    check_install_root(
         p2,
         pathlib.Path(spack_home_cfg_prefix) / ".local" / "share" / "spack" / "installs",
         "p2: config:locations:home override",
@@ -144,16 +144,18 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
 
     # "config:locations:data" overrides the above
     spack_data_prefix = _ensure_dir(tmp_path / "spack-data")
-    spack.config.set("config:locations:data", spack_data_prefix)
     p3 = SpackPaths(base_paths_generator())
-    checka(p3, pathlib.Path(spack_data_prefix) / "installs", "p3: config:locations:data override")
+    setup_mock_env(p3)
+    spack.config.set("config:locations:data", spack_data_prefix)
+    check_install_root(p3, pathlib.Path(spack_data_prefix) / "installs", "p3: config:locations:data override")
 
     # SPACK_HOME env variable overrides the above (even if there
     # are no installs there and there are installs in the old location)
     spack_home_env_prefix = _ensure_dir(tmp_path / "spack-home1")
     os.environ["SPACK_HOME"] = spack_home_env_prefix
     p1 = SpackPaths(base_paths_generator())
-    checka(
+    setup_mock_env(p1)
+    check_install_root(
         p1,
         pathlib.Path(spack_home_env_prefix) / ".local" / "share" / "spack" / "installs",
         "p1: SPACK_HOME override",
@@ -163,13 +165,15 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
     spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
     os.environ["SPACK_DATA_HOME"] = spack_data_home
     p5 = SpackPaths(base_paths_generator())
-    checka(p5, pathlib.Path(spack_data_home) / "installs", "p5: SPACK_DATA_HOME override")
+    setup_mock_env(p5)
+    check_install_root(p5, pathlib.Path(spack_data_home) / "installs", "p5: SPACK_DATA_HOME override")
 
     # Disable all location-based env vars: this will then defer
     # to using "config:locations:data"
-    spack.config.set("config:locations:disable_env", True)
     p6 = SpackPaths(base_paths_generator())
-    checka(
+    setup_mock_env(p6)
+    spack.config.set("config:locations:disable_env", True)
+    check_install_root(
         p6,
         pathlib.Path(spack_data_prefix) / "installs",
         "p6: disable_env defers to config:locations:data",
