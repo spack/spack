@@ -179,7 +179,6 @@ class SpackPaths:
     def user_cache_path(self):
         return self.state_home
 
-
     @property
     def reports_path(self):
         #: junit, cdash, etc. reports about builds

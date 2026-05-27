@@ -5774,7 +5774,9 @@ def eval_conditional(string):
         return spack.paths.detect_old_spack_layout(spack.paths.locations.base)
 
     valid_variables = get_host_environment()
-    valid_variables.update({"re": re, "env": os.environ, "old_layout_detected": old_layout_detected})
+    valid_variables.update(
+        {"re": re, "env": os.environ, "old_layout_detected": old_layout_detected}
+    )
     return eval(string, valid_variables)
 
 
