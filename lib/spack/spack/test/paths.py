@@ -289,9 +289,7 @@ def test_user_cache_path_is_default_when_env_var_is_empty(tmp_path, set_home):
     )
 
 
-def test_location_vars_that_use_other_location_vars(
-    tmp_path, set_home, mutable_config, monkeypatch
-):
+def test_location_vars_that_use_other_location_vars(tmp_path, set_home, monkeypatch):
     import spack.util.path
 
     def setup_layout_configs(base_path):
@@ -312,26 +310,41 @@ def test_location_vars_that_use_other_location_vars(
     basedir = _ensure_dir(tmp_path / "spack-root")
     setup_layout_configs(basedir)
 
-    mutable_config.set("config", {"locations": {"home": "$spack/home"}})
-
     p1 = SpackPaths(SpackPathsBase(str(basedir)))
     # This is a bit strange but resolution of the config variable involves accessing
     # the module, so we need to monkeypatch that
     monkeypatch.setattr(spack.paths_base, "locations", p1.base)
+    monkeypatch.setattr(spack.paths, "locations", p1)
     install_rel = pathlib.Path(".local") / "share" / "spack" / "installs"
     # Create new config to pick up layout detection
     cfg = spack.config.create()
-    install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
+
+    # Add a test scope with custom config:locations:home
+    cfg.push_scope(spack.config.InternalConfigScope("test", {"config": {"locations": {"home": "$spack/home"}}}))
+
+    # Replace the global CONFIG with our custom one
+    monkeypatch.setattr(spack.config, "CONFIG", cfg)
+
+    install_root = str(pathlib.Path(p1.data_home) / "installs")
     assert install_root == str(pathlib.Path(basedir) / "home" / install_rel)
 
     # Now try defining a $data_home -> $spack_home -> $spack
     p2 = SpackPaths(SpackPathsBase(str(basedir)))
     monkeypatch.setattr(spack.paths_base, "locations", p2.base)
-    mutable_config.set("config", {"locations": {"home": "$spack/home", "data": "$spack_home"}})
+    monkeypatch.setattr(spack.paths, "locations", p2)
     # Create new config to pick up layout detection
-    cfg = spack.config.create()
-    install_root = spack.util.path.substitute_config_variables(cfg.get("config:install_tree:root"))
-    assert install_root == str(pathlib.Path(basedir) / "home" / "installs")
+    cfg2 = spack.config.create()
+    # Add a test scope with custom config:locations
+    cfg2.push_scope(
+        spack.config.InternalConfigScope(
+            "test", {"config": {"locations": {"home": "$spack/home", "data": "$spack_home/data"}}}
+        )
+    )
+    # Replace the global CONFIG with our custom one
+    monkeypatch.setattr(spack.config, "CONFIG", cfg2)
+
+    install_root = str(pathlib.Path(p2.data_home) / "installs")
+    assert install_root == str(pathlib.Path(basedir) / "home" / "data" / "installs")
 
 
 def test_license_dir_config(mutable_config, mock_packages, tmp_path, monkeypatch, set_home):
