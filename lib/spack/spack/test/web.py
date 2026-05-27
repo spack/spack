@@ -7,7 +7,6 @@ import os
 import pathlib
 import pickle
 import ssl
-import time
 import urllib.request
 from typing import Dict
 
@@ -39,25 +38,6 @@ page_4 = _create_url("4.html")
 
 root_with_fragment = _create_url("index_with_fragment.html")
 root_with_javascript = _create_url("index_with_javascript.html")
-
-
-@pytest.fixture(scope="function")
-def mock_sleep(monkeypatch):
-
-    class CallCounter:
-        def __init__(self):
-            self.times = []
-
-        def __call__(self, time):
-            self.times.append(time)
-
-        @property
-        def count(self):
-            return len(self.times)
-
-    _sleep = CallCounter()
-    monkeypatch.setattr(time, "sleep", _sleep)
-    yield _sleep
 
 
 @pytest.mark.parametrize(
@@ -495,7 +475,9 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
             )
         return "ok"
 
-    retrying = spack.util.web.retry_on_transient_error(flaky_func, retries=max_retries)
+    retrying = spack.util.web.retry_on_transient_error(
+        flaky_func, spack.util.web.Retry(total=max_retries)
+    )
 
     if expect_failure:
         with pytest.raises(urllib.error.HTTPError):
@@ -520,7 +502,7 @@ def test_retry_on_transient_error_non_oserror(mock_sleep):
             raise ResponseStreamingError("IncompleteRead")
         return "ok"
 
-    retrying = spack.util.web.retry_on_transient_error(flaky_func, retries=5)
+    retrying = spack.util.web.retry_on_transient_error(flaky_func)
 
     assert retrying() == "ok"
     assert call_count == 3

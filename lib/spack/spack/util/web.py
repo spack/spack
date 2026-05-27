@@ -49,7 +49,7 @@ class Retry:
     def __init__(
         self,
         total: int = 5,
-        backoff_factor: float = 0.1,
+        backoff_factor: float = 0.5,
         backoff_jitter: float = 0.0,
         backoff_max: float = 120.0,
     ):
@@ -119,19 +119,17 @@ _R = TypeVar("_R")
 
 
 def retry_on_transient_error(
-    f: Callable[_P, _R], retries: int = 5, sleep: Optional[Callable[[float], None]] = None
+    f: Callable[_P, _R], retry: Optional[Retry] = None
 ) -> Callable[_P, _R]:
     """Retry a function on transient HTTP/network errors with exponential backoff."""
-    sleep = sleep or time.sleep
-
     @functools.wraps(f)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        for i in range(retries):
+        _retry = retry or Retry()
+        for _ in _retry:
             try:
                 return f(*args, **kwargs)
             except Exception as e:
-                if i + 1 != retries and is_transient_error(e):
-                    sleep(2**i)  # type: ignore[misc]  # mypy still thinks it's possibly None.
+                if not _retry.is_last_attempt() and is_transient_error(e):
                     continue
                 raise
         raise AssertionError("unreachable")

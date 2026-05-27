@@ -19,6 +19,7 @@ import stat
 import sys
 import tempfile
 import textwrap
+import time
 import xml.etree.ElementTree
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
@@ -2614,3 +2615,22 @@ class FsTree:
                     p.write_bytes(content.content)
                 elif isinstance(content.content, str):
                     p.write_text(content.content, encoding="utf-8")
+
+
+@pytest.fixture(scope="function")
+def mock_sleep(monkeypatch):
+
+    class CallCounter:
+        def __init__(self):
+            self.times = []
+
+        def __call__(self, time):
+            self.times.append(time)
+
+        @property
+        def count(self):
+            return len(self.times)
+
+    _sleep = CallCounter()
+    monkeypatch.setattr(time, "sleep", _sleep)
+    yield _sleep
