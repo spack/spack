@@ -8,6 +8,7 @@ import functools
 import io
 import json
 import os
+import random
 import re
 import shutil
 import socket
@@ -40,6 +41,56 @@ from spack.llnl.util.filesystem import mkdirp, rename, working_dir
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+
+
+class Retry:
+    """Wrapper class around retry logic"""
+
+    def __init__(
+        self,
+        total: int = 5,
+        backoff_factor: float = 0.1,
+        backoff_jitter: float = 0.0,
+        backoff_max: float = 120.0,
+    ):
+        self.total = total
+        self.count = 0
+        self.backoff_factor = backoff_factor
+        self.backoff_jitter = backoff_jitter
+        self.backoff_max = backoff_max
+
+    def is_last_attempt(self):
+        """Return if this the retry counter is on last attempt"""
+        return self.count == self.total - 1
+
+    def is_exhausted(self):
+        """Return if this the retry counter is exhausted"""
+        return self.count >= self.total
+
+    def reset(self):
+        """Reset the retry counter"""
+        self.count = 0
+
+    def _increment(self):
+        """Increment the attempt counter"""
+        self.count += 1
+
+    def _sleep(self):
+        """Sleep for the current attempts backoff waiting period"""
+        backoff: float = self.backoff_factor * (2**self.count)
+        if self.backoff_jitter != 0.0:
+            backoff += random.random() * self.backoff_jitter
+        backoff = float(max(0, min(self.backoff_max, backoff)))
+        time.sleep(backoff)
+
+    def __iter__(self):
+        """Convenient iterator function that handles doing backoff automatically"""
+        while True:
+            yield self.count
+            self._increment()
+            if self.is_exhausted():
+                break
+            self._sleep()
 
 
 def is_transient_error(e: Exception) -> bool:

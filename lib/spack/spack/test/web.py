@@ -7,6 +7,7 @@ import os
 import pathlib
 import pickle
 import ssl
+import time
 import urllib.request
 from typing import Dict
 
@@ -38,6 +39,25 @@ page_4 = _create_url("4.html")
 
 root_with_fragment = _create_url("index_with_fragment.html")
 root_with_javascript = _create_url("index_with_javascript.html")
+
+
+@pytest.fixture(scope="function")
+def mock_sleep(monkeypatch):
+
+    class CallCounter:
+        def __init__(self):
+            self.times = []
+
+        def __call__(self, time):
+            self.times.append(time)
+
+        @property
+        def count(self):
+            return len(self.times)
+
+    _sleep = CallCounter()
+    monkeypatch.setattr(time, "sleep", _sleep)
+    yield _sleep
 
 
 @pytest.mark.parametrize(
@@ -461,11 +481,10 @@ def test_ssl_curl_cert_file(
         (404, 1, 5, True),  # not transient, never retried
     ],
 )
-def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_failure):
+def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_failure, mock_sleep):
     import urllib.error
 
     call_count = 0
-    sleep_times = []
 
     def flaky_func():
         nonlocal call_count
@@ -476,26 +495,23 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
             )
         return "ok"
 
-    retrying = spack.util.web.retry_on_transient_error(
-        flaky_func, retries=max_retries, sleep=sleep_times.append
-    )
+    retrying = spack.util.web.retry_on_transient_error(flaky_func, retries=max_retries)
 
     if expect_failure:
         with pytest.raises(urllib.error.HTTPError):
             retrying()
     else:
         assert retrying() == "ok"
-        assert sleep_times == [2**i for i in range(num_errors)]
+        assert mock_sleep.times == [2**i for i in range(num_errors)]
 
 
-def test_retry_on_transient_error_non_oserror():
+def test_retry_on_transient_error_non_oserror(mock_sleep):
     """Non-OSError exceptions with transient names (e.g. botocore) should be retried."""
 
     class ResponseStreamingError(Exception):
         pass
 
     call_count = 0
-    sleep_times = []
 
     def flaky_func():
         nonlocal call_count
@@ -504,10 +520,66 @@ def test_retry_on_transient_error_non_oserror():
             raise ResponseStreamingError("IncompleteRead")
         return "ok"
 
-    retrying = spack.util.web.retry_on_transient_error(
-        flaky_func, retries=5, sleep=sleep_times.append
-    )
+    retrying = spack.util.web.retry_on_transient_error(flaky_func, retries=5)
 
     assert retrying() == "ok"
     assert call_count == 3
-    assert sleep_times == [1, 2]
+    assert mock_sleep.times == [1, 2]
+
+
+def test_retry(monkeypatch, mock_sleep):
+
+    retry = spack.util.web.Retry(total=5, backoff_factor=1.0e-4, backoff_jitter=1.0e-9, backoff_max=1)
+
+    # No early exit
+    count = 0
+    for _ in retry:
+        assert retry.count == count
+        count += 1
+
+    assert count == 5
+    assert retry.count == 5
+    assert mock_sleep.count  == 4
+
+    retry.reset()
+    assert retry.count == 0
+
+    # Exit early on last attempt
+    count = 0
+    for _ in retry:
+        assert retry.count == count
+        count += 1
+
+        # Skip the last increment step
+        if retry.is_last_attempt():
+            break
+
+    assert count == 5
+    assert retry.count == 4
+    assert mock_sleep.count  == 8
+
+    retry.reset()
+
+    count = 0
+    # Exit early on first attempt
+    for _ in retry:
+        count += 1
+        # Never increment retry, skips sleep
+        break
+
+    assert count == 1
+    assert retry.count == 0
+    assert mock_sleep.count == 8
+
+    retry.reset()
+
+    count = 0
+    # Exit early on second attempt
+    for _ in retry:
+        count += 1
+        if count == 2:
+            break
+
+    assert count == 2
+    assert retry.count == 1
+    assert mock_sleep.count == 9
