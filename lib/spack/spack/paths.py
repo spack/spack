@@ -101,13 +101,6 @@ class SpackPaths:
         self._cache_home = None
 
         self.old_layout_detected = detect_old_spack_layout(base)
-        self._new_layout_enforced = None
-
-    @property
-    def new_layout_enforced(self):
-        if self._new_layout_enforced is None:
-            self._new_layout_enforced = new_layout_enforced()
-        return self._new_layout_enforced
 
     @property
     def state_home(self):
@@ -348,17 +341,6 @@ class SpackPaths:
         return os.path.join(os.path.expanduser("~"), home_rel, "spack"), Provenance.NOTHING_SET
 
 
-
-def new_layout_enforced():
-    cfg = config.get("config:locations", {})
-    for x in ["home", "data", "state", "cache"]:
-        if cfg.get(x, None):
-            return True
-
-    use_env = not bool(cfg.get("disable_env", False))
-    return use_env and any(x.value in os.environ for x in Spack_vars.new_layout())
-
-
 def detect_old_spack_layout(paths: paths_base.SpackPathsBase):
     checks = [
         # It's important if this directory is occupied but we have a separate
@@ -393,7 +375,6 @@ def freeze():
         "data_home": locations.data_home,
         "cache_home": locations.cache_home,
         "old_layout_detected": locations.old_layout_detected,
-        "new_layout_enforced": new_layout_enforced(),
     }
 
 
@@ -402,4 +383,3 @@ def restore(bundled_state):
     locations._data_home = bundled_state["data_home"]
     locations._cache_home = bundled_state["cache_home"]
     locations.old_layout_detected = bundled_state["old_layout_detected"]
-    locations._new_layout_enforced = bundled_state["new_layout_enforced"]

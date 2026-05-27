@@ -124,7 +124,7 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
     spack_home_cfg_prefix = _ensure_dir(tmp_path / "spack-home2")
     spack.config.set("config:locations:home", spack_home_cfg_prefix)
     p2 = SpackPaths(base_paths_generator())
-    checkb(
+    checka(
         p2,
         pathlib.Path(spack_home_cfg_prefix) / ".local" / "share" / "spack" / "installs",
         "p2: config:locations:home override",
@@ -134,14 +134,14 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
     spack_data_prefix = _ensure_dir(tmp_path / "spack-data")
     spack.config.set("config:locations:data", spack_data_prefix)
     p3 = SpackPaths(base_paths_generator())
-    checkb(p3, pathlib.Path(spack_data_prefix) / "installs", "p3: config:locations:data override")
+    checka(p3, pathlib.Path(spack_data_prefix) / "installs", "p3: config:locations:data override")
 
     # SPACK_HOME env variable overrides the above (even if there
     # are no installs there and there are installs in the old location)
     spack_home_env_prefix = _ensure_dir(tmp_path / "spack-home1")
     os.environ["SPACK_HOME"] = spack_home_env_prefix
     p1 = SpackPaths(base_paths_generator())
-    checkb(
+    checka(
         p1,
         pathlib.Path(spack_home_env_prefix) / ".local" / "share" / "spack" / "installs",
         "p1: SPACK_HOME override",
@@ -151,13 +151,13 @@ def _install_path_checks(tmp_path, base_paths_generator, home_prefix, force_old_
     spack_data_home = _ensure_dir(tmp_path / "spack_data_home")
     os.environ["SPACK_DATA_HOME"] = spack_data_home
     p5 = SpackPaths(base_paths_generator())
-    checkb(p5, pathlib.Path(spack_data_home) / "installs", "p5: SPACK_DATA_HOME override")
+    checka(p5, pathlib.Path(spack_data_home) / "installs", "p5: SPACK_DATA_HOME override")
 
     # Disable all location-based env vars: this will then defer
     # to using "config:locations:data"
     spack.config.set("config:locations:disable_env", True)
     p6 = SpackPaths(base_paths_generator())
-    checkb(
+    checka(
         p6,
         pathlib.Path(spack_data_prefix) / "installs",
         "p6: disable_env defers to config:locations:data",
