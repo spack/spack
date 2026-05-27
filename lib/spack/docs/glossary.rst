@@ -219,7 +219,7 @@ For an alphabetic list of every documented keyword and environment variable, see
    strong preference
       A soft constraint declared in ``packages.yaml`` under ``prefer:``.
       The concretizer tries to satisfy it, but may ignore it if it cannot be met.
-      See :ref:`package-preferences`.
+      See :ref:`package-strong-preferences`.
 
    toolchain
       A reusable bundle of compiler and library choices that packages can opt into, configured in ``toolchains.yaml``.
