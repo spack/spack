@@ -192,7 +192,9 @@ class ConfigScope(argparse.Action):
 
     @property
     def choices(self):
-        return spack.config.scopes().keys()
+        # Filter out layout scopes from completion (old-layout, xdg-layout)
+        # These are internal implementation details that vary by installation
+        return [s for s in spack.config.scopes().keys() if s not in ("old-layout", "xdg-layout")]
 
     @choices.setter
     def choices(self, value):
