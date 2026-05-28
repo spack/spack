@@ -550,8 +550,6 @@ class ConcretizationCache:
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
         self.root /= f"v{ConcretizationCache.VERSION}"
 
-        self.root.mkdir(parents=True, exist_ok=True)
-
     def cleanup(self):
         """Prunes the concretization cache according to configured entry
         count limits. Cleanup is done in LRU ordering."""
@@ -583,6 +581,8 @@ class ConcretizationCache:
 
     def cache_entries(self):
         """Generator producing cache entries within a bucket"""
+        if not self.root.exists():
+            return
         for cache_entry in self.root.iterdir():
             # skip dotfiles and old-style directory entries
             if not cache_entry.name.startswith(".") and cache_entry.is_file():
