@@ -1138,7 +1138,6 @@ class OptionalInclude:
         # include.
         destination = getattr(self, "destination", "")
         if self.remote and destination:
-            assert filesystem.can_write_to_dir(destination)
             return destination
 
         # Prefer the (writable) parent scope directory for a local relative path.
@@ -1401,9 +1400,10 @@ class IncludePath(OptionalInclude):
         # Ensure the explicit destination for a remote file is writable.
         base = self.destination or self.base_directory(self.path, parent_scope)
         if self.remote and base and os.path.isdir(base):
-            assert filesystem.can_write_to_dir(self.destination), (
-                f"Cannot include {self.path}. Unable to write to {base}"
-            )
+            if not filesystem.can_write_to_dir(self.destination):
+                raise spack.error.ConfigError(
+                    f"Cannot include {self.path}. Unable to write to {base}"
+                )
 
         tty.debug(f"Local base directory for {self.path} is {base}")
         config_path = rfc_util.local_path(self.path, self.sha256, base)

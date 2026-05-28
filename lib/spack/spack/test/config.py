@@ -2269,13 +2269,10 @@ def test_included_path_unwritable_dest(tmp_path: pathlib.Path, mock_fetch_url_te
         "sha256": sha256,
     }
 
-    try:
-        include = spack.config.included_path(entry)
-        parent_scope = spack.config.ConfigScope("fake")
-        with pytest.raises(AssertionError, match="Unable to write to"):
-            include.scopes(parent_scope)
-    finally:
-        dest.chmod(current_mode)
+    include = spack.config.included_path(entry)
+    parent_scope = spack.config.ConfigScope("fake")
+    with pytest.raises(spack.error.ConfigError, match="Unable to write to"):
+        include.scopes(parent_scope)
 
 
 @pytest.mark.not_on_windows("chmod behaves differently")
@@ -2293,13 +2290,6 @@ def test_included_path_git_unwritable_dest(tmp_path: pathlib.Path):
     }
 
     parent_scope = spack.config.ConfigScope("fake")
-    try:
-        include = spack.config.included_path(entry)
-        with pytest.raises(spack.error.ConfigError, match="Unable to initialize"):
-            include.scopes(parent_scope)
-    finally:
-        dest.chmod(current_mode)
-        # Ensure the unwritable temp dir is removed to avoid failure on some
-        # platforms (e.g., rhel8).
-        if include.destination:
-            shutil.rmtree(include.destination)  # type: ignore[arg-type]
+    include = spack.config.included_path(entry)
+    with pytest.raises(spack.error.ConfigError, match="Unable to check out"):
+        include.scopes(parent_scope)
