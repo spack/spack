@@ -192,8 +192,6 @@ class GpgKeyAlgorithm(enum.Enum):
 
         if value > 255:
             return GpgKeyAlgorithm.LIBGCRYPT
-        elif value == 255:
-            raise ValueError("Algorithm id 255 is assumed to be unassigned")
         else:  # value < 255
             return GpgKeyAlgorithm.UNKNOWN
 
