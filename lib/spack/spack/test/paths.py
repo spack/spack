@@ -108,7 +108,7 @@ def test_disable_env_ignores_env_vars(working_env, tmp_path, mutable_config, set
 # ---------------------------------------------------------------------------
 
 
-def test_user_cache_path_env_sets_state_home(working_env, tmp_path):
+def test_user_cache_path_env_sets_state_home(working_env, tmp_path, mutable_config):
     target = str(tmp_path / "cache")
     os.environ["SPACK_USER_CACHE_PATH"] = target
     p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
@@ -118,7 +118,7 @@ def test_user_cache_path_env_sets_state_home(working_env, tmp_path):
     assert p.package_repos_path == os.path.join(target, "package_repos")
 
 
-def test_state_home_env_overrides_user_cache_path(working_env, tmp_path):
+def test_state_home_env_overrides_user_cache_path(working_env, tmp_path, mutable_config):
     """When both SPACK_USER_CACHE_PATH and SPACK_STATE_HOME are set, the
     older one (SPACK_USER_CACHE_PATH) wins, matching pre-1.2 behavior."""
     legacy = str(tmp_path / "legacy")
