@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import pathlib
+import re
 
 import pytest
 
@@ -95,6 +96,24 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap("reset", "-y")
     assert not os.path.exists(bootstrap_yaml)
     assert os.path.exists(backup_file)
+
+
+def test_list_sources_url(config, tmp_path):
+    metadata_yaml = tmp_path/"metadata.yaml"
+    metadata_yaml.write_text(
+        "type: install\n"
+        "description: test\n"
+        "info:\n"
+        "  url: ../../bootstrap_cache\n"
+    )
+    with spack.config.override("bootstrap", {
+        "sources": [{"name": "test", "metadata": str(tmp_path)}],
+        "trusted": {"test": True}
+    }):
+        output = _bootstrap("list")
+    match = re.search(r"url:(.+)", output)
+    url = match.group(1).strip()
+    assert os.path.isabs(url)
 
 
 def test_list_sources(config):
