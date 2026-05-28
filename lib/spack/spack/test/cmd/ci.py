@@ -2230,7 +2230,9 @@ def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_ch
                 "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
             ],
         )
-        monkeypatch.setattr(ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums)
+        monkeypatch.setattr(
+            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+        )
 
         out = ci_cmd("verify-patches", commits[-1], commits[-3])
         assert "Validated patch checksum in diff-test" in out
@@ -2241,7 +2243,9 @@ def test_ci_verify_patches_invalid(monkeypatch, mock_packages, mock_git_package_
     with spack.repo.use_repositories(repo):
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
         monkeypatch.setattr(spack.cmd.ci, "_collect_url_patch_checksums", lambda pkg_cls: ["abc"])
-        monkeypatch.setattr(ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums)
+        monkeypatch.setattr(
+            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+        )
 
         out = ci_cmd("verify-patches", commits[-1], commits[-3], fail_on_error=False)
         assert "Invalid patch checksum found in diff-test" in out

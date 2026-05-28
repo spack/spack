@@ -46,6 +46,7 @@ level = "long"
 SPACK_COMMAND = "spack"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
+SHA256_REGEX = re.compile(r"^[A-Fa-f0-9]{64}$")
 
 
 def deindent(desc):
@@ -844,9 +845,6 @@ def _collect_url_patch_checksums(pkg_cls) -> List[str]:
             if patch.archive_sha256:
                 checksums.add(patch.archive_sha256)
 
-    if not pkg_cls._patches_dependencies:
-        return list(checksums)
-
     for deps_by_name in pkg_cls.dependencies.values():
         for dependency in deps_by_name.values():
             for patch_list in dependency.patches.values():
@@ -863,7 +861,7 @@ def _collect_url_patch_checksums(pkg_cls) -> List[str]:
 def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
     valid = True
     for checksum in checksums:
-        if not re.fullmatch(r"[A-Fa-f0-9]{64}", checksum):
+        if not SHA256_REGEX.fullmatch(checksum):
             tty.error(
                 f"Invalid patch checksum found in {pkg_name}\n"
                 f"    {checksum}\n"
@@ -910,7 +908,7 @@ def ci_verify_patches(args):
             )
 
         if added_patch_checksums:
-            success &= validate_patch_checksums(pkg_name, added_patch_checksums)
+            success = success and validate_patch_checksums(pkg_name, added_patch_checksums)
 
     if not success:
         sys.exit(1)
