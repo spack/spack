@@ -993,6 +993,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a generate -d 'ge
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild-index -d 'rebuild the buildcache index for the remote mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a rebuild -d 'rebuild a spec if it is not on the remote mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a reproduce-build -d 'generate instructions for reproducing the spec rebuild job'
+complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a verify-patches -d 'validate patches checksum between git refs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ci' -f -a verify-versions -d 'validate version checksum & commits between git refs'
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci' -s h -l help -d 'show this help message and exit'
@@ -1071,6 +1072,12 @@ complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-file -r -d 'Path to public GPG key for validating binary cache installs'
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -f -a gpg_url
 complete -c spack -n '__fish_spack_using_command ci reproduce-build' -l gpg-url -r -d 'URL to public GPG key for validating binary cache installs'
+
+# spack ci verify-patches
+set -g __fish_spack_optspecs_spack_ci_verify_patches h/help 
+
+complete -c spack -n '__fish_spack_using_command ci verify-patches' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command ci verify-patches' -s h -l help -d 'show this help message and exit'
 
 # spack ci verify-versions
 set -g __fish_spack_optspecs_spack_ci_verify_versions h/help

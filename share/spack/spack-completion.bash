@@ -706,7 +706,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-patches verify-versions"
     fi
 }
 
