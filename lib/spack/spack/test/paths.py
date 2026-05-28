@@ -12,6 +12,28 @@ import spack.paths_base
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
+# Disable parallel execution for this module to avoid cache/global state conflicts
+# when tests modify spack.paths.locations or config:locations:*
+pytestmark = pytest.mark.xdist_group(name="paths_serial")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def clear_global_path_caches():
+    """Clear cached values in spack.paths.locations before running tests in this module.
+
+    The global singleton spack.paths.locations caches _data_home, _state_home, and
+    _cache_home values. In parallel test execution or when tests modify config, these
+    cached values can become stale and cause substitute_config_variables to use
+    outdated paths when expanding $data_home, $state_home, etc."""
+    spack.paths.locations._data_home = None
+    spack.paths.locations._state_home = None
+    spack.paths.locations._cache_home = None
+    yield
+    # Clean up after the module completes
+    spack.paths.locations._data_home = None
+    spack.paths.locations._state_home = None
+    spack.paths.locations._cache_home = None
+
 
 def _ensure_dir(pathlike):
     pathlike.mkdir(parents=True, exist_ok=True)
