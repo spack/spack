@@ -5309,22 +5309,21 @@ def test_concretization_cache_store_skips_existing(use_concretization_cache):
 
 
 def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cache, monkeypatch):
-    """store() removes the temp file and re-raises when the rename fails.
+    """store() swallows OSError, logs, and cleans up the temp file.
 
-    This simulates a race where two processes both pass the exists() check and write temp files,
-    but one fails on rename.
+    A failed cache store must not propagate as a concretization failure -- the cache is an
+    optimization, and the concretization that produced ``result`` already succeeded.
     """
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
     problem = "write failure test"
 
-    # Simulate a rename failure (e.g. race condition between concurrent solves)
-    def failing_rename(src, dst):
-        raise OSError("rename failed")
+    def failing_replace(src, dst):
+        raise OSError("replace failed")
 
-    monkeypatch.setattr(os, "rename", failing_rename)
+    monkeypatch.setattr(os, "replace", failing_replace)
 
-    with pytest.raises(OSError, match="rename failed"):
-        cache.store(problem, Result(specs=[]), statistics=[])
+    # store() must not raise even though os.replace did
+    cache.store(problem, Result(specs=[]), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)

@@ -635,11 +635,12 @@ class ConcretizationCache:
             with os.fdopen(fd, "wb") as raw_f:
                 with gzip.open(raw_f, "wb", compresslevel=6) as f:
                     f.write(json.dumps(cache_dict).encode())
-            os.rename(tmp_path, cache_path)
-        except BaseException:
-            # Clean up temp file on any failure (including if another process won the race)
+            os.replace(tmp_path, cache_path)
+        except OSError as e:
+            # Cache store is best-effort; failures shouldn't block a successful concretization.
+            tty.debug(f"Failed to store concretization cache entry {cache_path}: {e}")
             self._remove_entry(pathlib.Path(tmp_path))
-            raise
+            return
 
     def fetch(self, problem: str) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
