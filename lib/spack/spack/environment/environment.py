@@ -3190,6 +3190,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         #: Configuration scope associated with this environment. Note that this is not
         #: invalidated by a re-read of the manifest file.
         self._env_config_scope: Optional[spack.config.ConfigScope] = None
+        self._config_active: bool = False
 
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
@@ -3598,11 +3599,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(self) -> None:
+    def prepare_config_scope(self) -> bool:
         """Add the manifest's scope to the global configuration search path."""
+        if self._config_active:
+            return False
+
         spack.config.CONFIG.push_scope(
             self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
         )
+        return True
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope(s) from the global config path."""
@@ -3612,9 +3617,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def use_config(self):
         """Ensure only the manifest's configuration scopes are global."""
         with no_active_environment():
-            self.prepare_config_scope()
+            changed = self.prepare_config_scope()
             yield
-            self.deactivate_config_scope()
+            if changed:
+                self.deactivate_config_scope()
 
 
 def environment_path_scope(name: str, path: str) -> Optional[spack.config.ConfigScope]:
