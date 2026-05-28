@@ -5,7 +5,6 @@
 import argparse
 import json
 import os
-import re
 import shutil
 import sys
 from typing import Dict, List, Optional, Set, Tuple
@@ -46,8 +45,6 @@ level = "long"
 SPACK_COMMAND = "spack"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
-SHA256_REGEX = re.compile(r"^[A-Fa-f0-9]{64}$")
-
 
 def deindent(desc):
     return desc.replace("    ", "")
@@ -867,22 +864,6 @@ def _collect_url_patches(pkg_cls) -> List[spack.patch.UrlPatch]:
     return patches
 
 
-def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
-    valid = True
-    for checksum in checksums:
-        if not SHA256_REGEX.fullmatch(checksum):
-            tty.error(
-                f"Invalid patch checksum found in {pkg_name}\n"
-                f"    {checksum}\n"
-                "    Patch checksums must be 64 hexadecimal characters"
-            )
-            valid = False
-            continue
-
-        tty.info(f"Validated patch checksum in {pkg_name} --> {checksum}")
-
-    return valid
-
 
 def validate_patch_urls(pkg_name: str, patches: List[spack.patch.UrlPatch]) -> bool:
     valid = True
@@ -949,16 +930,12 @@ def ci_verify_patches(args):
             )
 
         if added_patch_checksums:
-            success = success and validate_patch_checksums(pkg_name, added_patch_checksums)
-
-            valid_added_patch_checksums = {
-                checksum for checksum in added_patch_checksums if SHA256_REGEX.fullmatch(checksum)
-            }
+            added_patch_checksums_set = set(added_patch_checksums)
             patches_to_verify = [
                 patch
                 for patch in url_patches
-                if patch.sha256 in valid_added_patch_checksums
-                or patch.archive_sha256 in valid_added_patch_checksums
+                if patch.sha256 in added_patch_checksums_set
+                or patch.archive_sha256 in added_patch_checksums_set
             ]
 
             if patches_to_verify:
