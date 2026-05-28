@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from typing import Dict, List
@@ -24,6 +25,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
+import spack.patch
 import spack.repo
 import spack.spec
 import spack.stage
@@ -242,6 +244,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
     verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
     verify_versions.set_defaults(func=ci_verify_versions, subparser=verify_versions)
+
+    verify_patches = subparsers.add_parser(
+        "verify-patches",
+        description=doc_dedented(ci_verify_patches),
+        help=doc_first_line(ci_verify_patches),
+    )
+    verify_patches.add_argument("from_ref", help="git ref from which start looking at changes")
+    verify_patches.add_argument("to_ref", help="git ref to end looking at changes")
+    verify_patches.set_defaults(func=ci_verify_patches, subparser=verify_patches)
 
 
 def ci_generate(args):
@@ -820,6 +831,89 @@ def validate_git_versions(
             tty.info(f"Validated {pkg.name}@{version} --> {known_commit}")
 
     return valid_commit
+
+
+def _collect_url_patch_checksums(pkg_cls) -> List[str]:
+    checksums = set()
+
+    for patch_list in pkg_cls.patches.values():
+        for patch in patch_list:
+            if not isinstance(patch, spack.patch.UrlPatch):
+                continue
+            checksums.add(patch.sha256)
+            if patch.archive_sha256:
+                checksums.add(patch.archive_sha256)
+
+    if not pkg_cls._patches_dependencies:
+        return list(checksums)
+
+    for deps_by_name in pkg_cls.dependencies.values():
+        for dependency in deps_by_name.values():
+            for patch_list in dependency.patches.values():
+                for patch in patch_list:
+                    if not isinstance(patch, spack.patch.UrlPatch):
+                        continue
+                    checksums.add(patch.sha256)
+                    if patch.archive_sha256:
+                        checksums.add(patch.archive_sha256)
+
+    return list(checksums)
+
+
+def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
+    valid = True
+    for checksum in checksums:
+        if not re.fullmatch(r"[A-Fa-f0-9]{64}", checksum):
+            tty.error(
+                f"Invalid patch checksum found in {pkg_name}\n"
+                f"    {checksum}\n"
+                "    Patch checksums must be 64 hexadecimal characters"
+            )
+            valid = False
+            continue
+
+        tty.info(f"Validated patch checksum in {pkg_name} --> {checksum}")
+
+    return valid
+
+
+def ci_verify_patches(args):
+    """\
+    validate patch checksums between git refs
+    This command takes from_ref and to_ref arguments and checks any newly added patch
+    checksums in changed package files for valid sha256 format.
+    """
+    # Get a list of all packages that have been changed or added
+    # between from_ref and to_ref
+    pkgs = spack.repo.get_all_package_diffs(
+        "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
+    )
+
+    success = True
+    for pkg_name in pkgs:
+        spec = spack.spec.Spec(pkg_name)
+        pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+        pkg_cls = type(pkg)
+        path = spack.repo.PATH.package_path(pkg_name)
+
+        if pkg.manual_download:
+            tty.warn(f"Skipping manual download package: {pkg_name}")
+            continue
+
+        patch_checksums = _collect_url_patch_checksums(pkg_cls)
+        if not patch_checksums:
+            continue
+
+        with fs.working_dir(os.path.dirname(path)):
+            added_patch_checksums = spack_ci.filter_added_checksums(
+                patch_checksums, path, from_ref=args.from_ref, to_ref=args.to_ref
+            )
+
+        if added_patch_checksums:
+            success &= validate_patch_checksums(pkg_name, added_patch_checksums)
+
+    if not success:
+        sys.exit(1)
 
 
 def ci_verify_versions(args):
