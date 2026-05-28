@@ -5463,8 +5463,6 @@ class SpecfileReaderBase(abc.ABC):
         # specs read in are concrete unless marked abstract
         if node.get("concrete", True):
             spec._mark_root_concrete()
-        else:
-            spec.clear_caches()
 
         if "patches" in node:
             patches = node["patches"]

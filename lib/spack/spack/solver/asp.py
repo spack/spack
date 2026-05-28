@@ -348,6 +348,11 @@ def spec_dict_from_json(data: Dict) -> SpecDict:
     nodes = [node for _, node in entries]
     specs_by_hash = spack.spec.wire_spec_nodes(nodes, "hash", reader)
 
+    # clear the hashes we cached on any abstract specs, so that they can be recomputed later
+    for spec in spack.traverse.traverse_nodes(list(specs_by_hash.values()), key=id):
+        if not spec.concrete:
+            spec.clear_caches()
+
     # Anonymous nodes (nid=None) are reachable transitively through named roots' edges, and
     # are handled by wire_spec_nodes() above. Skip them here to preserve SpecDict on round-trip.
     return {NodeId(*nid): specs_by_hash[node["hash"]] for nid, node in entries if nid is not None}
