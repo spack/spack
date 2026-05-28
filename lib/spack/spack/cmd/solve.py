@@ -23,7 +23,7 @@ section = "developer"
 level = "long"
 
 #: output options
-show_options = ("asp", "opt", "output", "solutions")
+show_options = ("facts", "opt", "output", "solutions", "rules")
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -33,11 +33,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store",
         default="opt,solutions",
         help="select outputs\n\ncomma-separated list of:\n"
-        "  asp          asp program text\n"
+        "  facts        asp facts (problem instance)\n"
+        "  rules        asp rules (.lp files)\n"
         "  opt          optimization criteria for best model\n"
         "  output       raw clingo output\n"
         "  solutions    models found by asp program\n"
-        "  all          all of the above",
+        "  all          all of the above\n"
+        "  asp          alias for 'facts' (deprecated)",
     )
     subparser.add_argument(
         "--timers",
@@ -130,12 +132,14 @@ def solve(parser, args):
     # process output options
     show = re.split(r"\s*,\s*", args.show)
     if "all" in show:
-        show = show_options
+        show = list(show_options)
+    # 'asp' is a deprecated alias for 'facts'
+    show = ["facts" if s == "asp" else s for s in show]
     for d in show:
         if d not in show_options:
             raise ValueError(
                 "Invalid option for '--show': '%s'\nchoose from: (%s)"
-                % (d, ", ".join(show_options + ("all",)))
+                % (d, ", ".join(show_options + ("all", "asp")))
             )
 
     # Format required for the output (JSON, YAML or None)
@@ -151,8 +155,8 @@ def solve(parser, args):
         args.subparser.error("requires at least one spec or an active environment")
 
     solver = asp.Solver()
-    output = sys.stdout if "asp" in show else None
-    setup_only = set(show) == {"asp"}
+    output = sys.stdout if ("facts" in show or "rules" in show) else None
+    setup_only = bool(show) and set(show) <= {"facts", "rules"}
     unify = spack.config.get("concretizer:unify")
     allow_deprecated = spack.config.get("config:deprecated", False)
     if unify == "when_possible":
@@ -162,6 +166,8 @@ def solve(parser, args):
                 out=output,
                 timers=args.timers,
                 stats=args.stats,
+                facts=("facts" in show),
+                rules=("rules" in show),
                 allow_deprecated=allow_deprecated,
             )
         ):
@@ -181,6 +187,8 @@ def solve(parser, args):
             timers=args.timers,
             stats=args.stats,
             setup_only=setup_only,
+            facts=("facts" in show),
+            rules=("rules" in show),
             allow_deprecated=allow_deprecated,
         )
         if not setup_only:
@@ -194,6 +202,8 @@ def solve(parser, args):
                 timers=args.timers,
                 stats=args.stats,
                 setup_only=setup_only,
+                facts=("facts" in show),
+                rules=("rules" in show),
                 allow_deprecated=allow_deprecated,
             )
             if not setup_only:
