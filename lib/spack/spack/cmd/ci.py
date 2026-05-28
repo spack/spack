@@ -837,7 +837,7 @@ def _collect_url_patch_checksums(
 ) -> List[str]:
     checksums = set()
 
-    for patch in (url_patches if url_patches is not None else _collect_url_patches(pkg_cls)):
+    for patch in url_patches if url_patches is not None else _collect_url_patches(pkg_cls):
         checksums.add(patch.sha256)
         if patch.archive_sha256:
             checksums.add(patch.archive_sha256)

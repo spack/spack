@@ -2192,15 +2192,9 @@ def test_ci_collect_url_patch_checksums_includes_dependency_patches(mock_package
     pkg_cls = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     checksums = set(spack.cmd.ci._collect_url_patch_checksums(pkg_cls))
 
-    assert (
-        "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234" in checksums
-    )
-    assert (
-        "1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd" in checksums
-    )
-    assert (
-        "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" in checksums
-    )
+    assert "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234" in checksums
+    assert "1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd" in checksums
+    assert "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" in checksums
 
 
 def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_changes):
@@ -2216,14 +2210,12 @@ def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_ch
             spack.cmd.ci,
             "_collect_url_patch_checksums",
             lambda pkg_cls, **kwargs: [
-                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
             ],
         )
         monkeypatch.setattr(spack.cmd.ci, "_collect_url_patches", lambda pkg_cls: [Patch()])
         monkeypatch.setattr(
-            ci,
-            "filter_added_checksums",
-            lambda checksums, path, **kwargs: checksums,
+            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
         )
         monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", lambda pkg_name, patches: True)
 
@@ -2246,7 +2238,7 @@ def test_ci_verify_patches_validates_patch_urls(
             spack.cmd.ci,
             "_collect_url_patch_checksums",
             lambda pkg_cls, **kwargs: [
-                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
             ],
         )
         monkeypatch.setattr(
