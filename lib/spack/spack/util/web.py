@@ -76,10 +76,6 @@ class Retry:
         """Reset the retry counter"""
         self.count = 0
 
-    def _increment(self):
-        """Increment the attempt counter"""
-        self.count += 1
-
     def backoff(self) -> float:
         """Return the backoff duration in seconds for the current attempt"""
         value: float = self.backoff_factor * (2 ** (self.count - 1))
@@ -95,7 +91,7 @@ class Retry:
         """Convenient iterator function that handles doing backoff automatically"""
         while True:
             yield self.count
-            self._increment()
+            self.count += 1
             if self.is_exhausted():
                 break
             self.sleep()
