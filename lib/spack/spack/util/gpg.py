@@ -612,8 +612,7 @@ class Gpg:
                 continue
 
             # Check if this key is expected, untrust anything that was not expected
-            unexpected_key = key not in keys
-            if unexpected_key:
+            if key not in keys:
                 warnings.warn(
                     f"Untrusting unexpected new key {key} discovered in keyring but not in {keyfile}. "
                 )
@@ -983,6 +982,15 @@ def list(trusted: bool, signing: bool, fmt: str = "default"):
     Args:
         trusted: if True list public keys
         signing: if True list private keys
+        fmt: Key formatting string
+            Values:
+                default: print output from gpg
+
+                GpgKey formatting string
+                    c[olons] - Output everything using a gpg style colon format ie.
+                    s[hort] - Shortened output ie. <fingerprint> (<uid>)
+                    f[pr] - Fingerprint only output ie. <fingerprint>
+
     """
     assert GPG
 
@@ -1044,7 +1052,7 @@ def _socket_dir(gpgconf: Optional[Executable]) -> Optional[pathlib.Path]:
     """Try to ensure that (/var)/run/user/$(id -u) exists so that
        `gpgconf --create-socketdir` can be run later.
 
-    NOTE(opadron): This action helps prevent a large class of
+    NOTE: This action helps prevent a large class of
                    "file-name-too-long" errors in gpg.
 
     If there is no suitable gpgconf, don't even bother trying to
@@ -1076,13 +1084,12 @@ def _socket_dir(gpgconf: Optional[Executable]) -> Optional[pathlib.Path]:
         # If the above operation fails due to lack of permissions, then
         # just carry on without running gpgconf and hope for the best.
         #
-        # NOTE(opadron): Without a dir in which to create a socket for IPC,
+        # NOTE: Without a dir in which to create a socket for IPC,
         #                gnupg may fail if GNUPGHOME is set to a path that
         #                is too long, where "too long" in this context is
         #                actually quite short; somewhere in the
         #                neighborhood of more than 100 characters.
         #
-        # TODO(opadron): Maybe a warning should be printed in this case?
         except OSError as exc:
             if exc.errno not in (errno.EPERM, errno.EACCES):
                 raise
