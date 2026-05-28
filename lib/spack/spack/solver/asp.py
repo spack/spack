@@ -3775,7 +3775,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     # TODO: remove this local import and get rid of dependency on globals
     import spack.environment as ev
 
-    # inject patches -- note that we' can't use set() to unique the
+    # inject patches -- note that we can't use set() to unique the
     # roots here, because the specs aren't complete, and the hash
     # function will loop forever.
     roots = [spec.root for spec in specs.values()]
