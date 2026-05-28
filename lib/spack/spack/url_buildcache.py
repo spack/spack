@@ -1396,14 +1396,19 @@ class MirrorMetadata:
         """
         if not format_spec:
             format_spec = "_url@_version?-_view"
-        out = format_spec.replace("_url", self.url)
-        out = out.replace("_version", str(self.version))
-        out = out.replace("_view", str(self.view))
-        parts = out.split("?")
+
+        formatted = []
+        parts = format_spec.split("?")
+        for p in parts:
+            formatted.append(
+                p.replace("_url", self.url)
+                .replace("_version", str(self.version))
+                .replace("_view", str(self.view))
+            )
         if self.view:
-            return "".join(parts)
+            return "".join(formatted)
         else:
-            return "".join(parts[0::2])
+            return "".join(formatted[0::2])
 
     @classmethod
     def from_string(cls, s: str) -> "MirrorMetadata":
