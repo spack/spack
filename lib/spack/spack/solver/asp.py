@@ -3678,7 +3678,7 @@ def reorder_flags(specs: SpecDict) -> None:
             # 2. Add all sources (the compiler is one of them, so skip any
             # flag group that matches it exactly)
             flag_groups = set()
-            for flag in specs[node].compiler_flags.get(flag_type, []):
+            for flag in spec.compiler_flags.get(flag_type, []):
                 flag_groups.add(
                     spack.spec.CompilerFlag(
                         flag.flag_group,
