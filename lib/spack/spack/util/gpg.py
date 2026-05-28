@@ -731,7 +731,7 @@ class Gpg:
             keys: keys to be exported
             secret: whether to export secret keys or not
         """
-        args = ["--armor", "--output", keyfile]
+        args = ["--yes", "--batch", "--armor", "--output", keyfile]
 
         if GpgKeyType.SECRET in ktype:
             args.append("--export-secret-keys")
