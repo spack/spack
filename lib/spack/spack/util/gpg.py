@@ -9,7 +9,6 @@ import functools
 import os
 import pathlib
 import re
-import warnings
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import spack.error
@@ -615,37 +614,27 @@ class Gpg:
             keyfile: file with the public key
         """
         # This global method is safe to use to list keys in a file
-        keys = extract_public_keys(keyfile)
-        if not keys:
+        imported_keys = extract_public_keys(keyfile)
+        if not imported_keys:
             tty.info(f"No keys to trust in {keyfile}")
             return
 
         # Import the keys from they keyfile and verify trust for all new keys after.
         # This avoids TOCTOU errors where the keyfile may change between extracting
         # the expected keys and trusting the keys.
-        known_keys = self.keys()
-        self.gpg("--batch", "--import", keyfile)
+        self.gpg("--yes", "--batch", "--import", keyfile)
 
         # Iterate all of the keys in the keychain and confirm trust
         for key in self.keys():
             # Skip keys we had before trusting the keys in the file
-            if key in known_keys:
+            if key not in imported_keys:
                 continue
-
-            # Check if this key is expected, untrust anything that was not expected
-            if key not in keys:
-                warnings.warn(
-                    f"Untrusting unexpected new key {key} discovered in keyring but not "
-                    f"in {keyfile}."
-                )
-                self.untrust(key)
 
             # Confirm with the user that the key should be trusted
             if not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
-                tty.info(f"Untrusting key {key}")
+                tty.info(f"Spack will not trust key {key}")
                 self.untrust(key)
 
-            # If promoting trust level to ultimate, continue
             ownertrust = GpgKeyTrust.FULL.ownertrust
             if ultimate:
                 ownertrust = GpgKeyTrust.ULTIMATE.ownertrust
