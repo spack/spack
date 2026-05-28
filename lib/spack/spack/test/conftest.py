@@ -1974,6 +1974,10 @@ class LazyValue:
         return self.val
 
 
+def _mock_env_path_factory(path_str: str) -> str:
+    return path_str
+
+
 @pytest.fixture(scope="function")
 def mutable_mock_env_path(tmp_path: Path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
@@ -1981,7 +1985,10 @@ def mutable_mock_env_path(tmp_path: Path, mutable_config, monkeypatch):
     mutable_config.set("config:environments_root", str(mock_path))
     # Also pin the runtime default so tests that compose with other config
     # fixtures (which may reset the active config) still see the mock.
-    monkeypatch.setattr(ev.environment, "default_env_path", lambda: str(mock_path))
+    # Use functools.partial to make this picklable for subprocess context.
+    monkeypatch.setattr(
+        ev.environment, "default_env_path", functools.partial(_mock_env_path_factory, str(mock_path))
+    )
     return mock_path
 
 
