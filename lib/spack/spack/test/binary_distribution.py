@@ -43,6 +43,7 @@ from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
     BuildcacheComponent,
     BuildcacheEntryError,
+    MirrorMetadata,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     compression_writer,
@@ -409,7 +410,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
     test_url = "file:///fake/keys/dir"
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        spack.binary_distribution._url_generate_package_index(test_url, str(tmp_path))
+        spack.binary_distribution._url_update_index(MirrorMetadata(test_url), str(tmp_path))
 
     assert (
         "Warning: Encountered problem listing packages at "
@@ -429,7 +430,7 @@ def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
         spack.binary_distribution.generate_key_index(url, str(tmp_path))
 
     with pytest.raises(GenerateIndexError, match="Unable to generate package index"):
-        spack.binary_distribution._url_generate_package_index(url, str(tmp_path))
+        spack.binary_distribution._url_update_index(MirrorMetadata(url), str(tmp_path))
 
     assert f"Encountered problem listing packages at {url}" in capfd.readouterr().err
 
@@ -584,7 +585,7 @@ def test_v2_etag_fetching_304():
         assert False, "Should not fetch {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
     )
@@ -609,7 +610,7 @@ def test_v2_etag_fetching_200():
         assert False, "Should not fetch {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
     )
@@ -634,7 +635,7 @@ def test_v2_etag_fetching_404():
         )
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
+        MirrorMetadata("https://www.example.com", 2),
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,
     )
@@ -668,9 +669,7 @@ def test_v2_default_index_fetch_200():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
-        local_hash="outdated",
-        urlopen=urlopen,
+        MirrorMetadata("https://www.example.com", 2), local_hash="outdated", urlopen=urlopen
     )
 
     result = fetcher.conditional_fetch()
@@ -701,9 +700,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
-        local_hash=None,
-        urlopen=urlopen,
+        MirrorMetadata("https://www.example.com", 2), local_hash=None, urlopen=urlopen
     )
 
     result = fetcher.conditional_fetch()
@@ -733,9 +730,7 @@ def test_v2_default_index_not_modified():
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
-        local_hash=index_json_hash,
-        urlopen=urlopen,
+        MirrorMetadata("https://www.example.com", 2), local_hash=index_json_hash, urlopen=urlopen
     )
 
     assert fetcher.conditional_fetch().fresh
@@ -755,9 +750,7 @@ def test_v2_default_index_invalid_hash_file(index_json):
         )
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
-        local_hash=index_json_hash,
-        urlopen=urlopen,
+        MirrorMetadata("https://www.example.com", 2), local_hash=index_json_hash, urlopen=urlopen
     )
 
     assert fetcher.get_remote_hash() is None
@@ -790,9 +783,7 @@ def test_v2_default_index_json_404():
         assert False, "Unexpected fetch {}".format(url)
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
-        spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
-        local_hash="invalid",
-        urlopen=urlopen,
+        MirrorMetadata("https://www.example.com", 2), local_hash="invalid", urlopen=urlopen
     )
 
     with pytest.raises(spack.binary_distribution.FetchIndexError, match="Could not fetch index"):
@@ -1447,13 +1438,11 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     install_cmd("--fake", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir / "nested"), s.name)
 
-    spec_manifests, _ = get_entries_from_cache(
-        str(mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
-    )
+    spec_manifests, _ = get_entries_from_cache(str(mirror_url), BuildcacheComponent.SPEC)
 
     nested_mirror_url = url_util.path_to_file_url(str(mirror_dir / "nested"))
     spec_manifests_nested, _ = get_entries_from_cache(
-        str(nested_mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
+        str(nested_mirror_url), BuildcacheComponent.SPEC
     )
 
     # Expected specs in root mirror
