@@ -7,11 +7,13 @@ include:
   # under ~/.local/share/spack etc.). Earlier entries override later ones,
   # so the scheme can supersede `base` for paths that diverge between
   # layouts. See lib/spack/docs/where_spack_writes_data.rst.
-  - path: old
+  - name: old-layout
+    path: old
     when: 'layout_detected("old")'
     optional: true
 
-  - path: xdg
+  - name: xdg-layout
+    path: xdg
     when: 'not layout_detected("old")'
     optional: true
 
