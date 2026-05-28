@@ -906,25 +906,6 @@ def signing_keys(*args) -> List[GpgKey]:
 
 
 @_autoinit
-def public_keys_to_fingerprint(*args):
-    """Return the keys that can be used to verify binaries."""
-    output = GPG("--list-public-keys", "--with-colons", "--fingerprint", *args, output=str)
-    return _parse_public_keys_output(output)
-
-
-@_autoinit
-def fingerprint_from_key(keyfile):
-    output = GPG("--show-keys", "--with-fingerprint", keyfile, output=str)
-    fingerprint_pattern = re.compile(r"^[A-Fa-f0-9]{40}$")
-    for line in output.splitlines():
-        # re.sub with '\s+' strips spaces, tabs, and non-breaking spaces (\xa0)
-        cleaned_line = re.sub(r"\s+", "", line)
-        if fingerprint_pattern.match(cleaned_line):
-            return cleaned_line.upper()
-    return None
-
-
-@_autoinit
 def public_keys(*args) -> List[GpgKey]:
     """Return a list of fingerprints"""
     assert GPG
@@ -1021,20 +1002,23 @@ def verify(signature: str, file: Optional[str] = None, suppress_warnings: bool =
 @_autoinit
 def validate_fingerprint(fingerprint: str, keyfile: str):
     """Verify a given key's fingerprint matches the provided fingerprint
+    and if it does, trust the key.
 
     Args:
         fingerpint: fingerprint used to verify the public key
         keyfile: filepath to public key that needs fingerprint confirmation
     """
-    key_fpr = fingerprint_from_key(keyfile)
+    key = extract_public_keys(keyfile)
+    if not key:
+        raise SpackGPGError(f"No public keys found in file: {keyfile}")
+    key_fpr = key[0].fpr
     if not key_fpr:
         raise SpackGPGError(f"Could not extract fingerprint from public key: {keyfile}")
-    key_fpr = key_fpr.strip().upper()
     if key_fpr != fingerprint:
         raise SpackGPGError(
             f"Trusted fingerprint does not match fingerprint from public key: {keyfile}"
         )
-    trust(keyfile)
+    trust(keyfile, yes_to_all=True)
 
 
 @_autoinit
