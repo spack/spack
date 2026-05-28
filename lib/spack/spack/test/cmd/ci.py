@@ -2265,7 +2265,9 @@ def test_ci_verify_patches_invalid(monkeypatch, mock_packages, mock_git_package_
         assert "Invalid patch checksum found in diff-test" in out
 
 
-def test_ci_verify_patches_validates_patch_urls(monkeypatch, mock_packages, mock_git_package_changes):
+def test_ci_verify_patches_validates_patch_urls(
+    monkeypatch, mock_packages, mock_git_package_changes
+):
     class Patch:
         def __init__(self, url, sha256, archive_sha256=None):
             self.url = url
