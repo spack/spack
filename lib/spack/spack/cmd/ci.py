@@ -8,7 +8,7 @@ import os
 import re
 import shutil
 import sys
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
@@ -834,15 +834,17 @@ def validate_git_versions(
     return valid_commit
 
 
-def _collect_url_patch_checksums(pkg_cls) -> List[str]:
+def _collect_url_patch_checksums(
+    pkg_cls, url_patches: Optional[List[spack.patch.UrlPatch]] = None
+) -> List[str]:
     checksums = set()
 
-    for patch in _collect_url_patches(pkg_cls):
+    for patch in (url_patches if url_patches is not None else _collect_url_patches(pkg_cls)):
         checksums.add(patch.sha256)
         if patch.archive_sha256:
             checksums.add(patch.archive_sha256)
 
-    return list(checksums)
+    return sorted(checksums)
 
 
 def _collect_url_patches(pkg_cls) -> List[spack.patch.UrlPatch]:
@@ -884,10 +886,10 @@ def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
 
 def validate_patch_urls(pkg_name: str, patches: List[spack.patch.UrlPatch]) -> bool:
     valid = True
-    seen: Set[Tuple[str, str, str]] = set()
+    seen: Set[Tuple[str, str, Optional[str]]] = set()
 
     for patch in patches:
-        key = (patch.url, patch.sha256, patch.archive_sha256 or "")
+        key = (patch.url, patch.sha256, patch.archive_sha256)
         if key in seen:
             continue
         seen.add(key)
@@ -935,11 +937,11 @@ def ci_verify_patches(args):
             tty.warn(f"Skipping manual download package: {pkg_name}")
             continue
 
-        patch_checksums = _collect_url_patch_checksums(pkg_cls)
-        if not patch_checksums:
+        url_patches = _collect_url_patches(pkg_cls)
+        if not url_patches:
             continue
 
-        url_patches = _collect_url_patches(pkg_cls)
+        patch_checksums = _collect_url_patch_checksums(pkg_cls, url_patches=url_patches)
 
         with fs.working_dir(os.path.dirname(path)):
             added_patch_checksums = spack_ci.filter_added_checksums(

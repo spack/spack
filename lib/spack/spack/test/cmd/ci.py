@@ -2231,13 +2231,15 @@ def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_ch
         monkeypatch.setattr(
             spack.cmd.ci,
             "_collect_url_patch_checksums",
-            lambda pkg_cls: [
+            lambda pkg_cls, **kwargs: [
                 "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
             ],
         )
         monkeypatch.setattr(spack.cmd.ci, "_collect_url_patches", lambda pkg_cls: [Patch()])
         monkeypatch.setattr(
-            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+            ci,
+            "filter_added_checksums",
+            lambda checksums, path, **kwargs: checksums,
         )
         monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", lambda pkg_name, patches: True)
 
@@ -2254,10 +2256,14 @@ def test_ci_verify_patches_invalid(monkeypatch, mock_packages, mock_git_package_
     repo, _, commits = mock_git_package_changes
     with spack.repo.use_repositories(repo):
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
-        monkeypatch.setattr(spack.cmd.ci, "_collect_url_patch_checksums", lambda pkg_cls: ["abc"])
+        monkeypatch.setattr(
+            spack.cmd.ci, "_collect_url_patch_checksums", lambda pkg_cls, **kwargs: ["abc"]
+        )
         monkeypatch.setattr(spack.cmd.ci, "_collect_url_patches", lambda pkg_cls: [Patch()])
         monkeypatch.setattr(
-            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+            ci,
+            "filter_added_checksums",
+            lambda checksums, path, **kwargs: checksums,
         )
         monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", lambda pkg_name, patches: True)
 
@@ -2280,7 +2286,7 @@ def test_ci_verify_patches_validates_patch_urls(
         monkeypatch.setattr(
             spack.cmd.ci,
             "_collect_url_patch_checksums",
-            lambda pkg_cls: [
+            lambda pkg_cls, **kwargs: [
                 "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
             ],
         )
@@ -2299,7 +2305,11 @@ def test_ci_verify_patches_validates_patch_urls(
             ],
         )
         monkeypatch.setattr(
-            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+            ci,
+            "filter_added_checksums",
+            lambda checksums, path, **kwargs: [
+                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            ],
         )
 
         captured = {}
