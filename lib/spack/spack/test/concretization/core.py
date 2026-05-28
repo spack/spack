@@ -4490,12 +4490,6 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     assert roundtrip[nid] == spec
 
 
-@pytest.fixture
-def enable_reuse():
-    with spack.config.override("concretizer:reuse", True):
-        yield
-
-
 @pytest.mark.parametrize(
     "spec,reused_dep",
     [
@@ -4530,7 +4524,7 @@ def test_concretization_cache_roundtrip(
         request.getfixturevalue("install_mockery")
         dep = spack.concretize.concretize_one(reused_dep)
         PackageInstaller([dep.package], fake=True, explicit=True).install()
-        request.getfixturevalue("enable_reuse")
+        mutable_config.set("concretizer:reuse", True)
 
     # run one standard concretization to populate the cache and the setup method
     # memoization
