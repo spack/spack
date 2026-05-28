@@ -887,17 +887,6 @@ class Configuration:
         # filter any scopes overridden by `include::`
         scopes = self._filter_overridden(scopes)
 
-        def get_env_section(config_scope, section):
-            data = config_scope.get_section(spack.schema.env.TOP_LEVEL_KEY)
-            if data is None:
-                return None
-
-            # Grab the actual data
-            if spack.schema.env.TOP_LEVEL_KEY in data:
-                data = data[spack.schema.env.TOP_LEVEL_KEY]
-
-            return data
-
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
         # process from lowest to highest precedence since newer take precedence
@@ -918,21 +907,17 @@ class Configuration:
                 data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
-            env_data = None
             if not isinstance(data, dict) or section not in data:
-                data = None
-                env_data = get_env_section(config_scope, section)
-                if not isinstance(env_data, dict):
-                    continue
+                continue
 
                 tty.debug(f"Retrieved {config_scope.name}'s '{section}' data", level=3)
 
             # If configuration is in an old format, transform it and keep track of the scope that
             # may need to be written out to disk.
-            if data and _update_in_memory(data, section):
+            if _update_in_memory(data, section):
                 updated_scopes.append(config_scope)
 
-            merged_section = spack.schema.merge_yaml(merged_section, data or env_data)
+            merged_section = spack.schema.merge_yaml(merged_section, data)
 
         self.updated_scopes_by_section[section] = updated_scopes
 
