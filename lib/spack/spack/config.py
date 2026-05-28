@@ -154,16 +154,6 @@ class ConfigScope:
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
 
-    def get_includes(self) -> Optional[YamlConfigDict]:
-        """Retrieve the 'include' section, allowing for the fact that includes
-        nested in a manifest file fall under spack:include."""
-        includes = self.get_section("include")
-        if includes:
-            tty.debug(f"Retrieved configuration includes for {self.name}: {includes}", level=3)
-            return includes
-
-        return None
-
     @property
     def included_scopes(self) -> List["ConfigScope"]:
         if self._included_scopes is None:
@@ -189,11 +179,8 @@ class ConfigScope:
         self._included_scopes = []
         self._included_lockfiles: List[IncludedLockfile] = []
 
-        includes = self.get_includes()
+        includes = self.get_section("include")
         if includes:
-            if "include" not in includes:
-                return
-
             include_paths = [included_path(data) for data in includes["include"]]
             tty.debug(
                 f"Processing included paths: {[str(path) for path in include_paths]}", level=3
