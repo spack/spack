@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import sys
 from datetime import datetime
 
+import spack.repo
 import spack.user_environment as uenv
 
 
@@ -62,6 +64,47 @@ def write_spec_scripts(shell_script_path: str, mods: str, comments: str):
         raise OSError(f"Error generating to {shell_script_path}\n{e}")
 
 
+def make_repo_path(root):
+    """Make a RepoPath from the repo subdirectories in an environment.
+
+    Args:
+        root: the root of the environment
+    """
+    repos = (
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    )
+    return spack.repo.RepoPath(*repos)
+
+
+def get_load_environment_modifications(spec, shell, repo=None) -> str:
+    """Returns the environment modifications to load the specified spec for the shell.
+
+    Args:
+        spec: The spec whose environment modifications we are returning
+        shell: The shell that the user is running
+        repo: (Optional) A repo to use when calculating environment modifications
+    """
+    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
+    env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
+    return env_mod.shell_modifications(shell)
+
+
+def get_unload_environment_modifications(spec, shell, repo=None):
+    """Returns the environment modifications to unload the specified spec for the shell.
+
+    Args:
+        spec: The spec whose environment modifications we are returning
+        shell: The shell that the user is running
+        repo: (Optional) A repo to use when calculating environment modifications
+    """
+    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo).reversed()
+    env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+
+    return env_mod.shell_modifications(shell)
+
+
 def post_install(spec, explicit=None):
     """Creates and writes a cached shell script in for all available shells
 
@@ -79,9 +122,6 @@ def post_install(spec, explicit=None):
     if sys.platform == "win32":
         shells_avail = ["bat", "pwsh"]
 
-    load_env_mods = uenv.environment_modifications_for_specs(spec)
-    unload_env_mod = uenv.environment_modifications_for_specs(spec).reversed()
-
     for shell in shells_avail:
         if shell == "bat":
             comments = "::"
@@ -89,15 +129,13 @@ def post_install(spec, explicit=None):
         load_script_path = path_to_load_shell_script(spec, shell)
         unload_script_path = path_to_unload_shell_script(spec, shell)
 
+        repo_path = make_repo_path(os.path.join(spec.prefix, ".spack"))
+        cached_repo = repo_path if repo_path.repos else None
+
         # Write shell script to load
-        load_mods = load_env_mods.shell_modifications(shell)
-        load_mods += f"_spack_env_prepend {uenv.spack_loaded_hashes_var} {spec.dag_hash()} :"
+        load_mods = get_load_environment_modifications(spec, shell, cached_repo)
         write_spec_scripts(load_script_path, load_mods, comments)
 
         # Write shell script to unload
-        unload_mods = unload_env_mod.shell_modifications(shell)
-        unload_mods += (
-            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {spec.dag_hash()} :"
-        )
-
+        unload_mods = get_unload_environment_modifications(spec, shell, cached_repo)
         write_spec_scripts(unload_script_path, unload_mods, comments)

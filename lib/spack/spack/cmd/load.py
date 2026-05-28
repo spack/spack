@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import glob
 import os
 import sys
 
@@ -12,8 +11,6 @@ import spack.cmd.common
 import spack.environment as ev
 import spack.hooks.generate_spec_scripts as generate_script
 import spack.llnl.util.tty as tty
-import spack.repo
-import spack.user_environment as uenv
 from spack.cmd.common import arguments
 
 description = "add package to the user environment"
@@ -79,36 +76,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def _get_environment_modifications(spec, shell, repo) -> str:
-    """Find the environment modifcations for spec
-
-    Args:
-        spec: the spec that needs environment modifications
-        shell: user's shell
-        repo: optional repo to use when spec is not in builtin repo
-    """
-
-    # TODO: if spec is not in builtin repo, pass cached repo or repo path
-
-    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
-    env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-
-    return env_mod.shell_modifications(shell)
-
-
-def _make_repo_path(root):
-    """Make a RepoPath from the repo subdirectories in an environment.
-
-    Args:
-        root: the root of the environment
-    """
-    repos = (
-        spack.repo.from_path(os.path.dirname(p))
-        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
-    )
-    return spack.repo.RepoPath(*repos)
-
-
 def load(parser, args):
     env = ev.active_environment()
 
@@ -136,15 +103,15 @@ def load(parser, args):
     for spec in specs:
         commands = ""
         if spec.external:
-            commands = _get_environment_modifications(spec, shell)
+            commands = generate_script.get_load_environment_modifications(spec, shell)
         else:
             load_script_path = generate_script.path_to_load_shell_script(spec, shell)
 
             if not os.path.isfile(load_script_path):
                 try:
-                    repo_path = _make_repo_path(os.path.join(spec.prefix, ".spack"))
+                    repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
                     cached_repo = repo_path if repo_path.repos else None
-                    mods = _get_environment_modifications(spec, shell, cached_repo)
+                    mods = generate_script.get_load_environment_modifications(spec, shell, cached_repo)
 
                     comments = "::" if shell == "bat" else "###"
                     generate_script.write_spec_scripts(load_script_path, mods, comments)
