@@ -320,13 +320,15 @@ def active(name):
 
 def is_env_dir(path):
     """Whether a directory contains a spack environment."""
+    path = substitute_path_variables(path)
     return os.path.isdir(path) and os.path.exists(os.path.join(path, manifest_name))
 
 
 def as_env_dir(name_or_dir):
     """Translate an environment name or directory to the environment directory"""
-    if is_env_dir(name_or_dir):
-        return name_or_dir
+    path = substitute_path_variables(name_or_dir)
+    if is_env_dir(path):
+        return path
     else:
         validate_env_name(name_or_dir)
         if not exists(name_or_dir):
@@ -417,9 +419,12 @@ def create_in_dir(
             manifest.set_default_view(with_view)
 
         if include_concrete is not None:
+            # Validate included concrete envs
             set_included_envs_to_env_paths(include_concrete)
             validate_included_envs_exists(include_concrete)
             validate_included_envs_concrete(include_concrete)
+
+            # Add unmodified paths to the config
             manifest.set_include_concrete(include_concrete)
 
         manifest.flush()
@@ -568,7 +573,7 @@ def validate_included_envs_exists(include_concrete: List[str]) -> None:
 
     missing_envs = set()
 
-    for i, env_name in enumerate(include_concrete):
+    for env_name in include_concrete:
         if not is_env_dir(env_name):
             missing_envs.add(env_name)
 
@@ -590,7 +595,7 @@ def validate_included_envs_concrete(include_concrete: List[str]) -> None:
     non_concrete_envs = set()
 
     for env_path in include_concrete:
-        if not os.path.exists(os.path.join(env_path, lockfile_name)):
+        if not os.path.exists(os.path.join(as_env_dir(env_path), lockfile_name)):
             non_concrete_envs.add(environment_name(env_path))
 
     if non_concrete_envs:

@@ -168,8 +168,7 @@ def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
         # subject to change with future versions of pytest.
         # if this test suddenly starts failing, verifying the line
         # endings from capfd is a good starting place.
-        newline = "\r\n" if sys.platform == "win32" else "\n"
-        assert capfd.readouterr()[0] == f"echo{newline}"
+        assert capfd.readouterr()[0] == "echo\n"
 
 
 def test_nested_logging_contexts(capfd, tmp_path):

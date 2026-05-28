@@ -96,6 +96,7 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.gpg
 import spack.util.hash
 import spack.util.prefix
 import spack.util.spack_json as sjson
@@ -178,16 +179,6 @@ DISPLAY_FORMAT = (
     "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
     "{/abstract_hash}"
     "{compilers}"
-)
-
-#: Regular expression to pull spec contents out of clearsigned signature
-#: file.
-CLEARSIGN_FILE_REGEX = re.compile(
-    (
-        r"^-----BEGIN PGP SIGNED MESSAGE-----"
-        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
-    ),
-    re.MULTILINE | re.DOTALL,
 )
 
 #: specfile format version. Must increase monotonically
@@ -2857,13 +2848,6 @@ class Spec:
             raise sjson.SpackJSONError("error parsing JSON spec:", e) from e
 
     @staticmethod
-    def extract_json_from_clearsig(data):
-        m = CLEARSIGN_FILE_REGEX.search(data)
-        if m:
-            return sjson.load(m.group(1))
-        return sjson.load(data)
-
-    @staticmethod
     def from_signed_json(stream):
         """Construct a spec from clearsigned json spec file.
 
@@ -2874,7 +2858,7 @@ class Spec:
         if hasattr(stream, "read"):
             data = stream.read()
 
-        extracted_json = Spec.extract_json_from_clearsig(data)
+        extracted_json = spack.util.gpg.extract_json_from_clearsig(data)
         return Spec.from_dict(extracted_json)
 
     @staticmethod

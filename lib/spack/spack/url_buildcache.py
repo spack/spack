@@ -423,8 +423,7 @@ class URLBuildcacheEntry:
     @classmethod
     def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
         """Possibly verify clearsig, then extract contents and return as json"""
-        magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
-        if manifest_contents.startswith(magic_string):
+        if spack.util.gpg.is_clearsig(manifest_contents):
             if verify:
                 # Try to verify and raise if we fail
                 with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
@@ -434,7 +433,7 @@ class URLBuildcacheEntry:
                     if not try_verify(manifest_path):
                         raise NoVerifyException("Signature could not be verified")
 
-            return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
+            return spack.util.gpg.extract_json_from_clearsig(manifest_contents)
         elif verify:
             raise NoVerifyException("Required signature was not found on manifest")
         return json.loads(manifest_contents)
@@ -1304,7 +1303,7 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     try:
         as_string = binary_content.decode("utf-8")
         if path.endswith(".json.sig"):
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(as_string)
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(as_string)
         else:
             spec_dict = json.loads(as_string)
     except Exception as e:

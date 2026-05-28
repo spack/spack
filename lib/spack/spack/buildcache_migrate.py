@@ -16,6 +16,7 @@ import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.gpg
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -118,7 +119,7 @@ def _migrate_spec(
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if v2_spec_url.endswith(".sig"):
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(spec_contents)
         else:
             spec_dict = json.loads(spec_contents)
     else:
@@ -131,7 +132,7 @@ def _migrate_spec(
         if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(fd.read())
 
     # Read out and remove the bits needed to rename and position the archive
     bcc = spec_dict.pop("binary_cache_checksum", None)

@@ -106,9 +106,7 @@ def binary_compatibility(monkeypatch, request):
         # Databases have been created without glibc support
         return
 
-    monkeypatch.setattr(spack.solver.core, "using_libc_compatibility", _true)
-    monkeypatch.setattr(spack.solver.runtimes, "using_libc_compatibility", _true)
-    monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", _true)
+    monkeypatch.setattr(spack.platforms, "using_libc_compatibility", _true)
 
 
 @pytest.fixture(
@@ -2784,7 +2782,7 @@ packages:
     def test_cannot_reuse_host_incompatible_libc(self):
         """Test whether reuse concretization correctly fails to reuse a spec with a host
         incompatible libc."""
-        if not spack.solver.core.using_libc_compatibility():
+        if not spack.platforms.using_libc_compatibility():
             pytest.skip("This test requires libc nodes")
 
         # We install b@1 ^glibc@2.30, and b@0 ^glibc@2.28. The former is not host compatible, the
@@ -4858,7 +4856,7 @@ packages:
     assert mpileaks.satisfies("%c=gcc@12")
 
 
-def test_concrete_specs_skip_prechecks(mock_packages):
+def test_concrete_specs_skip_prechecks(config, mock_packages):
     """Test that concrete specs are not checked for unknown versions and dependencies."""
 
     specs = [spack.spec.Spec("zlib"), spack.spec.Spec("deprecated-versions@=1.1.0")]
@@ -4954,7 +4952,7 @@ def test_penalties_for_variant_defined_by_function(
     assert s.satisfies(expected)
 
 
-def test_default_values_used_if_subset_required_by_dependent(mock_packages):
+def test_default_values_used_if_subset_required_by_dependent(config, mock_packages):
     """If a dependent requires *at least* a subset of default values of a multi-valued variant of
     a dependency, that should not influence concretization; the default values should be used."""
     # multivalue-variant-multi-defaults-dependent requires myvariant=bar without baz.

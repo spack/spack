@@ -575,15 +575,18 @@ class StreamWrapper:
         self.saved_stream_fd = os.dup(self.std_fd)
         self.redirect_fd = None
 
-    def redirect_stream(self, write_conn):
+    def redirect_stream(self, writer):
         """Redirect stdout to the given file descriptor."""
         self.flush()
         # Get fd for new stream
-        redirect_h = write_conn.fileno()
+        # new stream is file object
+        redirect_fd = writer.fileno()
+        # get windows file handle
+        redirect_h = msvcrt.get_osfhandle(redirect_fd)
+        # duplicate handle for local copy we own
         dup_redirect_h = dup_fh(redirect_h)
-        os.set_handle_inheritable(redirect_h, True)
         self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(redirect_h))
+        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(dup_redirect_h))
         os.dup2(self.redirect_fd, self.std_fd)
         setattr(
             sys,
@@ -657,7 +660,9 @@ class winlog:
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
 
-        self.read_p, self.write_p = multiprocessing.Pipe(duplex=False)
+        read_fd, write_fd = os.pipe()
+        self.read_p = read_fd
+        self.write_p = os.fdopen(write_fd, "wb", buffering=0)
 
         # Dup stdout so we can still write to it after redirection
         original_stdout_fd = sys.stdout.fileno()
@@ -697,7 +702,7 @@ class winlog:
 
     @staticmethod
     def _background_reader(
-        read,
+        read_fd: int,
         logfile: str,
         stdout: io.TextIOWrapper,
         append: bool,
@@ -705,46 +710,40 @@ class winlog:
         filter_fn: Optional[Callable],
     ):
         force_echo = False
+        write_mode = "a" if append else "w"
+        read_file = os.fdopen(read_fd, "r", encoding="utf-8", errors="replace", buffering=1)
 
-        write_mode = "ab" if append else "wb"
-        log_writer = open(logfile, mode=write_mode)
+        def process_message(message):
+            nonlocal force_echo
+            clean_line, num_controls = control.subn("", message)
+            log_writer.write(_strip(clean_line))
+            log_writer.flush()
+            if echo or force_echo:
+                output = clean_line
+                if filter_fn:
+                    output = filter_fn(output)
+                enc = stdout.encoding
+                if enc != "utf-8":
+                    output = output.encode(enc, "replace").decode(enc)
+                stdout.write(output)
+                stdout.flush()
+            if num_controls > 0:
+                controls = control.findall(message)
+                force_echo = force_echo_on(force_echo, controls)
+
         try:
-            while True:
-                data = read.recv_bytes(maxlength=4096)
-                if not data:
-                    # the pipe is closed or otherwise inaccesible
-                    return
-                norm_data = data.decode(encoding="utf-8", errors="replace")
-                clean_line, num_controls = control.subn("", norm_data)
+            with open(logfile, mode=write_mode, encoding="utf-8") as log_writer:
+                while True:
+                    line = read_file.readline(4096)
+                    if not line:
+                        break
+                    process_message(line)
 
-                log_writer.write(_strip(clean_line).encode(encoding="utf-8"))
-                log_writer.flush()
-                if echo or force_echo:
-                    output = clean_line
-                    if filter_fn:
-                        output = filter_fn(output)
-                    enc = stdout.encoding
-                    if enc != "utf-8":
-                        output = output.encode(enc, "replace").decode(enc)
-                    stdout.write(output)
-                    stdout.flush()
-                if num_controls > 0:
-                    controls = control.findall(norm_data)
-                    force_echo = force_echo_on(force_echo, controls)
-                if read.closed:
-                    break
-
-        # swallow valid errors
-        except EOFError:
-            pass
-        except OSError:
-            pass
-        except BaseException as e:
+        except Exception as e:
             tty.error(f"Exception in log writer thread! {e}", stream=stdout)
             traceback.print_exc(file=stdout)
         finally:
-            read.close()
-            log_writer.close()
+            read_file.close()
             stdout.close()
 
 
