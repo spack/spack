@@ -5506,10 +5506,12 @@ class SpecfileReaderBase(abc.ABC):
         """
         # Current specfile format
         nodes = data["spec"]["nodes"]
-        hash_type = None
-        any_deps = False
+        if not nodes:
+            raise spack.error.SpecError("Spec dictionary contains no nodes.")
 
         # Pass 0: Determine hash type
+        hash_type = None
+        any_deps = False
         for node in nodes:
             for _, _, _, dhash_type, _, _ in cls.dependencies_from_node_dict(node):
                 any_deps = True
@@ -5523,9 +5525,6 @@ class SpecfileReaderBase(abc.ABC):
             raise spack.error.SpecError(
                 "Spec dictionary contains malformed dependencies. Old format?"
             )
-
-        if not nodes:
-            raise spack.error.SpecError("Spec dictionary contains no nodes.")
 
         specs_by_hash = wire_spec_nodes(nodes, hash_type, cls)
         root_spec_hash = nodes[0][hash_type]
