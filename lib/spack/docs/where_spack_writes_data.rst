@@ -49,13 +49,15 @@ How to override
 
 In order of priority (highest first):
 
-1. **Env vars** for individual homes — ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, ``SPACK_CACHE_HOME``, or ``SPACK_HOME`` (which sets all three via XDG-style subpaths). Any of these also *forces the xdg scheme* even when legacy ``$spack`` data is present, so a partial override never produces a split layout.
+1. **Env vars** for individual homes — ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, ``SPACK_CACHE_HOME``, or ``SPACK_HOME`` (which sets all three via XDG-style subpaths).
+   Any of these also *forces the xdg scheme* even when legacy ``$spack`` data is present, so a partial override never produces a split layout.
 
 2. **Specific config keys** for individual paths — set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
 
 3. **Layout roots** — set ``config:locations:{home,data,state,cache}`` to redirect everything that uses the corresponding substitution.
 
-Config locations themselves — ``user_config_path``, ``system_config_path``, the entry-point ``include.yaml`` — are NOT in config (they bootstrap config). Override them with ``SPACK_USER_CONFIG_PATH``, ``SPACK_SYSTEM_CONFIG_PATH``, or ``SPACK_DISABLE_LOCAL_CONFIG``.
+Config locations themselves — ``user_config_path``, ``system_config_path``, the entry-point ``include.yaml`` — are NOT in config (they bootstrap config).
+Override them with ``SPACK_USER_CONFIG_PATH``, ``SPACK_SYSTEM_CONFIG_PATH``, or ``SPACK_DISABLE_LOCAL_CONFIG``.
 
 Path substitutions
 ------------------
@@ -78,11 +80,15 @@ The ``$xdg_*_home`` substitutions are used by the xdg scheme yaml so the layout 
 Migrating from the old layout
 -----------------------------
 
-If you have a ``~/.spack`` directory from before 1.2, you'll see a one-time warning. Run::
+If you have a ``~/.spack`` directory from before 1.2, you'll see a one-time warning.
+Run::
 
     spack migrate --clear
 
-to copy your config into ``~/.config/spack`` and move ``~/.spack`` to a backup at ``~/.local/share/spack/dotspack_backup``. (The backup location is fixed; it does not move when you set ``SPACK_DATA_HOME``.) Use ``spack migrate --restore`` to undo.
+to copy your config into ``~/.config/spack`` and move ``~/.spack`` to a backup at ``~/.local/share/spack/dotspack_backup``.
+(The backup location is fixed; it does not move when you set ``SPACK_DATA_HOME``.)
+
+Use ``spack migrate --restore`` to undo.
 
 If you have older Spack instances that can't be upgraded and need ``~/.spack`` to stick around, see ``spack migrate --i-need-old-spack``.
 
@@ -114,7 +120,8 @@ The location table
 +----------------+-----------+--------------------+------------+--------------------+
 
 .. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
-.. [#wheretable-2] ``cache_home`` is modeled after ``$XDG_CACHE_HOME``. Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out; misc cache is intended to be longer-lived, so it lives in ``state_home`` instead.
+.. [#wheretable-2] ``cache_home`` is modeled after ``$XDG_CACHE_HOME``.
+                   Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out; misc cache is intended to be longer-lived, so it lives in ``state_home`` instead.
 .. [#wheretable-3] User-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
 
 References
