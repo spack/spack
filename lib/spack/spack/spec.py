@@ -5649,6 +5649,13 @@ class SpecfileV1(SpecfileReaderBase):
 
         return dspec_list
 
+    @classmethod
+    def extract_build_spec_info_from_node_dict(
+        cls, node, hash_type=ht.dag_hash.name
+    ) -> Tuple[str, str, str]:
+        """Not used for SpecfileV1; raises NotImplementedError."""
+        raise NotImplementedError
+
 
 @register_reader
 class SpecfileV2(SpecfileReaderBase):
