@@ -1802,7 +1802,9 @@ class Database:
             )
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort(key=operator.attrgetter("architecture", "versions", "compilers"), reverse=True)  # type: ignore[call-overload]
+        results.sort(
+            key=operator.attrgetter("architecture", "versions", "compilers"), reverse=True
+        )  # type: ignore[call-overload]
         return results
 
     def query_one(
