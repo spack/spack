@@ -3663,6 +3663,11 @@ def reorder_flags(specs: SpecDict) -> None:
             # the input order from flag.flag_group
             flagmap_from_cli[flag_type] = _reorder_flags(flags)
 
+        # For flags that are applied by dependents, put flags from parents
+        # before children; we depend on the stability of traverse() to
+        # achieve a stable flag order for flags introduced in this manner.
+        topo_order = list(s.name for s in spec.traverse(order="post", direction="parents"))
+
         for flag_type in spec.compiler_flags.valid_compiler_flags():
             ordered_flags: List[str] = []
 
@@ -3683,10 +3688,9 @@ def reorder_flags(specs: SpecDict) -> None:
                     )
                 )
 
-            # For flags that are applied by dependents, put flags from parents
-            # before children; we depend on the stability of traverse() to
-            # achieve a stable flag order for flags introduced in this manner.
-            topo_order = list(s.name for s in spec.traverse(order="post", direction="parents"))
+            # If for x->y, x has multiple depends_on declarations that
+            # are activated, and each adds cflags to y, we fall back on
+            # alphabetical ordering to maintain a total order
             lex_order = list(sorted(flag_groups))
 
             def _order_index(flag_group):
@@ -3696,9 +3700,6 @@ def reorder_flags(specs: SpecDict) -> None:
                 type_index, pkg_source = ConstraintOrigin.strip_type_suffix(source)
                 if pkg_source in topo_order:
                     major_index = topo_order.index(pkg_source)
-                    # If for x->y, x has multiple depends_on declarations that
-                    # are activated, and each adds cflags to y, we fall back on
-                    # alphabetical ordering to maintain a total order
                     minor_index = lex_order.index(flag_group)
                 else:
                     major_index = len(topo_order) + lex_order.index(flag_group)
