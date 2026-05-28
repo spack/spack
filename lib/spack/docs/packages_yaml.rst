@@ -760,7 +760,7 @@ For example, you can reference local source archives or build artifacts:
          # Use Spack installation directory
          url: file://$spack/local-sources/mypackage-1.0.tar.gz
          # Use environment name
-         git: /projects/$env/mypackage.git
+         git: $env/mypackage.git
          # Use environment variables
          custom_path: ${HOME}/build/artifacts
          # Use user expansion
