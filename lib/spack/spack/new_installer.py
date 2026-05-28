@@ -771,7 +771,6 @@ def _install(
     # Spliced spec: rewire from build_spec prefix, or trigger build_spec installation.
     if spec.build_spec is not spec:
         if install_policy == "source_only":
-            # Parent guarantees build_spec is available with a read lock.
             send_state("rewiring", state_stream)
             _rewire_no_db(spec, explicit)
             return
@@ -2935,13 +2934,19 @@ class PackageInstaller:
             self._start(selector, jobserver, dag_hash, lock)
         return blocked
 
-    def _install_policy(self, dag_hash: str, is_root: bool) -> InstallPolicy:
+    def _effective_install_policy(self, dag_hash: str, is_root: bool) -> InstallPolicy:
+        """Compute the effective install policy based on the user policy and dynamic factors such
+        as build cache availability and whether build dependencies can be skipped."""
         if dag_hash in self.build_graph.force_source:
             return "source_only"
         policy = self.root_policy if is_root else self.dependencies_policy
         if policy == "auto" and not self.has_mirrors:
             return "source_only"
         if policy == "auto" and not self.include_build_deps:
+            # In case we don't require build deps and we have a binary cache configured, we install
+            # build dependencies only if needed. This works in two steps: force a cache_only
+            # install, and if that fails, add to force_source and schedule build deps so that a
+            # second attempt uses the source_only policy. Therefore, return cache_only here.
             return "cache_only"
         return policy
 
@@ -2977,7 +2982,7 @@ class PackageInstaller:
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
-            install_policy=self._install_policy(dag_hash, is_root),
+            install_policy=self._effective_install_policy(dag_hash, is_root),
             dirty=self.dirty,
             # keep_stage/restage logic taken from installer.py
             keep_stage=self.keep_stage or is_develop,
