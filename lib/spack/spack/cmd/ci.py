@@ -46,6 +46,7 @@ SPACK_COMMAND = "spack"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
 
+
 def deindent(desc):
     return desc.replace("    ", "")
 

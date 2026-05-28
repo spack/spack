@@ -2187,6 +2187,7 @@ def verify_git_versions_invalid(monkeypatch):
 
     monkeypatch.setattr(spack.cmd.ci, "validate_git_versions", validate_git_versions)
 
+
 def test_ci_collect_url_patch_checksums_includes_dependency_patches(mock_packages):
     pkg_cls = spack.repo.PATH.get_pkg_class("patch-several-dependencies")
     checksums = set(spack.cmd.ci._collect_url_patch_checksums(pkg_cls))
