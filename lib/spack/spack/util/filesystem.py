@@ -3409,12 +3409,28 @@ def fix_darwin_install_name(path: str) -> None:
 
 
 @memoized
+def bootstrap_relocate() -> Executable:
+    import spack.bootstrap
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
+
+
+@memoized
 def relocate(package=None) -> Executable:
+    wrapper_spec = None
     if package:
-        spec = package.spec["compiler-wrapper"]
-    else:
-        spec = spack.store.STORE.db.query_local("compiler-wrapper", installed=True)[0]
-    return Executable(str(spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+        wrapper_spec = package.spec["compiler-wrapper"]
+    if not wrapper_spec or not wrapper_spec.installed:
+        # Don't have one associated with our package installed
+        # fine, pull from local db, the functionality we need is
+        # origin agnostic
+        # NOTE: this will need updating if we ever introduce breaking changes
+        # in our relocate behavior
+        wrapper_spec = next(iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None)
+    if not wrapper_spec:
+        # We need to bootstrap
+        return bootstrap_relocate()
+    return Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
 
 
 @memoized
