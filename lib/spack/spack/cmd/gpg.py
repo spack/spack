@@ -167,7 +167,7 @@ def gpg_export(args):
 
 def gpg_list(args):
     """list keys available in the keyring"""
-    spack.util.gpg.list(args.trusted, args.signing, args.fmt)
+    spack.util.gpg.glist(args.trusted, args.signing, args.fmt)
 
 
 def gpg_trust(args):

@@ -90,4 +90,4 @@ def test_really_long_gnupghome_dir(tmp_path: pathlib.Path, has_socket_dir):
         spack.util.gpg.create(
             name="Spack testing 1", email="test@spack.io", comment="Spack testing key", expires="0"
         )
-        spack.util.gpg.list(True, True)
+        spack.util.gpg.glist(True, True)

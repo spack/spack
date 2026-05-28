@@ -999,7 +999,7 @@ def verify(signature: str, file: Optional[str] = None, suppress_warnings: bool =
 
 
 @_autoinit
-def list(trusted: bool, signing: bool, fmt: str = "default"):
+def glist(trusted: bool, signing: bool, fmt: str = "default"):
     """List known keys.
 
     Args:
