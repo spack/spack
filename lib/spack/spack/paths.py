@@ -16,6 +16,7 @@ import sys as _sys
 import types as _types
 from contextlib import contextmanager
 from enum import Enum
+from typing import TYPE_CHECKING
 
 import spack.config as config
 import spack.paths_base as paths_base
@@ -312,6 +313,59 @@ def restore(bundled_state):
     locations.old_layout_detected = bundled_state["old_layout_detected"]
 
 
+# Type hints for mypy - these module-level attributes are dynamically resolved at runtime
+# via the module shim below. Declared here so mypy can see them when checking imports.
+if TYPE_CHECKING:
+    # From SpackPaths
+    state_home: str
+    data_home: str
+    cache_home: str
+    spack_home: str
+    user_cache_path: str
+    reports_path: str
+    default_monitor_path: str
+    user_repos_cache_path: str
+    package_repos_path: str
+    dotspack_backup: str
+    gpg_path: str
+    gpg_keys_path: str
+    old_layout_detected: bool
+
+    # From SpackPathsBase (via delegation)
+    prefix: str
+    spack_root: str
+    bin_path: str
+    spack_script: str
+    sbang_script: str
+    lib_path: str
+    external_path: str
+    module_path: str
+    vendor_path: str
+    command_path: str
+    platform_path: str
+    compilers_path: str
+    operating_system_path: str
+    test_path: str
+    hooks_path: str
+    share_path: str
+    etc_path: str
+    var_path: str
+    test_repos_path: str
+    mock_packages_path: str
+    mock_gpg_data_path: str
+    mock_gpg_keys_path: str
+    old_install_path: str
+    old_envs_path: str
+    old_fetch_cache_path: str
+    old_gpg_path: str
+    old_gpg_keys_path: str
+    old_licenses_path: str
+    old_default_dot_spack: str
+    user_config_path: str
+    system_config_path: str
+    spack_instance_id: str
+
+
 # Module shim: lets callers keep using `spack.paths.X` for any attribute on
 # `locations` (e.g. `spack.paths.gpg_path`), which itself delegates to
 # `paths_base.locations` for static attributes (e.g. `spack.paths.prefix`).
@@ -320,8 +374,8 @@ def restore(bundled_state):
 # replace this block with a plain
 # `def __getattr__(name): return getattr(locations, name)`.
 class _PathsModule(_types.ModuleType):
-    def __getattr__(self, name):
-        return getattr(locations, name)
+    def __getattr__(self, name: str) -> str:
+        return getattr(locations, name)  # type: ignore[return-value]
 
 
 _shim = _PathsModule(__name__)
