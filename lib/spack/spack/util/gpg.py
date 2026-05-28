@@ -112,21 +112,44 @@ class GpgKeyCapability(enum.Enum):
 class GpgKeyTrust(enum.Enum):
     """Gpg Trust normalized for Field 1 and Field 9"""
 
-    INVALID = "i"
-    REVOKED = "r"
+    UNKNOWN = "-"  # also o or i
     EXPIRED = "e"
-    UNKNOWN = "-"  # - o
+    UNDEFINED = "q"
     NEVER = "n"
     MARGINAL = "m"
     FULL = "f"
     ULTIMATE = "u"
+    REVOKED = "r"
+    ERROR = "?"
     KNOWN = "w"
     SPECIAL = "s"
 
     @classmethod
     def _missing_(cls, value):
-        # If it is not found, then it is unknown
-        return GpgKeyTrust.UNKNOWN
+
+        if isinstance(value, str):
+            value = value.lower()
+
+            # If it is not found, then it is unknown
+            if value in ("o", "i"):
+                return GpgKeyTrust.UNKNOWN
+
+            value_to_trust = dict([(t.value, t) for t in GpgKeyTrust])
+            return value_to_trust.get(value, GpgKeyTrust.ERROR)
+
+        if isinstance(value, int):
+            try:
+                return list(GpgKeyTrust)[value]
+            except IndexError:
+                return GpgKeyTrust.ERROR
+
+    @property
+    def ownertrust(self) -> int:
+        """Return the ownertrust file integer corresponding to the GpgKeyTrust"""
+        try:
+            return list(GpgKeyTrust).index(self)
+        except ValueError:
+            return 8  # GpgKeyTrust.ERROR
 
 
 class GpgKeyAlgorithm(enum.Enum):
@@ -172,7 +195,7 @@ class GpgKeyAlgorithm(enum.Enum):
             return GpgKeyAlgorithm.LIBGCRYPT
         elif value == 255:
             raise ValueError("Algorithm id 255 is assumed to be unassigned")
-        else: # value < 255
+        else:  # value < 255
             return GpgKeyAlgorithm.UNKNOWN
 
     def __str__(cls):
@@ -493,9 +516,7 @@ class Gpg:
 
         return pathlib.Path(gnupghome)
 
-    def _create_gpgfn(
-        self, finder: Callable[..., Optional[Executable]]
-    ) -> Optional[Executable]:
+    def _create_gpgfn(self, finder: Callable[..., Optional[Executable]]) -> Optional[Executable]:
         """Create a GPG function wrapper"""
         import spack.bootstrap
 
@@ -614,7 +635,8 @@ class Gpg:
             # Check if this key is expected, untrust anything that was not expected
             if key not in keys:
                 warnings.warn(
-                    f"Untrusting unexpected new key {key} discovered in keyring but not in {keyfile}. "
+                    f"Untrusting unexpected new key {key} discovered in keyring but not "
+                    f"in {keyfile}."
                 )
                 self.untrust(key)
 
@@ -624,14 +646,15 @@ class Gpg:
                 self.untrust(key)
 
             # If promoting trust level to ultimate, continue
-            if not ultimate:
-                continue
+            ownertrust = GpgKeyTrust.FULL.ownertrust
+            if ultimate:
+                ownertrust = GpgKeyTrust.ULTIMATE.ownertrust
 
             # Update the owner trust to ultimate
             r, w = os.pipe()
             with contextlib.closing(os.fdopen(r, "r")) as rc:
                 with contextlib.closing(os.fdopen(w, "w")) as wc:
-                    wc.write("{0}:6:\n".format(str(key)))
+                    wc.write(f"{key.fpr}:{ownertrust}:\n")
                 self.gpg("--import-ownertrust", input=rc)
 
     def untrust(self, keys: List[GpgKey]):
