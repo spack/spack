@@ -1987,7 +1987,9 @@ def mutable_mock_env_path(tmp_path: Path, mutable_config, monkeypatch):
     # fixtures (which may reset the active config) still see the mock.
     # Use functools.partial to make this picklable for subprocess context.
     monkeypatch.setattr(
-        ev.environment, "default_env_path", functools.partial(_mock_env_path_factory, str(mock_path))
+        ev.environment,
+        "default_env_path",
+        functools.partial(_mock_env_path_factory, str(mock_path)),
     )
     return mock_path
 
