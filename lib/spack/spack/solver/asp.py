@@ -3783,15 +3783,12 @@ def post_process_concretization_result(specs: SpecDict) -> None:
     for root in roots.values():
         spack.spec._inject_patches_variant(root)
 
-    # Add external paths to specs with just external modules
     for s in specs.values():
+        # Add external paths to specs with just external modules
         _ensure_external_path_if_external(s)
-
-    for s in specs.values():
         _develop_specs_from_env(s, ev.active_environment())
 
-    # check for commits must happen after all version adaptations are complete
-    for s in specs.values():
+        # check for commits must happen after all version adaptations are complete
         _specs_with_commits(s)
 
     # mark concrete and assign hashes to all specs in the solve
@@ -3806,6 +3803,7 @@ def post_process_concretization_result(specs: SpecDict) -> None:
         unifier.add(current_spec)
         specs[key] = unifier[current_spec.dag_hash()]
 
+    # needs to happen after finalize_concretization, as it looks up hashes
     for s in specs.values():
         spack.spec.Spec.ensure_no_deprecated(s)
 
