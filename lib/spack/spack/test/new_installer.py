@@ -274,12 +274,12 @@ class TestPackageInstallerConstructor:
     def test_no_binary_mirrors_forces_source_only(
         self, temporary_store, mock_packages, mutable_config
     ):
-        """With no binary mirrors configured, auto is overridden to source_only."""
+        """With no binary mirrors configured, has_mirrors is False so auto resolves to
+        source_only at scheduling time."""
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
         installer = PackageInstaller([spec.package], root_policy="auto")
-        assert installer.root_policy == "source_only"
-        assert installer.dependencies_policy == "source_only"
+        assert not installer.has_mirrors
 
     def test_no_binary_mirrors_preserves_cache_only(
         self, temporary_store, mock_packages, mutable_config

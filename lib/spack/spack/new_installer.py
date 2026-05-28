@@ -718,6 +718,20 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
 
+def _rewire_no_db(spec: spack.spec.Spec, explicit: bool) -> None:
+    """Rewire a spliced spec from its build_spec prefix, without writing to the database."""
+    tmpdir = tempfile.mkdtemp()
+    try:
+        tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
+        spack.binary_distribution.create_tarball(spec.build_spec, tarball)
+        spack.hooks.pre_install(spec)
+        spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
+        spack.binary_distribution.relocate_package(spec)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+    spack.hooks.post_install(spec, explicit)
+
+
 def _install(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -757,6 +771,17 @@ def _install(
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
             raise BinaryCacheMiss(f"No binary available for {spec}")
+
+    # Spliced spec: rewire from build_spec prefix, or trigger build_spec installation.
+    if spec.build_spec is not spec:
+        if install_policy == "source_only":
+            # Parent guarantees build_spec is available with a read lock.
+            send_state("rewiring", state_stream)
+            _rewire_no_db(spec, explicit)
+            return
+        # Binary cache was the only option; signal miss for force_source expansion.
+        send_state("no binary available", state_stream)
+        raise BinaryCacheMiss(f"No binary available for {spec}")
 
     unmodified_env = os.environ.copy()
     env_mods = spack.build_environment.setup_package(pkg, dirty=dirty)
@@ -1702,6 +1727,7 @@ class BuildGraph:
         overwrite_set: Optional[Set[str]] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         explicit_set: Optional[Set[str]] = None,
+        has_mirrors: bool = True,
     ):
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
@@ -1743,10 +1769,27 @@ class BuildGraph:
                     # If it needs to be marked explicit, keep it in the graph (don't prune).
                     if key not in explicit_set or record.explicit:
                         self.pruned.add(key)
-                elif install_policy == "source_only" or include_build_deps:
+                elif (
+                    install_policy == "source_only"
+                    or include_build_deps
+                    or (install_policy == "auto" and not has_mirrors)
+                ):
                     depflag |= dt.BUILD
 
-                dependencies = spec.dependencies(deptype=depflag)
+                dependencies = list(spec.dependencies(deptype=depflag))
+
+                # For spliced specs built from source, add build_spec as a pseudo-dependency
+                # so it gets built before the spliced spec.
+                if spec.build_spec is not spec and key not in self.pruned and (depflag & dt.BUILD):
+                    bs = spec.build_spec
+                    bh = bs.dag_hash()
+                    if bh not in self.pruned:
+                        _, bs_record = database.query_by_spec_hash(bh)
+                        if not (bs_record and bs_record.installed):
+                            dependencies.append(bs)
+                        else:
+                            self.done.add(bh)
+
                 self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
                 # Enqueue new dependencies
@@ -1844,6 +1887,10 @@ class BuildGraph:
         for edge in spec.edges_to_dependencies(depflag=dt.BUILD):
             if (edge.depflag & base_deptypes) == 0:
                 unexpanded.append(edge.spec)
+        if dag_hash in self.force_source and spec.build_spec is not spec:
+            bh = spec.build_spec.dag_hash()
+            if bh not in self.nodes and bh not in self.done and bh not in self.pruned:
+                unexpanded.append(spec.build_spec)
         return unexpanded
 
     def expand_build_deps(
@@ -2400,12 +2447,7 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
-        # No point trying cache when there are no binary mirrors configured.
-        if not spack.mirrors.mirror.MirrorCollection(binary=True):
-            if root_policy == "auto":
-                root_policy = "source_only"
-            if dependencies_policy == "auto":
-                dependencies_policy = "source_only"
+        self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
         self.include_build_deps = include_build_deps
@@ -2438,6 +2480,7 @@ class PackageInstaller:
             self.overwrite,
             tests,
             self.explicit,
+            self.has_mirrors,
         )
 
         #: check what specs we could fetch from binaries (checks against cache, not remotely)
@@ -2447,7 +2490,9 @@ class PackageInstaller:
             pass
 
         self.binary_cache_for_spec = {
-            s.dag_hash(): spack.binary_distribution.BINARY_INDEX.find_by_hash(s.dag_hash())
+            s.dag_hash(): spack.binary_distribution.BINARY_INDEX.find_by_hash(
+                s.build_spec.dag_hash()
+            )
             for s in self.build_graph.nodes.values()
         }
         self.unsigned = unsigned
@@ -2804,8 +2849,13 @@ class PackageInstaller:
             return
         try:
             self.db._read()
+            dep_policy = (
+                "source_only"
+                if (self.dependencies_policy == "auto" and not self.has_mirrors)
+                else self.dependencies_policy
+            )
             newly_added = self.build_graph.expand_build_deps(
-                self.pending_expansions, self.pending_builds, self.db, self.dependencies_policy
+                self.pending_expansions, self.pending_builds, self.db, dep_policy
             )
             for h in newly_added:
                 self.binary_cache_for_spec[h] = (
@@ -2893,6 +2943,8 @@ class PackageInstaller:
         if dag_hash in self.build_graph.force_source:
             return "source_only"
         policy = self.root_policy if is_root else self.dependencies_policy
+        if policy == "auto" and not self.has_mirrors:
+            return "source_only"
         if policy == "auto" and not self.include_build_deps:
             return "cache_only"
         return policy

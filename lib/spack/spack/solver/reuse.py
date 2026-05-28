@@ -14,12 +14,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
-from spack.externals import (
-    ExternalSpecsParser,
-    complete_architecture,
-    complete_variants_and_architecture,
-    extract_dicts_from_configuration,
-)
+from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
 from .runtimes import all_libcs
@@ -153,22 +148,6 @@ class ReuseStrategy(enum.Enum):
     ROOTS = enum.auto()
     DEPENDENCIES = enum.auto()
     NONE = enum.auto()
-
-
-def create_external_parser(
-    packages_with_externals: Any, completion_mode: str
-) -> ExternalSpecsParser:
-    """Get externals from a pre-processed packages.yaml (with implicit externals)."""
-    external_dicts = extract_dicts_from_configuration(packages_with_externals)
-    if completion_mode == "default_variants":
-        complete_fn = complete_variants_and_architecture
-    elif completion_mode == "architecture_only":
-        complete_fn = complete_architecture
-    else:
-        raise ValueError(
-            f"Unknown value for concretizer:externals:completion: {completion_mode!r}"
-        )
-    return ExternalSpecsParser(external_dicts, complete_node=complete_fn)
 
 
 SpecFiltersFactory = Callable[

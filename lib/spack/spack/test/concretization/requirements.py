@@ -18,10 +18,10 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
-from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
-from spack.solver.runtimes import external_config_with_implicit_externals
+from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 

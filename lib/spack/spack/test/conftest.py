@@ -2677,3 +2677,22 @@ class FsTree:
                     p.write_bytes(content.content)
                 elif isinstance(content.content, str):
                     p.write_text(content.content, encoding="utf-8")
+
+
+@pytest.fixture(scope="function")
+def mock_sleep(monkeypatch):
+
+    class CallCounter:
+        def __init__(self):
+            self.times = []
+
+        def __call__(self, duration):
+            self.times.append(duration)
+
+        @property
+        def count(self):
+            return len(self.times)
+
+    _sleep = CallCounter()
+    monkeypatch.setattr(spack.util.web.Retry, "sleep", lambda self: _sleep(self.backoff()))
+    yield _sleep

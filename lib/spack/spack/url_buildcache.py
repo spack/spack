@@ -1365,10 +1365,7 @@ class MirrorMetadata:
         self.view = view
 
     def __str__(self):
-        s = f"{self.url}__v{self.version}"
-        if self.view:
-            s += f"__{self.view}"
-        return s
+        return f"{self:_url__v_version?___view}"
 
     def __eq__(self, other):
         if not isinstance(other, MirrorMetadata):
@@ -1377,6 +1374,41 @@ class MirrorMetadata:
 
     def __hash__(self):
         return hash((self.url, self.version, self.view))
+
+    def __format__(self, format_spec):
+        """Format the mirror metadata
+
+        Format Spec:
+            _url:     metadata.url
+            _version: metadata.version
+            _view:    metadata.view
+            ?:        delimiter to wrap conditional printing based on optional view
+
+        Example
+
+            f"{meta_data:_url?^_view?@v_version}"
+
+            Expansion without a view:
+                https://my-mirror.com/prefix@v3
+
+            Expansion with a view:
+                https://my-mirror.com/prefix^my-view@v3
+        """
+        if not format_spec:
+            format_spec = "_url@_version?-_view"
+
+        formatted = []
+        parts = format_spec.split("?")
+        for p in parts:
+            formatted.append(
+                p.replace("_url", self.url)
+                .replace("_version", str(self.version))
+                .replace("_view", str(self.view))
+            )
+        if self.view:
+            return "".join(formatted)
+        else:
+            return "".join(formatted[0::2])
 
     @classmethod
     def from_string(cls, s: str) -> "MirrorMetadata":

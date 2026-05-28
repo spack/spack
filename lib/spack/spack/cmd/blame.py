@@ -159,8 +159,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
 
-                # TODO: replace check with `is_relative_to` once supported
-                if prefix and str(path).startswith(str(prefix)):
+                if prefix == path or prefix in path.parents:
                     return prefix
 
         # Handle the local repository case, making sure it's a spack repository.
@@ -169,8 +168,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             if "spack_repo" in repo_path.parts:
                 prefix = git_prefix(repo_path)
 
-                # TODO: replace check with `is_relative_to` once supported
-                if prefix and str(path).startswith(str(prefix)):
+                if prefix == path or prefix in path.parents:
                     return prefix
 
     return None

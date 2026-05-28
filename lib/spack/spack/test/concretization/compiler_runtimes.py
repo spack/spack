@@ -16,8 +16,8 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import ViewDescriptor
-from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
-from spack.solver.runtimes import external_config_with_implicit_externals
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.version import Version
 
 
