@@ -7,6 +7,7 @@ import os
 import pathlib
 import pickle
 import ssl
+import urllib.error
 import urllib.request
 from typing import Dict
 
@@ -565,3 +566,23 @@ def test_retry(monkeypatch, mock_sleep):
     assert count == 2
     assert retry.count == 1
     assert mock_sleep.count == 9
+
+
+def test_retry_on_transient_error_reuse(mock_sleep):
+    """A shared Retry instance must be reset on each wrapper invocation."""
+    call_count = 0
+
+    def flaky_func():
+        nonlocal call_count
+        call_count += 1
+        if call_count % 2 != 0:
+            raise urllib.error.HTTPError(
+                url="https://example.com", code=503, msg="err", hdrs={}, fp=None
+            )
+        return "ok"
+
+    retry = spack.util.web.Retry(total=2)
+    retrying = spack.util.web.retry_on_transient_error(flaky_func, retry)
+
+    assert retrying() == "ok"
+    assert retrying() == "ok"

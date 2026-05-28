@@ -49,7 +49,7 @@ class Retry:
     def __init__(
         self,
         total: int = 5,
-        backoff_factor: float = 0.5,
+        backoff_factor: float = 1.0,
         backoff_jitter: float = 0.0,
         backoff_max: float = 120.0,
     ):
@@ -59,12 +59,14 @@ class Retry:
         self.backoff_jitter = backoff_jitter
         self.backoff_max = backoff_max
 
-        assert self.backoff_max > 0, "Maximum backoff must be a positive value"
-        assert self.total >= 0, "Retry total cannot be negative"
+        if self.backoff_max <= 0:
+            raise ValueError("Maximum backoff must be a positive value")
+        if self.total < 1:
+            raise ValueError("Retry total must be at least 1")
 
     def is_last_attempt(self):
         """Return if this the retry counter is on last attempt"""
-        return self.count == self.total - 1
+        return self.count >= self.total - 1
 
     def is_exhausted(self):
         """Return if this the retry counter is exhausted"""
@@ -78,13 +80,16 @@ class Retry:
         """Increment the attempt counter"""
         self.count += 1
 
-    def _sleep(self):
-        """Sleep for the current attempts backoff waiting period"""
-        backoff: float = self.backoff_factor * (2**self.count)
+    def backoff(self) -> float:
+        """Return the backoff duration in seconds for the current attempt"""
+        value: float = self.backoff_factor * (2 ** (self.count - 1))
         if self.backoff_jitter != 0.0:
-            backoff += random.random() * self.backoff_jitter
-        backoff = float(max(0, min(self.backoff_max, backoff)))
-        time.sleep(backoff)
+            value += random.random() * self.backoff_jitter
+        return float(max(0, min(self.backoff_max, value)))
+
+    def sleep(self) -> None:
+        """Sleep for the backoff duration of the current attempt"""
+        time.sleep(self.backoff())
 
     def __iter__(self):
         """Convenient iterator function that handles doing backoff automatically"""
@@ -93,7 +98,7 @@ class Retry:
             self._increment()
             if self.is_exhausted():
                 break
-            self._sleep()
+            self.sleep()
 
 
 def is_transient_error(e: Exception) -> bool:
@@ -129,6 +134,7 @@ def retry_on_transient_error(
     @functools.wraps(f)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         _retry = retry or Retry()
+        _retry.reset()
         for _ in _retry:
             try:
                 return f(*args, **kwargs)

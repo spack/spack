@@ -19,7 +19,6 @@ import stat
 import sys
 import tempfile
 import textwrap
-import time
 import xml.etree.ElementTree
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple, Union
@@ -2624,13 +2623,13 @@ def mock_sleep(monkeypatch):
         def __init__(self):
             self.times = []
 
-        def __call__(self, time):
-            self.times.append(time)
+        def __call__(self, duration):
+            self.times.append(duration)
 
         @property
         def count(self):
             return len(self.times)
 
     _sleep = CallCounter()
-    monkeypatch.setattr(time, "sleep", _sleep)
+    monkeypatch.setattr(spack.util.web.Retry, "sleep", lambda self: _sleep(self.backoff()))
     yield _sleep
