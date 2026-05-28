@@ -9,6 +9,7 @@ import functools
 import os
 import pathlib
 import re
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import spack.error
@@ -155,19 +156,24 @@ class GpgKeyAlgorithm(enum.Enum):
     SLH_DSA_SHAKE_256S = 34
     ML_KEM_786 = 35
     ML_KEM_1024 = 36
+    # Note: 255 is currently unassigned
+    # use it as a catch all for anything not listed
     UNKNOWN = 255
     LIBGCRYPT = 256
 
     @classmethod
     def _missing_(cls, value):
+        if not isinstance(value, int):
+            raise ValueError(
+                "GpgKeyAlgorithm can only be constructed from another Enum or an `int`"
+            )
+
         if value > 255:
             return GpgKeyAlgorithm.LIBGCRYPT
-
-        # Note: 255 is currently unassigned
-        # use it as a catch all for anything not listed
-        if value == 255:
+        elif value == 255:
+            raise ValueError("Algorithm id 255 is assumed to be unassigned")
+        else: # value < 255
             return GpgKeyAlgorithm.UNKNOWN
-        return None
 
     def __str__(cls):
         name = cls.name.lower()
@@ -177,12 +183,21 @@ class GpgKeyAlgorithm(enum.Enum):
 
     def __format__(cls, fspec):
         """Format type with length
-        ex. f"{gpg_algo:{gpg_len}}"
+        ex.
+            gpg_algo = GpgKeyAlgorithm.RSA
+            gpg_len = 2046
+            f"{gpg_algo:{gpg_len}}" -> "rsa 2046"
+
+            f"{gpg_algo}" -> "rsa"
         """
-        int(fspec)
+        # Only allow integer sizes
         name = cls.name.lower()
-        name = name.replace("_so", f"{fspec} (Signing only)")
-        name = name.replace("_eo", f"{fspec} (Encryption only)")
+        if fspec:
+            fspec = int(fspec)
+            name += f" {fspec}"
+
+        name = name.replace("_so", " (Signing only)")
+        name = name.replace("_eo", " (Encryption only)")
         return name
 
 
@@ -471,31 +486,32 @@ class Gpg:
             msg = 'gnupghome "{0}" exists and is not a directory'.format(gnupghome)
             raise SpackGPGError(msg)
 
+        st = os.stat(gnupghome)
+        if st.st_mode != (st.st_mode & 0o040700):
+            msg = 'gnupghome "{0}" has unsafe permissions for a GPG directory'.format(gnupghome)
+            raise SpackGPGError(msg)
+
         return pathlib.Path(gnupghome)
 
     def _create_gpgfn(
-        self, *find_gpgfn: Callable[..., Optional[Executable]]
-    ) -> List[Optional[Executable]]:
+        self, finder: Callable[..., Optional[Executable]]
+    ) -> Optional[Executable]:
         """Create a GPG function wrapper"""
         import spack.bootstrap
 
-        fnwrappers = []
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_gpg_in_path_or_raise()
-            for finder in find_gpgfn:
-                gpgfn = finder()
-                fnwrappers.append(gpgfn)
+            gpgfn = finder()
 
-        for gpgfn in fnwrappers:
-            if gpgfn:
-                gpgfn.add_default_env("GNUPGHOME", str(self.home))
+        if gpgfn:
+            gpgfn.add_default_env("GNUPGHOME", str(self.home))
 
-        return fnwrappers
+        return gpgfn
 
     @property
     def gpg(self):
         if not self._gpg:
-            self._gpg = self._create_gpgfn(_gpg)[0]
+            self._gpg = self._create_gpgfn(_gpg)
             # Ensure the GPG Socket exists
             _ = self.socket_dir
 
@@ -507,7 +523,7 @@ class Gpg:
     @property
     def conf(self) -> Optional[Executable]:
         if not self._gpgconf:
-            self._gpgconf = self._create_gpgfn(_gpgconf)[0]
+            self._gpgconf = self._create_gpgfn(_gpgconf)
 
         return self._gpgconf
 
@@ -544,7 +560,7 @@ class Gpg:
         # Get list of keys from keyring
         return self.gpg(*gpg_args, *fprs, output=str)
 
-    def keys(self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC):
+    def keys(self, *fprs, ktype: GpgKeyType = GpgKeyType.PUBLIC) -> List[GpgKey]:
         return _parse_gpg_output(self._list_keys(*fprs, colons=True, ktype=ktype))
 
     def list_keys(
@@ -592,13 +608,15 @@ class Gpg:
         # Iterate all of the keys in the keychain and confirm trust
         for key in self.keys():
             # Skip keys we had before trusting the keys in the file
-            if known_keys and key in known_keys:
+            if key in known_keys:
                 continue
 
             # Check if this key is expected, untrust anything that was not expected
             unexpected_key = key not in keys
             if unexpected_key:
-                tty.info(f"Untrusting unexpected key {key}")
+                warnings.warn(
+                    f"Untrusting unexpected new key {key} discovered in keyring but not in {keyfile}. "
+                )
                 self.untrust(key)
 
             # Confirm with the user that the key should be trusted
@@ -649,14 +667,13 @@ class Gpg:
         args = [str(signature)]
         if blob and str(blob) != str(signature):
             args.append(str(blob))
-        kwargs = {"error": str} if suppress_warnings else {}
-        print('args: {" ".join(args)}')
+        kwargs = {"error": os.devnull} if suppress_warnings else {}
         self.gpg("--verify", *args, **kwargs)
 
     def sign(
         self,
         blob: Union[str, pathlib.Path],
-        output: Union[str, pathlib.Path] = "",
+        output: Optional[Union[str, pathlib.Path]] = None,
         key: Optional[Union[str, GpgKey]] = None,
         armor: bool = True,
         clearsign: bool = False,
@@ -697,7 +714,7 @@ class Gpg:
         if GpgKeyType.SECRET in ktype:
             args.append("--export-secret-keys")
         else:
-            args.extend(["--yes", "--batch", "--export"])
+            args.extend(["--export"])
 
         fprs = [str(k) for k in keys]
         self.gpg(*args, *fprs)
@@ -793,6 +810,7 @@ def _parse_gpg_output(output: str) -> List[GpgKey]:
             if current_subkey:
                 assert current_key
                 current_key.subkey.append(current_subkey)
+                current_key.subkey.sort(key=lambda k: k.created_at)
                 current_subkey = None
             if current_key:
                 keys.append(current_key)
@@ -978,7 +996,8 @@ def list(trusted: bool, signing: bool, fmt: str = "default"):
 
 
 def _verify_exe_or_raise(exe):
-    """"""
+    """Verify that the gpg executable is a new enough version."""
+
     msg = (
         "Spack requires gpgconf version >= 2\n"
         "  To install a suitable version using Spack, run\n"
@@ -1001,15 +1020,17 @@ def _verify_exe_or_raise(exe):
 def _gpgconf() -> Optional[Executable]:
     """Get executable for gpgconf if it exists"""
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
+    exe = spack.util.executable.which(*GPGCONF_NAMES)
+    if not exe:
+        return None
+
     try:
-        exe = spack.util.executable.which(*GPGCONF_NAMES, required=True)
         _verify_exe_or_raise(exe)
         exe("--dry-run", "--create-socketdir", output=os.devnull, error=os.devnull)
+        return exe
     except spack.util.executable.ProcessError:
         # no dice
-        exe = None
-
-    return exe
+        return None
 
 
 def _gpg() -> Executable:
@@ -1019,7 +1040,7 @@ def _gpg() -> Executable:
     return exe
 
 
-def _socket_dir(gpgconf) -> Optional[pathlib.Path]:
+def _socket_dir(gpgconf: Optional[Executable]) -> Optional[pathlib.Path]:
     """Try to ensure that (/var)/run/user/$(id -u) exists so that
        `gpgconf --create-socketdir` can be run later.
 
@@ -1028,9 +1049,6 @@ def _socket_dir(gpgconf) -> Optional[pathlib.Path]:
 
     If there is no suitable gpgconf, don't even bother trying to
     pre-create a user run dir.
-
-    Args:
-            gpgconf: spack.util.executable.Excutable for gpgconf
 
     Returns:
         path to gpg socket directory
