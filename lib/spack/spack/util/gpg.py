@@ -299,13 +299,13 @@ class GpgUserId:
         assert data["type"] in ("uid", "uat")
 
         self.type = data["type"]
-        self.trust = GpgKeyTrust(data["trust"])
-        if not data["created_at"]:
+        self.trust = GpgKeyTrust(data.get("trust", ""))
+        if "created_at" not in data:
             tty.warn("GPG Key User ID has no creation date")
             self.created_at = None
         else:
             self.created_at = datetime.datetime.fromtimestamp(int(data["created_at"]))
-        self.hash = data["misc"]
+        self.hash = data.get("misc", "")
         self.uid = data["uid"]
         self.origin = data.get("origin")
 
@@ -348,7 +348,7 @@ class GpgKey:
 
         self.type = GpgKeyType(data["type"])
 
-        self.trust = GpgKeyTrust(data["trust"])
+        self.trust = GpgKeyTrust(data.get("trust", ""))
         self.key_len = data["len"]
         self.key_algorithm = GpgKeyAlgorithm(int(data["key_algo"]))
         self.key_id = data["key_id"]
@@ -357,7 +357,7 @@ class GpgKey:
         if data.get("expired_at"):
             self.expires_at = datetime.datetime.fromtimestamp(int(data["expired_at"]))
 
-        self.owner_trust = GpgKeyTrust(data["owner_trust"])
+        self.owner_trust = GpgKeyTrust(data.get("owner_trust", ""))
 
         self.capabilities = set()
         for cap in data.get("capabilities", []):
@@ -808,7 +808,8 @@ def _parse_gpg_fields(karray: List[str]):
     """Parse gpg line into a dict"""
     data = {}
     for key, value in zip(_GPG_FIELD_MAP, karray):
-        data[key] = value
+        if value:
+            data[key] = value
 
     return data
 
