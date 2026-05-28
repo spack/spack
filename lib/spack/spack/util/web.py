@@ -72,10 +72,6 @@ class Retry:
         """Return if this the retry counter is exhausted"""
         return self.count >= self.total
 
-    def reset(self):
-        """Reset the retry counter"""
-        self.count = 0
-
     def backoff(self) -> float:
         """Return the backoff duration in seconds for the current attempt"""
         value: float = self.backoff_factor * (2 ** (self.count - 1))
@@ -89,6 +85,7 @@ class Retry:
 
     def __iter__(self):
         """Convenient iterator function that handles doing backoff automatically"""
+        self.count = 0
         while True:
             yield self.count
             self.count += 1
@@ -130,7 +127,6 @@ def retry_on_transient_error(
     @functools.wraps(f)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         _retry = retry or Retry()
-        _retry.reset()
         for _ in _retry:
             try:
                 return f(*args, **kwargs)

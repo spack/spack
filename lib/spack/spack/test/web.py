@@ -524,9 +524,6 @@ def test_retry(monkeypatch, mock_sleep):
     assert retry.count == 5
     assert mock_sleep.count == 4
 
-    retry.reset()
-    assert retry.count == 0
-
     # Exit early on last attempt
     count = 0
     for _ in retry:
@@ -541,8 +538,6 @@ def test_retry(monkeypatch, mock_sleep):
     assert retry.count == 4
     assert mock_sleep.count == 8
 
-    retry.reset()
-
     count = 0
     # Exit early on first attempt
     for _ in retry:
@@ -553,8 +548,6 @@ def test_retry(monkeypatch, mock_sleep):
     assert count == 1
     assert retry.count == 0
     assert mock_sleep.count == 8
-
-    retry.reset()
 
     count = 0
     # Exit early on second attempt
