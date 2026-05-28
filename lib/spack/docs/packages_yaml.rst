@@ -769,7 +769,7 @@ For example, you can reference local source archives or build artifacts:
 All the variables documented in :ref:`config-file-variables` are supported, including:
 
 * ``$spack``: path to the Spack installation
-* ``$env``: name of the currently active environment
+* ``$env``: path to the currently active environment
 * ``$user``: current user name
 * ``${VARNAME}``: environment variables
 * ``~`` or ``~user``: user home directory expansion
