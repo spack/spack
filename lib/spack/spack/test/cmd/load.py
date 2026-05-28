@@ -1,13 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import os
 import sys
 
 import pytest
 
 import spack.concretize
-import spack.hooks.generate_spec_scripts as shell_script
+import spack.hooks.generate_spec_scripts as spec_script
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 
@@ -18,7 +19,7 @@ location = SpackCommand("location")
 
 
 def _get_load_cmds(spec, shell):
-    load_script_file = shell_script.path_to_load_shell_script(spec, shell)
+    load_script_file = spec_script.path_to_load_shell_script(spec, shell)
 
     with open(load_script_file, "r", encoding="utf-8") as f:
         return f.read()
@@ -88,10 +89,10 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
 
 @pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
 def test_load_includes_run_env(
-    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Tests that environment changes from the package's
     `setup_run_environment` method are added to the user environment in
@@ -106,7 +107,7 @@ def test_load_includes_run_env(
 
 
 @pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
 def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
@@ -131,7 +132,7 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
 
 
 @pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
 def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
     """Tests that any variables set in the user environment are undone by the
@@ -148,7 +149,7 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
 
     unload(shell, "mpileaks")
 
-    unload_script_file = shell_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
+    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
 
     with open(unload_script_file, "r", encoding="utf-8") as f:
         unload_cmds = f.read()
@@ -167,3 +168,30 @@ def test_unload_fails_no_shell(
 
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_regenerates_deleted_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that spack load regenerates the load script if it was deleted and uses the cached repo."""
+    install("--fake", "mpileaks")
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+
+    load(shell, "mpileaks")
+
+    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell)
+    assert os.path.exists(load_script_file)
+
+    os.remove(load_script_file)
+    assert not os.path.exists(load_script_file)
+
+    # Verify cached repo exists
+    cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
+    repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
+    assert len(repo_yaml_files) > 0
+
+    load(shell, "mpileaks")
+    assert os.path.exists(load_script_file)
