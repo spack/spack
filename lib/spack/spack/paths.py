@@ -148,9 +148,7 @@ class SpackPaths:
 
         spack_cfg_check = partial(cfg_check, f"config:locations:{config_var}")
         spack_home_cfg_check = partial(
-            cfg_check,
-            "config:locations:home",
-            rel=os.path.join(home_rel, "spack"),
+            cfg_check, "config:locations:home", rel=os.path.join(home_rel, "spack")
         )
 
         def env_check(env_vars, rel=None):
@@ -164,9 +162,7 @@ class SpackPaths:
         spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
         spack_env_check = partial(env_check, spack_vars)
         spack_home_env_check = partial(
-            env_check,
-            ["SPACK_HOME"],
-            rel=os.path.join(home_rel, "spack"),
+            env_check, ["SPACK_HOME"], rel=os.path.join(home_rel, "spack")
         )
         xdg_env_check = partial(env_check, [xdg_var], rel="spack")
 
