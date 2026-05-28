@@ -72,7 +72,7 @@ _GPG_FIELD_MAP = [
     "key_algo",
     "key_id",
     "created_at",
-    "expire_at",
+    "expires_at",
     "misc",
     "owner_trust",
     "uid",
@@ -103,7 +103,7 @@ class GpgKeyCapability(enum.Enum):
     @classmethod
     def _missing_(cls, value):
         for cap in cls:
-            if value.lower() == cap.value:
+            if value.lower() == cap.value.lower():
                 return cap
         return GpgKeyCapability.UNKNOWN
 
@@ -146,7 +146,7 @@ class GpgKeyTrust(enum.Enum):
     def ownertrust(self) -> int:
         """Return the ownertrust file integer corresponding to the GpgKeyTrust"""
         try:
-            return list(GpgKeyTrust).index(self)
+            return list(GpgKeyTrust)[:8].index(self)
         except ValueError:
             return 8  # GpgKeyTrust.ERROR
 
@@ -351,8 +351,8 @@ class GpgKey:
         self.key_id = data["key_id"]
         self.created_at = datetime.datetime.fromtimestamp(int(data["created_at"]))
         self.expires_at: Optional[datetime.datetime] = None
-        if data.get("expired_at"):
-            self.expires_at = datetime.datetime.fromtimestamp(int(data["expired_at"]))
+        if data.get("expires_at"):
+            self.expires_at = datetime.datetime.fromtimestamp(int(data["expires_at"]))
 
         self.owner_trust = GpgKeyTrust(data.get("owner_trust", ""))
 
@@ -419,7 +419,7 @@ class GpgKey:
         data["key_id"] = self.key_id
         data["created_at"] = int(self.created_at.timestamp())
         if self.expires_at:
-            data["expired_at"] = int(self.expires_at.timestamp())
+            data["expires_at"] = int(self.expires_at.timestamp())
         if self.updated_at:
             data["updated_at"] = int(self.updated_at.timestamp())
 
@@ -631,7 +631,7 @@ class Gpg:
             # Confirm with the user that the key should be trusted
             if not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
                 tty.info(f"Spack will not trust key {key}")
-                self.untrust(key)
+                self.untrust([key])
 
             ownertrust = GpgKeyTrust.FULL.ownertrust
             if ultimate:
