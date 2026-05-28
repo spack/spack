@@ -16,6 +16,7 @@ import sys as _sys
 import types as _types
 from contextlib import contextmanager
 from enum import Enum
+from functools import partial
 from typing import TYPE_CHECKING
 
 import spack.config as config
@@ -102,56 +103,112 @@ class SpackPaths:
 
         self.old_layout_detected = detect_old_spack_layout(base)
 
-    def _resolve_home(self, spack_var, config_var, home_rel):
-        """Resolve one of state/data/cache home with env-var precedence.
+    def resolve_a_home(self, spack_vars, config_var, home_rel, xdg_var):
+        """
+        Files stored by spack are split into state, data, and cache components.
+        Each of these categories has the same fall-through/prioritization path,
+        established by this function:
 
-        See SpackPaths docstring for the precedence order.
+            1. ``SPACK_x_HOME``: for example if the ``SPACK_DATA_HOME`` env var is
+               set, it has the highest precedence.
+            2. If the ``SPACK_HOME`` env variable is set, it can collect all of these
+               components together
+            3. ``config:locations:x``
+            4. ``config:locations:home``
+            5. ``XDG_x_HOME``: e.g. if the ``XDG_DATA_HOME`` env var is set
+            6. In the user's home directory, in the XDG default location for that
+               component.
+
+        Note that configuration settings for specific data (e.g.
+        ``config:install_tree:root`` for where installs are placed) will take
+        precedence over any of this.
+
+        Args:
+            spack_vars: spack-specific environment variables that indicate the
+                component location. Can be a list or a single variable. If this
+                is a list, earlier elements have precedence.
+            config_var: the spack config variable that indicates the component
+                location.
+            home_rel: for $SPACK_HOME and config:locations:home, this relative
+                path is appended to the result to get the component location.
+            xdg_var: the XDG-based environment variable that indicates the
+                component location.
         """
         disable_env = config.get("config:locations:disable_env", False)
 
-        if not disable_env and spack_var in os.environ:
-            return os.path.expanduser(os.environ[spack_var])
+        append_rel = lambda base, rel: str(pathlib.Path(base) / (rel or ""))
 
-        if not disable_env and "SPACK_HOME" in os.environ:
-            return os.path.join(os.path.expanduser(os.environ["SPACK_HOME"]), home_rel, "spack")
+        def cfg_check(path, rel=None):
+            found = config.get(path, None)
+            if found:
+                import spack.util.path
 
-        cfg = config.get(f"config:locations:{config_var}", None)
-        if cfg:
-            import spack.util.path
+                found = spack.util.path.canonicalize_path(found)
+                return append_rel(found, rel)
 
-            return spack.util.path.canonicalize_path(cfg)
+        spack_cfg_check = partial(cfg_check, f"config:locations:{config_var}")
+        spack_home_cfg_check = partial(
+            cfg_check,
+            "config:locations:home",
+            rel=os.path.join(home_rel, "spack"),
+        )
 
-        cfg_home = config.get("config:locations:home", None)
-        if cfg_home:
-            import spack.util.path
+        def env_check(env_vars, rel=None):
+            if disable_env:
+                return
 
-            return os.path.join(spack.util.path.canonicalize_path(cfg_home), home_rel, "spack")
+            for v in env_vars:
+                if v in os.environ:
+                    return append_rel(os.environ[v], rel)
 
-        # Final fallback. Shouldn't be hit when the scheme yamls are
-        # loaded — they always set config:locations:*.
+        spack_vars = [spack_vars] if isinstance(spack_vars, str) else spack_vars
+        spack_env_check = partial(env_check, spack_vars)
+        spack_home_env_check = partial(
+            env_check,
+            ["SPACK_HOME"],
+            rel=os.path.join(home_rel, "spack"),
+        )
+        xdg_env_check = partial(env_check, [xdg_var], rel="spack")
+
+        for check in [
+            spack_env_check,
+            spack_home_env_check,
+            spack_cfg_check,
+            spack_home_cfg_check,
+            xdg_env_check,
+        ]:
+            possible_resolution = check()
+            if possible_resolution:
+                return os.path.expanduser(possible_resolution)
+
         return os.path.join(os.path.expanduser("~"), home_rel, "spack")
 
     @property
     def state_home(self):
         if not self._state_home:
             # SPACK_USER_CACHE_PATH is a legacy alias for SPACK_STATE_HOME.
-            disable_env = config.get("config:locations:disable_env", False)
-            if not disable_env and "SPACK_USER_CACHE_PATH" in os.environ:
-                self._state_home = os.path.expanduser(os.environ["SPACK_USER_CACHE_PATH"])
-            else:
-                self._state_home = self._resolve_home("SPACK_STATE_HOME", "state", _RELATIVE_STATE)
+            self._state_home = self.resolve_a_home(
+                ["SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME"],
+                "state",
+                _RELATIVE_STATE,
+                "XDG_STATE_HOME",
+            )
         return self._state_home
 
     @property
     def cache_home(self):
         if not self._cache_home:
-            self._cache_home = self._resolve_home("SPACK_CACHE_HOME", "cache", _RELATIVE_CACHE)
+            self._cache_home = self.resolve_a_home(
+                "SPACK_CACHE_HOME", "cache", _RELATIVE_CACHE, "XDG_CACHE_HOME"
+            )
         return self._cache_home
 
     @property
     def data_home(self):
         if not self._data_home:
-            self._data_home = self._resolve_home("SPACK_DATA_HOME", "data", _RELATIVE_DATA)
+            self._data_home = self.resolve_a_home(
+                "SPACK_DATA_HOME", "data", _RELATIVE_DATA, "XDG_DATA_HOME"
+            )
         return self._data_home
 
     @property

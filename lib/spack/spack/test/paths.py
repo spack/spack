@@ -58,6 +58,75 @@ def _set_locations(cfg, **kwargs):
 # ---------------------------------------------------------------------------
 
 
+def test_data_home_precedence(working_env, tmp_path, mutable_config, set_home):
+    """Test the full precedence chain for data_home resolution.
+
+    From lowest to highest precedence:
+    1. Default: ~/.local/share/spack
+    2. XDG_DATA_HOME: $XDG_DATA_HOME/spack
+    3. config:locations:home: <config_home>/.local/share/spack
+    4. config:locations:data: <config_data> (direct)
+    5. SPACK_HOME: $SPACK_HOME/.local/share/spack
+    6. SPACK_DATA_HOME: $SPACK_DATA_HOME (direct, highest)
+    """
+    # Setup paths
+    home = _ensure_dir(tmp_path / "home")
+    x1 = _ensure_dir(tmp_path / "x1")
+    x2 = _ensure_dir(tmp_path / "x2")
+    x3 = _ensure_dir(tmp_path / "x3")
+    x4 = _ensure_dir(tmp_path / "x4")
+
+    set_home(home)
+
+    # 1. Default: ~/.local/share/spack
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(home, ".local", "share", "spack")
+
+    # 2. XDG_DATA_HOME overrides default
+    os.environ["XDG_DATA_HOME"] = x1
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(x1, "spack")
+
+    # 3. config:locations:home overrides XDG_DATA_HOME
+    mutable_config.set("config:locations:home", x2)
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(x2, ".local", "share", "spack")
+
+    # 4. config:locations:data overrides config:locations:home
+    mutable_config.set("config:locations:data", x3)
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == x3
+
+    # 5. SPACK_HOME overrides config:locations:data
+    os.environ["SPACK_HOME"] = x4
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(x4, ".local", "share", "spack")
+
+    # 6. SPACK_DATA_HOME overrides SPACK_HOME
+    x5 = _ensure_dir(tmp_path / "x5")
+    os.environ["SPACK_DATA_HOME"] = x5
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == x5
+
+    # 7. disable_env goes back to config:locations:data (ignores env vars)
+    mutable_config.set("config:locations:disable_env", True)
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == x3  # back to config:locations:data
+
+    # 8. Clear locations and set only home, should use config:locations:home
+    mutable_config.set("config:locations", {})
+    mutable_config.set("config:locations:home", x2)
+    mutable_config.set("config:locations:disable_env", True)
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(x2, ".local", "share", "spack")
+
+    # 9. Clear all locations settings, should use default
+    mutable_config.set("config:locations", {})
+    mutable_config.set("config:locations:disable_env", True)
+    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "base")))
+    assert p.data_home == os.path.join(home, ".local", "share", "spack")
+
+
 def test_data_home_from_config(working_env, tmp_path, mutable_config, set_home):
     set_home(_ensure_dir(tmp_path / "home"))
     _set_locations(mutable_config, data=str(tmp_path / "datadir"))
