@@ -864,7 +864,6 @@ def _collect_url_patches(pkg_cls) -> List[spack.patch.UrlPatch]:
     return patches
 
 
-
 def validate_patch_urls(pkg_name: str, patches: List[spack.patch.UrlPatch]) -> bool:
     valid = True
     seen: Set[Tuple[str, str, Optional[str]]] = set()
@@ -897,9 +896,8 @@ def validate_patch_urls(pkg_name: str, patches: List[spack.patch.UrlPatch]) -> b
 def ci_verify_patches(args):
     """\
     validate patch checksums between git refs
-    This command takes from_ref and to_ref arguments and checks any newly added patch
-    checksums in changed package files for valid sha256 format, then downloads the
-    corresponding URL patches and validates their checksums.
+    This command takes from_ref and to_ref arguments and downloads any newly added
+    URL patches in changed package files and validates their checksums.
     """
     # Get a list of all packages that have been changed or added
     # between from_ref and to_ref
