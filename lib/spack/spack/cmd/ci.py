@@ -8,7 +8,7 @@ import os
 import re
 import shutil
 import sys
-from typing import Dict, List
+from typing import Dict, List, Set, Tuple
 from urllib.parse import urlparse, urlunparse
 
 import spack.binary_distribution
@@ -837,13 +837,22 @@ def validate_git_versions(
 def _collect_url_patch_checksums(pkg_cls) -> List[str]:
     checksums = set()
 
+    for patch in _collect_url_patches(pkg_cls):
+        checksums.add(patch.sha256)
+        if patch.archive_sha256:
+            checksums.add(patch.archive_sha256)
+
+    return list(checksums)
+
+
+def _collect_url_patches(pkg_cls) -> List[spack.patch.UrlPatch]:
+    patches: List[spack.patch.UrlPatch] = []
+
     for patch_list in pkg_cls.patches.values():
         for patch in patch_list:
             if not isinstance(patch, spack.patch.UrlPatch):
                 continue
-            checksums.add(patch.sha256)
-            if patch.archive_sha256:
-                checksums.add(patch.archive_sha256)
+            patches.append(patch)
 
     for deps_by_name in pkg_cls.dependencies.values():
         for dependency in deps_by_name.values():
@@ -851,11 +860,9 @@ def _collect_url_patch_checksums(pkg_cls) -> List[str]:
                 for patch in patch_list:
                     if not isinstance(patch, spack.patch.UrlPatch):
                         continue
-                    checksums.add(patch.sha256)
-                    if patch.archive_sha256:
-                        checksums.add(patch.archive_sha256)
+                    patches.append(patch)
 
-    return list(checksums)
+    return patches
 
 
 def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
@@ -875,11 +882,41 @@ def validate_patch_checksums(pkg_name: str, checksums: List[str]) -> bool:
     return valid
 
 
+def validate_patch_urls(pkg_name: str, patches: List[spack.patch.UrlPatch]) -> bool:
+    valid = True
+    seen: Set[Tuple[str, str, str]] = set()
+
+    for patch in patches:
+        key = (patch.url, patch.sha256, patch.archive_sha256 or "")
+        if key in seen:
+            continue
+        seen.add(key)
+
+        try:
+            with spack.stage.Stage(patch.fetcher()) as stage:
+                stage.fetch()
+                stage.check()
+                stage.expand_archive()
+        except spack.error.SpackError as e:
+            tty.error(
+                f"Failed to verify patch URL and checksum in {pkg_name}\n"
+                f"    [URL] {patch.url}\n"
+                f"    [Error] {e}"
+            )
+            valid = False
+            continue
+
+        tty.info(f"Validated patch URL and checksum in {pkg_name} --> {patch.url}")
+
+    return valid
+
+
 def ci_verify_patches(args):
     """\
     validate patch checksums between git refs
     This command takes from_ref and to_ref arguments and checks any newly added patch
-    checksums in changed package files for valid sha256 format.
+    checksums in changed package files for valid sha256 format, then downloads the
+    corresponding URL patches and validates their checksums.
     """
     # Get a list of all packages that have been changed or added
     # between from_ref and to_ref
@@ -902,6 +939,8 @@ def ci_verify_patches(args):
         if not patch_checksums:
             continue
 
+        url_patches = _collect_url_patches(pkg_cls)
+
         with fs.working_dir(os.path.dirname(path)):
             added_patch_checksums = spack_ci.filter_added_checksums(
                 patch_checksums, path, from_ref=args.from_ref, to_ref=args.to_ref
@@ -909,6 +948,19 @@ def ci_verify_patches(args):
 
         if added_patch_checksums:
             success = success and validate_patch_checksums(pkg_name, added_patch_checksums)
+
+            valid_added_patch_checksums = {
+                checksum for checksum in added_patch_checksums if SHA256_REGEX.fullmatch(checksum)
+            }
+            patches_to_verify = [
+                patch
+                for patch in url_patches
+                if patch.sha256 in valid_added_patch_checksums
+                or patch.archive_sha256 in valid_added_patch_checksums
+            ]
+
+            if patches_to_verify:
+                success = success and validate_patch_urls(pkg_name, patches_to_verify)
 
     if not success:
         sys.exit(1)

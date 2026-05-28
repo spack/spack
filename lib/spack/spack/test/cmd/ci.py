@@ -2220,6 +2220,58 @@ def test_ci_collect_url_patch_checksums_includes_dependency_patches(mock_package
 
 
 def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_changes):
+    class Patch:
+        url = "https://example.com/patch"
+        sha256 = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+        archive_sha256 = None
+
+    repo, _, commits = mock_git_package_changes
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+        monkeypatch.setattr(
+            spack.cmd.ci,
+            "_collect_url_patch_checksums",
+            lambda pkg_cls: [
+                "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+            ],
+        )
+        monkeypatch.setattr(spack.cmd.ci, "_collect_url_patches", lambda pkg_cls: [Patch()])
+        monkeypatch.setattr(
+            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+        )
+        monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", lambda pkg_name, patches: True)
+
+        out = ci_cmd("verify-patches", commits[-1], commits[-3])
+        assert "Validated patch checksum in diff-test" in out
+
+
+def test_ci_verify_patches_invalid(monkeypatch, mock_packages, mock_git_package_changes):
+    class Patch:
+        url = "https://example.com/patch"
+        sha256 = "abc"
+        archive_sha256 = None
+
+    repo, _, commits = mock_git_package_changes
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+        monkeypatch.setattr(spack.cmd.ci, "_collect_url_patch_checksums", lambda pkg_cls: ["abc"])
+        monkeypatch.setattr(spack.cmd.ci, "_collect_url_patches", lambda pkg_cls: [Patch()])
+        monkeypatch.setattr(
+            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+        )
+        monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", lambda pkg_name, patches: True)
+
+        out = ci_cmd("verify-patches", commits[-1], commits[-3], fail_on_error=False)
+        assert "Invalid patch checksum found in diff-test" in out
+
+
+def test_ci_verify_patches_validates_patch_urls(monkeypatch, mock_packages, mock_git_package_changes):
+    class Patch:
+        def __init__(self, url, sha256, archive_sha256=None):
+            self.url = url
+            self.sha256 = sha256
+            self.archive_sha256 = archive_sha256
+
     repo, _, commits = mock_git_package_changes
     with spack.repo.use_repositories(repo):
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
@@ -2231,24 +2283,36 @@ def test_ci_verify_patches_valid(monkeypatch, mock_packages, mock_git_package_ch
             ],
         )
         monkeypatch.setattr(
-            ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
+            spack.cmd.ci,
+            "_collect_url_patches",
+            lambda pkg_cls: [
+                Patch(
+                    "https://example.com/a.patch",
+                    "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                ),
+                Patch(
+                    "https://example.com/b.patch",
+                    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+                ),
+            ],
         )
-
-        out = ci_cmd("verify-patches", commits[-1], commits[-3])
-        assert "Validated patch checksum in diff-test" in out
-
-
-def test_ci_verify_patches_invalid(monkeypatch, mock_packages, mock_git_package_changes):
-    repo, _, commits = mock_git_package_changes
-    with spack.repo.use_repositories(repo):
-        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
-        monkeypatch.setattr(spack.cmd.ci, "_collect_url_patch_checksums", lambda pkg_cls: ["abc"])
         monkeypatch.setattr(
             ci, "filter_added_checksums", lambda checksums, path, **kwargs: checksums
         )
 
-        out = ci_cmd("verify-patches", commits[-1], commits[-3], fail_on_error=False)
-        assert "Invalid patch checksum found in diff-test" in out
+        captured = {}
+
+        def _validate_patch_urls(pkg_name, patches):
+            captured["pkg_name"] = pkg_name
+            captured["urls"] = [patch.url for patch in patches]
+            return True
+
+        monkeypatch.setattr(spack.cmd.ci, "validate_patch_urls", _validate_patch_urls)
+
+        ci_cmd("verify-patches", commits[-1], commits[-3])
+
+        assert captured["pkg_name"] == "diff-test"
+        assert captured["urls"] == ["https://example.com/a.patch"]
 
 
 def test_ci_verify_versions_valid(
