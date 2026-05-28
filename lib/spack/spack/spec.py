@@ -63,6 +63,7 @@ import warnings
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Dict,
     Iterable,
     List,
@@ -5379,25 +5380,19 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
 DepSpecComponents = Tuple[str, str, List, str, Tuple[str, ...], bool]
 
 
-class SpecfileReaderMeta(abc.ABCMeta):
-    """Metaclass to automatically register all specfile versions.
-
-    This allows us to track available versions of SpecfileReaderBase subclasses.
-    """
-
-    def __new__(cls, name, bases, dct):
-        new_class = super().__new__(cls, name, bases, dct)
-        if hasattr(new_class, "SPEC_VERSION"):
-            new_class.versions[new_class.SPEC_VERSION] = new_class
-
-        return new_class
+_SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
 
 
-class SpecfileReaderBase(metaclass=SpecfileReaderMeta):
-    SPEC_VERSION: int
+def register_reader(cls: Type["SpecfileReaderBase"]) -> Type["SpecfileReaderBase"]:
+    """Register a SpecfileReaderBase subclass under its SPEC_VERSION."""
+    if "SPEC_VERSION" not in cls.__dict__:
+        raise TypeError(f"{cls.__name__} must define SPEC_VERSION to be registered")
+    _SPECFILE_READERS[cls.SPEC_VERSION] = cls
+    return cls
 
-    # all specfile versions
-    versions: Dict[int, Type["SpecfileReaderBase"]] = {}
+
+class SpecfileReaderBase(abc.ABC):
+    SPEC_VERSION: ClassVar[int]
 
     @classmethod
     @abc.abstractmethod
@@ -5581,6 +5576,7 @@ def wire_spec_nodes(
     return specs_by_hash
 
 
+@register_reader
 class SpecfileV1(SpecfileReaderBase):
     SPEC_VERSION = 1
 
@@ -5657,6 +5653,7 @@ class SpecfileV1(SpecfileReaderBase):
         return dspec_list
 
 
+@register_reader
 class SpecfileV2(SpecfileReaderBase):
     SPEC_VERSION = 2
 
@@ -5716,10 +5713,12 @@ class SpecfileV2(SpecfileReaderBase):
         return build_spec_dict["name"], build_spec_dict[hash_type], hash_type
 
 
+@register_reader
 class SpecfileV3(SpecfileV2):
     SPEC_VERSION = 3
 
 
+@register_reader
 class SpecfileV4(SpecfileV2):
     SPEC_VERSION = 4
 
@@ -5737,6 +5736,7 @@ class SpecfileV4(SpecfileV2):
         return cls._load(data)
 
 
+@register_reader
 class SpecfileV5(SpecfileV4):
     SPEC_VERSION = 5
 
@@ -5760,7 +5760,7 @@ SpecfileLatest = SpecfileV5
 
 def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:
     """Get a SpecfileReader for the provided version, or raise an error."""
-    reader = SpecfileReaderBase.versions.get(version)
+    reader = _SPECFILE_READERS.get(version)
 
     if not reader:
         raise ValueError(f"Unknown Specfile version: {version}")
