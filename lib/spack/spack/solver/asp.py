@@ -597,8 +597,8 @@ class ConcretizationCache:
         """Remove a corrupt or outdated cache entry, ignoring errors if it's already gone."""
         try:
             cache_path.unlink()
-        except OSError:
-            pass
+        except OSError as e:
+            tty.debug(f"Error removing entry: {e}")
 
     def _cache_path_from_problem(self, problem: str) -> pathlib.Path:
         """Returns a Path object representing the path to the cache
@@ -658,27 +658,39 @@ class ConcretizationCache:
         try:
             with gzip.open(cache_path, "rb") as f:
                 cache_content = json.loads(f.read().decode("utf-8"))
-        except (OSError, json.JSONDecodeError):
-            # file is corrupt, truncated, or disappeared since the exists() check
+        except (OSError, json.JSONDecodeError) as e:
+            tty.debug(
+                f"ConcretizationCache.fetch(): force-removing {cache_path} because it is "
+                f"corrupt, truncated, or removed since the exists() check: {e}"
+            )
             self._remove_entry(cache_path)
             return None, None
 
         cache_version = cache_content.get("_meta", {}).get("version")
         if cache_version != ConcretizationCache.VERSION:
-            # outdated format that we can't read; remove so it's regenerated
+            tty.debug(
+                f"ConcretizationCache.fetch(): force-removing {cache_path} because it is "
+                "in an outdated format."
+            )
             self._remove_entry(cache_path)
             return None, None
 
         results = cache_content.get("results")
         if results is None:
-            # malformed cache dictionary
+            tty.debug(
+                f"ConcretizationCache.fetch(): force-removing {cache_path} because 'results' is "
+                "missing from cache dictionary."
+            )
             self._remove_entry(cache_path)
             return None, None
 
         try:
             result = Result.from_dict(results)
-        except (KeyError, TypeError, ValueError, spack.error.SpecSyntaxError):
-            # valid JSON but spec data is malformed or incompatible
+        except (KeyError, TypeError, ValueError, spack.error.SpecSyntaxError) as e:
+            tty.debug(
+                f"ConcretizationCache.fetch(): force-removing {cache_path}. "
+                f"Valid JSON but spec data is malformed or incompatible: {e}"
+            )
             self._remove_entry(cache_path)
             return None, None
 
