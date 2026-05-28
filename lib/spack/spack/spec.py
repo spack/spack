@@ -5377,7 +5377,7 @@ def reconstruct_virtuals_on_edges(spec: Spec) -> None:
             edge.update_virtuals(virtuals_to_add)
 
 
-DepSpecComponents = Tuple[str, str, List, str, Tuple[str, ...], bool]
+DepSpecComponents = Tuple[str, str, List[str], str, Tuple[str, ...], bool]
 
 
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
