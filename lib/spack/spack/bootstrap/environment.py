@@ -58,6 +58,11 @@ class BootstrapEnvironment(spack.environment.Environment):
                 os.path.join(bootstrap_root_path, "environments", environment_dir)
             )
         )
+    
+    @classmethod
+    def bootstrap_gpg_home(cls) -> pathlib.Path:
+        """Location of the GPG home directory used for bootstrapping"""
+        return cls.environment_root().joinpath(".bootstrap_gpg_home")
 
     @classmethod
     def view_root(cls) -> pathlib.Path:
@@ -91,21 +96,22 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                download_and_trust_key()
-                fetch_policy = (
-                    "cache_only"
-                    if not spack.config.get("bootstrap:dev:enable_source", False)
-                    else "auto"
-                )
-                try:
-                    self.install_all(
-                        fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
+                with spack.util.gpg.gnupghome_override(str(self.bootstrap_gpg_home())):
+                    download_and_trust_key()
+                    fetch_policy = (
+                        "cache_only"
+                        if not spack.config.get("bootstrap:dev:enable_source", False)
+                        else "auto"
                     )
-                except BaseException:
-                    # catch any exception as we always want to clean up
-                    shutil.rmtree(self.environment_root())
-                    raise
-                self.write(regenerate=True)
+                    try:
+                        self.install_all(
+                            fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
+                        )
+                    except BaseException:
+                        # catch any exception as we always want to clean up
+                        shutil.rmtree(self.environment_root())
+                        raise
+                    self.write(regenerate=True)
 
     def load(self) -> None:
         """Update PATH and sys.path."""
