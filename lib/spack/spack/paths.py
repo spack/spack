@@ -80,7 +80,7 @@ class SpackPaths:
         self._state_home = None
         self._data_home = None
         self._cache_home = None
-        self.default_state_home_dot_spack = False
+        self._default_state_home_dot_spack = None
 
         self.old_layout_detected = detect_old_spack_layout(base)
 
@@ -171,7 +171,7 @@ class SpackPaths:
                 "XDG_STATE_HOME",
             )
 
-            self.default_state_home_dot_spack = False
+            self._default_state_home_dot_spack = False
 
             def cfg_state_home():
                 return config.get("config:locations:home", None) or config.get(
@@ -191,11 +191,17 @@ class SpackPaths:
                 self._state_home = state_home
             elif dir_is_occupied(self.base.old_default_dot_spack):
                 self._state_home = self.base.old_default_dot_spack
-                self.default_state_home_dot_spack = True
+                self._default_state_home_dot_spack = True
             else:
                 self._state_home = state_home
 
         return self._state_home
+
+    @property
+    def default_state_home_dot_spack(self):
+        if self._default_state_home_dot_spack is None:
+            self.state_home
+        return self._default_state_home_dot_spack
 
     @property
     def cache_home(self):
