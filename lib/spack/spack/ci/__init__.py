@@ -26,6 +26,7 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
+import spack.notary
 import spack.paths
 import spack.repo
 import spack.spec
@@ -608,24 +609,25 @@ def can_verify_binaries():
     return len(gpg_util.public_keys()) >= 1
 
 
-def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: bool) -> bool:
+def push_to_build_cache(
+    spec: spack.spec.Spec, mirror: spack.mirrors.mirror.Mirror, sign_binaries: bool
+) -> bool:
     """Push one or more binary packages to the mirror.
 
     Arguments:
 
         spec: Installed spec to push
-        mirror_url: URL of target mirror
+        mirror: URL of target mirror
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
-    signing_key = spack.binary_distribution.select_signing_key() if sign_binaries else None
-    mirror = spack.mirrors.mirror.Mirror.from_url(mirror_url)
+    notary = spack.notary.select_notary(mirror, signed=sign_binaries)
     try:
-        with spack.binary_distribution.make_uploader(mirror, signing_key=signing_key) as uploader:
+        with spack.binary_distribution.make_uploader(mirror, notary=notary) as uploader:
             uploader.push_or_raise([spec])
         return True
     except spack.binary_distribution.PushToBuildCacheError as e:
-        tty.error(f"Problem writing to {mirror_url}: {e}")
+        tty.error(f"Problem writing to {mirror.push_url}: {e}")
         return False
 
 
@@ -1239,7 +1241,10 @@ if ($LASTEXITCODE -ne 0){{
 
 
 def create_buildcache(
-    input_spec: spack.spec.Spec, *, destination_mirror_urls: List[str], sign_binaries: bool = False
+    input_spec: spack.spec.Spec,
+    *,
+    destination_mirrors: List[spack.mirrors.mirror.Mirror],
+    sign_binaries: bool = False,
 ) -> List[PushResult]:
     """Create the buildcache at the provided mirror(s).
 
@@ -1252,10 +1257,10 @@ def create_buildcache(
     """
     results = []
 
-    for mirror_url in destination_mirror_urls:
+    for mirror in destination_mirrors:
         results.append(
             PushResult(
-                success=push_to_build_cache(input_spec, mirror_url, sign_binaries), url=mirror_url
+                success=push_to_build_cache(input_spec, mirror, sign_binaries), url=mirror.push_url
             )
         )
 

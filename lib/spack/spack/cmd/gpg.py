@@ -7,12 +7,13 @@ import os
 import tempfile
 
 import spack.binary_distribution
+import spack.cmd.common.arguments as arguments
 import spack.mirrors.mirror
+import spack.notary
 import spack.paths
 import spack.stage
 import spack.util.gpg
 import spack.util.url
-from spack.cmd.common import arguments
 
 description = "handle GPG actions for spack"
 section = "packaging"
@@ -198,7 +199,10 @@ def gpg_publish(args):
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
         spack.binary_distribution._url_push_keys(
-            mirror, keys=args.keys, tmpdir=tmpdir, update_index=args.update_index
+            mirror,
+            keys=spack.notary.select_notary(mirror).get_keys(),
+            tmpdir=tmpdir,
+            update_index=args.update_index,
         )
 
 

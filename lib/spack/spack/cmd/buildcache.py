@@ -19,6 +19,7 @@ import spack.environment as ev
 import spack.error
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.oci.image
 import spack.oci.oci
 import spack.spec
@@ -484,24 +485,8 @@ def push_fn(args):
 
     push_url = mirror.push_url
 
-    # When neither --signed, --unsigned nor --key are specified, use the mirror's default.
-    if args.signed is None and not args.key:
-        unsigned = not mirror.signed
-    else:
-        unsigned = not (args.key or args.signed)
-
-    # For OCI images, we require dependencies to be pushed for now.
-    if spack.oci.image.is_oci_url(mirror.push_url) and not unsigned:
-        tty.warn(
-            "Code signing is currently not supported for OCI images. "
-            "Use --unsigned to silence this warning."
-        )
-        unsigned = True
-
     # Select a signing key, or None if unsigned.
-    signing_key = (
-        None if unsigned else (args.key or spack.binary_distribution.select_signing_key())
-    )
+    notary = spack.notary.select_notary(mirror, key=args.key, signed=args.signed)
 
     specs = _specs_to_be_packaged(
         roots,
@@ -542,7 +527,7 @@ def push_fn(args):
         mirror=mirror,
         force=args.force,
         update_index=args.update_index,
-        signing_key=signing_key,
+        notary=notary,
         base_image=args.base_image,
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs)
@@ -822,7 +807,7 @@ def sync_fn(args):
         cache_class = get_url_buildcache_class(
             layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(src_mirror_url, s, allow_unsigned=True)
+        src_cache_entry = cache_class(src_mirror_url, s)
         src_cache_entry.read_manifest()
         copy_buildcache_entry(src_cache_entry, dest_mirror_url)
 
@@ -847,9 +832,7 @@ def manifest_copy(
         cache_class = get_url_buildcache_class(
             layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(
-            cache_class.get_base_url(copy_obj["src"]), allow_unsigned=True
-        )
+        src_cache_entry = cache_class(cache_class.get_base_url(copy_obj["src"]))
         src_cache_entry.read_manifest(manifest_url=copy_obj["src"])
         if dest_mirror:
             destination_url = dest_mirror.push_url

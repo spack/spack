@@ -105,7 +105,7 @@ def tests_buildcache_create_env(
     cache_class = get_url_buildcache_class(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
-    cache_entry = cache_class(mirror_url, spec, allow_unsigned=True)
+    cache_entry = cache_class(mirror_url, spec)
     assert cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     cache_entry.destroy()
 
@@ -334,7 +334,7 @@ def test_buildcache_create_install(
     cache_class = get_url_buildcache_class(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
-    cache_entry = cache_class(mirror_url, spec, allow_unsigned=True)
+    cache_entry = cache_class(mirror_url, spec)
     manifest_path = os.path.join(
         str(tmp_path),
         *cache_class.get_relative_path_components(BuildcacheComponent.SPEC),
@@ -602,7 +602,7 @@ def test_url_buildcache_entry_v2_exists(
     spec = spack.concretize.concretize_one("libdwarf")
 
     # In v2 we have to ask for both, because we need to have the spec to have the tarball
-    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    build_cache = v2_cache_class(mirror_url, spec)
     assert not build_cache.exists([BuildcacheComponent.TARBALL])
     assert not build_cache.exists([BuildcacheComponent.SPEC])
     # But if we do ask for both, they should be there in this case
@@ -612,11 +612,11 @@ def test_url_buildcache_entry_v2_exists(
     tarball_path = build_cache._get_tarball_url(spec, mirror_url)[7:]
 
     os.remove(tarball_path)
-    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    build_cache = v2_cache_class(mirror_url, spec)
     assert not build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
 
     os.remove(spec_path)
-    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    build_cache = v2_cache_class(mirror_url, spec)
     assert not build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
 
 
@@ -793,9 +793,7 @@ def test_buildcache_prune_orphaned_blobs(tmp_path, mutable_database, mock_gnupgh
     spec = mutable_database.query_local("libelf", installed=True)[0]
     buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
-    )
+    cache_entry = URLBuildcacheEntry(mirror_url=f"file://{mirror_directory}", spec=spec)
 
     blob_urls = [
         URLBuildcacheEntry.get_blob_url(mirror_url=f"file://{mirror_directory}", record=blob)
@@ -835,9 +833,7 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
 
     # Create a cache entry and read the manifest, which should succeed
     # as we haven't pruned anything yet
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
-    )
+    cache_entry = URLBuildcacheEntry(mirror_url=f"file://{mirror_directory}", spec=spec)
     manifest = cache_entry.read_manifest()
 
     manifest_url = f"file://{cache_entry.get_manifest_url(spec=spec, mirror_url=mirror_directory)}"
@@ -872,9 +868,7 @@ def test_buildcache_prune_direct_with_keeplist(
     specs = mutable_database.query_local("libelf", installed=True)
     spec1 = specs[0]
 
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
-    )
+    cache_entry = URLBuildcacheEntry(mirror_url=f"file://{mirror_directory}", spec=spec1)
     manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
 
     # Push the first spec (package only, no dependencies)
@@ -912,9 +906,7 @@ def test_buildcache_prune_direct_removes_unlisted(
     keeplist_file = tmp_path / "keeplist.txt"
     keeplist_file.write_text("0" * 32)
 
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec1, allow_unsigned=True
-    )
+    cache_entry = URLBuildcacheEntry(mirror_url=f"file://{mirror_directory}", spec=spec1)
     manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
 
     assert web_util.url_exists(manifest_url)
@@ -974,9 +966,7 @@ def test_buildcache_prune_new_specs_race_condition(
 
     buildcache("push", "--only", "package", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
-    cache_entry = URLBuildcacheEntry(
-        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
-    )
+    cache_entry = URLBuildcacheEntry(mirror_url=f"file://{mirror_directory}", spec=spec)
     manifest_url = cache_entry.get_manifest_url(spec, f"file://{mirror_directory}")
 
     def mock_stat_url(url: str):
@@ -1327,7 +1317,6 @@ def test_buildcache_check_index_full(
     blob_path = tmp_path / "blobs" / "sha256"
     with open(tmp_path / "v3" / "manifests" / "index" / index_name, "r", encoding="utf-8") as fd:
         manifest = json.load(fd)
-        print(manifest)
         digest = manifest["data"][0]["checksum"]
         blob_path = blob_path / digest[:2] / digest
 

@@ -19,6 +19,7 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 
 #: The layout version spack can current install
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+DEFAULT_SIGNING_TYPE = "pgp-cleartext"
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -116,7 +117,24 @@ class Mirror:
         if is_oci_url(self.fetch_url):
             return False
 
-        return isinstance(self._data, str) or self._data.get("signed", True)
+        return isinstance(self._data, str) or bool(self._data.get("signed", True))
+
+    @property
+    def signing_type(self) -> Optional[str]:
+        if not self.signed:
+            return None
+
+        if isinstance(self._data, str):
+            return DEFAULT_SIGNING_TYPE
+
+        # Get the signature type from the config
+        sig_type = self._data.get("signed", DEFAULT_SIGNING_TYPE)
+        if isinstance(sig_type, bool):
+            sig_type = DEFAULT_SIGNING_TYPE
+        else:
+            sig_type = sig_type.get("type")
+
+        return sig_type
 
     @property
     def autopush(self) -> bool:

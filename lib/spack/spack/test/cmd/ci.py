@@ -19,6 +19,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
+import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
@@ -848,6 +849,9 @@ spack:
             )
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as current_env:
+            mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+            dest_mirror = mirrors["buildcache-destination"]
+
             current_env.concretize()
             install_cmd("--keep-stage")
 
@@ -858,7 +862,7 @@ spack:
                 ypfd.write(spec_json)
 
             for s in concrete_spec.traverse():
-                ci.push_to_build_cache(s, mirror_url, True)
+                ci.push_to_build_cache(s, dest_mirror, True)
 
             # Now test the --prune-dag (default) option of spack ci generate
             mirror_cmd("add", "test-ci", mirror_url)
@@ -933,7 +937,7 @@ def test_push_to_build_cache_exceptions(monkeypatch, tmp_path: pathlib.Path, cap
 
     # Input doesn't matter, as we are faking exceptional output
     url = tmp_path.as_uri()
-    ci.push_to_build_cache(spack.spec.Spec(), url, False)
+    ci.push_to_build_cache(spack.spec.Spec(), spack.mirrors.mirror.Mirror(url), False)
     assert f"Problem writing to {url}: Error: Access Denied" in capfd.readouterr().err
 
 

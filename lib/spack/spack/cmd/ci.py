@@ -597,7 +597,7 @@ def ci_rebuild(args):
         # will result in a non-zero exit code. Pushing is best-effort.
         for result in spack_ci.create_buildcache(
             input_spec=job_spec,
-            destination_mirror_urls=[buildcache_destination.push_url],
+            destination_mirrors=[buildcache_destination],
             sign_binaries=spack_ci.can_sign_binaries(),
         ):
             if not result.success:

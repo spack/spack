@@ -54,6 +54,7 @@ import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
+import spack.notary
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
@@ -77,6 +78,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.llnl.util.filesystem import mkdirp
+from spack.notary import Notary
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -637,20 +639,6 @@ def warn_v2_layout(mirror_url: str, action: str) -> bool:
     return True
 
 
-def select_signing_key() -> str:
-    keys = spack.util.gpg.signing_keys()
-    num = len(keys)
-    if num > 1:
-        raise PickKeyException(str(keys))
-    elif num == 0:
-        raise NoKeyException(
-            "No default key available for signing.\n"
-            "Use spack gpg init and spack gpg create"
-            " to create a default key."
-        )
-    return keys[0]
-
-
 def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: str = ""):
     """Generate the index, compute its hash, and push the files to the mirror"""
     index_json_path = os.path.join(temp_dir, spack.database.INDEX_JSON_FILE)
@@ -960,11 +948,11 @@ def _do_create_tarball(
 
 
 def _exists_in_buildcache(
-    spec: spack.spec.Spec, out_url: str, allow_unsigned: bool = False
+    spec: spack.spec.Spec, out_url: str, notary: Optional[Notary] = None
 ) -> URLBuildcacheEntry:
     """creates and returns (after checking existence) a URLBuildcacheEntry"""
     cache_type = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry = cache_type(out_url, spec, allow_unsigned=allow_unsigned)
+    cache_entry = cache_type(out_url, spec, notary=notary)
     return cache_entry
 
 
@@ -976,12 +964,12 @@ def prefixes_to_relocate(spec):
 
 
 def _url_upload_tarball_and_specfile(
-    spec: spack.spec.Spec, tmpdir: str, cache_entry: URLBuildcacheEntry, signing_key: Optional[str]
+    spec: spack.spec.Spec, tmpdir: str, cache_entry: URLBuildcacheEntry, notary: Optional[Notary]
 ):
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
 
-    cache_entry.push_binary_package(spec, tarball, "sha256", checksum, tmpdir, signing_key)
+    cache_entry.push_binary_package(spec, tarball, "sha256", checksum, tmpdir, notary)
 
 
 class Uploader:
@@ -1087,11 +1075,11 @@ class URLUploader(Uploader):
         mirror: spack.mirrors.mirror.Mirror,
         force: bool,
         update_index: bool,
-        signing_key: Optional[str],
+        notary: Optional[Notary],
     ) -> None:
         super().__init__(mirror, force, update_index)
         self.url = mirror.push_url
-        self.signing_key = signing_key
+        self.notary = notary
 
     def push(
         self, specs: List[spack.spec.Spec]
@@ -1101,7 +1089,7 @@ class URLUploader(Uploader):
             out_url=self.url,
             force=self.force,
             update_index=self.update_index,
-            signing_key=self.signing_key,
+            notary=self.notary,
             tmpdir=self.tmpdir,
             executor=self.executor,
         )
@@ -1111,7 +1099,7 @@ def make_uploader(
     mirror: spack.mirrors.mirror.Mirror,
     force: bool = False,
     update_index: bool = False,
-    signing_key: Optional[str] = None,
+    notary: Optional[Notary] = None,
     base_image: Optional[str] = None,
 ) -> Uploader:
     """Builder for the appropriate uploader based on the mirror type"""
@@ -1120,9 +1108,7 @@ def make_uploader(
             mirror=mirror, force=force, update_index=update_index, base_image=base_image
         )
     else:
-        return URLUploader(
-            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key
-        )
+        return URLUploader(mirror=mirror, force=force, update_index=update_index, notary=notary)
 
 
 def _format_spec(spec: spack.spec.Spec) -> str:
@@ -1169,9 +1155,9 @@ class FancyProgress:
 def _url_push(
     specs: List[spack.spec.Spec],
     out_url: str,
-    signing_key: Optional[str],
     force: bool,
     update_index: bool,
+    notary: Optional[Notary],
     tmpdir: str,
     executor: concurrent.futures.Executor,
 ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
@@ -1181,10 +1167,7 @@ def _url_push(
     errors: List[Tuple[spack.spec.Spec, BaseException]] = []
 
     exists_futures = [
-        executor.submit(
-            _exists_in_buildcache, spec, out_url, allow_unsigned=False if signing_key else True
-        )
-        for spec in specs
+        executor.submit(_exists_in_buildcache, spec, out_url, notary=notary) for spec in specs
     ]
 
     cache_entries = {
@@ -1215,11 +1198,7 @@ def _url_push(
 
     upload_futures = [
         executor.submit(
-            _url_upload_tarball_and_specfile,
-            spec,
-            tmpdir,
-            cache_entries[spec.dag_hash()],
-            signing_key,
+            _url_upload_tarball_and_specfile, spec, tmpdir, cache_entries[spec.dag_hash()], notary
         )
         for spec in specs_to_upload
     ]
@@ -1245,10 +1224,13 @@ def _url_push(
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_class.maybe_push_layout_json(out_url)
 
-    if signing_key:
+    if notary:
         keys_tmpdir = os.path.join(tmpdir, "keys")
         os.mkdir(keys_tmpdir)
-        _url_push_keys(out_url, keys=[signing_key], update_index=update_index, tmpdir=keys_tmpdir)
+        print(notary.get_keys())
+        _url_push_keys(
+            out_url, keys=notary.get_keys(), update_index=update_index, tmpdir=keys_tmpdir
+        )
 
     if update_index:
         index_tmpdir = os.path.join(tmpdir, "index")
@@ -1753,14 +1735,17 @@ def download_tarball(
     mirrors = [fetch_url_to_mirror(mirror_metadata) for mirror_metadata in urls_and_versions]
 
     for mirror, layout_version in mirrors:
-        # Override mirror's default if
-        currently_unsigned = unsigned if unsigned is not None else not mirror.signed
-
         # If it's an OCI index, do things differently, since we cannot compose URLs.
         fetch_url = mirror.fetch_url
 
         # TODO: refactor this to some "nice" place.
         if spack.oci.image.is_oci_url(fetch_url):
+            if not unsigned:
+                warnings.warn(
+                    "Code signing is currently not supported for OCI images. "
+                    "Specify unsigned to silence this warning."
+                )
+
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
             # Fetch the manifest
@@ -1820,7 +1805,13 @@ def download_tarball(
             return tarball_stage
         else:
             cache_type = get_url_buildcache_class(layout_version=layout_version)
-            cache_entry = cache_type(fetch_url, spec, allow_unsigned=currently_unsigned)
+            cache_entry = cache_type(
+                fetch_url,
+                spec,
+                notary=spack.notary.select_notary(
+                    mirror, signed=not unsigned if unsigned is not None else None
+                ),
+            )
 
             try:
                 cache_entry.fetch_archive()
@@ -2296,7 +2287,7 @@ def _get_keys(
         mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEY)
     )
     key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
-    index_entry = cache_class(mirror_url, allow_unsigned=True)
+    index_entry = cache_class(mirror_url)
 
     try:
         index_manifest = index_entry.read_manifest(manifest_url=key_index_manifest_url)
@@ -2313,7 +2304,7 @@ def _get_keys(
     saved_fingerprints = []
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
-        key_entry = cache_class(mirror_url, allow_unsigned=True)
+        key_entry = cache_class(mirror_url)
         try:
             key_manifest = key_entry.read_manifest(manifest_url=key_manifest_url)
             key_blob_path = key_entry.fetch_blob(key_manifest.data[0])
@@ -2387,16 +2378,13 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
 
 def _url_push_keys(
     *mirrors: Union[spack.mirrors.mirror.Mirror, str],
-    keys: List[str],
+    keys: List[Tuple[str, pathlib.Path]],
     tmpdir: str,
     update_index: bool = False,
 ):
     """Upload pgp public keys to the given mirrors"""
-    keys = spack.util.gpg.public_keys(*(keys or ()))
-    files = [os.path.join(tmpdir, f"{key}.pub") for key in keys]
-
-    for key, file in zip(keys, files):
-        spack.util.gpg.export_keys(file, [key])
+    if not keys:
+        return
 
     cache_class = get_url_buildcache_class()
 
@@ -2406,9 +2394,9 @@ def _url_push_keys(
         tty.debug(f"Pushing public keys to {url_util.format(push_url)}")
         pushed_a_key = False
 
-        for key, file in zip(keys, files):
+        for key, file in keys:
             cache_class.push_local_file_as_blob(
-                local_file_path=file,
+                local_file_path=str(file),
                 mirror_url=push_url,
                 manifest_name=f"{key}.key",
                 component_type=BuildcacheComponent.KEY,
@@ -2438,7 +2426,7 @@ def needs_rebuild(spec, mirror_url):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry = cache_class(mirror_url, spec, allow_unsigned=True)
+    cache_entry = cache_class(mirror_url, spec)
     exists = cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     return not exists
 
@@ -2513,7 +2501,7 @@ def download_single_spec(
 
     for url in urls:
         cache_class = get_url_buildcache_class(layout_version=layout_version)
-        cache_entry = cache_class(url, concrete_spec, allow_unsigned=True)
+        cache_entry = cache_class(url, concrete_spec)
 
         try:
             cache_entry.fetch_metadata()
@@ -2590,7 +2578,7 @@ class IndexHandler:
 
         manifest = BuildcacheManifest.from_dict(
             # Currently we do not sign buildcache index, but we could
-            cache_class.verify_and_extract_manifest(result, verify=False)
+            spack.util.gpg.extract_json_from_clearsig(result)
         )
         blob_record = manifest.get_blob_records(
             cache_class.component_to_media_type(BuildcacheComponent.INDEX)
@@ -2822,7 +2810,7 @@ class DefaultIndexHandler(IndexHandler):
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download the index blob
-        cache_entry = cache_class(self.url, allow_unsigned=True)
+        cache_entry = cache_class(self.url)
         computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
         cache_entry.destroy()
 
@@ -2884,7 +2872,7 @@ class EtagIndexHandler(IndexHandler):
                 "etag", None
             )
 
-        cache_entry = cache_class(self.url, allow_unsigned=True)
+        cache_entry = cache_class(self.url)
         computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
         cache_entry.destroy()
 
@@ -2933,26 +2921,6 @@ class NoGpgException(spack.error.SpackError):
 
     def __init__(self, msg):
         super().__init__(msg)
-
-
-class NoKeyException(spack.error.SpackError):
-    """
-    Raised when gpg has no default key added.
-    """
-
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
-class PickKeyException(spack.error.SpackError):
-    """
-    Raised when multiple keys can be used to sign.
-    """
-
-    def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
-        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
-        super().__init__(err_msg)
 
 
 class NewLayoutException(spack.error.SpackError):

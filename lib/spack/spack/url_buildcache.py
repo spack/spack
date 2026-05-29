@@ -14,12 +14,11 @@ import urllib.parse
 from contextlib import closing, contextmanager
 from datetime import datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
-import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
@@ -32,6 +31,7 @@ import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.notary import Notary
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
@@ -57,6 +57,8 @@ class BuildcacheComponent(enum.Enum):
     MANIFEST = enum.auto()
     # metadata file for a binary package
     SPEC = enum.auto()
+    # metadata file for a manifest signature
+    SIG = enum.auto()
     # things that live in the blobs directory
     BLOB = enum.auto()
     # binary mirror index
@@ -190,6 +192,7 @@ class URLBuildcacheEntry:
     SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
     TARBALL_MEDIATYPE = "application/vnd.spack.install.v2.tar+gzip"
     PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
+    PGP_SIGNATURE_MEDIATYPE = "application/pgp-signature"
     PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
@@ -198,18 +201,22 @@ class URLBuildcacheEntry:
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", "index"],
         BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
         BuildcacheComponent.SPEC: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
+        BuildcacheComponent.SIG: [f"v{LAYOUT_VERSION}", "manifests", "sig"],
         BuildcacheComponent.KEY_INDEX: [f"v{LAYOUT_VERSION}", "manifests", "key"],
         BuildcacheComponent.TARBALL: ["blobs"],
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
     def __init__(
-        self, mirror_url: str, spec: Optional[spack.spec.Spec] = None, allow_unsigned: bool = False
+        self,
+        mirror_url: str,
+        spec: Optional[spack.spec.Spec] = None,
+        notary: Optional[Notary] = None,
     ):
         """Lazily initialize the object"""
         self.mirror_url: str = mirror_url
         self.spec: Optional[spack.spec.Spec] = spec
-        self.allow_unsigned: bool = allow_unsigned
+        self.notary = notary
         self.manifest: Optional[BuildcacheManifest] = None
         self.remote_manifest_url: str = ""
         self.stages: Dict[BlobRecord, spack.stage.Stage] = {}
@@ -285,6 +292,23 @@ class URLBuildcacheEntry:
         )
 
     @classmethod
+    def get_sig_url_for_file(cls, file: str, mirror_url: str) -> str:
+        assert os.path.exists(file)
+        with open(file, "r", encoding="utf-8") as fd:
+            return cls.get_sig_url_for_content(fd.read(), mirror_url)
+
+    @classmethod
+    def get_sig_url_for_content(cls, content: str, mirror_url: str) -> str:
+        hasher = hash_fun_for_algo("sha256")()
+        hasher.update(content.encode())
+        return cls.get_sig_url_for_digest(hasher.hexdigest(), mirror_url)
+
+    @classmethod
+    def get_sig_url_for_digest(cls, digest: str, mirror_url: str) -> str:
+        path_components = cls.get_relative_path_components(BuildcacheComponent.SIG)
+        return url_util.join(mirror_url, *path_components, digest[:2], digest + ".asc")
+
+    @classmethod
     def get_buildcache_component_include_pattern(
         cls, buildcache_component: BuildcacheComponent
     ) -> str:
@@ -295,6 +319,8 @@ class URLBuildcacheEntry:
             return "*.manifest.json"
         elif buildcache_component == BuildcacheComponent.SPEC:
             return "*.spec.manifest.json"
+        elif buildcache_component == BuildcacheComponent.SIG:
+            return "*.sig.manifest.json"
         elif buildcache_component == BuildcacheComponent.INDEX:
             return ".*index.manifest.json"
         elif buildcache_component == BuildcacheComponent.KEY:
@@ -317,6 +343,9 @@ class URLBuildcacheEntry:
             return cls.PUBLIC_KEY_MEDIATYPE
         elif component == BuildcacheComponent.KEY_INDEX:
             return cls.PUBLIC_KEY_INDEX_MEDIATYPE
+        elif component == BuildcacheComponent.SIG:
+            # TODO support for cosign
+            return cls.PGP_SIGNATURE_MEDIATYPE
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
@@ -421,22 +450,62 @@ class URLBuildcacheEntry:
         return True
 
     @classmethod
-    def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
-        """Possibly verify clearsig, then extract contents and return as json"""
-        if spack.util.gpg.is_clearsig(manifest_contents):
-            if verify:
-                # Try to verify and raise if we fail
-                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                    manifest_path = os.path.join(tmpdir, "manifest.json.sig")
-                    with open(manifest_path, "w", encoding="utf-8") as fd:
-                        fd.write(manifest_contents)
-                    if not try_verify(manifest_path):
-                        raise NoVerifyException("Signature could not be verified")
+    def _fetch_detached_sig(cls, manifest_contents: str, mirror_url: str) -> str:
+        """Fetch the detached signature for a manifest"""
+        # Try to read the manifests for the known public keys
+        sig_manifest_url = URLBuildcacheEntry.get_sig_url_for_content(
+            manifest_contents, mirror_url
+        )
+        # Read the signature (signatures are never signed)
+        manifest = URLBuildcacheEntry.read_manifest_from_url(
+            sig_manifest_url, mirror_url, notary=None
+        )
+        sigs = manifest.get_blob_records(cls.component_to_media_type(BuildcacheComponent.SIG))
 
-            return spack.util.gpg.extract_json_from_clearsig(manifest_contents)
-        elif verify:
-            raise NoVerifyException("Required signature was not found on manifest")
-        return json.loads(manifest_contents)
+        # Skip records with signatures we don't understand
+        if not sigs:
+            raise BuildcacheEntryError("Found empty signature manifest")
+
+        blob_url = cls.get_blob_url(mirror_url, sigs[0])
+        return web_util.read_text(blob_url)
+
+    @classmethod
+    def read_manifest_from_url(
+        cls, manifest_url: str, mirror_url: str, notary: Optional[Notary]
+    ) -> BuildcacheManifest:
+        """Read and process the the buildcache entry manifest."""
+        manifest = None
+        manifest_contents = ""
+
+        # Read the manifest and cache it in the tmpdir for verify
+        try:
+            manifest_contents = web_util.read_text(manifest_url)
+        except (web_util.SpackWebError, OSError) as e:
+            raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
+
+        if not manifest_contents:
+            raise BuildcacheEntryError("Unable to read manifest or manifest empty")
+
+        # If this notary is capable of validation try to very the signature
+        # is_validating checked here to avoid trying to fetch detached signatures
+        if notary and notary.is_validating:
+            # If the manifest isn't cleartext signed, look for detached signatures
+            signature = None
+            if not spack.util.gpg.is_clearsig(manifest_contents):
+                signature = cls._fetch_detached_sig(manifest_contents, mirror_url)
+
+            # Try to verify and raise if we fail
+            if not try_verify(notary, manifest_contents, signature):
+                raise NoVerifyException("Signature could not be verified")
+
+        # Extract the contents of the manifest
+        manifest_contents = spack.util.gpg.extract_json_from_clearsig(manifest_contents)
+        manifest = BuildcacheManifest.from_dict(manifest_contents)
+
+        if manifest.version != 3:
+            raise BuildcacheEntryError("Layout version mismatch in fetched manifest")
+
+        return manifest
 
     def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
@@ -461,25 +530,9 @@ class URLBuildcacheEntry:
             manifest_url = self.get_manifest_url(self.spec, self.mirror_url)
 
         self.remote_manifest_url = manifest_url
-        manifest_contents = ""
-
-        try:
-            manifest_contents = web_util.read_text(manifest_url)
-        except (web_util.SpackWebError, OSError) as e:
-            raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
-
-        if not manifest_contents:
-            raise BuildcacheEntryError("Unable to read manifest or manifest empty")
-
-        manifest_contents = self.verify_and_extract_manifest(
-            manifest_contents, verify=not self.allow_unsigned
+        self.manifest = self.read_manifest_from_url(
+            manifest_url, self.mirror_url, notary=self.notary
         )
-
-        self.manifest = BuildcacheManifest.from_dict(manifest_contents)
-
-        if self.manifest.version != 3:
-            raise BuildcacheEntryError("Layout version mismatch in fetched manifest")
-
         return self.manifest
 
     def fetch_metadata(self) -> dict:
@@ -555,32 +608,35 @@ class URLBuildcacheEntry:
         manifest: BuildcacheManifest,
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
-        signing_key: Optional[str] = None,
+        notary: Optional[Notary] = None,
     ) -> None:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
         represents, so it can be placed in the correct relative path within the mirror.
-        If a signing_key is provided, it will be used to clearsign the manifest before
+        If a notary is provided, it will be used to clearsign the manifest before
         pushing it."""
         # write the manifest to a temporary location
         manifest_file_name = f"{manifest_name}.manifest.json"
-        manifest_path = os.path.join(tmpdir, manifest_file_name)
-        os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        manifest_path = Path(os.path.join(tmpdir, manifest_file_name))
+        manifest_path.parent.mkdir(exist_ok=True)
+        with manifest_path.open("w", encoding="utf-8") as f:
             json.dump(manifest.to_dict(), f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
             # chars). If lines are longer, they are truncated without error. So,
             # here we still add newlines, but no indent, so save on file size and
             # line length.
-
-        if signing_key:
-            manifest_path = sign_file(signing_key, manifest_path)
+        signature_path = manifest_path
+        if notary:
+            manifest_path, signature_path = notary.sign(manifest_path)
 
         manifest_destination_url = url_util.join(
             mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
         )
 
-        web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
+        web_util.push_to_url(str(manifest_path), manifest_destination_url, keep_original=False)
+        if manifest_path != signature_path:
+            sig_destination_url = cls.get_sig_url_for_file(str(manifest_path), mirror_url)
+            web_util.push_to_url(str(signature_path), sig_destination_url, keep_original=False)
 
     @classmethod
     def push_local_file_as_blob(
@@ -630,7 +686,7 @@ class URLBuildcacheEntry:
         checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        signing_key: Optional[str],
+        notary: Optional[Notary],
     ) -> None:
         """Convenience method to push tarball, specfile, and manifest to the remote mirror
 
@@ -710,8 +766,8 @@ class URLBuildcacheEntry:
         }
 
         # write the manifest to a temporary location
-        manifest_path = os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json")
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        manifest_path = Path(os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json"))
+        with manifest_path.open("w", encoding="utf-8") as f:
             json.dump(manifest, f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
             # chars). If lines are longer, they are truncated without error. So,
@@ -719,13 +775,18 @@ class URLBuildcacheEntry:
             # line length.
 
         # possibly sign the manifest
-        if signing_key:
-            manifest_path = sign_file(signing_key, manifest_path)
+        signature_path = manifest_path
+        if notary:
+            manifest_path, signature_path = notary.sign(manifest_path)
 
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
         # even if we deleted the pre-existing one.
         web_util.push_to_url(manifest_path, self.remote_manifest_url, keep_original=False)
+        if manifest_path != signature_path:
+            # This is a detached style signature, upload as a sig
+            sig_destination_url = self.get_sig_url_for_file(str(manifest_path), self.mirror_url)
+            web_util.push_to_url(signature_path, sig_destination_url, keep_original=False)
 
     def destroy(self):
         """Destroy any existing stages"""
@@ -752,6 +813,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.INDEX: ["build_cache"],
         BuildcacheComponent.KEY: ["build_cache", "_pgp"],
         BuildcacheComponent.SPEC: ["build_cache"],
+        BuildcacheComponent.SIG: ["build_cache"],
         BuildcacheComponent.KEY_INDEX: ["build_cache", "_pgp"],
         BuildcacheComponent.TARBALL: ["build_cache"],
         BuildcacheComponent.LAYOUT_JSON: ["build_cache", "layout.json"],
@@ -761,12 +823,12 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         self,
         push_url_base: str,
         spec: Optional[spack.spec.Spec] = None,
-        allow_unsigned: bool = False,
+        notary: Optional[Notary] = None,
     ):
         """Lazily initialize the object"""
         self.mirror_url: str = push_url_base
         self.spec: Optional[spack.spec.Spec] = spec
-        self.allow_unsigned: bool = allow_unsigned
+        self.notary: Optional[Notary] = notary
 
         self.has_metadata: bool = False
         self.has_tarball: bool = False
@@ -868,7 +930,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         if not self.remote_spec_url:
             raise BuildcacheEntryError(f"Mirror {self.mirror_url} does not have metadata for spec")
 
-        if not self.allow_unsigned and self.has_unsigned:
+        if not self.notary and self.has_unsigned:
             raise BuildcacheEntryError(
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
@@ -887,7 +949,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.local_specfile_path = self.spec_stage.save_filename
 
-        if not self.allow_unsigned and not try_verify(self.local_specfile_path):
+        if self.notary and not try_verify(self.notary, self.local_specfile_path):
             raise NoVerifyException(f"Signature on {self.remote_spec_url} could not be verified")
 
         # Check spec file for validity and read it, or else cleanup and exit early
@@ -999,10 +1061,6 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
     @classmethod
-    def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
-        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
-
-    @classmethod
     def push_blob(cls, mirror_url: str, blob_path: str, record: BlobRecord) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1014,7 +1072,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         manifest: BuildcacheManifest,
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
-        signing_key: Optional[str] = None,
+        notary: Optional[Notary] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1036,7 +1094,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         checksum_algorithm: str,
         tarball_checksum: str,
         tmpdir: str,
-        signing_key: Optional[str],
+        notary: Optional[Notary] = None,
     ) -> None:
         raise BuildcacheEntryError("Spack can no longer push v2 buildcache entries")
 
@@ -1101,7 +1159,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str, component_type: Buil
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, notary=None)
         cache_entry.read_manifest(manifest_url=manifest_path)
         return cache_entry
 
@@ -1178,7 +1236,7 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Bui
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
     def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, notary=None)
         cache_entry.read_manifest(manifest_url)
         return cache_entry
 
@@ -1323,16 +1381,9 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     return spec_dict, layout_version
 
 
-def sign_file(key: str, file_path: str) -> str:
-    """sign and return the path to the signed file"""
-    signed_file_path = f"{file_path}.sig"
-    spack.util.gpg.sign(key, file_path, signed_file_path, clearsign=True)
-    return signed_file_path
-
-
-def try_verify(specfile_path):
-    """Utility function to attempt to verify a local file.  Assumes the
-    file is a clearsigned signature file.
+def try_verify(notary: Notary, data: str, sig: Optional[str] = None):
+    """Utility function to attempt to verify a local file. Handles translating
+    in memory data to on disc layout needed by the notary
 
     Args:
         specfile_path (str): Path to file to be verified.
@@ -1340,14 +1391,34 @@ def try_verify(specfile_path):
     Returns:
         ``True`` if the signature could be verified, ``False`` otherwise.
     """
-    suppress = config.get("config:suppress_gpg_warnings", False)
-
     try:
-        spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
+        # Make a working directory for verification
+        tmppath = mkdtemp(dir=spack.stage.get_stage_root())
+        if not os.path.exists(data):
+            data_path = os.path.join(tmppath, "data.txt")
+            with open(data_path, "w", encoding="utf-8") as fd:
+                fd.write(data)
+        else:
+            data_path = data
+
+        if sig:
+            if not os.path.exists(sig):
+                sig_path = os.path.join(tmppath, "sig.txt")
+                with open(sig_path, "w", encoding="utf-8") as fd:
+                    fd.write(sig)
+            else:
+                sig_path = sig
+
+            valid = notary.verify(data_path, sig_path)
+        else:
+            valid = notary.verify(data_path)
+
+        return valid
     except Exception:
         return False
-
-    return True
+    finally:
+        # Cleanup workdir
+        shutil.rmtree(tmppath)
 
 
 class MirrorMetadata:
