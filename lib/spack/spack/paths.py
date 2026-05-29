@@ -353,6 +353,7 @@ def freeze():
     """
     # Look up locations dynamically so tests can monkeypatch it
     import spack.paths as paths_module
+
     locs = paths_module.locations
 
     return {
@@ -366,6 +367,7 @@ def freeze():
 def restore(bundled_state):
     # Look up locations dynamically so tests can monkeypatch it
     import spack.paths as paths_module
+
     locs = paths_module.locations
 
     locs._state_home = bundled_state["state_home"]
