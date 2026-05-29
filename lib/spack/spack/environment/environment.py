@@ -1252,10 +1252,6 @@ class Environment:
             parser.parse_definitions(data=spack.config.CONFIG.get("definitions", []))
         )
 
-        # TODO/50207: Fix this to handle grabbing specs though not clear yet
-        # TODO/50207:   how useful grabbing them from spack.config.CONFIG is
-        # TODO/50207:   since it requires appropriate substitutions (e.g.,
-        # TODO/50207:   definitions) and group handling.
         for group in self.manifest.groups():
             tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
 

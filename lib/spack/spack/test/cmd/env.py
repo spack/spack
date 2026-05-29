@@ -4774,14 +4774,8 @@ spack:
 
     expected = [Spec(s) for s in specs]
     with e:
-        # TODO/50207: REMOVE global "specs" extraction
-        # TODO/50207: The following check fails because "$packages"
-        # TODO/50207: shows up in the raw "specs" list instead of "libdwarf".
-        # config_specs = spack.config.CONFIG.get("specs", [])
-        # assert config_specs == expected
-
-        # TODO/50207: The environment needs to be changed s.t. user specs
-        # TODO/50207: from included environments are properly included.
+        config_specs = spack.config.CONFIG.get("specs", [])
+        assert config_specs == specs
         assert e.user_specs.specs == expected
 
 
@@ -4817,14 +4811,6 @@ spack:
     expected = [Spec(s) for s in specs]
 
     with e:
-        # TODO/50207: REMOVE global "specs" extraction
-        # TODO/50207: The following check fails because "$packages"
-        # TODO/50207: shows up in the raw "specs" list instead of "libdwarf".
-        # config_specs = spack.config.CONFIG.get("specs", [])
-        # assert config_specs == expected
-
-        # TODO/50207: The environment needs to be changed s.t. user specs
-        # TODO/50207: from included environments are properly included.
         assert e.user_specs.specs == expected
 
     # Confirm manifest contents include explicit and not included specs
