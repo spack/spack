@@ -631,9 +631,6 @@ class Gpg:
             keys: list of keys to trust
         """
 
-        if keys and yes_to_all:
-            raise SpackGPGError("Cannot specify keys to trust when yes_to_all is True")
-
         # This global method is safe to use to list keys in a file
         imported_keys = extract_public_keys(keyfile)
         if not imported_keys:
@@ -650,7 +647,11 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-            auto_trust_key = key in keys or yes_to_all
+            key_specified = key in keys
+            if keys and yes_to_all and not key_specified:
+                raise SpackGPGError("Cannot specify keys to trust when yes_to_all is True")
+
+            auto_trust_key = key_specified or yes_to_all
             # Confirm with the user that the key should be trusted
             if not auto_trust_key and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
                 tty.info(f"Spack will not trust key {key}")
