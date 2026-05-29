@@ -180,7 +180,7 @@ def download_and_trust_key():
             stage.fetch()
         except spack.error.FetchError as e:
             raise RuntimeError("Cannot fetch Spack Public key for binary cache validation") from e
-        spack.util.gpg.validate_fingerprint_and_trust(fingerprint, stage.save_filename)
+        spack.util.gpg.trust(stage.save_filename, fprs=[fingerprint])
 
 
 def ensure_environment_dependencies() -> None:
