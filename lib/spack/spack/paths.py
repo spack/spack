@@ -74,26 +74,6 @@ _RELATIVE_CACHE = ".cache"
 
 
 class SpackPaths:
-    """Per-instance Spack path resolution.
-
-    The four "home" properties (``state_home``, ``data_home``,
-    ``cache_home``, ``spack_home``) resolve to whatever the active layout
-    scheme yaml provides via ``config:locations:*`` — with two
-    higher-priority overrides preserved in Python:
-
-        1. ``SPACK_x_HOME`` env var (highest)
-        2. ``SPACK_HOME`` env var with the XDG-style subpath appended
-        3. ``config:locations:x`` (from scheme yaml or higher scopes)
-        4. ``config:locations:home`` with subpath (rarely needed when
-           scheme yaml is loaded, but kept for completeness)
-
-    Everything else that used to live in this module as ``default_*``
-    properties (default install root, envs root, license dir, gpg paths,
-    download cache) now comes directly from config, with the active
-    scheme yaml supplying the defaults. See
-    ``etc/spack/defaults/{old,xdg}/config.yaml``.
-    """
-
     def __init__(self, base):
         self.base = base
 
