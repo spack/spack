@@ -28,11 +28,13 @@ def clear_global_path_caches():
     spack.paths.locations._data_home = None
     spack.paths.locations._state_home = None
     spack.paths.locations._cache_home = None
+    spack.paths.locations._default_state_home_dot_spack = None
     yield
     # Clean up after the module completes
     spack.paths.locations._data_home = None
     spack.paths.locations._state_home = None
     spack.paths.locations._cache_home = None
+    spack.paths.locations._default_state_home_dot_spack = None
 
 
 def _ensure_dir(pathlike):
@@ -318,7 +320,7 @@ def test_layout_detected_in_eval_conditional(occupied_spack_root, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_home_substitutions_respect_env_vars(working_env, tmp_path, set_home, monkeypatch):
+def test_home_substitutions_respect_env_vars(working_env, tmp_path, mutable_config, set_home, monkeypatch):
     from spack.util.path import canonicalize_path
 
     home_prefix = _ensure_dir(tmp_path / "home-prefix")
