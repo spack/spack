@@ -13,29 +13,6 @@ from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
 
-@pytest.fixture(autouse=True)
-def clear_global_path_caches():
-    """Clear cached values in spack.paths.locations before each test.
-
-    The global singleton spack.paths.locations caches _data_home, _state_home, and
-    _cache_home values. Tests that create new SpackPaths instances or modify config
-    need these cleared to avoid stale cached values when substitute_config_variables
-    expands $data_home, $state_home, etc.
-
-    Function-scoped (not module-scoped) to ensure caches are cleared between tests
-    within the same worker, allowing tests to run in parallel across workers."""
-    spack.paths.locations._data_home = None
-    spack.paths.locations._state_home = None
-    spack.paths.locations._cache_home = None
-    spack.paths.locations._default_state_home_dot_spack = None
-    yield
-    # Clean up after each test
-    spack.paths.locations._data_home = None
-    spack.paths.locations._state_home = None
-    spack.paths.locations._cache_home = None
-    spack.paths.locations._default_state_home_dot_spack = None
-
-
 def _ensure_dir(pathlike):
     pathlike.mkdir(parents=True, exist_ok=True)
     return str(pathlike)
@@ -405,14 +382,17 @@ def test_gpg_path_from_config(working_env, tmp_path, mutable_config, set_home):
     assert p.gpg_path == str(tmp_path / "my-gpg")
 
 
-def test_gpg_path_default_from_scheme(working_env, tmp_path, mutable_config, set_home):
+def test_gpg_path_default_from_scheme(working_env, tmp_path, mutable_config, set_home, monkeypatch):
     """The xdg scheme yaml sets config:gpg_path to $data_home/gpg by default;
     the property simply reads that."""
     set_home(_ensure_dir(tmp_path / "home"))
     _set_locations(mutable_config, data=str(tmp_path / "datadir"))
     # base/config.yaml sets gpg_path to $data_home/gpg
     mutable_config.set("config:gpg_path", "$data_home/gpg")
-    p = SpackPaths(SpackPathsBase(_ensure_dir(tmp_path / "spack-root")))
+    test_base = SpackPathsBase(_ensure_dir(tmp_path / "spack-root"))
+    p = SpackPaths(test_base)
+    monkeypatch.setattr(spack.paths, "locations", p)
+    monkeypatch.setattr(spack.paths_base, "locations", test_base)
     assert p.gpg_path == str(tmp_path / "datadir" / "gpg")
 
 
