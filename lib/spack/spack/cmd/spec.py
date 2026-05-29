@@ -6,6 +6,7 @@ import argparse
 import sys
 
 import spack
+import spack.binary_distribution
 import spack.cmd
 import spack.environment as ev
 import spack.hash_types as ht
@@ -33,6 +34,7 @@ for further documentation regarding the spec syntax, see:
 
     install_status_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+    arguments.add_common_arguments(subparser, ["buildcache_status"])
 
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
@@ -77,17 +79,9 @@ for further documentation regarding the spec syntax, see:
 
 
 def spec(parser, args):
-    install_status_fn = spack.spec.Spec.install_status
-
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
-
-    # use a read transaction if we are getting install status for every
-    # spec in the DAG.  This avoids repeatedly querying the DB.
-    tree_context = lang.nullcontext
-    if args.install_status:
-        tree_context = spack.store.STORE.db.read_transaction
 
     env = ev.active_environment()
 
@@ -98,6 +92,21 @@ def spec(parser, args):
         concrete_specs = env.concrete_roots()
     else:
         args.subparser.error("requires at least one spec or an active environment")
+
+    show_status = args.install_status or args.buildcache_status
+    if args.buildcache_status:
+        available_hashes = spack.binary_distribution.specs_in_buildcaches(
+            spack.traverse.traverse_nodes(concrete_specs, key=spack.traverse.by_dag_hash)
+        )
+        status_fn = spack.cmd.buildcache_status_fn(available_hashes)
+    elif show_status:
+        status_fn = spack.spec.Spec.install_status
+    else:
+        status_fn = None
+
+    # use a read transaction if we are getting install status for every
+    # spec in the DAG.  This avoids repeatedly querying the DB.
+    tree_context = spack.store.STORE.db.read_transaction if show_status else lang.nullcontext
 
     # With --yaml, --json, or --format, just print the raw specs to output
     if args.format:
@@ -119,7 +128,7 @@ def spec(parser, args):
                 format=fmt,
                 hashlen=None if args.very_long else 7,
                 show_types=args.types,
-                status_fn=install_status_fn if args.install_status else None,
+                status_fn=status_fn,
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
                 highlight_version_fn=(

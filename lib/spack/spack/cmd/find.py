@@ -5,7 +5,9 @@
 import argparse
 import copy
 import sys
+from typing import List, Optional, Tuple
 
+import spack.binary_distribution
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
@@ -16,6 +18,7 @@ import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
+import spack.traverse
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.llnl.util.tty.color import colorize
@@ -53,6 +56,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-I", "--install-status", action="store_true", help="show install status of packages"
     )
+
+    arguments.add_common_arguments(subparser, ["buildcache_status"])
 
     subparser.add_argument(
         "--specfile-format",
@@ -335,7 +340,9 @@ def display_env(env, args, decorator, results):
         print()
 
 
-def _find_query(args, env):
+def _find_query(
+    args: argparse.Namespace, env: Optional[ev.Environment]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
@@ -355,8 +362,8 @@ def _find_query(args, env):
         else:
             env_specs = all_env_specs
 
-        spec_hashes = set(x.dag_hash() for x in env_specs)
-        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=spec_hashes, **q_args))
+        spec_hashes = {x.dag_hash() for x in env_specs}
+        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=list(spec_hashes), **q_args))
 
         results = list()
         with spack.store.STORE.db.read_transaction():
@@ -412,7 +419,14 @@ def find(parser, args):
         # the latter only exists if you call args.specs()
         tty.die(f"No package matches the query: {' '.join(args.constraint)}")
 
-    if args.install_status or args.show_concretized:
+    if args.buildcache_status:
+        available_hashes = spack.binary_distribution.specs_in_buildcaches(
+            spack.traverse.traverse_nodes(
+                results + concretized_but_not_installed, key=spack.traverse.by_dag_hash
+            )
+        )
+        status_fn = cmd.buildcache_status_fn(available_hashes)
+    elif args.install_status or args.show_concretized:
         status_fn = spack.spec.Spec.install_status
     else:
         status_fn = None

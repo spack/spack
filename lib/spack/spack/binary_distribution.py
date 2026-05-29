@@ -2251,6 +2251,15 @@ def update_cache_and_get_specs():
     return BINARY_INDEX.get_all_built_specs()
 
 
+def specs_in_buildcaches(specs: Iterable["spack.spec.Spec"]) -> Set[str]:
+    """Returns the dag hashes of *specs* that are available in any configured buildcache."""
+    try:
+        BINARY_INDEX.update(with_cooldown=True)
+    except Exception:
+        return set()
+    return {s.dag_hash() for s in specs if BINARY_INDEX.find_by_hash(s.dag_hash())}
+
+
 def get_keys(
     yes_to_all: bool = False,
     install: bool = False,

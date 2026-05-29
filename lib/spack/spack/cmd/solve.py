@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import enum
 import re
 import sys
 
 import spack
+import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
 import spack.config
@@ -17,10 +19,18 @@ import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.solver.asp as asp
 import spack.spec
+import spack.traverse
 
 description = "concretize a specs using an ASP solver"
 section = "developer"
 level = "long"
+
+
+class StatusMode(enum.Enum):
+    NONE = "none"
+    INSTALL = "install"
+    BUILDCACHE = "buildcache"
+
 
 #: output options
 show_options = ("asp", "opt", "output", "solutions")
@@ -52,7 +62,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     spack.cmd.spec.setup_parser(subparser)
 
 
-def _process_result(result, show, required_format, kwargs):
+def _process_result(result, show, required_format, kwargs, *, status_mode=StatusMode.NONE):
     opt, _, _ = min(result.answers)
     if ("opt" in show) and (not required_format):
         tty.msg("Best of %d considered solutions." % result.nmodels)
@@ -97,7 +107,19 @@ def _process_result(result, show, required_format, kwargs):
                 elif required_format == "json":
                     sys.stdout.write(spec.to_json(hash=ht.dag_hash))
         else:
-            sys.stdout.write(spack.spec.tree(result.specs, color=sys.stdout.isatty(), **kwargs))
+            if status_mode == StatusMode.BUILDCACHE:
+                available_hashes = spack.binary_distribution.specs_in_buildcaches(
+                    spack.traverse.traverse_nodes(result.specs, key=spack.traverse.by_dag_hash)
+                )
+                status_fn = spack.cmd.buildcache_status_fn(available_hashes)
+            elif status_mode == StatusMode.INSTALL:
+                status_fn = spack.spec.Spec.install_status
+            else:
+                status_fn = None
+            tree_str = spack.spec.tree(
+                result.specs, color=sys.stdout.isatty(), status_fn=status_fn, **kwargs
+            )
+            sys.stdout.write(tree_str)
         print()
 
     if result.unsolved_specs and "solutions" in show:
@@ -106,18 +128,22 @@ def _process_result(result, show, required_format, kwargs):
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    install_status_fn = spack.spec.Spec.install_status
-
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
+
+    if args.buildcache_status:
+        status_mode = StatusMode.BUILDCACHE
+    elif args.install_status:
+        status_mode = StatusMode.INSTALL
+    else:
+        status_mode = StatusMode.NONE
 
     kwargs = {
         "cover": args.cover,
         "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
-        "status_fn": install_status_fn if args.install_status else None,
         "hashes": args.long or args.very_long,
         "highlight_version_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
@@ -171,7 +197,7 @@ def solve(parser, args):
             else:
                 print("% END ROUND {0}\n".format(idx))
             if not setup_only:
-                _process_result(result, show, required_format, kwargs)
+                _process_result(result, show, required_format, kwargs, status_mode=status_mode)
     elif unify:
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
@@ -184,7 +210,7 @@ def solve(parser, args):
             allow_deprecated=allow_deprecated,
         )
         if not setup_only:
-            _process_result(result, show, required_format, kwargs)
+            _process_result(result, show, required_format, kwargs, status_mode=status_mode)
     else:
         for spec in specs:
             tty.msg("SOLVING SPEC:", spec)
@@ -197,4 +223,4 @@ def solve(parser, args):
                 allow_deprecated=allow_deprecated,
             )
             if not setup_only:
-                _process_result(result, show, required_format, kwargs)
+                _process_result(result, show, required_format, kwargs, status_mode=status_mode)

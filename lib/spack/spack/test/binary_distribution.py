@@ -1576,3 +1576,52 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     ]
     assert not concretization_warnings, "update() must not warn about concretization"
     assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}
+
+
+def test_specs_in_buildcaches_returns_hash_of_available_spec(monkeypatch, tmp_path):
+    """Tests that specs_in_buildcaches returns the dag hash of a spec whose hash is in the
+    binary index.
+    """
+    # Concretize before patching so the solver's own index calls are unaffected.
+    available = spack.concretize.concretize_one("mpich")
+    not_available = spack.concretize.concretize_one("libelf")
+
+    # Use a fresh, isolated index cache so we do not touch any real mirror.
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+
+    # update() must be called with cooldown so it doesn't hit the network.
+    update_calls = []
+
+    def fake_update(with_cooldown=False):
+        update_calls.append(with_cooldown)
+
+    monkeypatch.setattr(mock_index, "update", fake_update)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    # Simulate the index knowing about `available` but not `not_available`.
+    mock_index._mirrors_for_spec[available.dag_hash()] = {"some-mirror"}
+
+    result = spack.binary_distribution.specs_in_buildcaches([available, not_available])
+
+    assert available.dag_hash() in result
+    assert not_available.dag_hash() not in result
+    # update() must have been called with cooldown=True exactly once.
+    assert update_calls == [True]
+
+
+def test_specs_in_buildcaches_degrades_gracefully_on_update_error(monkeypatch, tmp_path):
+    """Tests that we return an empty set when the index update raises."""
+    # Concretize before patching so the solver's own index calls are unaffected.
+    s = spack.concretize.concretize_one("mpich")
+
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+
+    def exploding_update(with_cooldown=False):
+        raise OSError("network unreachable")
+
+    monkeypatch.setattr(mock_index, "update", exploding_update)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    result = spack.binary_distribution.specs_in_buildcaches([s])
+
+    assert result == set()
