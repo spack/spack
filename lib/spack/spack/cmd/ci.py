@@ -318,7 +318,7 @@ def ci_rebuild(args):
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
     if sign_binaries and not spack_ci.can_sign_binaries():
-        gpg_util.list(False, True)
+        gpg_util.glist(False, True)
         tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
