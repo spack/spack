@@ -58,7 +58,7 @@ class BootstrapEnvironment(spack.environment.Environment):
                 os.path.join(bootstrap_root_path, "environments", environment_dir)
             )
         )
-    
+
     @classmethod
     def bootstrap_gpg_home(cls) -> pathlib.Path:
         """Location of the GPG home directory used for bootstrapping"""
@@ -105,7 +105,9 @@ class BootstrapEnvironment(spack.environment.Environment):
                     )
                     try:
                         self.install_all(
-                            fail_fast=True, root_policy=fetch_policy, dependencies_policy=fetch_policy
+                            fail_fast=True,
+                            root_policy=fetch_policy,
+                            dependencies_policy=fetch_policy,
                         )
                     except BaseException:
                         # catch any exception as we always want to clean up
