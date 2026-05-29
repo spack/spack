@@ -12,6 +12,12 @@
 config:
   locations:
     home: "~"
-    data: $xdg_data_home/spack
-    state: $xdg_state_home/spack
-    cache: $xdg_cache_home/spack
+
+  install_tree:
+    root: $data_home/opt
+
+  environments_root: $data_home/environments
+  license_dir: $data_home/licenses
+  source_cache: $data_home/cache
+  gpg_path: $data_home/gpg
+  gpg_keys_path: $data_home/gpg-keys

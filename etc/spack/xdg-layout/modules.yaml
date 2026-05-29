@@ -1,0 +1,6 @@
+# XDG-compliant module paths for Spack 1.2+
+modules:
+  default:
+    roots:
+      tcl: $data_home/modules
+      lmod: $data_home/lmod
