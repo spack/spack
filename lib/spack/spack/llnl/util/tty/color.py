@@ -223,7 +223,7 @@ def _escape(s: _ConvertibleToStr, color: bool, enclose: bool, zsh: bool) -> str:
     if not color:
         return ""
     elif zsh:
-        return f"\033[0;{s}m"
+        return f"%{{\033[0;{s}m%}}"
 
     result = f"\033[{s}m"
 

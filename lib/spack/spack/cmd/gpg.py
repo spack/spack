@@ -24,7 +24,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparsers = subparser.add_subparsers(help="GPG sub-commands")
 
     trust = subparsers.add_parser("trust", help=gpg_trust.__doc__)
-    trust.add_argument("keyfile", type=str, help="add a key to the trust store")
+    trust.add_argument("keyfile", type=str, help="add a keyfile to the trust store")
+    arguments.add_common_arguments(trust, ["yes_to_all"])
     trust.set_defaults(func=gpg_trust, subparser=trust)
 
     untrust = subparsers.add_parser("untrust", help=gpg_untrust.__doc__)
@@ -57,15 +58,22 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     create.set_defaults(func=gpg_create, subparser=create)
 
-    list = subparsers.add_parser("list", help=gpg_list.__doc__)
-    list.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
-    list.add_argument(
+    glist = subparsers.add_parser("list", help=gpg_list.__doc__)
+    glist.add_argument(
+        "--fmt",
+        "-f",
+        action="store",
+        help="Format to list keys with (default (gpg), colons, keys, <key format string>)",
+    )
+    glist.add_argument("--trusted", action="store_true", default=True, help="list trusted keys")
+    glist.add_argument(
         "--signing", action="store_true", help="list keys which may be used for signing"
     )
-    list.set_defaults(func=gpg_list, subparser=list)
+    glist.set_defaults(func=gpg_list, subparser=glist)
 
     init = subparsers.add_parser("init", help=gpg_init.__doc__)
     init.add_argument("--from", metavar="DIR", type=str, dest="import_dir", help=argparse.SUPPRESS)
+    arguments.add_common_arguments(init, ["yes_to_all"])
     init.set_defaults(func=gpg_init, subparser=init)
 
     export = subparsers.add_parser("export", help=gpg_export.__doc__)
@@ -141,6 +149,7 @@ def gpg_create(args):
     if args.export or args.secret:
         new_sec_keys = set(spack.util.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
+        new_keys = [str(k) for k in new_keys]
 
     if args.export:
         spack.util.gpg.export_keys(args.export, new_keys)
@@ -152,18 +161,18 @@ def gpg_export(args):
     """export a gpg key, optionally including secret key"""
     keys = args.keys
     if not keys:
-        keys = spack.util.gpg.signing_keys()
+        keys = [str(k) for k in spack.util.gpg.signing_keys()]
     spack.util.gpg.export_keys(args.location, keys, args.secret)
 
 
 def gpg_list(args):
     """list keys available in the keyring"""
-    spack.util.gpg.list(args.trusted, args.signing)
+    spack.util.gpg.glist(args.trusted, args.signing, args.fmt)
 
 
 def gpg_trust(args):
     """add a key to the keyring"""
-    spack.util.gpg.trust(args.keyfile)
+    spack.util.gpg.trust(args.keyfile, args.yes_to_all)
 
 
 def gpg_init(args):
@@ -176,7 +185,7 @@ def gpg_init(args):
         for filename in filenames:
             if not filename.endswith(".key"):
                 continue
-            spack.util.gpg.trust(os.path.join(root, filename))
+            spack.util.gpg.trust(os.path.join(root, filename), args.yes_to_all)
 
 
 def gpg_untrust(args):

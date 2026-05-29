@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import difflib
+import gzip
 import json
 import os
 import pathlib
@@ -39,6 +40,7 @@ import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
 import spack.util.spack_yaml as syaml
@@ -4430,17 +4432,103 @@ def test_when_possible_above_all(mutable_config, mock_packages):
         assert criteria[0].name == "number of input specs not concretized"
 
 
+@pytest.mark.parametrize(
+    "specs",
+    [
+        [Spec("hdf5"), Spec("mpich")],
+        [Spec("hdf5")],
+        [Spec("mpich")],
+        [Spec("pkg-a"), Spec("pkg-b"), Spec("pkg-c")],
+    ],
+)
+def test_result_roundtrip(mock_packages, config, specs):
+    """Test that a solve result can be serialized and brought back."""
+    solver = spack.solver.asp.Solver()
+    result = solver.solve(specs)
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict())
+
+    # ensure that we didn't duplicate spec objects during the round trip -- specs need
+    # to come back as exactly the same graph they were before.
+    assert len(result.answers) == len(roundtrip.answers)
+    for (_, _, lspecs), (_, _, rspecs) in zip(result.answers, roundtrip.answers):
+        lids = set(id(lspec) for lspec in spack.traverse.traverse_nodes(lspecs.values()))
+        rids = set(id(rspec) for rspec in spack.traverse.traverse_nodes(rspecs.values()))
+        assert len(lids) == len(rids)
+
+    assert roundtrip == result
+
+
+@pytest.mark.parametrize(
+    "spec_str", ["hdf5", "hdf5^zmpi", "pkg-with-zlib-dep", "hypre^openblas-with-lapack"]
+)
+def test_spec_dict_roundtrip(mock_packages, config, spec_str):
+    """spec_dict_to_json/from_json preserves SpecDict shape and the full reachable graph.
+
+    Builds a SpecDict that holds only the root as a named entry -- transitive deps live
+    in the root's in-memory DAG but aren't separate NodeId entries. This mirrors how
+    reused specs appear in a SpecDict (pure build deps come along on the in-memory spec
+    but never become solver nodes), and is the case that triggered the original
+    dangling-hash bug in wire_spec_nodes.
+    """
+    spec = spack.concretize.concretize_one(spec_str)
+    nid = spack.solver.asp.SpecBuilder.make_node(pkg=spec.name)
+    spec_dict = {nid: spec}
+
+    roundtrip = spack.solver.asp.spec_dict_from_json(spack.solver.asp.spec_dict_to_json(spec_dict))
+
+    # SpecDict shape is preserved exactly (no synthetic NodeIds leak into the dict)
+    assert list(roundtrip.keys()) == [nid]
+
+    # Every spec reachable from the original is reachable from the roundtripped value,
+    # even though only the root was a SpecDict entry. This is the regression target:
+    # transitive deps must still be wired up through the root's edges.
+    original_hashes = {s.dag_hash() for s in spec.traverse()}
+    roundtrip_hashes = {s.dag_hash() for s in roundtrip[nid].traverse()}
+    assert original_hashes == roundtrip_hashes
+
+    # Deep equality on the root spec
+    assert roundtrip[nid] == spec
+
+
+@pytest.mark.parametrize(
+    "spec,reused_dep",
+    [
+        # fresh solves
+        ("hdf5", None),
+        ("hdf5^zmpi", None),
+        ("zmpi", None),
+        ("pkg-with-zlib-dep", None),
+        ("hypre^openblas-with-lapack", None),
+        # simple link dep reuse
+        ("pkg-with-zlib-dep", "zlib"),
+        # self reuse, no compiler-wrapper
+        ("zlib", "zlib"),
+        # self reuse, with compiler-wrapper
+        ("hdf5", "hdf5"),
+        ("zmpi", "zmpi"),
+        # reuse deps with compiler-wrapper
+        ("hdf5^zmpi", "zmpi"),
+        ("hypre^openblas-with-lapack", "openblas-with-lapack"),
+    ],
+)
 def test_concretization_cache_roundtrip(
-    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+    spec, reused_dep, mock_packages, use_concretization_cache, monkeypatch, mutable_config, request
 ):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
 
     assert spack.config.get("concretizer:concretization_cache:enable")
 
+    # when reusing, install the requested dependency and enable reuse for the solve
+    if reused_dep:
+        request.getfixturevalue("install_mockery")
+        dep = spack.concretize.concretize_one(reused_dep)
+        PackageInstaller([dep.package], fake=True, explicit=True).install()
+        mutable_config.set("concretizer:reuse", True)
+
     # run one standard concretization to populate the cache and the setup method
     # memoization
-    h = spack.concretize.concretize_one("hdf5")
+    h = spack.concretize.concretize_one(spec)
 
     # ASP output should be stable, concretizing the same spec
     # should have the same problem output
@@ -4460,10 +4548,11 @@ def test_concretization_cache_roundtrip(
 
     monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _ensure_no_store)
     monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", _ensure_cache_hits)
+
     # ensure subsequent concretizations of the same spec produce the same spec
     # object
-    for _ in range(5):
-        hdf5 = spack.concretize.concretize_one("hdf5")
+    for _ in range(3):
+        hdf5 = spack.concretize.concretize_one(spec)
 
         assert h.to_json(pretty=True) == hdf5.to_json(pretty=True)
         assert h == hdf5
@@ -4480,10 +4569,59 @@ def test_concretization_cache_roundtrip_result(use_concretization_cache):
     assert result1 == result2
 
 
+def test_concretization_cache_reapplies_patches_on_hit(
+    mock_packages, use_concretization_cache, monkeypatch
+):
+    """Tests that adding a patch to a recipe is taken into account when we hit the cache.
+
+    Patches are not part of the ASP facts, so adding a patch to a recipe does not change the cache
+    key. This ensures we do post-processing of solve output correctly after a cache hit.
+    """
+    EXTRA_SHA256 = "a" * 64  # synthetic sha256 simulating a newly added patch
+
+    # First solve: populate the cache. patch@1.0 has foo.patch and baz.patch.
+    spec1 = spack.concretize.concretize_one("patch@1.0")
+    assert "patches" in spec1.variants
+    initial_sha256s = frozenset(spec1.variants["patches"].value)
+
+    # Simulate a recipe change: wrap _inject_patches_variant to inject an extra sha256,
+    # as if a new patch directive had been added to the package.
+    original_inject = spack.spec._inject_patches_variant
+
+    def inject_with_new_patch(root):
+        original_inject(root)
+        for s in root.traverse():
+            if s.name == "patch" and not s.concrete and "patches" in s.variants:
+                existing = list(s.variants["patches"].value)
+                s.variants["patches"].set(*existing, EXTRA_SHA256)
+                break
+
+    monkeypatch.setattr(spack.spec, "_inject_patches_variant", inject_with_new_patch)
+
+    # The cache key has not changed (patches are not in ASP facts), so the second
+    # solve must hit the cache without running clingo again.
+    def _assert_no_store(self, problem, result, statistics, test=False):
+        raise AssertionError("Cache should be hit, not re-solved and stored")
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+
+    # Second solve: cache hit + post_process_concretization_result re-runs.
+    spec2 = spack.concretize.concretize_one("patch@1.0")
+
+    assert "patches" in spec2.variants
+    new_sha256s = frozenset(spec2.variants["patches"].value)
+
+    # The new patch must appear (post_process_concretization_result re-ran on hit).
+    assert EXTRA_SHA256 in new_sha256s, "Expected the new patch to be injected on a cache hit"
+    # The original patches are still present.
+    assert initial_sha256s <= new_sha256s
+
+
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
-    conc_cache_dir = use_concretization_cache
+    conc_cache_dir = use_concretization_cache / f"v{spack.solver.asp.ConcretizationCache.VERSION}"
+    conc_cache_dir.mkdir(parents=True)
 
     spack.config.set("concretizer:concretization_cache:entry_limit", 1000)
 
@@ -4513,24 +4651,56 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     assert len(after - before) == 1  # one additional hash added by 1001st concretization
 
 
-def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
-    def _store(self, problem, result, statistics):
-        cache_path = self._cache_path_from_problem(problem)
-        with self.write_transaction(cache_path) as exists:
-            if exists:
-                return
-            try:
-                with open(cache_path, "x", encoding="utf-8") as cache_entry:
-                    cache_dict = {"results": result.to_dict(), "statistics": statistics}
-                    cache_entry.write(json.dumps(cache_dict))
-            except FileExistsError:
-                pass
+@pytest.fixture()
+def corrupt_cache_entry(use_concretization_cache):
+    """Yields a cache and path for a fake entry. After the test body writes a corrupt file
+    to the path, the fixture asserts that fetch returns a miss and removes the file."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "some asp problem"
+    cache_path = cache._cache_path_from_problem(problem)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
 
-    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _store)
-    # Store the results in plaintext
-    spack.concretize.concretize_one("zlib")
-    # Ensure fetch can handle the plaintext cache entry
-    spack.concretize.concretize_one("zlib")
+    def write_gzip_json(obj):
+        with gzip.open(cache_path, "wb") as f:
+            f.write(json.dumps(obj).encode())
+
+    yield cache, cache_path, write_gzip_json
+
+    assert cache_path.exists(), "test should have written a corrupt file"
+    result, stats = cache.fetch(problem)
+    assert result is None
+    assert stats is None
+    assert not cache_path.exists(), "corrupt cache entry should have been removed"
+
+
+def test_concretization_cache_removes_corrupt_gzip(corrupt_cache_entry):
+    """A file that isn't valid gzip is removed on fetch."""
+    _, cache_path, _ = corrupt_cache_entry
+    cache_path.write_bytes(b"this is not gzip")
+
+
+def test_concretization_cache_removes_corrupt_json(corrupt_cache_entry):
+    """A file that is valid gzip but not valid JSON is removed on fetch."""
+    _, cache_path, _ = corrupt_cache_entry
+    with gzip.open(cache_path, "wb") as f:
+        f.write(b"not json{{{")
+
+
+def test_concretization_cache_removes_wrong_version(corrupt_cache_entry):
+    """A cache entry with an unsupported version is removed on fetch."""
+    _, _, write_gzip_json = corrupt_cache_entry
+    write_gzip_json({"_meta": {"version": -1}})
+
+
+def test_concretization_cache_removes_bad_spec_data(corrupt_cache_entry):
+    """A cache entry with valid JSON/version but malformed spec data is removed on fetch."""
+    _, _, write_gzip_json = corrupt_cache_entry
+    write_gzip_json(
+        {
+            "_meta": {"version": spack.solver.asp.ConcretizationCache.VERSION},
+            "results": {"not": "valid"},
+        }
+    )
 
 
 @pytest.mark.parametrize(
@@ -5088,3 +5258,116 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
         spack.solver.reuse._specs_from_mirror()
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {},
+        {"_meta": {}},
+        {"_meta": {"spec_version": "not_an_int"}, "specs": []},
+        {"specs": []},
+        {"_meta": {"bad_label": 6}},
+    ],
+)
+def test_spec_dict_from_json_invalid_data(data):
+    """spec_dict_from_json raises ValueError on missing or malformed input."""
+    with pytest.raises(ValueError, match="Invalid spec dict data"):
+        spack.solver.asp.spec_dict_from_json(data)
+
+
+def test_concretization_cache_remove_entry_oserror(tmp_path):
+    """_remove_entry silently ignores OSError (e.g. file already gone)."""
+    gone = tmp_path / "nonexistent"
+    # Should not raise even though the file doesn't exist
+    spack.solver.asp.ConcretizationCache._remove_entry(gone)
+
+
+def test_concretization_cache_store_skips_existing(use_concretization_cache):
+    """store() is a no-op when the cache path already exists."""
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "duplicate store test"
+    cache_path = cache._cache_path_from_problem(problem)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Pre-create the file with sentinel content
+    cache_path.write_bytes(b"sentinel")
+
+    # Build a minimal Result so store() has something to serialize
+    result = Result(specs=[])
+
+    cache.store(problem, result, statistics=[])
+
+    # The file should still contain the sentinel, proving store() returned early
+    assert cache_path.read_bytes() == b"sentinel"
+
+
+def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cache, monkeypatch):
+    """store() swallows OSError, logs, and cleans up the temp file.
+
+    A failed cache store must not propagate as a concretization failure -- the cache is an
+    optimization, and the concretization that produced ``result`` already succeeded.
+    """
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    problem = "write failure test"
+
+    def failing_replace(src, dst):
+        raise OSError("replace failed")
+
+    monkeypatch.setattr(os, "replace", failing_replace)
+
+    # store() must not raise even though os.replace did
+    cache.store(problem, Result(specs=[]), statistics=[])
+
+    # The final cache path should not exist
+    cache_path = cache._cache_path_from_problem(problem)
+    assert not cache_path.exists()
+
+    # No leftover temp files
+    temps = list(cache.root.glob(".tmp_*"))
+    assert temps == []
+
+
+def test_concretization_cache_roundtrip_with_automatic_splice(
+    use_concretization_cache, mutable_config, monkeypatch, install_mockery
+):
+    """Test that cache entries written after an automatic splice are readable on the next solve."""
+    mutable_config.set("concretizer:reuse", True)
+
+    # Install the old version.  splice-t depends on splice-h, which has:
+    #   can_splice("splice-h@1.0.0 +compat", when="@1.0.1 +compat")
+    # so splice-h@1.0.0+compat can be spliced in wherever splice-h@1.0.1+compat is needed.
+    old = spack.concretize.concretize_one(
+        "splice-t@1 ^splice-h@1.0.0+compat ^splice-z@1.0.0+compat"
+    )
+    PackageInstaller([old.package], fake=True, explicit=True).install()
+
+    # Make splice-t non-buildable so the solver is forced to reuse it via a splice.
+    mutable_config.set("packages", {"splice-t": {"buildable": False}})
+    mutable_config.set("concretizer:splice", {"automatic": True})
+
+    goal = "splice-t@1 ^splice-h@1.0.1+compat ^splice-z@1.0.0+compat"
+
+    # First solve: the auto-splice fires, producing a spec with ._build_spec set.
+    # The result is stored in the cache by spec_dict_to_json().
+    spec1 = spack.concretize.concretize_one(goal)
+
+    # Confirm the splice actually occurred -- if it didn't, the test doesn't cover the bug.
+    assert spec1.build_spec is not spec1, (
+        "expected auto-splice to produce a build_spec on the root; "
+        "the test premise is wrong if no splice occurred"
+    )
+
+    # Second solve must be a pure cache hit: clingo must not run again.
+    # If the cache entry is unreadable (the bug), fetch() deletes it and falls through
+    # to _run_clingo, which calls store() -- triggering this assertion.
+    def _assert_no_store(self, problem, result, statistics):
+        raise AssertionError(
+            "cache should have been hit on the second solve, "
+            "but the cache entry was unreadable and clingo ran again"
+        )
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+
+    spec2 = spack.concretize.concretize_one(goal)
+    assert spec1 == spec2

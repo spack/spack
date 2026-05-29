@@ -23,6 +23,7 @@ import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
+import spack.error
 import spack.hash_types as ht
 import spack.paths
 import spack.repo
@@ -570,3 +571,43 @@ def test_pickle_preserves_identity_and_prefix(default_mock_concretization):
 
     # Test that the specs are the same as dicts
     assert mpileaks_before.to_dict() == mpileaks_after.to_dict()
+
+
+def test_load_specfile_with_no_nodes():
+    """Test that _load raises an error when the spec dict has an empty nodes list."""
+    data = {"spec": {"_meta": {"version": 4}, "nodes": []}}
+    with pytest.raises(spack.error.SpecError, match="contains no nodes"):
+        spack.spec.SpecfileV4.load(data)
+
+
+@pytest.mark.parametrize("version", [0, -1])
+def test_specfile_reader_for_invalid_version(version):
+    """Test that requesting an invalid specfile version raises."""
+    with pytest.raises(ValueError, match="Unknown Specfile version"):
+        spack.spec.specfile_reader_for_version(version)
+
+
+def test_wire_spec_nodes_missing_dep_hash():
+    """wire_spec_nodes raises when a dep edge references a hash not in the node list."""
+    nodes = [
+        {
+            "name": "root",
+            "hash": "r" * 32,
+            "dependencies": [
+                {
+                    "name": "ghost",
+                    "hash": "g" * 32,
+                    "parameters": {"deptypes": ("link",), "virtuals": ()},
+                }
+            ],
+        }
+    ]
+    with pytest.raises(spack.spec.MissingSpecHashError, match=r"missing dep hash ghost/g+"):
+        spack.spec.wire_spec_nodes(nodes, "hash", spack.spec.SpecfileLatest)
+
+
+def test_wire_spec_nodes_missing_build_spec_hash():
+    """wire_spec_nodes raises when a build_spec references a hash not in the node list."""
+    nodes = [{"name": "root", "hash": "r" * 32, "build_spec": {"name": "ghost", "hash": "g" * 32}}]
+    with pytest.raises(spack.spec.MissingSpecHashError, match=r"missing build_spec hash ghost/g+"):
+        spack.spec.wire_spec_nodes(nodes, "hash", spack.spec.SpecfileLatest)
