@@ -199,6 +199,6 @@ def test_obscure_parsing_rules():
 
     # TODO: add a comment explaining why this happens
     if sys.platform == "win32":
-        spack.paths.remove(os.path.join(root, "second", "path"))
+        paths.remove(os.path.join(root, "second", "path"))
 
     check_link_paths("obscure-parsing-rules.txt", paths)
