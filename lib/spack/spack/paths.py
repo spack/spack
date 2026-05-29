@@ -351,19 +351,27 @@ def freeze():
     Spack's path resolution mid-build. Call this in the parent, ship the
     dict to the child, and call ``restore()`` there.
     """
+    # Look up locations dynamically so tests can monkeypatch it
+    import spack.paths as paths_module
+    locs = paths_module.locations
+
     return {
-        "state_home": locations.state_home,
-        "data_home": locations.data_home,
-        "cache_home": locations.cache_home,
-        "old_layout_detected": locations.old_layout_detected,
+        "state_home": locs.state_home,
+        "data_home": locs.data_home,
+        "cache_home": locs.cache_home,
+        "old_layout_detected": locs.old_layout_detected,
     }
 
 
 def restore(bundled_state):
-    locations._state_home = bundled_state["state_home"]
-    locations._data_home = bundled_state["data_home"]
-    locations._cache_home = bundled_state["cache_home"]
-    locations.old_layout_detected = bundled_state["old_layout_detected"]
+    # Look up locations dynamically so tests can monkeypatch it
+    import spack.paths as paths_module
+    locs = paths_module.locations
+
+    locs._state_home = bundled_state["state_home"]
+    locs._data_home = bundled_state["data_home"]
+    locs._cache_home = bundled_state["cache_home"]
+    locs.old_layout_detected = bundled_state["old_layout_detected"]
 
 
 # Type hints for mypy - these module-level attributes are dynamically resolved at runtime
