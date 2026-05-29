@@ -346,18 +346,31 @@ class GlobalState:
     but excludes the Spack environment, which is slow to serialize and should not be needed
     during the build."""
 
-    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache", "gpg")
+    __slots__ = (
+        "store",
+        "config",
+        "monkey_patches",
+        "spack_working_dir",
+        "repo_cache",
+        "gnupg_home",
+    )
 
     def __init__(self):
+        import spack.util.gpg
+
+        self.gnupg_home = str(spack.util.gpg.GNUPGHOME)
         if multiprocessing.get_start_method() == "fork":
             return
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
         self.spack_working_dir = spack.paths.spack_working_dir
-        self.gpg = spack.util.gpg.GPG
 
     def restore(self):
+        import spack.util.gpg
+
+        if self.gnupg_home:
+            spack.util.gpg.init(gnupghome=self.gnupg_home, force=True)
         if multiprocessing.get_start_method() == "fork":
             # In the forking case we must erase SSL contexts.
             from spack.oci import opener

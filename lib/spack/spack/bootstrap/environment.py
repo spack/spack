@@ -62,7 +62,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def bootstrap_gpg_home(cls) -> pathlib.Path:
         """Location of the GPG home directory used for bootstrapping"""
-        return cls.environment_root().joinpath(".bootstrap_gpg_home")
+        return pathlib.Path(root_path()).joinpath(".bootstrap_gpg_home")
 
     @classmethod
     def view_root(cls) -> pathlib.Path:
