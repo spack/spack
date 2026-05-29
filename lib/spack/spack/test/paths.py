@@ -339,7 +339,9 @@ def test_layout_detected_in_eval_conditional(occupied_spack_root, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_home_substitutions_respect_env_vars(working_env, tmp_path, mutable_config, mock_paths_locations):
+def test_home_substitutions_respect_env_vars(
+    working_env, tmp_path, mutable_config, mock_paths_locations
+):
     from spack.util.path import canonicalize_path
 
     # mock_paths_locations sets up the test instance, we just need tmp_path for XDG vars
@@ -357,9 +359,7 @@ def test_home_substitutions_fall_back_to_defaults(working_env, tmp_path, mock_pa
 
     home_prefix = mock_paths_locations
 
-    assert canonicalize_path("$data_home") == os.path.join(
-        home_prefix, ".local", "share", "spack"
-    )
+    assert canonicalize_path("$data_home") == os.path.join(home_prefix, ".local", "share", "spack")
     assert canonicalize_path("$state_home") == os.path.join(
         home_prefix, ".local", "state", "spack"
     )
