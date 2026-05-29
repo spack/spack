@@ -224,6 +224,25 @@ class SpackPaths:
         return os.path.expanduser("~")
 
     @property
+    def default_state_home_dot_spack(self):
+        """True if state_home is ~/.spack from old-layout default (not explicitly configured)."""
+        old_dotspack = os.path.expanduser("~/.spack")
+        if self.state_home != old_dotspack:
+            return False
+
+        # Check if explicitly configured via env vars or config
+        disable_env = config.get("config:locations:disable_env", False)
+        if not disable_env:
+            if any(v in os.environ for v in ("SPACK_USER_CACHE_PATH", "SPACK_STATE_HOME", "SPACK_HOME")):
+                return False
+
+        if config.get("config:locations:state", None) or config.get("config:locations:home", None):
+            return False
+
+        # It's the default from old-layout scheme
+        return True
+
+    @property
     def user_cache_path(self):
         return self.state_home
 
