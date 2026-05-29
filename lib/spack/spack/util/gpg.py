@@ -620,6 +620,7 @@ class Gpg:
     def trust(
         self,
         keyfile: str,
+        keys: Optional[List[GpgKey]] = None,
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
@@ -627,7 +628,12 @@ class Gpg:
 
         Args:
             keyfile: file with the public key
+            keys: list of keys to trust
         """
+
+        if keys and yes_to_all:
+            raise SpackGPGError("Cannot specify keys to trust when yes_to_all is True")
+
         # This global method is safe to use to list keys in a file
         imported_keys = extract_public_keys(keyfile)
         if not imported_keys:
@@ -644,9 +650,9 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-
+            auto_trust_key = (keys and key in keys) or yes_to_all
             # Confirm with the user that the key should be trusted
-            if not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
+            if not auto_trust_key and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
                 tty.info(f"Spack will not trust key {key}")
                 self.untrust([key])
 
@@ -940,7 +946,7 @@ def extract_public_keys(keyfile: str):
 
 
 @_autoinit
-def trust(keyfile: str, yes_to_all: bool = False):
+def trust(keyfile: str, keys: Optional[List[GpgKey]] = None, yes_to_all: bool = False):
     """Import a public key from a file and trust it.
 
     Args:
@@ -1018,7 +1024,7 @@ def validate_fingerprint_and_trust(fingerprint: str, keyfile: str):
         raise SpackGPGError(
             f"Trusted fingerprint does not match fingerprint from public key: {keyfile}"
         )
-    trust(keyfile, yes_to_all=True)
+    trust(keyfile, keys=key)
 
 
 @_autoinit
