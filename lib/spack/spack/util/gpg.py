@@ -620,7 +620,7 @@ class Gpg:
     def trust(
         self,
         keyfile: str,
-        keys: Optional[List[GpgKey]] = None,
+        keys: List[GpgKey] = [],
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
@@ -650,7 +650,7 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-            auto_trust_key = (keys and key in keys) or yes_to_all
+            auto_trust_key = key in keys or yes_to_all
             # Confirm with the user that the key should be trusted
             if not auto_trust_key and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
                 tty.info(f"Spack will not trust key {key}")
