@@ -162,7 +162,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         diff_cmd("mpileaks", "mpileaks+debug")
 
     # But if we tell it to use the first, it won't try to disambiguate
-    assert "variant" in diff_cmd("--first", "mpileaks", "mpileaks~debug")
+    assert "variant" in diff_cmd("--first", "mpileaks", "mpileaks+debug")
 
     # This matches them exactly
     debug_hash = find_cmd("--format", "{hash}", "mpileaks+debug").strip()
