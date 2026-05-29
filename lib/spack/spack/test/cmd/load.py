@@ -195,3 +195,30 @@ def test_load_regenerates_deleted_script(
 
     load(shell, "mpileaks")
     assert os.path.exists(load_script_file)
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_unload_regenerates_deleted_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that spack load regenerates the load script if it was deleted and uses the cached repo."""
+    install("--fake", "mpileaks")
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+
+    unload(shell, "mpileaks")
+
+    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell)
+    assert os.path.exists(unload_script_file)
+
+    os.remove(unload_script_file)
+    assert not os.path.exists(unload_script_file)
+
+    # Verify cached repo exists
+    cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
+    repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
+    assert len(repo_yaml_files) > 0
+
+    unload(shell, "mpileaks")
+    assert os.path.exists(unload_script_file)
