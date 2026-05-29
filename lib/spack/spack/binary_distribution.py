@@ -2325,7 +2325,7 @@ def _get_keys(
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(key_blob_path, True)
+                spack.util.gpg.trust(key_blob_path, yes_to_all=True)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:
@@ -2375,7 +2375,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(stage.save_filename, True)
+                spack.util.gpg.trust(stage.save_filename, yes_to_all=True)
                 tty.debug("Added this key to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:

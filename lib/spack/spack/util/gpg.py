@@ -620,6 +620,7 @@ class Gpg:
     def trust(
         self,
         keyfile: str,
+        *,
         fprs: List[str] = [],
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
@@ -647,8 +648,7 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-
-            fingerprint_trust_yes = fprs and yes_to_all
+            fingerprint_trust_yes = (fprs and yes_to_all)
             if key.fpr in fprs:
                 pass
             # Confirm with the user that the key should be trusted
@@ -948,7 +948,7 @@ def extract_public_keys(keyfile: str):
 
 
 @_autoinit
-def trust(keyfile: str, fprs: List[str] = [], yes_to_all: bool = False):
+def trust(keyfile: str, *, yes_to_all: bool = False, fprs: List[str] = []):
     """Import a public key from a file and trust it.
 
     Args:
