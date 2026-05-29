@@ -9,6 +9,7 @@ import functools
 import os
 import pathlib
 import re
+import sys
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import spack.error
@@ -489,13 +490,18 @@ class Gpg:
     """Wrapper for GPG"""
 
     def __init__(self, gnupghome: Optional[str] = None):
-        self.home = Gpg._init_gnupghome(gnupghome)
+        if sys.platform == "win32":
+            self.home = Gpg._init_gnupghome_dir(gnupghome)
+        else:
+            self.home = Gpg._init_gnupghome_posix(gnupghome)
+
         self._gpg: Optional[Executable] = None
         self._gpgconf: Optional[Executable] = None
         self._socket_dir: Optional[pathlib.Path] = None
 
     @staticmethod
-    def _init_gnupghome(gnupghome: Optional[str] = None) -> pathlib.Path:
+    def _init_gnupghome_dir(gnupghome: Optional[str] = None) -> pathlib.Path:
+        """Init gnupg home but don't check permissions"""
         # Make sure that the gnupghome exists
         gnupghome = gnupghome or os.getenv("SPACK_GNUPGHOME") or spack.paths.gpg_path
         if not os.path.exists(gnupghome):
@@ -506,12 +512,23 @@ class Gpg:
             msg = 'gnupghome "{0}" exists and is not a directory'.format(gnupghome)
             raise SpackGPGError(msg)
 
-        st = os.stat(gnupghome)
-        if st.st_mode != (st.st_mode & 0o040700):
-            msg = 'gnupghome "{0}" has unsafe permissions for a GPG directory'.format(gnupghome)
+        if not os.access(gnupghome, os.R_OK | os.W_OK | os.X_OK):
+            msg = 'gnupghome "{0}" exists but is not accessible'.format(gnupghome)
             raise SpackGPGError(msg)
 
         return pathlib.Path(gnupghome)
+
+    @staticmethod
+    def _init_gnupghome_posix(gnupghome: Optional[str] = None) -> pathlib.Path:
+        """Init gnupg home and check permissions."""
+        gnupghome = Gpg._init_gnupghome_dir(gnupghome)
+
+        # Ensure safe permissions on posix systems
+        st = gnupghome.stat()
+        if st.st_mode != (st.st_mode & 0o040700):
+            os.chmod(gnupghome, 0o700)
+
+        return gnupghome
 
     def _create_gpgfn(self, finder: Callable[..., Optional[Executable]]) -> Optional[Executable]:
         """Create a GPG function wrapper"""
