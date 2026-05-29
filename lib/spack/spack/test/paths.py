@@ -318,30 +318,44 @@ def test_layout_detected_in_eval_conditional(occupied_spack_root, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_xdg_substitutions_respect_env_vars(working_env, tmp_path):
+def test_home_substitutions_respect_env_vars(working_env, tmp_path, set_home, monkeypatch):
     from spack.util.path import canonicalize_path
+
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+    set_home(home_prefix)
+    test_base = SpackPathsBase(base_prefix)
+    test_paths = SpackPaths(test_base)
+    monkeypatch.setattr(spack.paths, "locations", test_paths)
+    monkeypatch.setattr(spack.paths_base, "locations", test_base)
 
     os.environ["XDG_DATA_HOME"] = str(tmp_path / "xdg-data")
     os.environ["XDG_STATE_HOME"] = str(tmp_path / "xdg-state")
     os.environ["XDG_CACHE_HOME"] = str(tmp_path / "xdg-cache")
 
-    assert canonicalize_path("$xdg_data_home/spack") == str(tmp_path / "xdg-data" / "spack")
-    assert canonicalize_path("$xdg_state_home/spack") == str(tmp_path / "xdg-state" / "spack")
-    assert canonicalize_path("$xdg_cache_home/spack") == str(tmp_path / "xdg-cache" / "spack")
+    assert canonicalize_path("$data_home") == str(tmp_path / "xdg-data" / "spack")
+    assert canonicalize_path("$state_home") == str(tmp_path / "xdg-state" / "spack")
+    assert canonicalize_path("$cache_home") == str(tmp_path / "xdg-cache" / "spack")
 
 
-def test_xdg_substitutions_fall_back_to_defaults(working_env, set_home, tmp_path):
+def test_home_substitutions_fall_back_to_defaults(working_env, set_home, tmp_path, monkeypatch):
     from spack.util.path import canonicalize_path
 
-    home = _ensure_dir(tmp_path / "home")
-    set_home(home)
-    assert canonicalize_path("$xdg_data_home/spack") == os.path.join(
-        home, ".local", "share", "spack"
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+    set_home(home_prefix)
+    test_base = SpackPathsBase(base_prefix)
+    test_paths = SpackPaths(test_base)
+    monkeypatch.setattr(spack.paths, "locations", test_paths)
+    monkeypatch.setattr(spack.paths_base, "locations", test_base)
+
+    assert canonicalize_path("$data_home") == os.path.join(
+        home_prefix, ".local", "share", "spack"
     )
-    assert canonicalize_path("$xdg_state_home/spack") == os.path.join(
-        home, ".local", "state", "spack"
+    assert canonicalize_path("$state_home") == os.path.join(
+        home_prefix, ".local", "state", "spack"
     )
-    assert canonicalize_path("$xdg_cache_home/spack") == os.path.join(home, ".cache", "spack")
+    assert canonicalize_path("$cache_home") == os.path.join(home_prefix, ".cache", "spack")
 
 
 # ---------------------------------------------------------------------------
