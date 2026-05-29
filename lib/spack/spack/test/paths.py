@@ -12,6 +12,7 @@ import spack.paths_base
 from spack.paths import SpackPaths
 from spack.paths_base import SpackPathsBase
 
+
 @pytest.fixture(autouse=True)
 def clear_global_path_caches():
     """Clear cached values in spack.paths.locations before each test.
@@ -352,7 +353,9 @@ def test_home_substitutions_respect_env_vars(
     assert canonicalize_path("$cache_home") == str(tmp_path / "xdg-cache" / "spack")
 
 
-def test_home_substitutions_fall_back_to_defaults(working_env, tmp_path, mock_paths_locations, mutable_config):
+def test_home_substitutions_fall_back_to_defaults(
+    working_env, tmp_path, mock_paths_locations, mutable_config
+):
     from spack.util.path import canonicalize_path
 
     home_prefix = mock_paths_locations
