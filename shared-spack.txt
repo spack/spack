@@ -27,16 +27,18 @@ locations. The decision is made once, at startup, by the layout *scheme*.
 on `layout_detected("old")` (a helper exposed to include `when:` clauses
 by spack.spec.eval_conditional):
 
-- `etc/spack/defaults/old/config.yaml`  — selected when legacy data exists
-  in $spack/opt, $spack/var/spack/environments, $spack/var/cache, etc.
-  Sets install_tree:root, environments_root, license_dir, source_cache,
+- `etc/spack/defaults/old/config.yaml` (scope name: `old-layout`) —
+  selected when legacy data exists in $spack/opt,
+  $spack/var/spack/environments, $spack/var/cache, etc. Sets
+  install_tree:root, environments_root, license_dir, source_cache,
   gpg_path, gpg_keys_path to their $spack-local paths, plus
   config:locations:* for general substitutions.
 
-- `etc/spack/defaults/xdg/config.yaml` — selected otherwise. Just sets
-  config:locations:{home,data,state,cache} using $xdg_*_home
-  substitutions; base/config.yaml's $data_home-relative defaults then
-  resolve to the right XDG paths.
+- `etc/spack/defaults/xdg/config.yaml` (scope name: `xdg-layout`) —
+  selected otherwise. Sets config:locations:{home,data,state,cache}
+  directly (respecting XDG_* env vars). The XDG layout itself is defined
+  in base/config.yaml (install_tree:root: $data_home/installs, etc.),
+  which both schemes inherit.
 
 The schemes are pulled in EARLIER in defaults/include.yaml than
 defaults/base/config.yaml, giving them higher priority — they override
@@ -59,11 +61,13 @@ still override individual values once loaded.
 
 In order from highest to lowest:
 
-1. SPACK_DATA_HOME / SPACK_STATE_HOME / SPACK_CACHE_HOME / SPACK_HOME
-   env vars (env-var, also forces scheme).
-2. Specific config keys: config:install_tree:root,
+1. Specific config keys: config:install_tree:root,
    config:environments_root, config:license_dir, config:source_cache,
-   config:gpg_path, config:gpg_keys_path — set in any scope.
+   config:gpg_path, config:gpg_keys_path — set in any user/site/system
+   scope.
+2. SPACK_DATA_HOME / SPACK_STATE_HOME / SPACK_CACHE_HOME / SPACK_HOME
+   env vars (also forces xdg scheme even when legacy $spack data is
+   present).
 3. config:locations:{home,data,state,cache} — redirects everything that
    uses $data_home etc. substitutions.
 4. The active scheme yaml's defaults.
@@ -79,9 +83,6 @@ Available in any string-valued config field:
 
 - $data_home / $state_home / $cache_home / $spack_home — read
   config:locations:* with the env-var overrides applied
-- $xdg_data_home / $xdg_state_home / $xdg_cache_home — $XDG_*_HOME or
-  the freedesktop default (with no /spack suffix). Used in the xdg
-  scheme yaml.
 - $user_cache_path — legacy alias for $state_home
 - $spack, $spack_instance_id — instance-specific; unchanged
 

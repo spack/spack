@@ -21,8 +21,9 @@ Spack picks one of two *layout schemes* at startup:
 * **old**: installs in ``$spack/opt/spack``, environments in ``$spack/var/spack/environments``, license files in ``$spack/etc/spack/licenses``, etc. — i.e. the pre-1.2 layout.
 
 The scheme is chosen by ``etc/spack/defaults/include.yaml`` using a ``when:`` clause that calls :func:`spack.paths.detect_layout`.
-The included yaml — ``etc/spack/defaults/old/config.yaml`` or ``etc/spack/defaults/xdg/config.yaml`` — sets ``config:locations:*`` (and, for old, the install_tree/environments/etc. paths that don't share a single root).
-Everything else flows through normal config: ``config:install_tree:root`` is ``$data_home/installs``, environments root is ``$data_home/environments``, gpg lives at ``$data_home/gpg``, and so on.
+The XDG layout is defined by ``etc/spack/defaults/base/config.yaml``, which sets paths like ``config:install_tree:root`` to ``$data_home/installs``, ``environments_root`` to ``$data_home/environments``, etc.
+The ``xdg-layout`` scope (``etc/spack/defaults/xdg/config.yaml``) just sets ``config:locations:*`` to establish what ``$data_home``, ``$state_home``, and ``$cache_home`` resolve to.
+The ``old-layout`` scope (``etc/spack/defaults/old/config.yaml``) overrides both the homes and the individual paths (install_tree, environments, etc.) to point back into ``$spack``.
 
 You can see the active scheme and where each path came from with::
 
@@ -34,9 +35,9 @@ Sample output::
 
     homes:
       $data_home             /home/alice/.local/share/spack
-        config:locations:data (scope: defaults:xdg)
+        config:locations:data (scope: defaults:xdg-layout)
       $state_home            /home/alice/.local/state/spack
-        config:locations:state (scope: defaults:xdg)
+        config:locations:state (scope: defaults:xdg-layout)
       ...
 
     config-driven paths:
@@ -49,10 +50,10 @@ How to override
 
 In order of priority (highest first):
 
-1. **Env vars** for individual homes — ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, ``SPACK_CACHE_HOME``, or ``SPACK_HOME`` (which sets all three via XDG-style subpaths).
-   Any of these also *forces the xdg scheme* even when legacy ``$spack`` data is present, so a partial override never produces a split layout.
+1. **Specific config keys** for individual paths — set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
 
-2. **Specific config keys** for individual paths — set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
+2. **Env vars** for individual homes — ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, ``SPACK_CACHE_HOME``, or ``SPACK_HOME`` (which sets all three via XDG-style subpaths).
+   Any of these also *forces the xdg scheme* even when legacy ``$spack`` data is present, so a partial override never produces a split layout.
 
 3. **Layout roots** — set ``config:locations:{home,data,state,cache}`` to redirect everything that uses the corresponding substitution.
 
@@ -65,32 +66,30 @@ Path substitutions
 Config values can reference these in any string field:
 
 * ``$data_home``        — typically ``~/.local/share/spack`` (xdg) or ``$spack`` (old)
-* ``$state_home``       — typically ``~/.local/state/spack`` (xdg) or ``~/.spack`` (old)
+* ``$state_home``       — typically ``~/.local/state/spack`` (xdg) or ``~/.spack`` (old, if it exists)
 * ``$cache_home``       — typically ``~/.cache/spack``
 * ``$spack_home``       — base for spack's user-level data; defaults to ``~``
-* ``$xdg_data_home``    — ``$XDG_DATA_HOME`` if set, else ``~/.local/share`` (no ``/spack`` suffix)
-* ``$xdg_state_home``   — ``$XDG_STATE_HOME`` if set, else ``~/.local/state``
-* ``$xdg_cache_home``   — ``$XDG_CACHE_HOME`` if set, else ``~/.cache``
 * ``$user_cache_path``  — alias for ``$state_home`` (legacy)
 * ``$spack``            — the Spack instance's prefix
 * ``$spack_instance_id`` — hash distinguishing co-installed Spack instances
 
-The ``$xdg_*_home`` substitutions are used by the xdg scheme yaml so the layout respects XDG env vars without baking that resolution into Python.
-
 Migrating from the old layout
 -----------------------------
 
-If you have a ``~/.spack`` directory from before 1.2, you'll see a one-time warning.
-Run::
+If you have a ``~/.spack`` directory from before 1.2, each Spack command will print a warning until you run ``spack migrate``.
+Spack will continue using ``~/.spack`` as ``$state_home`` (for backward compatibility) until you migrate.
+
+If all Spack instances are upgrading to 1.2+, run::
 
     spack migrate --clear
 
 to copy your config into ``~/.config/spack`` and move ``~/.spack`` to a backup at ``~/.local/share/spack/dotspack_backup``.
 (The backup location is fixed; it does not move when you set ``SPACK_DATA_HOME``.)
+This silences the warning.
 
 Use ``spack migrate --restore`` to undo.
 
-If you have older Spack instances that can't be upgraded and need ``~/.spack`` to stick around, see ``spack migrate --i-need-old-spack``.
+If you have older Spack instances that can't be upgraded and need ``~/.spack`` to stick around, see ``spack migrate --i-need-old-spack`` for how to silence the warning without migrating.
 
 The location table
 ------------------
