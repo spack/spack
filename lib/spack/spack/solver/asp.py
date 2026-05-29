@@ -318,11 +318,15 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
     # Make a dictionary preserving the NodeIds from input.
     node_id_for: Dict[int, NodeId] = {id(spec): nid for nid, spec in spec_dict.items()}
 
+    # make a list of all nodes in specs and their build_specs
+    specs = list(spec_dict.values())
+    specs += [spec.build_spec for spec in specs if spec.build_spec is not spec]
+
     # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
     # to the serialized entires either a) with their original NodeId, or b) with None if they
     # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
     entries = []
-    for dep in spack.traverse.traverse_nodes(list(spec_dict.values()), key=lambda s: s.dag_hash()):
+    for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
         node = dep.to_node_dict()
         node["hash"] = dep.dag_hash()
         entries.append((node_id_for.get(id(dep)), node))

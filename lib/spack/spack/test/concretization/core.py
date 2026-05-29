@@ -5326,3 +5326,48 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     # No leftover temp files
     temps = list(cache.root.glob(".tmp_*"))
     assert temps == []
+
+
+def test_concretization_cache_roundtrip_with_automatic_splice(
+    use_concretization_cache, mutable_config, monkeypatch, install_mockery
+):
+    """Test that cache entries written after an automatic splice are readable on the next solve."""
+    mutable_config.set("concretizer:reuse", True)
+
+    # Install the old version.  splice-t depends on splice-h, which has:
+    #   can_splice("splice-h@1.0.0 +compat", when="@1.0.1 +compat")
+    # so splice-h@1.0.0+compat can be spliced in wherever splice-h@1.0.1+compat is needed.
+    old = spack.concretize.concretize_one(
+        "splice-t@1 ^splice-h@1.0.0+compat ^splice-z@1.0.0+compat"
+    )
+    PackageInstaller([old.package], fake=True, explicit=True).install()
+
+    # Make splice-t non-buildable so the solver is forced to reuse it via a splice.
+    mutable_config.set("packages", {"splice-t": {"buildable": False}})
+    mutable_config.set("concretizer:splice", {"automatic": True})
+
+    goal = "splice-t@1 ^splice-h@1.0.1+compat ^splice-z@1.0.0+compat"
+
+    # First solve: the auto-splice fires, producing a spec with ._build_spec set.
+    # The result is stored in the cache by spec_dict_to_json().
+    spec1 = spack.concretize.concretize_one(goal)
+
+    # Confirm the splice actually occurred -- if it didn't, the test doesn't cover the bug.
+    assert spec1.build_spec is not spec1, (
+        "expected auto-splice to produce a build_spec on the root; "
+        "the test premise is wrong if no splice occurred"
+    )
+
+    # Second solve must be a pure cache hit: clingo must not run again.
+    # If the cache entry is unreadable (the bug), fetch() deletes it and falls through
+    # to _run_clingo, which calls store() -- triggering this assertion.
+    def _assert_no_store(self, problem, result, statistics):
+        raise AssertionError(
+            "cache should have been hit on the second solve, "
+            "but the cache entry was unreadable and clingo ran again"
+        )
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+
+    spec2 = spack.concretize.concretize_one(goal)
+    assert spec1 == spec2
