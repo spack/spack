@@ -299,7 +299,7 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
 # yet final, because there are spec changes yet to be made in post-processing that will
 # change the hashes. We still need an identifier for the nodes in the spec DAG, though.
 # So, we use hashes as ids during serialization, but we must clear them afterwards so
-# that they are not cached, and they can be set again the final changes are made.
+# that they are not cached, and they can be set again when the final changes are made.
 
 
 def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
@@ -323,7 +323,7 @@ def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
     specs += [spec.build_spec for spec in specs if spec.build_spec is not spec]
 
     # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
-    # to the serialized entires either a) with their original NodeId, or b) with None if they
+    # to the serialized entries either a) with their original NodeId, or b) with None if they
     # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
     entries = []
     for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
