@@ -139,7 +139,7 @@ class GpgKeyTrust(enum.Enum):
 
         if isinstance(value, int):
             try:
-                return list(GpgKeyTrust)[value]
+                return list(GpgKeyTrust)[:8][value]
             except IndexError:
                 return GpgKeyTrust.ERROR
 
@@ -247,11 +247,6 @@ class GpgKeyType(enum.Flag):
 
     @classmethod
     def _missing_(cls, value):
-        if not isinstance(value, str):
-            for mem in cls:
-                if mem.value == value:
-                    return mem
-
         kname = value.strip().lower()
         if kname == "pub":
             return GpgKeyType.PUBLIC

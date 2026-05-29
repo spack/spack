@@ -20,7 +20,7 @@ def has_socket_dir():
 def test_parse_gpg_output_case_one():
     now = int(time.time())
     # Two keys, fingerprint for primary keys, but not subkeys
-    output = f"""sec:-:2048:1:AAAAAAAAAAAAAAAA:{now}:{now}::-:::CESces::::::23::0:
+    output = f"""sec:-:2048:1:AAAAAAAAAAAAAAAA:{now}:{now}::-:::CESces::::::23:{now}:0:
 fpr:::::::::XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:
 uid:-::::{now}::AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA::Joe (Test) <j.s@s.com>::::::::::0:
 ssb:-:2048:1:AAAAAAAAAAAAAAAA:{now}:::-:::ces::::::23:
@@ -133,6 +133,18 @@ def test_gpg_trust_ownertrust():
     assert 8 == spack.util.gpg.GpgKeyTrust.KNOWN.ownertrust
     assert 8 == spack.util.gpg.GpgKeyTrust.SPECIAL.ownertrust
 
+    assert spack.util.gpg.GpgKeyTrust(0) == spack.util.gpg.GpgKeyTrust.UNKNOWN
+    assert spack.util.gpg.GpgKeyTrust(1) == spack.util.gpg.GpgKeyTrust.EXPIRED
+    assert spack.util.gpg.GpgKeyTrust(2) == spack.util.gpg.GpgKeyTrust.UNDEFINED
+    assert spack.util.gpg.GpgKeyTrust(3) == spack.util.gpg.GpgKeyTrust.NEVER
+    assert spack.util.gpg.GpgKeyTrust(4) == spack.util.gpg.GpgKeyTrust.MARGINAL
+    assert spack.util.gpg.GpgKeyTrust(5) == spack.util.gpg.GpgKeyTrust.FULL
+    assert spack.util.gpg.GpgKeyTrust(6) == spack.util.gpg.GpgKeyTrust.ULTIMATE
+    assert spack.util.gpg.GpgKeyTrust(7) == spack.util.gpg.GpgKeyTrust.REVOKED
+    assert spack.util.gpg.GpgKeyTrust(8) == spack.util.gpg.GpgKeyTrust.ERROR
+
+    assert spack.util.gpg.GpgKeyTrust(9) == spack.util.gpg.GpgKeyTrust.ERROR
+
 
 def test_gpg_key_algorithm():
     with pytest.raises(
@@ -149,9 +161,15 @@ def test_gpg_key_algorithm():
 
 
 def test_gpg_key_type():
-    assert spack.util.gpg.GpgKeyType("pub") == spack.util.gpg.GpgKeyType.PUBLIC
-    assert spack.util.gpg.GpgKeyType("sub") == spack.util.gpg.GpgKeyType.PUBLIC_SUBKEY
-    assert spack.util.gpg.GpgKeyType("sec") == spack.util.gpg.GpgKeyType.SECRET
-    assert spack.util.gpg.GpgKeyType("ssb") == spack.util.gpg.GpgKeyType.SECRET_SUBKEY
-    assert spack.util.gpg.GpgKeyType("sec#") == spack.util.gpg.GpgKeyType.SECRET_SUBKEY_ONLY
-    assert spack.util.gpg.GpgKeyType("rvk") == spack.util.gpg.GpgKeyType.REVOCATION
+    str_to_type = [
+        ("pub", spack.util.gpg.GpgKeyType.PUBLIC),
+        ("sub", spack.util.gpg.GpgKeyType.PUBLIC_SUBKEY),
+        ("sec", spack.util.gpg.GpgKeyType.SECRET),
+        ("ssb", spack.util.gpg.GpgKeyType.SECRET_SUBKEY),
+        ("sec#", spack.util.gpg.GpgKeyType.SECRET_SUBKEY_ONLY),
+        ("rvk", spack.util.gpg.GpgKeyType.REVOCATION),
+    ]
+
+    for s, t in str_to_type:
+        assert s == str(t)
+        assert spack.util.gpg.GpgKeyType(s) == t
