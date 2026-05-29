@@ -408,3 +408,72 @@ def test_module_shim_dynamic_attribute():
     # `state_home` is computed by SpackPaths; access via the module
     # should also work.
     assert spack.paths.state_home == spack.paths.locations.state_home
+
+
+# ---------------------------------------------------------------------------
+# Subprocess isolation test
+# ---------------------------------------------------------------------------
+
+
+class SetAnXdgVarAndReadDataHome:
+    """Set XDG_DATA_HOME in a subprocess and verify that spack.paths.locations.data_home
+    is not affected due to freeze/restore mechanism."""
+
+    def __init__(self, expected_data_home):
+        self.expected_data_home = expected_data_home
+
+    def __call__(self):
+        import os
+
+        # Set XDG_DATA_HOME to a bogus value in the subprocess
+        os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
+
+        import spack.paths
+
+        # Access the global locations singleton - it should use the frozen value
+        # from the parent process, not the XDG_DATA_HOME we just set
+        actual = spack.paths.locations.data_home
+
+        assert actual == self.expected_data_home, (
+            f"Subprocess should use frozen parent value, not XDG_DATA_HOME.\n"
+            f"Expected: {self.expected_data_home}\n"
+            f"Got: {actual}\n"
+            f"XDG_DATA_HOME={os.environ.get('XDG_DATA_HOME')}"
+        )
+
+
+def test_child_proc_xdg_isolation(tmp_path, set_home, monkeypatch):
+    """Test that subprocess inherits frozen path values from parent, not env vars.
+
+    Build subprocesses may set XDG_* environment variables. We want to ensure that
+    the global spack.paths.locations singleton in those subprocesses uses the frozen
+    values from the parent process (via freeze/restore in subprocess_context), not
+    the new env vars.
+
+    This test modifies the global spack.paths.locations and must run serially.
+    """
+    import spack.subprocess_context
+
+    # Set up redirected paths in temp directories
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+
+    set_home(home_prefix)
+
+    # Expected data_home based on the home we set (without any XDG override)
+    expected = str(pathlib.Path(home_prefix) / ".local" / "share" / "spack")
+
+    # Create a test SpackPaths instance with redirected base
+    test_base = SpackPathsBase(base_prefix)
+    test_paths = SpackPaths(test_base)
+
+    # Replace global locations with our test instance (both paths and paths_base)
+    monkeypatch.setattr(spack.paths, "locations", test_paths)
+    monkeypatch.setattr(spack.paths_base, "locations", test_base)
+
+    # Run in subprocess that sets XDG_DATA_HOME
+    spack_process = spack.subprocess_context.SpackTestProcess(SetAnXdgVarAndReadDataHome(expected))
+    proc = spack_process.create()
+    proc.start()
+    proc.join()
+    assert proc.exitcode == 0, "Subprocess test failed"
