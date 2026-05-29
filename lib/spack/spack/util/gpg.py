@@ -1000,7 +1000,7 @@ def verify(signature: str, file: Optional[str] = None, suppress_warnings: bool =
 
 
 @_autoinit
-def validate_fingerprint(fingerprint: str, keyfile: str):
+def validate_fingerprint_and_trust(fingerprint: str, keyfile: str):
     """Verify a given key's fingerprint matches the provided fingerprint
     and if it does, trust the key.
 
