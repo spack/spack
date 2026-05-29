@@ -622,7 +622,12 @@ class Gpg:
         else:
             return out
 
-    def trust(self, keyfile: str, ultimate: bool = True, yes_to_all: bool = False):
+    def trust(
+        self,
+        keyfile: str,
+        ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
+        yes_to_all: bool = False,
+    ):
         """Import a public key from a file and trust it.
 
         Args:
@@ -650,15 +655,11 @@ class Gpg:
                 tty.info(f"Spack will not trust key {key}")
                 self.untrust([key])
 
-            ownertrust = GpgKeyTrust.FULL.ownertrust
-            if ultimate:
-                ownertrust = GpgKeyTrust.ULTIMATE.ownertrust
-
             # Update the owner trust to ultimate
             r, w = os.pipe()
             with contextlib.closing(os.fdopen(r, "r")) as rc:
                 with contextlib.closing(os.fdopen(w, "w")) as wc:
-                    wc.write(f"{key.fpr}:{ownertrust}:\n")
+                    wc.write(f"{key.fpr}:{ownertrust.ownertrust}:\n")
                 self.gpg("--import-ownertrust", input=rc)
 
     def untrust(self, keys: List[GpgKey]):
@@ -951,7 +952,7 @@ def trust(keyfile: str, yes_to_all: bool = False):
         keyfile: file with the public key
     """
     assert GPG
-    GPG.trust(keyfile, ultimate=True, yes_to_all=yes_to_all)
+    GPG.trust(keyfile, ownertrust=GpgKeyTrust.ULTIMATE, yes_to_all=yes_to_all)
 
 
 @_autoinit
@@ -1010,15 +1011,7 @@ def glist(trusted: bool, signing: bool, fmt: str = "default"):
     Args:
         trusted: if True list public keys
         signing: if True list private keys
-        fmt: Key formatting string
-            Values:
-                default: print output from gpg
-
-                GpgKey formatting string
-                    c[olons] - Output everything using a gpg style colon format ie.
-                    s[hort] - Shortened output ie. <fingerprint> (<uid>)
-                    f[pr] - Fingerprint only output ie. <fingerprint>
-
+        fmt: Key formatting string (default, colons, short, fpr)
     """
     assert GPG
 
