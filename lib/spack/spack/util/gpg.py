@@ -621,7 +621,7 @@ class Gpg:
         self,
         keyfile: str,
         *,
-        fprs: List[str] = [],
+        fprs: Optional[List[str]] = None,
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
@@ -649,7 +649,7 @@ class Gpg:
             if key not in imported_keys:
                 continue
             fingerprint_trust_yes = (fprs and yes_to_all)
-            if key.fpr in fprs:
+            if fprs and key.fpr in fprs:
                 pass
             # Confirm with the user that the key should be trusted
             elif fingerprint_trust_yes or (
@@ -657,6 +657,7 @@ class Gpg:
             ):
                 tty.info(f"Spack will not trust key {key}")
                 self.untrust([key])
+                continue
 
             # Update the owner trust to ultimate
             r, w = os.pipe()
@@ -948,7 +949,7 @@ def extract_public_keys(keyfile: str):
 
 
 @_autoinit
-def trust(keyfile: str, *, yes_to_all: bool = False, fprs: List[str] = []):
+def trust(keyfile: str, *, yes_to_all: bool = False, fprs: Optional[List[str]] = None):
     """Import a public key from a file and trust it.
 
     Args:
