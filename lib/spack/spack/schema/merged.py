@@ -10,50 +10,12 @@
 
 from typing import Any, Dict
 
-import spack.schema.bootstrap
-import spack.schema.cdash
-import spack.schema.ci
-import spack.schema.compilers
-import spack.schema.concretizer
-import spack.schema.config
-import spack.schema.container
-import spack.schema.definitions
-import spack.schema.develop
-import spack.schema.env_vars
-import spack.schema.environment
-import spack.schema.include
-import spack.schema.mirrors
-import spack.schema.modules
-import spack.schema.packages
-import spack.schema.projections
-import spack.schema.repos
+import spack.schema.merged_no_specs
 import spack.schema.specs
-import spack.schema.toolchains
-import spack.schema.upstreams
-import spack.schema.view
 
 #: Properties for inclusion in other schemas
-sections: Dict[str, Any] = {
-    **spack.schema.bootstrap.properties,
-    **spack.schema.cdash.properties,
-    **spack.schema.compilers.properties,
-    **spack.schema.concretizer.properties,
-    **spack.schema.config.properties,
-    **spack.schema.container.properties,
-    **spack.schema.ci.properties,
-    **spack.schema.definitions.properties,
-    **spack.schema.develop.properties,
-    **spack.schema.env_vars.properties,
-    **spack.schema.include.properties,
-    **spack.schema.mirrors.properties,
-    **spack.schema.modules.properties,
-    **spack.schema.packages.properties,
-    **spack.schema.repos.properties,
-    **spack.schema.specs.properties,
-    **spack.schema.toolchains.properties,
-    **spack.schema.upstreams.properties,
-    **spack.schema.view.properties,
-}
+sections: Dict[str, Any] = spack.schema.merged_no_specs.sections
+sections.update(spack.schema.specs.properties)
 
 #: Canonical definitions for JSON Schema $ref
 defs: Dict[str, Any] = {
@@ -64,11 +26,13 @@ defs: Dict[str, Any] = {
     "env_modifications": spack.schema.environment.env_modifications,
     "module_file_configuration": spack.schema.modules.module_file_configuration,
     "projections": spack.schema.projections.projections,
+    "spec_list_schema": spack.schema.specs.spec_list_schema,
 }
 
 #: Properties using $ref pointers into $defs
 ref_sections: Dict[str, Any] = {
-    name: {"$ref": f"#/definitions/section_{name}"} for name in sections
+    **spack.schema.merged_no_specs.ref_sections,
+    "specs": {"$ref": f"#/definitions/section_specs"}
 }
 
 #: Full schema with metadata
