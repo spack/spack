@@ -4298,7 +4298,7 @@ class Spec:
                         current = getattr(current, part)
                     except AttributeError:
                         if part == "compiler":
-                            return "none"
+                            return ""
                         elif part == "specfile_version":
                             return f"v{current.original_spec_format()}"
 

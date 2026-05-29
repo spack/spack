@@ -335,7 +335,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     format_string = (
         "{name}{@version}"
         "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-        "{%compiler.name}{@compiler.version}"
+        "{ %compiler.name}{@compiler.version}"
     )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
