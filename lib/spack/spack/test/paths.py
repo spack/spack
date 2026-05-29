@@ -55,6 +55,25 @@ def _set_locations(cfg, **kwargs):
         cfg.set(f"config:locations:{k}", v)
 
 
+@pytest.fixture
+def mock_paths_locations(tmp_path, set_home, monkeypatch):
+    """Create test SpackPaths instance and monkeypatch it as the global locations.
+
+    Returns:
+        str: The home_prefix path that was set up
+    """
+    home_prefix = _ensure_dir(tmp_path / "home-prefix")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+    set_home(home_prefix)
+
+    test_base = SpackPathsBase(base_prefix)
+    test_paths = SpackPaths(test_base)
+    monkeypatch.setattr(spack.paths, "locations", test_paths)
+    monkeypatch.setattr(spack.paths_base, "locations", test_base)
+
+    return home_prefix
+
+
 # ---------------------------------------------------------------------------
 # Home property resolution
 # ---------------------------------------------------------------------------
@@ -320,17 +339,10 @@ def test_layout_detected_in_eval_conditional(occupied_spack_root, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_home_substitutions_respect_env_vars(working_env, tmp_path, mutable_config, set_home, monkeypatch):
+def test_home_substitutions_respect_env_vars(working_env, tmp_path, mutable_config, mock_paths_locations):
     from spack.util.path import canonicalize_path
 
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    set_home(home_prefix)
-    test_base = SpackPathsBase(base_prefix)
-    test_paths = SpackPaths(test_base)
-    monkeypatch.setattr(spack.paths, "locations", test_paths)
-    monkeypatch.setattr(spack.paths_base, "locations", test_base)
-
+    # mock_paths_locations sets up the test instance, we just need tmp_path for XDG vars
     os.environ["XDG_DATA_HOME"] = str(tmp_path / "xdg-data")
     os.environ["XDG_STATE_HOME"] = str(tmp_path / "xdg-state")
     os.environ["XDG_CACHE_HOME"] = str(tmp_path / "xdg-cache")
@@ -340,16 +352,10 @@ def test_home_substitutions_respect_env_vars(working_env, tmp_path, mutable_conf
     assert canonicalize_path("$cache_home") == str(tmp_path / "xdg-cache" / "spack")
 
 
-def test_home_substitutions_fall_back_to_defaults(working_env, set_home, tmp_path, monkeypatch):
+def test_home_substitutions_fall_back_to_defaults(working_env, tmp_path, mock_paths_locations):
     from spack.util.path import canonicalize_path
 
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-    set_home(home_prefix)
-    test_base = SpackPathsBase(base_prefix)
-    test_paths = SpackPaths(test_base)
-    monkeypatch.setattr(spack.paths, "locations", test_paths)
-    monkeypatch.setattr(spack.paths_base, "locations", test_base)
+    home_prefix = mock_paths_locations
 
     assert canonicalize_path("$data_home") == os.path.join(
         home_prefix, ".local", "share", "spack"
@@ -458,7 +464,7 @@ class SetAnXdgVarAndReadDataHome:
         )
 
 
-def test_child_proc_xdg_isolation(tmp_path, set_home, monkeypatch):
+def test_child_proc_xdg_isolation(tmp_path, mock_paths_locations):
     """Test that subprocess inherits frozen path values from parent, not env vars.
 
     Build subprocesses may set XDG_* environment variables. We want to ensure that
@@ -470,22 +476,10 @@ def test_child_proc_xdg_isolation(tmp_path, set_home, monkeypatch):
     """
     import spack.subprocess_context
 
-    # Set up redirected paths in temp directories
-    home_prefix = _ensure_dir(tmp_path / "home-prefix")
-    base_prefix = _ensure_dir(tmp_path / "spack-root")
-
-    set_home(home_prefix)
+    home_prefix = mock_paths_locations
 
     # Expected data_home based on the home we set (without any XDG override)
     expected = str(pathlib.Path(home_prefix) / ".local" / "share" / "spack")
-
-    # Create a test SpackPaths instance with redirected base
-    test_base = SpackPathsBase(base_prefix)
-    test_paths = SpackPaths(test_base)
-
-    # Replace global locations with our test instance (both paths and paths_base)
-    monkeypatch.setattr(spack.paths, "locations", test_paths)
-    monkeypatch.setattr(spack.paths_base, "locations", test_base)
 
     # Run in subprocess that sets XDG_DATA_HOME
     spack_process = spack.subprocess_context.SpackTestProcess(SetAnXdgVarAndReadDataHome(expected))
