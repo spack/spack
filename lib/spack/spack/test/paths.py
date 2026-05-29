@@ -382,7 +382,9 @@ def test_gpg_path_from_config(working_env, tmp_path, mutable_config, set_home):
     assert p.gpg_path == str(tmp_path / "my-gpg")
 
 
-def test_gpg_path_default_from_scheme(working_env, tmp_path, mutable_config, set_home, monkeypatch):
+def test_gpg_path_default_from_scheme(
+    working_env, tmp_path, mutable_config, set_home, monkeypatch
+):
     """The xdg scheme yaml sets config:gpg_path to $data_home/gpg by default;
     the property simply reads that."""
     set_home(_ensure_dir(tmp_path / "home"))
