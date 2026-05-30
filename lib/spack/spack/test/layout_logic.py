@@ -222,3 +222,120 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config)
     proc.start()
     proc.join()
     assert proc.exitcode == 0, "Subprocess test failed"
+
+
+def test_warn_old_dotspack_when_only_dotspack_exists(tmp_path, set_home, monkeypatch, capsys):
+    """Warn if ~/.spack exists but ~/.config/spack doesn't."""
+    import spack.config
+    import spack.main
+
+    home_dir = _ensure_dir(tmp_path / "home")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+
+    # Create ~/.spack directory
+    _ensure_dir(pathlib.Path(home_dir) / ".spack")
+    # Don't create ~/.config/spack
+
+    # Copy defaults to mock prefix
+    real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
+    sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
+    os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
+    shutil.copytree(real_defaults, sim_defaults)
+
+    set_home(home_dir)
+
+    # Monkeypatch paths
+    from spack.paths import SpackPaths
+
+    mock_paths = SpackPaths(_prefix=base_prefix)
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
+    # Create fresh config
+    spack.config.CONFIG = spack.config.create()
+
+    # Call the warning function
+    import spack.main
+
+    spack.main._warn_about_old_dotspack()
+
+    # Check that warning was issued
+    captured = capsys.readouterr()
+    assert "~/.spack" in captured.err
+    assert "spack migrate" in captured.err
+
+
+def test_no_warn_when_both_exist(tmp_path, set_home, monkeypatch, capsys):
+    """Don't warn if both ~/.spack and ~/.config/spack exist."""
+    import spack.config
+    import spack.main
+
+    home_dir = _ensure_dir(tmp_path / "home")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+
+    # Create both directories
+    _ensure_dir(pathlib.Path(home_dir) / ".spack")
+    _ensure_dir(pathlib.Path(home_dir) / ".config" / "spack")
+
+    # Copy defaults to mock prefix
+    real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
+    sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
+    os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
+    shutil.copytree(real_defaults, sim_defaults)
+
+    set_home(home_dir)
+
+    # Monkeypatch paths
+    from spack.paths import SpackPaths
+
+    mock_paths = SpackPaths(_prefix=base_prefix)
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
+    # Create fresh config
+    spack.config.CONFIG = spack.config.create()
+
+    # Call the warning function
+    spack.main._warn_about_old_dotspack()
+
+    # Check that no warning was issued
+    captured = capsys.readouterr()
+    assert "~/.spack" not in captured.err or "spack migrate" not in captured.err
+
+
+def test_no_warn_when_explicit_override(tmp_path, set_home, monkeypatch, capsys):
+    """Don't warn if SPACK_USER_CONFIG_PATH explicitly set to ~/.spack."""
+    import spack.config
+    import spack.main
+
+    home_dir = _ensure_dir(tmp_path / "home")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+
+    # Create ~/.spack directory
+    dotspack = _ensure_dir(pathlib.Path(home_dir) / ".spack")
+    # Don't create ~/.config/spack
+
+    # Set SPACK_USER_CONFIG_PATH explicitly
+    monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(dotspack))
+
+    # Copy defaults to mock prefix
+    real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
+    sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
+    os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
+    shutil.copytree(real_defaults, sim_defaults)
+
+    set_home(home_dir)
+
+    # Monkeypatch paths
+    from spack.paths import SpackPaths
+
+    mock_paths = SpackPaths(_prefix=base_prefix)
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
+    # Create fresh config
+    spack.config.CONFIG = spack.config.create()
+
+    # Call the warning function
+    spack.main._warn_about_old_dotspack()
+
+    # Check that no warning was issued
+    captured = capsys.readouterr()
+    assert "spack migrate" not in captured.err
