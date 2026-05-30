@@ -106,9 +106,6 @@ _ALL_SCHEMAS: Dict[str, Any] = {
     spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema,
 }
 
-#: Path to the main configuration scope
-CONFIGURATION_DEFAULTS_PATH = ("defaults", os.path.join(spack.paths.etc_path, "defaults"))
-
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
 #: the defaults scope is removed.
@@ -1614,7 +1611,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
         (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", CONFIG_DEFAULTS)),
-        (ConfigScopePriority.DEFAULTS, DirectoryConfigScope(*CONFIGURATION_DEFAULTS_PATH)),
+        (ConfigScopePriority.DEFAULTS, DirectoryConfigScope("defaults", os.path.join(spack.paths.etc_path, "defaults"))),
     )
     yield cfg
 

@@ -179,7 +179,11 @@ def detect_layout(scheme):
     env_forces_new = any(v in os.environ for v in new_layout_env_vars)
 
     # Detect if old layout data exists
-    is_old = locations.old_layout_detected and not env_forces_new
+    # Access via sys.modules to respect monkeypatching in tests
+    import sys
+    locations_obj = sys.modules[__name__].locations
+    is_old = locations_obj.old_layout_detected and not env_forces_new
+
     return is_old
 
 
