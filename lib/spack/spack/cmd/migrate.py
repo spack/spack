@@ -44,22 +44,15 @@ you have pre-1.2 Spack instances that cannot upgrade, you can run
 and 1.2+ instances will have divergent config (unless e.g.
 SPACK_DISABLE_LOCAL_CONFIG is set).
 
-Also note that after running `spack migrate` that pre-1.2 instances
-that upgrade to 1.2+ will automatically start using the migrated
-config.
+About divergence:
 
-Examples of divergence:
-
-- pre-1.2 and 1.2+ instances may have different notions of what
-  compilers are available (this is generally addressed by making
-  sure to run `spack compiler add` for at least one instance of
-  each category).
+Pre-1.2 instances will use ~/.spack, and 1.2+ instances (including
+those that upgrade to 1.2+) will use ~/.config/spack. This means for
+example that pre-1.2 and 1.2+ instances may have different notions
+of what compilers are available.
 
 You can avoid this divergence issue by forcing new Spack instances
 to also use ~/.spack (which will silence the warning).
-
-Explicit configuration of ~/.spack will silence this warning
-(e.g. setting `config:locations:state` to `~/.spack`).
 """)
 
 
