@@ -272,11 +272,9 @@ def test_no_warn_when_both_exist(tmp_path, set_home, monkeypatch, capsys):
     home_dir = _ensure_dir(tmp_path / "home")
     base_prefix = _ensure_dir(tmp_path / "spack-root")
 
-    # Create both directories
     _ensure_dir(pathlib.Path(home_dir) / ".spack")
     _ensure_dir(pathlib.Path(home_dir) / ".config" / "spack")
 
-    # Copy defaults to mock prefix
     real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
     sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
     os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
@@ -284,19 +282,14 @@ def test_no_warn_when_both_exist(tmp_path, set_home, monkeypatch, capsys):
 
     set_home(home_dir)
 
-    # Monkeypatch paths
     from spack.paths import SpackPaths
 
     mock_paths = SpackPaths(_prefix=base_prefix)
     monkeypatch.setattr(spack.paths, "locations", mock_paths)
 
-    # Create fresh config
     spack.config.CONFIG = spack.config.create()
-
-    # Call the warning function
     spack.main._warn_about_old_dotspack()
 
-    # Check that no warning was issued
     captured = capsys.readouterr()
     assert "~/.spack" not in captured.err or "spack migrate" not in captured.err
 
@@ -309,14 +302,11 @@ def test_no_warn_when_explicit_override(tmp_path, set_home, monkeypatch, capsys)
     home_dir = _ensure_dir(tmp_path / "home")
     base_prefix = _ensure_dir(tmp_path / "spack-root")
 
-    # Create ~/.spack directory
     dotspack = _ensure_dir(pathlib.Path(home_dir) / ".spack")
     # Don't create ~/.config/spack
 
-    # Set SPACK_USER_CONFIG_PATH explicitly
     monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(dotspack))
 
-    # Copy defaults to mock prefix
     real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
     sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
     os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
@@ -324,18 +314,13 @@ def test_no_warn_when_explicit_override(tmp_path, set_home, monkeypatch, capsys)
 
     set_home(home_dir)
 
-    # Monkeypatch paths
     from spack.paths import SpackPaths
 
     mock_paths = SpackPaths(_prefix=base_prefix)
     monkeypatch.setattr(spack.paths, "locations", mock_paths)
 
-    # Create fresh config
     spack.config.CONFIG = spack.config.create()
-
-    # Call the warning function
     spack.main._warn_about_old_dotspack()
 
-    # Check that no warning was issued
     captured = capsys.readouterr()
     assert "spack migrate" not in captured.err
