@@ -357,6 +357,7 @@ class GlobalState:
 
     def restore(self):
         import spack.util.path
+
         spack.util.path.freeze()
         if multiprocessing.get_start_method() == "fork":
             # In the forking case we must erase SSL contexts.

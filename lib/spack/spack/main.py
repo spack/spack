@@ -939,7 +939,7 @@ def _warn_about_old_dotspack():
     if reasons:
         tty.warn(f"""\
 Spack is using the old ~/.spack directory layout.
-  Reasons: {', '.join(reasons)}
+  Reasons: {", ".join(reasons)}
 
 If all spack instances are >= 1.2, you can use
 

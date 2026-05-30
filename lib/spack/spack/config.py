@@ -138,13 +138,7 @@ MAX_RECURSIVE_INCLUDES = 100
 
 #: configurable config vars -- these cannot be used by include paths
 #: nor by other paths that can affect config values
-CONFIGURABLE_VARS = (
-    "config_home",
-    "state_home",
-    "cache_home",
-    "data_home",
-    "user_cache_path",
-)
+CONFIGURABLE_VARS = ("config_home", "state_home", "cache_home", "data_home", "user_cache_path")
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 
@@ -1611,7 +1605,10 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # These are versioned with Spack and can be overridden by systems, sites or user scopes.
     cfg = create_from(
         (ConfigScopePriority.DEFAULTS, InternalConfigScope("_builtin", CONFIG_DEFAULTS)),
-        (ConfigScopePriority.DEFAULTS, DirectoryConfigScope("defaults", os.path.join(spack.paths.etc_path, "defaults"))),
+        (
+            ConfigScopePriority.DEFAULTS,
+            DirectoryConfigScope("defaults", os.path.join(spack.paths.etc_path, "defaults")),
+        ),
     )
     yield cfg
 

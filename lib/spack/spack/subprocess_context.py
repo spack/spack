@@ -113,6 +113,7 @@ class GlobalStateMarshaler:
 
     def restore(self):
         import spack.util.path
+
         spack.util.path.freeze()
         if self.is_forked:
             # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL

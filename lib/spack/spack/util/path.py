@@ -99,7 +99,7 @@ def _resolve_location_var(location_key):
 
         # Check if item contains an environment variable
         # Look for $VAR or ${VAR} patterns
-        env_var_pattern = r'\$\{?([A-Z_][A-Z0-9_]*)\}?'
+        env_var_pattern = r"\$\{?([A-Z_][A-Z0-9_]*)\}?"
         env_vars = re.findall(env_var_pattern, item)
 
         if env_vars:
@@ -119,7 +119,7 @@ def _resolve_location_var(location_key):
 
         # Check if item contains a spack config variable (like $data_home)
         # This would be a variable that starts with $ but isn't an env var
-        config_var_pattern = r'\$([a-z_][a-z0-9_]*)'
+        config_var_pattern = r"\$([a-z_][a-z0-9_]*)"
         config_vars = re.findall(config_var_pattern, item)
 
         if config_vars:

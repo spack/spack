@@ -111,9 +111,11 @@ class SpackPaths:
         # Detect old layout
         self.old_layout_detected = detect_old_spack_layout(self)
 
-        # User cache path - simplified version that uses SPACK_USER_CACHE_PATH or ~/.local/state/spack
+        # User cache path - simplified version that uses SPACK_USER_CACHE_PATH
+        # or ~/.local/state/spack
         self.user_cache_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CACHE_PATH") or os.path.join(expanded_home, ".local", "state", "spack")
+            os.getenv("SPACK_USER_CACHE_PATH")
+            or os.path.join(expanded_home, ".local", "state", "spack")
         )
 
         #: Default paths based on user_cache_path
@@ -126,7 +128,9 @@ class SpackPaths:
         self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
         self.package_repos_path = os.path.join(self.user_cache_path, "package_repos")
         self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
-        self.default_misc_cache_path = os.path.join(self.user_cache_path, self.spack_instance_id, "cache")
+        self.default_misc_cache_path = os.path.join(
+            self.user_cache_path, self.spack_instance_id, "cache"
+        )
 
         #: Backup location for old .spack directory (used by migrate command)
         self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
@@ -181,6 +185,7 @@ def detect_layout(scheme):
     # Detect if old layout data exists
     # Access via sys.modules to respect monkeypatching in tests
     import sys
+
     locations_obj = sys.modules[__name__].locations
     is_old = locations_obj.old_layout_detected and not env_forces_new
 

@@ -112,9 +112,9 @@ def test_config_defaults_use_data_home(mock_spack_instance):
     install_tree_root = cfg.get("config:install_tree:root")
 
     # The value from base/config.yaml should be "$data_home/installs"
-    assert (
-        install_tree_root == "$data_home/installs"
-    ), f"Expected $data_home/installs, got {install_tree_root}"
+    assert install_tree_root == "$data_home/installs", (
+        f"Expected $data_home/installs, got {install_tree_root}"
+    )
 
     # Test other paths that should use $data_home
     license_dir = cfg.get("config:license_dir")
@@ -124,17 +124,17 @@ def test_config_defaults_use_data_home(mock_spack_instance):
     assert "$data_home" in source_cache, f"source_cache should use $data_home, got {source_cache}"
 
     environments_root = cfg.get("config:environments_root")
-    assert (
-        "$data_home" in environments_root
-    ), f"environments_root should use $data_home, got {environments_root}"
+    assert "$data_home" in environments_root, (
+        f"environments_root should use $data_home, got {environments_root}"
+    )
 
     gpg_path = cfg.get("config:gpg_path")
     assert "$data_home" in gpg_path, f"gpg_path should use $data_home, got {gpg_path}"
 
     gpg_keys_path = cfg.get("config:gpg_keys_path")
-    assert (
-        "$data_home" in gpg_keys_path
-    ), f"gpg_keys_path should use $data_home, got {gpg_keys_path}"
+    assert "$data_home" in gpg_keys_path, (
+        f"gpg_keys_path should use $data_home, got {gpg_keys_path}"
+    )
 
 
 def test_locations_config_exists(mock_spack_instance):
@@ -150,21 +150,23 @@ def test_locations_config_exists(mock_spack_instance):
     locations_cache = cfg.get("config:locations:cache")
 
     # These should be lists according to our schema
-    assert isinstance(locations_data, list), f"locations:data should be a list, got {locations_data}"
-    assert isinstance(
-        locations_state, list
-    ), f"locations:state should be a list, got {locations_state}"
-    assert isinstance(
-        locations_cache, list
-    ), f"locations:cache should be a list, got {locations_cache}"
+    assert isinstance(locations_data, list), (
+        f"locations:data should be a list, got {locations_data}"
+    )
+    assert isinstance(locations_state, list), (
+        f"locations:state should be a list, got {locations_state}"
+    )
+    assert isinstance(locations_cache, list), (
+        f"locations:cache should be a list, got {locations_cache}"
+    )
 
     # Check that the lists contain expected entries
-    assert any(
-        "XDG_DATA_HOME" in str(x) for x in locations_data
-    ), "locations:data should include XDG_DATA_HOME entry"
-    assert any(
-        "XDG_STATE_HOME" in str(x) for x in locations_state
-    ), "locations:state should include XDG_STATE_HOME entry"
+    assert any("XDG_DATA_HOME" in str(x) for x in locations_data), (
+        "locations:data should include XDG_DATA_HOME entry"
+    )
+    assert any("XDG_STATE_HOME" in str(x) for x in locations_state), (
+        "locations:state should include XDG_STATE_HOME entry"
+    )
 
 
 class SetAnXdgVarAndReadDataHome:
@@ -203,8 +205,8 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config)
 
     This test modifies the global spack.paths.locations and must run serially.
     """
-    import spack.subprocess_context
     import spack.config
+    import spack.subprocess_context
 
     home_dir, base_prefix = mock_spack_instance
 
