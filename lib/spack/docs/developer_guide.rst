@@ -319,7 +319,6 @@ Writing Hooks
 -------------
 
 Hooks in Spack provide an extension mechanism that allows code to be executed at specific points in the package lifecycle.
-They make it easy to add functionality without modifying core code.
 This section explains how the Spack hook system works and how to use it effectively.
 When a hook point is reached in the code, the corresponding hook runner finds all hook functions with matching names in registered modules and executes them.
 This allows multiple modules to respond to the same event.
