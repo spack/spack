@@ -556,7 +556,7 @@ class Lock:
         """
         if self._writes == 0:
             fh = self._ensure_valid_handle()
-            if LockType.to_module(LockType.WRITE) == fcntl.LOCK_EX and fh.mode == "rb":
+            if not sys.platform == "win32" and LockType.to_module(LockType.WRITE) == fcntl.LOCK_EX and fh.mode == "rb":
                 raise LockROFileError(self.path)
             if not self._poll_lock(LockType.WRITE):
                 return False

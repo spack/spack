@@ -736,6 +736,14 @@ class Stage(AbstractStage):
 
     def destroy(self):
         """Removes this stage directory."""
+        # On Windows a directory that is the CWD of any process cannot be deleted (WinError 32).
+        # Proactively chdir to the parent before removal so the worker's CWD doesn't block rmtree.
+        if sys.platform == "win32":
+            try:
+                if os.getcwd().lower().startswith(self.path.lower()):
+                    os.chdir(os.path.dirname(self.path))
+            except OSError:
+                pass
         remove_linked_tree(self.path)
 
         # Make sure we don't end up in a removed directory

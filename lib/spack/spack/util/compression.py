@@ -54,7 +54,13 @@ def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
         # also have other extensions (on Unix) such as tgz, tbz2, ...
         archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
-    tar = which("tar", required=True)
+    if sys.platform == "win32":
+        # Prefer the Windows-native tar (System32) over MSYS2/Git-bundled tar, which
+        # treats Windows drive-letter paths (C:\...) as remote host:file syntax.
+        windir = os.environ.get("WINDIR", r"C:\Windows")
+        tar = which(os.path.join(windir, "System32", "tar.exe")) or which("tar", required=True)
+    else:
+        tar = which("tar", required=True)
     # GNU tar's --no-same-owner is not as portable, -o works for BSD tar too. This flag is relevant
     # when extracting archives as root, where tar attempts to set original ownership of files. This
     # is redundant when distributing tarballs, as the tarballs are created on different systems
