@@ -22,7 +22,23 @@ def _ensure_dir(pathlike):
 
 
 @pytest.fixture
-def mock_spack_instance(tmp_path, monkeypatch):
+def set_home(working_env):
+    """Fixture to set HOME environment variable for both Windows and Linux."""
+
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
+
+
+@pytest.fixture
+def mock_spack_instance(tmp_path, set_home, monkeypatch):
     """Create a mock Spack instance with simulated home and base prefix.
 
     Returns:
@@ -38,8 +54,8 @@ def mock_spack_instance(tmp_path, monkeypatch):
     os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
     shutil.copytree(real_defaults, sim_defaults)
 
-    # Set up environment
-    monkeypatch.setenv("HOME", home_dir)
+    # Set up environment using set_home fixture (handles both Windows and Linux)
+    set_home(home_dir)
 
     # Create a new SpackPaths instance pointing to the mock base
     from spack.paths import SpackPaths
