@@ -6,7 +6,7 @@
 # everything in those legacy locations so pulling a newer Spack into an old
 # clone is non-disruptive.
 #
-# The four `config:locations:*` keys give the rest of the default config
+# The three `config:locations:*` keys give the rest of the default config
 # (which uses `$data_home`, `$state_home`, `$cache_home` substitutions) a
 # coherent answer for old layout — but old layout doesn't actually share a
 # single root, so individual path keys below override the substitutions
@@ -14,7 +14,6 @@
 # -------------------------------------------------------------------------
 config:
   locations:
-    home: "~"
     data: $spack
     state: "~/.spack"
     cache: $spack/var
