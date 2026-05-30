@@ -34,9 +34,9 @@ def dir_is_occupied(x, except_for=None):
 class SpackPaths:
     """Object containing paths for a Spack instance with layout detection."""
 
-    def __init__(self):
+    def __init__(self, _prefix=None):
         #: This file lives in $prefix/lib/spack/spack/__file__
-        self.prefix = str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
+        self.prefix = _prefix or str(PurePath(spack.llnl.util.filesystem.ancestor(__file__, 4)))
 
         #: synonym for prefix
         self.spack_root = self.prefix

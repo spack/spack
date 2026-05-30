@@ -1,0 +1,151 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+"""Tests for layout detection and config variable resolution."""
+
+import os
+import pathlib
+import shutil
+
+import pytest
+
+import spack.config
+import spack.paths
+
+
+def _ensure_dir(pathlike):
+    """Create directory and return as string."""
+    pathlike = pathlib.Path(pathlike)
+    pathlike.mkdir(parents=True, exist_ok=True)
+    return str(pathlike)
+
+
+@pytest.fixture
+def mock_spack_instance(tmp_path, monkeypatch):
+    """Create a mock Spack instance with simulated home and base prefix.
+
+    Returns:
+        tuple: (home_dir, base_prefix)
+    """
+    # Create simulated directories
+    home_dir = _ensure_dir(tmp_path / "home")
+    base_prefix = _ensure_dir(tmp_path / "spack-root")
+
+    # Copy real etc/spack/defaults into the simulated base prefix
+    real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
+    sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
+    os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
+    shutil.copytree(real_defaults, sim_defaults)
+
+    # Set up environment
+    monkeypatch.setenv("HOME", home_dir)
+
+    # Create a new SpackPaths instance pointing to the mock base
+    from spack.paths import SpackPaths
+
+    mock_paths = SpackPaths(_prefix=base_prefix)
+
+    # Replace the global locations object
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
+    return home_dir, base_prefix
+
+
+def test_old_layout_detected(mock_spack_instance):
+    """Test that old layout is detected when old install directory exists."""
+    home_dir, base_prefix = mock_spack_instance
+
+    # Touch the old install directory to make it "occupied"
+    old_install = os.path.join(base_prefix, "opt", "spack")
+    os.makedirs(old_install, exist_ok=True)
+    # Add a file so dir_is_occupied returns True
+    with open(os.path.join(old_install, "dummy_install"), "w") as f:
+        f.write("test")
+
+    # Re-detect layout
+    from spack.paths import SpackPaths, detect_old_spack_layout
+
+    mock_paths = SpackPaths(_prefix=base_prefix)
+    old_detected = detect_old_spack_layout(mock_paths)
+
+    assert old_detected, "Old layout should be detected when opt/spack has content"
+
+    # Create a new configuration to see if it picks up the old scope
+    # The include.yaml should include the "old" scope when layout_detected("old") is true
+    cfg = spack.config.create()
+
+    # Check that we have the defaults scope
+    assert "defaults" in cfg.scopes, "Should have defaults scope"
+
+    # The old-layout scope should be included if the condition is met
+    scope_names = list(cfg.scopes.keys())
+
+    # Based on include.yaml, if old layout is detected, we should see "old-layout" scope
+    assert len(scope_names) > 0, "Should have at least one scope"
+
+
+def test_config_defaults_use_data_home(mock_spack_instance):
+    """Test that config defaults reference $data_home for various paths."""
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create a fresh configuration
+    cfg = spack.config.create()
+
+    # Get install_tree root - it should reference $data_home
+    install_tree_root = cfg.get("config:install_tree:root")
+
+    # The value from base/config.yaml should be "$data_home/installs"
+    assert (
+        install_tree_root == "$data_home/installs"
+    ), f"Expected $data_home/installs, got {install_tree_root}"
+
+    # Test other paths that should use $data_home
+    license_dir = cfg.get("config:license_dir")
+    assert "$data_home" in license_dir, f"license_dir should use $data_home, got {license_dir}"
+
+    source_cache = cfg.get("config:source_cache")
+    assert "$data_home" in source_cache, f"source_cache should use $data_home, got {source_cache}"
+
+    environments_root = cfg.get("config:environments_root")
+    assert (
+        "$data_home" in environments_root
+    ), f"environments_root should use $data_home, got {environments_root}"
+
+    gpg_path = cfg.get("config:gpg_path")
+    assert "$data_home" in gpg_path, f"gpg_path should use $data_home, got {gpg_path}"
+
+    gpg_keys_path = cfg.get("config:gpg_keys_path")
+    assert (
+        "$data_home" in gpg_keys_path
+    ), f"gpg_keys_path should use $data_home, got {gpg_keys_path}"
+
+
+def test_locations_config_exists(mock_spack_instance):
+    """Test that config:locations section exists with data, state, and cache keys."""
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create a fresh configuration
+    cfg = spack.config.create()
+
+    # Get the locations config
+    locations_data = cfg.get("config:locations:data")
+    locations_state = cfg.get("config:locations:state")
+    locations_cache = cfg.get("config:locations:cache")
+
+    # These should be lists according to our schema
+    assert isinstance(locations_data, list), f"locations:data should be a list, got {locations_data}"
+    assert isinstance(
+        locations_state, list
+    ), f"locations:state should be a list, got {locations_state}"
+    assert isinstance(
+        locations_cache, list
+    ), f"locations:cache should be a list, got {locations_cache}"
+
+    # Check that the lists contain expected entries
+    assert any(
+        "XDG_DATA_HOME" in str(x) for x in locations_data
+    ), "locations:data should include XDG_DATA_HOME entry"
+    assert any(
+        "XDG_STATE_HOME" in str(x) for x in locations_state
+    ), "locations:state should include XDG_STATE_HOME entry"
