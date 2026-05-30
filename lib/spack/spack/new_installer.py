@@ -356,19 +356,15 @@ class GlobalState:
     )
 
     def __init__(self):
-        import spack.util.gpg
-
         if multiprocessing.get_start_method() == "fork":
             return
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.store = spack.store.STORE
         self.monkey_patches = spack.subprocess_context.TestPatches.create()
         self.spack_working_dir = spack.paths.spack_working_dir
-        self.gnupg_home = str(spack.util.gpg.GNUPGHOME)
+        self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
 
     def restore(self):
-        import spack.util.gpg
-
         if multiprocessing.get_start_method() == "fork":
             # In the forking case we must erase SSL contexts.
             from spack.oci import opener
@@ -380,7 +376,8 @@ class GlobalState:
             s3_client_cache.clear()
             return
         if self.gnupg_home:
-            spack.util.gpg.init(gnupghome=self.gnupg_home, force=True)
+            spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
+            spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
