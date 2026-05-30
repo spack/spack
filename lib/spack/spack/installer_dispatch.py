@@ -44,7 +44,7 @@ def create_installer(
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = (
-        sys.platform == "win32" or spack.config.get("config:installer", "new") == "old"
+        spack.config.get("config:installer", "new") == "old"
     )
 
     if spack.config.get("config:sandbox:enable", False):
