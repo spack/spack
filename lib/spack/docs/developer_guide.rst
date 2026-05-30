@@ -330,7 +330,7 @@ This section will cover the basic kind of hooks and how to write them.
 Available Hook Types
 ^^^^^^^^^^^^^^^^^^^^
 
-Spack provides several built-in hook points that you can implement in your own hook modules.
+The following hooks are currently implemented to make it easy for you, the developer, to add hooks at different stages of a Spack install or similar.
 If there is a hook that you would like and it is missing, you can propose to add a new one.
 
 ``pre_install(spec)``
@@ -345,10 +345,18 @@ It receives the spec as its only argument.
 A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
 It receives the spec and an optional boolean indicating whether this spec is an explicit user request, or a dependency.
 
-``pre_uninstall(spec)`` and ``post_uninstall(spec)``
-""""""""""""""""""""""""""""""""""""""""""""""""""""
+``pre_uninstall(spec)``
+"""""""""""""""""""""""
 
-These hooks run before and after a package is uninstalled, and are primarily used for cleaning up module files during uninstall operations.
+A ``pre_uninstall`` hook runs directly before installation starts.
+It receives the spec as its only argument.
+
+``post_uninstall(spec)``
+""""""""""""""""""""""""
+
+A ``post_uninstall`` hook runs after package uninstallation finishes.
+It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
+
 
 Adding a New Hook Type
 ^^^^^^^^^^^^^^^^^^^^^^
