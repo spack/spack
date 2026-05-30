@@ -97,6 +97,10 @@ class GlobalStateMarshaler:
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
+        # Freeze XDG environment variables before fork to prevent child processes
+        # from changing Spack's path resolution
+        import spack.util.path
+        spack.util.path.freeze()
         if self.is_forked:
             return
 

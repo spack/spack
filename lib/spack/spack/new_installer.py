@@ -348,6 +348,10 @@ class GlobalState:
     __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache")
 
     def __init__(self):
+        # Freeze XDG environment variables before fork to prevent child processes
+        # from changing Spack's path resolution
+        import spack.util.path
+        spack.util.path.freeze()
         if multiprocessing.get_start_method() == "fork":
             return
         self.config = spack.config.CONFIG.ensure_unwrapped()

@@ -149,3 +149,54 @@ def test_locations_config_exists(mock_spack_instance):
     assert any(
         "XDG_STATE_HOME" in str(x) for x in locations_state
     ), "locations:state should include XDG_STATE_HOME entry"
+
+
+class SetAnXdgVarAndReadDataHome:
+    """Set XDG_DATA_HOME in a subprocess and verify that $data_home resolution
+    is not affected due to freeze mechanism."""
+
+    def __init__(self, expected_data_home):
+        self.expected_data_home = expected_data_home
+
+    def __call__(self):
+        import os
+
+        # Set XDG_DATA_HOME to a bogus value in the subprocess
+        os.environ["XDG_DATA_HOME"] = "/made-up-value-that-shouldnt-matter"
+
+        import spack.util.path
+
+        # Resolve $data_home - it should use the frozen value from the parent
+        # process, not the XDG_DATA_HOME we just set
+        actual = spack.util.path.substitute_path_variables("$data_home")
+
+        assert actual == self.expected_data_home, (
+            f"Subprocess should use frozen parent value, not XDG_DATA_HOME.\n"
+            f"Expected: {self.expected_data_home}\n"
+            f"Got: {actual}\n"
+            f"XDG_DATA_HOME={os.environ.get('XDG_DATA_HOME')}"
+        )
+
+
+def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance):
+    """Test that subprocess inherits frozen path values from parent, not env vars.
+
+    Build subprocesses may set XDG_* environment variables. We want to ensure that
+    $data_home resolution in those subprocesses uses the frozen values from the
+    parent process (via freeze() in subprocess_context), not the new env vars.
+
+    This test modifies the global spack.paths.locations and must run serially.
+    """
+    import spack.subprocess_context
+
+    home_dir, base_prefix = mock_spack_instance
+
+    # Expected data_home based on the home we set (without any XDG override)
+    expected = str(pathlib.Path(home_dir) / ".local" / "share" / "spack")
+
+    # Run in subprocess that sets XDG_DATA_HOME
+    spack_process = spack.subprocess_context.SpackTestProcess(SetAnXdgVarAndReadDataHome(expected))
+    proc = spack_process.create()
+    proc.start()
+    proc.join()
+    assert proc.exitcode == 0, "Subprocess test failed"

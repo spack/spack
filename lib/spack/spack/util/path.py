@@ -52,6 +52,26 @@ def get_user():
 # return value for replacements with no match
 NOMATCH = object()
 
+# Frozen environment variables for child processes
+_frozen_env = {}
+
+
+def freeze():
+    """Snapshot XDG_*_HOME environment variables for child build processes.
+
+    Builds may set their own XDG_* env vars, which would otherwise change
+    Spack's path resolution mid-build. Call this in the parent before
+    spawning a child process. After calling freeze(), the _resolve_location_var
+    function will use frozen values instead of checking os.environ.
+
+    This prevents child processes from inadvertently changing where Spack
+    looks for data/state/cache directories.
+    """
+    global _frozen_env
+    xdg_vars = ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
+    _frozen_env = {var: os.environ.get(var) for var in xdg_vars}
+    return _frozen_env.copy()
+
 
 def _resolve_location_var(location_key):
     """Resolve a config:locations entry to a concrete path.
@@ -84,7 +104,13 @@ def _resolve_location_var(location_key):
 
         if env_vars:
             # If it contains env vars, check if they're defined
-            all_defined = all(os.environ.get(var) for var in env_vars)
+            # Use frozen values if available (from freeze() call)
+            def get_env_var(var):
+                if var in _frozen_env:
+                    return _frozen_env[var]
+                return os.environ.get(var)
+
+            all_defined = all(get_env_var(var) for var in env_vars)
             if all_defined:
                 # Resolve and return it
                 return substitute_path_variables(item)
