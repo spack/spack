@@ -511,6 +511,20 @@ On Linux however, the corresponding ``LD_LIBRARY_PATH`` variable is *not* set, b
 
 .. note::
 
+   On macOS Big Sur and later, ``DYLD_FALLBACK_LIBRARY_PATH`` may not be
+   exported correctly by Spack-generated module files due to macOS System
+   Integrity Protection (SIP). SIP strips ``DYLD_*`` environment variables
+   when launching protected processes, which can cause the variable to appear
+   set (via ``echo $DYLD_FALLBACK_LIBRARY_PATH``) but missing from the
+   environment of child processes (via ``env | grep DYLD``).
+   
+   If you experience issues with libraries not being found on macOS Big Sur
+   or later, consider using ``CMAKE_PREFIX_PATH`` or ``PKG_CONFIG_PATH``
+   as alternatives, or consult the `Apple documentation on System Integrity
+   Protection <https://developer.apple.com/documentation/security/disabling_and_enabling_system_integrity_protection>`_.
+
+.. note::
+
    In general, the ``LD_LIBRARY_PATH`` variable is not required when using packages built with Spack, thanks to the use of RPATH.
    Some packages may still need the variable, which is best handled on a per-package basis instead of globally, as explained in :ref:`overide-api-calls-in-package-py`.
 
