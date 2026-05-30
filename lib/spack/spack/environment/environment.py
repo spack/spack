@@ -3438,16 +3438,17 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: is no valid definition exists already
         """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
+        with self.use_config():
+            defs = spack.config.get("definitions", scope=self.scope_name)
+            msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
 
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            item[list_name].append(user_spec)
-            break
+            for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
+                item[list_name].append(user_spec)
+                break
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
+            # "definitions" can be remote, so we need to update the global config too
+            spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
+            self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
         """Removes a user spec from an active definition that matches the name passed as argument.
@@ -3460,19 +3461,20 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: if the user spec cannot be removed from the list,
                 or the list does not exist
         """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
+        with self.use_config():
+            defs = spack.config.get("definitions", scope=self.scope_name)
+            msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
 
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            try:
-                item[list_name].remove(user_spec)
-                break
-            except ValueError:
-                pass
+            for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
+                try:
+                    item[list_name].remove(user_spec)
+                    break
+                except ValueError:
+                    pass
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
+            # "definitions" can be remote, so we need to update the global config too
+            spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
+            self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
         """Overrides a user spec from an active definition that matches the name passed
@@ -3486,20 +3488,21 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: if the user spec cannot be overridden
         """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
+        with self.use_config():
+            defs = spack.config.get("definitions", [], scope=self.scope_name)
+            msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
 
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            try:
-                sub_index = item[list_name].index(user_spec)
-                item[list_name][sub_index] = override
-                break
-            except ValueError:
-                pass
+            for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
+                try:
+                    sub_index = item[list_name].index(user_spec)
+                    item[list_name][sub_index] = override
+                    break
+                except ValueError:
+                    pass
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
+            # "definitions" can be remote, so we need to update the global config too
+            spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
+            self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
         """Iterates on definitions, returning the active ones matching a given name."""
