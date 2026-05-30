@@ -892,6 +892,61 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
 _ENV = object()
 
 
+def _warn_about_old_dotspack():
+    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+    old_dotspack = os.path.expanduser("~/.spack")
+
+    # Don't warn if it doesn't exist
+    if not os.path.exists(old_dotspack):
+        tty.debug("Skip .spack warning: no ~/.spack directory")
+        return
+
+    # Helper to check if old_dotspack is a prefix
+    def uses_old_dotspack(path):
+        return path == old_dotspack or path.startswith(old_dotspack + os.sep)
+
+    # Check if any config scope is using ~/.spack (means explicit configuration)
+    reasons = []
+    for scope in spack.config.CONFIG.scopes.values():
+        if hasattr(scope, "path") and uses_old_dotspack(scope.path):
+            if hasattr(scope, "backwards_compat_fallback") and scope.backwards_compat_fallback:
+                reasons.append(f"Used by config scope: {scope.name}")
+            else:
+                # A config scope explicitly targets ~/.spack: don't warn
+                tty.debug(
+                    f"Skip .spack warning: scope {scope.name} includes ~/.spack: {scope.path}"
+                )
+                return
+
+    # If we found backwards_compat usage, warn about it
+    if reasons:
+        tty.warn(
+            "Spack is using the old ~/.spack directory layout.\n"
+            f"  Reasons: {', '.join(reasons)}\n"
+            "\n"
+            "If all spack instances are >= 1.2, you can use\n"
+            "\n"
+            "  spack migrate --clear\n"
+            "\n"
+            "to silence this warning (and you can stop reading).\n"
+            "\n"
+            "If you need both pre-1.2 and 1.2+ instances, you can run\n"
+            "\n"
+            "  spack migrate\n"
+            "\n"
+            "(without --clear) this will create a copy of the user config and\n"
+            "package repo for 1.2+ instances to use; that is usually fine, but\n"
+            "pre-1.2 instances and 1.2+ instances will have divergent config and\n"
+            "packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).\n"
+            "\n"
+            "You can run\n"
+            "\n"
+            "  spack migrate --i-need-old-spack\n"
+            "\n"
+            "for more info (including examples of what \"divergence\" means)."
+        )
+
+
 def add_command_line_scopes(
     cfg: spack.config.Configuration, command_line_scopes: List[str]
 ) -> None:
@@ -1044,7 +1099,9 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        return finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
+        _warn_about_old_dotspack()
+        return result
 
 
 def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):

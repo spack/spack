@@ -139,8 +139,48 @@ YamlConfigDict = Dict[str, Any]
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
 
+#: configurable config vars -- these cannot be used by include paths
+#: nor by other paths that can affect config values
+CONFIGURABLE_VARS = (
+    "config_home",
+    "state_home",
+    "cache_home",
+    "data_home",
+    "user_cache_path",
+)
+_CVARS_RE = "|".join(CONFIGURABLE_VARS)
+CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
 # placeholder object for unspecified default for get methods
 default_sigil = object()
+
+
+def substitute_include_path(path, context):
+    """Substitute path variables in include paths, with validation.
+
+    Args:
+        path: path string that may contain variables
+        context: context string for error messages
+
+    Returns:
+        Substituted path string
+
+    Raises:
+        ValueError: if path contains prohibited configurable variables
+    """
+    # circular dependencies
+    import spack.util.path
+
+    banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+    if banned_var:
+        msg = (
+            "Included scope is defined in terms of prohibited config variable."
+            f" ({banned_var.group(0)}): {path}"
+            f"\n    Context: {context}"
+            "\n\n    Include config paths may not refer to configurable config variables."
+        )
+        raise ValueError(msg)
+    return spack.util.path.substitute_path_variables(path)
 
 
 class ConfigScope:
@@ -148,6 +188,7 @@ class ConfigScope:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
+        self.backwards_compat_fallback = False
         self.prefer_modify = False
         self.included = included
 
@@ -1267,16 +1308,28 @@ class IncludePath(OptionalInclude):
     destination: Optional[str]
 
     def __init__(self, entry: dict):
-        # circular dependencies
-        import spack.util.path
-
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
         if path_override_env_var and path_override_env_var in os.environ:
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = spack.util.path.substitute_path_variables(path)
+
+        context_prefix = f"({self.name}) " if self.name else ""
+        context = f"{context_prefix}{path}"
+
+        new_path = substitute_include_path(path, context)
+        old_path = None
+        backwards_compat = entry.get("backwards_compat", None)
+        if backwards_compat:
+            old_path = substitute_include_path(backwards_compat, context)
+
+        self.backwards_compat_fallback = False
+        if old_path and os.path.exists(old_path) and not os.path.exists(new_path):
+            self.path = old_path
+            self.backwards_compat_fallback = True
+        else:
+            self.path = new_path
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1327,6 +1380,8 @@ class IncludePath(OptionalInclude):
 
         scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
+            if self.backwards_compat_fallback:
+                scope.backwards_compat_fallback = True
             self._scopes = [scope]
 
         return self._scopes
