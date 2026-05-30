@@ -1,5 +1,9 @@
 config:
   locks: false
+  install_tree:
+    root: $data_home/installs
+    projections:
+      all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
   build_stage::
     - '$user_cache_path/stage'
   stage_name: '{name}-{version}-{hash:7}'

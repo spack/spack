@@ -1,0 +1,14 @@
+# -------------------------------------------------------------------------
+# Module root overrides for the legacy $spack-local layout.
+#
+# Selected by etc/spack/defaults/include.yaml when an existing Spack
+# instance has installs etc. under $spack. base/modules.yaml puts module
+# files under $data_home/{modules,lmod} (the xdg default); old layout
+# instead puts them in $spack/share/spack so a pre-1.2 clone that pulls
+# this PR doesn't lose track of its existing modules.
+# -------------------------------------------------------------------------
+modules:
+  default:
+    roots:
+      tcl: $spack/share/spack/modules
+      lmod: $spack/share/spack/lmod

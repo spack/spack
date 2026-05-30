@@ -53,6 +53,65 @@ def get_user():
 NOMATCH = object()
 
 
+def _resolve_location_var(location_key):
+    """Resolve a config:locations entry to a concrete path.
+
+    Args:
+        location_key: one of 'data', 'cache', or 'state'
+
+    Returns:
+        A resolved path string, or NOMATCH if none can be resolved.
+    """
+    # break circular imports
+    import spack.config
+
+    # Get the list of potential locations from config
+    location_list = spack.config.get(f"config:locations:{location_key}")
+
+    # If it's not a list, just return it
+    if not isinstance(location_list, list):
+        return location_list if location_list else NOMATCH
+
+    # Process each item in the list
+    for item in location_list:
+        if not isinstance(item, str):
+            continue
+
+        # Check if item contains an environment variable
+        # Look for $VAR or ${VAR} patterns
+        env_var_pattern = r'\$\{?([A-Z_][A-Z0-9_]*)\}?'
+        env_vars = re.findall(env_var_pattern, item)
+
+        if env_vars:
+            # If it contains env vars, check if they're defined
+            all_defined = all(os.environ.get(var) for var in env_vars)
+            if all_defined:
+                # Resolve and return it
+                return substitute_path_variables(item)
+            # If not all defined, continue to next item
+            continue
+
+        # Check if item contains a spack config variable (like $data_home)
+        # This would be a variable that starts with $ but isn't an env var
+        config_var_pattern = r'\$([a-z_][a-z0-9_]*)'
+        config_vars = re.findall(config_var_pattern, item)
+
+        if config_vars:
+            # Resolve the config variable (but watch out for infinite loops)
+            # For now, just resolve it - the replacements() function will handle it
+            try:
+                return substitute_path_variables(item)
+            except RecursionError:
+                # If we hit infinite recursion, skip this item
+                continue
+
+        # If it's just a static string (like "~/.local/share/spack"), return it
+        return substitute_path_variables(item)
+
+    # If we went through the list without returning anything, return NOMATCH
+    return NOMATCH
+
+
 # Substitutions to perform
 def replacements():
     # break circular imports
@@ -78,6 +137,9 @@ def replacements():
         "date": lambda: date.today().strftime("%Y-%m-%d"),
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "data_home": lambda: _resolve_location_var("data"),
+        "cache_home": lambda: _resolve_location_var("cache"),
+        "state_home": lambda: _resolve_location_var("state"),
     }
 
 

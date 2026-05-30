@@ -5,19 +5,35 @@
 # sensible defaults out of the box. Spack maintainers should edit this
 # file to keep it current.
 #
-# Users can override these settings by editing files in:
-#
-#  * $SPACK_ROOT/etc/spack/     - Spack instance settings
-#  * ~/.spack/                  - user settings
-#  * $SPACK_ROOT/etc/spack/site - Spack "site" settings. Like instance settings
-#                                 but lower priority then user settings.
+# Users can override these settings in their own configuration files.
+# See https://spack.readthedocs.io/en/latest/configuration.html.
 #
 # -------------------------------------------------------------------------
 config:
+  locations:
+    data:
+    - "$SPACK_DATA_HOME"
+    - "$XDG_DATA_HOME/spack"
+    - "~/.local/share/spack"  # XDG default
+    state:
+    - "$SPACK_STATE_HOME"
+    - "$SPACK_USER_CACHE_PATH"
+    - "$XDG_STATE_HOME/spack"
+    - "~/.local/state/spack"  # XDG default
+    cache:
+    - "$SPACK_STATE_HOME"
+    - "$XDG_STATE_HOME/spack"
+    - "~/.cache/spack"        # XDG default
+
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
-    root: $spack/opt/spack
+    # If layout_detected("old"), this is overridden to $spack/opt/spack by
+    # etc/spack/defaults/old/config.yaml (the scheme yaml chosen by
+    # defaults/include.yaml when legacy data is present in $spack).
+    # Otherwise $data_home resolves to ~/.local/share/spack (or
+    # $XDG_DATA_HOME/spack, $SPACK_DATA_HOME, etc.).
+    root: $data_home/installs
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
@@ -33,8 +49,9 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
-  # Directory where licenses should be located
-  license_dir: $spack/etc/spack/licenses
+  # Directory where licenses should be located.
+  # Overridden to $spack/etc/spack/licenses by the old-layout scheme yaml.
+  license_dir: $data_home/licenses
 
   # Temporary locations Spack can try to use for builds.
   #
@@ -48,11 +65,9 @@ config:
   # to specify `$user_cache_path/stage`, which ensures each user builds in their
   # home directory.
   #
-  # A more traditional path uses the value of `$spack/var/spack/stage`, which
-  # builds directly inside Spack's instance without staging them in a
-  # temporary space.  Problems with specifying a path inside a Spack instance
-  # are that it precludes its use as a system package and its ability to be
-  # pip installable.
+  # If you do Spack builds inside of allocations and want stages to persist
+  # after those allocations end, you will want to override this and avoid using
+  # a temporary directory.
   #
   # In Spack environment files, chaining onto existing system Spack
   # installations, the $env variable can be used to download, cache and build
@@ -68,8 +83,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - $user_cache_path/stage
-  # - $spack/var/spack/stage
+    - $cache_home/stage
 
   # Naming format for individual stage directories
   stage_name: "spack-stage-{name}-{version}-{hash}"
@@ -77,20 +91,28 @@ config:
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: $user_cache_path/test
+  test_stage: $state_home/test
+
 
   # Cache directory for already downloaded source tarballs and archived
   # repositories. This can be purged with `spack clean --downloads`.
-  source_cache: $spack/var/spack/cache
+  # Overridden to $spack/var/cache by the old-layout scheme yaml.
+  source_cache: $data_home/downloads
+
+  # Directories Spack uses for its gpg keyring and pre-imported public keys.
+  # Overridden to $spack-local paths by the old-layout scheme yaml.
+  gpg_path: $data_home/gpg
+  gpg_keys_path: $data_home/gpg-keys
 
 
-  ## Directory where spack managed environments are created and stored
-  # environments_root: $spack/var/spack/environments
+  ## Directory where spack managed environments are created and stored.
+  # Overridden to $spack/var/spack/environments by the old-layout scheme yaml.
+  environments_root: $data_home/environments
 
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $user_cache_path/cache
+  misc_cache: $state_home/$spack_instance_id/cache
 
   # Abort downloads after this many seconds if not data is received.
   # Setting this to 0 will disable the timeout.
