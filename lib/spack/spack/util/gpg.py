@@ -949,7 +949,7 @@ def extract_public_keys(keyfile: str):
 
 
 @_autoinit
-def trust(keyfile: str, *, yes_to_all: bool = False, fprs: Optional[List[str]] = None):
+def trust(keyfile: str, *, fprs: Optional[List[str]] = None, yes_to_all: bool = False):
     """Import a public key from a file and trust it.
 
     Args:
