@@ -5,44 +5,30 @@
 """Utility classes for logging the output of blocks of code."""
 
 import atexit
-import collections
-import ctypes
-import ctypes.wintypes as wintypes
 import errno
 import io
 import multiprocessing
-import multiprocessing.connection
 import os
 import re
 import select
-import selectors
 import signal
-import socket
 import sys
-import time
+import threading
 import traceback
 from contextlib import contextmanager
-from ctypes import wintypes
 from multiprocessing.connection import Connection
 from threading import Thread
 from typing import IO, Callable, List, Optional, Tuple
 
-
 import spack.llnl.util.tty as tty
 
 if sys.platform == "win32":
-    import ctypes.wintypes as wintypes
-    import msvcrt
-
-    kernel32 = ctypes.windll.kernel32
+    from spack.llnl.util import win_io
 
 try:
     import termios
 except ImportError:
     termios = None  # type: ignore[assignment]
-
-# win32api constants
-DUPLICATE_SAME_ACCESS = 0x00000002
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format
@@ -136,386 +122,6 @@ class preserve_terminal_settings:
         if self.old_cfg:
             self._restore_default_terminal_settings()
             atexit.unregister(self._restore_default_terminal_settings)
-
-kernel32 = ctypes.windll.kernel32
-
-HANDLE = ctypes.c_void_p
-LPHANDLE = ctypes.POINTER(HANDLE)
-
-# Define ULONG_PTR for 32/64 bit compatibility
-if ctypes.sizeof(ctypes.c_void_p) == 8:
-    ULONG_PTR = ctypes.c_ulonglong
-else:
-    ULONG_PTR = ctypes.c_ulong
-
-INVALID_HANDLE_VALUE = HANDLE(-1).value 
-INFINITE = 0xFFFFFFFF
-WAIT_TIMEOUT = 258
-ERROR_MORE_DATA = 234
-ERROR_IO_PENDING = 997
-ERROR_BROKEN_PIPE = 109
-ERROR_OPERATION_ABORTED = 995
-ERROR_INVALID_HANDLE = 6
-ERROR_HANDLE_EOF = 38
-READ_BUFFER_SIZE = 65536
-STD_INPUT_HANDLE = -10
-STD_OUTPUT_HANDLE = -11
-ENABLE_PROCESSED_INPUT = 0x0001
-ENABLE_LINE_INPUT = 0x0002
-ENABLE_ECHO_INPUT = 0x0004
-ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # For stdout
-
-INVALID_HANDLE_VALUE = wintypes.HANDLE(-1).value
-
-
-class OVERLAPPED(ctypes.Structure):
-    _fields_ = [
-        ("Internal", ULONG_PTR),
-        ("InternalHigh", ULONG_PTR),
-        ("Offset", wintypes.DWORD),
-        ("OffsetHigh", wintypes.DWORD),
-        ("hEvent", HANDLE)
-    ]
-
-CreateIoCompletionPort = kernel32.CreateIoCompletionPort
-CreateIoCompletionPort.argtypes = [HANDLE, HANDLE, ULONG_PTR, wintypes.DWORD]
-CreateIoCompletionPort.restype = HANDLE
-
-GetQueuedCompletionStatus = kernel32.GetQueuedCompletionStatus
-GetQueuedCompletionStatus.argtypes = [
-    HANDLE, 
-    ctypes.POINTER(wintypes.DWORD), 
-    ctypes.POINTER(ULONG_PTR), 
-    ctypes.POINTER(ctypes.POINTER(OVERLAPPED)), 
-    wintypes.DWORD
-]
-GetQueuedCompletionStatus.restype = wintypes.BOOL
-
-PostQueuedCompletionStatus = kernel32.PostQueuedCompletionStatus
-PostQueuedCompletionStatus.argtypes = [HANDLE, wintypes.DWORD, ULONG_PTR, ctypes.POINTER(OVERLAPPED)]
-PostQueuedCompletionStatus.restype = wintypes.BOOL
-
-ReadFile = kernel32.ReadFile
-ReadFile.argtypes = [HANDLE, ctypes.c_void_p, wintypes.DWORD, ctypes.POINTER(wintypes.DWORD), ctypes.POINTER(OVERLAPPED)]
-ReadFile.restype = wintypes.BOOL
-
-CancelIoEx = kernel32.CancelIoEx
-CancelIoEx.argtypes = [HANDLE, ctypes.POINTER(OVERLAPPED)]
-CancelIoEx.restype = wintypes.BOOL
-
-PeekNamedPipe = kernel32.PeekNamedPipe
-PeekNamedPipe.argtypes = [
-    HANDLE, 
-    ctypes.c_void_p, 
-    wintypes.DWORD, 
-    ctypes.POINTER(wintypes.DWORD), 
-    ctypes.POINTER(wintypes.DWORD), 
-    ctypes.POINTER(wintypes.DWORD)
-]
-PeekNamedPipe.restype = wintypes.BOOL
-
-CloseHandle = kernel32.CloseHandle
-CloseHandle.argtypes = [HANDLE]
-CloseHandle.restype = wintypes.BOOL
-
-
-GetStdHandle = kernel32.GetStdHandle
-GetStdHandle.argtypes = [wintypes.DWORD]
-GetStdHandle.restype = wintypes.HANDLE
-
-GetConsoleMode = kernel32.GetConsoleMode
-GetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.LPDWORD]
-GetConsoleMode.restype = wintypes.BOOL
-
-SetConsoleMode = kernel32.SetConsoleMode
-SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
-SetConsoleMode.restype = wintypes.BOOL
-
-
-class BufferedPipe:
-    """A pipe wrapper that buffers data received by the IOCP Selector."""
-    def __init__(self, raw_fd):
-        self.fileno_val = raw_fd
-        self._buffer = collections.deque()
-        self._closed = False
-
-    @property
-    def has_data(self):
-        return bool(self._buffer) or self._closed
-
-    def fileno(self):
-        return self.fileno_val
-
-    def recv(self, max_size=-1):
-        if not self._buffer and self._closed:
-            raise EOFError
-        if not self._buffer:
-            return b""
-        if len(self._buffer) == 1:
-            chunk = self._buffer[0]
-            if max_size < 0 or len(chunk) <= max_size:
-                self._buffer.popleft()
-                return chunk
-            else:
-                data = chunk[:max_size]
-                self._buffer[0] = chunk[max_size:]
-                return data
-        out = io.BytesIO()
-        remaining = max_size if max_size >= 0 else float("inf")
-        while self._buffer and remaining > 0:
-            chunk = self._buffer[0]
-            if len(chunk) > remaining:
-                out.write(chunk[:remaining])
-                self._buffer[0] = chunk[remaining:]
-                remaining = 0
-            else:
-                out.write(chunk)
-                self._buffer.popleft()
-                remaining -= len(chunk)
-        return out.getvalue()
-
-    def read(self, max_size=-1):
-        return self.recv(max_size=max_size)
-
-    def _push_data(self, data):
-        if data:
-            self._buffer.append(data)
-
-    def _mark_closed(self):
-        self._closed = True
-
-class IOCPSelector(selectors.BaseSelector):
-    """IO multiplexor class that works with win32 named pipes
-
-    Note: the selectors documentation claims they only work
-    with sockets on Windows, this class explicitly supports
-    only named pipes, not sockets
-    """
-
-    def __init__(self, jobs=0):
-        self._iocp = CreateIoCompletionPort(wintypes.HANDLE(INVALID_HANDLE_VALUE), wintypes.HANDLE(0), 0, jobs)
-        if not self._iocp:
-            raise OSError(f"Failed to create IOCP: {ctypes.GetLastError()}")
-        self._fd_to_key = {}
-        self._fd_to_handle = {}
-        self._valid_ov_addrs = set()
-
-    def register(self, fileobj, events, data=None):
-        if (not events) or (events & ~(selectors.EVENT_WRITE | selectors.EVENT_READ)):
-            raise ValueError("Invalid event")
-        fd = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
-        if fd in self._fd_to_key:
-            raise KeyError(f"{fileobj!r} (FD {fd}) is already registered")
-
-        try:
-            f_handle = msvcrt.get_osfhandle(fd)
-            f_handle = wintypes.HANDLE(f_handle)
-        except OSError as e:
-            if e.errno == 9:
-                f_handle = wintypes.HANDLE(fd)
-            else:
-                raise ValueError(f"Invalid file descriptor: {fd}") from e
-
-        bf = BufferedPipe(fd)
-        key = selectors.SelectorKey(bf, fd, events, data)
-        self._fd_to_key[fd] = key
-
-        res = CreateIoCompletionPort(f_handle, self._iocp, fd, 0)
-        if not res:
-            raise OSError(f"Failed to associate handle with IOCP: {ctypes.GetLastError()}")
-
-        ov = OVERLAPPED()
-        ov_addr = ctypes.addressof(ov)
-        self._valid_ov_addrs.add(ov_addr)
-        read_buffer = ctypes.create_string_buffer(READ_BUFFER_SIZE)
-
-        self._fd_to_handle[fd] = {
-            "handle": f_handle,
-            "overlapped": ov,
-            "addr": ov_addr,
-            "buffer": read_buffer,
-            "wrapper": bf,
-        }
-        self._issue_real_read(fd)
-        return key
-
-    def _issue_real_read(self, fd):
-        if fd not in self._fd_to_handle:
-            return
-        handle = self._fd_to_handle[fd]["handle"]
-        ov = self._fd_to_handle[fd]["overlapped"]
-        buf = self._fd_to_handle[fd]["buffer"]
-
-        ov.Offset = 0
-        ov.OffsetHigh = 0
-        ov.Internal = 0
-        ov.InternalHigh = 0
-
-        bytes_read = wintypes.DWORD()
-        res = ReadFile(handle, buf, READ_BUFFER_SIZE, ctypes.byref(bytes_read), ctypes.byref(ov))
-
-        if res:
-            PostQueuedCompletionStatus(self._iocp, bytes_read.value, fd, ctypes.byref(ov))
-            return
-
-        err = ctypes.GetLastError()
-        if err == ERROR_IO_PENDING:
-            return
-        if err in (ERROR_BROKEN_PIPE, ERROR_INVALID_HANDLE, ERROR_HANDLE_EOF):
-            PostQueuedCompletionStatus(self._iocp, 0, fd, ctypes.byref(ov))
-            return
-        raise OSError(f"ReadFile failed: {err}")
-
-    def unregister(self, fileobj):
-        fd = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
-        try:
-            key = self._fd_to_key.pop(fd)
-        except KeyError:
-            raise KeyError(f"{fileobj!r} is not registered")
-
-        if fd in self._fd_to_handle:
-            handle = self._fd_to_handle[fd]["handle"]
-            ov = self._fd_to_handle[fd]["overlapped"]
-            ov_addr = self._fd_to_handle[fd]["addr"]
-            CancelIoEx(handle, ctypes.byref(ov))
-            if ov_addr in self._valid_ov_addrs:
-                self._valid_ov_addrs.remove(ov_addr)
-            del self._fd_to_handle[fd]
-        return key
-
-    def select(self, timeout=None):
-        ready_keys = []
-        has_buffered_data = False
-
-        for fd, key in self._fd_to_key.items():
-            if key.fileobj.has_data:
-                ready_keys.append((key, selectors.EVENT_READ))
-                has_buffered_data = True
-
-        ms = 0 if has_buffered_data else (INFINITE if timeout is None else int(timeout * 1000))
-        current_ms = ms
-        seen_keys = set()
-
-        c_nbytes = wintypes.DWORD()
-        c_key = ULONG_PTR()
-        c_ov_ptr = ctypes.POINTER(OVERLAPPED)()
-
-        while True:
-            res = GetQueuedCompletionStatus(
-                self._iocp, ctypes.byref(c_nbytes), ctypes.byref(c_key), ctypes.byref(c_ov_ptr), current_ms
-            )
-            rc = 0 if res else ctypes.GetLastError()
-            try:
-                overlapped = c_ov_ptr.contents if c_ov_ptr else None
-            except ValueError:
-                overlapped = None
-
-            if rc == WAIT_TIMEOUT:
-                break
-            if rc and not overlapped:
-                raise OSError(f"GetQueuedCompletionStatus failed. Error {rc}")
-
-            ov_addr = ctypes.cast(c_ov_ptr, ctypes.c_void_p).value
-            if ov_addr not in self._valid_ov_addrs:
-                if ready_keys or has_buffered_data:
-                    current_ms = 0
-                continue
-
-            key_fd = c_key.value
-            if key_fd in self._fd_to_key:
-                if key_fd not in seen_keys:
-                    bytes_transferred = c_nbytes.value
-                    if bytes_transferred:
-                        read_buffer = self._fd_to_handle[key_fd]["buffer"]
-                        chunk = read_buffer.raw[:bytes_transferred]
-                        self._fd_to_handle[key_fd]["wrapper"]._push_data(chunk)
-                    if rc in (ERROR_BROKEN_PIPE, ERROR_HANDLE_EOF):
-                        self._fd_to_handle[key_fd]["wrapper"]._mark_closed()
-
-                    key = self._fd_to_key[key_fd]
-                    is_new = all(rk is not key for rk, _ in ready_keys)
-                    if is_new:
-                        ready_keys.append((key, selectors.EVENT_READ))
-                    seen_keys.add(key_fd)
-            current_ms = 0
-
-        for key_fd in seen_keys:
-            self._issue_real_read(key_fd)
-
-        return ready_keys
-
-    def get_map(self):
-        return self._fd_to_key
-
-    def close(self):
-        for fd in list(self._fd_to_handle.keys()):
-            self.unregister(fd)
-        self._fd_to_handle.clear()
-        if self._iocp:
-            CloseHandle(self._iocp)
-            self._iocp = None
-        super().close()
-
-
-class HybridWindowsSelector(selectors.BaseSelector):
-    """Windows IO multiplexor supporting sockets AND fds"""
-
-    def __init__(self):
-        self._socket_selector = selectors.SelectSelector()
-        self._pipe_selector = IOCPSelector()
-        self._map = {}
-
-    def register(self, fileobj, events, data=None):
-        is_socket = isinstance(fileobj, socket.socket) or hasattr(fileobj, "family")
-        if is_socket:
-            key = self._socket_selector.register(fileobj, events, data)
-        else:
-            key = self._pipe_selector.register(fileobj, events, data)
-        self._map[key.fd] = key
-        return key
-
-    def unregister(self, fileobj):
-        fd = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
-        key = self._map.pop(fd)
-        try:
-            self._socket_selector.unregister(fileobj)
-        except KeyError:
-            pass
-        try:
-            self._pipe_selector.unregister(fileobj)
-        except KeyError:
-            pass
-        return key
-
-    def select(self, timeout=None):
-        start_time = time.time()
-        POLL_INTERVAL = 0.05
-        while True:
-            ready_keys = []
-            if self._socket_selector.get_map():
-                ready_keys.extend(self._socket_selector.select(timeout=0))
-            if self._pipe_selector.get_map():
-                ready_keys.extend(self._pipe_selector.select(timeout=0))
-
-            if ready_keys:
-                return ready_keys
-            if timeout is not None:
-                elapsed = time.time() - start_time
-                if elapsed >= timeout:
-                    return []
-                wait_time = min(POLL_INTERVAL, timeout - elapsed)
-                if wait_time < 0:
-                    wait_time = 0
-            else:
-                wait_time = POLL_INTERVAL
-            time.sleep(wait_time)
-
-    def close(self):
-        self._socket_selector.close()
-        self._pipe_selector.close()
-
-    def get_map(self):
-        return self._map
 
 
 class keyboard_input(preserve_terminal_settings):
@@ -739,21 +345,12 @@ def log_output(*args, **kwargs):
         return nixlog(*args, **kwargs)
 
 
-
 def forward_stdin(write_pipe, _kill_sig):
-    """Run in a thread, recieves stdin from parent process and forwards to child via pipe"""
-    # Loop until thread is dead
+    """Run in a thread, receives stdin from parent process and forwards to child via pipe."""
     try:
         while True:
             stopped = _kill_sig.wait(0.1)
-            # ensure write pipe is writable
-            assert write_pipe.writable()
-            write_pipe.flush()
             stdin_info = sys.stdin.read(4096)
-            # chunk stdin so to avoid ValueErrors on
-            # large stdin inputs (max is 32mib or less)
-            # need to figure out how to stream chunked data
-            # so the reader knows its chunked
             write_pipe.send(stdin_info)
             if stopped:
                 break
@@ -837,6 +434,7 @@ class nixlog:
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe(duplex=False)
 
+        self._in_kill = None
         stdin_fd = None
         stdout_fd = None
         try:
@@ -847,7 +445,9 @@ class nixlog:
                 else:
                     stdin_fd, stdin_write = multiprocessing.Pipe(duplex=True)
                     self._in_kill = threading.Event()
-                    self.input_forward_thread = threading.Thread(target=forward_stdin, args=(stdin_write, ) )
+                    self.input_forward_thread = threading.Thread(
+                        target=forward_stdin, args=(stdin_write, self._in_kill)
+                    )
                     self.input_forward_thread.start()
             except BaseException:
                 # just don't forward input if this fails
@@ -875,7 +475,8 @@ class nixlog:
             self.process.daemon = True  # must set before start()
             self.process.start()
         except Exception:
-            self._in_kill.set()
+            if self._in_kill is not None:
+                self._in_kill.set()
         finally:
             if stdin_fd:
                 stdin_fd.close()
@@ -917,19 +518,15 @@ class nixlog:
         # return this log_output object so that the user can do things
         # like temporarily echo some output.
         return self
-    
-
-    def redirect_streams(self):
-        """Redirects fds to standard buffers"""
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Flush any buffered output to the logger daemon.
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # kill the windows stdin stream
-        self._in_kill.set()
+        # signal the stdin forward thread to stop (only set when that path was taken)
+        if self._in_kill is not None:
+            self._in_kill.set()
 
         # restore previous output settings using the OS-level way
         for fd, saved_fd in self._redirected_fds.items():
@@ -974,89 +571,6 @@ class nixlog:
             sys.stdout.flush()
 
 
-class StreamWrapper:
-    """Wrapper class to handle redirection of io streams"""
-
-    def __init__(self, sys_attr):
-        self.sys_attr = sys_attr
-        self.saved_stream = None
-
-        kernel32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]  # nStdHandle  # hHandle
-
-        kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
-        kernel32.GetStdHandle.restype = wintypes.HANDLE
-
-        # https://docs.microsoft.com/en-us/windows/console/getstdhandle
-        if self.sys_attr == "stdout":
-            self.STD_HANDLE = -11
-        elif self.sys_attr == "stderr":
-            self.STD_HANDLE = -12
-        else:
-            raise KeyError(self.sys_attr)
-
-        self.saved_stream = getattr(sys, self.sys_attr)
-        self.std_fd = self.saved_stream.fileno()
-        self.saved_std_handle = kernel32.GetStdHandle(self.STD_HANDLE)
-        self.saved_stream_fd = os.dup(self.std_fd)
-        self.redirect_fd = None
-
-    def redirect_stream(self, writer):
-        """Redirect stdout to the given file descriptor."""
-        self.flush()
-        # Get fd for new stream
-        # new stream is file object
-        redirect_fd = writer.fileno()
-        # get windows file handle
-        redirect_h = msvcrt.get_osfhandle(redirect_fd)
-        # duplicate handle for local copy we own
-        dup_redirect_h = dup_fh(redirect_h)
-        self.redirect_fd = msvcrt.open_osfhandle(dup_redirect_h, os.O_WRONLY)
-        kernel32.SetStdHandle(self.STD_HANDLE, wintypes.HANDLE(dup_redirect_h))
-        os.dup2(self.redirect_fd, self.std_fd)
-        setattr(
-            sys,
-            self.sys_attr,
-            os.fdopen(
-                self.std_fd,
-                "w",
-                encoding="utf-8",
-                buffering=1,
-                errors="replace",
-                closefd=False,
-                newline="\n",
-            ),
-        )
-
-    def flush(self):
-        # get current system stream for the standard fd we're redirecting
-        sys_stream = getattr(sys, self.sys_attr)
-        try:
-            if sys_stream:
-                # Flush the system stream before redirection
-                sys_stream.flush()
-        except BaseException as e:
-            # swallow flush errors
-            tty.debug(f"Encountered error flushing stream: {e}")
-            pass
-
-    def close(self):
-        """Redirect back to the original system stream, and close stream"""
-        try:
-            self.flush()
-            if self.saved_stream_fd is not None:
-                # restore os handle
-                kernel32.SetStdHandle(self.STD_HANDLE, self.saved_std_handle)
-                # restore c fd
-                os.dup2(self.saved_stream_fd, self.std_fd)
-                # python level
-                setattr(sys, self.sys_attr, self.saved_stream)
-        finally:
-            if self.redirect_fd is not None:
-                os.close(self.redirect_fd)
-            if self.saved_stream_fd is not None:
-                os.close(self.saved_stream_fd)
-
-
 class winlog:
     """
     Similar to nixlog, with underlying
@@ -1071,8 +585,8 @@ class winlog:
         self.debug = debug
         self.echo = echo
         self.logfile = filename
-        self.stdout = StreamWrapper("stdout")
-        self.stderr = StreamWrapper("stderr")
+        self.stdout = win_io.StreamWrapper("stdout")
+        self.stderr = win_io.StreamWrapper("stderr")
         self._active = False
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
@@ -1335,92 +849,6 @@ def _writer_daemon(
 
         # send echo value back to the parent so it can be preserved.
         control_fd.send(echo)
-
-def dup_fh(fh:int) -> int:
-    # Define function signatures for safety
-    kernel32.DuplicateHandle.argtypes = [
-        wintypes.HANDLE, # hSourceProcessHandle
-        wintypes.HANDLE, # hSourceHandle
-        wintypes.HANDLE, # hTargetProcessHandle
-        ctypes.POINTER(wintypes.HANDLE), # lpTargetHandle
-        wintypes.DWORD,  # dwDesiredAccess
-        wintypes.BOOL,   # bInheritHandle
-        wintypes.DWORD   # dwOptions
-    ]
-    current_process = ctypes.windll.kernel32.GetCurrentProcess()
-    target_handle = wintypes.HANDLE()
-    
-    success = ctypes.windll.kernel32.DuplicateHandle(
-        current_process,
-        wintypes.HANDLE(fh),
-        current_process,
-        ctypes.byref(target_handle),
-        0,
-        True,
-        DUPLICATE_SAME_ACCESS
-    )
-    
-    if not success:
-        raise ctypes.WinError()
-    
-    if not target_handle.value:
-        raise ctypes.WinError()
-
-    return target_handle.value
-
-
-def force_echo_on(force_echo: bool, controls: List[str]):
-    if xon in controls:
-        return True
-    if xoff in controls:
-        return False
-    return force_echo
-
-
-if sys.platform == "win32":
-    # dont define this outside windows, otherwise mypy complains
-    # or we'd have to # type: ignore on basically every line of
-    # this method
-    def dup_fh(fh: int) -> int:
-        """Windows Only
-        Duplicates Windows file handles. Useful when
-        we need multiple references to a single file handle
-        that all can be closed independently
-
-        uses DuplicateHandle from the win32 api
-
-        Arguments:
-            fh: OS level file handle to be duplicated
-
-        Returns: integer representing the new, identical file handle
-        """
-        # Define function signatures for safety
-        kernel32.DuplicateHandle.argtypes = [
-            wintypes.HANDLE,  # hSourceProcessHandle
-            wintypes.HANDLE,  # hSourceHandle
-            wintypes.HANDLE,  # hTargetProcessHandle
-            ctypes.POINTER(wintypes.HANDLE),  # lpTargetHandle
-            wintypes.DWORD,  # dwDesiredAccess
-            wintypes.BOOL,  # bInheritHandle
-            wintypes.DWORD,  # dwOptions
-        ]
-        current_process = kernel32.GetCurrentProcess()
-        target_handle = wintypes.HANDLE()
-
-        success = kernel32.DuplicateHandle(
-            current_process,
-            wintypes.HANDLE(fh),
-            current_process,
-            ctypes.byref(target_handle),
-            0,
-            True,
-            DUPLICATE_SAME_ACCESS,
-        )
-
-        if not success or not target_handle.value:
-            raise ctypes.WinError()
-
-        return target_handle.value
 
 
 def force_echo_on(force_echo: bool, controls: List[str]):

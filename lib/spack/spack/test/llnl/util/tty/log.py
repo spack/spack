@@ -3,14 +3,22 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
+import multiprocessing
+import os
 import pathlib
 import sys
+import time
 from types import ModuleType
 from typing import Optional
+
+import pytest
 
 import spack.llnl.util.tty.log as log
 from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+
+if sys.platform == "win32":
+    import spack.llnl.util.win_io as win_io
 
 termios: Optional[ModuleType] = None
 try:
@@ -186,3 +194,79 @@ def test_nested_logging_contexts(capfd, tmp_path):
             log_captured_out = f.read()
             assert "inner\n" in log_captured_out
             assert "outer\n" not in log_captured_out
+
+
+@contextlib.contextmanager
+def make_buffered_pipe():
+    """Create a BufferedPipe with a dummy fd (we never call fileno())."""
+    bp = win_io.BufferedPipe(-1)
+    yield bp
+
+
+pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_push_and_recv():
+    with make_buffered_pipe() as bp:
+        bp._push_data(b"hello")
+        assert bp.recv() == b"hello"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_recv_max_size_partial():
+    with make_buffered_pipe() as bp:
+        bp._push_data(b"abcdef")
+        assert bp.recv(max_size=3) == b"abc"
+        assert bp.recv() == b"def"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_recv_across_chunks():
+    with make_buffered_pipe() as bp:
+        bp._push_data(b"foo")
+        bp._push_data(b"bar")
+        assert bp.recv(max_size=5) == b"fooba"
+        assert bp.recv() == b"r"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_empty_recv_returns_empty():
+    with make_buffered_pipe() as bp:
+        assert bp.recv() == b""
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_has_data():
+    with make_buffered_pipe() as bp:
+        assert not bp.has_data
+        bp._push_data(b"x")
+        assert bp.has_data
+        bp.recv()
+        assert not bp.has_data
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_closed_raises_eoferror():
+    with make_buffered_pipe() as bp:
+        bp._mark_closed()
+        assert bp.has_data  # has_data is True when closed
+        try:
+            bp.recv()
+        except EOFError:
+            pass
+        else:
+            raise AssertionError("Expected EOFError after _mark_closed with empty buffer")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+def test_buffered_pipe_data_then_closed():
+    with make_buffered_pipe() as bp:
+        bp._push_data(b"last")
+        bp._mark_closed()
+        # Still readable while data remains
+        assert bp.recv() == b"last"
+        # Now closed and empty → EOFError
+        try:
+            bp.recv()
+        except EOFError:
+            pass
+        else:
+            raise AssertionError("Expected EOFError after draining a closed BufferedPipe")
