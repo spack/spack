@@ -97,10 +97,6 @@ class GlobalStateMarshaler:
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
-        # Freeze XDG environment variables before fork to prevent child processes
-        # from changing Spack's path resolution
-        import spack.util.path
-        spack.util.path.freeze()
         if self.is_forked:
             return
 
@@ -116,6 +112,8 @@ class GlobalStateMarshaler:
             self.env = None
 
     def restore(self):
+        import spack.util.path
+        spack.util.path.freeze()
         if self.is_forked:
             # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
             # and botocore connection pools are not fork-safe.

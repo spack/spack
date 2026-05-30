@@ -61,16 +61,16 @@ def freeze():
 
     Builds may set their own XDG_* env vars, which would otherwise change
     Spack's path resolution mid-build. Call this in the parent before
-    spawning a child process. After calling freeze(), the _resolve_location_var
-    function will use frozen values instead of checking os.environ.
+    spawning a child process. After calling freeze(), env var lookups
+    will use frozen values instead of checking os.environ.
 
     This prevents child processes from inadvertently changing where Spack
     looks for data/state/cache directories.
     """
     global _frozen_env
+
     xdg_vars = ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
     _frozen_env = {var: os.environ.get(var) for var in xdg_vars}
-    return _frozen_env.copy()
 
 
 def _resolve_location_var(location_key):

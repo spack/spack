@@ -194,7 +194,7 @@ class SetAnXdgVarAndReadDataHome:
         )
 
 
-def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance):
+def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config):
     """Test that subprocess inherits frozen path values from parent, not env vars.
 
     Build subprocesses may set XDG_* environment variables. We want to ensure that
@@ -204,8 +204,12 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance):
     This test modifies the global spack.paths.locations and must run serially.
     """
     import spack.subprocess_context
+    import spack.config
 
     home_dir, base_prefix = mock_spack_instance
+
+    # Create fresh config after monkeypatch to pick up new paths
+    spack.config.CONFIG = spack.config.create()
 
     # Expected data_home based on the home we set (without any XDG override)
     expected = str(pathlib.Path(home_dir) / ".local" / "share" / "spack")
