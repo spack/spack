@@ -905,6 +905,23 @@ def _warn_about_old_dotspack():
     def uses_old_dotspack(path):
         return path == old_dotspack or path.startswith(old_dotspack + os.sep)
 
+    # Check if user has explicitly configured $data_home, $state_home, or $cache_home
+    # to point to ~/.spack - if so, they've made a conscious choice and we shouldn't warn
+    import spack.util.path
+
+    for config_var in ["$data_home", "$state_home", "$cache_home"]:
+        try:
+            resolved = spack.util.path.substitute_config_variables(config_var)
+            if uses_old_dotspack(resolved):
+                tty.debug(
+                    f"Skip .spack warning: user explicitly configured "
+                    f"{config_var} to use ~/.spack (resolved to {resolved})"
+                )
+                return
+        except Exception:
+            # If substitution fails, just continue
+            pass
+
     # Check if any config scope is using ~/.spack (means explicit configuration)
     reasons = []
     for scope in spack.config.CONFIG.scopes.values():
@@ -920,31 +937,31 @@ def _warn_about_old_dotspack():
 
     # If we found backwards_compat usage, warn about it
     if reasons:
-        tty.warn(
-            "Spack is using the old ~/.spack directory layout.\n"
-            f"  Reasons: {', '.join(reasons)}\n"
-            "\n"
-            "If all spack instances are >= 1.2, you can use\n"
-            "\n"
-            "  spack migrate --clear\n"
-            "\n"
-            "to silence this warning (and you can stop reading).\n"
-            "\n"
-            "If you need both pre-1.2 and 1.2+ instances, you can run\n"
-            "\n"
-            "  spack migrate\n"
-            "\n"
-            "(without --clear) this will create a copy of the user config and\n"
-            "package repo for 1.2+ instances to use; that is usually fine, but\n"
-            "pre-1.2 instances and 1.2+ instances will have divergent config and\n"
-            "packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).\n"
-            "\n"
-            "You can run\n"
-            "\n"
-            "  spack migrate --i-need-old-spack\n"
-            "\n"
-            "for more info (including examples of what \"divergence\" means)."
-        )
+        tty.warn(f"""\
+Spack is using the old ~/.spack directory layout.
+  Reasons: {', '.join(reasons)}
+
+If all spack instances are >= 1.2, you can use
+
+  spack migrate --clear
+
+to silence this warning (and you can stop reading).
+
+If you need both pre-1.2 and 1.2+ instances, you can run
+
+  spack migrate
+
+(without --clear) this will create a copy of the user config and
+package repo for 1.2+ instances to use; that is usually fine, but
+pre-1.2 instances and 1.2+ instances will have divergent config and
+packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).
+
+You can run
+
+  spack migrate --i-need-old-spack
+
+for more info (including examples of what "divergence" means).
+""")
 
 
 def add_command_line_scopes(

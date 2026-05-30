@@ -54,11 +54,8 @@ Examples of divergence:
 You can avoid this divergence issue by forcing new Spack instances
 to also use ~/.spack (which will silence the warning).
 
-If a new instance sees SPACK_USER_CACHE_PATH=~/.spack, that will
-silence the warning.
-
-Other explicit uses of ~/.spack will also silence this warning
-(e.g. setting `config:locations:state:~/.spack`).
+Explicit configuration of ~/.spack will silence this warning
+(e.g. setting `config:locations:state` to `~/.spack`).
 """)
 
 
