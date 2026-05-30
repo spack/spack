@@ -47,8 +47,9 @@ properties: Dict[str, Any] = {
                         },
                         "backwards_compat": {
                             "type": "string",
-                            "description": "Fallback path to use if the primary path does not exist. "
-                            "Used for backwards compatibility when migrating config locations.",
+                            "description": "Fallback path to use if the primary path does not "
+                            "exist. Used for backwards compatibility when migrating config "
+                            "locations.",
                         },
                         "sha256": {
                             "type": "string",
