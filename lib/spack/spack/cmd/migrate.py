@@ -44,6 +44,10 @@ you have pre-1.2 Spack instances that cannot upgrade, you can run
 and 1.2+ instances will have divergent config (unless e.g.
 SPACK_DISABLE_LOCAL_CONFIG is set).
 
+Also note that after running `spack migrate` that pre-1.2 instances
+that upgrade to 1.2+ will automatically start using the migrated
+config.
+
 Examples of divergence:
 
 - pre-1.2 and 1.2+ instances may have different notions of what

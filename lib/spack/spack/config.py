@@ -1301,22 +1301,27 @@ class IncludePath(OptionalInclude):
     def __init__(self, entry: dict):
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
+        env_override = False
         if path_override_env_var and path_override_env_var in os.environ:
             path = os.environ[path_override_env_var]
+            env_override = True
         else:
             path = entry.get("path", "")
 
         context_prefix = f"({self.name}) " if self.name else ""
         context = f"{context_prefix}{path}"
-
         new_path = substitute_include_path(path, context)
         old_path = None
         backwards_compat = entry.get("backwards_compat", None)
         if backwards_compat:
             old_path = substitute_include_path(backwards_compat, context)
-
         self.backwards_compat_fallback = False
-        if old_path and os.path.exists(old_path) and not os.path.exists(new_path):
+        if (
+            not env_override
+            and old_path
+            and os.path.exists(old_path)
+            and not os.path.exists(new_path)
+        ):
             self.path = old_path
             self.backwards_compat_fallback = True
         else:
