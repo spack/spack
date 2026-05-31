@@ -1526,17 +1526,6 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     assert "test3" in includes
 
 
-@pytest.mark.xfail(reason="TODO: fix - user_cache_path resolution with layout detection")
-def test_user_cache_path_is_overridable(working_env, mutable_empty_config):
-    p = "/some/path"
-    os.environ["SPACK_STATE_HOME"] = p
-    # Need to create a new SpackPaths to pick up the env change
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
-    assert paths.user_cache_path == p
-
-
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
     os.environ["SPACK_STATE_HOME"] = ""
     from spack.paths import SpackPaths

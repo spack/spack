@@ -260,7 +260,7 @@ def test_no_warn_when_both_exist(mock_spack_instance):
     assert warning is None
 
 
-def test_no_warn_when_explicit_override(mock_spack_instance, monkeypatch):
+def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkeypatch):
     """Don't warn if SPACK_USER_CONFIG_PATH explicitly set to ~/.spack."""
     import spack.config
     import spack.main
@@ -270,9 +270,16 @@ def test_no_warn_when_explicit_override(mock_spack_instance, monkeypatch):
     dotspack = _ensure_dir(pathlib.Path(home_dir) / ".spack")
     # Don't create ~/.config/spack
 
-    monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(dotspack))
+    os.environ["SPACK_USER_CONFIG_PATH"] = str(dotspack)
 
     spack.config.CONFIG = spack.config.create()
     warning = spack.main._old_dotspack_warning()
 
     assert warning is None
+
+
+def test_user_cache_path_is_overridable(working_env, mock_spack_instance):
+    p = "/some/path"
+    os.environ["SPACK_STATE_HOME"] = p
+    spack.config.CONFIG = spack.config.create()
+    assert spack.paths.user_cache_path == p
