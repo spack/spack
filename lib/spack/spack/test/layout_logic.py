@@ -76,7 +76,7 @@ def test_old_layout_detected(mock_spack_instance):
     old_install = os.path.join(base_prefix, "opt", "spack")
     os.makedirs(old_install, exist_ok=True)
     # Add a file so dir_is_occupied returns True
-    with open(os.path.join(old_install, "dummy_install"), "w") as f:
+    with open(os.path.join(old_install, "dummy_install"), "w", encoding="utf-8") as f:
         f.write("test")
 
     # Re-detect layout
