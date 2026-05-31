@@ -1226,6 +1226,7 @@ def test_system_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = p
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
     assert paths.system_config_path == p
 
@@ -1233,6 +1234,7 @@ def test_system_config_path_is_overridable(working_env):
 def test_system_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
     assert os.sep + os.path.join("etc", "spack") == paths.system_config_path
 
@@ -1241,6 +1243,7 @@ def test_user_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_USER_CONFIG_PATH"] = p
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
     assert p == paths.user_config_path
 
@@ -1248,6 +1251,7 @@ def test_user_config_path_is_overridable(working_env):
 def test_user_config_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
     assert os.path.expanduser(os.path.join("~", ".config", "spack")) == paths.user_config_path
 
@@ -1528,6 +1532,7 @@ def test_user_cache_path_is_overridable(working_env, mutable_empty_config):
     os.environ["SPACK_STATE_HOME"] = p
     # Need to create a new SpackPaths to pick up the env change
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
     assert paths.user_cache_path == p
 
@@ -1535,8 +1540,11 @@ def test_user_cache_path_is_overridable(working_env, mutable_empty_config):
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
     os.environ["SPACK_STATE_HOME"] = ""
     from spack.paths import SpackPaths
+
     paths = SpackPaths()
-    assert os.path.expanduser(os.path.join("~", ".local", "state", "spack")) == paths.user_cache_path
+    assert (
+        os.path.expanduser(os.path.join("~", ".local", "state", "spack")) == paths.user_cache_path
+    )
 
 
 def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):
