@@ -892,14 +892,18 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
 _ENV = object()
 
 
-def _warn_about_old_dotspack():
-    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+def _old_dotspack_warning():
+    """Check if ~/.spack is in use and return a warning message if so.
+
+    Returns:
+        str or None: Warning message if ~/.spack is in use, None otherwise
+    """
     old_dotspack = os.path.expanduser("~/.spack")
 
     # Don't warn if it doesn't exist
     if not os.path.exists(old_dotspack):
         tty.debug("Skip .spack warning: no ~/.spack directory")
-        return
+        return None
 
     # Helper to check if old_dotspack is a prefix
     def uses_old_dotspack(path):
@@ -917,7 +921,7 @@ def _warn_about_old_dotspack():
                     f"Skip .spack warning: user explicitly configured "
                     f"{config_var} to use ~/.spack (resolved to {resolved})"
                 )
-                return
+                return None
         except Exception:
             # If substitution fails, just continue
             pass
@@ -933,11 +937,11 @@ def _warn_about_old_dotspack():
                 tty.debug(
                     f"Skip .spack warning: scope {scope.name} includes ~/.spack: {scope.path}"
                 )
-                return
+                return None
 
-    # If we found backwards_compat usage, warn about it
+    # If we found backwards_compat usage, return the warning message
     if reasons:
-        tty.warn(f"""\
+        return f"""\
 Spack is using the old ~/.spack directory layout.
   Reasons: {", ".join(reasons)}
 
@@ -961,7 +965,15 @@ You can run
   spack migrate --i-need-old-spack
 
 for more info (including examples of what "divergence" means).
-""")
+"""
+    return None
+
+
+def _warn_about_old_dotspack():
+    """Warn if ~/.spack exists and is in use (not explicitly configured)."""
+    warning = _old_dotspack_warning()
+    if warning:
+        tty.warn(warning)
 
 
 def add_command_line_scopes(

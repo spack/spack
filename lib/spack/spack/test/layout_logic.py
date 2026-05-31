@@ -224,7 +224,7 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config)
     assert proc.exitcode == 0, "Subprocess test failed"
 
 
-def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance, capsys):
+def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance):
     """Warn if ~/.spack exists but ~/.config/spack doesn't."""
     import spack.config
     import spack.main
@@ -235,14 +235,14 @@ def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance, capsys
     # Don't create ~/.config/spack
 
     spack.config.CONFIG = spack.config.create()
-    spack.main._warn_about_old_dotspack()
+    warning = spack.main._old_dotspack_warning()
 
-    captured = capsys.readouterr()
-    assert "~/.spack" in captured.err
-    assert "spack migrate" in captured.err
+    assert warning is not None
+    assert "~/.spack" in warning
+    assert "spack migrate" in warning
 
 
-def test_no_warn_when_both_exist(mock_spack_instance, capsys):
+def test_no_warn_when_both_exist(mock_spack_instance):
     """Don't warn if both ~/.spack and ~/.config/spack exist."""
     import spack.config
     import spack.main
@@ -253,13 +253,12 @@ def test_no_warn_when_both_exist(mock_spack_instance, capsys):
     _ensure_dir(pathlib.Path(home_dir) / ".config" / "spack")
 
     spack.config.CONFIG = spack.config.create()
-    spack.main._warn_about_old_dotspack()
+    warning = spack.main._old_dotspack_warning()
 
-    captured = capsys.readouterr()
-    assert "~/.spack" not in captured.err or "spack migrate" not in captured.err
+    assert warning is None
 
 
-def test_no_warn_when_explicit_override(mock_spack_instance, monkeypatch, capsys):
+def test_no_warn_when_explicit_override(mock_spack_instance, monkeypatch):
     """Don't warn if SPACK_USER_CONFIG_PATH explicitly set to ~/.spack."""
     import spack.config
     import spack.main
@@ -272,7 +271,6 @@ def test_no_warn_when_explicit_override(mock_spack_instance, monkeypatch, capsys
     monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(dotspack))
 
     spack.config.CONFIG = spack.config.create()
-    spack.main._warn_about_old_dotspack()
+    warning = spack.main._old_dotspack_warning()
 
-    captured = capsys.readouterr()
-    assert "spack migrate" not in captured.err
+    assert warning is None
