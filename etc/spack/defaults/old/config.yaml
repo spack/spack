@@ -13,10 +13,13 @@
 # directly.
 # -------------------------------------------------------------------------
 config:
-  locations:
-    data: $spack
-    state: "~/.spack"
-    cache: $spack/var
+  locations::
+    data:
+    - $spack
+    state:
+    - "~/.spack"
+    cache:
+    - $spack/var
 
   install_tree:
     root: $spack/opt/spack

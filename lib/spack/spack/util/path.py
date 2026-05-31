@@ -80,7 +80,7 @@ def _resolve_location_var(location_key):
         location_key: one of 'data', 'cache', or 'state'
 
     Returns:
-        A resolved path string, or NOMATCH if none can be resolved.
+        A resolved path string or None
     """
     # break circular imports
     import spack.config
@@ -90,7 +90,7 @@ def _resolve_location_var(location_key):
 
     # If it's not a list, just return it
     if not isinstance(location_list, list):
-        return location_list if location_list else NOMATCH
+        return location_list
 
     # Process each item in the list
     for item in location_list:
@@ -134,8 +134,7 @@ def _resolve_location_var(location_key):
         # If it's just a static string (like "~/.local/share/spack"), return it
         return substitute_path_variables(item)
 
-    # If we went through the list without returning anything, return NOMATCH
-    return NOMATCH
+    return None
 
 
 # Substitutions to perform
