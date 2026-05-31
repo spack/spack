@@ -7,6 +7,7 @@ import glob
 import hashlib
 import io
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -740,8 +741,10 @@ class Stage(AbstractStage):
         # Proactively chdir to the parent before removal so the worker's CWD doesn't block rmtree.
         if sys.platform == "win32":
             try:
-                if os.getcwd().lower().startswith(self.path.lower()):
-                    os.chdir(os.path.dirname(self.path))
+                cwd = pathlib.Path(os.getcwd()).resolve()
+                stage = pathlib.Path(self.path).resolve()
+                if cwd == stage or stage in cwd.parents:
+                    os.chdir(stage.parent)
             except OSError:
                 pass
         remove_linked_tree(self.path)
