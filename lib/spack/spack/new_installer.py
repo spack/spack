@@ -22,12 +22,9 @@ of logs), and for output from the build process."""
 
 import abc
 import codecs
-from ctypes import wintypes
-import ctypes
 import glob
 import io
 import json
-import msvcrt
 import multiprocessing
 import os
 import re
@@ -35,14 +32,12 @@ import selectors
 import shlex
 import shutil
 import signal
-from socket import socket
+import socket
 import sys
 import tempfile
-import termios
 import threading
 import time
 import traceback
-import tty
 import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
@@ -72,7 +67,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.hooks
 import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty.log as slog
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
@@ -94,11 +88,18 @@ from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
-
 IS_WINDOWS = sys.platform == "win32"
 
-if not IS_WINDOWS:
+if IS_WINDOWS:
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    from spack.llnl.util import win_io
+else:
     import fcntl
+    import termios
+    import tty
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -126,6 +127,42 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 
 #: Suffix for temporary cleanup during failed install
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
+
+
+def _conn_to_text_stream(conn: "Connection") -> io.TextIOWrapper:
+    """Open the write end of a Connection as a line-buffered text stream.
+
+    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
+    We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() (nulling out
+    Connection._handle so PipeConnection.__del__ doesn't double-close it) and then
+    wrap the resulting fd with os.fdopen().  On POSIX we wrap the fd directly with
+    closefd=False so the Connection retains ownership.
+    """
+    if IS_WINDOWS:
+        handle = conn.fileno()
+        conn._handle = None  # transfer ownership to CRT
+        fd = msvcrt.open_osfhandle(handle, os.O_WRONLY)
+        return os.fdopen(fd, "w", buffering=1)
+    return os.fdopen(conn.fileno(), "w", buffering=1, closefd=False)
+
+
+def _conn_write(conn: "Connection", data: bytes) -> None:
+    """Write bytes to a pipe Connection.
+
+    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd,
+    so os.write() cannot be used directly.  We duplicate the handle to obtain a CRT-owned
+    copy (following StreamWrapper.redirect_stream in log.py), write through it, then close
+    the duplicate; the Connection's original handle is left intact.
+    """
+    if IS_WINDOWS:
+        dup_h = win_io.dup_fh(conn.fileno())
+        fd = msvcrt.open_osfhandle(dup_h, os.O_WRONLY)
+        try:
+            os.write(fd, data)
+        finally:
+            os.close(fd)
+    else:
+        os.write(conn.fileno(), data)
 
 
 class ExitCode:
@@ -227,7 +264,7 @@ def get_selectors() -> selectors.BaseSelector:
     """Return a new selector for monitoring child process output."""
     selector = selectors.DefaultSelector()
     if IS_WINDOWS:
-        selector = slog.HybridWindowsSelector()
+        selector = win_io.HybridWindowsSelector()
     return selector
 
 
@@ -252,27 +289,28 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
 def read_from_key(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
     """
     Reads data from Unix (raw fds) or Windows (BufferedPipe/Sockets).
+
+    Returns b"" on EOF (including when BufferedPipe raises EOFError).
     """
-    if hasattr(key.fileobj, "read"):
-        data = key.fileobj.read(max_size)
-        if isinstance(data, str):
-            return data.encode('utf-8')
-        return data
+    try:
+        if hasattr(key.fileobj, "read"):
+            data = key.fileobj.read(max_size)
+            if isinstance(data, str):
+                return data.encode("utf-8")
+            return data
 
-    if hasattr(key.fileobj, "recv"):
-        return key.fileobj.recv(max_size)
+        if hasattr(key.fileobj, "recv"):
+            return key.fileobj.recv(max_size)
 
-    return os.read(key.fd, max_size)
+        return os.read(key.fd, max_size)
+    except EOFError:
+        return b""
 
 
 def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
-    selector = get_selectors()
-    selector.register(log_r, selectors.EVENT_READ)
-    selector.register(control_r, selectors.EVENT_READ)
-
     try:
         with log_file, open(parent_w, "wb", closefd=False) as parent:
             while True:
@@ -296,6 +334,7 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
     except OSError:  # do not raise
         pass
     finally:
+        log_file.close()
         os.close(log_r)
 
 
@@ -310,19 +349,88 @@ class Tee:
         # redirect their file descriptors in addition to the original fds 1 and 2.
         fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
         self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The path of the log file
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
-        r, w = os.pipe()
+        r, w = self._create_pipe()
+        self._control_fd, parent_fd = self._acquire_connection_fds()
         self.tee_thread = threading.Thread(
-            target=tee,
-            args=(self.control.fileno(), r, log_file, self.parent.fileno()),
-            daemon=True,
+            target=tee, args=(self._control_fd, r, self.log_path, parent_fd), daemon=True
         )
         self.tee_thread.start()
         for fd in fds:
             os.dup2(w, fd)
-        os.close(w)
+        self._redirect_std_handles(w)
+        os.close(w)  # closes dup_h_write via CRT on Windows; h_write remains open there
+
+    def _create_pipe(self) -> Tuple[int, int]:
+        """Create the tee pipe pair and return (r_fd, w_fd) as CRT file descriptors.
+
+        On Windows, os.pipe() produces anonymous pipes that don't support overlapped I/O
+        and therefore can't be monitored by IOCPSelector.  We use asyncio.windows_utils.pipe()
+        to get a named pipe pair whose read end has FILE_FLAG_OVERLAPPED.  We also duplicate
+        h_write before converting it to a CRT fd so that the original handle can later be
+        passed to SetStdHandle (which must own a live Win32 HANDLE, not a CRT fd).
+        """
+        if IS_WINDOWS:
+            import asyncio.windows_utils
+
+            h_read, h_write = asyncio.windows_utils.pipe(overlapped=(True, False))
+            r = msvcrt.open_osfhandle(h_read, os.O_RDONLY)
+            dup_h_write = win_io.dup_fh(h_write)
+            w = msvcrt.open_osfhandle(dup_h_write, os.O_WRONLY)
+            self._h_write = h_write  # retained for SetStdHandle and CloseHandle in close()
+        else:
+            r, w = os.pipe()
+        return r, w
+
+    def _acquire_connection_fds(self) -> Tuple[int, int]:
+        """Return (control_fd, parent_fd) as CRT file descriptors.
+
+        On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
+        We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() and null out
+        Connection._handle so that PipeConnection.__del__ doesn't double-close the handle.
+        """
+        if IS_WINDOWS:
+            control_handle = self.control.fileno()
+            self.control._handle = None  # transfer ownership to CRT
+            control_fd = msvcrt.open_osfhandle(control_handle, os.O_RDONLY)
+            parent_handle = self.parent.fileno()
+            self.parent._handle = None  # transfer ownership to CRT
+            parent_fd = msvcrt.open_osfhandle(parent_handle, os.O_WRONLY)
+        else:
+            control_fd = self.control.fileno()
+            parent_fd = self.parent.fileno()
+        return control_fd, parent_fd
+
+    def _redirect_std_handles(self, w: int) -> None:
+        """On Windows, save current Win32 std handles and redirect them to the pipe write end.
+
+        subprocess.Popen(stdout=None) inherits Win32 standard handles set via SetStdHandle,
+        not the CRT fds redirected by os.dup2() above.  We must redirect both so that child
+        processes (nmake, cmake, etc.) write to the tee pipe rather than the original console.
+        The write handle is made inheritable first so child processes can use it directly.
+        """
+        if IS_WINDOWS:
+            self._saved_win32_stdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
+            self._saved_win32_stderr = win_io.GetStdHandle(win_io.STD_ERROR_HANDLE)
+            os.set_handle_inheritable(self._h_write, True)
+            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._h_write)
+            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._h_write)
+
+    def _restore_std_handles(self) -> None:
+        """On Windows, restore the Win32 std handles saved by _redirect_std_handles."""
+        if IS_WINDOWS:
+            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._saved_win32_stdout)
+            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._saved_win32_stderr)
+            win_io.CloseHandle(self._h_write)
+
+    def _release_connection_fds(self) -> None:
+        """Close or release the control connection after the tee thread has joined."""
+        if IS_WINDOWS:
+            # CRT owns the HANDLE (transferred in _acquire_connection_fds); close the fd.
+            os.close(self._control_fd)
+        else:
+            self.control.close()
 
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
@@ -334,9 +442,11 @@ class Tee:
         for fd, saved_fd in self.saved_fds.items():
             os.dup2(saved_fd, fd)
             os.close(saved_fd)
+        # Restore Win32 handles after dup2 (which closes the pipe write end and lets the tee
+        # thread drain) but before join(), so the thread sees EOF before we wait for it.
+        self._restore_std_handles()
         self.tee_thread.join()
-        # Only then close the other fds.
-        self.control.close()
+        self._release_connection_fds()
         self.parent.close()
 
 
@@ -472,7 +582,7 @@ class PrefixPivoter:
         return os.path.lexists(path)
 
     def _rename(self, src: str, dst: str) -> None:
-        os.rename(src, dst)
+        fs.rename(src, dst)
 
     def _mkdtemp(self, dir: str, prefix: str, suffix: str) -> str:
         return tempfile.mkdtemp(dir=dir, prefix=prefix, suffix=suffix)
@@ -538,21 +648,13 @@ def worker_function(
 
     global_state.restore()
 
-    # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
-    # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
-        #######
-        #######
-        #######
-        # not on Windows
-    os.setpgid(0, 0)
+    if not IS_WINDOWS:
+        # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
+        # contrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        os.setpgid(0, 0)
 
-    # Reset SIGTSTP to default in case the parent had a custom handler.
-            #######
-        #######
-        #######
-        # not on Windows
-        # need special handling for signals here
-    signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        # Reset SIGTSTP to default in case the parent had a custom handler.
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -560,58 +662,56 @@ def worker_function(
         # __exit__ and finally blocks run after the child processes have stopped, meaning that we
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
-                #######
-        #######
-        #######
-        # not on Windows
-        # need special handling for Windows here
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
-        #######
-        #######
-        #######
-        # not on Windows
-        os.killpg(0, signal.SIGTERM)
-
-        try:
-            while True:
-                os.waitpid(-1, 0)
-        except ChildProcessError:
-            pass
+        if not IS_WINDOWS:
+            os.killpg(0, signal.SIGTERM)
+            try:
+                while True:
+                    os.waitpid(-1, 0)
+            except ChildProcessError:
+                pass
 
         raise KeyboardInterrupt("Installation interrupted")
 
-            #######
-        #######
-        #######
-        # not on Windows
-    # more special windows sauce
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     os.environ["MAKEFLAGS"] = makeflags
 
-    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
-    # much ourselves, but what we print should appear before output from `make` and other build
-    # tools.
-    sys.stdout = os.fdopen(
-        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
-    )
-    sys.stderr = os.fdopen(
-        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
-    )
+    # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
+    # line-buffered wrappers after the Tee starts.
+    _stdout_enc = sys.stdout.encoding or "utf-8"
+    _stderr_enc = sys.stderr.encoding or "utf-8"
 
-    # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
-    # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
+    # Detach stdin from the terminal like `./build < /dev/null`.
     devnull_fd = os.open(os.devnull, os.O_RDONLY)
     os.dup2(devnull_fd, 0)
     os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(echo_control, parent, log_path)
+    # Wrap setup in a try/except: any crash here is outside the main try/except block below, so
+    # exceptions would escape silently (no tee → no log). Instead, write the traceback directly
+    # to log_path (already created by tempfile.mkstemp in the parent) so the user can diagnose.
+    tee = None
+    state_stream = None
+    try:
+        tee = Tee(echo_control, parent, log_path)
+        # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
+        # than ConsoleIO (WriteConsoleW).  On Windows, if fds 1/2 are still console handles when
+        # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
+        # ERROR_INVALID_FUNCTION.  Post-dup2 the fds are pipe handles, so FileIO is chosen.
+        sys.stdout = os.fdopen(1, "w", buffering=1, encoding=_stdout_enc, closefd=False)
+        sys.stderr = os.fdopen(2, "w", buffering=1, encoding=_stderr_enc, closefd=False)
+        state_stream = _conn_to_text_stream(state)
+    except Exception:
+        with open(log_path, "a") as _log:
+            _log.write("worker_function: Tee/state_stream setup failed:\n")
+            traceback.print_exc(file=_log)
+        if tee is not None:
+            tee.close()
+        sys.exit(ExitCode.BUILD_ERROR)
 
-    # Use closedfd=false because of the connection objects. Use line buffering.
-    state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -643,11 +743,17 @@ def worker_function(
     except BinaryCacheMiss:
         exit_code = ExitCode.BUILD_CACHE_MISS
     except BaseException:
-        traceback.print_exc(limit=-4)
+        traceback.print_exc()
         exit_code = ExitCode.BUILD_ERROR
     finally:
-        tee.close()
-        state_stream.close()
+        try:
+            tee.close()
+        except Exception:
+            pass
+        try:
+            state_stream.close()
+        except Exception:
+            pass
 
     if exit_code == ExitCode.SUCCESS:
         # Try to install the compressed log file
@@ -940,8 +1046,14 @@ class JobServer:
         os.set_inheritable(self.w, True)
         # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
         # Connection objects close the fd as they are garbage collected, so store them.
-        self.r_conn = Connection(self.r)
-        self.w_conn = Connection(self.w)
+        # On Windows, os.pipe() returns CRT fds (not Windows HANDLEs), so Connection() wrappers
+        # would be misinterpreted and cause pickling errors during process spawn.
+        if IS_WINDOWS:
+            self.r_conn = None
+            self.w_conn = None
+        else:
+            self.r_conn = Connection(self.r)
+            self.w_conn = Connection(self.w)
 
     def _setup(self) -> None:
 
@@ -980,6 +1092,11 @@ class JobServer:
 
     def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
         """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
+        if IS_WINDOWS and not gmake:
+            # nmake reads MAKEFLAGS but rejects GNU make jobserver flags. Only emit
+            # them on Windows when the package explicitly depends on gmake.
+            # Always true for now, but not always
+            return ""
         if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
             return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
         elif not gmake or gmake.satisfies("@4.0:"):
@@ -1008,9 +1125,21 @@ class JobServer:
         self.target_jobs -= 1
         self.maybe_discard_tokens()
 
+    def _available_tokens(self) -> int:
+        """Return the number of tokens immediately readable without blocking.
+
+        On Windows, anonymous pipes don't support non-blocking reads: os.read() blocks
+        until data is available.  We must peek at the pipe first to avoid deadlocking the
+        event loop.  On POSIX the pipe fd is set non-blocking, so os.read() raises
+        BlockingIOError immediately; returning sys.maxsize lets callers proceed to that path.
+        """
+        if IS_WINDOWS:
+            return win_io._pipe_bytes_available(self.r)
+        return sys.maxsize
+
     def maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
-        to_discard = self.num_jobs - self.target_jobs
+        """Try to reduce parallelism by discarding tokens."""
+        to_discard = min(self.num_jobs - self.target_jobs, self._available_tokens())
         if to_discard <= 0:
             return
         try:
@@ -1022,6 +1151,9 @@ class JobServer:
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
         tokens actually acquired (may be less than requested, or zero)."""
+        jobs = min(jobs, self._available_tokens())
+        if not jobs:
+            return 0
         try:
             num_acquired = len(os.read(self.r, jobs))
             self.tokens_acquired += num_acquired
@@ -1059,8 +1191,10 @@ class JobServer:
                         stacklevel=2,
                     )
 
-        self.r_conn.close()
-        self.w_conn.close()
+        if self.r_conn is not None:
+            self.r_conn.close()
+        if self.w_conn is not None:
+            self.w_conn.close()
 
         # Remove the FIFO if we created it.
         if self.created and self.fifo_path:
@@ -1072,6 +1206,25 @@ class JobServer:
                 os.rmdir(os.path.dirname(self.fifo_path))
             except OSError:
                 pass
+
+
+def _make_unidirectional_pipe() -> Tuple["Connection", "Connection"]:
+    """Return a (read_conn, write_conn) pipe pair compatible with the platform's selector.
+
+    On Windows, multiprocessing.Pipe() creates anonymous pipes that lack the
+    FILE_FLAG_OVERLAPPED attribute required by IOCPSelector.  asyncio.windows_utils.pipe()
+    creates a named pipe pair with an overlapped read end, which IOCP can monitor.
+    """
+    if IS_WINDOWS:
+        import asyncio.windows_utils
+        from multiprocessing.connection import PipeConnection
+
+        h_r, h_w = asyncio.windows_utils.pipe(overlapped=(True, False))
+        return (
+            PipeConnection(h_r, readable=True, writable=False),
+            PipeConnection(h_w, readable=False, writable=True),
+        )
+    return Pipe(duplex=False)
 
 
 def start_build(
@@ -1094,10 +1247,9 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    # Create pipes for the child's output, state reporting, and control.
-    state_r_conn, state_w_conn = Pipe(duplex=False)
-    output_r_conn, output_w_conn = Pipe(duplex=False)
-    control_r_conn, control_w_conn = Pipe(duplex=False)
+    state_r_conn, state_w_conn = _make_unidirectional_pipe()
+    output_r_conn, output_w_conn = _make_unidirectional_pipe()
+    control_r_conn, control_w_conn = _make_unidirectional_pipe()
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
@@ -1140,9 +1292,10 @@ def start_build(
     output_w_conn.close()
     control_r_conn.close()
 
-    # Set the read ends to non-blocking: in principle redundant with epoll/kqueue, but safer.
-    os.set_blocking(output_r_conn.fileno(), False)
-    os.set_blocking(state_r_conn.fileno(), False)
+    # Non-blocking on the read ends: not needed on Windows.
+    if not IS_WINDOWS:
+        os.set_blocking(output_r_conn.fileno(), False)
+        os.set_blocking(state_r_conn.fileno(), False)
 
     return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
 
@@ -1176,8 +1329,18 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str,
         return None
 
 
-def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
-    """Create a new jobserver FIFO with the specified number of job tokens."""
+def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, Optional[str]]:
+    """Create a new jobserver FIFO with the specified number of job tokens.
+
+    On Windows, where named FIFOs are not available, an anonymous pipe is used
+    and ``fifo_path`` is returned as ``None``.
+    """
+    if IS_WINDOWS:
+        read_fd, write_fd = os.pipe()
+        # write num_jobs - 1 tokens, because the first job is implicit
+        os.write(write_fd, b"+" * (num_jobs - 1))
+        return read_fd, write_fd, None
+
     tmpdir = tempfile.mkdtemp()
     fifo_path = os.path.join(tmpdir, "jobserver_fifo")
 
@@ -1273,7 +1436,7 @@ class BuildStatus:
         self,
         total: int,
         stdout: io.TextIOWrapper = sys.stdout,  # type: ignore[assignment]
-        get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
+        get_terminal_size: Callable[[], os.terminal_size] = shutil.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
         color: Optional[bool] = None,
@@ -1285,6 +1448,13 @@ class BuildStatus:
         self.completed = 0
         self.builds: Dict[str, BuildInfo] = {}
         self.finished_builds: List[BuildInfo] = []
+        #: Preserved start times for builds removed mid-flight (e.g. binary-cache miss → source).
+        #: Allows the source build to continue the elapsed-time counter from the original attempt.
+        self._preserved_start: Dict[str, float] = {}
+        #: Preserved active_area_rows across a remove_build/add_build cycle (e.g. cache-miss →
+        #: source retry). Prevents an intermediate 0-build draw from shrinking active_area_rows
+        #: and triggering a terminal scroll when the display area sits at the bottom of the window.
+        self._preserved_area_rows: int = 0
         self.spinner_chars = ["|", "/", "-", "\\"]
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
@@ -1331,25 +1501,32 @@ class BuildStatus:
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
-        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, int(self.get_time()))
-        self.builds[spec.dag_hash()] = build_info
+        dag_hash = spec.dag_hash()
+        preserved = self._preserved_start.pop(dag_hash, None)
+        start_time = preserved if preserved is not None else int(self.get_time())
+        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, start_time)
+        self.builds[dag_hash] = build_info
+        self._preserved_area_rows = 0
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
         if self.verbose and not self.tracked_build_id and control_w_conn is not None:
-            self.tracked_build_id = spec.dag_hash()
+            self.tracked_build_id = dag_hash
             try:
-                os.write(control_w_conn.fileno(), b"1")
+                _conn_write(control_w_conn, b"1")
             except OSError:
                 pass
 
     def remove_build(self, build_id: str) -> None:
         """Remove a build from the display (e.g. after a binary cache miss before retry)."""
-        self.builds.pop(build_id, None)
+        removed = self.builds.pop(build_id, None)
+        if removed is not None:
+            self._preserved_start[build_id] = removed.start_time
         if self.tracked_build_id == build_id:
             self.tracked_build_id = ""
             if not self.overview_mode:
                 self.overview_mode = True
+        self._preserved_area_rows = self.active_area_rows
         self.dirty = True
 
     def toggle(self) -> None:
@@ -1368,7 +1545,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    _conn_write(conn, b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -1433,7 +1610,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    _conn_write(conn, b"0")
             except (KeyError, OSError):
                 pass
 
@@ -1465,7 +1642,7 @@ class BuildStatus:
             try:
                 conn = new_build.control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"1")
+                    _conn_write(conn, b"1")
             except (KeyError, OSError):
                 pass
 
@@ -1554,7 +1731,12 @@ class BuildStatus:
 
         for build_id in list(self.builds):
             build_info = self.builds[build_id]
-            if build_info.state == "failed" or build_info.finished_time is None:
+            if build_info.finished_time is None:
+                continue
+            # During normal operation, failed builds stay in the active area so the user can
+            # see them while other builds are still running. During finalize, promote ALL
+            # completed builds (including failed) to terminal history via finished_builds.
+            if build_info.state == "failed" and not finalize:
                 continue
 
             if finalize or now >= build_info.finished_time:
@@ -1646,6 +1828,13 @@ class BuildStatus:
 
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
+
+        # When updating current active builds or status an intermediate draw with zero active
+        # builds would shrink total_lines needed threshhold. Pad with blank lines so we stay
+        # at the proper value and cursor calculation remains correct in the next draw
+        # This prevents terminal scroll artifacts on Windows.
+        while self.total_lines < self._preserved_area_rows:
+            self._println(buffer)
 
         # Clear any remaining lines from previous display
         buffer.write("\033[0J")
@@ -2317,6 +2506,20 @@ class BaseTerminalState(abc.ABC):
         self.on_suspend = on_suspend
         self.on_resume = on_resume
 
+    @classmethod
+    def stdout_is_interactive(cls) -> bool:
+        """Return True if stdout is connected to an interactive terminal."""
+        return sys.stdout.isatty()
+
+    @classmethod
+    def stdin_is_interactive(cls) -> bool:
+        """Return True if stdin is connected to an interactive terminal."""
+        return sys.stdin.isatty()
+
+    def create_stdin_reader(self) -> "StdinReader":
+        """Return a StdinReader that reads from the interactive input source."""
+        return StdinReader(sys.stdin.fileno())
+
     @abc.abstractmethod
     def setup(self) -> None:
         """Set up terminal for interactive TUI mode."""
@@ -2341,6 +2544,7 @@ class BaseTerminalState(abc.ABC):
     def handle_continue(self) -> None:
         """Detect foreground/background state and adjust."""
         pass
+
 
 class TerminalState(BaseTerminalState):
     """Manages terminal settings, stdin selector registration, and suspend/resume signals.
@@ -2490,56 +2694,31 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
             pass
 
 
-
-class ConsoleReader:
-    """Bridges blocking Windows console input to the Hybrid Selector via a socket pair."""
-    def __init__(self, selector: slog.HybridWindowsSelector):
-        self.selector = selector
-        self.rsock, self.wsock = socket.socketpair()
-        self.rsock.setblocking(False)
-        self.selector.register(self.rsock, selectors.EVENT_READ, "stdin")
-        self._running = True
-        self._last_size = shutil.get_terminal_size()
-        self.thread = threading.Thread(target=self._read_console, daemon=True)
-        self.thread.start()
-
-    def _read_console_and_poll_size(self):
-        while self._running:
-            try:
-                # 1. Read Keystrokes
-                if msvcrt.kbhit():
-                    char = msvcrt.getch()
-                    if char in (b'\x00', b'\xe0'):
-                        char += msvcrt.getch()
-                    self.stdin_wsock.sendall(char)
-                else:
-                    # 2. Poll for Resizes
-                    current_size = shutil.get_terminal_size()
-                    if current_size != self._last_size:
-                        self._last_size = current_size
-                        # Spoof the Unix SIGWINCH behavior!
-                        self.sigwinch_wsock.sendall(b"\x00")
-                    
-                    time.sleep(0.01)
-            except Exception:
-                break
-
-    def close(self):
-        self._running = False
-        try:
-            self.selector.unregister(self.rsock)
-        except Exception:
-            pass
-        self.wsock.close()
-        self.rsock.close()
-
-
 class WindowsTerminalState(BaseTerminalState):
     """Terminal State management class for Windows"""
+
+    @classmethod
+    def stdout_is_interactive(cls) -> bool:
+        """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY,
+        wraps child I/O in pipes but forwards console API calls."""
+        mode = wintypes.DWORD()
+        handle = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
+        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))
+
+    @classmethod
+    def stdin_is_interactive(cls) -> bool:
+        mode = wintypes.DWORD()
+        handle = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)
+        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))
+
+    def create_stdin_reader(self) -> "StdinReader":
+        """read key inputs from socket pair"""
+        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)
+
     def __init__(
         self,
-        selector: slog.HybridWindowsSelector,
-        build_status,  # Replace with actual typing
+        selector: "win_io.HybridWindowsSelector",
+        build_status: BuildStatus,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
@@ -2547,19 +2726,19 @@ class WindowsTerminalState(BaseTerminalState):
         self.build_status = build_status
         self.on_suspend = on_suspend
         self.on_resume = on_resume
-        
-        self.hStdin = slog.GetStdHandle(slog.STD_INPUT_HANDLE)
-        self.hStdout = slog.GetStdHandle(slog.STD_OUTPUT_HANDLE)
-        
+
+        self.hStdin = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)
+        self.hStdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
+
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
-        
-        slog.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        slog.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+
+        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        win_io.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
 
         self.stdin_r, self.stdin_w = socket.socketpair()
         self.stdin_r.setblocking(False)
-        
+
         # 2. Create the fake SIGWINCH sockets
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
@@ -2568,8 +2747,8 @@ class WindowsTerminalState(BaseTerminalState):
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
-        new_out_mode = self.old_stdout_settings.value | slog.ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        slog.SetConsoleMode(self.hStdout, new_out_mode)
+        new_out_mode = self.old_stdout_settings.value | win_io.ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        win_io.SetConsoleMode(self.hStdout, new_out_mode)
 
         # Register the fake sigwinch pipe with the exact same name Unix uses
         self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
@@ -2579,30 +2758,33 @@ class WindowsTerminalState(BaseTerminalState):
 
     def teardown(self) -> None:
         """Restore console mode and shut down bridge."""
-        slog.SetConsoleMode(self.hStdin, self.old_stdin_settings)
-        slog.SetConsoleMode(self.hStdout, self.old_stdout_settings)
+        win_io.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
+        win_io.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
         if self.console_reader:
             self.console_reader.close()
             self.console_reader = None
-            
-        for fd in (self.stdin_r, self.sigwinch_r):
-            if fd in self.selector.get_map():
-                self.selector.unregister(fd)
-            fd.close()
+
+        for sock in (self.stdin_r, self.sigwinch_r):
+            try:
+                self.selector.unregister(sock)
+            except KeyError:
+                pass
+            sock.close()
 
     def enter_foreground(self) -> None:
         if not self.build_status.headless:
             return
 
-        slog.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        new_in_mode = self.old_stdin_settings.value & ~(slog.ENABLE_LINE_INPUT | slog.ENABLE_ECHO_INPUT)
-        slog.SetConsoleMode(self.hStdin, new_in_mode)
+        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        disable = win_io.ENABLE_LINE_INPUT | win_io.ENABLE_ECHO_INPUT
+        new_in_mode = self.old_stdin_settings.value & ~disable
+        win_io.SetConsoleMode(self.hStdin, new_in_mode)
 
         # Register stdin and start the polling thread
-        if sys.stdin.isatty() and not self.console_reader:
+        if self.stdin_is_interactive() and not self.console_reader:
             self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
-            self.console_reader = ConsoleReader(self.stdin_w, self.sigwinch_w)
+            self.console_reader = win_io.ConsoleReader(self.stdin_w, self.sigwinch_w)
 
         self.build_status.headless = False
         self.build_status.dirty = True
@@ -2612,15 +2794,23 @@ class WindowsTerminalState(BaseTerminalState):
         if self.console_reader:
             self.console_reader.close()
             self.console_reader = None
+            try:
+                self.selector.unregister(self.stdin_r)
+            except KeyError:
+                pass
         self.build_status.headless = True
 
     def handle_continue(self) -> None:
         self.enter_foreground()
 
-def _establish_terminal_state(*args, **kwargs) -> BaseTerminalState:
-    if IS_WINDOWS:
-        return WindowsTerminalState(*args, **kwargs)
-    return TerminalState(*args, **kwargs)
+
+def _establish_terminal_state(*args, **kwargs) -> Optional[BaseTerminalState]:
+    """Create and return the appropriate terminal state for the current platform, or None if
+    stdin is not interactive (e.g. piped input, background process, or no console attached)."""
+    cls = WindowsTerminalState if IS_WINDOWS else TerminalState
+    if not cls.stdin_is_interactive():
+        return None
+    return cls(*args, **kwargs)
 
 
 class StdinReader:
@@ -2630,17 +2820,26 @@ class StdinReader:
     do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
     internally, which the event loop is not aware of, and user input doesn't come through."""
 
-    def __init__(self, fd: int) -> None:
+    def __init__(self, fd: int, sock: Optional[socket.socket] = None) -> None:
         self.fd = fd
+        #: On Windows, stdin is piped through a socket pair; use recv() not os.read()
+        self.sock = sock
         #: Handle multi-byte UTF-8 characters
         self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         #: For stripping out arrow and navigation keys
         self.ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z~]")
 
+    def _decode(self, raw: bytes) -> str:
+        return self.ansi_escape_re.sub("", self.decoder.decode(raw))
+
     def read(self) -> str:
         try:
-            chars = self.decoder.decode(os.read(self.fd, 1024))
-            return self.ansi_escape_re.sub("", chars)
+            if self.sock is not None:
+                # Windows socket pair: use recv() — os.read() does not work on Winsock handles
+                raw = self.sock.recv(1024)
+            else:
+                raw = os.read(self.fd, 1024)
+            return self._decode(raw)
         except OSError:
             return ""
 
@@ -2791,15 +2990,19 @@ class PackageInstaller:
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[BaseTerminalState] = None
         stdin_reader: Optional[StdinReader] = None
-        if sys.stdin.isatty():
-            stdin_reader = StdinReader(sys.stdin.fileno())
+        try:
             terminal = _establish_terminal_state(
                 selector,
                 self.build_status,
                 on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
                 on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
             )
-            terminal.setup()
+            if terminal is not None:
+                terminal.setup()
+                self.build_status.is_tty = True
+                stdin_reader = terminal.create_stdin_reader()
+        except Exception:
+            pass
 
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
@@ -2817,6 +3020,10 @@ class PackageInstaller:
                 )
                 self.build_status.set_blocked(blocked and not self.running_builds)
 
+            # Force an initial render so the spinner/header appear even if the first build
+            # completes faster than the first selector timeout (e.g., near-instant failures).
+            self.build_status.update()
+
             while (
                 self.pending_builds
                 or self.running_builds
@@ -2832,10 +3039,14 @@ class PackageInstaller:
                     and not blocked
                     or not jobserver.has_target_parallelism()
                 )
-                if wake_on_jobserver and jobserver.r not in selector.get_map():
-                    selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not wake_on_jobserver and jobserver.r in selector.get_map():
-                    selector.unregister(jobserver.r)
+                # On Windows, non named pipes from os.pipe() are not IOCP-compatible, so we
+                # skip selector registration and poll for tokens each loop instead.
+                # The latency is limited by the selector timeout (SPINNER_INTERVAL = 0.1 s).
+                if not IS_WINDOWS:
+                    if wake_on_jobserver and jobserver.r not in selector.get_map():
+                        selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
+                    elif not wake_on_jobserver and jobserver.r in selector.get_map():
+                        selector.unregister(jobserver.r)
 
                 stdin_ready = False
 
@@ -2855,34 +3066,35 @@ class PackageInstaller:
                 # handler, but there's no SIGCONT event in the transition of background to
                 # foreground, so we conditionally poll for that here (headless case). In the
                 # headless case the event loop only fires once per second, so this is cheap enough.
-                if terminal and self.build_status.headless and not _is_background_tty(sys.stdin):
-                    terminal.enter_foreground()
+                if terminal and self.build_status.headless:
+                    if IS_WINDOWS or not _is_background_tty(sys.stdin):
+                        terminal.enter_foreground()
 
                 for key, _ in events:
-                    data = read_from_key(key)
-                    if isinstance(data, FdInfo):
+                    tag = key.data
+                    if isinstance(tag, FdInfo):
                         # Child output (logs and state updates)
-                        child_info = self.running_builds[data.pid]
-                        if data.name == "output":
-                            self._handle_child_logs(key.fd, child_info, selector)
-                        elif data.name == "state":
-                            self._handle_child_state(key.fd, child_info, selector)
-                        elif data.name == "sentinel":
-                            finished_pids.append(data.pid)
-                    elif data == "stdin":
+                        child_info = self.running_builds[tag.pid]
+                        if tag.name == "output":
+                            self._handle_child_logs(key, child_info, selector)
+                        elif tag.name == "state":
+                            self._handle_child_state(key, child_info, selector)
+                        elif tag.name == "sentinel":
+                            finished_pids.append(tag.pid)
+                    elif tag == "stdin":
+                        # On Windows, ConsoleReader sends resize events to sigwinch_wsock
+                        # (b"\x00") and keypresses to stdin_wsock. Calling call read_from_key()
+                        # drains the socket and leave stdin_reader.read() empty.
+                        # Just signal readiness and let stdin_reader.read() consume the bytes.
                         stdin_ready = True
-                        if IS_WINDOWS:
-                            # no sigwinch (or other useful signals) on Win
-                            # so we fake it manually and process as part of stdin
-                            if ConsoleReader.RESIZE_EVENT_PAYLOAD in data:
-                                # Strip it out so it doesn't get rendered as text
-                                data = data.replace(ConsoleReader.RESIZE_EVENT_PAYLOAD, b"")
-                                self.build_status.on_resize()
-                    elif data == "sigwinch":
+                    elif tag == "sigwinch":
                         assert terminal is not None
-                        os.read(terminal.sigwinch_r, 64)  # drain the pipe
+                        if IS_WINDOWS:
+                            terminal.sigwinch_r.recv(64)  # drain the socket
+                        else:
+                            os.read(terminal.sigwinch_r, 64)  # drain the pipe
                         self.build_status.on_resize()
-                    elif data == "jobserver" and not jobserver.has_target_parallelism():
+                    elif tag == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
@@ -2949,7 +3161,17 @@ class PackageInstaller:
                 # Finally update the UI
                 self.build_status.update()
         finally:
-            # First ensure that the user's terminal state is restored.
+            # Render the final TUI state while terminal settings are still active.
+            # This must happen BEFORE teardown(), which removes VT100 support on Windows.
+            # Without VT100, on Windows cursor-movement codes appear as literal text instead of repositioning
+            # the cursor, and the instruction stanza would not be rendered.
+            try:
+                self.build_status.overview_mode = True
+                self.build_status.update(finalize=True)
+            except Exception:
+                pass
+
+            # Restore terminal settings.
             if terminal is not None:
                 terminal.teardown()
 
@@ -2996,8 +3218,6 @@ class PackageInstaller:
                 action.release_prefix_lock()
 
             try:
-                self.build_status.overview_mode = True
-                self.build_status.update(finalize=True)
                 selector.close()
                 jobserver.close()
             except Exception:
@@ -3025,7 +3245,14 @@ class PackageInstaller:
 
         if failures:
             for s in failures:
-                build_info = self.build_status.builds[s.dag_hash()]
+                # After update(finalize=True), failed builds have been moved from
+                # self.build_status.builds to self.build_status.finished_builds.
+                # Search both to find the build_info.
+                dag_hash = s.dag_hash()
+                finished = self.build_status.finished_builds
+                build_info = self.build_status.builds.get(dag_hash) or next(
+                    (b for b in finished if b.spec.dag_hash() == dag_hash), None
+                )
                 if build_info and build_info.log_summary:
                     sys.stderr.write(build_info.log_summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
@@ -3268,16 +3495,17 @@ class PackageInstaller:
         self.report_data.start_record(spec)
 
     def _handle_child_logs(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
+        r_fd = key.fd
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_from_key(key, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
             return
-        except OSError:
+        except (OSError, EOFError):
             data = None
 
         if not data:  # EOF or error
@@ -3293,25 +3521,28 @@ class PackageInstaller:
         """Read and print any remaining output from a finished child's pipe."""
         r_fd = child_info.output_r_conn.fileno()
         while r_fd in selector.get_map():
-            self._handle_child_logs(r_fd, child_info, selector)
+            key = selector.get_map()[r_fd]
+            self._handle_child_logs(key, child_info, selector)
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
         r_fd = child_info.state_r_conn.fileno()
         while r_fd in selector.get_map():
-            self._handle_child_state(r_fd, child_info, selector)
+            key = selector.get_map()[r_fd]
+            self._handle_child_state(key, child_info, selector)
 
     def _handle_child_state(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
+        r_fd = key.fd
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_from_key(key, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
             return
-        except OSError:
+        except (OSError, EOFError):
             data = None
 
         if not data:  # EOF or error
