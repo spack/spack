@@ -114,11 +114,6 @@ class SpackPaths:
 
         self._user_cache_path = None
 
-        #: Default paths that don't depend on user_cache_path
-        self.default_fetch_cache_path = os.path.join(self.var_path, "cache")
-        self.gpg_keys_path = os.path.join(self.var_path, "gpg")
-        self.gpg_path = os.path.join(self.opt_path, "spack", "gpg")
-
         #: Backup location for old .spack directory (used by migrate command)
         self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
 
@@ -161,6 +156,45 @@ class SpackPaths:
     @property
     def default_misc_cache_path(self):
         return os.path.join(self.user_cache_path, self.spack_instance_id, "cache")
+
+    @property
+    def gpg_path(self):
+        """GPG home directory - reads from config."""
+        import spack.config
+        import spack.util.path
+
+        cfg = spack.config.get("config:gpg_path", None)
+        if cfg:
+            return spack.util.path.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.util.path.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "gpg")
+
+    @property
+    def gpg_keys_path(self):
+        """GPG keys directory - reads from config."""
+        import spack.config
+        import spack.util.path
+
+        cfg = spack.config.get("config:gpg_keys_path", None)
+        if cfg:
+            return spack.util.path.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.util.path.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "gpg-keys")
+
+    @property
+    def default_fetch_cache_path(self):
+        """Source cache directory - reads from config."""
+        import spack.config
+        import spack.util.path
+
+        cfg = spack.config.get("config:source_cache", None)
+        if cfg:
+            return spack.util.path.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.util.path.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "cache")
 
 
 def detect_old_spack_layout(paths):
