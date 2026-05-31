@@ -45,7 +45,6 @@ jobs:
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack config scopes
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack solve zlib
@@ -72,7 +71,6 @@ jobs:
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack config scopes
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
@@ -102,7 +100,6 @@ jobs:
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack config scopes
           spack solve zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
@@ -146,7 +143,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           . share/spack/setup-env.sh
-          spack config scopes
           for ver in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do
             ver_dir="$(find "$RUNNER_TOOL_CACHE/Python" -wholename "*/${ver}.*/*/bin" | grep . || true)"
             export SPACK_PYTHON="$ver_dir/python3"
@@ -161,7 +157,6 @@ jobs:
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack config scopes
           spack gpg list
           tree $(spack bootstrap root)
 
@@ -183,7 +178,6 @@ jobs:
       - name: Bootstrap clingo
         run: |
           ./share/spack/setup-env.ps1
-          spack config scopes
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack -d solve zlib
@@ -192,7 +186,6 @@ jobs:
       - name: Bootstrap GnuPG
         run: |
           ./share/spack/setup-env.ps1
-          spack config scopes
           spack -d gpg list
           ./share/spack/qa/validate_last_exit.ps1
           tree $(spack bootstrap root)
@@ -222,6 +215,5 @@ jobs:
       run: |
           source ~/platform-spack-311/bin/activate
           source share/spack/setup-env.sh
-          spack config scopes
           spack debug report
           spack -d bootstrap now --dev
