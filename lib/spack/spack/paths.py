@@ -112,29 +112,55 @@ class SpackPaths:
         # Detect old layout
         self.old_layout_detected = detect_old_spack_layout(self)
 
-        # User cache path - simplified version that uses SPACK_USER_CACHE_PATH
-        # or ~/.local/state/spack
-        self.user_cache_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CACHE_PATH")
-            or os.path.join(expanded_home, ".local", "state", "spack")
-        )
+        self._user_cache_path = None
 
-        #: Default paths based on user_cache_path
+        #: Default paths that don't depend on user_cache_path
         self.default_fetch_cache_path = os.path.join(self.var_path, "cache")
         self.gpg_keys_path = os.path.join(self.var_path, "gpg")
         self.gpg_path = os.path.join(self.opt_path, "spack", "gpg")
-        self.reports_path = os.path.join(self.user_cache_path, "reports")
-        self.default_test_path = os.path.join(self.user_cache_path, "test")
-        self.default_monitor_path = os.path.join(self.reports_path, "monitor")
-        self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
-        self.package_repos_path = os.path.join(self.user_cache_path, "package_repos")
-        self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
-        self.default_misc_cache_path = os.path.join(
-            self.user_cache_path, self.spack_instance_id, "cache"
-        )
 
         #: Backup location for old .spack directory (used by migrate command)
         self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
+
+    @property
+    def user_cache_path(self):
+        # Note this depends on config, which generally depends on paths
+        if self._user_cache_path is None:
+            import spack.util.path
+
+            expanded_home = os.path.expanduser("~")
+            self._user_cache_path = spack.util.path._resolve_location_var("state") or os.path.join(
+                expanded_home, ".local", "state", "spack"
+            )
+        return self._user_cache_path
+
+    @property
+    def reports_path(self):
+        return os.path.join(self.user_cache_path, "reports")
+
+    @property
+    def default_test_path(self):
+        return os.path.join(self.user_cache_path, "test")
+
+    @property
+    def default_monitor_path(self):
+        return os.path.join(self.reports_path, "monitor")
+
+    @property
+    def user_repos_cache_path(self):
+        return os.path.join(self.user_cache_path, "git_repos")
+
+    @property
+    def package_repos_path(self):
+        return os.path.join(self.user_cache_path, "package_repos")
+
+    @property
+    def default_user_bootstrap_path(self):
+        return os.path.join(self.user_cache_path, "bootstrap")
+
+    @property
+    def default_misc_cache_path(self):
+        return os.path.join(self.user_cache_path, self.spack_instance_id, "cache")
 
 
 def detect_old_spack_layout(paths):

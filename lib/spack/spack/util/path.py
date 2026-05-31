@@ -151,7 +151,7 @@ def replacements():
         "spack": lambda: spack.paths.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "user_cache_path": lambda: _resolve_location_var("state"),
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,
