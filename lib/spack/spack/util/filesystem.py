@@ -48,10 +48,11 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 import spack.store
+from spack.enums import Context
 from spack.util import lang, tty
+from spack.build_environment import SetupContext
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable, ProcessError, which
-from spack.util.filesystem import edit_in_place_through_temporary_file
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -3411,6 +3412,7 @@ def fix_darwin_install_name(path: str) -> None:
 @memoized
 def bootstrap_relocate() -> Executable:
     import spack.bootstrap
+
     with spack.bootstrap.ensure_bootstrap_configuration():
         return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
 
@@ -3426,11 +3428,17 @@ def relocate(package=None) -> Executable:
         # origin agnostic
         # NOTE: this will need updating if we ever introduce breaking changes
         # in our relocate behavior
-        wrapper_spec = next(iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None)
+        wrapper_spec = next(
+            iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
+        )
     if not wrapper_spec:
         # We need to bootstrap
         return bootstrap_relocate()
-    return Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+    relocate_exe = Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+    # get msvc context from wrapper - needed for finding msvc utils during relocate run
+    setup_context = SetupContext(wrapper_spec, context=Context.RUN)
+    relocate_exe.add_default_envmod(setup_context.get_env_modifications())
+    return relocate_exe
 
 
 @memoized
@@ -3442,8 +3450,8 @@ def dumpbin(pkg) -> Executable:
 
 def relocate_win_rpath(package):
     ev = EnvironmentModifications()
-    dlls = llnl.util.filesystem.find(package.spec.prefix, "*.dll")
-    exes = llnl.util.filesystem.find(package.spec.prefix, "*.exe")
+    dlls = find(package.spec.prefix, "*.dll")
+    exes = find(package.spec.prefix, "*.exe")
     pes = dlls + exes
     pe_stage_to_prefix = {}
     # map all PE (dll,exe) prefix locations to the stage
@@ -3459,7 +3467,7 @@ def relocate_win_rpath(package):
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
     reloc = relocate(package)
     lib_map = {}
-    for lib in llnl.util.filesystem.find(package.spec.prefix, "*.lib"):
+    for lib in find(package.spec.prefix, "*.lib"):
         print(f"processing lib {lib}")
         if verify_import_lib(lib, package=package):
             # we have an import lib, determine associated DLL
