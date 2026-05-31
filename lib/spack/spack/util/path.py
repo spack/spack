@@ -112,8 +112,8 @@ def _resolve_location_var(location_key):
 
             all_defined = all(get_env_var(var) for var in env_vars)
             if all_defined:
-                # Resolve and return it
-                return substitute_path_variables(item)
+                # Resolve and return it, normalizing path separators
+                return os.path.normpath(substitute_path_variables(item))
             # If not all defined, continue to next item
             continue
 
@@ -126,13 +126,13 @@ def _resolve_location_var(location_key):
             # Resolve the config variable (but watch out for infinite loops)
             # For now, just resolve it - the replacements() function will handle it
             try:
-                return substitute_path_variables(item)
+                return os.path.normpath(substitute_path_variables(item))
             except RecursionError:
                 # If we hit infinite recursion, skip this item
                 continue
 
         # If it's just a static string (like "~/.local/share/spack"), return it
-        return substitute_path_variables(item)
+        return os.path.normpath(substitute_path_variables(item))
 
     return None
 
