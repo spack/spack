@@ -59,7 +59,7 @@ to also use ~/.spack (which will silence the warning).
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Migrate user config files from ~/.spack to ~/.config/spack.
 
-    This command copies config files (*.yaml, *.yml) from ~/.spack/ to
+    This command copies config files (...yaml, ...yml) from ~/.spack/ to
     ~/.config/spack/ to support the new XDG-compliant directory layout.
     """
     if args.i_need_old_spack:
