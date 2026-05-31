@@ -14,6 +14,14 @@ import spack.config
 import spack.paths
 
 
+@pytest.fixture(scope="function", autouse=True)
+def clean_config_env(monkeypatch):
+    """Unset config-related env vars that would interfere with layout tests."""
+    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
+    monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
+    monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
+
+
 def _ensure_dir(pathlike):
     """Create directory and return as string."""
     pathlike = pathlib.Path(pathlike)
@@ -38,14 +46,12 @@ def set_home(working_env):
 
 
 @pytest.fixture
-def mock_spack_instance(tmp_path, set_home, monkeypatch):
+def mock_spack_instance(tmp_path, set_home, monkeypatch, clean_config_env):
     """Create a mock Spack instance with simulated home and base prefix.
 
     Returns:
         tuple: (home_dir, base_prefix)
     """
-    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
-
     # Create simulated directories
     home_dir = _ensure_dir(tmp_path / "home")
     base_prefix = _ensure_dir(tmp_path / "spack-root")
