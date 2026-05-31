@@ -57,7 +57,6 @@ def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
     # These are imports that may be problematic at top level (circular imports). They are used
     # only to provide exhaustive details when erroring due to a broken clingo module.
     import spack.config
-    import spack.paths as sp
     import spack.util.path as sup
 
     try:
