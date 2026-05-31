@@ -44,6 +44,8 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch):
     Returns:
         tuple: (home_dir, base_prefix)
     """
+    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
+
     # Create simulated directories
     home_dir = _ensure_dir(tmp_path / "home")
     base_prefix = _ensure_dir(tmp_path / "spack-root")
