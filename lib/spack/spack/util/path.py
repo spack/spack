@@ -56,21 +56,24 @@ NOMATCH = object()
 _frozen_env = {}
 
 
-def freeze():
+def freeze(xdg_env):
     """Snapshot XDG_*_HOME environment variables for child build processes.
 
     Builds may set their own XDG_* env vars, which would otherwise change
-    Spack's path resolution mid-build. Call this in the parent before
-    spawning a child process. After calling freeze(), env var lookups
-    will use frozen values instead of checking os.environ.
+    Spack's path resolution mid-build. This is called in the child process
+    during subprocess state restoration with the XDG env vars captured from
+    the parent process.
 
     This prevents child processes from inadvertently changing where Spack
     looks for data/state/cache directories.
+
+    Args:
+        xdg_env: Dict of XDG env vars to freeze (captured from parent process).
     """
     global _frozen_env
 
     xdg_vars = ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
-    _frozen_env = {var: os.environ.get(var) for var in xdg_vars}
+    _frozen_env = {var: xdg_env.get(var) for var in xdg_vars}
 
 
 def _resolve_location_var(location_key):

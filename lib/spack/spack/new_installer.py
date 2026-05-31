@@ -345,9 +345,15 @@ class GlobalState:
     but excludes the Spack environment, which is slow to serialize and should not be needed
     during the build."""
 
-    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache")
+    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache", "xdg_env")
 
     def __init__(self):
+        # Capture XDG env vars before fork/spawn - needed for consistent path resolution
+        self.xdg_env = {
+            var: os.environ.get(var)
+            for var in ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
+        }
+
         if multiprocessing.get_start_method() == "fork":
             return
         self.config = spack.config.CONFIG.ensure_unwrapped()
@@ -367,13 +373,13 @@ class GlobalState:
             web.urlopen._instance = None
             opener.urlopen._instance = None
             s3_client_cache.clear()
-            spack.util.path.freeze()
+            spack.util.path.freeze(xdg_env=self.xdg_env)
             return
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
         spack.paths.spack_working_dir = self.spack_working_dir
-        spack.util.path.freeze()
+        spack.util.path.freeze(xdg_env=self.xdg_env)
 
 
 class PrefixPivoter:

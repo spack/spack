@@ -16,6 +16,7 @@ import importlib
 import io
 import multiprocessing
 import multiprocessing.context
+import os
 import pickle
 from types import ModuleType
 from typing import TYPE_CHECKING, Optional
@@ -97,6 +98,13 @@ class GlobalStateMarshaler:
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
+
+        # Capture XDG env vars before fork/spawn - needed for consistent path resolution
+        self.xdg_env = {
+            var: os.environ.get(var)
+            for var in ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
+        }
+
         if self.is_forked:
             return
 
@@ -115,7 +123,7 @@ class GlobalStateMarshaler:
         import spack.util.path
 
         if self.is_forked:
-            spack.util.path.freeze()
+            spack.util.path.freeze(xdg_env=self.xdg_env)
             # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
             # and botocore connection pools are not fork-safe.
             from spack.oci import opener
@@ -135,7 +143,7 @@ class GlobalStateMarshaler:
             from spack.environment import activate
 
             activate(self.env)
-        spack.util.path.freeze()
+        spack.util.path.freeze(xdg_env=self.xdg_env)
 
 
 class TestPatches:
