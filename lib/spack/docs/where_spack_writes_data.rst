@@ -113,4 +113,3 @@ References
 
 * :ref:`include.yaml <include-yaml>`
 * :ref:`config.yaml <config-yaml>`
-* :ref:`Environment variables controlling config scopes <local-config-overrides>`
