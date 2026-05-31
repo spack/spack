@@ -185,12 +185,23 @@ class ConfigScope:
             tty.debug(
                 f"Processing included paths: {[str(path) for path in include_paths]}", level=3
             )
-            included_scopes = chain(*[include.scopes(self) for include in include_paths])
+            included_scopes = list(chain(*[include.scopes(self) for include in include_paths]))
 
             for included_scope in included_scopes:
                 # If it's a lockfile, sort it accordingly
                 if isinstance(included_scope, IncludedLockfile):
                     if included_scope not in self._included_lockfiles:
+                        parent = pathlib.Path(included_scope.path).parent
+                        if any(
+                            scope.path == str(parent) or scope.path == str(parent / "spack.yaml")
+                            for scope in included_scopes
+                            if not isinstance(scope, IncludedLockfile)
+                        ):
+                            msg = (
+                                "Cannot include abstract and concrete from the same environment.\n"
+                                f"    Environment: {parent}"
+                            )
+                            raise spack.error.ConfigError(msg)
                         self._included_lockfiles.append(included_scope)
                     continue
 
