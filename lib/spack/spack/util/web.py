@@ -397,7 +397,6 @@ def push_to_url(local_file_path, remote_path, keep_original=True, if_match: Opti
         )
 
     if remote_url.scheme == "file":
-
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:

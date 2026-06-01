@@ -773,7 +773,7 @@ def _read_specs(
 def _lazy_read_spec(
     file: str,
     spec_by_hash: Callable[[str], Optional[spack.spec.Spec]],
-    read_from_cache: Callable[[str], Optional[spack.spec.Spec]]
+    read_from_cache: Callable[[str], Optional[spack.spec.Spec]],
 ):
     """Lazy reader that attempts to find the spec using local methods first"""
     _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
@@ -855,7 +855,7 @@ def _url_update_index(
                         db._read_from_stream(f)
 
             try_read_spec = functools.partial(
-                _lazy_read_spec, spec_by_hash=spec_by_hash, reac_from_cache=read_fn
+                _lazy_read_spec, spec_by_hash=spec_by_hash, read_from_cache=read_fn
             )
 
             # Read the specs from the cache into the database db

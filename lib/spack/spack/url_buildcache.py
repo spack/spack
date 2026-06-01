@@ -565,7 +565,7 @@ class URLBuildcacheEntry:
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
-        **extra_args,
+        **kwargs,
     ) -> None:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
@@ -591,7 +591,7 @@ class URLBuildcacheEntry:
         )
 
         web_util.push_to_url(
-            manifest_path, manifest_destination_url, keep_original=False, extra_args=extra_args
+            manifest_path, manifest_destination_url, keep_original=False, **kwargs
         )
 
     @classmethod
