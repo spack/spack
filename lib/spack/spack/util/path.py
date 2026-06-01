@@ -92,11 +92,7 @@ def _resolve_location_var(location_key):
     if not isinstance(location_list, list):
         return location_list
 
-    # Process each item in the list
     for item in location_list:
-        if not isinstance(item, str):
-            continue
-
         # Check if item contains an environment variable
         # Look for $VAR or ${VAR} patterns
         env_var_pattern = r"\$\{?([A-Z_][A-Z0-9_]*)\}?"
