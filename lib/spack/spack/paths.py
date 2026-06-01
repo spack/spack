@@ -241,16 +241,13 @@ def detect_layout(scheme):
 
     # Check if user explicitly set new-layout environment variables
     new_layout_env_vars = ["SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME"]
-    env_forces_new = any(v in os.environ for v in new_layout_env_vars)
+    if any(v in os.environ for v in new_layout_env_vars):
+        return False
 
     # Detect if old layout data exists
     # Access via sys.modules to respect monkeypatching in tests
-    import sys
-
-    locations_obj = sys.modules[__name__].locations
-    is_old = locations_obj.old_layout_detected and not env_forces_new
-
-    return is_old
+    locations_obj = _sys.modules[__name__].locations
+    return locations_obj.old_layout_detected
 
 
 # Module-level singleton instance
