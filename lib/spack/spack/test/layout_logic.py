@@ -64,11 +64,11 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clean_config_env):
     home_dir = _ensure_dir(tmp_path / "home")
     base_prefix = _ensure_dir(tmp_path / "spack-root")
 
-    # Copy real etc/spack/defaults into the simulated base prefix
-    real_defaults = os.path.join(spack.paths.prefix, "etc", "spack", "defaults")
-    sim_defaults = os.path.join(base_prefix, "etc", "spack", "defaults")
-    os.makedirs(os.path.dirname(sim_defaults), exist_ok=True)
-    shutil.copytree(real_defaults, sim_defaults)
+    # Copy real etc/spack into the simulated base prefix (includes defaults and include.yaml)
+    real_etc_spack = os.path.join(spack.paths.prefix, "etc", "spack")
+    sim_etc_spack = os.path.join(base_prefix, "etc", "spack")
+    os.makedirs(os.path.dirname(sim_etc_spack), exist_ok=True)
+    shutil.copytree(real_etc_spack, sim_etc_spack)
 
     # Set up environment using set_home fixture (handles both Windows and Linux)
     set_home(home_dir)
