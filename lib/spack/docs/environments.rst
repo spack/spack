@@ -195,7 +195,8 @@ These scripts are stored in the ``.spack-env`` directory within your environment
 - Managing the prompt to show the active environment
 - Setting up environment variables for views
 
-The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows) and are regenerated when needed, such as when the environment's lockfile changes.
+The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows).
+For efficiency, the activation and deactivation scripts for sh, csh, and fish are combined into single files.
 
 Internally, Spack uses these scripts when you run commands like:
 
@@ -211,7 +212,7 @@ You can also use these scripts directly by sourcing them:
    $ source /path/to/environment/.spack-env/activate
    $ source /path/to/environment/.spack-env/deactivate.sh
 
-The activation scripts are automatically updated when:
+The activation scripts are automatically regenerated when:
 
 1. A new environment is created
 2. An environment view is regenerated
