@@ -57,7 +57,7 @@ _spack_env_append() {
         export $varname="$value"
     else
         eval "current=\"\${${varname}}\""
-        export $varname=$current$sep$value
+        export $varname="$current$sep$value"
     fi
 }
 
@@ -76,7 +76,7 @@ _spack_env_prepend() { # if not exporting then use lowercase
         export $varname="$value"
     else
         eval "current=\"\${${varname}}\""
-        export $varname=$value$sep$current
+        export $varname="$value$sep$current"
     fi
 }
 
@@ -99,14 +99,14 @@ _spack_env_remove_value() {
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
         if [ "$val" != "$value" ]; then
-            accumulator=$accumulator$val$sep
+            accumulator="$accumulator$val$sep"
         fi
     done
 
     export IFS="$original_ifs"
 
-    accumulator=${accumulator#$sep}
-    accumulator=${accumulator%$sep}
+    accumulator="${accumulator#$sep}"
+    accumulator="${accumulator%$sep}"
     export $varname="$accumulator"
 }
 
@@ -130,7 +130,7 @@ _spack_env_remove_first() {
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
          if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
-            accumulator=$accumulator$val$sep
+            accumulator="$accumulator$val$sep"
         else
             done="yes"
         fi
@@ -138,8 +138,8 @@ _spack_env_remove_first() {
 
     export IFS="$original_ifs"
 
-    accumulator=${accumulator#$sep}
-    accumulator=${accumulator%$sep}
+    accumulator="${accumulator#$sep}"
+    accumulator="${accumulator%$sep}"
     export $varname="$accumulator"
 }
 
@@ -163,23 +163,23 @@ _spack_env_remove_last() {
     eval "varname_value=\"\${${varname}}\""
     reversed="$sep"
     for val in $varname_value; do
-        reversed=$sep$val$reversed
+        reversed="$sep$val$reversed"
     done
-    reversed=${reversed#$sep}
-    reversed=${reversed%$sep}
+    reversed="${reversed#$sep}"
+    reversed="${reversed%$sep}"
 
     # Remove the first appearance of $value in the reversed list
     # Put the entries back in in reverse order to get back original order
     accumulator="$sep"
     for val in $reversed; do
         if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
-            accumulator=$sep$val$accumulator
+            accumulator="$sep$val$accumulator"
         else
             done="yes"
         fi
     done
-    accumulator=${accumulator#$sep}
-    accumulator=${accumulator%$sep}
+    accumulator="${accumulator#$sep}"
+    accumulator="${accumulator%$sep}"
 
     export IFS="$original_ifs"
     export $varname="$accumulator"
@@ -206,17 +206,17 @@ _spack_env_prune_duplicates() {
     while [ "$varname_value" != "" ]; do
         # for-loop to get the first entry, then break
         for val in $varname_value; do
-            prune_accumulator=$prune_accumulator$val$sep
+            prune_accumulator="$prune_accumulator$val$sep"
             IFS="$pre_prune_ifs"  # setting IFS to $sep breaks _spack_env_remove_value
             _spack_env_remove_value "$varname" "$val" "$sep"
-            IFS=$sep
+            IFS="$sep"
             eval "varname_value=\"\${${varname}}\""
             break
         done
     done
 
-    prune_accumulator=${prune_accumulator#$sep}
-    prune_accumulator=${prune_accumulator%$sep}
+    prune_accumulator="${prune_accumulator#$sep}"
+    prune_accumulator="${prune_accumulator%$sep}"
 
     export IFS="$pre_prune_ifs"
     export $varname="$prune_accumulator"

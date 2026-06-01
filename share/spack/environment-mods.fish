@@ -11,7 +11,7 @@ function _spack_env_unset -a name
 end
 
 function _spack_env_append -a name value sep
-    if test -n $name
+    if test -n "$$name"
         set -gx $name $$name$sep$value
     else
         set -gx $name $value
@@ -19,7 +19,7 @@ function _spack_env_append -a name value sep
 end
 
 function _spack_env_prepend -a name value sep
-    if test -n $name
+    if test -n "$$name"
         set -gx $name $value$sep$$name
     else
         set -gx $name $value

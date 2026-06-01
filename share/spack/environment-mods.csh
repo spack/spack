@@ -31,7 +31,6 @@ case _spack_env_append:
     else
         set var = `printenv $varname`
         setenv $varname $var$sep$value
-        endif
     endif
     breaksw
 case _spack_env_prepend:
@@ -40,7 +39,6 @@ case _spack_env_prepend:
     else
         set var = `printenv $varname`
         setenv $varname $value$sep$var
-        endif
     endif
     breaksw
 case _spack_env_remove_value:
