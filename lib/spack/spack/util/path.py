@@ -52,28 +52,22 @@ def get_user():
 # return value for replacements with no match
 NOMATCH = object()
 
-# Frozen environment variables for child processes
-_frozen_env = {}
+
+_frozen_home = {}
 
 
-def freeze(xdg_env):
-    """Snapshot XDG_*_HOME environment variables for child build processes.
+def freeze(home_vars):
+    global _frozen_home
 
-    Builds may set their own XDG_* env vars, which would otherwise change
-    Spack's path resolution mid-build. This is called in the child process
-    during subprocess state restoration with the XDG env vars captured from
-    the parent process.
+    _frozen_home = home_vars
 
-    This prevents child processes from inadvertently changing where Spack
-    looks for data/state/cache directories.
 
-    Args:
-        xdg_env: Dict of XDG env vars to freeze (captured from parent process).
-    """
-    global _frozen_env
-
-    xdg_vars = ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
-    _frozen_env = {var: xdg_env.get(var) for var in xdg_vars}
+def collect():
+    return {
+        "data": _resolve_location_var("data"),
+        "state": _resolve_location_var("state"),
+        "cache": _resolve_location_var("cache"),
+    }
 
 
 def _resolve_location_var(location_key):
@@ -85,6 +79,9 @@ def _resolve_location_var(location_key):
     Returns:
         A resolved path string or None
     """
+    if _frozen_home and location_key in _frozen_home:
+        return _frozen_home[location_key]
+
     # break circular imports
     import spack.config
 
@@ -106,14 +103,7 @@ def _resolve_location_var(location_key):
         env_vars = re.findall(env_var_pattern, item)
 
         if env_vars:
-            # If it contains env vars, check if they're defined
-            # Use frozen values if available (from freeze() call)
-            def get_env_var(var):
-                if var in _frozen_env:
-                    return _frozen_env[var]
-                return os.environ.get(var)
-
-            all_defined = all(get_env_var(var) for var in env_vars)
+            all_defined = all(os.environ.get(var) for var in env_vars)
             if all_defined:
                 # Resolve and return it, normalizing path separators
                 return os.path.normpath(substitute_path_variables(item))

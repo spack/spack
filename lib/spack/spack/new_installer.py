@@ -82,6 +82,7 @@ import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
+import spack.util.path
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
@@ -345,14 +346,17 @@ class GlobalState:
     but excludes the Spack environment, which is slow to serialize and should not be needed
     during the build."""
 
-    __slots__ = ("store", "config", "monkey_patches", "spack_working_dir", "repo_cache", "xdg_env")
+    __slots__ = (
+        "store",
+        "config",
+        "monkey_patches",
+        "spack_working_dir",
+        "repo_cache",
+        "home_vars",
+    )
 
     def __init__(self):
-        # Capture XDG env vars before fork/spawn - needed for consistent path resolution
-        self.xdg_env = {
-            var: os.environ.get(var)
-            for var in ["XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"]
-        }
+        self.home_vars = spack.util.path.collect()
 
         if multiprocessing.get_start_method() == "fork":
             return
@@ -362,8 +366,6 @@ class GlobalState:
         self.spack_working_dir = spack.paths.spack_working_dir
 
     def restore(self):
-        import spack.util.path
-
         if multiprocessing.get_start_method() == "fork":
             # In the forking case we must erase SSL contexts.
             from spack.oci import opener
@@ -373,13 +375,13 @@ class GlobalState:
             web.urlopen._instance = None
             opener.urlopen._instance = None
             s3_client_cache.clear()
-            spack.util.path.freeze(xdg_env=self.xdg_env)
+            spack.util.path.freeze(self.home_vars)
             return
         spack.store.STORE = self.store
         spack.config.CONFIG = self.config
         self.monkey_patches.restore()
         spack.paths.spack_working_dir = self.spack_working_dir
-        spack.util.path.freeze(xdg_env=self.xdg_env)
+        spack.util.path.freeze(self.home_vars)
 
 
 class PrefixPivoter:
