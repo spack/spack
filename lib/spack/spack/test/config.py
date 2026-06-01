@@ -466,13 +466,6 @@ def test_substitute_user(mock_low_high_config, tmp_path: pathlib.Path):
     )
 
 
-def test_substitute_user_cache(mock_low_high_config):
-    user_cache_path = spack.paths.user_cache_path
-    assert os.path.join(user_cache_path, "baz") == spack_path.canonicalize_path(
-        os.path.join("$user_cache_path", "baz")
-    )
-
-
 def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path("$tempdir")
@@ -1524,16 +1517,6 @@ def test_override_included_config(working_env, tmp_path, include_config_factory)
     assert "test1" in includes
     assert "test2" in includes
     assert "test3" in includes
-
-
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
-    os.environ["SPACK_STATE_HOME"] = ""
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
-    assert (
-        os.path.expanduser(os.path.join("~", ".local", "state", "spack")) == paths.user_cache_path
-    )
 
 
 def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):

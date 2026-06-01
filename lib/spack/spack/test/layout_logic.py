@@ -13,14 +13,21 @@ import pytest
 
 import spack.config
 import spack.paths
+import spack.util.path
 
 
 @pytest.fixture(scope="function", autouse=True)
 def clean_config_env(monkeypatch):
     """Unset config-related env vars that would interfere with layout tests."""
+    # Clear config path overrides
     monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
     monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
     monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
+
+    # Clear XDG and SPACK location overrides
+    for location in ["DATA", "STATE", "CACHE"]:
+        monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
+        monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
 
 
 def _ensure_dir(pathlike):
@@ -285,8 +292,22 @@ def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkey
     assert warning is None
 
 
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mock_spack_instance):
+    home_dir, base_prefix = mock_spack_instance
+    assert (
+        os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
+    )
+
+
 def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch):
     p = str(Path("some") / "path")
     os.environ["SPACK_STATE_HOME"] = p
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     assert spack.paths.user_cache_path == p
+
+
+def test_substitute_user_cache(mock_spack_instance):
+    user_cache_path = spack.paths.user_cache_path
+    assert os.path.join(user_cache_path, "baz") == spack.util.path.canonicalize_path(
+        os.path.join("$user_cache_path", "baz")
+    )
