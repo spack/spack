@@ -92,7 +92,7 @@ def dummy_prefix(tmp_path: pathlib.Path):
 
 
 @pytest.mark.maybeslow
-def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery):
+def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
