@@ -88,40 +88,42 @@ def _resolve_location_var(location_key):
     # Get the list of potential locations from config
     location_list = spack.config.get(f"config:locations:{location_key}")
 
-    # If it's not a list, just return it
-    if not isinstance(location_list, list):
+    # If config returned a non-list value (but not None), return it as-is
+    if location_list is not None and not isinstance(location_list, list):
         return location_list
 
-    for item in location_list:
-        # Check if item contains an environment variable
-        # Look for $VAR or ${VAR} patterns
-        env_var_pattern = r"\$\{?([A-Z_][A-Z0-9_]*)\}?"
-        env_vars = re.findall(env_var_pattern, item)
+    # If it's a list, iterate through items
+    if isinstance(location_list, list):
+        for item in location_list:
+            # Check if item contains an environment variable
+            # Look for $VAR or ${VAR} patterns
+            env_var_pattern = r"\$\{?([A-Z_][A-Z0-9_]*)\}?"
+            env_vars = re.findall(env_var_pattern, item)
 
-        if env_vars:
-            all_defined = all(var in os.environ for var in env_vars)
-            if all_defined:
-                # Resolve and return it, normalizing path separators
-                return os.path.normpath(substitute_path_variables(item))
-            # If not all defined, continue to next item
-            continue
-
-        # Check if item contains a spack config variable (like $data_home)
-        # This would be a variable that starts with $ but isn't an env var
-        config_var_pattern = r"\$([a-z_][a-z0-9_]*)"
-        config_vars = re.findall(config_var_pattern, item)
-
-        if config_vars:
-            # Resolve the config variable (but watch out for infinite loops)
-            # For now, just resolve it - the replacements() function will handle it
-            try:
-                return os.path.normpath(substitute_path_variables(item))
-            except RecursionError:
-                # If we hit infinite recursion, skip this item
+            if env_vars:
+                all_defined = all(var in os.environ for var in env_vars)
+                if all_defined:
+                    # Resolve and return it, normalizing path separators
+                    return os.path.normpath(substitute_path_variables(item))
+                # If not all defined, continue to next item
                 continue
 
-        # If it's just a static string (like "~/.local/share/spack"), return it
-        return os.path.normpath(substitute_path_variables(item))
+            # Check if item contains a spack config variable (like $data_home)
+            # This would be a variable that starts with $ but isn't an env var
+            config_var_pattern = r"\$([a-z_][a-z0-9_]*)"
+            config_vars = re.findall(config_var_pattern, item)
+
+            if config_vars:
+                # Resolve the config variable (but watch out for infinite loops)
+                # For now, just resolve it - the replacements() function will handle it
+                try:
+                    return os.path.normpath(substitute_path_variables(item))
+                except RecursionError:
+                    # If we hit infinite recursion, skip this item
+                    continue
+
+            # If it's just a static string (like "~/.local/share/spack"), return it
+            return os.path.normpath(substitute_path_variables(item))
 
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
     # config::)
