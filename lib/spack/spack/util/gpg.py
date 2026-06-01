@@ -626,7 +626,7 @@ class Gpg:
         yes_to_all: bool = False,
     ):
         """Import a public key from a file and trust it.
-        
+
         Args:
             keyfile: file with the public key
             fprs: list of fingerprints to trust, if provided, then yes_to_all is ignored
