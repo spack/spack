@@ -25,6 +25,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
+import spack.util.gpg
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -110,6 +111,7 @@ class GlobalStateMarshaler:
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
         self.test_patches = TestPatches.create()
+        self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
         if serialize_env:
             from spack.environment import active_environment
 
@@ -136,6 +138,9 @@ class GlobalStateMarshaler:
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
+        if self.gnupg_home:
+            spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
+            spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
         self.test_patches.restore()
         if self.env:
             from spack.environment import activate

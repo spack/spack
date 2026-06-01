@@ -172,7 +172,7 @@ def gpg_list(args):
 
 def gpg_trust(args):
     """add a key to the keyring"""
-    spack.util.gpg.trust(args.keyfile, args.yes_to_all)
+    spack.util.gpg.trust(args.keyfile, yes_to_all=args.yes_to_all)
 
 
 def gpg_init(args):
@@ -185,7 +185,7 @@ def gpg_init(args):
         for filename in filenames:
             if not filename.endswith(".key"):
                 continue
-            spack.util.gpg.trust(os.path.join(root, filename), args.yes_to_all)
+            spack.util.gpg.trust(os.path.join(root, filename), yes_to_all=args.yes_to_all)
 
 
 def gpg_untrust(args):

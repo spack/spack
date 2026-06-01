@@ -387,14 +387,9 @@ class GpgKey:
             self.rev.append(GpgSignature(data))
 
     def __eq__(self, otherkey):
-        def _subkey_fpr_list(key):
-            # return an ordered list of key fingerprints for comparison
-            return set([k.fpr for k in key.subkey])
-
         if isinstance(otherkey, str):
             return self.fpr == otherkey
         elif isinstance(otherkey, GpgKey):
-            # return f"{self:c}" == f"{otherkey:c}"
             return self.fpr == otherkey.fpr
         else:
             return NotImplemented
@@ -620,6 +615,8 @@ class Gpg:
     def trust(
         self,
         keyfile: str,
+        *,
+        fprs: Optional[List[str]] = None,
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
@@ -627,7 +624,11 @@ class Gpg:
 
         Args:
             keyfile: file with the public key
+            fprs: list of fingerprints to trust, if provided, then yes_to_all is ignored
+            ownertrust: level of trust to assign to the key(s)
+            yes_to_all: trust all keys in the file if True, otherwise ask for each key
         """
+
         # This global method is safe to use to list keys in a file
         imported_keys = extract_public_keys(keyfile)
         if not imported_keys:
@@ -644,11 +645,17 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
+            # if fprs is provided, then only trust keys in the file with matching fingerprints
+            # yes_to_all is ignored in this case
+            if fprs:
+                trusted = key.fpr in fprs
+            else:
+                trusted = yes_to_all or bool(tty.get_yes_or_no(f"Trust key: {key}", default=False))
 
-            # Confirm with the user that the key should be trusted
-            if not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False):
+            if not trusted:
                 tty.info(f"Spack will not trust key {key}")
                 self.untrust([key])
+                continue
 
             # Update the owner trust to ultimate
             r, w = os.pipe()
@@ -940,14 +947,17 @@ def extract_public_keys(keyfile: str):
 
 
 @_autoinit
-def trust(keyfile: str, yes_to_all: bool = False):
+def trust(keyfile: str, *, fprs: Optional[List[str]] = None, yes_to_all: bool = False):
     """Import a public key from a file and trust it.
 
     Args:
         keyfile: file with the public key
+        fprs: fingerprints of keys to trust.
+        yes_to_all: trust all keys in the file if True, otherwise ask for each key.
+                    Ignored if fprs is provided.
     """
     assert GPG
-    GPG.trust(keyfile, ownertrust=GpgKeyTrust.ULTIMATE, yes_to_all=yes_to_all)
+    GPG.trust(keyfile, fprs=fprs, ownertrust=GpgKeyTrust.ULTIMATE, yes_to_all=yes_to_all)
 
 
 @_autoinit
