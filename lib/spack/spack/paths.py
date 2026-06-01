@@ -330,7 +330,12 @@ if TYPE_CHECKING:
 # to the locations object.
 class _PathsModule(_types.ModuleType):
     def __getattr__(self, name: str) -> str:
-        return getattr(locations, name)  # type: ignore[return-value]
+        # Look up 'locations' from module __dict__ instead of using closure
+        # This allows tests to monkeypatch the locations object
+        locs = self.__dict__.get("locations")
+        if locs is None:
+            raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+        return getattr(locs, name)  # type: ignore[return-value]
 
 
 _shim = _PathsModule(__name__)
