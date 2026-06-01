@@ -935,7 +935,7 @@ def _old_dotspack_warning():
     reasons = []
     for scope in spack.config.CONFIG.scopes.values():
         if hasattr(scope, "path") and uses_old_dotspack(scope.path):
-            if hasattr(scope, "backwards_compat_fallback") and scope.backwards_compat_fallback:
+            if getattr(scope, "backwards_compat_fallback", False):
                 reasons.append(f"Used by config scope: {scope.name}")
             else:
                 # A config scope explicitly targets ~/.spack: don't warn
