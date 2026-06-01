@@ -20,16 +20,17 @@ import spack.schema.container
 import spack.schema.definitions
 import spack.schema.develop
 import spack.schema.env_vars
-import spack.schema.environment
 import spack.schema.include
 import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
-import spack.schema.projections
 import spack.schema.repos
 import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
+
+#: This schema module accumulates all non-specs sections to be
+#: included as an option within spec groups for config overrides
 
 #: Properties for inclusion in other schemas
 sections: Dict[str, Any] = {

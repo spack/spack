@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.spec
 import spack.store

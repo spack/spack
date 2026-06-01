@@ -38,7 +38,7 @@ definition_list_options = [
         "properties": {**matrix_properties},
     },
     {"type": "string", "description": "Simple spec string"},
-    {"type": "null"}
+    {"type": "null"},
 ]
 
 
@@ -66,9 +66,7 @@ properties: Dict[str, Any] = {
                 "description": "List of specs in a definition, supporting both simple specs and "
                 "matrix configurations",
                 "default": [],
-                "items": {
-                    "anyOf": definition_list_options
-                }
+                "items": {"anyOf": definition_list_options}
             }
         }
     }

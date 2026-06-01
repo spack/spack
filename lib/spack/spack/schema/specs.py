@@ -55,22 +55,11 @@ spec_list_schema = {
     "description": "List of specs to include in the environment, supporting both simple specs and "
     "matrix configurations",
     "default": [],
-    "items": {
-        "anyOf": spec_list_options
-    },
+    "items": {"anyOf": spec_list_options},
 }
 
 
-properties: Dict[str, Any] = {
-    "specs": {
-        "type": "array",
-        "description": "List of specs, supporting both simple specs and matrix configurations",
-        "default": [],
-        "items": {
-            "anyOf": spec_list_options
-        },
-    }
-}
+properties: Dict[str, Any] = {"specs": spec_list_schema}
 
 #: Full schema with metadata
 schema = {

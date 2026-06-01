@@ -265,7 +265,7 @@ def ci_reindex(args):
     """
     env = spack.cmd.require_active_env(args.subparser)
     with env:
-        ci_mirrors = spack.config.CONFIG.get("mirrors", default={}, scope=env.scope_name)
+        ci_mirrors = cfg.CONFIG.get("mirrors", default={}, scope=env.scope_name)
 
     if not ci_mirrors:
         tty.die("spack ci rebuild-index requires an env containing a mirror")
