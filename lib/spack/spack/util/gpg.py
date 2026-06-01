@@ -626,10 +626,12 @@ class Gpg:
         yes_to_all: bool = False,
     ):
         """Import a public key from a file and trust it.
-
+        
         Args:
             keyfile: file with the public key
-            keys: list of keys to trust
+            fprs: list of fingerprints to trust, if provided, then yes_to_all is ignored
+            ownertrust: level of trust to assign to the key(s)
+            yes_to_all: trust all keys in the file if True, otherwise ask for each key
         """
 
         # This global method is safe to use to list keys in a file
@@ -649,12 +651,12 @@ class Gpg:
             if key not in imported_keys:
                 continue
 
-            if fprs and key.fpr in fprs:
-                pass
-            # Confirm with the user that the key should be trusted
-            if (fprs and key.fpr not in fprs) or (
-                not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False)
-            ):
+            if fprs:
+                trusted = key.fpr in fprs
+            else:
+                trusted = yes_to_all or tty.get_yes_or_no(f"Trust key: {key}", default=False)
+
+            if not trusted:
                 tty.info(f"Spack will not trust key {key}")
                 self.untrust([key])
                 continue
