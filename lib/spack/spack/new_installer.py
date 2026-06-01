@@ -25,7 +25,6 @@ import fcntl
 import glob
 import io
 import json
-import multiprocessing
 import os
 import re
 import selectors
@@ -71,13 +70,11 @@ import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
-import spack.paths
 import spack.report
 import spack.sandbox
 import spack.spec
 import spack.stage
 import spack.store
-import spack.subprocess_context
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
