@@ -294,9 +294,7 @@ def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkey
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mock_spack_instance):
     home_dir, base_prefix = mock_spack_instance
-    assert (
-        os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
-    )
+    assert os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
 
 
 def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch):
@@ -306,6 +304,7 @@ def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkey
 
     # Create fresh SpackPaths instance after setting env var
     from spack.paths import SpackPaths
+
     fresh_paths = SpackPaths(_prefix=base_prefix)
     monkeypatch.setattr(spack.paths, "locations", fresh_paths)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
