@@ -24,6 +24,7 @@ import textwrap
 import traceback
 import warnings
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, List, Optional, Set, Tuple
 
 import spack.vendor.archspec.cpu
@@ -898,16 +899,20 @@ def _old_dotspack_warning():
     Returns:
         str or None: Warning message if ~/.spack is in use, None otherwise
     """
-    old_dotspack = os.path.expanduser("~/.spack")
+    old_dotspack = Path(os.path.expanduser("~/.spack")).resolve()
 
     # Don't warn if it doesn't exist
-    if not os.path.exists(old_dotspack):
+    if not old_dotspack.exists():
         tty.debug("Skip .spack warning: no ~/.spack directory")
         return None
 
     # Helper to check if old_dotspack is a prefix
     def uses_old_dotspack(path):
-        return path == old_dotspack or path.startswith(old_dotspack + os.sep)
+        try:
+            Path(path).resolve().relative_to(old_dotspack)
+            return True
+        except ValueError:
+            return False
 
     # Check if user has explicitly configured $data_home, $state_home, or $cache_home
     # to point to ~/.spack - if so, they've made a conscious choice and we shouldn't warn
