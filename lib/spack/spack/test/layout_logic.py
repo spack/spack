@@ -292,7 +292,9 @@ def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkey
     assert warning is None
 
 
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mock_spack_instance, monkeypatch):
+def test_user_cache_path_is_default_when_env_var_is_empty(
+    working_env, mock_spack_instance, monkeypatch
+):
     import spack.config
 
     home_dir, base_prefix = mock_spack_instance
