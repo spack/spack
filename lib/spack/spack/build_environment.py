@@ -1037,7 +1037,7 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-    def get_env_modifications(self, cached_repo=None) -> EnvironmentModifications:
+    def get_env_modifications(self, cached_repo: Optional[spack.repo.RepoPath] = None) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
         - Updating PATH for packages that are required at runtime
