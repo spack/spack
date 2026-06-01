@@ -11,7 +11,7 @@ import subprocess
 import sys
 import textwrap
 from collections import Counter
-from typing import Callable, Generator, List, Optional, Sequence, Set, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
 import spack.config
@@ -354,12 +354,13 @@ def gray_hash(spec, length):
 
 
 def buildcache_status_fn(
-    available_hashes: Set[str],
+    available_hashes: Container[str],
 ) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
-    """Return a status_fn that marks not-installed specs present in a buildcache as [B].
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
 
     Args:
-        available_hashes: set of dag hashes known to be available in at least one buildcache.
+        available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
+            known to be available in at least one buildcache.
     """
 
     def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":

@@ -199,7 +199,7 @@ class InstallStatus(enum.Enum):
     external = "@M{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
-    buildcache = "@c{[B]}  "
+    buildcache = "@g{[b]}  "
 
 
 # regexes used in spec formatting

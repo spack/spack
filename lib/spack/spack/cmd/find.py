@@ -18,7 +18,6 @@ import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
-import spack.traverse
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.llnl.util.tty.color import colorize
@@ -56,8 +55,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-I", "--install-status", action="store_true", help="show install status of packages"
     )
-
-    arguments.add_common_arguments(subparser, ["buildcache_status"])
 
     subparser.add_argument(
         "--specfile-format",
@@ -419,15 +416,9 @@ def find(parser, args):
         # the latter only exists if you call args.specs()
         tty.die(f"No package matches the query: {' '.join(args.constraint)}")
 
-    if args.buildcache_status:
-        available_hashes = spack.binary_distribution.specs_in_buildcaches(
-            spack.traverse.traverse_nodes(
-                results + concretized_but_not_installed, key=spack.traverse.by_dag_hash
-            )
-        )
-        status_fn = cmd.buildcache_status_fn(available_hashes)
-    elif args.install_status or args.show_concretized:
-        status_fn = spack.spec.Spec.install_status
+    if args.install_status or args.show_concretized:
+        spack.binary_distribution.load_buildcache_index()
+        status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None
 
