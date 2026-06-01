@@ -10,6 +10,8 @@
 #
 # -------------------------------------------------------------------------
 config:
+  # locations variables are set by the first value that does NOT contain
+  # a null environment variable
   locations:
     data:
     - "$SPACK_DATA_HOME"

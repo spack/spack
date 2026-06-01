@@ -103,7 +103,7 @@ def _resolve_location_var(location_key):
         env_vars = re.findall(env_var_pattern, item)
 
         if env_vars:
-            all_defined = all(os.environ.get(var) for var in env_vars)
+            all_defined = all(var in os.environ for var in env_vars)
             if all_defined:
                 # Resolve and return it, normalizing path separators
                 return os.path.normpath(substitute_path_variables(item))

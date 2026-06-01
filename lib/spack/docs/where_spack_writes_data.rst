@@ -30,7 +30,7 @@ The ``old-layout`` scope (``etc/spack/defaults/old/config.yaml``) overrides both
 **Unilateral override**: Setting any of the new-style environment variables (``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, or ``SPACK_CACHE_HOME``) forces the new layout even when legacy ``$spack`` data is present.
 This ensures a partial override never produces a split layout.
 
-**Config bypass**: If you set ``config::`` or ``include::`` entries directly (bypassing the defaults), the base config scope is omitted and the ``SPACK_*_HOME`` environment variables have no effect on locations.
+**Config bypass**: If you set ``config::`` or ``include::`` entries directly (overriding the defaults with the ``::`` :ref:`configuration override syntax <config-overrides>`), the base config scope is omitted and the ``SPACK_*_HOME`` environment variables have no effect on locations.
 
 How to override
 ---------------

@@ -138,7 +138,7 @@ MAX_RECURSIVE_INCLUDES = 100
 
 #: configurable config vars -- these cannot be used by include paths
 #: nor by other paths that can affect config values
-CONFIGURABLE_VARS = ("config_home", "state_home", "cache_home", "data_home", "user_cache_path")
+CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 

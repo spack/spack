@@ -52,7 +52,10 @@ example that pre-1.2 and 1.2+ instances may have different notions
 of what compilers are available.
 
 You can avoid this divergence issue by forcing new Spack instances
-to also use ~/.spack (which will silence the warning).
+to also use ~/.spack (which will silence the warning) or by forcing
+old Spack instances to use `~/.config/spack`. For all versions after
+Spack v1.0, this can be done in the `includes` section of the Spack
+config scope in `$spack/etc/spack/include.yaml`.
 """)
 
 
