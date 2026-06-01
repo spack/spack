@@ -1600,3 +1600,72 @@ def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
 
     # Should not raise.
     spack.binary_distribution.load_buildcache_index()
+
+
+class _MockBinaryIndex:
+    """Minimal stand-in for BINARY_INDEX used by _url_update_index tests."""
+
+    def __init__(self, handler):
+        self.known_specs = {}
+        self._handler = handler
+        self.update_calls = []
+
+    def update(self, mirror_metadata=None, with_cooldown=False):
+        self.update_calls.append(mirror_metadata)
+
+    def get_index_handler(self, mirror_metadata, cache_entry={}):
+        return self._handler
+
+
+def _no_entries(url, component_type):
+    return {}, lambda f: None
+
+
+@pytest.fixture()
+def create_mock_index(monkeypatch):
+    """Constructs a mock index with the handler passed as argument."""
+
+    def _factory(handler):
+        mock_index = _MockBinaryIndex(handler)
+        monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+        monkeypatch.setattr(spack.binary_distribution, "get_entries_from_cache", _no_entries)
+
+        retry = web_util.Retry(total=5, backoff_factor=0, backoff_max=1)
+        return mock_index, retry
+
+    return _factory
+
+
+def test_url_update_index_retries_on_push_failure(tmp_path, create_mock_index):
+    """Tests that _url_update_index retries when push_index raises, eventually succeeding."""
+
+    class _Handler:
+        push_count = 0
+
+        def push_index(self, db):
+            _Handler.push_count += 1
+            if _Handler.push_count < 3:
+                raise Exception("Simulated 412 IfMatch mismatch")
+
+    mock_index, retry = create_mock_index(_Handler())
+    metadata = MirrorMetadata("s3://mybucket/prefix", 3)
+    spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+
+    assert _Handler.push_count == 3
+    # We should call .update on every attempt, so each retry picks up a fresh etag
+    assert mock_index.update_calls == [metadata] * 3
+
+
+def test_url_update_index_raises_after_retries_exhausted(tmp_path, create_mock_index):
+    """Tests that _url_update_index raises GenerateIndexError when all retry attempts fail."""
+
+    class _Handler:
+        def push_index(self, db):
+            raise Exception("412 IfMatch mismatch")
+
+    create_mock_index(_Handler())
+
+    metadata = MirrorMetadata("s3://mybucket/prefix", 3)
+    retry = web_util.Retry(total=5, backoff_factor=0, backoff_max=1)
+    with pytest.raises(GenerateIndexError):
+        spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
