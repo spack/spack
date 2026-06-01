@@ -648,11 +648,11 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-            fingerprint_trust_yes = fprs and yes_to_all
+
             if fprs and key.fpr in fprs:
                 pass
             # Confirm with the user that the key should be trusted
-            elif fingerprint_trust_yes or (
+            if (fprs and key.fpr not in fprs) or (
                 not yes_to_all and not tty.get_yes_or_no(f"Trust key: {key}", default=False)
             ):
                 tty.info(f"Spack will not trust key {key}")
