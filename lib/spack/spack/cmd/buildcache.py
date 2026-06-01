@@ -637,7 +637,9 @@ def keys_fn(args):
     if args.mirrors:
         mirror_map = dict([(m.name, m) for m in args.mirrors])
 
-    spack.binary_distribution.get_keys(args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map)
+    spack.binary_distribution.get_keys(
+        args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map
+    )
 
 
 def check_fn(args: argparse.Namespace):

@@ -804,7 +804,8 @@ complete -c spack -n '__fish_spack_using_command buildcache list' -s a -l allarc
 complete -c spack -n '__fish_spack_using_command buildcache list' -s a -l allarch -d 'list specs for all available architectures instead of default platform and OS'
 
 # spack buildcache keys
-set -g __fish_spack_optspecs_spack_buildcache_keys h/help i/install t/trust f/force
+set -g __fish_spack_optspecs_spack_buildcache_keys h/help i/install t/trust f/force y/yes-to-all
+
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s i -l install -f -a install
@@ -813,6 +814,8 @@ complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust 
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s t -l trust -d 'trust all downloaded keys'
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -f -a force
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -d 'force new download of keys'
+complete -c spack -n '__fish_spack_using_command buildcache keys' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache keys' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack buildcache check
 set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope=

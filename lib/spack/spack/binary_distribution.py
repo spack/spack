@@ -2272,7 +2272,9 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                mirror_layout_fingerprints = _get_keys_v2(fetch_url, yes_to_all, install, trust, force)
+                mirror_layout_fingerprints = _get_keys_v2(
+                    fetch_url, yes_to_all, install, trust, force
+                )
             else:
                 mirror_layout_fingerprints = _get_keys(
                     fetch_url, layout_version, yes_to_all, install, trust, force
@@ -2339,7 +2341,9 @@ def _get_keys(
     return saved_fingerprints
 
 
-def _get_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> Optional[List[str]]:
+def _get_keys_v2(
+    mirror_url, yes_to_all=False, install=False, trust=False, force=False
+) -> Optional[List[str]]:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(

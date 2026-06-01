@@ -600,7 +600,12 @@ _spack_buildcache_list() {
 }
 
 _spack_buildcache_keys() {
-    SPACK_COMPREPLY="-h --help -i --install -t --trust -f --force"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -i --install -t --trust -f --force -y --yes-to-all"
+    else
+        _mirrors
+    fi
 }
 
 _spack_buildcache_check() {
