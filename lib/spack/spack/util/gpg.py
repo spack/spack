@@ -387,14 +387,9 @@ class GpgKey:
             self.rev.append(GpgSignature(data))
 
     def __eq__(self, otherkey):
-        def _subkey_fpr_list(key):
-            # return an ordered list of key fingerprints for comparison
-            return set([k.fpr for k in key.subkey])
-
         if isinstance(otherkey, str):
             return self.fpr == otherkey
         elif isinstance(otherkey, GpgKey):
-            # return f"{self:c}" == f"{otherkey:c}"
             return self.fpr == otherkey.fpr
         else:
             return NotImplemented
