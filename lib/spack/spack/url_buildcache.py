@@ -1116,7 +1116,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     if not aws:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        tty.warn("Failed to use aws CLI to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
@@ -1152,7 +1152,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
                 filename_to_mtime[filename] = datetime.strptime(
                     match.group(1), "%Y-%m-%d %H:%M:%S"
                 ).timestamp()
-    except Exception as e:
+    except spack.util.executable.ProcessError as e:
         warnings.warn(
             "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
         )
@@ -1196,7 +1196,7 @@ def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
                 if stat_result is not None:
                     filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
-    except Exception as err:
+    except OSError as err:
         # If we got some kind of S3 (access denied or other connection error), the first non
         # boto-specific class in the exception is Exception.  Just print a warning and return
         tty.warn(f"Encountered problem listing packages at {url}: {err}")

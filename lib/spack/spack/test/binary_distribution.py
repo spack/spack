@@ -403,7 +403,7 @@ def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
 
 def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Some HTTP error")
+        raise OSError("Some HTTP error")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
@@ -420,7 +420,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
 
 def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Test Exception handling")
+        raise OSError("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
