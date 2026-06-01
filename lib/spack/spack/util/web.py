@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 import urllib.parse
+import warnings
 from html.parser import HTMLParser
 from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
@@ -387,9 +388,16 @@ def read_json(url: str):
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
-def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
+def push_to_url(local_file_path, remote_path, keep_original=True, if_match: Optional[str] = None):
     remote_url = urllib.parse.urlparse(remote_path)
+    if if_match and remote_url.scheme != "s3":
+        warnings.warn(
+            "Pushing to URL with `if_match` is only supported for s3:// URLS.n\n"
+            "Files may be overwritten unexpectedly."
+        )
+
     if remote_url.scheme == "file":
+
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
         if keep_original:
@@ -409,8 +417,9 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     raise
 
     elif remote_url.scheme == "s3":
-        if extra_args is None:
-            extra_args = {}
+        extra_args = {}
+        if if_match is not None:
+            extra_args = {"IfMatch": if_match}
 
         remote_path = remote_url.path
         while remote_path.startswith("/"):

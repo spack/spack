@@ -7,6 +7,7 @@ import concurrent.futures
 import contextlib
 import copy
 import datetime
+import functools
 import hashlib
 import io
 import itertools
@@ -769,6 +770,38 @@ def _read_specs(
         db.mark(spec, "in_buildcache", True)
 
 
+def _lazy_read_spec(
+    file: str,
+    spec_by_hash: Callable[[str], Optional[spack.spec.Spec]],
+    read_from_cache: Callable[[str], Optional[spack.spec.Spec]]
+):
+    """Lazy reader that attempts to find the spec using local methods first"""
+    _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
+
+    # Try to look it up from a passed source
+    s = spec_by_hash(spec_hash)
+    if s:
+        return s
+
+    # Look in the cached databases
+    s = BINARY_INDEX.known_specs.get(spec_hash)
+    if s:
+        return s
+
+    cache_entry: Optional[URLBuildcacheEntry] = None
+    try:
+        cache_entry = read_from_cache(file)
+        spec_dict = cache_entry.fetch_metadata()
+        s = spack.spec.Spec.from_dict(spec_dict)
+    except OSError as e:
+        warnings.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+    finally:
+        if cache_entry:
+            cache_entry.destroy()
+
+        return s
+
+
 def _url_update_index(
     mirror_metadata: MirrorMetadata,
     tmpdir: str,
@@ -792,33 +825,6 @@ def _url_update_index(
     """
     if not retry:
         retry = web_util.Retry()
-
-    def _lazy_read_spec(file: str):
-        """Lazy reader that attempts to find the spec using local dicts first"""
-        _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
-
-        # Try to look it up from a passed source
-        s = spec_by_hash(spec_hash)
-        if s:
-            return s
-
-        # Look in the cached databases
-        s = BINARY_INDEX.known_specs.get(spec_hash)
-        if s:
-            return s
-
-        cache_entry: Optional[URLBuildcacheEntry] = None
-        try:
-            cache_entry = read_fn(file)
-            spec_dict = cache_entry.fetch_metadata()
-            s = spack.spec.Spec.from_dict(spec_dict)
-        except Exception as e:
-            tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
-        finally:
-            if cache_entry:
-                cache_entry.destroy()
-
-        return s
 
     # Iterate until success
     for attempt in retry:
@@ -848,9 +854,13 @@ def _url_update_index(
                     if f is not None:
                         db._read_from_stream(f)
 
+            try_read_spec = functools.partial(
+                _lazy_read_spec, spec_by_hash=spec_by_hash, reac_from_cache=read_fn
+            )
+
             # Read the specs from the cache into the database db
             with timer.measure("read"):
-                _read_specs(file_list, _lazy_read_spec, filter_fn, db)
+                _read_specs(file_list, try_read_spec, filter_fn, db)
 
             with timer.measure("push"):
                 index_handler = BINARY_INDEX.get_index_handler(mirror_metadata)
@@ -3018,11 +3028,7 @@ class EtagIndexHandler(IndexHandler):
 
     def push_index(self, db: BuildCacheDatabase):
         """Push a database as the index back to the cache"""
-        args = {}
-        if self.url.startswith("s3://"):
-            args = {"IfMatch": self.etag}
-
-        _url_push_index(self.mirror_metadata, db, **args)
+        _url_push_index(self.mirror_metadata, db, if_match=self.etag)
 
 
 class NoOverwriteException(spack.error.SpackError):
