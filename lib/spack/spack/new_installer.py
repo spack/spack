@@ -79,7 +79,6 @@ import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.lock
-import spack.util.path
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
