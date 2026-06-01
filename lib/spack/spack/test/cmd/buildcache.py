@@ -636,7 +636,7 @@ def test_install_v2_layout(
     mirror("add", "my-mirror", str(test_mirror_path))
 
     # Trust original signing key (no-op if this is the unsigned pass)
-    buildcache("keys", "--install", "--trust")
+    buildcache("keys", "-y", "--install", "--trust")
 
     output = install("--fake", "--no-check-signature", "libdwarf")
 
@@ -711,7 +711,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
 
     # Trust original signing key (since it's in the original layout location,
     # this is where the monkeypatched attribute is used)
-    output = buildcache("keys", "--install", "--trust")
+    output = buildcache("keys", "-y", "--install", "--trust")
 
     output = buildcache("migrate", "my-mirror")
 
