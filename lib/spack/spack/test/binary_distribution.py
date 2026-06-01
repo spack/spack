@@ -162,7 +162,7 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path: pathlib.Path):
     with spack.util.gpg.gnupghome_override(gpg_dir2):
         assert len(spack.util.gpg.public_keys()) == 0
 
-        spack.binary_distribution.get_keys(mirrors=mirrors, install=True, trust=True, force=True)
+        spack.binary_distribution.get_keys(mirrors=mirrors, yes_to_all=True, install=True, trust=True, force=True)
 
         new_keys = spack.util.gpg.public_keys()
         assert len(new_keys) == 1

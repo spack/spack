@@ -2252,6 +2252,7 @@ def update_cache_and_get_specs():
 
 
 def get_keys(
+    yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
@@ -2271,10 +2272,10 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                mirror_layout_fingerprints = _get_keys_v2(fetch_url, install, trust, force)
+                mirror_layout_fingerprints = _get_keys_v2(fetch_url, yes_to_all, install, trust, force)
             else:
                 mirror_layout_fingerprints = _get_keys(
-                    fetch_url, layout_version, install, trust, force
+                    fetch_url, layout_version, yes_to_all, install, trust, force
                 )
             if mirror_layout_fingerprints:
                 fingerprints.extend(mirror_layout_fingerprints)
@@ -2284,6 +2285,7 @@ def get_keys(
 def _get_keys(
     mirror_url: str,
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+    yes_to_all: bool = False,
     install: bool = False,
     trust: bool = False,
     force: bool = False,
@@ -2325,7 +2327,7 @@ def _get_keys(
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(key_blob_path, yes_to_all=True)
+                spack.util.gpg.trust(key_blob_path, yes_to_all=yes_to_all)
                 tty.debug(f"Added {fingerprint} to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:
@@ -2337,7 +2339,7 @@ def _get_keys(
     return saved_fingerprints
 
 
-def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optional[List[str]]:
+def _get_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False) -> Optional[List[str]]:
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
@@ -2375,7 +2377,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False) -> Optiona
         tty.debug("Found key {0}".format(fingerprint))
         if install:
             if trust:
-                spack.util.gpg.trust(stage.save_filename, yes_to_all=True)
+                spack.util.gpg.trust(stage.save_filename, yes_to_all=yes_to_all)
                 tty.debug("Added this key to trusted keys.")
                 saved_fingerprints.append(fingerprint)
             else:

@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Optional, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 import spack.binary_distribution
 import spack.cmd
@@ -199,6 +199,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     keys.add_argument("-t", "--trust", action="store_true", help="trust all downloaded keys")
     keys.add_argument("-f", "--force", action="store_true", help="force new download of keys")
+    arguments.add_common_arguments(keys, ["yes_to_all"])
+    keys.add_argument(
+        "mirrors",
+        nargs=argparse.REMAINDER,
+        type=arguments.mirror_name_or_url,
+        help="mirror name, path, or URL",
+    )
     keys.set_defaults(func=keys_fn, subparser=keys)
 
     # Check if binaries need to be rebuilt on remote mirror
@@ -626,7 +633,11 @@ def list_fn(args):
 
 def keys_fn(args):
     """get public keys available on mirrors"""
-    spack.binary_distribution.get_keys(args.install, args.trust, args.force)
+    mirror_map: Optional[Mapping[str, spack.mirrors.mirror.Mirror]] = None
+    if args.mirrors:
+        mirror_map = dict([(m.name, m) for m in args.mirrors])
+
+    spack.binary_distribution.get_keys(args.yes_to_all, args.install, args.trust, args.force, mirrors=mirror_map)
 
 
 def check_fn(args: argparse.Namespace):
