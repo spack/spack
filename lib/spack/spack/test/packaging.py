@@ -118,7 +118,7 @@ def test_buildcache(mock_archive, tmp_path: pathlib.Path, monkeypatch, mutable_c
         args = parser.parse_args(["keys", "-f"])
         buildcache.buildcache(parser, args)
 
-        args = parser.parse_args(["keys", "-i", "-t"])
+        args = parser.parse_args(["keys", "-y", "-i", "-t"])
         buildcache.buildcache(parser, args)
 
 
