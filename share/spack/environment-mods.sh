@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-#!/bin/sh
 
 # _separator_exists sep
 #
@@ -55,7 +54,7 @@ _spack_env_append() {
    _separator_exists $sep || return
 
     if _spack_env_varname_is_empty "$varname"; then
-        export $varname=$value
+        export $varname="$value"
     else
         eval "current=\"\${${varname}}\""
         export $varname=$current$sep$value
@@ -71,7 +70,7 @@ _spack_env_prepend() { # if not exporting then use lowercase
     value="$2"
     sep="$3"
 
-   _separator_exists $sep || return
+   _separator_exists "$sep" || return
 
    if _spack_env_varname_is_empty "$varname"; then
         export $varname=$value
@@ -91,11 +90,11 @@ _spack_env_remove_value() {
     value="$2"
     sep="$3"
 
-    _separator_exists $sep || return
+    _separator_exists "$sep" || return
 
-    accumulator=$sep
-    original_ifs=$IFS
-    IFS=$sep
+    accumulator="$sep"
+    original_ifs="$IFS"
+    IFS="$sep"
 
     eval "varname_value=\"\${${varname}}\""
     for val in $varname_value; do
@@ -108,7 +107,7 @@ _spack_env_remove_value() {
 
     accumulator=${accumulator#$sep}
     accumulator=${accumulator%$sep}
-    export $varname=$accumulator
+    export $varname="$accumulator"
 }
 
 # _spack_env_remove_first varname value sep
@@ -120,11 +119,11 @@ _spack_env_remove_first() {
     value="$2"
     sep="$3"
 
-    _separator_exists $sep || return
+    _separator_exists "$sep" || return
 
-    accumulator=$sep
-    original_ifs=$IFS
-    IFS=$sep
+    accumulator="$sep"
+    original_ifs="$IFS"
+    IFS="$sep"
 
     done="no"
 
@@ -141,7 +140,7 @@ _spack_env_remove_first() {
 
     accumulator=${accumulator#$sep}
     accumulator=${accumulator%$sep}
-    export $varname=$accumulator
+    export $varname="$accumulator"
 }
 
 # _spack_env_remove_last varname value sep
@@ -153,16 +152,16 @@ _spack_env_remove_last() {
     value="$2"
     sep="$3"
 
-    _separator_exists $sep || return
+    _separator_exists "$sep" || return
 
-    original_ifs=$IFS
-    IFS=$sep
+    original_ifs="$IFS"
+    IFS="$sep"
 
     done="no"
 
     # Reverse the list order
     eval "varname_value=\"\${${varname}}\""
-    reversed=$sep
+    reversed="$sep"
     for val in $varname_value; do
         reversed=$sep$val$reversed
     done
@@ -171,7 +170,7 @@ _spack_env_remove_last() {
 
     # Remove the first appearance of $value in the reversed list
     # Put the entries back in in reverse order to get back original order
-    accumulator=$sep
+    accumulator="$sep"
     for val in $reversed; do
         if [ "$val" != "$value" ] || [ "$done" = "yes" ]; then
             accumulator=$sep$val$accumulator
@@ -183,7 +182,7 @@ _spack_env_remove_last() {
     accumulator=${accumulator%$sep}
 
     export IFS="$original_ifs"
-    export $varname=$accumulator
+    export $varname="$accumulator"
 }
 
 # _spack_env_prune_duplicate varname sep
@@ -196,12 +195,12 @@ _spack_env_prune_duplicates() {
     varname="$1"
     sep="$2"
 
-    _separator_exists $sep || return
+    _separator_exists "$sep" || return
 
     # keep separate var names since we delegate to another method
-    prune_accumulator=$sep
-    pre_prune_ifs=$IFS
-    IFS=$sep
+    prune_accumulator="$sep"
+    pre_prune_ifs="$IFS"
+    IFS="$sep"
 
     eval "varname_value=\"\${${varname}}\""
     while [ "$varname_value" != "" ]; do
@@ -220,5 +219,5 @@ _spack_env_prune_duplicates() {
     prune_accumulator=${prune_accumulator%$sep}
 
     export IFS="$pre_prune_ifs"
-    export $varname=$prune_accumulator
+    export $varname="$prune_accumulator"
 }
