@@ -123,7 +123,17 @@ def _resolve_location_var(location_key):
         # If it's just a static string (like "~/.local/share/spack"), return it
         return os.path.normpath(substitute_path_variables(item))
 
-    return None
+    # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
+    # config::)
+    expanded_home = os.path.expanduser("~")
+    if location_key == "data":
+        return os.path.join(expanded_home, ".local", "share", "spack")
+    elif location_key == "state":
+        return os.path.join(expanded_home, ".local", "state", "spack")
+    elif location_key == "cache":
+        return os.path.join(expanded_home, ".cache", "spack")
+    else:
+        raise ValueError(f"Unexpected request: {location_key}")
 
 
 # Substitutions to perform
