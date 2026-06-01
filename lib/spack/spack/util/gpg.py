@@ -650,11 +650,12 @@ class Gpg:
             # Skip keys we had before trusting the keys in the file
             if key not in imported_keys:
                 continue
-
+            # if fprs is provided, then only trust keys in the file with matching fingerprints
+            # yes_to_all is ignored in this case
             if fprs:
                 trusted = key.fpr in fprs
             else:
-                trusted = yes_to_all or tty.get_yes_or_no(f"Trust key: {key}", default=False)
+                trusted = yes_to_all or bool(tty.get_yes_or_no(f"Trust key: {key}", default=False))
 
             if not trusted:
                 tty.info(f"Spack will not trust key {key}")
