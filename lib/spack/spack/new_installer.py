@@ -86,6 +86,7 @@ import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
+from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
@@ -341,49 +342,6 @@ def install_from_buildcache(
     return True
 
 
-class GlobalState:
-    """Global state needed in a build subprocess. This is similar to spack.subprocess_context,
-    but excludes the Spack environment, which is slow to serialize and should not be needed
-    during the build."""
-
-    __slots__ = (
-        "store",
-        "config",
-        "monkey_patches",
-        "spack_working_dir",
-        "repo_cache",
-        "gnupg_home",
-    )
-
-    def __init__(self):
-        if multiprocessing.get_start_method() == "fork":
-            return
-        self.config = spack.config.CONFIG.ensure_unwrapped()
-        self.store = spack.store.STORE
-        self.monkey_patches = spack.subprocess_context.TestPatches.create()
-        self.spack_working_dir = spack.paths.spack_working_dir
-        self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
-
-    def restore(self):
-        if multiprocessing.get_start_method() == "fork":
-            # In the forking case we must erase SSL contexts.
-            from spack.oci import opener
-            from spack.util import web
-            from spack.util.s3 import s3_client_cache
-
-            web.urlopen._instance = None
-            opener.urlopen._instance = None
-            s3_client_cache.clear()
-            return
-        if self.gnupg_home:
-            spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
-            spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
-        spack.store.STORE = self.store
-        spack.config.CONFIG = self.config
-        self.monkey_patches.restore()
-        spack.paths.spack_working_dir = self.spack_working_dir
-
-
 class PrefixPivoter:
     """Manages the installation prefix of a build."""
 
@@ -479,7 +437,7 @@ def worker_function(
     js1: Optional[Connection],
     js2: Optional[Connection],
     log_path: str,
-    global_state: GlobalState,
+    global_state: GlobalStateMarshaler,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
 ):
@@ -1045,6 +1003,8 @@ def start_build(
     makeflags = jobserver.makeflags(gmake)
     fifo = "--jobserver-auth=fifo:" in makeflags
 
+    # As a performance optimization, we do not serialize the environment which
+    # is slow to serialize and not needed in the build job
     proc = Process(
         target=worker_function,
         args=(
@@ -1068,7 +1028,7 @@ def start_build(
             None if fifo else jobserver.r_conn,
             None if fifo else jobserver.w_conn,
             log_path,
-            GlobalState(),
+            GlobalStateMarshaler(serialize_env=False),
             stop_before,
             stop_at,
         ),
