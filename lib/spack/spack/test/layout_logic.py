@@ -300,14 +300,37 @@ def test_user_cache_path_is_default_when_env_var_is_empty(working_env, mock_spac
 
 
 def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch):
+    home_dir, base_prefix = mock_spack_instance
     p = str(Path("some") / "path")
     os.environ["SPACK_STATE_HOME"] = p
+
+    # Create fresh SpackPaths instance after setting env var
+    from spack.paths import SpackPaths
+    fresh_paths = SpackPaths(_prefix=base_prefix)
+    monkeypatch.setattr(spack.paths, "locations", fresh_paths)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # The module shim's __getattr__ has a closure over the original 'locations'
+    # We need to replace the __getattr__ method to look up 'locations' from module dict
+    import sys
+    import types
+    paths_module = sys.modules['spack.paths']
+
+    # Replace __getattr__ with a version that looks up locations from module dict
+    def new_getattr(self, name):
+        # Look up locations from the module's __dict__ instead of using closure
+        locs = self.__dict__.get('locations')
+        if locs is None:
+            raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+        return getattr(locs, name)
+
+    # Bind the new method to the module
+    paths_module.__getattr__ = types.MethodType(new_getattr, paths_module)
+
     assert spack.paths.user_cache_path == p
 
 
 def test_substitute_user_cache(mock_spack_instance):
-    user_cache_path = spack.paths.user_cache_path
-    assert os.path.join(user_cache_path, "baz") == spack.util.path.canonicalize_path(
+    assert os.path.join(spack.paths.user_cache_path, "baz") == spack.util.path.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
