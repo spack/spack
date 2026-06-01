@@ -388,7 +388,13 @@ def read_json(url: str):
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
-def push_to_url(local_file_path, remote_path, keep_original=True, if_match: Optional[str] = None):
+def push_to_url(
+    local_file_path,
+    remote_path,
+    keep_original=True,
+    content_type: Optional[str] = None,
+    if_match: Optional[str] = None,
+):
     remote_url = urllib.parse.urlparse(remote_path)
     if if_match and remote_url.scheme != "s3":
         warnings.warn(
@@ -418,7 +424,9 @@ def push_to_url(local_file_path, remote_path, keep_original=True, if_match: Opti
     elif remote_url.scheme == "s3":
         extra_args = {}
         if if_match is not None:
-            extra_args = {"IfMatch": if_match}
+            extra_args.update({"IfMatch": if_match})
+        if content_type is not None:
+            extra_args.update({"ContentType": content_type})
 
         remote_path = remote_url.path
         while remote_path.startswith("/"):

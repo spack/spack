@@ -711,7 +711,9 @@ def select_signing_key() -> str:
     return str(keys[0])
 
 
-def _url_push_index(mirror_metadata: MirrorMetadata, db: BuildCacheDatabase, **kwargs):
+def _url_push_index(
+    mirror_metadata: MirrorMetadata, db: BuildCacheDatabase, if_match: Optional[str] = None
+):
     """Generate the index, compute its hash, and push the files to the mirror"""
     # Ensure the database file is up-to-date
     db._write()
@@ -724,7 +726,7 @@ def _url_push_index(mirror_metadata: MirrorMetadata, db: BuildCacheDatabase, **k
         url_util.join(mirror_metadata.view, "index") if mirror_metadata.view else "index",
         BuildcacheComponent.INDEX,
         compression="none",
-        **kwargs,
+        if_match=if_match,
     )
     cache_class.maybe_push_layout_json(mirror_metadata.url)
 
@@ -750,7 +752,11 @@ def _read_specs(
             _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
 
         except IndexError:
-            raise GenerateIndexError(f"Malformed metadata file name detected {file}")
+            # If unable to parse the spec information from the file name continue.
+            warnings.warn(f"Malformed metadata file name detected {file}")
+            # _lazy_read_spec will still try to download the manifest, it is possible something odd
+            # happened and this is still a valid cache manifest.
+            pass
 
         if not filter_fn(spec_hash):
             continue
@@ -771,23 +777,26 @@ def _read_specs(
 
 
 def _lazy_read_spec(
-    file: str,
-    spec_by_hash: Callable[[str], Optional[spack.spec.Spec]],
-    read_from_cache: Callable[[str], Optional[spack.spec.Spec]],
+    file: str, spec_by_hash: Callable[[str], Optional[spack.spec.Spec]], read_from_cache: Callable
 ):
     """Lazy reader that attempts to find the spec using local methods first"""
-    _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
+    try:
+        _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
 
-    # Try to look it up from a passed source
-    s = spec_by_hash(spec_hash)
-    if s:
-        return s
+        # Try to look it up from a passed source
+        s = spec_by_hash(spec_hash)
+        if s:
+            return s
 
-    # Look in the cached databases
-    s = BINARY_INDEX.known_specs.get(spec_hash)
-    if s:
-        return s
+        # Look in the cached databases
+        s = BINARY_INDEX.known_specs.get(spec_hash)
+        if s:
+            return s
+    except IndexError:
+        # Failure to parse the manifest means we can't just do this the fast way
+        pass
 
+    # If we can't find the spec locally, try to fetch it from the cache
     cache_entry: Optional[URLBuildcacheEntry] = None
     try:
         cache_entry = read_from_cache(file)
@@ -2389,13 +2398,9 @@ def get_keys(
         for layout_version in mirror.supported_layout_versions:
             fetch_url = mirror.fetch_url
             if layout_version == 2:
-                _get_keys_v2(
-                    fetch_url, yes_to_all, install, trust, force
-                )
+                _get_keys_v2(fetch_url, yes_to_all, install, trust, force)
             else:
-                _get_keys(
-                    fetch_url, layout_version, yes_to_all, install, trust, force
-                )
+                _get_keys(fetch_url, layout_version, yes_to_all, install, trust, force)
 
 
 def _get_keys(
@@ -2452,9 +2457,7 @@ def _get_keys(
         key_entry.destroy()
 
 
-def _get_keys_v2(
-    mirror_url, yes_to_all=False, install=False, trust=False, force=False
-)
+def _get_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, force=False):
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(

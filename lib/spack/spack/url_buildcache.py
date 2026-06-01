@@ -36,7 +36,7 @@ from spack.mirrors.mirror import BINARY_MEDIA_TYPE_VERSION
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
-from spack.util.executable import which
+from spack.util.executable import ProcessError, which
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -565,7 +565,7 @@ class URLBuildcacheEntry:
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
-        **kwargs,
+        if_match: Optional[str] = None,
     ) -> None:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
@@ -591,7 +591,7 @@ class URLBuildcacheEntry:
         )
 
         web_util.push_to_url(
-            manifest_path, manifest_destination_url, keep_original=False, **kwargs
+            manifest_path, manifest_destination_url, keep_original=False, if_match=if_match
         )
 
     @classmethod
@@ -602,7 +602,7 @@ class URLBuildcacheEntry:
         manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-        **kwargs,
+        if_match: Optional[str] = None,
     ) -> None:
         """Convenience method to push a local file to a mirror as a blob.  Both manifest
         and blob are pushed as a component of the given component_type.  If ``compression``
@@ -638,7 +638,7 @@ class URLBuildcacheEntry:
                 manifest,
                 tmpdir,
                 component_type=component_type,
-                **kwargs,
+                if_match=if_match,
             )
 
     def push_binary_package(
@@ -1033,7 +1033,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
-        **kwargs,
+        if_match: Optional[str] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1045,7 +1045,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-        **kwargs,
+        if_match: Optional[str] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1152,7 +1152,7 @@ def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
                 filename_to_mtime[filename] = datetime.strptime(
                     match.group(1), "%Y-%m-%d %H:%M:%S"
                 ).timestamp()
-    except spack.util.executable.ProcessError as e:
+    except ProcessError as e:
         warnings.warn(
             "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
         )
