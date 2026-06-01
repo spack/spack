@@ -7,6 +7,7 @@
 import os
 import pathlib
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -204,7 +205,7 @@ class SetAnXdgVarAndReadDataHome:
         )
 
 
-def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config):
+def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config, monkeypatch):
     """Test that subprocess inherits frozen path values from parent, not env vars.
 
     Build subprocesses may set XDG_* environment variables. We want to ensure that
@@ -219,7 +220,7 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config)
     home_dir, base_prefix = mock_spack_instance
 
     # Create fresh config after monkeypatch to pick up new paths
-    spack.config.CONFIG = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     # Expected data_home based on the home we set (without any XDG override)
     expected = str(pathlib.Path(home_dir) / ".local" / "share" / "spack")
@@ -232,7 +233,7 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config)
     assert proc.exitcode == 0, "Subprocess test failed"
 
 
-def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance):
+def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance, monkeypatch):
     """Warn if ~/.spack exists but ~/.config/spack doesn't."""
     import spack.config
     import spack.main
@@ -242,7 +243,7 @@ def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance):
     _ensure_dir(pathlib.Path(home_dir) / ".spack")
     # Don't create ~/.config/spack
 
-    spack.config.CONFIG = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     warning = spack.main._old_dotspack_warning()
 
     assert warning is not None
@@ -250,7 +251,7 @@ def test_warn_old_dotspack_when_only_dotspack_exists(mock_spack_instance):
     assert "spack migrate" in warning
 
 
-def test_no_warn_when_both_exist(mock_spack_instance):
+def test_no_warn_when_both_exist(mock_spack_instance, monkeypatch):
     """Don't warn if both ~/.spack and ~/.config/spack exist."""
     import spack.config
     import spack.main
@@ -260,7 +261,7 @@ def test_no_warn_when_both_exist(mock_spack_instance):
     _ensure_dir(pathlib.Path(home_dir) / ".spack")
     _ensure_dir(pathlib.Path(home_dir) / ".config" / "spack")
 
-    spack.config.CONFIG = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     warning = spack.main._old_dotspack_warning()
 
     assert warning is None
@@ -278,15 +279,14 @@ def test_no_warn_when_explicit_override(mock_spack_instance, working_env, monkey
 
     os.environ["SPACK_USER_CONFIG_PATH"] = str(dotspack)
 
-    spack.config.CONFIG = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     warning = spack.main._old_dotspack_warning()
 
     assert warning is None
 
 
-@pytest.mark.xfail(reason="TODO: fix - user_cache_path resolution with layout detection")
-def test_user_cache_path_is_overridable(working_env, mock_spack_instance):
-    p = "/some/path"
+def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch):
+    p = str(Path("some") / "path")
     os.environ["SPACK_STATE_HOME"] = p
-    spack.config.CONFIG = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     assert spack.paths.user_cache_path == p
