@@ -51,7 +51,7 @@ _spack_env_append() {
     value="$2"
     sep="$3"
 
-   _separator_exists $sep || return
+   _separator_exists "$sep" || return
 
     if _spack_env_varname_is_empty "$varname"; then
         export $varname="$value"
@@ -73,7 +73,7 @@ _spack_env_prepend() { # if not exporting then use lowercase
    _separator_exists "$sep" || return
 
    if _spack_env_varname_is_empty "$varname"; then
-        export $varname=$value
+        export $varname="$value"
     else
         eval "current=\"\${${varname}}\""
         export $varname=$value$sep$current
@@ -208,7 +208,7 @@ _spack_env_prune_duplicates() {
         for val in $varname_value; do
             prune_accumulator=$prune_accumulator$val$sep
             IFS="$pre_prune_ifs"  # setting IFS to $sep breaks _spack_env_remove_value
-            _spack_env_remove_value $varname $val $sep
+            _spack_env_remove_value "$varname" "$val" "$sep"
             IFS=$sep
             eval "varname_value=\"\${${varname}}\""
             break

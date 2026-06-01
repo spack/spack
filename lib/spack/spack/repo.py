@@ -937,13 +937,6 @@ class RepoPath:
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def all_repos_for_pkg(self, pkg_name: str) -> List["Repo"]:
-        """Return all repos in this path that contain a package with the given name."""
-        return [repo for repo in self.repos if repo.exists(pkg_name)]
-
-    def get_all_repos(self):
-        return self.repos
-
     def is_virtual(self, pkg_name: str) -> bool:
         """Return True if the package with this name is virtual, False otherwise.
 
