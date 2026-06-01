@@ -957,6 +957,8 @@ def trust(keyfile: str, *, fprs: Optional[List[str]] = None, yes_to_all: bool = 
     Args:
         keyfile: file with the public key
         fprs: fingerprints of keys to trust.
+        yes_to_all: trust all keys in the file if True, otherwise ask for each key.
+                    Ignored if fprs is provided.
     """
     assert GPG
     GPG.trust(keyfile, fprs=fprs, ownertrust=GpgKeyTrust.ULTIMATE, yes_to_all=yes_to_all)
