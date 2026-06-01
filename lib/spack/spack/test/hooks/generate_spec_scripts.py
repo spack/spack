@@ -197,10 +197,10 @@ def test_no_scripts_for_external_spec_with_deps(
         assert not os.path.isfile(path_to_unload_script)
 
 
-def test_write_spec_scripts_fails_on_nonexistent_directory(
+def test_generate_script_fails_on_nonexistent_directory(
     install_mockery, mock_fetch, mock_archive, mock_packages
 ):
-    """Test that write_spec_scripts prints an error message when it fails to write a script
+    """Test that generate_script prints an error message when it fails to write a script
     because the directory doesn't exist"""
 
     spec = Spec("mpileaks")
@@ -212,4 +212,4 @@ def test_write_spec_scripts_fails_on_nonexistent_directory(
     bad_path = os.path.join(spec.prefix, "nonexistent_dir", "load")
 
     with pytest.raises(OSError):
-        spec_script.write_spec_scripts(bad_path, "some modifications")
+        spec_script.generate_script(bad_path, "Nonexistant directory script content")

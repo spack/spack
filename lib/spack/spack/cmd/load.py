@@ -114,7 +114,7 @@ def load(parser, args):
                     mods = generate_script.get_load_environment_modifications(spec, shell, cached_repo)
 
                     comments = "::" if shell == "bat" else "###"
-                    generate_script.write_spec_scripts(load_script_path, mods, comments)
+                    generate_script.generate_script(load_script_path, mods, comments)
                 except Exception as err:
                     tty.die(f"Error writing to {load_script_path}\n{err}")
 

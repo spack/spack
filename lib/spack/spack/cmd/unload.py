@@ -106,7 +106,7 @@ def unload(parser, args):
                     mods = generate_script.get_unload_environment_modifications(spec, shell, cached_repo)
 
                     comments = "::" if shell == "bat" else "###"
-                    generate_script.write_spec_scripts(unload_script_path, mods, comments)
+                    generate_script.generate_script(unload_script_path, mods, comments)
                 except Exception as err:
                     tty.die(f"Error writing to {unload_script_path}\n{err}")
 
