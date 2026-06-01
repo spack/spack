@@ -84,7 +84,7 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clean_config_env):
     return home_dir, base_prefix
 
 
-def test_old_layout_detected(mock_spack_instance):
+def test_old_layout_detected(mock_spack_instance, monkeypatch):
     """Test that old layout is detected when old install directory exists."""
     home_dir, base_prefix = mock_spack_instance
 
@@ -95,7 +95,7 @@ def test_old_layout_detected(mock_spack_instance):
     with open(os.path.join(old_install, "dummy_install"), "w", encoding="utf-8") as f:
         f.write("test")
 
-    # Re-detect layout
+    # Re-detect layout by creating fresh SpackPaths and updating global locations
     from spack.paths import SpackPaths, detect_old_spack_layout
 
     mock_paths = SpackPaths(_prefix=base_prefix)
@@ -103,18 +103,17 @@ def test_old_layout_detected(mock_spack_instance):
 
     assert old_detected, "Old layout should be detected when opt/spack has content"
 
+    # Update the global locations object so config initialization sees the old layout
+    monkeypatch.setattr(spack.paths, "locations", mock_paths)
+
     # Create a new configuration to see if it picks up the old scope
     # The include.yaml should include the "old" scope when layout_detected("old") is true
     cfg = spack.config.create()
 
-    # Check that we have the defaults scope
-    assert "defaults" in cfg.scopes, "Should have defaults scope"
-
-    # The old-layout scope should be included if the condition is met
-    scope_names = list(cfg.scopes.keys())
-
-    # Based on include.yaml, if old layout is detected, we should see "old-layout" scope
-    assert len(scope_names) > 0, "Should have at least one scope"
+    # Check that we have the old-layout scope
+    assert "old-layout" in cfg.scopes, "Should have old-layout scope when old layout detected"
+    assert cfg.get("config:install_tree:root") == "$spack/opt/spack"
+    assert cfg.get("config:source_cache") == "$spack/var/cache"
 
 
 def test_config_defaults_use_data_home(mock_spack_instance):
