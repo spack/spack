@@ -3,11 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import contextlib
-import multiprocessing
-import os
 import pathlib
 import sys
-import time
 from types import ModuleType
 from typing import Optional
 
@@ -204,6 +201,8 @@ def make_buffered_pipe():
 
 
 pytest.mark.skipif(sys.platform != "win32", reason="Windows-only")
+
+
 def test_buffered_pipe_push_and_recv():
     with make_buffered_pipe() as bp:
         bp._push_data(b"hello")

@@ -44,6 +44,7 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     FrozenSet,
@@ -140,8 +141,8 @@ def _conn_to_text_stream(conn: "Connection") -> io.TextIOWrapper:
     """
     if IS_WINDOWS:
         handle = conn.fileno()
-        conn._handle = None  # transfer ownership to CRT
-        fd = msvcrt.open_osfhandle(handle, os.O_WRONLY)
+        conn._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
+        fd = msvcrt.open_osfhandle(handle, os.O_WRONLY)  # type: ignore[attr-defined]
         return os.fdopen(fd, "w", buffering=1)
     return os.fdopen(conn.fileno(), "w", buffering=1, closefd=False)
 
@@ -156,7 +157,7 @@ def _conn_write(conn: "Connection", data: bytes) -> None:
     """
     if IS_WINDOWS:
         dup_h = win_io.dup_fh(conn.fileno())
-        fd = msvcrt.open_osfhandle(dup_h, os.O_WRONLY)
+        fd = msvcrt.open_osfhandle(dup_h, os.O_WRONLY)  # type: ignore[attr-defined]
         try:
             os.write(fd, data)
         finally:
@@ -262,7 +263,7 @@ class ChildInfo(DatabaseAction):
 
 def get_selectors() -> selectors.BaseSelector:
     """Return a new selector for monitoring child process output."""
-    selector = selectors.DefaultSelector()
+    selector: selectors.BaseSelector = selectors.DefaultSelector()
     if IS_WINDOWS:
         selector = win_io.HybridWindowsSelector()
     return selector
@@ -311,6 +312,9 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
     """Forward log_r to file_w and parent_w (if echoing is enabled).
     Echoing is enabled and disabled by reading from control_r."""
     echo_on = False
+    selector = get_selectors()
+    selector.register(log_r, selectors.EVENT_READ)
+    selector.register(control_r, selectors.EVENT_READ)
     try:
         with log_file, open(parent_w, "wb", closefd=False) as parent:
             while True:
@@ -334,7 +338,6 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
     except OSError:  # do not raise
         pass
     finally:
-        log_file.close()
         os.close(log_r)
 
 
@@ -354,7 +357,7 @@ class Tee:
         r, w = self._create_pipe()
         self._control_fd, parent_fd = self._acquire_connection_fds()
         self.tee_thread = threading.Thread(
-            target=tee, args=(self._control_fd, r, self.log_path, parent_fd), daemon=True
+            target=tee, args=(self._control_fd, r, log_file, parent_fd), daemon=True
         )
         self.tee_thread.start()
         for fd in fds:
@@ -374,10 +377,10 @@ class Tee:
         if IS_WINDOWS:
             import asyncio.windows_utils
 
-            h_read, h_write = asyncio.windows_utils.pipe(overlapped=(True, False))
-            r = msvcrt.open_osfhandle(h_read, os.O_RDONLY)
+            h_read, h_write = asyncio.windows_utils.pipe(overlapped=(True, False))  # type: ignore[attr-defined]
+            r = msvcrt.open_osfhandle(h_read, os.O_RDONLY)  # type: ignore[attr-defined]
             dup_h_write = win_io.dup_fh(h_write)
-            w = msvcrt.open_osfhandle(dup_h_write, os.O_WRONLY)
+            w = msvcrt.open_osfhandle(dup_h_write, os.O_WRONLY)  # type: ignore[attr-defined]
             self._h_write = h_write  # retained for SetStdHandle and CloseHandle in close()
         else:
             r, w = os.pipe()
@@ -392,11 +395,11 @@ class Tee:
         """
         if IS_WINDOWS:
             control_handle = self.control.fileno()
-            self.control._handle = None  # transfer ownership to CRT
-            control_fd = msvcrt.open_osfhandle(control_handle, os.O_RDONLY)
+            self.control._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
+            control_fd = msvcrt.open_osfhandle(control_handle, os.O_RDONLY)  # type: ignore[attr-defined]
             parent_handle = self.parent.fileno()
-            self.parent._handle = None  # transfer ownership to CRT
-            parent_fd = msvcrt.open_osfhandle(parent_handle, os.O_WRONLY)
+            self.parent._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
+            parent_fd = msvcrt.open_osfhandle(parent_handle, os.O_WRONLY)  # type: ignore[attr-defined]
         else:
             control_fd = self.control.fileno()
             parent_fd = self.parent.fileno()
@@ -411,18 +414,18 @@ class Tee:
         The write handle is made inheritable first so child processes can use it directly.
         """
         if IS_WINDOWS:
-            self._saved_win32_stdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
-            self._saved_win32_stderr = win_io.GetStdHandle(win_io.STD_ERROR_HANDLE)
-            os.set_handle_inheritable(self._h_write, True)
-            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._h_write)
-            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._h_write)
+            self._saved_win32_stdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
+            self._saved_win32_stderr = win_io.GetStdHandle(win_io.STD_ERROR_HANDLE)  # type: ignore[has-type]
+            os.set_handle_inheritable(self._h_write, True)  # type: ignore[attr-defined]
+            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._h_write)  # type: ignore[has-type]
+            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._h_write)  # type: ignore[has-type]
 
     def _restore_std_handles(self) -> None:
         """On Windows, restore the Win32 std handles saved by _redirect_std_handles."""
         if IS_WINDOWS:
-            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._saved_win32_stdout)
-            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._saved_win32_stderr)
-            win_io.CloseHandle(self._h_write)
+            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._saved_win32_stdout)  # type: ignore[has-type]
+            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._saved_win32_stderr)  # type: ignore[has-type]
+            win_io.CloseHandle(self._h_write)  # type: ignore[has-type]
 
     def _release_connection_fds(self) -> None:
         """Close or release the control connection after the tee thread has joined."""
@@ -695,22 +698,18 @@ def worker_function(
     # to log_path (already created by tempfile.mkstemp in the parent) so the user can diagnose.
     tee = None
     state_stream = None
-    try:
-        tee = Tee(echo_control, parent, log_path)
-        # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
-        # than ConsoleIO (WriteConsoleW).  On Windows, if fds 1/2 are still console handles when
-        # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
-        # ERROR_INVALID_FUNCTION.  Post-dup2 the fds are pipe handles, so FileIO is chosen.
-        sys.stdout = os.fdopen(1, "w", buffering=1, encoding=_stdout_enc, closefd=False)
-        sys.stderr = os.fdopen(2, "w", buffering=1, encoding=_stderr_enc, closefd=False)
-        state_stream = _conn_to_text_stream(state)
-    except Exception:
-        with open(log_path, "a") as _log:
-            _log.write("worker_function: Tee/state_stream setup failed:\n")
-            traceback.print_exc(file=_log)
-        if tee is not None:
-            tee.close()
-        sys.exit(ExitCode.BUILD_ERROR)
+    tee = Tee(echo_control, parent, log_path)
+    # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
+    # than ConsoleIO (WriteConsoleW).  On Windows, if fds 1/2 are still console handles when
+    # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
+    # ERROR_INVALID_FUNCTION.  Post-dup2 the fds are pipe handles, so FileIO is chosen.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=_stdout_enc, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
+    )
+    state_stream = _conn_to_text_stream(state)
 
     exit_code = ExitCode.SUCCESS
 
@@ -1217,9 +1216,9 @@ def _make_unidirectional_pipe() -> Tuple["Connection", "Connection"]:
     """
     if IS_WINDOWS:
         import asyncio.windows_utils
-        from multiprocessing.connection import PipeConnection
+        from multiprocessing.connection import PipeConnection  # type: ignore[attr-defined]
 
-        h_r, h_w = asyncio.windows_utils.pipe(overlapped=(True, False))
+        h_r, h_w = asyncio.windows_utils.pipe(overlapped=(True, False))  # type: ignore[attr-defined]
         return (
             PipeConnection(h_r, readable=True, writable=False),
             PipeConnection(h_w, readable=False, writable=True),
@@ -2494,6 +2493,7 @@ class NullReportData(ReportData):
 
 class BaseTerminalState(abc.ABC):
     """Abstract base for TerminalState management classes"""
+
     def __init__(
         self,
         selector,
@@ -2702,18 +2702,18 @@ class WindowsTerminalState(BaseTerminalState):
         """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY,
         wraps child I/O in pipes but forwards console API calls."""
         mode = wintypes.DWORD()
-        handle = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
-        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))
+        handle = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
+        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[has-type]
 
     @classmethod
     def stdin_is_interactive(cls) -> bool:
         mode = wintypes.DWORD()
-        handle = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)
-        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))
+        handle = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)  # type: ignore[has-type]
+        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[has-type]
 
     def create_stdin_reader(self) -> "StdinReader":
         """read key inputs from socket pair"""
-        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)
+        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)  # type: ignore[has-type]
 
     def __init__(
         self,
@@ -2727,28 +2727,28 @@ class WindowsTerminalState(BaseTerminalState):
         self.on_suspend = on_suspend
         self.on_resume = on_resume
 
-        self.hStdin = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)
-        self.hStdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)
+        self.hStdin = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)  # type: ignore[has-type]
+        self.hStdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
 
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
 
-        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        win_io.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[has-type]
+        win_io.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))  # type: ignore[has-type]
 
-        self.stdin_r, self.stdin_w = socket.socketpair()
-        self.stdin_r.setblocking(False)
+        self.stdin_r, self.stdin_w = socket.socketpair()  # type: ignore[has-type]
+        self.stdin_r.setblocking(False)  # type: ignore[has-type]
 
-        # 2. Create the fake SIGWINCH sockets
+        # Create the fake SIGWINCH sockets
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
 
-        self.console_reader = None
+        self.console_reader: Optional[Any] = None
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
-        new_out_mode = self.old_stdout_settings.value | win_io.ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        win_io.SetConsoleMode(self.hStdout, new_out_mode)
+        new_out_mode = self.old_stdout_settings.value | win_io.ENABLE_VIRTUAL_TERMINAL_PROCESSING  # type: ignore[has-type]
+        win_io.SetConsoleMode(self.hStdout, new_out_mode)  # type: ignore[has-type]
 
         # Register the fake sigwinch pipe with the exact same name Unix uses
         self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
@@ -2758,14 +2758,14 @@ class WindowsTerminalState(BaseTerminalState):
 
     def teardown(self) -> None:
         """Restore console mode and shut down bridge."""
-        win_io.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
-        win_io.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
+        win_io.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)  # type: ignore[has-type]
+        win_io.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)  # type: ignore[has-type]
 
         if self.console_reader:
             self.console_reader.close()
             self.console_reader = None
 
-        for sock in (self.stdin_r, self.sigwinch_r):
+        for sock in (self.stdin_r, self.sigwinch_r):  # type: ignore[has-type]
             try:
                 self.selector.unregister(sock)
             except KeyError:
@@ -2776,15 +2776,15 @@ class WindowsTerminalState(BaseTerminalState):
         if not self.build_status.headless:
             return
 
-        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        disable = win_io.ENABLE_LINE_INPUT | win_io.ENABLE_ECHO_INPUT
+        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[has-type]
+        disable = win_io.ENABLE_LINE_INPUT | win_io.ENABLE_ECHO_INPUT  # type: ignore[has-type]
         new_in_mode = self.old_stdin_settings.value & ~disable
-        win_io.SetConsoleMode(self.hStdin, new_in_mode)
+        win_io.SetConsoleMode(self.hStdin, new_in_mode)  # type: ignore[has-type]
 
         # Register stdin and start the polling thread
         if self.stdin_is_interactive() and not self.console_reader:
-            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
-            self.console_reader = win_io.ConsoleReader(self.stdin_w, self.sigwinch_w)
+            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")  # type: ignore[has-type]
+            self.console_reader = win_io.ConsoleReader(self.stdin_w, self.sigwinch_w)  # type: ignore[has-type]
 
         self.build_status.headless = False
         self.build_status.dirty = True
@@ -2795,7 +2795,7 @@ class WindowsTerminalState(BaseTerminalState):
             self.console_reader.close()
             self.console_reader = None
             try:
-                self.selector.unregister(self.stdin_r)
+                self.selector.unregister(self.stdin_r)  # type: ignore[has-type]
             except KeyError:
                 pass
         self.build_status.headless = True
@@ -3090,9 +3090,9 @@ class PackageInstaller:
                     elif tag == "sigwinch":
                         assert terminal is not None
                         if IS_WINDOWS:
-                            terminal.sigwinch_r.recv(64)  # drain the socket
+                            terminal.sigwinch_r.recv(64)  # type: ignore[attr-defined]
                         else:
-                            os.read(terminal.sigwinch_r, 64)  # drain the pipe
+                            os.read(terminal.sigwinch_r, 64)  # type: ignore[attr-defined]
                         self.build_status.on_resize()
                     elif tag == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
@@ -3163,8 +3163,9 @@ class PackageInstaller:
         finally:
             # Render the final TUI state while terminal settings are still active.
             # This must happen BEFORE teardown(), which removes VT100 support on Windows.
-            # Without VT100, on Windows cursor-movement codes appear as literal text instead of repositioning
-            # the cursor, and the instruction stanza would not be rendered.
+            # Without VT100, on Windows cursor-movement codes appear as literal text
+            # instead of repositioning the cursor, and the instruction stanza would
+            # not be rendered.
             try:
                 self.build_status.overview_mode = True
                 self.build_status.update(finalize=True)
@@ -3251,7 +3252,7 @@ class PackageInstaller:
                 dag_hash = s.dag_hash()
                 finished = self.build_status.finished_builds
                 build_info = self.build_status.builds.get(dag_hash) or next(
-                    (b for b in finished if b.spec.dag_hash() == dag_hash), None
+                    (b for b in finished if dag_hash.startswith(b.hash)), None
                 )
                 if build_info and build_info.log_summary:
                     sys.stderr.write(build_info.log_summary)

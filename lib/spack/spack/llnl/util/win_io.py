@@ -7,6 +7,11 @@
 This module is win32-only.  Import it only inside ``if sys.platform == "win32":`` guards.
 """
 
+import sys
+
+if sys.platform != "win32":  # pragma: no cover
+    raise ImportError("spack.llnl.util.win_io is only available on Windows")
+
 import collections
 import ctypes
 import ctypes.wintypes as wintypes
@@ -16,7 +21,6 @@ import os
 import selectors
 import shutil
 import socket
-import sys
 import threading
 import time
 from typing import Optional
@@ -30,6 +34,7 @@ kernel32 = ctypes.windll.kernel32
 HANDLE = ctypes.c_void_p
 LPHANDLE = ctypes.POINTER(HANDLE)
 
+ULONG_PTR: type
 if ctypes.sizeof(ctypes.c_void_p) == 8:
     ULONG_PTR = ctypes.c_ulonglong
 else:
@@ -58,6 +63,7 @@ DUPLICATE_SAME_ACCESS = 0x00000002
 # Overlapped struct definition, needed for async
 # io on Windows
 
+
 class OVERLAPPED(ctypes.Structure):
     _fields_ = [
         ("Internal", ULONG_PTR),
@@ -66,6 +72,7 @@ class OVERLAPPED(ctypes.Structure):
         ("OffsetHigh", wintypes.DWORD),
         ("hEvent", HANDLE),
     ]
+
 
 # Ctypes argument typing
 # required or win32api calls tend to fail
@@ -617,4 +624,3 @@ class StreamWrapper:
                 os.close(self.redirect_fd)
             if self.saved_stream_fd is not None:
                 os.close(self.saved_stream_fd)
-

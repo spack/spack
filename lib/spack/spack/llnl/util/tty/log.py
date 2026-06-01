@@ -585,8 +585,8 @@ class winlog:
         self.debug = debug
         self.echo = echo
         self.logfile = filename
-        self.stdout = win_io.StreamWrapper("stdout")
-        self.stderr = win_io.StreamWrapper("stderr")
+        self.stdout = win_io.StreamWrapper("stdout")  # type: ignore[name-defined]
+        self.stderr = win_io.StreamWrapper("stderr")  # type: ignore[name-defined]
         self._active = False
         self.old_stdout = sys.stdout
         self.old_stderr = sys.stderr
