@@ -306,10 +306,18 @@ def test_user_cache_path_is_default_when_env_var_is_empty(
     assert os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
 
 
-def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch):
+@pytest.mark.parametrize("env_var", ["SPACK_STATE_HOME", "XDG_STATE_HOME"])
+def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch, env_var):
     home_dir, base_prefix = mock_spack_instance
     p = str(Path("some") / "path")
-    os.environ["SPACK_STATE_HOME"] = p
+
+    # For XDG_STATE_HOME, append /spack since that's the convention
+    if env_var == "XDG_STATE_HOME":
+        os.environ[env_var] = p
+        expected = os.path.join(p, "spack")
+    else:
+        os.environ[env_var] = p
+        expected = p
 
     # Create fresh SpackPaths instance after setting env var
     from spack.paths import SpackPaths
@@ -318,7 +326,7 @@ def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkey
     monkeypatch.setattr(spack.paths, "locations", fresh_paths)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    assert spack.paths.user_cache_path == p
+    assert spack.paths.user_cache_path == expected
 
 
 def test_substitute_user_cache(mock_spack_instance):
