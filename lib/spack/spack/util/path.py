@@ -96,10 +96,11 @@ def _resolve_location_var(location_key):
     if isinstance(location_list, list):
         for item in location_list:
             # Attempt to resolve all variables in the entry
-            # Catch recursion error in case someone tries `data: $data_home` or a cycle among the three
             try:
                 candidate = os.path.normpath(substitute_path_variables(item))
             except RecursionError:
+                # Catch recursion error in case someone tries `data: $data_home` or
+                # a cycle among the three
                 tty.warn(f"Skipping recursive definition in locations config: {item}.")
             # Look for unresolved env var or config vars in candidate
             var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
