@@ -2578,8 +2578,6 @@ def reset_extension_paths():
 @pytest.fixture(params=["old", "new"])
 def installer_variant(request):
     """Parametrize a test over the old and new installer."""
-    if request.param == "new" and sys.platform == "win32":
-        pytest.skip("New installer not supported on Windows")
     with spack.config.override("config:installer", request.param):
         yield request.param
 
