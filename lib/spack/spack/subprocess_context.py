@@ -122,8 +122,8 @@ class GlobalStateMarshaler:
     def restore(self):
         import spack.util.path
 
+        spack.util.path.freeze(self.home_vars)
         if self.is_forked:
-            spack.util.path.freeze(self.home_vars)
             # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
             # and botocore connection pools are not fork-safe.
             from spack.oci import opener
@@ -146,7 +146,6 @@ class GlobalStateMarshaler:
             from spack.environment import activate
 
             activate(self.env)
-        spack.util.path.freeze(self.home_vars)
 
 
 class TestPatches:
