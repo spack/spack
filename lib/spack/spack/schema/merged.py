@@ -10,9 +10,9 @@
 
 from typing import Any, Dict
 
-import spack.schema.merged_no_specs
 import spack.schema.ci
 import spack.schema.environment
+import spack.schema.merged_no_specs
 import spack.schema.modules
 import spack.schema.projections
 import spack.schema.specs
@@ -36,7 +36,7 @@ defs: Dict[str, Any] = {
 #: Properties using $ref pointers into $defs
 ref_sections: Dict[str, Any] = {
     **spack.schema.merged_no_specs.ref_sections,
-    "specs": {"$ref": f"#/definitions/section_specs"},
+    "specs": {"$ref": "#/definitions/section_specs"},
 }
 
 #: Full schema with metadata

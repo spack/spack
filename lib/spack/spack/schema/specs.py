@@ -12,7 +12,6 @@ from typing import Any, Dict
 from .definitions import definition_list_options, matrix_properties
 from .merged_no_specs import ref_sections
 
-
 group_name_and_deps = {
     "group": {"type": "string", "description": "Name for this group of specs"},
     "explicit": {
@@ -45,7 +44,7 @@ spec_list_options = definition_list_options + [
         "type": "object",
         "description": "User spec group with multiple matrices",
         "additionalProperties": False,
-        "properties": {**group_name_and_deps, "specs": {"$ref": "#/definitions/spec_list_schema"}}
+        "properties": {**group_name_and_deps, "specs": {"$ref": "#/definitions/spec_list_schema"}},
     },
 ]
 

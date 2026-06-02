@@ -10,11 +10,10 @@
 
 from typing import Any, Dict
 
-
 matrix_properties = {
     "matrix": {
         "type": "array",
-        "description": "List of spec constraint lists whose cross product generates multiple specs",
+        "description": "List of spec constraint lists whose cross product generate multiple specs",
         "items": {
             "type": "array",
             "description": "List of spec constraints for this matrix dimension",
@@ -66,9 +65,9 @@ properties: Dict[str, Any] = {
                 "description": "List of specs in a definition, supporting both simple specs and "
                 "matrix configurations",
                 "default": [],
-                "items": {"anyOf": definition_list_options}
-            }
-        }
+                "items": {"anyOf": definition_list_options},
+            },
+        },
     }
 }
 

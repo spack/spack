@@ -16,7 +16,6 @@ import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
-import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht

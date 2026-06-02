@@ -3463,7 +3463,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         """
         with self.use_config():
             defs = spack.config.get("definitions", scope=self.scope_name)
-            msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
+            msg = (
+                f"cannot remove {user_spec} from the '{list_name}' definition,"
+                " no valid list exists"
+            )
 
             for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
                 try:

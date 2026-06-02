@@ -38,7 +38,6 @@ import re
 import shutil
 import sys
 import tempfile
-import warnings
 import urllib.parse
 from collections import defaultdict
 from itertools import chain
@@ -192,16 +191,22 @@ class ConfigScope:
                 if isinstance(included_scope, IncludedLockfile):
                     if included_scope not in self._included_lockfiles:
                         parent = pathlib.Path(included_scope.path).parent
-                        if any(
-                            scope.path == str(parent) or scope.path == str(parent / "spack.yaml")
-                            for scope in included_scopes
-                            if not isinstance(scope, IncludedLockfile)
-                        ):
-                            msg = (
-                                "Cannot include abstract and concrete from the same environment.\n"
-                                f"    Environment: {parent}"
-                            )
-                            raise spack.error.ConfigError(msg)
+
+                        # Forbid including manifest and lock from same environment
+                        for scope in included_scopes:
+                            if not isinstance(scope, SingleFileScope):
+                                continue
+
+                            assert isinstance(scope, SingleFileScope)  # satisfy mypy
+
+                            if scope.path == str(parent) or scope.path == str(
+                                parent / "spack.yaml"
+                            ):
+                                msg = (
+                                    "Cannot include abstract and concrete from the same "
+                                    f"environment.\n    Environment: {parent}"
+                                )
+                                raise spack.error.ConfigError(msg)
                         self._included_lockfiles.append(included_scope)
                     continue
 
