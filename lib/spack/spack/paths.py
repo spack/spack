@@ -122,16 +122,9 @@ class SpackPaths:
         # Note this depends on config, which generally depends on paths
         if self._user_cache_path is None:
             import spack.util.path
-            import sys
 
             expanded_home = os.path.expanduser("~")
-            resolved = spack.util.path._resolve_location_var("state")
-
-            # DEBUG
-            if 'pytest' in sys.modules:
-                print(f"DEBUG user_cache_path property: resolved={resolved}, expanded_home={expanded_home}")
-
-            self._user_cache_path = resolved or os.path.join(
+            self._user_cache_path = spack.util.path._resolve_location_var("state") or os.path.join(
                 expanded_home, ".local", "state", "spack"
             )
         return self._user_cache_path

@@ -83,17 +83,10 @@ def _resolve_location_var(location_key):
         return _frozen_home[location_key]
 
     # break circular imports
-    import sys
     import spack.config
 
     # Get the list of potential locations from config
-    # Access CONFIG via sys.modules to ensure we get the monkeypatched version
-    cfg = sys.modules['spack.config'].CONFIG
-    location_list = cfg.get(f"config:locations:{location_key}")
-
-    # DEBUG
-    if 'pytest' in sys.modules:
-        print(f"DEBUG _resolve_location_var: location_key={location_key}, location_list={location_list}")
+    location_list = spack.config.get(f"config:locations:{location_key}")
 
     # If config returned a non-list value (but not None), return it as-is
     if location_list is not None and not isinstance(location_list, list):
@@ -135,10 +128,6 @@ def _resolve_location_var(location_key):
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
     # config::)
     expanded_home = os.path.expanduser("~")
-    # DEBUG
-    import sys
-    if 'pytest' in sys.modules:
-        print(f"DEBUG _resolve_location_var fallback: location_key={location_key}, HOME={os.environ.get('HOME')}, expanded_home={expanded_home}")
     if location_key == "data":
         return os.path.join(expanded_home, ".local", "share", "spack")
     elif location_key == "state":
