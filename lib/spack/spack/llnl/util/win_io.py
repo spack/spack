@@ -12,10 +12,17 @@ import sys
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("spack.llnl.util.win_io is only available on Windows")
 
+import collections
 import ctypes
 import ctypes.wintypes as wintypes
+import io
 import msvcrt
 import os
+import selectors
+import shutil
+import socket
+import threading
+import time
 from typing import Optional
 
 import spack.llnl.util.tty as tty
@@ -49,9 +56,9 @@ STD_ERROR_HANDLE = -12
 ENABLE_PROCESSED_INPUT = 0x0001
 ENABLE_LINE_INPUT = 0x0002
 ENABLE_ECHO_INPUT = 0x0004
+ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # For stdout
 
 DUPLICATE_SAME_ACCESS = 0x00000002
-
 
 # Ctypes argument typing
 # required or win32api calls tend to fail
@@ -63,6 +70,7 @@ GetStdHandle.restype = wintypes.HANDLE
 SetStdHandle = kernel32.SetStdHandle
 SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]
 SetStdHandle.restype = wintypes.BOOL
+
 
 DuplicateHandle = kernel32.DuplicateHandle
 DuplicateHandle.argtypes = [
