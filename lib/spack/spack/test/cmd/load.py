@@ -19,7 +19,7 @@ location = SpackCommand("location")
 
 
 def _get_load_cmds(spec, shell):
-    load_script_file = spec_script.path_to_load_shell_script(spec, shell)
+    load_script_file = spec_script.path_to_load_shell_script(spec, shell[2:])
 
     with open(load_script_file, "r", encoding="utf-8") as f:
         return f.read()
@@ -91,9 +91,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 @pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
-def test_load_includes_run_env(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
-):
+def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
     """Tests that environment changes from the package's
     `setup_run_environment` method are added to the user environment in
     addition to the prefix inspections"""
@@ -176,13 +174,15 @@ def test_unload_fails_no_shell(
 def test_load_regenerates_deleted_script(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
-    """Test that spack load regenerates the load script if it was deleted and uses the cached repo."""
+    """Test that spack load regenerates the load script if it was deleted.
+    Uses the cached repo for regeneration.
+    """
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
     load(shell, "mpileaks")
 
-    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell)
+    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
     assert os.path.exists(load_script_file)
 
     os.remove(load_script_file)
@@ -203,13 +203,17 @@ def test_load_regenerates_deleted_script(
 def test_unload_regenerates_deleted_script(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
-    """Test that spack load regenerates the load script if it was deleted and uses the cached repo."""
+    """Test that spack unload regenerates the unload script if it was deleted.
+    Uses the cached repo for regeneration.
+    """
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
+    os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
+
     unload(shell, "mpileaks")
 
-    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell)
+    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
     assert os.path.exists(unload_script_file)
 
     os.remove(unload_script_file)

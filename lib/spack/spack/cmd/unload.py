@@ -101,9 +101,13 @@ def unload(parser, args):
 
             if not os.path.isfile(unload_script_path):
                 try:
-                    repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
+                    repo_path = generate_script.make_repo_path(
+                        os.path.join(spec.prefix, ".spack")
+                    )
                     cached_repo = repo_path if repo_path.repos else None
-                    _, mods = generate_script.get_environment_modifications(spec, shell, cached_repo)
+                    _, mods = generate_script.get_environment_modifications(
+                        spec, shell, cached_repo
+                    )
 
                     comments = "::" if shell == "bat" else "###"
                     generate_script.generate_script(unload_script_path, mods, comments)

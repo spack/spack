@@ -109,9 +109,13 @@ def load(parser, args):
 
             if not os.path.isfile(load_script_path):
                 try:
-                    repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
+                    repo_path = generate_script.make_repo_path(
+                        os.path.join(spec.prefix, ".spack")
+                    )
                     cached_repo = repo_path if repo_path.repos else None
-                    mods, _ = generate_script.get_environment_modifications(spec, shell, cached_repo)
+                    mods, _ = generate_script.get_environment_modifications(
+                        spec, shell, cached_repo
+                    )
 
                     comments = "::" if shell == "bat" else "###"
                     generate_script.generate_script(load_script_path, mods, comments)
