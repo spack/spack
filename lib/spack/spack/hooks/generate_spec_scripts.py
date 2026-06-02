@@ -8,6 +8,7 @@ import sys
 from datetime import datetime
 
 import spack.llnl.util.filesystem as fs
+import spack.llnl.util.tty as tty
 import spack.repo
 import spack.user_environment as uenv
 
@@ -88,32 +89,30 @@ def make_repo_path(root):
     return spack.repo.RepoPath(*repos)
 
 
-def get_load_environment_modifications(spec, shell, env_mod, repo=None) -> str:
-    """Returns the environment modifications to load the specified spec for the shell.
+def get_environment_modifications(spec, shell, repo=None) -> tuple[str, str]:
+      """Returns both load and unload environment modifications for the spec.
 
-    Args:
-        spec: The spec whose environment modifications we are returning
-        shell: The shell that the user is running
-        repo: (Optional) A repo to use when calculating environment modifications
-    """
-    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
-    env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+        Args:
+            spec: The spec whose environment modifications we are returning
+            shell: The shell that the user is running
+            repo: (Optional) A repo to use when calculating environment modifications
 
-    return env_mod.shell_modifications(shell)
+        Returns:
+            tuple: (load_modifications, unload_modifications)
+      """
+      # Get base modifications once
+      load_env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
+      unload_env_mod = load_env_mod.reversed()
 
+      # Create load modifications (modifies in place)
+      load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+      load_mods = load_env_mod.shell_modifications(shell)
 
-def get_unload_environment_modifications(spec, shell, env_mod, repo=None):
-    """Returns the environment modifications to unload the specified spec for the shell.
+      # Create unload modifications (reversed() likely creates a new copy)
+      unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+      unload_mods = unload_env_mod.shell_modifications(shell)
 
-    Args:
-        spec: The spec whose environment modifications we are returning
-        shell: The shell that the user is running
-        repo: (Optional) A repo to use when calculating environment modifications
-    """
-    env_mod = uenv.environment_modifications_for_specs(spec, repo=repo).reversed()
-    env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-
-    return env_mod.shell_modifications(shell)
+      return load_mods, unload_mods
 
 
 def post_install(spec, explicit=None):
@@ -137,16 +136,18 @@ def post_install(spec, explicit=None):
         if shell == "bat":
             comments = "::"
 
-        load_script_path = path_to_load_shell_script(spec, shell)
-        unload_script_path = path_to_unload_shell_script(spec, shell)
+        try:
+            load_script_path = path_to_load_shell_script(spec, shell)
+            unload_script_path = path_to_unload_shell_script(spec, shell)
 
-        repo_path = make_repo_path(os.path.join(spec.prefix, ".spack"))
-        cached_repo = repo_path if repo_path.repos else None
+            repo_path = make_repo_path(os.path.join(spec.prefix, ".spack"))
+            cached_repo = repo_path if repo_path.repos else None
 
-        # Write shell script to load
-        load_mods = get_load_environment_modifications(spec, shell, cached_repo)
-        generate_script(load_script_path, load_mods, comments)
-
-        # Write shell script to unload
-        unload_mods = get_unload_environment_modifications(spec, shell, cached_repo)
-        generate_script(unload_script_path, unload_mods, comments)
+            # Write shell script to load & unload
+            load_mods, unload_mods = get_environment_modifications(spec, shell, cached_repo)
+            generate_script(load_script_path, load_mods, comments)
+            generate_script(unload_script_path, unload_mods, comments)
+        except OSError as e:
+            msg = f"Error generating shell scripts for {spec.name} in {shell} shell\n{e}"
+            msg += str(e)
+            tty.warn(msg)

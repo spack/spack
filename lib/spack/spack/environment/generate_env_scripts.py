@@ -62,7 +62,7 @@ def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
     return cmds
 
 
-def lockfile_newer_than_script(lockfile_date, script_path) -> bool:
+def _lockfile_newer_than_script(lockfile_date, script_path) -> bool:
     """Returns true if the environment's lockfile has been change more recently than the
     activation or deactivations script
 
@@ -87,7 +87,6 @@ def generate_script(shell_script_path: str, mods: str, comments: str):
         mods: Modifications to write to the script.
         comments: Comment character(s) to use in the script
             (e.g. "::" for bat and ### for all other shells)
-
     """
 
     try:
@@ -155,7 +154,7 @@ def update_env_activate_script(env, view: str = "default"):
         activate_script_path = path_to_env_activate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date == 0.00 or lockfile_newer_than_script(
+        if lockfile_date == 0.00 or _lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
             cmds = spack.environment.shell.activate_commands(env, shell, view=view)
@@ -189,7 +188,7 @@ def write_env_deactivate_script(env, view: str):
         deactivate_script_path = path_to_env_deactivate_shell_script(env, shell)
 
         # Update the script only if the lockfile doesn't exist or is newer than script
-        if lockfile_date == 0.00 or lockfile_newer_than_script(
+        if lockfile_date == 0.00 or _lockfile_newer_than_script(
             lockfile_date, deactivate_script_path
         ):
             env_mods = spack.environment.shell.deactivate(env, view)

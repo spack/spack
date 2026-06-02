@@ -95,7 +95,7 @@ def unload(parser, args):
         commands = ""
 
         if spec.external:
-            commands = generate_script.get_unload_environment_modifications(spec, shell)
+            _, commands = generate_script.get_environment_modifications(spec, shell)
         else:
             unload_script_path = generate_script.path_to_unload_shell_script(spec, shell)
 
@@ -103,7 +103,7 @@ def unload(parser, args):
                 try:
                     repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
                     cached_repo = repo_path if repo_path.repos else None
-                    mods = generate_script.get_unload_environment_modifications(spec, shell, cached_repo)
+                    _, mods = generate_script.get_environment_modifications(spec, shell, cached_repo)
 
                     comments = "::" if shell == "bat" else "###"
                     generate_script.generate_script(unload_script_path, mods, comments)

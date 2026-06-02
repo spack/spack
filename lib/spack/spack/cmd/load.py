@@ -103,7 +103,7 @@ def load(parser, args):
     for spec in specs:
         commands = ""
         if spec.external:
-            commands = generate_script.get_load_environment_modifications(spec, shell)
+            commands, _ = generate_script.get_environment_modifications(spec, shell)
         else:
             load_script_path = generate_script.path_to_load_shell_script(spec, shell)
 
@@ -111,7 +111,7 @@ def load(parser, args):
                 try:
                     repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
                     cached_repo = repo_path if repo_path.repos else None
-                    mods = generate_script.get_load_environment_modifications(spec, shell, cached_repo)
+                    mods, _ = generate_script.get_environment_modifications(spec, shell, cached_repo)
 
                     comments = "::" if shell == "bat" else "###"
                     generate_script.generate_script(load_script_path, mods, comments)
