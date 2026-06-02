@@ -759,6 +759,12 @@ def worker_function(
     # Detach stdin from the terminal like `./build < /dev/null`.
     devnull_fd = os.open(os.devnull, os.O_RDONLY)
     os.dup2(devnull_fd, 0)
+
+    if IS_WINDOWS:
+        h_read = msvcrt.get_osfhandle(0)
+        os.set_handle_inheritable(h_read, True)
+        ctypes.windll.kernel32.SetStdHandle(-10, h_read)
+
     os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
