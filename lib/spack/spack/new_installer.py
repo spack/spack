@@ -495,7 +495,10 @@ class Tee:
             kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             self._saved_win32_stdout = kernel32.GetStdHandle(-11)
             self._saved_win32_stderr = kernel32.GetStdHandle(-12)
-            h_write = msvcrt.get_osfhandle(w)  # type: ignore[attr-defined]
+            # Get the handle from fd 1, not from w: os.dup2(w, 1) calls DuplicateHandle so
+            # fd 1 owns a fresh copy. os.close(w) below closes w's original handle, making any
+            # handle obtained from w invalid. Fd 1's duplicate survives the close.
+            h_write = msvcrt.get_osfhandle(1)  # type: ignore[attr-defined]
             os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
             kernel32.SetStdHandle(-11, h_write)
             kernel32.SetStdHandle(-12, h_write)

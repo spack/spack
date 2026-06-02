@@ -220,7 +220,7 @@ class TestForegroundBackground:
         new_mode = set_calls[0][0][1]
         disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
         assert (new_mode & disable) == 0, f"Disabled flags still set: {new_mode:#010x}"
-        assert (new_mode & ENABLE_EXTENDED_FLAGS), "ENABLE_EXTENDED_FLAGS not set"
+        assert new_mode & ENABLE_EXTENDED_FLAGS, "ENABLE_EXTENDED_FLAGS not set"
 
     def test_enter_foreground_registers_stdin_when_interactive(self):
         """enter_foreground() registers stdin_r with tag 'stdin' when interactive."""
@@ -354,7 +354,11 @@ class TestResizeThread:
         state, sel, bs, k32 = _make_state()
         state._running = True
         call_count = [0]
-        sizes = [os.terminal_size((80, 24)), os.terminal_size((80, 24)), os.terminal_size((100, 30))]
+        sizes = [
+            os.terminal_size((80, 24)),
+            os.terminal_size((80, 24)),
+            os.terminal_size((100, 30)),
+        ]
 
         def get_size():
             idx = call_count[0]

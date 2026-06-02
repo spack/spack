@@ -8,14 +8,9 @@ import sys
 from types import ModuleType
 from typing import Optional
 
-import pytest
-
 import spack.llnl.util.tty.log as log
 from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
-
-if sys.platform == "win32":
-    import spack.llnl.util.win_io as win_io
 
 termios: Optional[ModuleType] = None
 try:
