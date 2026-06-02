@@ -126,7 +126,6 @@ def _resolve_location_var(location_key):
 # Substitutions to perform
 def replacements():
     # break circular imports
-    import spack
     import spack.environment as ev
     import spack.paths
 
