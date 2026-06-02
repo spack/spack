@@ -335,8 +335,15 @@ class _PathsModule(_types.ModuleType):
         module_dict = object.__getattribute__(self, "__dict__")
 
         # If it's a known module-level attribute (not from locations), return it
-        if name in ("locations", "SpackPaths", "detect_old_spack_layout", "detect_layout",
-                    "dir_is_occupied", "set_working_dir", "spack_working_dir"):
+        if name in (
+            "locations",
+            "SpackPaths",
+            "detect_old_spack_layout",
+            "detect_layout",
+            "dir_is_occupied",
+            "set_working_dir",
+            "spack_working_dir",
+        ):
             if name in module_dict:
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
