@@ -48,9 +48,8 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 import spack.store
-from spack.enums import Context
+import spack.user_environment
 from spack.util import lang, tty
-from spack.build_environment import SetupContext
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable, ProcessError, which
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
@@ -3409,6 +3408,17 @@ def fix_darwin_install_name(path: str) -> None:
             install_name_tool(*args, tmp)
 
 
+def setup_relocate_run(wrapper_spec) -> Executable:
+    relocate_exe = Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
+    # get msvc context from wrapper - needed for finding msvc utils during relocate run
+    relocate_exe.add_default_envmod(
+        spack.user_environment.environment_modifications_for_specs(
+            wrapper_spec, set_package_py_globals=False
+        )
+    )
+    return relocate_exe
+
+
 @memoized
 def bootstrap_relocate() -> Executable:
     import spack.bootstrap
@@ -3434,11 +3444,7 @@ def relocate(package=None) -> Executable:
     if not wrapper_spec:
         # We need to bootstrap
         return bootstrap_relocate()
-    relocate_exe = Executable(str(wrapper_spec.package.bin_dir() / "relocate.exe"))  # type: ignore
-    # get msvc context from wrapper - needed for finding msvc utils during relocate run
-    setup_context = SetupContext(wrapper_spec, context=Context.RUN)
-    relocate_exe.add_default_envmod(setup_context.get_env_modifications())
-    return relocate_exe
+    return setup_relocate_run(wrapper_spec)
 
 
 @memoized
@@ -3465,6 +3471,7 @@ def relocate_win_rpath(package):
 
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    ev.set("SPACK_DEBUG_WRAPPER", "ON")
     reloc = relocate(package)
     lib_map = {}
     for lib in find(package.spec.prefix, "*.lib"):
