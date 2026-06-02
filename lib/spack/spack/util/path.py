@@ -85,30 +85,27 @@ def _resolve_location_var(location_key):
     # break circular imports
     import spack.config
 
-    # Get the list of potential locations from config
-    location_list = spack.config.get(f"config:locations:{location_key}")
+    location_list = spack.config.get(f"config:locations:{location_key}", default=[])
 
-    # If config returned a non-list value (but not None), return it as-is
-    if location_list is not None and not isinstance(location_list, list):
-        return location_list
+    if isinstance(location_list, str):
+        # Schema allows specifying a single item as a string in place of list
+        location_list = [location_list]
 
-    # If it's a list, iterate through items
-    if isinstance(location_list, list):
-        for item in location_list:
-            # Attempt to resolve all variables in the entry
-            try:
-                candidate = os.path.normpath(substitute_path_variables(item))
-            except RecursionError:
-                # Catch recursion error in case someone tries `data: $data_home` or
-                # a cycle among the three
-                tty.warn(f"Skipping recursive definition in locations config: {item}.")
-            # Look for unresolved env var or config vars in candidate
-            var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
-            unresolved_vars = re.search(var_pattern, candidate)
+    for item in location_list:
+        # Attempt to resolve all variables in the entry
+        try:
+            candidate = os.path.normpath(substitute_path_variables(item))
+        except RecursionError:
+            # Catch recursion error in case someone tries `data: $data_home` or
+            # a cycle among the three
+            tty.warn(f"Skipping recursive definition in locations config: {item}.")
+        # Look for unresolved env var or config vars in candidate
+        var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
+        unresolved_vars = re.search(var_pattern, candidate)
 
-            if unresolved_vars:
-                continue
-            return candidate
+        if unresolved_vars:
+            continue
+        return candidate
 
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
     # config::)
