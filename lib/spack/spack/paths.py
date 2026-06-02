@@ -11,8 +11,8 @@ dependencies.
 
 import os
 import pathlib
-import sys as _sys
-import types as _types
+import sys
+import types
 from pathlib import PurePath
 from typing import TYPE_CHECKING
 
@@ -246,7 +246,7 @@ def detect_layout(scheme):
 
     # Detect if old layout data exists
     # Access via sys.modules to respect monkeypatching in tests
-    locations_obj = _sys.modules[__name__].locations
+    locations_obj = sys.modules[__name__].locations
     return locations_obj.old_layout_detected
 
 
@@ -325,7 +325,7 @@ if TYPE_CHECKING:
 # `locations` (e.g. `spack.paths.gpg_path`, `spack.paths.prefix`).
 # Uses a sys.modules swap because we want all attribute access to delegate
 # to the locations object.
-class _PathsModule(_types.ModuleType):
+class _PathsModule(types.ModuleType):
     def __getattribute__(self, name: str):
         # For special attributes, use normal resolution
         if name in ("__dict__", "__class__", "__name__"):
@@ -356,5 +356,5 @@ class _PathsModule(_types.ModuleType):
 
 
 _shim = _PathsModule(__name__)
-_shim.__dict__.update(_sys.modules[__name__].__dict__)
-_sys.modules[__name__] = _shim
+_shim.__dict__.update(sys.modules[__name__].__dict__)
+sys.modules[__name__] = _shim
