@@ -91,13 +91,13 @@ def make_repo_path(root):
 
 def get_environment_modifications(spec, shell, repo=None) -> tuple[str, str]:
     """Returns both load and unload environment modifications for the spec.
-        Args:
-            spec: The spec whose environment modifications we are returning
-            shell: The shell that the user is running
-            repo: (Optional) A repo to use when calculating environment modifications
+    Args:
+        spec: The spec whose environment modifications we are returning
+        shell: The shell that the user is running
+        repo: (Optional) A repo to use when calculating environment modifications
 
-        Returns:
-            tuple: (load_modifications, unload_modifications)
+    Returns:
+        tuple: (load_modifications, unload_modifications)
     """
     load_env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
     unload_env_mod = load_env_mod.reversed()
