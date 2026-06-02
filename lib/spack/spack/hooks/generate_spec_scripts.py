@@ -90,8 +90,7 @@ def make_repo_path(root):
 
 
 def get_environment_modifications(spec, shell, repo=None) -> tuple[str, str]:
-      """Returns both load and unload environment modifications for the spec.
-
+    """Returns both load and unload environment modifications for the spec.
         Args:
             spec: The spec whose environment modifications we are returning
             shell: The shell that the user is running
@@ -99,20 +98,17 @@ def get_environment_modifications(spec, shell, repo=None) -> tuple[str, str]:
 
         Returns:
             tuple: (load_modifications, unload_modifications)
-      """
-      # Get base modifications once
-      load_env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
-      unload_env_mod = load_env_mod.reversed()
+    """
+    load_env_mod = uenv.environment_modifications_for_specs(spec, repo=repo)
+    unload_env_mod = load_env_mod.reversed()
 
-      # Create load modifications (modifies in place)
-      load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-      load_mods = load_env_mod.shell_modifications(shell)
+    load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+    load_mods = load_env_mod.shell_modifications(shell)
 
-      # Create unload modifications (reversed() likely creates a new copy)
-      unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-      unload_mods = unload_env_mod.shell_modifications(shell)
+    unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+    unload_mods = unload_env_mod.shell_modifications(shell)
 
-      return load_mods, unload_mods
+    return load_mods, unload_mods
 
 
 def post_install(spec, explicit=None):
