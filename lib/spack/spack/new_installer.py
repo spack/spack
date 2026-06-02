@@ -155,6 +155,13 @@ class WindowsPipeBridge:
                 self.wsock.sendall(data)
             except OSError:
                 break
+            finally:
+                self.wsock.close()
+                try:
+                    os.close(self.pipe_fd)
+                except OSError:
+                    pass
+
         self.wsock.close()
 
     def fileno(self):
