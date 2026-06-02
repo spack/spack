@@ -23,8 +23,8 @@ config:
     - "$XDG_STATE_HOME/spack"
     - "~/.local/state/spack"  # XDG default
     cache:
-    - "$SPACK_STATE_HOME"
-    - "$XDG_STATE_HOME/spack"
+    - "$SPACK_CACHE_HOME"
+    - "$XDG_CACHE_HOME/spack"
     - "~/.cache/spack"        # XDG default
 
   # This is the path to the root of the Spack install tree.

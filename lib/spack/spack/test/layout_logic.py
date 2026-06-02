@@ -182,6 +182,9 @@ def test_locations_config_exists(mock_spack_instance):
     assert any("XDG_STATE_HOME" in str(x) for x in locations_state), (
         "locations:state should include XDG_STATE_HOME entry"
     )
+    assert any("XDG_CACHE_HOME" in str(x) for x in locations_cache), (
+        "locations:cache should include XDG_CACHE_HOME entry"
+    )
 
 
 class SetAnXdgVarAndReadDataHome:
