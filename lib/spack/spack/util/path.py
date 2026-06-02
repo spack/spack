@@ -20,6 +20,7 @@ from typing import Optional, Union
 
 import spack.llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
+from spack import get_short_version
 from spack.llnl.util.lang import memoized
 
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
@@ -143,7 +144,7 @@ def replacements():
         "target_family": lambda: arch.target.family,
         "date": lambda: date.today().strftime("%Y-%m-%d"),
         "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
-        "spack_short_version": lambda: spack.get_short_version(),
+        "spack_short_version": lambda: get_short_version(),
         "data_home": lambda: _resolve_location_var("data"),
         "cache_home": lambda: _resolve_location_var("cache"),
         "state_home": lambda: _resolve_location_var("state"),
