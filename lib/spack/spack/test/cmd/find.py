@@ -599,6 +599,7 @@ def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: path
     print(not_expected)
 
     import spack.config
+
     with env:
         spack.config.CONFIG.print_section("specs", yaml=True, blame=True)
 
