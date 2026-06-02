@@ -12,17 +12,10 @@ import sys
 if sys.platform != "win32":  # pragma: no cover
     raise ImportError("spack.llnl.util.win_io is only available on Windows")
 
-import collections
 import ctypes
 import ctypes.wintypes as wintypes
-import io
 import msvcrt
 import os
-import selectors
-import shutil
-import socket
-import threading
-import time
 from typing import Optional
 
 import spack.llnl.util.tty as tty
