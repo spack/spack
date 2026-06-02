@@ -1147,10 +1147,11 @@ class JobServer:
     def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
         """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
         if IS_WINDOWS:
-            # nmake reads MAKEFLAGS but rejects GNU make jobserver flags. Only emit
-            # them on Windows when the package explicitly depends on gmake.
-            # Always true for now, but not always
-            return ""
+            # nmake reads MAKEFLAGS but rejects GNU make jobserver flags. Only pass
+            # -jN (no jobserver protocol) when the package explicitly depends on gmake.
+            if not gmake:
+                return ""
+            return f" -j{self.num_jobs}"
         if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
             return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
         elif not gmake or gmake.satisfies("@4.0:"):
