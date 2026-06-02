@@ -44,7 +44,6 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     Dict,
     FrozenSet,
@@ -96,7 +95,12 @@ if IS_WINDOWS:
     import msvcrt
     from ctypes import wintypes
 
-    from spack.llnl.util import win_io
+    # Windows console mode flags used by WindowsTerminalState
+    ENABLE_LINE_INPUT = 0x0002
+    ENABLE_ECHO_INPUT = 0x0004
+    ENABLE_QUICK_EDIT_MODE = 0x0040
+    ENABLE_EXTENDED_FLAGS = 0x0080
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
 else:
     import fcntl
     import termios
@@ -130,6 +134,103 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 
+# =============================================================================
+# Windows Socket Bridges (Isolates Windows threading hacks from POSIX epoll)
+# =============================================================================
+
+
+class WindowsPipeBridge:
+    """Reads from a blocking Windows anonymous pipe and forwards to a non-blocking socket."""
+
+    def __init__(self, pipe_fd: int):
+        self.rsock, self.wsock = socket.socketpair()
+        self.rsock.setblocking(False)
+        self.pipe_fd = pipe_fd
+        self.thread = threading.Thread(target=self._forward, daemon=True)
+        self.thread.start()
+
+    def _forward(self):
+        while True:
+            try:
+                data = os.read(self.pipe_fd, OUTPUT_BUFFER_SIZE)
+                if not data:
+                    break
+                # If the TUI stalls, the socket buffer fills, and sendall blocks.
+                # This naturally pauses os.read(), providing perfect kernel backpressure!
+                self.wsock.sendall(data)
+            except OSError:
+                break
+        self.wsock.close()
+
+    def fileno(self):
+        return self.rsock.fileno()
+
+    def recv(self, size):
+        try:
+            return self.rsock.recv(size)
+        except BlockingIOError:
+            return b""
+
+    def close(self):
+        self.rsock.close()
+
+
+class WindowsSentinelBridge:
+    """Waits for a process to exit and sends a byte to a socket to wake the selector."""
+
+    def __init__(self, proc):
+        self.rsock, self.wsock = socket.socketpair()
+        self.rsock.setblocking(False)
+        self.proc = proc
+        self.thread = threading.Thread(target=self._wait, daemon=True)
+        self.thread.start()
+
+    def _wait(self):
+        self.proc.join()
+        try:
+            self.wsock.sendall(b"x")
+        except OSError:
+            pass
+        self.wsock.close()
+
+    def fileno(self):
+        return self.rsock.fileno()
+
+    def recv(self, size):
+        try:
+            return self.rsock.recv(size)
+        except BlockingIOError:
+            return b""
+
+    def close(self):
+        self.rsock.close()
+
+
+def read_from_key(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
+    """Reads data from Unix (raw fds) or Windows (Socket Bridges)."""
+    try:
+        if hasattr(key.fileobj, "recv"):
+            return key.fileobj.recv(max_size)
+        return os.read(key.fd, max_size)
+    except (EOFError, OSError):
+        return b""
+
+
+def _get_crt_fd(conn: Connection, mode: int) -> int:
+    """Return a CRT file descriptor from a Connection, transferring HANDLE ownership on Windows.
+
+    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
+    We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() and null out
+    Connection._handle so that PipeConnection.__del__ doesn't double-close the handle.
+    On POSIX we return the fd directly; the Connection retains ownership.
+    """
+    if IS_WINDOWS:
+        handle = conn.fileno()
+        conn._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
+        return msvcrt.open_osfhandle(handle, mode)  # type: ignore[attr-defined]
+    return conn.fileno()
+
+
 def _conn_to_text_stream(conn: "Connection") -> io.TextIOWrapper:
     """Open the write end of a Connection as a line-buffered text stream.
 
@@ -139,31 +240,10 @@ def _conn_to_text_stream(conn: "Connection") -> io.TextIOWrapper:
     wrap the resulting fd with os.fdopen().  On POSIX we wrap the fd directly with
     closefd=False so the Connection retains ownership.
     """
+    fd = _get_crt_fd(conn, os.O_WRONLY)
     if IS_WINDOWS:
-        handle = conn.fileno()
-        conn._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
-        fd = msvcrt.open_osfhandle(handle, os.O_WRONLY)  # type: ignore[attr-defined]
         return os.fdopen(fd, "w", buffering=1)
-    return os.fdopen(conn.fileno(), "w", buffering=1, closefd=False)
-
-
-def _conn_write(conn: "Connection", data: bytes) -> None:
-    """Write bytes to a pipe Connection.
-
-    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd,
-    so os.write() cannot be used directly.  We duplicate the handle to obtain a CRT-owned
-    copy (following StreamWrapper.redirect_stream in log.py), write through it, then close
-    the duplicate; the Connection's original handle is left intact.
-    """
-    if IS_WINDOWS:
-        dup_h = win_io.dup_fh(conn.fileno())
-        fd = msvcrt.open_osfhandle(dup_h, os.O_WRONLY)  # type: ignore[attr-defined]
-        try:
-            os.write(fd, data)
-        finally:
-            os.close(fd)
-    else:
-        os.write(conn.fileno(), data)
+    return os.fdopen(fd, "w", buffering=1, closefd=False)
 
 
 class ExitCode:
@@ -211,7 +291,15 @@ class MarkExplicitAction(DatabaseAction):
 class ChildInfo(DatabaseAction):
     """Information about a child process."""
 
-    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
+    __slots__ = (
+        "proc",
+        "output_r_conn",
+        "state_r_conn",
+        "control_w_sock",
+        "explicit",
+        "log_path",
+        "bridges",
+    )
 
     def __init__(
         self,
@@ -219,7 +307,7 @@ class ChildInfo(DatabaseAction):
         spec: spack.spec.Spec,
         output_r_conn: Connection,
         state_r_conn: Connection,
-        control_w_conn: Connection,
+        control_w_sock: socket.socket,
         log_path: str,
         explicit: bool = False,
     ) -> None:
@@ -227,10 +315,12 @@ class ChildInfo(DatabaseAction):
         self.spec = spec
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
-        self.control_w_conn = control_w_conn
+        self.control_w_sock = control_w_sock
         self.log_path = log_path
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        #: WindowsPipeBridge / WindowsSentinelBridge objects; kept alive to prevent GC.
+        self.bridges: list = []
 
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
@@ -238,35 +328,36 @@ class ChildInfo(DatabaseAction):
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
-        try:
-            selector.unregister(self.output_r_conn.fileno())
-        except KeyError:
-            pass
-        try:
-            selector.unregister(self.state_r_conn.fileno())
-        except KeyError:
-            pass
-        try:
-            selector.unregister(self.proc.sentinel)
-        except (KeyError, ValueError):
-            pass
+        if not IS_WINDOWS:
+            # On Windows, Connection._handle was transferred to the CRT via
+            # msvcrt.open_osfhandle(), so fileno() raises "handle is closed".
+            # Bridges own selector registration on Windows; skip this loop.
+            for fd in (
+                self.output_r_conn.fileno(),
+                self.state_r_conn.fileno(),
+                self.proc.sentinel,
+            ):
+                try:
+                    selector.unregister(fd)
+                except (KeyError, ValueError, OSError):
+                    pass
+
+        for bridge in self.bridges:
+            try:
+                selector.unregister(bridge)
+            except (KeyError, ValueError):
+                pass
+            bridge.close()
+
         self.output_r_conn.close()
         self.state_r_conn.close()
-        self.control_w_conn.close()
+        self.control_w_sock.close()
         self.proc.join()
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"
         if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
             self.proc.close()
         return exit_code
-
-
-def get_selectors() -> selectors.BaseSelector:
-    """Return a new selector for monitoring child process output."""
-    selector: selectors.BaseSelector = selectors.DefaultSelector()
-    if IS_WINDOWS:
-        selector = win_io.HybridWindowsSelector()
-    return selector
 
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
@@ -287,169 +378,150 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def read_from_key(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
+def tee(control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
+    """Forward log_r to log_file and parent_w (when echoing is enabled).
+
+    On POSIX, a DefaultSelector multiplexes log_r and control_r so echo toggle
+    messages are processed immediately even when the build is quiet.
+
+    On Windows, os.pipe() anonymous pipes cannot be registered with WinSock
+    select(), so a dedicated thread reads from control_r and updates a shared
+    flag while the main loop blocks on log_r.
     """
-    Reads data from Unix (raw fds) or Windows (BufferedPipe/Sockets).
-
-    Returns b"" on EOF (including when BufferedPipe raises EOFError).
-    """
-    try:
-        if hasattr(key.fileobj, "read"):
-            data = key.fileobj.read(max_size)
-            if isinstance(data, str):
-                return data.encode("utf-8")
-            return data
-
-        if hasattr(key.fileobj, "recv"):
-            return key.fileobj.recv(max_size)
-
-        return os.read(key.fd, max_size)
-    except EOFError:
-        return b""
+    if IS_WINDOWS:
+        _tee_windows(control_r, log_r, log_file, parent_w)
+    else:
+        _tee_posix(control_r, log_r, log_file, parent_w)
 
 
-def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
-    """Forward log_r to file_w and parent_w (if echoing is enabled).
-    Echoing is enabled and disabled by reading from control_r."""
+def _tee_posix(
+    control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: int
+) -> None:
     echo_on = False
-    selector = get_selectors()
-    selector.register(log_r, selectors.EVENT_READ)
-    selector.register(control_r, selectors.EVENT_READ)
+    os.set_blocking(log_r, False)
+    sel = selectors.DefaultSelector()
+    sel.register(log_r, selectors.EVENT_READ, "log")
+    sel.register(control_r, selectors.EVENT_READ, "ctrl")
     try:
-        with log_file, open(parent_w, "wb", closefd=False) as parent:
+        with log_file:
             while True:
-                for key, _ in selector.select():
-                    if key.fd == log_r:
-                        data = read_from_key(key, OUTPUT_BUFFER_SIZE)
-                        if not data:  # EOF: exit the thread
+                for key, _ in sel.select():
+                    if key.data == "ctrl":
+                        data = control_r.recv(1)
+                        if not data:
+                            return
+                        echo_on = data == b"1"
+                    else:
+                        try:
+                            data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                        except BlockingIOError:
+                            continue
+                        if not data:
                             return
                         log_file.write(data)
                         log_file.flush()
                         if echo_on:
-                            parent.write(data)
-                            parent.flush()
-
-                    elif key.fd == control_r:
-                        control_data = read_from_key(key, 1)
-                        if not control_data:
-                            return
-                        else:
-                            echo_on = control_data == b"1"
-    except OSError:  # do not raise
+                            os.write(parent_w, data)
+    except OSError:
         pass
+    finally:
+        sel.close()
+        os.close(log_r)
+
+
+def _tee_windows(
+    control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: int
+) -> None:
+    # Shared echo flag. Written by the control thread, read by the log thread.
+    # Single-element list assignment is GIL-atomic in CPython.
+    _echo: List[bool] = [False]
+
+    def _control_reader() -> None:
+        """Block on control_r and update the shared echo flag as messages arrive."""
+        while True:
+            try:
+                data = control_r.recv(1)
+                if not data:
+                    break
+                _echo[0] = data == b"1"
+            except OSError:
+                break
+
+    threading.Thread(target=_control_reader, daemon=True).start()
+
+    try:
+        with log_file:
+            while True:
+                try:
+                    data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                except OSError:
+                    break
+                if not data:
+                    break
+                log_file.write(data)
+                log_file.flush()
+                if _echo[0]:
+                    try:
+                        os.write(parent_w, data)
+                    except OSError:
+                        pass
     finally:
         os.close(log_r)
 
 
 class Tee:
-    """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
-
-    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
-        self.control = control
+    def __init__(self, control_r: socket.socket, parent: Connection, log_path: str) -> None:
+        self.control_r = control_r
         self.parent = parent
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+
+        fds = set()
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                fds.add(stream.fileno())
+            except (AttributeError, io.UnsupportedOperation):
+                pass
+        fds.update({1, 2})
         self.saved_fds = {fd: os.dup(fd) for fd in fds}
+
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
-        r, w = self._create_pipe()
-        self._control_fd, parent_fd = self._acquire_connection_fds()
+        r, w = os.pipe()
+        parent_fd = _get_crt_fd(self.parent, os.O_WRONLY)
+
         self.tee_thread = threading.Thread(
-            target=tee, args=(self._control_fd, r, log_file, parent_fd), daemon=True
+            target=tee, args=(self.control_r, r, log_file, parent_fd), daemon=True
         )
         self.tee_thread.start()
+
         for fd in fds:
             os.dup2(w, fd)
-        self._redirect_std_handles(w)
-        os.close(w)  # closes dup_h_write via CRT on Windows; h_write remains open there
 
-    def _create_pipe(self) -> Tuple[int, int]:
-        """Create the tee pipe pair and return (r_fd, w_fd) as CRT file descriptors.
-
-        On Windows, os.pipe() produces anonymous pipes that don't support overlapped I/O
-        and therefore can't be monitored by IOCPSelector.  We use asyncio.windows_utils.pipe()
-        to get a named pipe pair whose read end has FILE_FLAG_OVERLAPPED.  We also duplicate
-        h_write before converting it to a CRT fd so that the original handle can later be
-        passed to SetStdHandle (which must own a live Win32 HANDLE, not a CRT fd).
-        """
         if IS_WINDOWS:
-            import asyncio.windows_utils
+            kernel32 = ctypes.windll.kernel32
+            self._saved_win32_stdout = kernel32.GetStdHandle(-11)
+            self._saved_win32_stderr = kernel32.GetStdHandle(-12)
+            h_write = msvcrt.get_osfhandle(w)  # type: ignore[attr-defined]
+            os.set_handle_inheritable(h_write, True)
+            kernel32.SetStdHandle(-11, h_write)
+            kernel32.SetStdHandle(-12, h_write)
+            self._h_write = h_write
 
-            h_read, h_write = asyncio.windows_utils.pipe(overlapped=(True, False))  # type: ignore[attr-defined]
-            r = msvcrt.open_osfhandle(h_read, os.O_RDONLY)  # type: ignore[attr-defined]
-            dup_h_write = win_io.dup_fh(h_write)
-            w = msvcrt.open_osfhandle(dup_h_write, os.O_WRONLY)  # type: ignore[attr-defined]
-            self._h_write = h_write  # retained for SetStdHandle and CloseHandle in close()
-        else:
-            r, w = os.pipe()
-        return r, w
-
-    def _acquire_connection_fds(self) -> Tuple[int, int]:
-        """Return (control_fd, parent_fd) as CRT file descriptors.
-
-        On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
-        We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() and null out
-        Connection._handle so that PipeConnection.__del__ doesn't double-close the handle.
-        """
-        if IS_WINDOWS:
-            control_handle = self.control.fileno()
-            self.control._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
-            control_fd = msvcrt.open_osfhandle(control_handle, os.O_RDONLY)  # type: ignore[attr-defined]
-            parent_handle = self.parent.fileno()
-            self.parent._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
-            parent_fd = msvcrt.open_osfhandle(parent_handle, os.O_WRONLY)  # type: ignore[attr-defined]
-        else:
-            control_fd = self.control.fileno()
-            parent_fd = self.parent.fileno()
-        return control_fd, parent_fd
-
-    def _redirect_std_handles(self, w: int) -> None:
-        """On Windows, save current Win32 std handles and redirect them to the pipe write end.
-
-        subprocess.Popen(stdout=None) inherits Win32 standard handles set via SetStdHandle,
-        not the CRT fds redirected by os.dup2() above.  We must redirect both so that child
-        processes (nmake, cmake, etc.) write to the tee pipe rather than the original console.
-        The write handle is made inheritable first so child processes can use it directly.
-        """
-        if IS_WINDOWS:
-            self._saved_win32_stdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
-            self._saved_win32_stderr = win_io.GetStdHandle(win_io.STD_ERROR_HANDLE)  # type: ignore[has-type]
-            os.set_handle_inheritable(self._h_write, True)  # type: ignore[attr-defined]
-            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._h_write)  # type: ignore[has-type]
-            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._h_write)  # type: ignore[has-type]
-
-    def _restore_std_handles(self) -> None:
-        """On Windows, restore the Win32 std handles saved by _redirect_std_handles."""
-        if IS_WINDOWS:
-            win_io.SetStdHandle(win_io.STD_OUTPUT_HANDLE, self._saved_win32_stdout)  # type: ignore[has-type]
-            win_io.SetStdHandle(win_io.STD_ERROR_HANDLE, self._saved_win32_stderr)  # type: ignore[has-type]
-            win_io.CloseHandle(self._h_write)  # type: ignore[has-type]
-
-    def _release_connection_fds(self) -> None:
-        """Close or release the control connection after the tee thread has joined."""
-        if IS_WINDOWS:
-            # CRT owns the HANDLE (transferred in _acquire_connection_fds); close the fd.
-            os.close(self._control_fd)
-        else:
-            self.control.close()
+        os.close(w)
 
     def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
         sys.stdout.flush()
         sys.stderr.flush()
         for fd, saved_fd in self.saved_fds.items():
             os.dup2(saved_fd, fd)
             os.close(saved_fd)
-        # Restore Win32 handles after dup2 (which closes the pipe write end and lets the tee
-        # thread drain) but before join(), so the thread sees EOF before we wait for it.
-        self._restore_std_handles()
+
+        if IS_WINDOWS:
+            kernel32 = ctypes.windll.kernel32
+            kernel32.SetStdHandle(-11, self._saved_win32_stdout)
+            kernel32.SetStdHandle(-12, self._saved_win32_stderr)
+
         self.tee_thread.join()
-        self._release_connection_fds()
+        self.control_r.close()
         self.parent.close()
 
 
@@ -610,7 +682,7 @@ def worker_function(
     run_tests: bool,
     state: Connection,
     parent: Connection,
-    echo_control: Connection,
+    echo_control_r: socket.socket,
     makeflags: str,
     js1: Optional[Connection],
     js2: Optional[Connection],
@@ -637,7 +709,7 @@ def worker_function(
         run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
-        echo_control: Connection to receive echo control messages from
+        echo_control_r: Socket to receive echo control messages from
         makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
         js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
         js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
@@ -693,12 +765,9 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    # Wrap setup in a try/except: any crash here is outside the main try/except block below, so
-    # exceptions would escape silently (no tee → no log). Instead, write the traceback directly
-    # to log_path (already created by tempfile.mkstemp in the parent) so the user can diagnose.
     tee = None
     state_stream = None
-    tee = Tee(echo_control, parent, log_path)
+    tee = Tee(echo_control_r, parent, log_path)
     # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
     # than ConsoleIO (WriteConsoleW).  On Windows, if fds 1/2 are still console handles when
     # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
@@ -1039,23 +1108,27 @@ class JobServer:
         self.target_jobs = num_jobs
         self.fifo_path: Optional[str] = None
         self.created = False
-        self._setup()
-        # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
-        os.set_inheritable(self.r, True)
-        os.set_inheritable(self.w, True)
-        # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
-        # Connection objects close the fd as they are garbage collected, so store them.
-        # On Windows, os.pipe() returns CRT fds (not Windows HANDLEs), so Connection() wrappers
-        # would be misinterpreted and cause pickling errors during process spawn.
+
         if IS_WINDOWS:
+            # Windows: use a multiprocessing Semaphore instead of a pipe-based jobserver.
+            # Anonymous pipes on Windows don't support non-blocking reads (needed by the POSIX
+            # token mechanism), and nmake rejects POSIX jobserver flags in MAKEFLAGS.
+            self.semaphore = multiprocessing.Semaphore(num_jobs - 1)
+            self.created = True
             self.r_conn = None
             self.w_conn = None
         else:
+            self._setup_posix()
+            # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
+            os.set_inheritable(self.r, True)
+            os.set_inheritable(self.w, True)
+            # r_conn and w_conn are used to make build processes inherit the jobserver fds
+            # if needed.
+            # Connection objects close the fd as they are garbage collected, so store them.
             self.r_conn = Connection(self.r)
             self.w_conn = Connection(self.w)
 
-    def _setup(self) -> None:
-
+    def _setup_posix(self) -> None:
         fifo_config = get_jobserver_config()
 
         if type(fifo_config) is str:
@@ -1068,22 +1141,9 @@ class JobServer:
         elif type(fifo_config) is tuple:
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
-            if not IS_WINDOWS:
-                # Use fcntl on POSIX to validate the fds.
-                if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
-                    self.r, self.w = r, w
-                    return
-            else:
-                try:
-                    # fcntl is not available on Windows. Validate fds by
-                    # calling os.fstat which will raise on invalid fds.
-                    os.fstat(r)
-                    os.fstat(w)
-                    self.r, self.w = r, w
-                    return
-                except Exception:
-                    # Fall through to creating our own FIFO if validation fails.
-                    pass
+            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
+                self.r, self.w = r, w
+                return
 
         # No existing jobserver we can connect to: create a FIFO-based one.
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
@@ -1091,7 +1151,7 @@ class JobServer:
 
     def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
         """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
-        if IS_WINDOWS and not gmake:
+        if IS_WINDOWS:
             # nmake reads MAKEFLAGS but rejects GNU make jobserver flags. Only emit
             # them on Windows when the package explicitly depends on gmake.
             # Always true for now, but not always
@@ -1114,7 +1174,11 @@ class JobServer:
         # If a decrease was pending, don't add a token.
         if self.target_jobs <= self.num_jobs:
             return
-        os.write(self.w, b"+")
+
+        if IS_WINDOWS:
+            self.semaphore.release()
+        else:
+            os.write(self.w, b"+")
         self.num_jobs += 1
 
     def decrease_parallelism(self) -> None:
@@ -1124,41 +1188,48 @@ class JobServer:
         self.target_jobs -= 1
         self.maybe_discard_tokens()
 
-    def _available_tokens(self) -> int:
-        """Return the number of tokens immediately readable without blocking.
-
-        On Windows, anonymous pipes don't support non-blocking reads: os.read() blocks
-        until data is available.  We must peek at the pipe first to avoid deadlocking the
-        event loop.  On POSIX the pipe fd is set non-blocking, so os.read() raises
-        BlockingIOError immediately; returning sys.maxsize lets callers proceed to that path.
-        """
-        if IS_WINDOWS:
-            return win_io._pipe_bytes_available(self.r)
-        return sys.maxsize
-
     def maybe_discard_tokens(self) -> None:
         """Try to reduce parallelism by discarding tokens."""
-        to_discard = min(self.num_jobs - self.target_jobs, self._available_tokens())
+        to_discard = self.num_jobs - self.target_jobs
         if to_discard <= 0:
             return
-        try:
-            # The read may return zero or just fewer bytes than requested; we'll try again later.
-            self.num_jobs -= len(os.read(self.r, to_discard))
-        except BlockingIOError:
-            pass
+
+        if IS_WINDOWS:
+            for _ in range(to_discard):
+                if self.semaphore.acquire(block=False):
+                    self.num_jobs -= 1
+                else:
+                    break
+        else:
+            try:
+                # The read may return zero or just fewer bytes than requested;
+                # we'll try again later.
+                self.num_jobs -= len(os.read(self.r, to_discard))
+            except BlockingIOError:
+                pass
 
     def acquire(self, jobs: int) -> int:
         """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
         tokens actually acquired (may be less than requested, or zero)."""
-        jobs = min(jobs, self._available_tokens())
         if not jobs:
             return 0
-        try:
-            num_acquired = len(os.read(self.r, jobs))
-            self.tokens_acquired += num_acquired
-            return num_acquired
-        except BlockingIOError:
-            return 0
+
+        if IS_WINDOWS:
+            acquired = 0
+            for _ in range(jobs):
+                if self.semaphore.acquire(block=False):
+                    acquired += 1
+                else:
+                    break
+            self.tokens_acquired += acquired
+            return acquired
+        else:
+            try:
+                num_acquired = len(os.read(self.r, jobs))
+                self.tokens_acquired += num_acquired
+                return num_acquired
+            except BlockingIOError:
+                return 0
 
     def release(self) -> None:
         """Release a token back to the jobserver."""
@@ -1170,60 +1241,33 @@ class JobServer:
             # If a decrease in parallelism is requested, discard a token instead of releasing it.
             self.num_jobs -= 1
         else:
-            os.write(self.w, b"+")
+            if IS_WINDOWS:
+                self.semaphore.release()
+            else:
+                os.write(self.w, b"+")
 
     def close(self) -> None:
         if self.created and self.num_jobs > 1:
             if self.tokens_acquired != 0:
                 # It's a non-fatal internal error to close the jobserver with acquired tokens.
                 warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
-            else:
-                # Verify that all build processes released the tokens they acquired.
-                total = self.num_jobs - 1
-                drained = self.acquire(total)
-                if drained != total:
-                    n = total - drained
-                    warnings.warn(
-                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
-                        "by the build processes. This can indicate that the build ran with "
-                        "limited parallelism.",
-                        stacklevel=2,
-                    )
 
-        if self.r_conn is not None:
-            self.r_conn.close()
-        if self.w_conn is not None:
-            self.w_conn.close()
+        if not IS_WINDOWS:
+            if self.r_conn is not None:
+                self.r_conn.close()
+            if self.w_conn is not None:
+                self.w_conn.close()
 
-        # Remove the FIFO if we created it.
-        if self.created and self.fifo_path:
-            try:
-                os.unlink(self.fifo_path)
-            except OSError:
-                pass
-            try:
-                os.rmdir(os.path.dirname(self.fifo_path))
-            except OSError:
-                pass
-
-
-def _make_unidirectional_pipe() -> Tuple["Connection", "Connection"]:
-    """Return a (read_conn, write_conn) pipe pair compatible with the platform's selector.
-
-    On Windows, multiprocessing.Pipe() creates anonymous pipes that lack the
-    FILE_FLAG_OVERLAPPED attribute required by IOCPSelector.  asyncio.windows_utils.pipe()
-    creates a named pipe pair with an overlapped read end, which IOCP can monitor.
-    """
-    if IS_WINDOWS:
-        import asyncio.windows_utils
-        from multiprocessing.connection import PipeConnection  # type: ignore[attr-defined]
-
-        h_r, h_w = asyncio.windows_utils.pipe(overlapped=(True, False))  # type: ignore[attr-defined]
-        return (
-            PipeConnection(h_r, readable=True, writable=False),
-            PipeConnection(h_w, readable=False, writable=True),
-        )
-    return Pipe(duplex=False)
+            # Remove the FIFO if we created it.
+            if self.created and self.fifo_path:
+                try:
+                    os.unlink(self.fifo_path)
+                except OSError:
+                    pass
+                try:
+                    os.rmdir(os.path.dirname(self.fifo_path))
+                except OSError:
+                    pass
 
 
 def start_build(
@@ -1246,9 +1290,12 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    state_r_conn, state_w_conn = _make_unidirectional_pipe()
-    output_r_conn, output_w_conn = _make_unidirectional_pipe()
-    control_r_conn, control_w_conn = _make_unidirectional_pipe()
+    state_r_conn, state_w_conn = Pipe(duplex=False)
+    output_r_conn, output_w_conn = Pipe(duplex=False)
+
+    # Use a socket pair for the echo-control channel so the Tee thread can use non-blocking
+    # recv() cross-platform (unlike multiprocessing.Pipe which returns Win32 HANDLEs on Windows).
+    control_r_sock, control_w_sock = socket.socketpair()
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
@@ -1274,7 +1321,7 @@ def start_build(
             run_tests,
             state_w_conn,
             output_w_conn,
-            control_r_conn,
+            control_r_sock,
             makeflags,
             None if fifo else jobserver.r_conn,
             None if fifo else jobserver.w_conn,
@@ -1289,14 +1336,14 @@ def start_build(
     # The parent process does not need the write ends of the main pipes or the read end of control.
     state_w_conn.close()
     output_w_conn.close()
-    control_r_conn.close()
+    control_r_sock.close()
 
-    # Non-blocking on the read ends: not needed on Windows.
+    # Non-blocking on the read ends: not needed on Windows (bridges use blocking reads in threads).
     if not IS_WINDOWS:
         os.set_blocking(output_r_conn.fileno(), False)
         os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_sock, log_path, explicit)
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
@@ -1334,15 +1381,8 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, Optional[str]]:
     On Windows, where named FIFOs are not available, an anonymous pipe is used
     and ``fifo_path`` is returned as ``None``.
     """
-    if IS_WINDOWS:
-        read_fd, write_fd = os.pipe()
-        # write num_jobs - 1 tokens, because the first job is implicit
-        os.write(write_fd, b"+" * (num_jobs - 1))
-        return read_fd, write_fd, None
-
     tmpdir = tempfile.mkdtemp()
     fifo_path = os.path.join(tmpdir, "jobserver_fifo")
-
     try:
         os.mkfifo(fifo_path, 0o600)
         read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
@@ -1374,16 +1414,6 @@ def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
         return None
 
 
-class FdInfo:
-    """Information about a file descriptor mapping."""
-
-    __slots__ = ("pid", "name")
-
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
-        self.name = name
-
-
 class BuildInfo:
     """Information about a package being built."""
 
@@ -1399,7 +1429,7 @@ class BuildInfo:
         "start_time",
         "duration",
         "progress_percent",
-        "control_w_conn",
+        "control_w_sock",
         "log_path",
         "log_summary",
     )
@@ -1408,7 +1438,7 @@ class BuildInfo:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection],
+        control_w_sock: Optional[socket.socket],
         log_path: Optional[str] = None,
         start_time: float = 0.0,
     ) -> None:
@@ -1423,7 +1453,7 @@ class BuildInfo:
         self.start_time: float = start_time
         self.duration: Optional[float] = None
         self.progress_percent: Optional[int] = None
-        self.control_w_conn = control_w_conn
+        self.control_w_sock = control_w_sock
         self.log_path = log_path
         self.log_summary: Optional[str] = None
 
@@ -1496,23 +1526,23 @@ class BuildStatus:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection] = None,
+        control_w_sock: Optional[socket.socket] = None,
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
         dag_hash = spec.dag_hash()
         preserved = self._preserved_start.pop(dag_hash, None)
         start_time = preserved if preserved is not None else int(self.get_time())
-        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, start_time)
+        build_info = BuildInfo(spec, explicit, control_w_sock, log_path, start_time)
         self.builds[dag_hash] = build_info
         self._preserved_area_rows = 0
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
-        if self.verbose and not self.tracked_build_id and control_w_conn is not None:
+        if self.verbose and not self.tracked_build_id and control_w_sock is not None:
             self.tracked_build_id = dag_hash
             try:
-                _conn_write(control_w_conn, b"1")
+                control_w_sock.sendall(b"1")
             except OSError:
                 pass
 
@@ -1531,6 +1561,15 @@ class BuildStatus:
     def toggle(self) -> None:
         """Toggle between overview mode and following a specific build."""
         if self.overview_mode:
+            # Move the cursor back to the top of the TUI area and clear it so the
+            # "Following logs of" header overwrites the overview in-place. Without
+            # this, the overview stays on screen above the header; toggling back and
+            # forth makes additional headers appear below the overview, looking like
+            # duplicated output.
+            if self.active_area_rows > 0:
+                self.stdout.write(f"\033[{self.active_area_rows}A\r\033[0J")
+                self.stdout.flush()
+                self.active_area_rows = 0
             self.next()
         else:
             if not self.log_ends_with_newline:
@@ -1542,9 +1581,9 @@ class BuildStatus:
             self.overview_mode = True
             self.dirty = True
             try:
-                conn = self.builds[self.tracked_build_id].control_w_conn
-                if conn is not None:
-                    _conn_write(conn, b"0")
+                sock = self.builds[self.tracked_build_id].control_w_sock
+                if sock is not None:
+                    sock.sendall(b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -1607,9 +1646,9 @@ class BuildStatus:
         # Stop following the previous and start following the new build.
         if self.tracked_build_id:
             try:
-                conn = self.builds[self.tracked_build_id].control_w_conn
-                if conn is not None:
-                    _conn_write(conn, b"0")
+                sock = self.builds[self.tracked_build_id].control_w_sock
+                if sock is not None:
+                    sock.sendall(b"0")
             except (KeyError, OSError):
                 pass
 
@@ -1639,9 +1678,9 @@ class BuildStatus:
             self.log_ends_with_newline = True
             self.stdout.flush()
             try:
-                conn = new_build.control_w_conn
-                if conn is not None:
-                    _conn_write(conn, b"1")
+                sock = new_build.control_w_sock
+                if sock is not None:
+                    sock.sendall(b"1")
             except (KeyError, OSError):
                 pass
 
@@ -2239,7 +2278,7 @@ def schedule_builds(
     overwrite_time: float,
     capacity: int,
     needs_jobserver_token: bool,
-    jobserver: JobServer,
+    jobserver: "JobServer",
     explicit: Set[str],
 ) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
@@ -2491,13 +2530,23 @@ class NullReportData(ReportData):
         pass
 
 
+class FdInfo:
+    """Information about a file descriptor mapping."""
+
+    __slots__ = ("pid", "name")
+
+    def __init__(self, pid: int, name: str) -> None:
+        self.pid = pid
+        self.name = name
+
+
 class BaseTerminalState(abc.ABC):
     """Abstract base for TerminalState management classes"""
 
     def __init__(
         self,
-        selector,
-        build_status,
+        selector: selectors.BaseSelector,
+        build_status: BuildStatus,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
@@ -2683,17 +2732,6 @@ class TerminalState(BaseTerminalState):
             self.enter_foreground()
 
 
-def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
-    """Send a signal to the process group of each running build."""
-    for child in running_builds.values():
-        try:
-            pid = child.proc.pid
-            if pid is not None:
-                os.killpg(pid, sig)
-        except OSError:
-            pass
-
-
 class WindowsTerminalState(BaseTerminalState):
     """Terminal State management class for Windows"""
 
@@ -2701,71 +2739,59 @@ class WindowsTerminalState(BaseTerminalState):
     def stdout_is_interactive(cls) -> bool:
         """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY,
         wraps child I/O in pipes but forwards console API calls."""
-        mode = wintypes.DWORD()
-        handle = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
-        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[has-type]
+        mode = wintypes.DWORD()  # type: ignore[name-defined]
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        handle = kernel32.GetStdHandle(-11)
+        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[attr-defined]
 
     @classmethod
     def stdin_is_interactive(cls) -> bool:
-        mode = wintypes.DWORD()
-        handle = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)  # type: ignore[has-type]
-        return bool(win_io.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[has-type]
+        mode = wintypes.DWORD()  # type: ignore[name-defined]
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        handle = kernel32.GetStdHandle(-10)
+        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[attr-defined]
 
-    def create_stdin_reader(self) -> "StdinReader":
-        """read key inputs from socket pair"""
-        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)  # type: ignore[has-type]
-
-    def __init__(
-        self,
-        selector: "win_io.HybridWindowsSelector",
-        build_status: BuildStatus,
-        on_suspend: Optional[Callable[[], None]] = None,
-        on_resume: Optional[Callable[[], None]] = None,
-    ) -> None:
-        self.selector = selector
-        self.build_status = build_status
-        self.on_suspend = on_suspend
-        self.on_resume = on_resume
-
-        self.hStdin = win_io.GetStdHandle(win_io.STD_INPUT_HANDLE)  # type: ignore[has-type]
-        self.hStdout = win_io.GetStdHandle(win_io.STD_OUTPUT_HANDLE)  # type: ignore[has-type]
-
+    def __init__(self, selector, build_status, on_suspend=None, on_resume=None):
+        super().__init__(selector, build_status, on_suspend, on_resume)
+        self.kernel32 = ctypes.windll.kernel32
+        self.hStdin = self.kernel32.GetStdHandle(-10)
+        self.hStdout = self.kernel32.GetStdHandle(-11)
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
+        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        self.kernel32.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
 
-        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[has-type]
-        win_io.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))  # type: ignore[has-type]
-
-        self.stdin_r, self.stdin_w = socket.socketpair()  # type: ignore[has-type]
-        self.stdin_r.setblocking(False)  # type: ignore[has-type]
-
-        # Create the fake SIGWINCH sockets
+        self.stdin_r, self.stdin_w = socket.socketpair()
+        self.stdin_r.setblocking(False)
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
 
-        self.console_reader: Optional[Any] = None
+    def create_stdin_reader(self) -> "StdinReader":
+        """Read key inputs from the stdin socket pair."""
+        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
-        new_out_mode = self.old_stdout_settings.value | win_io.ENABLE_VIRTUAL_TERMINAL_PROCESSING  # type: ignore[has-type]
-        win_io.SetConsoleMode(self.hStdout, new_out_mode)  # type: ignore[has-type]
+        new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING  # type: ignore[name-defined]
+        self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
 
         # Register the fake sigwinch pipe with the exact same name Unix uses
         self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-
         self.build_status.headless = True
+
+        self._running = True
+        threading.Thread(target=self._input_thread, daemon=True).start()
+        threading.Thread(target=self._resize_thread, daemon=True).start()
+
         self.enter_foreground()
 
     def teardown(self) -> None:
         """Restore console mode and shut down bridge."""
-        win_io.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)  # type: ignore[has-type]
-        win_io.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)  # type: ignore[has-type]
+        self._running = False
+        self.kernel32.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
+        self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
-        if self.console_reader:
-            self.console_reader.close()
-            self.console_reader = None
-
-        for sock in (self.stdin_r, self.sigwinch_r):  # type: ignore[has-type]
+        for sock in (self.stdin_r, self.sigwinch_r):
             try:
                 self.selector.unregister(sock)
             except KeyError:
@@ -2776,32 +2802,56 @@ class WindowsTerminalState(BaseTerminalState):
         if not self.build_status.headless:
             return
 
-        win_io.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[has-type]
-        disable = win_io.ENABLE_LINE_INPUT | win_io.ENABLE_ECHO_INPUT  # type: ignore[has-type]
-        new_in_mode = self.old_stdin_settings.value & ~disable
-        win_io.SetConsoleMode(self.hStdin, new_in_mode)  # type: ignore[has-type]
+        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[attr-defined]
 
-        # Register stdin and start the polling thread
-        if self.stdin_is_interactive() and not self.console_reader:
-            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")  # type: ignore[has-type]
-            self.console_reader = win_io.ConsoleReader(self.stdin_w, self.sigwinch_w)  # type: ignore[has-type]
+        # Disable Line Input, Echo, and QuickEdit Mode (prevents TUI freeze on mouse click).
+        # ENABLE_EXTENDED_FLAGS (0x0080) must be set when clearing QuickEdit (0x0040).
+        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
+        new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS
+        self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
+
+        if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
+            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
 
         self.build_status.headless = False
         self.build_status.dirty = True
 
     def enter_background(self) -> None:
         """Stop processing console input."""
-        if self.console_reader:
-            self.console_reader.close()
-            self.console_reader = None
-            try:
-                self.selector.unregister(self.stdin_r)  # type: ignore[has-type]
-            except KeyError:
-                pass
+        if self.stdin_r.fileno() in self.selector.get_map():
+            self.selector.unregister(self.stdin_r)
         self.build_status.headless = True
 
     def handle_continue(self) -> None:
         self.enter_foreground()
+
+    def _input_thread(self):
+        while self._running:
+            if self.build_status.headless:
+                time.sleep(0.1)
+                continue
+            if msvcrt.kbhit():
+                char = msvcrt.getwch()
+                if char in ("\x00", "\xe0"):
+                    char += msvcrt.getwch()
+                try:
+                    self.stdin_w.sendall(char.encode("utf-8"))
+                except OSError:
+                    pass
+            else:
+                time.sleep(0.05)
+
+    def _resize_thread(self) -> None:
+        last_size = shutil.get_terminal_size()
+        while self._running:
+            time.sleep(0.1)
+            curr = shutil.get_terminal_size()
+            if curr != last_size:
+                last_size = curr
+                try:
+                    self.sigwinch_w.sendall(b"\x00")
+                except OSError:
+                    pass
 
 
 def _establish_terminal_state(*args, **kwargs) -> Optional[BaseTerminalState]:
@@ -2842,6 +2892,17 @@ class StdinReader:
             return self._decode(raw)
         except OSError:
             return ""
+
+
+def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
+    """Send a signal to the process group of each running build."""
+    for child in running_builds.values():
+        try:
+            pid = child.proc.pid
+            if pid is not None:
+                os.killpg(pid, sig)
+        except OSError:
+            pass
 
 
 class PackageInstaller:
@@ -2898,6 +2959,7 @@ class PackageInstaller:
 
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
+        self.state_decoders: Dict[int, codecs.IncrementalDecoder] = {}
 
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
@@ -2940,7 +3002,7 @@ class PackageInstaller:
         self.keep_stage = keep_stage
         self.skip_patch = skip_patch
 
-        #: queue of packages ready to install (no children)
+        #: queue of packages ready to install (no uninstalled children)
         self.pending_builds = [
             parent for parent, children in self.build_graph.parent_to_child.items() if not children
         ]
@@ -2985,7 +3047,7 @@ class PackageInstaller:
     def _installer(self) -> None:
         spack.store.STORE.install_sbang()
         jobserver = JobServer(self.jobs)
-        selector = get_selectors()
+        selector = selectors.DefaultSelector()
 
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[BaseTerminalState] = None
@@ -3034,21 +3096,14 @@ class PackageInstaller:
                 # spec is not locked by another process. Also listen if the target parallelism is
                 # reduced.
                 wake_on_jobserver = (
-                    self.pending_builds
-                    and self.capacity
-                    and not blocked
-                    or not jobserver.has_target_parallelism()
-                )
-                # On Windows, non named pipes from os.pipe() are not IOCP-compatible, so we
-                # skip selector registration and poll for tokens each loop instead.
-                # The latency is limited by the selector timeout (SPINNER_INTERVAL = 0.1 s).
+                    self.pending_builds and self.capacity and not blocked
+                ) or not jobserver.has_target_parallelism()
+
                 if not IS_WINDOWS:
                     if wake_on_jobserver and jobserver.r not in selector.get_map():
                         selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
                     elif not wake_on_jobserver and jobserver.r in selector.get_map():
                         selector.unregister(jobserver.r)
-
-                stdin_ready = False
 
                 if self.build_status.headless:
                     # no UI to update, but check background to foreground transition periodically
@@ -3061,6 +3116,7 @@ class PackageInstaller:
                 events = selector.select(timeout=timeout)
 
                 finished_pids.clear()
+                stdin_ready = False
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -3082,21 +3138,27 @@ class PackageInstaller:
                         elif tag.name == "sentinel":
                             finished_pids.append(tag.pid)
                     elif tag == "stdin":
-                        # On Windows, ConsoleReader sends resize events to sigwinch_wsock
-                        # (b"\x00") and keypresses to stdin_wsock. Calling call read_from_key()
-                        # drains the socket and leave stdin_reader.read() empty.
+                        # On Windows, the input thread pushes keypresses to stdin_r via the socket
+                        # pair.
                         # Just signal readiness and let stdin_reader.read() consume the bytes.
                         stdin_ready = True
                     elif tag == "sigwinch":
                         assert terminal is not None
                         if IS_WINDOWS:
-                            terminal.sigwinch_r.recv(64)  # type: ignore[attr-defined]
+                            terminal.sigwinch_r.recv(64)  # type: ignore[attr-defined]  # drain
                         else:
                             os.read(terminal.sigwinch_r, 64)  # type: ignore[attr-defined]
                         self.build_status.on_resize()
                     elif tag == "jobserver" and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+
+                # On Windows, the jobserver uses a semaphore rather than a pipe fd, so it cannot
+                # be registered with the selector. Poll for token discard each loop instead.
+                # The latency is bounded by the selector timeout (SPINNER_INTERVAL = 0.1 s).
+                if IS_WINDOWS and wake_on_jobserver and not jobserver.has_target_parallelism():
+                    jobserver.maybe_discard_tokens()
+                    self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
                 for pid in finished_pids:
@@ -3122,7 +3184,7 @@ class PackageInstaller:
                             self.build_status.toggle()
                         elif char == "n":
                             self.build_status.next(1)
-                        elif char == "p" or char == "N":
+                        elif char in ("p", "N"):
                             self.build_status.next(-1)
                         elif char == "+":
                             jobserver.increase_parallelism()
@@ -3265,7 +3327,7 @@ class PackageInstaller:
         self,
         pid: int,
         current_time: float,
-        jobserver: JobServer,
+        jobserver: "JobServer",
         selector: selectors.BaseSelector,
         failures: List[spack.spec.Spec],
         database_actions: List[DatabaseAction],
@@ -3278,6 +3340,7 @@ class PackageInstaller:
         self.capacity += 1
         jobserver.release()
         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
+        # Must drain before build.close() to consume any remaining pipe data before bridges close.
         self._drain_child_output(build, selector)
         self._drain_child_state(build, selector)
         exitcode = build.close(selector)
@@ -3294,7 +3357,6 @@ class PackageInstaller:
 
         # When we don't have to do a db write, we can release the lock immediately.
         build.release_prefix_lock()
-
         is_root = dag_hash in self.build_graph.roots
         user_policy = self.root_policy if is_root else self.dependencies_policy
 
@@ -3366,13 +3428,12 @@ class PackageInstaller:
                     raise
                 finally:
                     action.prefix_lock = None
-
         return True
 
     def _schedule_builds(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: "JobServer",
         retained_read_locks: List[spack.util.lock.Lock],
         database_actions: List[DatabaseAction],
     ) -> bool:
@@ -3432,7 +3493,7 @@ class PackageInstaller:
     def _start(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: "JobServer",
         dag_hash: str,
         prefix_lock: spack.util.lock.Lock,
     ) -> None:
@@ -3480,17 +3541,49 @@ class PackageInstaller:
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
-        selector.register(
-            child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
-        )
-        selector.register(
-            child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
-        )
-        selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+
+        self.state_decoders[pid] = codecs.getincrementaldecoder("utf-8")(errors="replace")
+
+        # Cross-platform Pipe Registration
+        if IS_WINDOWS:
+            # Connection.fileno() on Windows returns a Win32 HANDLE, not a CRT fd.
+            # os.read() (used by WindowsPipeBridge) requires a CRT fd.
+            # Convert via msvcrt.open_osfhandle() and null _handle to prevent
+            # PipeConnection.__del__ from double-closing the same handle.
+            out_handle = child_info.output_r_conn.fileno()
+            child_info.output_r_conn._handle = None  # type: ignore[attr-defined]
+            out_crt_fd = msvcrt.open_osfhandle(out_handle, os.O_RDONLY)  # type: ignore[attr-defined]
+            out_bridge = WindowsPipeBridge(out_crt_fd)
+
+            state_handle = child_info.state_r_conn.fileno()
+            child_info.state_r_conn._handle = None  # type: ignore[attr-defined]
+            state_crt_fd = msvcrt.open_osfhandle(state_handle, os.O_RDONLY)  # type: ignore[attr-defined]
+            state_bridge = WindowsPipeBridge(state_crt_fd)
+
+            sentinel_bridge = WindowsSentinelBridge(child_info.proc)
+
+            child_info.bridges.extend([out_bridge, state_bridge, sentinel_bridge])
+
+            selector.register(out_bridge, selectors.EVENT_READ, FdInfo(pid, "output"))
+            selector.register(state_bridge, selectors.EVENT_READ, FdInfo(pid, "state"))
+            selector.register(sentinel_bridge, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        else:
+            os.set_blocking(child_info.output_r_conn.fileno(), False)
+            os.set_blocking(child_info.state_r_conn.fileno(), False)
+            selector.register(
+                child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
+            )
+            selector.register(
+                child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
+            )
+            selector.register(
+                child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel")
+            )
+
         self.build_status.add_build(
             child_info.spec,
             explicit=explicit,
-            control_w_conn=child_info.control_w_conn,
+            control_w_sock=child_info.control_w_sock,
             log_path=child_info.log_path,
         )
         self.report_data.start_record(spec)
@@ -3499,7 +3592,6 @@ class PackageInstaller:
         self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
-        r_fd = key.fd
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
@@ -3511,7 +3603,7 @@ class PackageInstaller:
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
+                selector.unregister(key.fileobj)
             except KeyError:
                 pass
             return
@@ -3520,47 +3612,59 @@ class PackageInstaller:
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        r_fd = child_info.output_r_conn.fileno()
-        while r_fd in selector.get_map():
-            key = selector.get_map()[r_fd]
+        fd_or_obj = child_info.bridges[0] if IS_WINDOWS else child_info.output_r_conn.fileno()
+        while fd_or_obj in selector.get_map():
+            key = selector.get_map()[fd_or_obj]
             self._handle_child_logs(key, child_info, selector)
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
-        r_fd = child_info.state_r_conn.fileno()
-        while r_fd in selector.get_map():
-            key = selector.get_map()[r_fd]
+        fd_or_obj = child_info.bridges[1] if IS_WINDOWS else child_info.state_r_conn.fileno()
+        while fd_or_obj in selector.get_map():
+            key = selector.get_map()[fd_or_obj]
             self._handle_child_state(key, child_info, selector)
 
     def _handle_child_state(
         self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
-        r_fd = key.fd
         try:
-            # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
-            # iteration of the event loop to keep things responsive.
             data = read_from_key(key, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
             return
-        except (OSError, EOFError):
-            data = None
+
+        pid = child_info.proc.pid
+        decoder = self.state_decoders[pid]
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
+                selector.unregister(key.fileobj)
             except KeyError:
                 pass
-            self.state_buffers.pop(r_fd, None)
+            final_text = decoder.decode(b"", final=True)
+            if final_text:
+                self._process_state_string(pid, child_info, final_text)
+            self.state_buffers.pop(pid, None)
             return
 
-        # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(r_fd, "") + data.decode(errors="replace")
+        text = decoder.decode(data)
+        if text:
+            self._process_state_string(pid, child_info, text)
+
+    def _process_state_string(self, pid: int, child_info: ChildInfo, text: str) -> None:
+        buffer = self.state_buffers.get(pid, "") + text
         lines = buffer.split("\n")
 
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[r_fd] = lines.pop()
+        self.state_buffers[pid] = lines.pop()
+
+        # OOM protection for rogue state pipes
+        if len(self.state_buffers[pid]) > 1024 * 1024:
+            last_newline = self.state_buffers[pid].rfind("\n")
+            self.state_buffers[pid] = (
+                "" if last_newline < 0 else self.state_buffers[pid][last_newline + 1 :]
+            )
 
         for line in lines:
             if not line:
