@@ -2848,7 +2848,8 @@ class WindowsTerminalState(BaseTerminalState):
             if msvcrt.kbhit():
                 char = msvcrt.getwch()
                 if char in ("\x00", "\xe0"):
-                    char += msvcrt.getwch()
+                    msvcrt.getwch()  # Consume the trailing scan code
+                    continue    # and drop the keypress
                 try:
                     self.stdin_w.sendall(char.encode("utf-8"))
                 except OSError:
