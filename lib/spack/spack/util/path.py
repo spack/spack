@@ -95,35 +95,19 @@ def _resolve_location_var(location_key):
     # If it's a list, iterate through items
     if isinstance(location_list, list):
         for item in location_list:
-            # Check if item contains an environment variable
-            # Look for $VAR or ${VAR} patterns
-            env_var_pattern = r"\$\{?([A-Z_][A-Z0-9_]*)\}?"
-            env_vars = re.findall(env_var_pattern, item)
+            # Attempt to resolve all variables in the entry
+            # Catch recursion error in case someone tries `data: $data_home` or a cycle among the three
+            try:
+                candidate = os.path.normpath(substitute_path_variables(item))
+            except RecursionError:
+                tty.warn(f"Skipping recursive definition in locations config: {item}.")
+            # Look for unresolved env var or config vars in candidate
+            var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
+            unresolved_vars = re.search(var_pattern, candidate)
 
-            if env_vars:
-                all_defined = all(var in os.environ for var in env_vars)
-                if all_defined:
-                    # Resolve and return it, normalizing path separators
-                    return os.path.normpath(substitute_path_variables(item))
-                # If not all defined, continue to next item
+            if unresolved_vars:
                 continue
-
-            # Check if item contains a spack config variable (like $data_home)
-            # This would be a variable that starts with $ but isn't an env var
-            config_var_pattern = r"\$([a-z_][a-z0-9_]*)"
-            config_vars = re.findall(config_var_pattern, item)
-
-            if config_vars:
-                # Resolve the config variable (but watch out for infinite loops)
-                # For now, just resolve it - the replacements() function will handle it
-                try:
-                    return os.path.normpath(substitute_path_variables(item))
-                except RecursionError:
-                    # If we hit infinite recursion, skip this item
-                    continue
-
-            # If it's just a static string (like "~/.local/share/spack"), return it
-            return os.path.normpath(substitute_path_variables(item))
+            return candidate
 
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
     # config::)
