@@ -115,9 +115,7 @@ def test_list_sources_url(config, tmp_path):
     assert os.path.isabs(url)
 
     # Absolute URL
-    metadata_yaml.write_text(
-        "type: install\ndescription: test\ninfo:\n  url: /bootstrap_cache\n"
-    )
+    metadata_yaml.write_text("type: install\ndescription: test\ninfo:\n  url: /bootstrap_cache\n")
     with spack.config.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
@@ -126,7 +124,6 @@ def test_list_sources_url(config, tmp_path):
     match = re.search(r"url:(.+)", output)
     url = match.group(1).strip()
     assert os.path.isabs(url)
-
 
 
 def test_list_sources(config):
