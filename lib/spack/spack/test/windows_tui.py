@@ -1,37 +1,39 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for Windows-specific TUI components: ConsoleReader and WindowsTerminalState.
+"""Tests for Windows-specific TUI components in new_installer.py.
 
-All tests in this module are Windows-only and use unittest.mock to avoid real Win32 API calls.
+WindowsTerminalState uses two daemon threads (_input_thread, _resize_thread) and
+a pair of socketpairs (stdin_r/w, sigwinch_r/w) to bridge Win32 console events
+into the selector-based event loop.  All tests here use unittest.mock so that
+no real Win32 API calls are required.
 """
 
 import selectors
+import socket
 import sys
+import threading
 import time
+from ctypes import wintypes
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 if sys.platform != "win32":
     pytest.skip("Windows-only tests", allow_module_level=True)
 
-import socket
-from ctypes import wintypes
-from unittest.mock import MagicMock, patch
-
-import spack.llnl.util.win_io as win_io
-from spack.llnl.util.win_io import ConsoleReader
-from spack.new_installer import WindowsTerminalState
-
-
-def _make_socket_pair():
-    """Return a (read_sock, write_sock) socket pair both in blocking mode."""
-    r, w = socket.socketpair()
-    return r, w
+from spack.new_installer import (
+    ENABLE_ECHO_INPUT,
+    ENABLE_EXTENDED_FLAGS,
+    ENABLE_LINE_INPUT,
+    ENABLE_QUICK_EDIT_MODE,
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+    WindowsTerminalState,
+)
 
 
 def _drain(sock, timeout=0.5):
-    """Read all available bytes from a non-blocking socket within a timeout."""
+    """Read all available bytes from a socket within *timeout* seconds."""
     sock.setblocking(False)
     data = b""
     deadline = time.monotonic() + timeout
@@ -46,274 +48,344 @@ def _drain(sock, timeout=0.5):
     return data
 
 
-class TestConsoleReader:
-    """Tests for ConsoleReader — the bridge between Windows console and the selector."""
-
-    def test_resize_event_payload_defined(self):
-        assert isinstance(ConsoleReader.RESIZE_EVENT_PAYLOAD, bytes)
-        assert len(ConsoleReader.RESIZE_EVENT_PAYLOAD) > 0
-
-    def test_keystroke_forwarded_to_stdin_wsock(self):
-        """A keystroke from msvcrt.getch() should appear on stdin_wsock."""
-        stdin_r, stdin_w = _make_socket_pair()
-        sigwinch_r, sigwinch_w = _make_socket_pair()
-
-        with patch("spack.llnl.util.win_io.msvcrt") as mock_msvcrt:
-            # Simulate one keypress
-            call_count = [0]
-
-            def kbhit_side_effect():
-                call_count[0] += 1
-                return call_count[0] == 1  # True only for first call
-
-            mock_msvcrt.kbhit.side_effect = kbhit_side_effect
-            mock_msvcrt.getch.return_value = b"v"
-
-            reader = ConsoleReader(stdin_w, sigwinch_w)
-            # Give the thread a moment to process the first poll cycle
-            time.sleep(0.15)
-            reader.close()
-            reader.thread.join(timeout=1.0)
-
-        data = _drain(stdin_r)
-        assert b"v" in data
-
-        for s in (stdin_r, stdin_w, sigwinch_r, sigwinch_w):
-            s.close()
-
-    def test_resize_event_sent_on_size_change(self):
-        """A terminal resize should inject RESIZE_EVENT_PAYLOAD on sigwinch_wsock."""
-        stdin_r, stdin_w = _make_socket_pair()
-        sigwinch_r, sigwinch_w = _make_socket_pair()
-
-        original_size = (80, 24)
-        new_size = (100, 30)
-
-        with patch("spack.llnl.util.win_io.msvcrt") as mock_msvcrt, patch(
-            "spack.llnl.util.win_io.shutil.get_terminal_size"
-        ) as mock_size:
-            mock_msvcrt.kbhit.return_value = False
-            sizes = iter([original_size, original_size, new_size, new_size])
-
-            def get_size():
-                try:
-                    w, h = next(sizes)
-                    return type("ts", (), {"columns": w, "lines": h})()
-                except StopIteration:
-                    return type("ts", (), {"columns": new_size[0], "lines": new_size[1]})()
-
-            mock_size.side_effect = get_size
-
-            reader = ConsoleReader(stdin_w, sigwinch_w)
-            # Seed the initial size so the first call establishes baseline
-            reader._last_size = type(
-                "ts", (), {"columns": original_size[0], "lines": original_size[1]}
-            )()
-            time.sleep(0.15)
-            reader.close()
-            reader.thread.join(timeout=1.0)
-
-        data = _drain(sigwinch_r)
-        assert b"\x00" in data
-
-        for s in (stdin_r, stdin_w, sigwinch_r, sigwinch_w):
-            s.close()
-
-    def test_close_stops_thread(self):
-        """close() should stop the polling thread cleanly."""
-        stdin_r, stdin_w = _make_socket_pair()
-        sigwinch_r, sigwinch_w = _make_socket_pair()
-
-        with patch("spack.llnl.util.win_io.msvcrt") as mock_msvcrt, patch(
-            "spack.llnl.util.win_io.shutil.get_terminal_size",
-            return_value=type("ts", (), {"columns": 80, "lines": 24})(),
-        ):
-            mock_msvcrt.kbhit.return_value = False
-            reader = ConsoleReader(stdin_w, sigwinch_w)
-            assert reader.thread.is_alive()
-            reader.close()
-            reader.thread.join(timeout=1.0)
-            assert not reader.thread.is_alive()
-
-        for s in (stdin_r, stdin_w, sigwinch_r, sigwinch_w):
-            s.close()
-
-    def test_extended_key_reads_two_bytes(self):
-        """Extended keys (e.g. arrow keys) that start with 0x00 or 0xe0 read a second byte."""
-        stdin_r, stdin_w = _make_socket_pair()
-        sigwinch_r, sigwinch_w = _make_socket_pair()
-
-        with patch("spack.llnl.util.win_io.msvcrt") as mock_msvcrt:
-            call_count = [0]
-
-            def kbhit():
-                call_count[0] += 1
-                return call_count[0] == 1
-
-            mock_msvcrt.kbhit.side_effect = kbhit
-            # Simulate an extended key: 0xe0 followed by up-arrow code 0x48
-            mock_msvcrt.getch.side_effect = [b"\xe0", b"\x48"]
-
-            reader = ConsoleReader(stdin_w, sigwinch_w)
-            time.sleep(0.15)
-            reader.close()
-            reader.thread.join(timeout=1.0)
-
-        data = _drain(stdin_r)
-        assert b"\xe0\x48" in data
-
-        for s in (stdin_r, stdin_w, sigwinch_r, sigwinch_w):
-            s.close()
-
-
 def _make_mock_selector():
-    """Return a MagicMock that behaves like a BaseSelector for registration tracking."""
     sel = MagicMock(spec=selectors.BaseSelector)
-    registered = {}
+    _reg = {}
 
-    def register(fileobj, events, data=None):
-        fd = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
-        registered[fd] = (fileobj, events, data)
-        key = MagicMock()
-        key.fd = fd
-        key.fileobj = fileobj
-        key.data = data
-        return key
+    def _register(fileobj, events, data=None):
+        key = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
+        _reg[key] = (fileobj, events, data)
+        k = MagicMock()
+        k.fd = key
+        k.fileobj = fileobj
+        k.data = data
+        return k
 
-    def unregister(fileobj):
-        fd = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
-        if fd in registered:
-            del registered[fd]
+    def _unregister(fileobj):
+        key = fileobj.fileno() if hasattr(fileobj, "fileno") else fileobj
+        _reg.pop(key, None)
 
-    def get_map():
-        return registered
-
-    sel.register.side_effect = register
-    sel.unregister.side_effect = unregister
-    sel.get_map.side_effect = get_map
+    sel.register.side_effect = _register
+    sel.unregister.side_effect = _unregister
+    sel.get_map.side_effect = lambda: _reg
     return sel
 
 
-def _make_mock_build_status():
+def _make_mock_build_status(headless=True):
     bs = MagicMock()
-    bs.headless = True
+    bs.headless = headless
     bs.dirty = False
     return bs
 
 
-class TestWindowsTerminalState:
-    """Tests for WindowsTerminalState — console mode management and socket lifecycle."""
+def _make_state(headless=True):
+    """Create a WindowsTerminalState bypassing __init__ to avoid real Win32 calls.
 
-    def _make_state(self, selector=None, build_status=None):
-        sel = selector or _make_mock_selector()
-        bs = build_status or _make_mock_build_status()
+    All kernel32 calls go through a MagicMock; real socket pairs are created so
+    that thread tests can send/receive actual bytes.
+    """
+    sel = _make_mock_selector()
+    bs = _make_mock_build_status(headless=headless)
+    mock_k32 = MagicMock()
+    mock_k32.GetStdHandle.return_value = MagicMock()
+    mock_k32.GetConsoleMode.return_value = True
+    mock_k32.SetConsoleMode.return_value = True
 
-        stdin_mode = wintypes.DWORD(0x0007)
+    state = object.__new__(WindowsTerminalState)
+    state.selector = sel
+    state.build_status = bs
+    state.on_suspend = None
+    state.on_resume = None
+    state.kernel32 = mock_k32
+    state.hStdin = MagicMock()
+    state.hStdout = MagicMock()
+    # ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT
+    state.old_stdin_settings = wintypes.DWORD(0x0007)
+    state.old_stdout_settings = wintypes.DWORD(0x0003)
+    state.stdin_r, state.stdin_w = socket.socketpair()
+    state.stdin_r.setblocking(False)
+    state.sigwinch_r, state.sigwinch_w = socket.socketpair()
+    state.sigwinch_r.setblocking(False)
+    state._running = False
+    return state, sel, bs, mock_k32
 
-        with patch.object(win_io, "GetStdHandle", return_value=MagicMock()), patch.object(
-            win_io, "GetConsoleMode"
-        ) as mock_get_mode, patch.object(win_io, "SetConsoleMode"):
-            # Populate old_*_settings DWORDs via the mock
-            def _get_mode(handle, dword_ptr):
-                dword_ptr._obj.value = stdin_mode.value
 
-            mock_get_mode.side_effect = _get_mode
-            state = WindowsTerminalState(sel, bs)
-
-        return state, sel, bs
-
+class TestSetupTeardown:
     def test_setup_enables_vt100_on_stdout(self):
-        """setup() should call SetConsoleMode with the VT100 flag ORed in."""
-        state, sel, bs = self._make_state()
+        """setup() ORs ENABLE_VIRTUAL_TERMINAL_PROCESSING into the stdout console mode."""
+        state, sel, bs, k32 = _make_state()
 
-        with patch.object(win_io, "SetConsoleMode") as mock_set, patch.object(
-            win_io, "GetConsoleMode"
+        with patch("spack.new_installer.threading.Thread"), patch.object(
+            state, "enter_foreground"
         ):
             state.setup()
 
-        # At least one SetConsoleMode call should include ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        vt_flag = win_io.ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        assert any((args[1] & vt_flag) == vt_flag for args, _ in mock_set.call_args_list), (
-            "VT100 flag was not set during setup()"
-        )
+        vt_flag = ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        vt_calls = [
+            args[1]
+            for args, _ in k32.SetConsoleMode.call_args_list
+            if args and isinstance(args[1], int) and (args[1] & vt_flag)
+        ]
+        assert vt_calls, "VT100 flag not set in any SetConsoleMode call during setup()"
 
     def test_setup_registers_sigwinch_socket(self):
-        """setup() should register sigwinch_r in the selector."""
-        state, sel, bs = self._make_state()
+        """setup() registers sigwinch_r in the selector with tag 'sigwinch'."""
+        state, sel, bs, k32 = _make_state()
 
-        with patch.object(win_io, "SetConsoleMode"), patch.object(win_io, "GetConsoleMode"):
+        with patch("spack.new_installer.threading.Thread"), patch.object(
+            state, "enter_foreground"
+        ):
             state.setup()
 
-        registered_data = [call_args[0][2] for call_args in sel.register.call_args_list]
-        assert "sigwinch" in registered_data
+        tags = [call_args[0][2] for call_args in sel.register.call_args_list]
+        assert "sigwinch" in tags
 
-    def test_teardown_restores_console_mode_value(self):
-        """teardown() must pass .value (int), not the DWORD struct, to SetConsoleMode."""
-        state, sel, bs = self._make_state()
+    def test_setup_starts_two_daemon_threads(self):
+        """setup() starts exactly two daemon threads."""
+        state, sel, bs, k32 = _make_state()
+        threads = []
 
-        calls = []
-        with patch.object(win_io, "SetConsoleMode", side_effect=lambda h, v: calls.append(v)):
-            state.teardown()
+        class _FakeThread:
+            def __init__(self, target, daemon):
+                threads.append(self)
+                self.daemon = daemon
 
-        # All mode arguments should be plain integers, not ctypes instances
-        for v in calls:
-            assert isinstance(v, int), f"SetConsoleMode got non-int argument: {type(v)}"
+            def start(self):
+                pass
 
-    def test_enter_foreground_registers_stdin_and_starts_reader(self):
-        """enter_foreground() should register stdin_r and create a ConsoleReader."""
-        state, sel, bs = self._make_state()
-        bs.headless = True
+        with patch("spack.new_installer.threading.Thread", _FakeThread), patch.object(
+            state, "enter_foreground"
+        ):
+            state.setup()
 
-        with patch.object(win_io, "GetConsoleMode"), patch.object(win_io, "SetConsoleMode"), patch(
-            "spack.llnl.util.win_io.ConsoleReader"
-        ) as MockReader, patch.object(sys.stdin, "isatty", return_value=True):
+        assert len(threads) == 2
+        assert all(t.daemon for t in threads)
+
+    def test_teardown_restores_console_mode_with_int_values(self):
+        """teardown() passes plain ints (not DWORD structs) to SetConsoleMode."""
+        state, sel, bs, k32 = _make_state()
+        captured = []
+        k32.SetConsoleMode.side_effect = lambda h, v: captured.append(v)
+
+        state.teardown()
+
+        assert captured, "SetConsoleMode not called during teardown()"
+        for v in captured:
+            assert isinstance(v, int), f"Expected int, got {type(v)}: {v!r}"
+
+    def test_teardown_closes_stdin_and_sigwinch_sockets(self):
+        """teardown() closes stdin_r and sigwinch_r."""
+        state, sel, bs, k32 = _make_state()
+        stdin_mock = MagicMock(spec=socket.socket)
+        stdin_mock.fileno.return_value = 99
+        sigwinch_mock = MagicMock(spec=socket.socket)
+        sigwinch_mock.fileno.return_value = 100
+        state.stdin_r = stdin_mock
+        state.sigwinch_r = sigwinch_mock
+        sel.get_map.side_effect = lambda: {}
+
+        state.teardown()
+
+        stdin_mock.close.assert_called_once()
+        sigwinch_mock.close.assert_called_once()
+
+    def test_teardown_sets_running_false(self):
+        """teardown() sets _running=False to stop background threads."""
+        state, sel, bs, k32 = _make_state()
+        state._running = True
+
+        state.teardown()
+
+        assert not state._running
+
+
+class TestForegroundBackground:
+    def test_enter_foreground_noop_when_already_foreground(self):
+        """enter_foreground() is a no-op when headless is already False."""
+        state, sel, bs, k32 = _make_state(headless=False)
+
+        state.enter_foreground()
+
+        k32.SetConsoleMode.assert_not_called()
+
+    def test_enter_foreground_disables_line_echo_quickedit(self):
+        """enter_foreground() clears LINE_INPUT, ECHO_INPUT, QUICK_EDIT_MODE."""
+        state, sel, bs, k32 = _make_state(headless=True)
+
+        with patch.object(WindowsTerminalState, "stdin_is_interactive", return_value=True):
             state.enter_foreground()
 
-        # stdin_r should have been registered
-        registered_data = [call_args[0][2] for call_args in sel.register.call_args_list]
-        assert "stdin" in registered_data
+        set_calls = k32.SetConsoleMode.call_args_list
+        assert set_calls, "SetConsoleMode not called"
+        new_mode = set_calls[0][0][1]
+        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
+        assert (new_mode & disable) == 0, f"Disabled flags still set: {new_mode:#010x}"
+        assert (new_mode & ENABLE_EXTENDED_FLAGS), "ENABLE_EXTENDED_FLAGS not set"
 
-        # ConsoleReader should have been instantiated
-        MockReader.assert_called_once()
+    def test_enter_foreground_registers_stdin_when_interactive(self):
+        """enter_foreground() registers stdin_r with tag 'stdin' when interactive."""
+        state, sel, bs, k32 = _make_state(headless=True)
+
+        with patch.object(WindowsTerminalState, "stdin_is_interactive", return_value=True):
+            state.enter_foreground()
+
+        tags = [c[0][2] for c in sel.register.call_args_list]
+        assert "stdin" in tags
         assert bs.headless is False
 
-    def test_enter_foreground_noop_when_already_foreground(self):
-        """enter_foreground() should do nothing if headless is already False."""
-        state, sel, bs = self._make_state()
-        bs.headless = False
+    def test_enter_foreground_skips_stdin_when_not_interactive(self):
+        """enter_foreground() does not register stdin_r when not interactive."""
+        state, sel, bs, k32 = _make_state(headless=True)
 
-        with patch.object(win_io, "SetConsoleMode") as mock_set:
+        with patch.object(WindowsTerminalState, "stdin_is_interactive", return_value=False):
             state.enter_foreground()
 
-        mock_set.assert_not_called()
+        tags = [c[0][2] for c in sel.register.call_args_list]
+        assert "stdin" not in tags
 
-    def test_enter_background_stops_reader(self):
-        """enter_background() should stop ConsoleReader and mark headless=True."""
-        state, sel, bs = self._make_state()
-        mock_reader = MagicMock()
-        state.console_reader = mock_reader
-        bs.headless = False
+    def test_enter_background_unregisters_stdin_and_sets_headless(self):
+        """enter_background() unregisters stdin_r and sets headless=True."""
+        state, sel, bs, k32 = _make_state(headless=False)
+        sel.get_map.side_effect = lambda: {state.stdin_r.fileno(): object()}
 
         state.enter_background()
 
-        mock_reader.close.assert_called_once()
-        assert state.console_reader is None
+        sel.unregister.assert_called()
         assert bs.headless is True
 
-    def test_teardown_closes_sockets(self):
-        """teardown() should close stdin_r and sigwinch_r sockets."""
-        state, sel, bs = self._make_state()
 
-        stdin_r_mock = MagicMock(spec=socket.socket)
-        stdin_r_mock.fileno.return_value = -1
-        sigwinch_r_mock = MagicMock(spec=socket.socket)
-        sigwinch_r_mock.fileno.return_value = -2
+class TestInputThread:
+    """Tests for WindowsTerminalState._input_thread."""
 
-        state.stdin_r = stdin_r_mock
-        state.sigwinch_r = sigwinch_r_mock
+    def _run_thread(self, state, mock_msvcrt, *, timeout=0.5):
+        """Run _input_thread in a daemon thread and return bytes received on stdin_r."""
+        state._running = True
+        state.build_status.headless = False
+        with patch("spack.new_installer.msvcrt", mock_msvcrt):
+            t = threading.Thread(target=state._input_thread, daemon=True)
+            t.start()
+            t.join(timeout=timeout)
+        return _drain(state.stdin_r)
 
-        with patch.object(win_io, "SetConsoleMode"):
-            state.teardown()
+    def test_keystroke_forwarded_to_stdin_r(self):
+        """A normal keypress is sent to stdin_r."""
+        state, sel, bs, k32 = _make_state()
+        call_count = [0]
+        mock_msvcrt = MagicMock()
 
-        stdin_r_mock.close.assert_called_once()
-        sigwinch_r_mock.close.assert_called_once()
+        def kbhit():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return True
+            state._running = False
+            return False
+
+        mock_msvcrt.kbhit.side_effect = kbhit
+        mock_msvcrt.getwch.return_value = "v"
+
+        data = self._run_thread(state, mock_msvcrt)
+        assert b"v" in data
+
+    def test_extended_key_e0_reads_two_bytes(self):
+        """The 0xe0 prefix (arrow/nav keys) triggers a second getwch() call."""
+        state, sel, bs, k32 = _make_state()
+        call_count = [0]
+        mock_msvcrt = MagicMock()
+
+        def kbhit():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return True
+            state._running = False
+            return False
+
+        mock_msvcrt.kbhit.side_effect = kbhit
+        mock_msvcrt.getwch.side_effect = ["\xe0", "H"]  # up-arrow
+
+        data = self._run_thread(state, mock_msvcrt)
+        assert "\xe0H".encode("utf-8") in data
+
+    def test_extended_key_null_reads_two_bytes(self):
+        """The 0x00 prefix (F-keys) triggers a second getwch() call."""
+        state, sel, bs, k32 = _make_state()
+        call_count = [0]
+        mock_msvcrt = MagicMock()
+
+        def kbhit():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return True
+            state._running = False
+            return False
+
+        mock_msvcrt.kbhit.side_effect = kbhit
+        mock_msvcrt.getwch.side_effect = ["\x00", "K"]  # left-arrow via null prefix
+
+        data = self._run_thread(state, mock_msvcrt)
+        assert b"\x00K" in data
+
+    def test_no_keypress_when_headless(self):
+        """_input_thread does not call kbhit when headless=True."""
+        state, sel, bs, k32 = _make_state()
+        state.build_status.headless = True
+        mock_msvcrt = MagicMock()
+        mock_msvcrt.kbhit.return_value = False
+
+        state._running = True
+
+        def stop():
+            time.sleep(0.15)
+            state._running = False
+
+        threading.Thread(target=stop, daemon=True).start()
+        with patch("spack.new_installer.msvcrt", mock_msvcrt):
+            state._input_thread()
+
+        mock_msvcrt.kbhit.assert_not_called()
+
+
+class TestResizeThread:
+    """Tests for WindowsTerminalState._resize_thread."""
+
+    def test_resize_event_sent_on_size_change(self):
+        """_resize_thread sends b'\\x00' to sigwinch_w when terminal dimensions change."""
+        import os
+
+        state, sel, bs, k32 = _make_state()
+        state._running = True
+        call_count = [0]
+        sizes = [os.terminal_size((80, 24)), os.terminal_size((80, 24)), os.terminal_size((100, 30))]
+
+        def get_size():
+            idx = call_count[0]
+            call_count[0] += 1
+            if idx >= len(sizes):
+                state._running = False
+                return sizes[-1]
+            return sizes[idx]
+
+        with patch("spack.new_installer.shutil.get_terminal_size", side_effect=get_size):
+            state._resize_thread()
+
+        data = _drain(state.sigwinch_r)
+        assert b"\x00" in data
+
+    def test_no_resize_event_on_same_size(self):
+        """_resize_thread does not send if dimensions are unchanged."""
+        import os
+
+        state, sel, bs, k32 = _make_state()
+        state._running = True
+        call_count = [0]
+
+        def get_size():
+            call_count[0] += 1
+            if call_count[0] > 4:
+                state._running = False
+            return os.terminal_size((80, 24))
+
+        with patch("spack.new_installer.shutil.get_terminal_size", side_effect=get_size):
+            state._resize_thread()
+
+        data = _drain(state.sigwinch_r)
+        assert data == b""
