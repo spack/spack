@@ -488,10 +488,10 @@ class Tee:
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
-        parent_fd = _get_crt_fd(self.parent, os.O_WRONLY)
+        self.parent_fd = _get_crt_fd(self.parent, os.O_WRONLY)
 
         self.tee_thread = threading.Thread(
-            target=tee, args=(self.control_r, r, log_file, parent_fd), daemon=True
+            target=tee, args=(self.control_r, r, log_file, self.parent_fd), daemon=True
         )
         self.tee_thread.start()
 
@@ -520,14 +520,17 @@ class Tee:
             os.dup2(saved_fd, fd)
             os.close(saved_fd)
 
+        self.tee_thread.join()
+        self.control_r.close()
+        self.parent.close()
         if IS_WINDOWS:
             kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             kernel32.SetStdHandle(-11, self._saved_win32_stdout)
             kernel32.SetStdHandle(-12, self._saved_win32_stderr)
-
-        self.tee_thread.join()
-        self.control_r.close()
-        self.parent.close()
+            try:
+                os.close(self._parent_fd)
+            except OSError:
+                pass
 
 
 def install_from_buildcache(
@@ -2803,7 +2806,7 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
         self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
-        for sock in (self.stdin_r, self.sigwinch_r):
+        for sock in (self.stdin_r, self.sigwinch_r, self.stdin_w, self.sigwinch_w):
             try:
                 self.selector.unregister(sock)
             except KeyError:
