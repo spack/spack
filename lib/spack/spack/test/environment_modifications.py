@@ -257,6 +257,36 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count(make_path("duplicate")) == 1
 
 
+@pytest.mark.not_on_windows("Skip unix path tests on Windows")
+def test_unix_system_path_manipulation(env, system_paths_for_os):
+    """Tests manipulating paths that have special meaning as system paths on Unix."""
+    env.prepend_path("PATH_LIST_WITH_SYSTEM_PATHS", make_path("custom", "bin"))
+    env.append_path("PATH_LIST_WITH_SYSTEM_PATHS", make_path("another", "custom"))
+    env.apply_modifications()
+
+    path_list = os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].split(os.pathsep)
+
+    assert make_path("custom", "bin") == path_list[0]
+    assert make_path("another", "custom") == path_list[-1]
+
+    assert any(p in path_list for p in system_paths_for_os)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Skip Windows paths on not Windows")
+def test_windows_system_path_manipulation(env, system_paths_for_os):
+    """Tests manipulating paths that have special meaning as system paths on Windows."""
+    env.prepend_path("PATH_LIST_WITH_SYSTEM_PATHS", make_path("custom", "bin"))
+    env.append_path("PATH_LIST_WITH_SYSTEM_PATHS", make_path("another", "custom"))
+    env.apply_modifications()
+
+    path_list = os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].split(os.pathsep)
+
+    assert make_path("custom", "bin") == path_list[0]
+    assert make_path("another", "custom") == path_list[-1]
+
+    assert any(p in path_list for p in system_paths_for_os)
+
+
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.
