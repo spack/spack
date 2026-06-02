@@ -77,7 +77,7 @@ echo {0}
 
 
 def test_get_version_no_repo(tmp_path: pathlib.Path, monkeypatch):
-    monkeypatch.setattr(spack.paths, "prefix", str(tmp_path))
+    monkeypatch.setattr(spack.paths.locations, "prefix", str(tmp_path))
     assert spack.spack_version == spack.get_version()
 
 

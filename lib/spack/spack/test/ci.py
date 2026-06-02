@@ -270,7 +270,7 @@ def test_setup_spack_repro_version(
     spack_dir.mkdir(parents=True)
 
     prefix_save = spack.paths.prefix
-    monkeypatch.setattr(spack.paths, "prefix", "/garbage")
+    monkeypatch.setattr(spack.paths.locations, "prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
     _, err = capfd.readouterr()
@@ -278,7 +278,7 @@ def test_setup_spack_repro_version(
     assert not ret
     assert "Unable to find the path" in err
 
-    monkeypatch.setattr(spack.paths, "prefix", prefix_save)
+    monkeypatch.setattr(spack.paths.locations, "prefix", prefix_save)
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)

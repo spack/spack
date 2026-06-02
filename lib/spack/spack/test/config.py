@@ -1984,7 +1984,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
 
 
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+    monkeypatch.setattr(spack.paths.locations, "_user_cache_path", str(tmp_path))
 
     paths = ["concretizer.yaml"]
     entry = {
