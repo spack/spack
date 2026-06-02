@@ -122,9 +122,16 @@ class SpackPaths:
         # Note this depends on config, which generally depends on paths
         if self._user_cache_path is None:
             import spack.util.path
+            import sys
 
             expanded_home = os.path.expanduser("~")
-            self._user_cache_path = spack.util.path._resolve_location_var("state") or os.path.join(
+            resolved = spack.util.path._resolve_location_var("state")
+
+            # DEBUG
+            if 'pytest' in sys.modules:
+                print(f"DEBUG user_cache_path property: resolved={resolved}, expanded_home={expanded_home}")
+
+            self._user_cache_path = resolved or os.path.join(
                 expanded_home, ".local", "state", "spack"
             )
         return self._user_cache_path
@@ -326,10 +333,23 @@ if TYPE_CHECKING:
 # Uses a sys.modules swap because we want all attribute access to delegate
 # to the locations object.
 class _PathsModule(_types.ModuleType):
-    def __getattr__(self, name: str) -> str:
-        # Look up 'locations' from module __dict__ instead of using closure
-        # This allows tests to monkeypatch the locations object
-        locs = self.__dict__.get("locations")
+    def __getattribute__(self, name: str):
+        # For special attributes, use normal resolution
+        if name in ("__dict__", "__class__", "__name__"):
+            return object.__getattribute__(self, name)
+
+        # Look up 'locations' from module __dict__
+        module_dict = object.__getattribute__(self, "__dict__")
+
+        # If it's a known module-level attribute (not from locations), return it
+        if name in ("locations", "SpackPaths", "detect_old_spack_layout", "detect_layout",
+                    "dir_is_occupied", "set_working_dir", "spack_working_dir"):
+            if name in module_dict:
+                return module_dict[name]
+            raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+
+        # Otherwise delegate to locations object
+        locs = module_dict.get("locations")
         if locs is None:
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
         return getattr(locs, name)  # type: ignore[return-value]

@@ -300,6 +300,26 @@ def test_user_cache_path_is_default_when_env_var_is_empty(
 
     # Create fresh config after mock_spack_instance sets up paths
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # Debug: check what we're actually accessing
+    print(f"\nDEBUG: home_dir = {home_dir}")
+    print(f"DEBUG: os.environ['HOME'] = {os.environ.get('HOME')}")
+    print(f"DEBUG: spack.paths.locations id = {id(spack.paths.locations)}")
+    print(f"DEBUG: spack.paths.locations._user_cache_path = {spack.paths.locations._user_cache_path}")
+
+    # Check if frozen_home is interfering
+    import spack.util.path
+    print(f"DEBUG: spack.util.path._frozen_home = {spack.util.path._frozen_home}")
+
+    # Check if user_cache_path is cached in module dict
+    import sys
+    spack_paths_module = sys.modules['spack.paths']
+    print(f"DEBUG: 'user_cache_path' in spack.paths.__dict__ = {'user_cache_path' in spack_paths_module.__dict__}")
+    if 'user_cache_path' in spack_paths_module.__dict__:
+        print(f"DEBUG: spack.paths.__dict__['user_cache_path'] = {spack_paths_module.__dict__['user_cache_path']}")
+
+    print(f"DEBUG: spack.paths.user_cache_path = {spack.paths.user_cache_path}")
+
     assert os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
 
 
