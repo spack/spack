@@ -1133,8 +1133,8 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
         _warn_about_old_dotspack()
+        result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
         return result
 
 
