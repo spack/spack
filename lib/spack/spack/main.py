@@ -960,10 +960,10 @@ If you need both pre-1.2 and 1.2+ instances, you can run
 
   spack migrate
 
-(without --clear) this will create a copy of the user config and
-package repo for 1.2+ instances to use; that is usually fine, but
-pre-1.2 instances and 1.2+ instances will have divergent config and
-packages (unless e.g. SPACK_DISABLE_LOCAL_CONFIG is set).
+(without --clear) this will create a copy of the user config for 1.2+
+instances to use; that is usually fine, but pre-1.2 instances and
+1.2+ instances will have divergent config (unless e.g.
+SPACK_DISABLE_LOCAL_CONFIG is set).
 
 You can run
 
@@ -1133,7 +1133,8 @@ def _main(argv=None):
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 
     with bootstrap_context:
-        _warn_about_old_dotspack()
+        if cmd_name != "migrate":
+            _warn_about_old_dotspack()
         result = finish_parse_and_run(parser, cmd_name, args, env_format_error)
         return result
 
