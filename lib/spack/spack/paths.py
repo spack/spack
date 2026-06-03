@@ -112,8 +112,6 @@ class SpackPaths:
         # Detect old layout
         self.old_layout_detected = detect_old_spack_layout(self)
 
-        self._user_cache_path = None
-
         #: Backup location for old .spack directory (used by migrate command)
         self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
 
