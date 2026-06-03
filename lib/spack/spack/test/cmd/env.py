@@ -3911,8 +3911,8 @@ def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, ins
 
     # The view is still a real directory; no .new or .old leftovers.
     assert view_dir.is_dir() and not view_dir.is_symlink()
-    assert not (tmp_path / "view.new").exists()
-    assert not (tmp_path / "view.old").exists()
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
 
 
 def test_environment_view_target_already_exists(

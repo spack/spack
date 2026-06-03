@@ -1852,11 +1852,6 @@ class Environment:
                 view_path.unlink()
             else:
                 shutil.rmtree(view_path)  # new format: remove real dir
-            # Remove all marker files for this view
-            subdir = pathlib.Path(env_subdir_path(self.path))
-            name = self.default_view.name
-            for f in subdir.glob(f"view_{name}_*"):
-                f.unlink(missing_ok=True)
         except FileNotFoundError as e:
             tty.debug(f"[ENVIRONMENT] error trying to delete the default view: {e}")
 
