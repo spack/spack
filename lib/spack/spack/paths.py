@@ -204,9 +204,10 @@ def detect_old_spack_layout(paths):
         True if old layout data is detected, False otherwise
     """
     checks = [
-        # It's important if this directory is occupied but we have a separate
-        # check for that, so exclude that directory here
-        (paths.old_install_path, ["gpg"]),
+        # Regarding excluding gpg here: it's important if this
+        # directory is occupied but we have a separate check for
+        # that, so exclude that directory here
+        (paths.old_install_path, ["gpg", ".spack-db"]),
         (paths.old_envs_path, []),
         (paths.old_fetch_cache_path, []),
         (paths.old_gpg_path, []),
