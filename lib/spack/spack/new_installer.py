@@ -1069,7 +1069,7 @@ class JobServer:
             # Windows: use a multiprocessing Semaphore instead of a pipe-based jobserver.
             # Anonymous pipes on Windows don't support non-blocking reads (needed by the POSIX
             # token mechanism), and nmake rejects POSIX jobserver flags in MAKEFLAGS.
-            self.semaphore = multiprocessing.Semaphore(num_jobs - 1)
+            self.semaphore = multiprocessing.Semaphore(num_jobs - 1)  # noqa: F821 # type: ignore[name-defined]
             self.created = True
             self.r_conn = None
             self.w_conn = None
