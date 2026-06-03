@@ -128,6 +128,9 @@ jobs:
     needs: [ changes ]
     if: ${{ needs.changes.outputs.containers == 'true' }}
     uses: ./.github/workflows/build-containers.yml
+    permissions:
+      contents: read
+      packages: write
     secrets: inherit
 
   bootstrap:
