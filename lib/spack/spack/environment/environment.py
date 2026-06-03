@@ -1241,8 +1241,6 @@ class Environment:
         # Cache concrete environments for required lock files.
         self._load_concrete_include_data()
 
-    # TODO/50207: Properly resolve the conflicts related to adding included
-    # TODO/50207: user specs.
     def _sync_speclists(self):
         toolchains = spack.config.CONFIG.get("toolchains", {})
         parser = SpecListParser(toolchains=toolchains)
