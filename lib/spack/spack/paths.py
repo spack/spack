@@ -119,15 +119,12 @@ class SpackPaths:
 
     @property
     def user_cache_path(self):
-        # Note this depends on config, which generally depends on paths
-        if self._user_cache_path is None:
-            import spack.util.path
+        import spack.util.path
 
-            expanded_home = os.path.expanduser("~")
-            self._user_cache_path = spack.util.path._resolve_location_var("state") or os.path.join(
-                expanded_home, ".local", "state", "spack"
-            )
-        return self._user_cache_path
+        expanded_home = os.path.expanduser("~")
+        return spack.util.path._resolve_location_var("state") or os.path.join(
+            expanded_home, ".local", "state", "spack"
+        )
 
     @property
     def reports_path(self):
