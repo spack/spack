@@ -106,6 +106,16 @@ def test_raising_exception_module_importable(config, monkeypatch):
         spack.bootstrap.core.ensure_module_importable_or_raise("asdf")
 
 
+def test_raising_exception_clingo_mentions_bootstrap_now(config, monkeypatch):
+    monkeypatch.setattr(spack.bootstrap.core, "_python_import", lambda module: False)
+    monkeypatch.setattr(spack.bootstrap.core, "bootstrapping_sources", lambda: [])
+
+    with pytest.raises(ImportError) as exc_info:
+        spack.bootstrap.core.ensure_module_importable_or_raise("clingo")
+
+    assert "spack bootstrap now" in str(exc_info.value)
+
+
 def test_raising_exception_executables_in_path(config, monkeypatch):
     monkeypatch.setattr(spack.bootstrap.core, "source_is_enabled", _true)
     with pytest.raises(RuntimeError, match="cannot bootstrap any of the asdf, fdsa executables"):
