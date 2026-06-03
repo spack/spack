@@ -251,3 +251,26 @@ def test_buildcache_status_fn_installed_not_overridden(mutable_database):
 
     status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
     assert status_fn(s) == spack.spec.InstallStatus.installed
+
+
+def test_spec_buildcache_status_flag(install_mockery, mock_fetch, tmp_path):
+    """Tests that --refresh-buildcaches shows [b] for a non-installed spec in a buildcache,
+    and that a subsequent plain -I also shows [b] using the already-populated index.
+    """
+    pkg = "trivial-install-test-package"
+
+    # Install, push to buildcache with a fully updated index, then uninstall.
+    install(pkg)
+    buildcache("push", "--unsigned", "--update-index", str(tmp_path), pkg)
+    uninstall("-y", pkg)
+
+    # Register the mirror so BINARY_INDEX can fetch its index.
+    mirror("add", "--unsigned", "test-buildcache", tmp_path.as_uri())
+
+    # With --refresh-buildcaches: fetches remote index -> [b] for the absent spec.
+    output_with_refresh = spec("--refresh-buildcaches", pkg)
+    assert "[b]" in output_with_refresh
+
+    # Plain -I: with the index already in memory, [b] shows without a fresh network fetch.
+    output_no_refresh = spec("-I", pkg)
+    assert "[b]" in output_no_refresh

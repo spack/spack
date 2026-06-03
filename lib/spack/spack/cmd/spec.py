@@ -34,6 +34,8 @@ for further documentation regarding the spec syntax, see:
 
     install_status_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(install_status_group, ["install_status", "no_install_status"])
+    arguments.add_common_arguments(subparser, ["refresh_buildcaches"])
+
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "-y",
@@ -91,9 +93,9 @@ def spec(parser, args):
     else:
         args.subparser.error("requires at least one spec or an active environment")
 
-    show_status = args.install_status
+    show_status = args.install_status or args.refresh_buildcaches
     if show_status:
-        spack.binary_distribution.load_buildcache_index()
+        spack.binary_distribution.load_buildcache_index(refresh=args.refresh_buildcaches)
         status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None

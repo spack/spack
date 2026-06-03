@@ -475,6 +475,18 @@ def no_install_status():
 
 
 @arg
+def refresh_buildcaches():
+    return Args(
+        "--refresh-buildcaches",
+        action="store_true",
+        default=False,
+        help=(
+            "refresh the buildcache mirror index over the network before showing install status\n"
+        ),
+    )
+
+
+@arg
 def show_non_defaults():
     return Args(
         "--non-defaults",

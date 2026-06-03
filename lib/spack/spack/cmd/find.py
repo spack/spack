@@ -56,6 +56,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-I", "--install-status", action="store_true", help="show install status of packages"
     )
 
+    arguments.add_common_arguments(subparser, ["refresh_buildcaches"])
+
     subparser.add_argument(
         "--specfile-format",
         action="store_true",
@@ -416,8 +418,8 @@ def find(parser, args):
         # the latter only exists if you call args.specs()
         tty.die(f"No package matches the query: {' '.join(args.constraint)}")
 
-    if args.install_status or args.show_concretized:
-        spack.binary_distribution.load_buildcache_index()
+    if args.install_status or args.refresh_buildcaches or args.show_concretized:
+        spack.binary_distribution.load_buildcache_index(refresh=args.refresh_buildcaches)
         status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None

@@ -113,9 +113,9 @@ def solve(parser, args):
     if args.namespaces:
         fmt = "{namespace}." + fmt
 
-    show_status = args.install_status
+    show_status = args.install_status or args.refresh_buildcaches
     if show_status:
-        spack.binary_distribution.load_buildcache_index()
+        spack.binary_distribution.load_buildcache_index(refresh=args.refresh_buildcaches)
         status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None

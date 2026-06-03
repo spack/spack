@@ -2255,13 +2255,20 @@ def update_cache_and_get_specs():
     return BINARY_INDEX.get_all_built_specs()
 
 
-def load_buildcache_index() -> None:
+def load_buildcache_index(refresh: bool = False) -> None:
     """Populates BINARY_INDEX from the local on-disk index cache.
 
     Failures are swallowed, so the status display never breaks a command.
+
+    Args:
+        refresh: run a full network update when True. Reload only from the locally cached
+            index files when False.
     """
     try:
-        BINARY_INDEX.regenerate_spec_cache()
+        if refresh:
+            BINARY_INDEX.update(with_cooldown=True)
+        else:
+            BINARY_INDEX.regenerate_spec_cache()
     except Exception:
         pass
 
