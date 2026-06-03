@@ -22,9 +22,11 @@ jobs:
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: ${{ inputs.python_version }}
+
     - name: Install Python Packages
       run: |
         pip install -r .github/workflows/requirements/validate/requirements.txt
+
     # Validate that the code can be run on all the Python versions supported by Spack
     - name: vermin
       run: |
@@ -36,6 +38,7 @@ jobs:
                -vvv \
                --exclude-regex lib/spack/spack/vendor \
                lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+
     # Check that __slots__ are used properly
     - name: slotscheck
       run: |

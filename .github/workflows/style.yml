@@ -18,6 +18,7 @@ jobs:
     - uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3  # v3.0.0
       with:
         spack_ref: ${{ github.sha }}
+        spack_path: ${{ github.workspace }}
 
     - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
