@@ -187,7 +187,8 @@ class ConfigScope:
             included_scopes = list(chain(*[include.scopes(self) for include in include_paths]))
 
             for included_scope in included_scopes:
-                # If it's a lockfile, sort it accordingly
+                # Sort IncludedLockfile to self._included_lockfiles
+                # All others are scopes and sort to self._included_scopes
                 if isinstance(included_scope, IncludedLockfile):
                     if included_scope not in self._included_lockfiles:
                         parent = pathlib.Path(included_scope.path).parent
@@ -203,8 +204,10 @@ class ConfigScope:
                                 parent / "spack.yaml"
                             ):
                                 msg = (
-                                    "Cannot include abstract and concrete from the same "
-                                    f"environment.\n    Environment: {parent}"
+                                    "Cannot include environment manifest and lockfile from the "
+                                    "same environment."
+                                    f"\n    Manifest or environment directory: {scope.path}"
+                                    f"\n    Lockfile: {included_scope.path}"
                                 )
                                 raise spack.error.ConfigError(msg)
                         self._included_lockfiles.append(included_scope)
@@ -1345,7 +1348,7 @@ class OptionalInclude:
         raise NotImplementedError("must be implemented in derived classes")
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return the minimal configuration information in dictionary form."""
+        """Dictionary used to write back to config with modifications"""
         result = {}
         for name in ["when", "optional"]:
             value = getattr(self, name)
@@ -1440,7 +1443,7 @@ class IncludePath(OptionalInclude):
         return [self.path]
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return minimal the configuration information in dictionary form."""
+        """Used to write the IncludePath back to config with modifications."""
         result = super().to_dict()
         for name in ["path", "sha256"]:
             value = getattr(self, name)
@@ -1622,7 +1625,7 @@ class GitIncludePaths(OptionalInclude):
             return [path for path in yaml_files if config_file(path)]
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return the minimal configuration information in dictionary form."""
+        """Used to write the GitIncludePath back to config with modifications."""
         result = super().to_dict()
         for name in ["git", "branch", "tag", "commit", "paths"]:
             value = getattr(self, name)
