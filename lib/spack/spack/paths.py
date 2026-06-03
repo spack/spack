@@ -13,7 +13,7 @@ import os
 import pathlib
 import sys
 import types
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import TYPE_CHECKING
 
 import spack.llnl.util.filesystem
@@ -265,6 +265,32 @@ def set_working_dir():
         spack_working_dir = locations.prefix
 
 
+def get_legacy_package_repo_path(destination):
+    """Check if a repo destination exists in the old ~/.spack/package_repos location.
+
+    Args:
+        destination: The destination path where the repo would be cloned in the new location
+                    (e.g., ~/.local/state/spack/package_repos/abc1234)
+
+    Returns:
+        Path to old repo if it exists, None otherwise.
+    """
+    locations_obj = sys.modules[__name__].locations
+
+    if not Path(locations_obj.old_default_dot_spack).exists():
+        return None
+
+    # Extract the directory name (e.g., "abc1234" from the destination path)
+    repo_dir_name = Path(destination).name
+
+    # Check if this exists in the old location
+    old_repo = Path(locations_obj.old_default_dot_spack) / "package_repos" / repo_dir_name
+
+    if old_repo.is_dir():
+        return str(old_repo)
+    return None
+
+
 # Type hints for mypy - these module-level attributes are dynamically resolved at runtime
 # via the module shim below. Declared here so mypy can see them when checking imports.
 if TYPE_CHECKING:
@@ -341,6 +367,7 @@ class _PathsModule(types.ModuleType):
             "dir_is_occupied",
             "set_working_dir",
             "spack_working_dir",
+            "get_legacy_package_repo_path",
         ):
             if name in module_dict:
                 return module_dict[name]

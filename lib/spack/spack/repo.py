@@ -1799,6 +1799,17 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                     # setup the repository if it does not exist
                     if not fetched:
+                        # Check if this repo exists in old ~/.spack/package_repos location
+                        legacy_path = spack.paths.get_legacy_package_repo_path(self.destination)
+                        if legacy_path:
+                            # Copy from old location instead of cloning
+                            tty.debug(
+                                f"Migrating package repo from {legacy_path} to {self.destination}"
+                            )
+                            shutil.copytree(legacy_path, self.destination, dirs_exist_ok=True)
+                            self.read_index_file()
+                            return
+
                         spack.util.git.init_git_repo(self.repository, remote=remote, git_exe=git)
 
                         # determine the default branch from ls-remote
