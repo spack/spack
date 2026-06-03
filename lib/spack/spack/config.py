@@ -1377,9 +1377,7 @@ class IncludePath(OptionalInclude):
         self.sha256 = entry.get("sha256", "")
         self.destination = entry.get("destination", "")
         if self.destination:
-            # Possible work-around for adding spack.util.path circular import
-            # since already a circular import for spack.util.remote_file_cache.
-            self.destination = rfc_util.canonicalize_path(self.destination)
+            self.destination = spack.util.path.canonicalize_path(self.destination)
 
         self.remote = urllib.parse.urlparse(self.path).scheme in ("http", "https", "ftp")
         if self.remote and not self.sha256:
