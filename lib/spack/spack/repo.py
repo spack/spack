@@ -1806,8 +1806,6 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             tty.debug(
                                 f"Migrating package repo from {legacy_path} to {self.destination}"
                             )
-                            # Python 3.6 compatible: manually copy contents since destination
-                            # directory already exists (created by working_dir context manager)
                             for item in os.listdir(legacy_path):
                                 src = os.path.join(legacy_path, item)
                                 dst = os.path.join(self.destination, item)
