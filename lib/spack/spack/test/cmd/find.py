@@ -595,11 +595,6 @@ def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: path
     (tmp_path / "spack.yaml").write_text(spack_yaml)
     with ev.Environment(tmp_path):
         output = find()
-        spack.config.CONFIG.print_section("specs", yaml=True, blame=True)
-
-    print(output)
-    print(expected)
-    print(not_expected)
 
     assert all(x in output for x in expected)
     assert all(x not in output for x in not_expected)
