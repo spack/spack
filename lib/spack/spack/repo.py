@@ -1806,7 +1806,15 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             tty.debug(
                                 f"Migrating package repo from {legacy_path} to {self.destination}"
                             )
-                            shutil.copytree(legacy_path, self.destination, dirs_exist_ok=True)
+                            # Python 3.6 compatible: manually copy contents since destination
+                            # directory already exists (created by working_dir context manager)
+                            for item in os.listdir(legacy_path):
+                                src = os.path.join(legacy_path, item)
+                                dst = os.path.join(self.destination, item)
+                                if os.path.isdir(src):
+                                    shutil.copytree(src, dst)
+                                else:
+                                    shutil.copy2(src, dst)
                             self.read_index_file()
                             return
 
