@@ -13,7 +13,6 @@ import re
 import select
 import signal
 import sys
-import threading
 import traceback
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
@@ -345,19 +344,6 @@ def log_output(*args, **kwargs):
         return nixlog(*args, **kwargs)
 
 
-def forward_stdin(write_pipe, _kill_sig):
-    """Run in a thread, receives stdin from parent process and forwards to child via pipe."""
-    try:
-        while True:
-            stopped = _kill_sig.wait(0.1)
-            stdin_info = sys.stdin.read(4096)
-            write_pipe.send(stdin_info)
-            if stopped:
-                break
-    finally:
-        write_pipe.close()
-
-
 class nixlog:
     """
     Under the hood, we spawn a daemon and set up a pipe between this
@@ -411,7 +397,6 @@ class nixlog:
         self.append = append
 
         self._active = False  # used to prevent re-entry
-        self.input_forward_thread = None
 
     def __enter__(self):
         if self._active:
@@ -434,21 +419,13 @@ class nixlog:
         # Currently only used to save echo value between uses
         self.parent_pipe, child_pipe = multiprocessing.Pipe(duplex=False)
 
-        self._in_kill = None
         stdin_fd = None
         stdout_fd = None
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
-                if sys.stdin.isatty() and not sys.platform == "win32":
+                if sys.stdin.isatty():
                     stdin_fd = Connection(os.dup(sys.stdin.fileno()))
-                else:
-                    stdin_fd, stdin_write = multiprocessing.Pipe(duplex=True)
-                    self._in_kill = threading.Event()
-                    self.input_forward_thread = threading.Thread(
-                        target=forward_stdin, args=(stdin_write, self._in_kill)
-                    )
-                    self.input_forward_thread.start()
             except BaseException:
                 # just don't forward input if this fails
                 pass
@@ -474,9 +451,7 @@ class nixlog:
             )
             self.process.daemon = True  # must set before start()
             self.process.start()
-        except Exception:
-            if self._in_kill is not None:
-                self._in_kill.set()
+
         finally:
             if stdin_fd:
                 stdin_fd.close()
@@ -523,10 +498,6 @@ class nixlog:
         # Flush any buffered output to the logger daemon.
         sys.stdout.flush()
         sys.stderr.flush()
-
-        # signal the stdin forward thread to stop (only set when that path was taken)
-        if self._in_kill is not None:
-            self._in_kill.set()
 
         # restore previous output settings using the OS-level way
         for fd, saved_fd in self._redirected_fds.items():

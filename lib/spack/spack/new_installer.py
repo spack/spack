@@ -134,11 +134,6 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 
-# =============================================================================
-# Windows Socket Bridges (Isolates Windows threading hacks from POSIX epoll)
-# =============================================================================
-
-
 class WindowsPipeBridge:
     """Reads from a blocking Windows anonymous pipe and forwards to a non-blocking socket."""
 
@@ -497,11 +492,11 @@ class Tee:
             os.dup2(w, fd)
 
         if IS_WINDOWS:
-            kernel32 = ctypes.windll.kernel32
+            kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             self._saved_win32_stdout = kernel32.GetStdHandle(-11)
             self._saved_win32_stderr = kernel32.GetStdHandle(-12)
             h_write = msvcrt.get_osfhandle(w)  # type: ignore[attr-defined]
-            os.set_handle_inheritable(h_write, True)
+            os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
             kernel32.SetStdHandle(-11, h_write)
             kernel32.SetStdHandle(-12, h_write)
             self._h_write = h_write
@@ -516,7 +511,7 @@ class Tee:
             os.close(saved_fd)
 
         if IS_WINDOWS:
-            kernel32 = ctypes.windll.kernel32
+            kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             kernel32.SetStdHandle(-11, self._saved_win32_stdout)
             kernel32.SetStdHandle(-12, self._saved_win32_stderr)
 
@@ -3634,6 +3629,7 @@ class PackageInstaller:
             return
 
         pid = child_info.proc.pid
+        assert pid is not None
         decoder = self.state_decoders[pid]
 
         if not data:  # EOF or error
@@ -3663,7 +3659,7 @@ class PackageInstaller:
         if len(self.state_buffers[pid]) > 1024 * 1024:
             last_newline = self.state_buffers[pid].rfind("\n")
             self.state_buffers[pid] = (
-                "" if last_newline < 0 else self.state_buffers[pid][last_newline + 1 :]
+                "" if last_newline < 0 else self.state_buffers[pid][last_newline + 1 :]  # type: ignore[index]
             )
 
         for line in lines:
