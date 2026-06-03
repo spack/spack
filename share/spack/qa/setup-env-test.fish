@@ -334,7 +334,7 @@ set _b_bin $_b_loc"/bin"
 set _a_loc (spack -m location -i shell-a)
 set _a_bin $_a_loc"/bin"
 
-spt_contains "set -gx PATH $_b_bin" spack -m load --fish shell-b
+spt_contains "source $_b_loc/.spack/load" spack -m load --fish shell-b
 spt_succeeds spack -m load shell-b
 set LIST_CONTENT (spack -m load shell-b; spack load --list)
 spt_contains "shell-b@" echo $LIST_CONTENT
