@@ -54,6 +54,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
 from spack.vendor.typing_extensions import Literal
@@ -327,9 +328,9 @@ def tee(
     flag while the main loop blocks on log_r.
     """
     if IS_WINDOWS:
-        _tee_windows(control_r, log_r, log_file, parent_w)
+        _tee_windows(control_r, log_r, log_file, cast(socket.socket, parent_w))
     else:
-        _tee_posix(control_r, log_r, log_file, parent_w)
+        _tee_posix(control_r, log_r, log_file, cast(int, parent_w))
 
 
 def _tee_posix(
@@ -426,8 +427,9 @@ class Tee:
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
+        parent_target: Union[socket.socket, int]
         if IS_WINDOWS:
-            parent_target = self.parent  # It's a socket
+            parent_target = cast(socket.socket, self.parent)  # It's a socket on Windows
         else:
             parent_target = self.parent.fileno()
 
@@ -708,9 +710,9 @@ def worker_function(
     os.dup2(devnull_fd, 0)
 
     if IS_WINDOWS:
-        h_read = msvcrt.get_osfhandle(0)
-        os.set_handle_inheritable(h_read, True)
-        ctypes.windll.kernel32.SetStdHandle(-10, h_read)
+        h_read = msvcrt.get_osfhandle(0)  # type: ignore[attr-defined]
+        os.set_handle_inheritable(h_read, True)  # type: ignore[attr-defined]
+        ctypes.windll.kernel32.SetStdHandle(-10, h_read)  # type: ignore[attr-defined]
 
     os.close(devnull_fd)
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
@@ -730,7 +732,7 @@ def worker_function(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
     if IS_WINDOWS:
-        state_stream = state.makefile("w", buffering=1, encoding="utf-8")
+        state_stream = state.makefile("w", buffering=1, encoding="utf-8")  # type: ignore[union-attr]
     else:
         state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
 
@@ -1245,6 +1247,10 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
+    state_r_conn: Union[socket.socket, Connection]
+    state_w_conn: Union[socket.socket, Connection]
+    output_r_conn: Union[socket.socket, Connection]
+    output_w_conn: Union[socket.socket, Connection]
     if IS_WINDOWS:
         state_r_conn, state_w_conn = socket.socketpair()
         output_r_conn, output_w_conn = socket.socketpair()
@@ -3507,8 +3513,8 @@ class PackageInstaller:
 
         # Cross-platform Pipe Registration
         if IS_WINDOWS:
-            child_info.output_r_conn.setblocking(False)
-            child_info.state_r_conn.setblocking(False)
+            child_info.output_r_conn.setblocking(False)  # type: ignore[union-attr]
+            child_info.state_r_conn.setblocking(False)  # type: ignore[union-attr]
             sentinel_bridge = WindowsSentinelBridge(child_info.proc)
             child_info.bridges.append(sentinel_bridge)
 
