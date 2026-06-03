@@ -95,6 +95,36 @@ def _recursive_chmod(path: Path, mode: int):
             os.chmod(os.path.join(root, dir), mode)
 
 
+@pytest.fixture
+def clear_env_vars(working_env, monkeypatch):
+    """Clear XDG and SPACK location env vars, and config path overrides."""
+    # Clear config path overrides
+    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
+    monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
+    monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
+
+    # Clear XDG and SPACK location overrides
+    for location in ["DATA", "STATE", "CACHE"]:
+        monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
+        monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
+
+
+@pytest.fixture
+def set_home(working_env):
+    """Fixture to set HOME environment variable for both Windows and Linux."""
+
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
+
+
 @pytest.fixture(autouse=True)
 def clear_sys_modules():
     """Clear package repos from sys.modules before each test."""

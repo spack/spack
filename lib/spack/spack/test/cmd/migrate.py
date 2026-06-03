@@ -16,37 +16,9 @@ from spack.paths import SpackPaths
 migrate = spack.main.SpackCommand("migrate")
 
 
-@pytest.fixture(autouse=True)
-def clear_env_vars(working_env):
-    """Clear XDG and SPACK location env vars."""
-    for location in ["DATA", "STATE", "CACHE"]:
-        os.environ.pop(f"XDG_{location}_HOME", None)
-        os.environ.pop(f"SPACK_{location}_HOME", None)
-
-
 @pytest.fixture
-def set_home(working_env):
-    """Fixture to set HOME environment variable for both Windows and Linux."""
-
-    def _set_home(val):
-        # Clear some env vars that can interfere w/ expanduser(~) on Windows
-        os.environ.pop("USERPROFILE", None)
-        os.environ.pop("HOMEDRIVE", None)
-        os.environ["HOMEPATH"] = val
-
-        # For expanduser on Linux
-        os.environ["HOME"] = val
-
-    yield _set_home
-
-
-@pytest.fixture
-def migrate_setup(tmp_path, set_home, monkeypatch, mutable_config):
-    """Set up common test environment for migrate tests.
-
-    Yields:
-        tuple: (dotspack, created, new_config, paths)
-    """
+def migrate_setup(tmp_path, set_home, monkeypatch, clear_env_vars, mutable_config):
+    """Set up common test environment for migrate tests."""
     spack_root = tmp_path / "spack-root"
     spack_root.mkdir()
     home = tmp_path / "home"

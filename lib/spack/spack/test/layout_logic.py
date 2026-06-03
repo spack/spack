@@ -16,20 +16,6 @@ import spack.paths
 import spack.util.path
 
 
-@pytest.fixture(scope="function", autouse=True)
-def clean_config_env(monkeypatch):
-    """Unset config-related env vars that would interfere with layout tests."""
-    # Clear config path overrides
-    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
-    monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
-    monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
-
-    # Clear XDG and SPACK location overrides
-    for location in ["DATA", "STATE", "CACHE"]:
-        monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
-        monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
-
-
 def _ensure_dir(pathlike):
     """Create directory and return as string."""
     pathlike = pathlib.Path(pathlike)
@@ -38,23 +24,7 @@ def _ensure_dir(pathlike):
 
 
 @pytest.fixture
-def set_home(working_env):
-    """Fixture to set HOME environment variable for both Windows and Linux."""
-
-    def _set_home(val):
-        # Clear some env vars that can interfere w/ expanduser(~) on Windows
-        os.environ.pop("USERPROFILE", None)
-        os.environ.pop("HOMEDRIVE", None)
-        os.environ["HOMEPATH"] = val
-
-        # For expanduser on Linux
-        os.environ["HOME"] = val
-
-    yield _set_home
-
-
-@pytest.fixture
-def mock_spack_instance(tmp_path, set_home, monkeypatch, clean_config_env):
+def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars):
     """Create a mock Spack instance with simulated home and base prefix.
 
     Returns:
