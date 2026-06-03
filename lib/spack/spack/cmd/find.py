@@ -5,7 +5,9 @@
 import argparse
 import copy
 import sys
+from typing import List, Optional, Tuple
 
+import spack.binary_distribution
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
@@ -53,6 +55,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-I", "--install-status", action="store_true", help="show install status of packages"
     )
+
+    arguments.add_common_arguments(subparser, ["refresh_buildcaches"])
 
     subparser.add_argument(
         "--specfile-format",
@@ -335,7 +339,9 @@ def display_env(env, args, decorator, results):
         print()
 
 
-def _find_query(args, env):
+def _find_query(
+    args: argparse.Namespace, env: Optional[ev.Environment]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
@@ -355,8 +361,8 @@ def _find_query(args, env):
         else:
             env_specs = all_env_specs
 
-        spec_hashes = set(x.dag_hash() for x in env_specs)
-        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=spec_hashes, **q_args))
+        spec_hashes = {x.dag_hash() for x in env_specs}
+        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=list(spec_hashes), **q_args))
 
         results = list()
         with spack.store.STORE.db.read_transaction():
@@ -412,8 +418,9 @@ def find(parser, args):
         # the latter only exists if you call args.specs()
         tty.die(f"No package matches the query: {' '.join(args.constraint)}")
 
-    if args.install_status or args.show_concretized:
-        status_fn = spack.spec.Spec.install_status
+    if args.install_status or args.refresh_buildcaches or args.show_concretized:
+        spack.binary_distribution.load_buildcache_index(refresh=args.refresh_buildcaches)
+        status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
     else:
         status_fn = None
 

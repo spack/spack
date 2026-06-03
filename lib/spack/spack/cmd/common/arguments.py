@@ -458,6 +458,7 @@ def install_status():
             "show install status of packages\n"
             "[+] installed       [^] installed in an upstream\n"
             " -  not installed   [-] missing dep of installed package\n"
+            "[b] available in a buildcache\n"
         ),
     )
 
@@ -470,6 +471,18 @@ def no_install_status():
         action="store_false",
         default=True,
         help="do not show install status annotations",
+    )
+
+
+@arg
+def refresh_buildcaches():
+    return Args(
+        "--refresh-buildcaches",
+        action="store_true",
+        default=False,
+        help=(
+            "refresh the buildcache mirror index over the network before showing install status\n"
+        ),
     )
 
 

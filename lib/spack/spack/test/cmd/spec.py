@@ -6,12 +6,19 @@ import re
 
 import pytest
 
+import spack.cmd
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
+
+buildcache = SpackCommand("buildcache")
+install = SpackCommand("install")
+mirror = SpackCommand("mirror")
+uninstall = SpackCommand("uninstall")
 
 # Unit tests should not be affected by the user's managed environments
 pytestmark = pytest.mark.usefixtures(
@@ -223,3 +230,47 @@ def test_spec_unification_from_cli(
     else:
         output = spec(*hashes)
         assert match in output
+
+
+def test_buildcache_status_fn_marks_absent_spec(install_mockery, mock_packages):
+    """Tests the basic semantics of build_cache_status_fn."""
+    s = spack.concretize.concretize_one("mpileaks")
+    assert s.install_status() == spack.spec.InstallStatus.absent
+
+    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
+    assert status_fn(s) == spack.spec.InstallStatus.buildcache
+
+    status_fn = spack.cmd.buildcache_status_fn(set())
+    assert status_fn(s) == spack.spec.InstallStatus.absent
+
+
+def test_buildcache_status_fn_installed_not_overridden(mutable_database):
+    """Tests that an installed spec stays installed even if its hash is in the cache."""
+    s = spack.store.STORE.db.query_one("mpileaks^mpich")
+    assert s.install_status() == spack.spec.InstallStatus.installed
+
+    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
+    assert status_fn(s) == spack.spec.InstallStatus.installed
+
+
+def test_spec_buildcache_status_flag(install_mockery, mock_fetch, tmp_path):
+    """Tests that --refresh-buildcaches shows [b] for a non-installed spec in a buildcache,
+    and that a subsequent plain -I also shows [b] using the already-populated index.
+    """
+    pkg = "trivial-install-test-package"
+
+    # Install, push to buildcache with a fully updated index, then uninstall.
+    install(pkg)
+    buildcache("push", "--unsigned", "--update-index", str(tmp_path), pkg)
+    uninstall("-y", pkg)
+
+    # Register the mirror so BINARY_INDEX can fetch its index.
+    mirror("add", "--unsigned", "test-buildcache", tmp_path.as_uri())
+
+    # With --refresh-buildcaches: fetches remote index -> [b] for the absent spec.
+    output_with_refresh = spec("--refresh-buildcaches", pkg)
+    assert "[b]" in output_with_refresh
+
+    # Plain -I: with the index already in memory, [b] shows without a fresh network fetch.
+    output_no_refresh = spec("-I", pkg)
+    assert "[b]" in output_no_refresh

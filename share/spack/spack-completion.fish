@@ -1885,7 +1885,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized show-configured-externals f/show-flags show-full-compiler x/explicit X/implicit e/external u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status refresh-buildcaches specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized show-configured-externals f/show-flags show-full-compiler x/explicit X/implicit e/external u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1897,6 +1897,8 @@ complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -d 'show install status of packages'
+complete -c spack -n '__fish_spack_using_command find' -l refresh-buildcaches -f -a refresh_buildcaches
+complete -c spack -n '__fish_spack_using_command find' -l refresh-buildcaches -d 'refresh the buildcache mirror index over the network before showing install status'
 complete -c spack -n '__fish_spack_using_command find' -l specfile-format -f -a specfile_format
 complete -c spack -n '__fish_spack_using_command find' -l specfile-format -d 'show the specfile format for installed deps '
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -f -a deps
@@ -3005,7 +3007,7 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status refresh-buildcaches y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
@@ -3025,6 +3027,8 @@ complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -
 complete -c spack -n '__fish_spack_using_command solve' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command solve' -l no-install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command solve' -l no-install-status -d 'do not show install status annotations'
+complete -c spack -n '__fish_spack_using_command solve' -l refresh-buildcaches -f -a refresh_buildcaches
+complete -c spack -n '__fish_spack_using_command solve' -l refresh-buildcaches -d 'refresh the buildcache mirror index over the network before showing install status'
 complete -c spack -n '__fish_spack_using_command solve' -s y -l yaml -f -a format
 complete -c spack -n '__fish_spack_using_command solve' -s y -l yaml -d 'print concrete spec as YAML'
 complete -c spack -n '__fish_spack_using_command solve' -s j -l json -f -a format
@@ -3049,7 +3053,7 @@ complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status refresh-buildcaches y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -3063,6 +3067,8 @@ complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -f
 complete -c spack -n '__fish_spack_using_command spec' -s I -l install-status -d 'show install status of packages'
 complete -c spack -n '__fish_spack_using_command spec' -l no-install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command spec' -l no-install-status -d 'do not show install status annotations'
+complete -c spack -n '__fish_spack_using_command spec' -l refresh-buildcaches -f -a refresh_buildcaches
+complete -c spack -n '__fish_spack_using_command spec' -l refresh-buildcaches -d 'refresh the buildcache mirror index over the network before showing install status'
 complete -c spack -n '__fish_spack_using_command spec' -s y -l yaml -f -a format
 complete -c spack -n '__fish_spack_using_command spec' -s y -l yaml -d 'print concrete spec as YAML'
 complete -c spack -n '__fish_spack_using_command spec' -s j -l json -f -a format

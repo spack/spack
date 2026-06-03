@@ -1576,3 +1576,49 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     ]
     assert not concretization_warnings, "update() must not warn about concretization"
     assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}
+
+
+@pytest.mark.parametrize(
+    "refresh_value,expected_regenerate,expected_update", [(False, [False], []), (True, [], [True])]
+)
+def test_load_buildcache_index(
+    refresh_value, expected_regenerate, expected_update, monkeypatch, tmp_path
+):
+    """Tests that we don't call update without ``refresh=True``"""
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    regenerate_calls = []
+    update_calls = []
+
+    def fake_regenerate(clear_existing=False):
+        regenerate_calls.append(clear_existing)
+
+    def fake_update(with_cooldown=False):
+        update_calls.append(with_cooldown)
+
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", fake_regenerate)
+    monkeypatch.setattr(mock_index, "update", fake_update)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    spack.binary_distribution.load_buildcache_index(refresh=refresh_value)
+
+    assert regenerate_calls == expected_regenerate and update_calls == expected_update
+
+
+def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
+    """Tests that load_buildcache_index swallows errors; status display never breaks a command."""
+    # Concretize before patching so the solver's own index calls are unaffected.
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+
+    def exploding_update(with_cooldown=False):
+        raise OSError("network unreachable")
+
+    def exploding_regenerate(clear_existing=False):
+        raise OSError("disk error")
+
+    monkeypatch.setattr(mock_index, "update", exploding_update)
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", exploding_regenerate)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    # Neither call should raise.
+    spack.binary_distribution.load_buildcache_index(refresh=True)
+    spack.binary_distribution.load_buildcache_index(refresh=False)
