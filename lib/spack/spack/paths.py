@@ -117,14 +117,13 @@ class SpackPaths:
         #: Backup location for old .spack directory (used by migrate command)
         self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
 
+        self.default_state_home = os.path.join(expanded_home, ".local", "state", "spack")
+
     @property
     def user_cache_path(self):
         import spack.util.path
 
-        expanded_home = os.path.expanduser("~")
-        return spack.util.path._resolve_location_var("state") or os.path.join(
-            expanded_home, ".local", "state", "spack"
-        )
+        return spack.util.path._resolve_location_var("state") or self.default_state_home
 
     @property
     def reports_path(self):
@@ -278,6 +277,16 @@ def get_legacy_package_repo_path(destination):
     locations_obj = sys.modules[__name__].locations
 
     if not Path(locations_obj.old_default_dot_spack).exists():
+        return None
+
+    if (
+        Path(locations_obj.user_cache_path).absolute()
+        != Path(locations_obj.default_state_home).absolute()
+    ):
+        # Only prompt copying of package repositories if we are moving from
+        # an old default to a new default. If the user explicitly sets
+        # SPACK_USER_CACHE_PATH to some other location, don't retrieve old
+        # state because that would contradict prior behavior
         return None
 
     # Extract the directory name (e.g., "abc1234" from the destination path)
