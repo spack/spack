@@ -14,13 +14,14 @@ import socket
 import sys
 import threading
 import time
-from ctypes import wintypes
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 if sys.platform != "win32":
     pytest.skip("Windows-only tests", allow_module_level=True)
+
+from ctypes import wintypes
 
 from spack.new_installer import (
     ENABLE_ECHO_INPUT,
