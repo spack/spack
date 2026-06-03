@@ -683,7 +683,6 @@ class ViewDescriptor:
         base_path: str,
         root: str,
         *,
-        name: Optional[str] = None,
         projections: Optional[Dict[str, str]] = None,
         select: Optional[List[str]] = None,
         exclude: Optional[List[str]] = None,
@@ -695,7 +694,6 @@ class ViewDescriptor:
         self.base = base_path
         self.raw_root = root
         self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
-        self.name = name if name is not None else os.path.basename(self.root)
         self.projections = projections or {}
         self.select = select or []
         self.exclude = exclude or []
@@ -745,11 +743,10 @@ class ViewDescriptor:
         return ret
 
     @staticmethod
-    def from_dict(base_path: str, d, *, name: Optional[str] = None) -> "ViewDescriptor":
+    def from_dict(base_path: str, d) -> "ViewDescriptor":
         return ViewDescriptor(
             base_path,
             d["root"],
-            name=name,
             projections=d.get("projections", {}),
             select=d.get("select", []),
             exclude=d.get("exclude", []),
@@ -1169,9 +1166,9 @@ class Environment:
         def add_view(name, values):
             """Add the view with the name and the string or dict values."""
             if isinstance(values, str):
-                self.views[name] = ViewDescriptor(self.path, values, name=name)
+                self.views[name] = ViewDescriptor(self.path, values)
             elif isinstance(values, dict):
-                self.views[name] = ViewDescriptor.from_dict(self.path, values, name=name)
+                self.views[name] = ViewDescriptor.from_dict(self.path, values)
             else:
                 tty.error(f"Cannot add view named {name} for {type(values)} values {values}")
 
@@ -1198,9 +1195,7 @@ class Environment:
         # If we reach this point without an explicit view option then we
         # provide the default view.
         if self.views == dict():
-            self.views[default_view_name] = ViewDescriptor(
-                self.path, self.view_path_default, name=default_view_name
-            )
+            self.views[default_view_name] = ViewDescriptor(self.path, self.view_path_default)
 
     def _load_concrete_include_data(self):
         """Load concrete include specs data from included concrete directories."""
@@ -1834,9 +1829,7 @@ class Environment:
             self.default_view.update_root(view_path)
         else:
             assert isinstance(view_path, str), f"expected str for 'view_path', but got {view_path}"
-            self.views[default_view_name] = ViewDescriptor(
-                self.path, view_path, name=default_view_name
-            )
+            self.views[default_view_name] = ViewDescriptor(self.path, view_path)
 
         self.manifest.set_default_view(self._default_view_as_yaml())
 
