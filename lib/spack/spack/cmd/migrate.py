@@ -174,4 +174,4 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         tty.msg(f"\nMoving {old_location} to {backup_loc}...")
         shutil.move(old_location, backup_loc)
         tty.msg(f"Backup complete! Original ~/.spack moved to {backup_loc}")
-        tty.msg(f"\nYou can restore it with:\n  spack migrate --restore")
+        tty.msg("\nYou can restore it with:\n  spack migrate --restore")
