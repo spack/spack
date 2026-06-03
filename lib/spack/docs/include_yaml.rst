@@ -96,8 +96,10 @@ You can also add a ``destination`` to specify the local root directory.
 If you want to control the :ref:`name of the configuration scope <named-config-scopes>`, you can provide a ``name``.
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
-And we want the configuration scope name to start ``common`` and the files to be cached under ``$HOME/my_usc_includes``.
-We would then configure the ``include.yaml`` file as follows::
+In this example, we name the include ``USC``, resulting in scopes named ``USC/config/config.yaml`` and ``USC/config/packages.yaml`` (combining the include name with the relative path).
+In this example, we also specify the files to be cached in ``$HOME/my_usc_includes``.
+
+.. code-block:: yaml
 
    include:
    - name: USC  # optional
@@ -111,7 +113,7 @@ We would then configure the ``include.yaml`` file as follows::
 
 .. note::
 
-   The git URL could have been specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
+   The git URL could also be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
 
 If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
 The resulting repository can be found under ``$HOME/my_usc_includes``.
@@ -121,17 +123,17 @@ Once cloned, the settings for the two files under the ``$HOME/my_usc_includes/US
 In this example, the new scopes can be seen by running::
 
    $ spack config scopes -p
-   Scope                          Path
+   Scope                     Path
    command_line
-   spack                            /Users/username/spack/etc/spack/
-   user                             /Users/username/.spack/
-   common:USC/config/config.yaml    /Users/username/my_usc_includes/USC/config/config.yaml
-   common:USC/config/packages.yaml  /Users/username/my_usc_includes/USC/config/packages.yaml
-   site                             /Users/username/spack/etc/spack/site/
-   system                           /etc/spack/
-   defaults                         /Users/username/spack/etc/spack/defaults/
-   defaults:darwin                  /Users/username/spack/etc/spack/defaults/darwin/
-   defaults:base                    /Users/username/spack/etc/spack/defaults/base/
+   spack                     /Users/username/spack/etc/spack/
+   user                      /Users/username/.spack/
+   USC/config/config.yaml    /Users/username/my_usc_includes/USC/config/config.yaml
+   USC/config/packages.yaml  /Users/username/my_usc_includes/USC/config/packages.yaml
+   site                      /Users/username/spack/etc/spack/site/
+   system                    /etc/spack/
+   defaults                  /Users/username/spack/etc/spack/defaults/
+   defaults:darwin           /Users/username/spack/etc/spack/defaults/darwin/
+   defaults:base             /Users/username/spack/etc/spack/defaults/base/
    _builtin
 
 Since there are two unique paths, each results in a separate configuration scope.
