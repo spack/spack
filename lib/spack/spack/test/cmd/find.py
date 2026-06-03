@@ -603,4 +603,3 @@ def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: path
 
     assert all(x in output for x in expected)
     assert all(x not in output for x in not_expected)
-    assert False
