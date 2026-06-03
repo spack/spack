@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Windows-specific I/O: Win32 API bindings, IOCP selector, console I/O bridging.
+"""Windows-specific I/O: Win32 API bindings, console I/O bridging.
 
 This module is win32-only.  Import it only inside ``if sys.platform == "win32":`` guards.
 """

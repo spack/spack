@@ -341,7 +341,7 @@ gettext_uuid = False
 # directories to ignore when looking for source files.
 exclude_patterns = ["_build", "_spack_root", ".spack-env", ".spack", ".venv"]
 
-autodoc_mock_imports = ["llnl"]
+autodoc_mock_imports = ["llnl", "spack.llnl.util.win_io"]
 autodoc_default_options = {"no-value": True}
 autodoc_preserve_defaults = True
 
