@@ -2256,10 +2256,7 @@ def update_cache_and_get_specs():
 
 
 def load_buildcache_index() -> None:
-    """Populates BINARY_INDEX from the local on-disk index cache.
-
-    Failures are swallowed, so the status display never breaks a command.
-    """
+    """Populates BINARY_INDEX from the local on-disk index cache and never raises exceptions."""
     try:
         BINARY_INDEX.regenerate_spec_cache()
     except Exception:
