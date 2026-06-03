@@ -137,8 +137,9 @@ def post_install(spec, explicit=None):
             load_script_path = path_to_load_shell_script(spec, shell)
             unload_script_path = path_to_unload_shell_script(spec, shell)
 
-            repo_path = make_repo_path(os.path.join(spec.prefix, ".spack"))
-            cached_repo = repo_path if repo_path.repos else None
+            spack_dir = os.path.join(spec.prefix, ".spack")
+            repo_path = make_repo_path(spack_dir) if os.path.exists(spack_dir) else None
+            cached_repo = repo_path if repo_path and repo_path.repos else None
 
             # Write shell script to load & unload
             load_mods, unload_mods = get_environment_modifications(spec, shell, cached_repo)
