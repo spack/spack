@@ -41,4 +41,6 @@ jobs:
         pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
 
     - name: Run style tests (docs)
-      run: .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
+      run: |
+        export PYTHONPATH="${{ github.workspace }}/lib/spack"
+        .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
