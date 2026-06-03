@@ -278,6 +278,7 @@ The most important component of an environment is a list of abstract specs.
 
 Adding abstract specs does not immediately install anything, nor does it affect the ``spack.lock`` file.
 To update the lockfile, the environment must be :ref:`re-concretized <cmd-spack-concretize>`, and to update any installations, the environment must be :ref:`(re)installed <installing-environment>`.
+Existing installations are associated with the environment automatically after concretization.
 
 The ``spack add`` command is environment-aware.
 It adds the spec to the currently active environment.
