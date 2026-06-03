@@ -590,7 +590,6 @@ def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: path
     """Tests that the output of spack find contains expected matches when using an
     environment with groups.
     """
-    import spack.config
 
     (tmp_path / "spack.yaml").write_text(spack_yaml)
     with ev.Environment(tmp_path):
