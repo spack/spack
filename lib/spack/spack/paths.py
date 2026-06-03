@@ -112,9 +112,6 @@ class SpackPaths:
         # Detect old layout
         self.old_layout_detected = detect_old_spack_layout(self)
 
-        #: Backup location for old .spack directory (used by migrate command)
-        self.dotspack_backup = os.path.join(expanded_home, ".spack.backup")
-
         self.default_state_home = os.path.join(expanded_home, ".local", "state", "spack")
 
     @property
@@ -349,7 +346,6 @@ if TYPE_CHECKING:
     package_repos_path: str
     default_user_bootstrap_path: str
     default_misc_cache_path: str
-    dotspack_backup: str
 
 
 # Module shim: lets callers keep using `spack.paths.X` for any attribute on

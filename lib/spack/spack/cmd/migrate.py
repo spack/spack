@@ -7,10 +7,17 @@ import os
 import shutil
 
 import spack.llnl.util.tty as tty
+import spack.util.path
 
 description = "migrate user config from ~/.spack to ~/.config/spack"
 section = "config"
 level = "long"
+
+
+def backup_location():
+    """Return the backup location for ~/.spack (in $state_home/dotspack_backup)."""
+    state_home = spack.util.path.substitute_path_variables("$state_home")
+    return os.path.join(state_home, "dotspack_backup")
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -23,6 +30,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--clear",
         action="store_true",
         help="move entire ~/.spack directory to backup location after migration",
+    )
+    subparser.add_argument(
+        "--restore",
+        action="store_true",
+        help="restore ~/.spack from backup location (reverses --clear)",
     )
     subparser.add_argument(
         "--i-need-old-spack",
@@ -71,7 +83,26 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     old_location = os.path.expanduser("~/.spack")
     new_config_location = os.path.expanduser("~/.config/spack")
-    backup_location = os.path.expanduser("~/.spack.backup")
+    backup_loc = backup_location()
+
+    # Handle --restore
+    if args.restore:
+        if not os.path.exists(backup_loc):
+            tty.die(f"Backup location does not exist: {backup_loc}")
+
+        if os.path.exists(old_location):
+            tty.die(
+                f"Cannot restore: {old_location} already exists.\n"
+                f"Please remove or rename it before restoring from backup."
+            )
+
+        if args.dry_run:
+            tty.msg(f"Would move {backup_loc} to {old_location}")
+        else:
+            tty.msg(f"Restoring {backup_loc} to {old_location}...")
+            shutil.move(backup_loc, old_location)
+            tty.msg("Restore complete!")
+        return
 
     if not os.path.exists(old_location):
         tty.msg(f"Old configuration location does not exist: {old_location}")
@@ -79,8 +110,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         return
 
     # Check if backup already exists (for --clear)
-    if args.clear and os.path.exists(backup_location):
-        tty.die(f"Backup location already exists: {backup_location}")
+    if args.clear and os.path.exists(backup_loc):
+        tty.die(f"Backup location already exists: {backup_loc}")
 
     # Find config files to migrate
     config_files = []
@@ -94,10 +125,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         if args.clear:
             # Still do the backup if --clear was requested
             if args.dry_run:
-                tty.msg(f"Would move {old_location} to {backup_location}")
+                tty.msg(f"Would move {old_location} to {backup_loc}")
             else:
-                tty.msg(f"Moving {old_location} to {backup_location}...")
-                shutil.move(old_location, backup_location)
+                tty.msg(f"Moving {old_location} to {backup_loc}...")
+                shutil.move(old_location, backup_loc)
                 tty.msg("Backup complete!")
         return
 
@@ -123,7 +154,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         for config_file in config_files:
             tty.msg(f"    - {config_file}")
         if args.clear:
-            tty.msg(f"\nWould then move {old_location} to {backup_location}")
+            tty.msg(f"\nWould then move {old_location} to {backup_loc}")
         return
 
     # Perform the migration
@@ -140,7 +171,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
 
     # Handle --clear: move ~/.spack to backup
     if args.clear:
-        tty.msg(f"\nMoving {old_location} to {backup_location}...")
-        shutil.move(old_location, backup_location)
-        tty.msg(f"Backup complete! Original ~/.spack moved to {backup_location}")
-        tty.msg(f"\nYou can restore it with:\n  mv {backup_location} {old_location}")
+        tty.msg(f"\nMoving {old_location} to {backup_loc}...")
+        shutil.move(old_location, backup_loc)
+        tty.msg(f"Backup complete! Original ~/.spack moved to {backup_loc}")
+        tty.msg(f"\nYou can restore it with:\n  spack migrate --restore")

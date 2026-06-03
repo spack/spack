@@ -119,14 +119,38 @@ def test_migrate_basic(migrate_setup):
 
 def test_migrate_with_clear(migrate_setup):
     """Test --clear: does everything `spack migrate` does, plus
-    removes ~/.spack (moves it to ~/.spack.backup)."""
+    removes ~/.spack (moves it to $state_home/dotspack_backup)."""
     dotspack, created, new_config, paths = migrate_setup
 
-    backup_location = pathlib.Path(os.path.expanduser("~/.spack.backup"))
+    backup_loc = pathlib.Path(spack.cmd.migrate.backup_location())
 
     migrate("--clear")
 
-    assert verify_files_copied(backup_location, new_config, created)
+    assert verify_files_copied(backup_loc, new_config, created)
     # --clear should remove old location (or rather, move it)
     assert not dotspack.exists()
-    assert backup_location.exists()
+    assert backup_loc.exists()
+
+
+def test_migrate_restore(migrate_setup):
+    """Test --restore: moves $state_home/dotspack_backup back to ~/.spack."""
+    dotspack, created, new_config, paths = migrate_setup
+
+    backup_loc = pathlib.Path(spack.cmd.migrate.backup_location())
+
+    # First migrate with --clear to create the backup
+    migrate("--clear")
+
+    assert not dotspack.exists()
+    assert backup_loc.exists()
+
+    # Now restore
+    migrate("--restore")
+
+    # Should move backup back to original location
+    assert dotspack.exists()
+    assert not backup_loc.exists()
+
+    # Verify original files are back
+    for config_file in created["config_files"]:
+        assert (dotspack / config_file).exists()

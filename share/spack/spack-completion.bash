@@ -1458,7 +1458,7 @@ _spack_mark() {
 }
 
 _spack_migrate() {
-    SPACK_COMPREPLY="-h --help --dry-run --clear --i-need-old-spack"
+    SPACK_COMPREPLY="-h --help --dry-run --clear --restore --i-need-old-spack"
 }
 
 _spack_mirror() {
