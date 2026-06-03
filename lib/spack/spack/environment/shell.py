@@ -149,7 +149,7 @@ def deactivate_commands(shell):
     return cmds
 
 
-def activate(env, use_env_repo=False, view: Optional[str] = "default") -> EnvironmentModifications:
+def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     """Activate an environment and append environment modifications
 
     To activate an environment, we add its configuration scope to the
@@ -158,7 +158,6 @@ def activate(env, use_env_repo=False, view: Optional[str] = "default") -> Enviro
 
     Arguments:
         env: the environment to activate
-        use_env_repo: use the packages exactly as they appear in the environment's repository
         view: generate commands to add runtime environment variables for named view
 
     Returns:

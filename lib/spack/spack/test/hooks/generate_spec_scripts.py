@@ -140,7 +140,7 @@ def test_install_individual_specs_scripts(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_install_multiple_specs_shell_scripts(
-    shell, set_command, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Ensure that the each spec environment modifications are written to the apporiate
     shell script and aren't put together when multiple specs are installed at once"""
@@ -212,4 +212,4 @@ def test_generate_script_fails_on_nonexistent_directory(
     bad_path = os.path.join(spec.prefix, "nonexistent_dir", "load")
 
     with pytest.raises(OSError):
-        spec_script.generate_script(bad_path, "Nonexistant directory script content")
+        spec_script.generate_script(bad_path, "Nonexistant directory script content", "###")

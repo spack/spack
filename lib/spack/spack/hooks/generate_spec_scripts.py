@@ -143,7 +143,6 @@ def post_install(spec, explicit=None):
             load_mods, unload_mods = get_environment_modifications(spec, shell, cached_repo)
             generate_script(load_script_path, load_mods, comments)
             generate_script(unload_script_path, unload_mods, comments)
-        except OSError as e:
-            msg = f"Error generating shell scripts for {spec.name} in {shell} shell\n{e}"
-            msg += str(e)
+        except Exception as e:
+            msg = f"Error generating shell scripts for {spec.name} in {shell} shell: {e}"
             tty.warn(msg)
