@@ -220,22 +220,21 @@ else:
 
 @system_path_filter
 def _win_rename(src, dst):
-    # On Windows, os.rename will fail if the destination file already exists
-    # os.replace is the same as os.rename on POSIX and is MoveFileExW w/
-    # the MOVEFILE_REPLACE_EXISTING flag on Windows
-    # Windows invocation is abstracted behind additional logic handling
-    # remaining cases of divergent behavior across platforms
-    # os.replace will still fail if on Windows (but not POSIX) if the dst
-    # is a symlink to a directory (all other cases have parity Windows <-> Posix)
+    # On Windows, os.rename fails if the destination already exists.
+    # os.replace maps to MoveFileExW(MOVEFILE_REPLACE_EXISTING), which handles
+    # most cases but diverges from POSIX rename in two meaningful ways:
+    #   * dst is a symlink to a directory MoveFileExW fails; remove the
+    #      symlink first.
+    #   * dst is a plain directory MoveFileExW returns ERROR_ACCESS_DENIED
+    #      regardless of actual permissions; remove the empty directory first
+    #      to restore POSIX rename semantics (which allow replacing an empty
+    #      directory).
     if os.path.islink(dst) and os.path.isdir(os.path.realpath(dst)):
         if os.path.samefile(src, dst):
-            # src and dst are the same
-            # do nothing and exit early
             return
-        # If dst exists and is a symlink to a directory
-        # we need to remove dst and then perform rename/replace
-        # this is safe to do as there's no chance src == dst now
         os.remove(dst)
+    elif os.path.isdir(dst):
+        os.rmdir(dst)  # only passes if empty, same as POSIX
     os.replace(src, dst)
 
 
