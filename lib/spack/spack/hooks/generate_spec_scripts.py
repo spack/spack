@@ -6,6 +6,7 @@ import glob
 import os
 import sys
 from datetime import datetime
+from typing import Tuple
 
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
@@ -89,7 +90,7 @@ def make_repo_path(root):
     return spack.repo.RepoPath(*repos)
 
 
-def get_environment_modifications(spec, shell, repo=None) -> tuple[str, str]:
+def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
     """Returns both load and unload environment modifications for the spec.
     Args:
         spec: The spec whose environment modifications we are returning
