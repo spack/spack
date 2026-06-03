@@ -79,8 +79,7 @@ def update(data: Dict[str, Any]) -> bool:
 
     # Now add back the includes the environment file already has.
     if "include" in data:
-        for path in data["include"]:
-            includes.append(path)
+        includes.extend(data["include"])
 
     data["include"] = includes
     del data["include_concrete"]
