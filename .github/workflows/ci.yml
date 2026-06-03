@@ -19,10 +19,6 @@ permissions:
   contents: read
   pull-requests: read
 
-env:
-  PYTHON_VERSION: '3.13'
-  MIN_PYTHON_VERSION: '3.6'
-
 jobs:
   changes:
     if: ${{ github.repository == 'spack/spack' }}
@@ -113,15 +109,15 @@ jobs:
     needs: [ changes ]
     uses: ./.github/workflows/validate.yml
     with:
-      python_version: ${{ env.PYTHON_VERSION }}
-      minimum_python_version: ${{ env.MIN_PYTHON_VERSION }}
+      python_version: '3.13'
+      minimum_python_version: '3.6'
 
   style:
     if: ${{ needs.changes.outputs.style == 'true' }}
     needs: [ changes ]
     uses: ./.github/workflows/style.yml
     with:
-      python_version: ${{ env.PYTHON_VERSION }}
+      python_version: '3.13'
 
   import-check:
     needs: [ validate, style, changes ]
