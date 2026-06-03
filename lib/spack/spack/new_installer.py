@@ -134,49 +134,6 @@ OVERWRITE_BACKUP_SUFFIX = ".old"
 OVERWRITE_GARBAGE_SUFFIX = ".garbage"
 
 
-class WindowsPipeBridge:
-    """Reads from a blocking Windows anonymous pipe and forwards to a non-blocking socket."""
-
-    def __init__(self, pipe_fd: int):
-        self.rsock, self.wsock = socket.socketpair()
-        self.rsock.setblocking(False)
-        self.pipe_fd = pipe_fd
-        self.thread = threading.Thread(target=self._forward, daemon=True)
-        self.thread.start()
-
-    def _forward(self):
-        while True:
-            try:
-                data = os.read(self.pipe_fd, OUTPUT_BUFFER_SIZE)
-                if not data:
-                    break
-                # If the TUI stalls, the socket buffer fills, and sendall blocks.
-                # This naturally pauses os.read(), providing perfect kernel backpressure!
-                self.wsock.sendall(data)
-            except OSError:
-                break
-            finally:
-                self.wsock.close()
-                try:
-                    os.close(self.pipe_fd)
-                except OSError:
-                    pass
-
-        self.wsock.close()
-
-    def fileno(self):
-        return self.rsock.fileno()
-
-    def recv(self, size):
-        try:
-            return self.rsock.recv(size)
-        except BlockingIOError:
-            return b""
-
-    def close(self):
-        self.rsock.close()
-
-
 class WindowsSentinelBridge:
     """Waits for a process to exit and sends a byte to a socket to wake the selector."""
 
@@ -216,36 +173,6 @@ def read_from_key(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
         return os.read(key.fd, max_size)
     except (EOFError, OSError):
         return b""
-
-
-def _get_crt_fd(conn: Connection, mode: int) -> int:
-    """Return a CRT file descriptor from a Connection, transferring HANDLE ownership on Windows.
-
-    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
-    We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() and null out
-    Connection._handle so that PipeConnection.__del__ doesn't double-close the handle.
-    On POSIX we return the fd directly; the Connection retains ownership.
-    """
-    if IS_WINDOWS:
-        handle = conn.fileno()
-        conn._handle = None  # type: ignore[attr-defined]  # transfer ownership to CRT
-        return msvcrt.open_osfhandle(handle, mode)  # type: ignore[attr-defined]
-    return conn.fileno()
-
-
-def _conn_to_text_stream(conn: "Connection") -> io.TextIOWrapper:
-    """Open the write end of a Connection as a line-buffered text stream.
-
-    On Windows, PipeConnection.fileno() returns a Win32 HANDLE rather than a CRT fd.
-    We transfer HANDLE ownership to the CRT via msvcrt.open_osfhandle() (nulling out
-    Connection._handle so PipeConnection.__del__ doesn't double-close it) and then
-    wrap the resulting fd with os.fdopen().  On POSIX we wrap the fd directly with
-    closefd=False so the Connection retains ownership.
-    """
-    fd = _get_crt_fd(conn, os.O_WRONLY)
-    if IS_WINDOWS:
-        return os.fdopen(fd, "w", buffering=1)
-    return os.fdopen(fd, "w", buffering=1, closefd=False)
 
 
 class ExitCode:
@@ -307,8 +234,8 @@ class ChildInfo(DatabaseAction):
         self,
         proc: Process,
         spec: spack.spec.Spec,
-        output_r_conn: Connection,
-        state_r_conn: Connection,
+        output_r_conn: Union[Connection, socket.socket],
+        state_r_conn: Union[Connection, socket.socket],
         control_w_sock: socket.socket,
         log_path: str,
         explicit: bool = False,
@@ -321,7 +248,7 @@ class ChildInfo(DatabaseAction):
         self.log_path = log_path
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
-        #: WindowsPipeBridge / WindowsSentinelBridge objects; kept alive to prevent GC.
+        #: WindowsSentinelBridge objects; kept alive to prevent GC.
         self.bridges: list = []
 
     def save_to_db(self, db: spack.database.Database) -> None:
@@ -330,10 +257,14 @@ class ChildInfo(DatabaseAction):
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
-        if not IS_WINDOWS:
-            # On Windows, Connection._handle was transferred to the CRT via
-            # msvcrt.open_osfhandle(), so fileno() raises "handle is closed".
-            # Bridges own selector registration on Windows; skip this loop.
+        if IS_WINDOWS:
+            # On Windows, output/state are socket pairs registered by object; sentinel via bridge.
+            for obj in (self.output_r_conn, self.state_r_conn):
+                try:
+                    selector.unregister(obj)
+                except (KeyError, ValueError, OSError):
+                    pass
+        else:
             for fd in (
                 self.output_r_conn.fileno(),
                 self.state_r_conn.fileno(),
@@ -380,7 +311,12 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
+def tee(
+    control_r: socket.socket,
+    log_r: int,
+    log_file: io.BufferedWriter,
+    parent_w: Union[int, socket.socket],
+) -> None:
     """Forward log_r to log_file and parent_w (when echoing is enabled).
 
     On POSIX, a DefaultSelector multiplexes log_r and control_r so echo toggle
@@ -432,7 +368,7 @@ def _tee_posix(
 
 
 def _tee_windows(
-    control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: int
+    control_r: socket.socket, log_r: int, log_file: io.BufferedWriter, parent_w: socket.socket
 ) -> None:
     # Shared echo flag. Written by the control thread, read by the log thread.
     # Single-element list assignment is GIL-atomic in CPython.
@@ -464,7 +400,7 @@ def _tee_windows(
                 log_file.flush()
                 if _echo[0]:
                     try:
-                        os.write(parent_w, data)
+                        parent_w.sendall(data)
                     except OSError:
                         pass
     finally:
@@ -472,7 +408,9 @@ def _tee_windows(
 
 
 class Tee:
-    def __init__(self, control_r: socket.socket, parent: Connection, log_path: str) -> None:
+    def __init__(
+        self, control_r: socket.socket, parent: Union[Connection, socket.socket], log_path: str
+    ) -> None:
         self.control_r = control_r
         self.parent = parent
 
@@ -488,10 +426,13 @@ class Tee:
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
-        self.parent_fd = _get_crt_fd(self.parent, os.O_WRONLY)
+        if IS_WINDOWS:
+            parent_target = self.parent  # It's a socket
+        else:
+            parent_target = self.parent.fileno()
 
         self.tee_thread = threading.Thread(
-            target=tee, args=(self.control_r, r, log_file, self.parent_fd), daemon=True
+            target=tee, args=(self.control_r, r, log_file, parent_target), daemon=True
         )
         self.tee_thread.start()
 
@@ -527,10 +468,6 @@ class Tee:
             kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             kernel32.SetStdHandle(-11, self._saved_win32_stdout)
             kernel32.SetStdHandle(-12, self._saved_win32_stderr)
-            try:
-                os.close(self._parent_fd)
-            except OSError:
-                pass
 
 
 def install_from_buildcache(
@@ -688,8 +625,8 @@ def worker_function(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    state: Connection,
-    parent: Connection,
+    state: Union[Connection, socket.socket],
+    parent: Union[Connection, socket.socket],
     echo_control_r: socket.socket,
     makeflags: str,
     js1: Optional[Connection],
@@ -792,7 +729,10 @@ def worker_function(
     sys.stderr = os.fdopen(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
-    state_stream = _conn_to_text_stream(state)
+    if IS_WINDOWS:
+        state_stream = state.makefile("w", buffering=1, encoding="utf-8")
+    else:
+        state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
 
     exit_code = ExitCode.SUCCESS
 
@@ -1305,8 +1245,12 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    state_r_conn, state_w_conn = Pipe(duplex=False)
-    output_r_conn, output_w_conn = Pipe(duplex=False)
+    if IS_WINDOWS:
+        state_r_conn, state_w_conn = socket.socketpair()
+        output_r_conn, output_w_conn = socket.socketpair()
+    else:
+        state_r_conn, state_w_conn = Pipe(duplex=False)
+        output_r_conn, output_w_conn = Pipe(duplex=False)
 
     # Use a socket pair for the echo-control channel so the Tee thread can use non-blocking
     # recv() cross-platform (unlike multiprocessing.Pipe which returns Win32 HANDLEs on Windows).
@@ -1353,7 +1297,7 @@ def start_build(
     output_w_conn.close()
     control_r_sock.close()
 
-    # Non-blocking on the read ends: not needed on Windows (bridges use blocking reads in threads).
+    # Non-blocking on the read ends: on Windows this is deferred to the installer after registration.
     if not IS_WINDOWS:
         os.set_blocking(output_r_conn.fileno(), False)
         os.set_blocking(state_r_conn.fileno(), False)
@@ -3562,39 +3506,20 @@ class PackageInstaller:
 
         # Cross-platform Pipe Registration
         if IS_WINDOWS:
-            # Connection.fileno() on Windows returns a Win32 HANDLE, not a CRT fd.
-            # os.read() (used by WindowsPipeBridge) requires a CRT fd.
-            # Convert via msvcrt.open_osfhandle() and null _handle to prevent
-            # PipeConnection.__del__ from double-closing the same handle.
-            out_handle = child_info.output_r_conn.fileno()
-            child_info.output_r_conn._handle = None  # type: ignore[attr-defined]
-            out_crt_fd = msvcrt.open_osfhandle(out_handle, os.O_RDONLY)  # type: ignore[attr-defined]
-            out_bridge = WindowsPipeBridge(out_crt_fd)
-
-            state_handle = child_info.state_r_conn.fileno()
-            child_info.state_r_conn._handle = None  # type: ignore[attr-defined]
-            state_crt_fd = msvcrt.open_osfhandle(state_handle, os.O_RDONLY)  # type: ignore[attr-defined]
-            state_bridge = WindowsPipeBridge(state_crt_fd)
-
+            child_info.output_r_conn.setblocking(False)
+            child_info.state_r_conn.setblocking(False)
             sentinel_bridge = WindowsSentinelBridge(child_info.proc)
+            child_info.bridges.append(sentinel_bridge)
 
-            child_info.bridges.extend([out_bridge, state_bridge, sentinel_bridge])
-
-            selector.register(out_bridge, selectors.EVENT_READ, FdInfo(pid, "output"))
-            selector.register(state_bridge, selectors.EVENT_READ, FdInfo(pid, "state"))
+            selector.register(child_info.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
+            selector.register(child_info.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
             selector.register(sentinel_bridge, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         else:
             os.set_blocking(child_info.output_r_conn.fileno(), False)
             os.set_blocking(child_info.state_r_conn.fileno(), False)
-            selector.register(
-                child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
-            )
-            selector.register(
-                child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
-            )
-            selector.register(
-                child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel")
-            )
+            selector.register(child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
+            selector.register(child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
+            selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
 
         self.build_status.add_build(
             child_info.spec,
@@ -3628,14 +3553,14 @@ class PackageInstaller:
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        fd_or_obj = child_info.bridges[0] if IS_WINDOWS else child_info.output_r_conn.fileno()
+        fd_or_obj = child_info.output_r_conn.fileno()
         while fd_or_obj in selector.get_map():
             key = selector.get_map()[fd_or_obj]
             self._handle_child_logs(key, child_info, selector)
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
-        fd_or_obj = child_info.bridges[1] if IS_WINDOWS else child_info.state_r_conn.fileno()
+        fd_or_obj = child_info.state_r_conn.fileno()
         while fd_or_obj in selector.get_map():
             key = selector.get_map()[fd_or_obj]
             self._handle_child_state(key, child_info, selector)
