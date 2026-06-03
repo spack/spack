@@ -1297,7 +1297,8 @@ def start_build(
     output_w_conn.close()
     control_r_sock.close()
 
-    # Non-blocking on the read ends: on Windows this is deferred to the installer after registration.
+    # Non-blocking on the read ends:
+    # on Windows this is deferred to the installer after registration.
     if not IS_WINDOWS:
         os.set_blocking(output_r_conn.fileno(), False)
         os.set_blocking(state_r_conn.fileno(), False)
@@ -2793,7 +2794,7 @@ class WindowsTerminalState(BaseTerminalState):
                 char = msvcrt.getwch()
                 if char in ("\x00", "\xe0"):
                     msvcrt.getwch()  # Consume the trailing scan code
-                    continue    # and drop the keypress
+                    continue  # and drop the keypress
                 try:
                     self.stdin_w.sendall(char.encode("utf-8"))
                 except OSError:
@@ -3511,15 +3512,23 @@ class PackageInstaller:
             sentinel_bridge = WindowsSentinelBridge(child_info.proc)
             child_info.bridges.append(sentinel_bridge)
 
-            selector.register(child_info.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
+            selector.register(
+                child_info.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output")
+            )
             selector.register(child_info.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
             selector.register(sentinel_bridge, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
         else:
             os.set_blocking(child_info.output_r_conn.fileno(), False)
             os.set_blocking(child_info.state_r_conn.fileno(), False)
-            selector.register(child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
-            selector.register(child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
-            selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+            selector.register(
+                child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
+            )
+            selector.register(
+                child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
+            )
+            selector.register(
+                child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel")
+            )
 
         self.build_status.add_build(
             child_info.spec,
