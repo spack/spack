@@ -752,7 +752,7 @@ _spack_clean() {
 _spack_commands() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --update-completion -a --aliases --format --header --update"
+        SPACK_COMPREPLY="-h --help --update-completion --layout-specific-scopes -a --aliases --format --header --update"
     else
         SPACK_COMPREPLY=""
     fi
