@@ -25,16 +25,16 @@ if sys.platform != "win32":
 
 from ctypes import wintypes
 
-import spack.new_installer as _ni
-from spack.new_installer import (
+import spack.new_installer_windows as _niw
+from spack.new_installer_windows import (
     ENABLE_ECHO_INPUT,
     ENABLE_EXTENDED_FLAGS,
     ENABLE_LINE_INPUT,
     ENABLE_QUICK_EDIT_MODE,
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
-    StdinReader,
     WindowsTerminalState,
 )
+from spack.new_installer_windows import WindowsStdinReader as StdinReader
 
 
 class _FakeSelector:
@@ -149,7 +149,7 @@ class TestSetupTeardown:
     def test_setup_enables_vt100_on_stdout(self, monkeypatch):
         """setup() ORs ENABLE_VIRTUAL_TERMINAL_PROCESSING into the stdout console mode."""
         state, sel, bs, k32 = _make_state()
-        monkeypatch.setattr(_ni.threading, "Thread", _NoopThread)
+        monkeypatch.setattr(_niw.threading, "Thread", _NoopThread)
         monkeypatch.setattr(state, "enter_foreground", lambda: None)
 
         state.setup()
@@ -161,7 +161,7 @@ class TestSetupTeardown:
     def test_setup_registers_sigwinch_socket(self, monkeypatch):
         """setup() registers sigwinch_r in the selector with tag 'sigwinch'."""
         state, sel, bs, k32 = _make_state()
-        monkeypatch.setattr(_ni.threading, "Thread", _NoopThread)
+        monkeypatch.setattr(_niw.threading, "Thread", _NoopThread)
         monkeypatch.setattr(state, "enter_foreground", lambda: None)
 
         state.setup()
@@ -182,7 +182,7 @@ class TestSetupTeardown:
             def start(self):
                 pass
 
-        monkeypatch.setattr(_ni.threading, "Thread", _FakeThread)
+        monkeypatch.setattr(_niw.threading, "Thread", _FakeThread)
         monkeypatch.setattr(state, "enter_foreground", lambda: None)
 
         state.setup()
@@ -290,7 +290,7 @@ class TestInputThread:
         """Run _input_thread in a daemon thread and return bytes received on stdin_r."""
         state._running = True
         state.build_status.headless = False
-        monkeypatch.setattr(_ni, "msvcrt", fake_msvcrt)
+        monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
         t = threading.Thread(target=state._input_thread, daemon=True)
         t.start()
         t.join(timeout=timeout)
@@ -382,7 +382,7 @@ class TestInputThread:
             state._running = False
 
         threading.Thread(target=stop, daemon=True).start()
-        monkeypatch.setattr(_ni, "msvcrt", fake_msvcrt)
+        monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
         state._input_thread()
 
         assert not kbhit_calls

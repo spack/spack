@@ -20,8 +20,6 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
-import abc
-import codecs
 import glob
 import io
 import json
@@ -31,7 +29,6 @@ import selectors
 import shlex
 import shutil
 import signal
-import socket
 import sys
 import tempfile
 import threading
@@ -82,27 +79,17 @@ from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.subprocess_context import GlobalStateMarshaler
+from spack.new_installer_terminal import BaseTerminalState, StdinReaderBase
 from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
-IS_WINDOWS = sys.platform == "win32"
-
-if IS_WINDOWS:
-    import ctypes
-    import msvcrt
-    from ctypes import wintypes
-
-    # Windows console mode flags used by WindowsTerminalState
-    ENABLE_LINE_INPUT = 0x0002
-    ENABLE_ECHO_INPUT = 0x0004
-    ENABLE_QUICK_EDIT_MODE = 0x0040
-    ENABLE_EXTENDED_FLAGS = 0x0080
-    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
+if sys.platform == "win32":
+    from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
     import fcntl
-    import termios
-    import tty
+
+    from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -2216,349 +2203,6 @@ class NullReportData(ReportData):
         pass
 
 
-class BaseTerminalState(abc.ABC):
-    """Abstract base for platform-specific terminal state management."""
-
-    def __init__(
-        self,
-        selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
-        on_suspend: Optional[Callable[[], None]] = None,
-        on_resume: Optional[Callable[[], None]] = None,
-    ) -> None:
-        self.selector = selector
-        self.build_status = build_status
-        self.on_suspend = on_suspend
-        self.on_resume = on_resume
-
-    @classmethod
-    def stdout_is_interactive(cls) -> bool:
-        return sys.stdout.isatty()
-
-    @classmethod
-    def stdin_is_interactive(cls) -> bool:
-        return sys.stdin.isatty()
-
-    def create_stdin_reader(self) -> "StdinReader":
-        return StdinReader(sys.stdin.fileno())
-
-    @abc.abstractmethod
-    def setup(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def teardown_input(self) -> None:
-        """Restore input settings and signal handlers. Called before the final UI render."""
-        pass
-
-    @abc.abstractmethod
-    def teardown_output(self) -> None:
-        """Restore output settings. Called after the final UI render."""
-        pass
-
-    def teardown(self) -> None:
-        self.teardown_input()
-        self.teardown_output()
-
-    @abc.abstractmethod
-    def enter_foreground(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def enter_background(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def handle_continue(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def drain_sigwinch(self) -> None:
-        """Drain the platform-specific sigwinch notification channel."""
-        pass
-
-    @abc.abstractmethod
-    def should_enter_foreground(self) -> bool:
-        """Return True if the process should switch from headless to foreground mode."""
-        pass
-
-
-class TerminalState(BaseTerminalState):
-    """Manages terminal settings, stdin selector registration, and suspend/resume signals.
-
-    Installs a SIGTSTP handler that restores the terminal before suspending and re-applies it
-    on resume. After waking up it checks whether the process is in the foreground or background
-    and enables or suppresses interactive output accordingly.
-
-    Optional ``on_suspend`` / ``on_resume`` hooks are called just before the process suspends
-    and just after it wakes, allowing callers to pause and resume child processes."""
-
-    def __init__(
-        self,
-        selector: selectors.BaseSelector,
-        build_status: BuildStatus,
-        on_suspend: Optional[Callable[[], None]] = None,
-        on_resume: Optional[Callable[[], None]] = None,
-    ) -> None:
-        super().__init__(selector, build_status, on_suspend, on_resume)
-        self.old_stdin_settings = termios.tcgetattr(sys.stdin)  # type: ignore[name-defined]
-        self.sigwinch_r = -1
-        self.sigwinch_w = -1
-
-    def setup(self) -> None:
-        """Set cbreak mode, register stdin and signal pipes in the selector."""
-
-        # SIGWINCH self-pipe (stdout must be a tty too)
-        if sys.stdout.isatty():
-            self.sigwinch_r, self.sigwinch_w = os.pipe()
-            os.set_blocking(self.sigwinch_r, False)
-            os.set_blocking(self.sigwinch_w, False)
-            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-            self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
-        else:
-            self.old_sigwinch = None
-
-        self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
-
-        # Start correctly depending on whether we're foregrounded or backgrounded
-        self.build_status.headless = True
-        if not _is_background_tty(sys.stdin):
-            self.enter_foreground()
-
-    def teardown_input(self) -> None:
-        """Restore terminal settings and signal handlers, close pipes."""
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
-
-        for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
-            if old is not None:
-                try:
-                    signal.signal(sig, old)
-                except Exception as e:
-                    spack.llnl.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
-
-        if sys.stdin.fileno() in self.selector.get_map():
-            self.selector.unregister(sys.stdin.fileno())
-
-        for fd in (self.sigwinch_r, self.sigwinch_w):
-            if fd < 0:
-                continue
-            if fd in self.selector.get_map():
-                self.selector.unregister(fd)
-            try:
-                os.close(fd)
-            except Exception as e:
-                spack.llnl.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
-
-    def teardown_output(self) -> None:
-        pass
-
-    def _handle_sigtstp(self, signum: int, frame: object) -> None:
-        """Restore terminal before suspending, then re-install handler after resume."""
-
-        # Reset so the first redraw after resume doesn't overwrite the shell's
-        # prompt / "$ fg" line.
-        self.build_status.active_area_rows = 0
-
-        # Restore terminal so the user's shell works normally while we're stopped.
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSANOW, self.old_stdin_settings)
-
-        # Force headless mode before suspending so that enter_foreground() doesn't
-        # exit early when we resume, ensuring terminal settings are re-applied.
-        self.build_status.headless = True
-
-        # Actually suspend: reset to default handler then re-send SIGTSTP.
-        if self.on_suspend is not None:
-            self.on_suspend()
-        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
-        os.kill(os.getpid(), signal.SIGTSTP)
-
-        # Execution resumes here after SIGCONT. Re-install our handler.
-        signal.signal(signal.SIGTSTP, self._handle_sigtstp)
-
-        if self.on_resume is not None:
-            self.on_resume()
-        self.handle_continue()
-
-    def _handle_sigwinch(self, signum: int, frame: object) -> None:
-        try:
-            os.write(self.sigwinch_w, b"\x00")
-        except OSError:
-            pass
-
-    def enter_foreground(self) -> None:
-        """Restore interactive terminal mode."""
-        if not self.build_status.headless:
-            return
-
-        # We save old settings right before applying cbreak.
-        # If we started in the background, bash may have had the terminal in its own
-        # readline (raw) mode when __init__ ran. Waiting until we are foregrounded
-        # ensures we capture the shell's exported 'sane' configuration for this job.
-        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
-
-        with ignore_signal(signal.SIGTTOU):
-            tty.setcbreak(sys.stdin.fileno())
-
-        if sys.stdin.fileno() not in self.selector.get_map():
-            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
-        self.build_status.headless = False
-        self.build_status.dirty = True
-
-    def enter_background(self) -> None:
-        """Suppress output and stop reading stdin to avoid SIGTTIN/SIGTTOU."""
-        if sys.stdin.fileno() in self.selector.get_map():
-            self.selector.unregister(sys.stdin.fileno())
-        self.build_status.headless = True
-
-    def handle_continue(self) -> None:
-        """Detect whether the process is in the foreground or background and adjust accordingly."""
-        if _is_background_tty(sys.stdin):
-            self.enter_background()
-        else:
-            self.enter_foreground()
-
-    def drain_sigwinch(self) -> None:
-        os.read(self.sigwinch_r, 64)  # type: ignore[arg-type]
-
-    def should_enter_foreground(self) -> bool:
-        return not _is_background_tty(sys.stdin)
-
-
-class WindowsTerminalState(BaseTerminalState):
-    """Terminal State management class for Windows"""
-
-    @classmethod
-    def stdout_is_interactive(cls) -> bool:
-        """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
-        mode = wintypes.DWORD()  # type: ignore[name-defined]
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-        handle = kernel32.GetStdHandle(-11)
-        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[attr-defined]
-
-    @classmethod
-    def stdin_is_interactive(cls) -> bool:
-        mode = wintypes.DWORD()  # type: ignore[name-defined]
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-        handle = kernel32.GetStdHandle(-10)
-        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))  # type: ignore[attr-defined]
-
-    def __init__(self, selector, build_status, on_suspend=None, on_resume=None):
-        super().__init__(selector, build_status, on_suspend, on_resume)
-        self.kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
-        self.hStdin = self.kernel32.GetStdHandle(-10)
-        self.hStdout = self.kernel32.GetStdHandle(-11)
-        self.old_stdin_settings = wintypes.DWORD()  # type: ignore[name-defined]
-        self.old_stdout_settings = wintypes.DWORD()  # type: ignore[name-defined]
-        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        self.kernel32.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
-
-        self.stdin_r, self.stdin_w = socket.socketpair()
-        self.stdin_r.setblocking(False)
-        self.sigwinch_r, self.sigwinch_w = socket.socketpair()
-        self.sigwinch_r.setblocking(False)
-
-    def create_stdin_reader(self) -> "StdinReader":
-        return StdinReader(self.stdin_r.fileno(), sock=self.stdin_r)
-
-    def setup(self) -> None:
-        # Enable VT100 ANSI escapes on stdout
-        new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING  # type: ignore[name-defined]
-        self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
-
-        self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-        self.build_status.headless = True
-
-        self._running = True
-        threading.Thread(target=self._input_thread, daemon=True).start()
-        threading.Thread(target=self._resize_thread, daemon=True).start()
-
-        self.enter_foreground()
-
-    def teardown_input(self) -> None:
-        self._running = False
-        self.kernel32.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
-
-        for sock in (self.stdin_r, self.sigwinch_r, self.stdin_w, self.sigwinch_w):
-            try:
-                self.selector.unregister(sock)
-            except KeyError:
-                pass
-            sock.close()
-
-    def teardown_output(self) -> None:
-        self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
-
-    def enter_foreground(self) -> None:
-        if not self.build_status.headless:
-            return
-
-        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))  # type: ignore[attr-defined]
-
-        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE  # type: ignore[name-defined]
-        new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS  # type: ignore[name-defined]
-        self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
-
-        if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
-            self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
-
-        self.build_status.headless = False
-        self.build_status.dirty = True
-
-    def enter_background(self) -> None:
-        if self.stdin_r.fileno() in self.selector.get_map():
-            self.selector.unregister(self.stdin_r)
-        self.build_status.headless = True
-
-    def handle_continue(self) -> None:
-        self.enter_foreground()
-
-    def drain_sigwinch(self) -> None:
-        self.sigwinch_r.recv(64)
-
-    def should_enter_foreground(self) -> bool:
-        return True
-
-    def _input_thread(self):
-        while self._running:
-            if self.build_status.headless:
-                time.sleep(0.1)
-                continue
-            if msvcrt.kbhit():  # type: ignore[name-defined]
-                char = msvcrt.getwch()  # type: ignore[name-defined]
-                if char in ("\x00", "\xe0"):
-                    msvcrt.getwch()  # type: ignore[name-defined]
-                    continue
-                try:
-                    self.stdin_w.sendall(char.encode("utf-8"))
-                except OSError:
-                    pass
-            else:
-                time.sleep(0.05)
-
-    def _resize_thread(self) -> None:
-        last_size = shutil.get_terminal_size()
-        while self._running:
-            time.sleep(0.1)
-            curr = shutil.get_terminal_size()
-            if curr != last_size:
-                last_size = curr
-                try:
-                    self.sigwinch_w.sendall(b"\x00")
-                except OSError:
-                    pass
-
-
-def _establish_terminal_state(*args, **kwargs) -> Optional[BaseTerminalState]:
-    """Create and return the appropriate terminal state for the current platform, or None if
-    stdin is not interactive."""
-    cls = WindowsTerminalState if IS_WINDOWS else TerminalState
-    if not cls.stdin_is_interactive():
-        return None
-    return cls(*args, **kwargs)
-
-
 def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
@@ -2568,36 +2212,6 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
                 os.killpg(pid, sig)
         except OSError:
             pass
-
-
-class StdinReader:
-    """Helper class to do non-blocking, incremental decoding of stdin, stripping ANSI escape
-    sequences. The input is the backing file descriptor for stdin (instead of the TextIOWrapper) to
-    avoid double buffering issues: the event loop triggers when the fd is ready to read, and if we
-    do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
-    internally, which the event loop is not aware of, and user input doesn't come through."""
-
-    def __init__(self, fd: int, sock: Optional[socket.socket] = None) -> None:
-        self.fd = fd
-        #: On Windows, stdin is piped through a socket pair; use recv() not os.read()
-        self.sock = sock
-        #: Handle multi-byte UTF-8 characters
-        self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
-        #: For stripping out arrow and navigation keys
-        self.ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z~]")
-
-    def _decode(self, raw: bytes) -> str:
-        return self.ansi_escape_re.sub("", self.decoder.decode(raw))
-
-    def read(self) -> str:
-        try:
-            if self.sock is not None:
-                raw = self.sock.recv(1024)
-            else:
-                raw = os.read(self.fd, 1024)
-            return self._decode(raw)
-        except OSError:
-            return ""
 
 
 class PackageInstaller:
@@ -2745,14 +2359,14 @@ class PackageInstaller:
 
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[BaseTerminalState] = None
-        stdin_reader: Optional[StdinReader] = None
-        terminal = _establish_terminal_state(
-            selector,
-            self.build_status,
-            on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
-            on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
-        )
-        if terminal is not None:
+        stdin_reader: Optional[StdinReaderBase] = None
+        if TerminalState.stdin_is_interactive():
+            terminal = TerminalState(
+                selector,
+                self.build_status,
+                on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
+                on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
+            )
             terminal.setup()
             self.build_status.is_tty = True
             stdin_reader = terminal.create_stdin_reader()
@@ -2898,12 +2512,9 @@ class PackageInstaller:
                 # Finally update the UI
                 self.build_status.update()
         finally:
-            # Restore input settings and signal handlers. On Linux this runs TCSADRAIN,
+            # Restore input settings and signal handlers. On POSIX this runs TCSADRAIN,
             # ensuring buffered cursor-movement codes from the event loop are transmitted
-            # before the final render. On Windows this stops input threads and restores
-            # hStdin, but leaves VT100 output processing active for the final render.
-            # VT100 processing is required to prevent leaking raw control characters
-            # to output streams.
+            # before the final render.
             if terminal is not None:
                 terminal.teardown_input()
 
@@ -2986,11 +2597,6 @@ class PackageInstaller:
             for s in failures:
                 dag_hash = s.dag_hash()
                 build_info = self.build_status.builds.get(dag_hash)
-                if build_info is None and IS_WINDOWS:
-                    # On Windows, headless mode can prevent the final update(finalize=True) from
-                    # flushing finished_builds, so a build's info may linger there instead.
-                    finished = self.build_status.finished_builds
-                    build_info = next((b for b in finished if dag_hash.startswith(b.hash)), None)
                 if build_info and build_info.log_summary:
                     sys.stderr.write(build_info.log_summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
