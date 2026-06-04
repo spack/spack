@@ -73,6 +73,12 @@ def setup_parser(subparser: ArgumentParser) -> None:
         default=False,
         help="regenerate spack's tab completion scripts",
     )
+    subparser.add_argument(
+        "--layout-specific-scopes",
+        action="store_true",
+        default=False,
+        help="process scopes based on detected layout",
+    )
 
     subparser.add_argument(
         "-a", "--aliases", action="store_true", default=False, help="include command aliases"
@@ -875,6 +881,23 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
         _commands(parser, args)
 
 
+import contextlib
+
+
+@contextlib.contextmanager
+def scope_layout_context(ignore_old=False):
+    saved_config = spack.config.CONFIG
+    try:
+        if ignore_old:
+            spack.paths.ignore_old_layout = True
+            spack.config.CONFIG = spack.config.create()
+        yield
+    finally:
+        if ignore_old:
+            spack.paths.ignore_old_layout = False
+            spack.config.CONFIG = saved_config
+
+
 def commands(parser: ArgumentParser, args: Namespace) -> None:
     """Main function that calls formatter functions.
 
@@ -886,8 +909,9 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
             args.subparser.error("--update-completion can only be specified alone")
 
-        # this runs the command multiple times with different arguments
-        update_completion(parser, args)
+        with scope_layout_context(not args.layout_specific_scopes):
+            # this runs the command multiple times with different arguments
+            update_completion(parser, args)
 
     else:
         # run commands normally

@@ -192,9 +192,7 @@ class ConfigScope(argparse.Action):
 
     @property
     def choices(self):
-        # Avoid including old-layout from etc/spack/defaults/include.yaml
-        # in autocompletion
-        return [s for s in spack.config.scopes().keys() if s not in ("old-layout",)]
+        return spack.config.scopes().keys()
 
     @choices.setter
     def choices(self, value):

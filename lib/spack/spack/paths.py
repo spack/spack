@@ -188,6 +188,9 @@ class SpackPaths:
         return os.path.join(data_home, "cache")
 
 
+ignore_old_layout = False
+
+
 def detect_old_spack_layout(paths):
     """Detect if the old Spack layout is present.
 
@@ -230,6 +233,10 @@ def detect_layout(scheme):
     """
     if scheme != "old":
         raise ValueError(f"unknown layout scheme: {scheme!r} (expected 'old')")
+
+    global ignore_old_layout
+    if ignore_old_layout:
+        return False
 
     # Check if user explicitly set new-layout environment variables
     new_layout_env_vars = ["SPACK_DATA_HOME", "SPACK_STATE_HOME", "SPACK_CACHE_HOME"]
@@ -378,6 +385,7 @@ class _PathsModule(types.ModuleType):
             "set_working_dir",
             "spack_working_dir",
             "get_legacy_package_repo_path",
+            "ignore_old_layout",
         ):
             if name in module_dict:
                 return module_dict[name]
