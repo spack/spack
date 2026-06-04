@@ -8,6 +8,7 @@ import sys
 from datetime import datetime
 from typing import Tuple
 
+import spack.bootstrap.config
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.repo
@@ -126,6 +127,10 @@ def post_install(spec, explicit=None):
     """
 
     if spec.external:
+        return
+
+    # Skip script generation during bootstrapping
+    if spack.bootstrap.config.is_bootstrapping():
         return
 
     shells_avail = ["sh"]  # csh & fish have the same script as sh
