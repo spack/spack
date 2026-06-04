@@ -88,7 +88,13 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # Handle --restore
     if args.restore:
         if not os.path.exists(backup_loc):
-            tty.die(f"Backup location does not exist: {backup_loc}")
+            tty.die(
+                f"Backup location does not exist: {backup_loc}"
+                "\nIf you have moved $state_home (e.g. by setting"
+                "\nSPACK_STATE_HOME) since the time that the backup"
+                "\nwas created, restoring the previous value should"
+                "\nbe enough for this command to succeed."
+            )
 
         if os.path.exists(old_location):
             tty.die(
