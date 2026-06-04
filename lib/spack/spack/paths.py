@@ -260,14 +260,21 @@ def set_working_dir():
 
 
 def get_legacy_package_repo_path(destination):
-    """Check if a repo destination exists in the old ~/.spack/package_repos location.
+    """Check if the repo that would be placed in ``destination`` also exists in the
+    old package repository location; if so, and if the ``destination`` is in the new
+    default location for package repos, then return the old location.
+
+    This function returning a path indicates that it is a good idea to copy the
+    resource available in that path. If the user set SPACK_USER_CACHE_PATH, we assume
+    they may want to isolate (and so copying the old repo would not be desired).
 
     Args:
         destination: The destination path where the repo would be cloned in the new location
                     (e.g., ~/.local/state/spack/package_repos/abc1234)
 
     Returns:
-        Path to old repo if it exists, None otherwise.
+        Path to old repo if it exists and new repo would be placed in default location,
+        None otherwise.
     """
     locations_obj = sys.modules[__name__].locations
 
