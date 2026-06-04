@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import contextlib
 import copy
 import os
 import re
@@ -879,9 +880,6 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
         for attr, value in shell_args.items():
             setattr(args, attr, value)
         _commands(parser, args)
-
-
-import contextlib
 
 
 @contextlib.contextmanager
