@@ -36,7 +36,7 @@ import spack.util.parallel
 import spack.util.path
 import spack.util.url as url_util
 from spack.llnl.util import lang, tty
-from spack.llnl.util.filesystem import mkdirp, rename, working_dir
+from spack.llnl.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -396,7 +396,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                rename(local_file_path, remote_file_path)
+                shutil.move(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
