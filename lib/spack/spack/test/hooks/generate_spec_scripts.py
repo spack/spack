@@ -197,11 +197,10 @@ def test_no_scripts_for_external_spec_with_deps(
         assert not os.path.isfile(path_to_unload_script)
 
 
-def test_generate_script_fails_on_nonexistent_directory(
+def test_generate_script_creates_directory(
     install_mockery, mock_fetch, mock_archive, mock_packages
 ):
-    """Test that generate_script prints an error message when it fails to write a script
-    because the directory doesn't exist"""
+    """Test that generate_script creates the directory if it doesn't exist"""
 
     spec = Spec("mpileaks")
     spec = spack.concretize.concretize_one(spec.name)
@@ -209,7 +208,15 @@ def test_generate_script_fails_on_nonexistent_directory(
     install("--fake", spec.name)
 
     # Provide a path to a non-existent directory
-    bad_path = os.path.join(spec.prefix, "nonexistent_dir", "load")
+    nonexistent_dir = os.path.join(spec.prefix, "nonexistent_dir")
+    script_path = os.path.join(nonexistent_dir, "load")
 
-    with pytest.raises(OSError):
-        spec_script.generate_script(bad_path, "Nonexistant directory script content", "###")
+    # Directory should not exist initially
+    assert not os.path.exists(nonexistent_dir)
+
+    # generate_script should create the directory
+    spec_script.generate_script(script_path, "Test script content", "###")
+
+    # Now the directory and file should exist
+    assert os.path.exists(nonexistent_dir)
+    assert os.path.isfile(script_path)
