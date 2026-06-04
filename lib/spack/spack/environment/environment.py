@@ -1718,6 +1718,7 @@ class Environment:
         """
         old_concretized_roots = self.concretized_roots[:]
         old_specs_by_hash = self.specs_by_hash.copy()
+        old_concrete_data = self.included_concrete_spec_data
 
         # This is slightly complicated to pass by value the correct portion of the way
         # down the stack
@@ -1742,6 +1743,7 @@ class Environment:
             self.included_concretized_user_specs = old_included_roots
             self.included_concretized_order = old_included_order
             self.included_specs_by_hash = old_included_by_hash
+            self.included_concrete_spec_data = old_concrete_data
             raise
 
     def sync_concretized_specs(self) -> None:
