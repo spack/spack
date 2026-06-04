@@ -913,4 +913,5 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
 
     else:
         # run commands normally
-        _commands(parser, args)
+        with scope_layout_context(not args.layout_specific_scopes):
+            _commands(parser, args)
