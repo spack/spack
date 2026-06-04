@@ -138,7 +138,7 @@ def post_install(spec, explicit=None):
             unload_script_path = path_to_unload_shell_script(spec, shell)
 
             spack_dir = os.path.join(spec.prefix, ".spack")
-            if not os.path.exists(spack_dir)
+            if not os.path.exists(spack_dir):
                 os.makedirs(spack_dir)
 
             repo_path = make_repo_path(spack_dir)
