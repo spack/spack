@@ -383,13 +383,18 @@ class _PathsModule(types.ModuleType):
             "detect_layout",
             "dir_is_occupied",
             "set_working_dir",
-            "spack_working_dir",
             "get_legacy_package_repo_path",
-            "ignore_old_layout",
         ):
             if name in module_dict:
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+
+        # spack_working_dir is mutable - look it up in the original module
+        if name in ["ignore_old_layout", "spack_working_dir"]:
+            original_module = module_dict.get("_original_module")
+            if original_module is not None:
+                return original_module.__dict__.get(name)
+            return module_dict.get(name)
 
         # Otherwise delegate to locations object
         locs = module_dict.get("locations")
@@ -398,6 +403,8 @@ class _PathsModule(types.ModuleType):
         return getattr(locs, name)  # type: ignore[return-value]
 
 
+_original_module = sys.modules[__name__]
 _shim = _PathsModule(__name__)
-_shim.__dict__.update(sys.modules[__name__].__dict__)
+_shim.__dict__.update(_original_module.__dict__)
+_shim.__dict__["_original_module"] = _original_module
 sys.modules[__name__] = _shim
