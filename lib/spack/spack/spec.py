@@ -6012,6 +6012,7 @@ class _ImmutableSpec(Spec):
     """An immutable Spec that prevents a class of accidental mutations."""
 
     _mutable: bool
+    _str_cache: str
 
     def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
@@ -6030,6 +6031,15 @@ class _ImmutableSpec(Spec):
     def add_dependency_edge(self, *args, **kwargs):
         assert self._mutable
         return super().add_dependency_edge(*args, **kwargs)
+
+    def __str__(self) -> str:
+        # Cache the str value of immutable specs as an optimization
+        try:
+            return self._str_cache
+        except AttributeError:
+            s = self._str(color=False)
+            object.__setattr__(self, "_str_cache", s)
+            return s
 
     def __setattr__(self, name, value) -> None:
         assert self._mutable
