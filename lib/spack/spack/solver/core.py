@@ -57,7 +57,7 @@ class AspFunction:
             attr("version", "foo", "bar")
 
         """
-        return AspFunction(self.name, self.args + args)
+        return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
         parts = []
