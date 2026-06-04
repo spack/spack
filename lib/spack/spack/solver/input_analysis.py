@@ -246,6 +246,7 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             dep.depflag & allowed_deps for deplist in dependencies.values() for dep in deplist
         )
 
+    @lang.memoized
     def _is_possible(self, *, pkg_name):
         try:
             return self.is_allowed_on_this_platform(pkg_name=pkg_name) and self.can_be_installed(
@@ -459,9 +460,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._possible_virtuals.update(virtuals)
         self._link_run_virtuals.update(virtuals)
-        for x in self._link_run:
+        if self._link_run:
             reals, virtuals, _ = self.possible_graph.possible_dependencies(
-                x, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
+                *self._link_run, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
             )
             self._possible_virtuals.update(virtuals)
             self._direct_build.update(reals)

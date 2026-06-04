@@ -63,7 +63,8 @@ class AspFunction:
         parts = []
         for arg in self.args:
             if type(arg) is str:
-                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
+                if '\\' in arg or '\n' in arg or '"' in arg:
+                    arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
                 parts.append(f'"{arg}"')
             elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
                 parts.append(str(arg))
@@ -77,7 +78,10 @@ class AspFunction:
 
 class _AspFunctionBuilder:
     def __getattr__(self, name: str) -> AspFunction:
-        return AspFunction(name)
+        # This is safe to do because AspFunction objects are never mutated
+        f = AspFunction(name)
+        self.__dict__[name] = f
+        return f
 
 
 #: Global AspFunction builder
