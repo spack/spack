@@ -14,8 +14,6 @@ import selectors
 import shutil
 import socket
 import sys
-import threading
-import time
 import types
 
 import pytest
@@ -100,27 +98,62 @@ class _NoopThread:
         pass
 
 
-def _drain(sock, timeout=0.5):
-    """Read all available bytes from a socket within *timeout* seconds."""
+class _FakePipe:
+    """In-process unidirectional byte pipe.
+
+    sendall() on one end places bytes directly into the peer's buffer; recv() on the
+    other end returns them immediately or raises BlockingIOError if the buffer is empty.
+    """
+
+    def __init__(self, fd: int) -> None:
+        self._fd = fd
+        self._buf = bytearray()
+        self._peer: "_FakePipe"
+
+    def fileno(self) -> int:
+        return self._fd
+
+    def sendall(self, data: bytes) -> None:
+        self._peer._buf.extend(data)
+
+    def recv(self, n: int) -> bytes:
+        if not self._buf:
+            raise BlockingIOError
+        chunk, self._buf = bytes(self._buf[:n]), self._buf[n:]
+        return chunk
+
+    def setblocking(self, flag: bool) -> None:
+        pass
+
+    def settimeout(self, timeout: object) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+
+def _fakepair(fd1: int, fd2: int) -> tuple:
+    """Return a connected (_FakePipe, _FakePipe) pair (analogous to socket.socketpair)."""
+    a, b = _FakePipe(fd1), _FakePipe(fd2)
+    a._peer = b
+    b._peer = a
+    return a, b
+
+
+def _recv(sock) -> bytes:
+    """Read all available bytes from a socket without blocking."""
     sock.setblocking(False)
-    data = b""
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        try:
-            chunk = sock.recv(4096)
-            if not chunk:
-                break
-            data += chunk
-        except BlockingIOError:
-            time.sleep(0.01)
-    return data
+    try:
+        return sock.recv(4096)
+    except BlockingIOError:
+        return b""
 
 
 def _make_state(headless=True):
     """Create a WindowsTerminalState bypassing __init__ to avoid real Win32 calls.
 
-    All kernel32 calls go through _FakeKernel32; real socket pairs are created so
-    that thread tests can send/receive actual bytes.
+    All kernel32 calls go through _FakeKernel32; _FakePipe pairs replace real OS
+    sockets.
     """
     sel = _FakeSelector()
     bs = types.SimpleNamespace(headless=headless, dirty=False)
@@ -137,10 +170,8 @@ def _make_state(headless=True):
     # ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT
     state.old_stdin_settings = wintypes.DWORD(0x0007)
     state.old_stdout_settings = wintypes.DWORD(0x0003)
-    state.stdin_r, state.stdin_w = socket.socketpair()
-    state.stdin_r.setblocking(False)
-    state.sigwinch_r, state.sigwinch_w = socket.socketpair()
-    state.sigwinch_r.setblocking(False)
+    state.stdin_r, state.stdin_w = _fakepair(10, 11)
+    state.sigwinch_r, state.sigwinch_w = _fakepair(12, 13)
     state._running = False
     return state, sel, bs, k32
 
@@ -286,15 +317,14 @@ class TestForegroundBackground:
 class TestInputThread:
     """Tests for WindowsTerminalState._input_thread."""
 
-    def _run_thread(self, state, fake_msvcrt, monkeypatch, *, timeout=0.5):
-        """Run _input_thread in a daemon thread and return bytes received on stdin_r."""
+    def _run_thread(self, state, fake_msvcrt, monkeypatch):
+        """Call _input_thread directly and return bytes received on stdin_r."""
         state._running = True
         state.build_status.headless = False
         monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
-        t = threading.Thread(target=state._input_thread, daemon=True)
-        t.start()
-        t.join(timeout=timeout)
-        return _drain(state.stdin_r)
+        monkeypatch.setattr(_niw.time, "sleep", lambda _: None)
+        state._input_thread()
+        return _recv(state.stdin_r)
 
     def test_keystroke_forwarded_to_stdin_r(self, monkeypatch):
         """A normal keypress is sent to stdin_r."""
@@ -369,20 +399,16 @@ class TestInputThread:
         state.build_status.headless = True
         kbhit_calls = []
 
-        def kbhit():
-            kbhit_calls.append(None)
-            return False
+        def fake_sleep(_):
+            state._running = False  # stop the loop on first sleep in the headless branch
 
-        fake_msvcrt = types.SimpleNamespace(kbhit=kbhit, getwch=lambda: "")
+        fake_msvcrt = types.SimpleNamespace(
+            kbhit=lambda: kbhit_calls.append(None) or False, getwch=lambda: ""
+        )
 
         state._running = True
-
-        def stop():
-            time.sleep(0.15)
-            state._running = False
-
-        threading.Thread(target=stop, daemon=True).start()
         monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
+        monkeypatch.setattr(_niw.time, "sleep", fake_sleep)
         state._input_thread()
 
         assert not kbhit_calls
@@ -411,10 +437,10 @@ class TestResizeThread:
             return sizes[idx]
 
         monkeypatch.setattr(shutil, "get_terminal_size", get_size)
+        monkeypatch.setattr(_niw.time, "sleep", lambda _: None)
         state._resize_thread()
 
-        data = _drain(state.sigwinch_r)
-        assert b"\x00" in data
+        assert b"\x00" in _recv(state.sigwinch_r)
 
     def test_no_resize_event_on_same_size(self, monkeypatch):
         """_resize_thread does not send if dimensions are unchanged."""
@@ -429,10 +455,10 @@ class TestResizeThread:
             return os.terminal_size((80, 24))
 
         monkeypatch.setattr(shutil, "get_terminal_size", get_size)
+        monkeypatch.setattr(_niw.time, "sleep", lambda _: None)
         state._resize_thread()
 
-        data = _drain(state.sigwinch_r)
-        assert data == b""
+        assert _recv(state.sigwinch_r) == b""
 
 
 class TestStdinReaderSocketPath:

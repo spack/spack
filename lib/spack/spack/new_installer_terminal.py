@@ -36,7 +36,8 @@ class StdinReaderBase:
     def _decode(self, raw: bytes) -> str:
         return self.ansi_escape_re.sub("", self.decoder.decode(raw))
 
-    def read(self) -> str: ...
+    def read(self) -> str:
+        raise NotImplementedError
 
 
 class BaseTerminalState(abc.ABC):

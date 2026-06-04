@@ -17,7 +17,8 @@ from multiprocessing import Pipe
 from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
-from spack.new_installer import BuildStatus, StdinReader
+from spack.new_installer import BuildStatus
+from spack.new_installer_posix import PosixStdinReader as StdinReader
 
 
 class MockConnection:

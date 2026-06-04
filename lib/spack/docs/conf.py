@@ -96,6 +96,7 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
+        "_spack_root/lib/spack/spack/new_installer_windows.py",
     ]
 )
 sphinx_apidoc(
@@ -357,6 +358,7 @@ nitpick_ignore = [
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     ("py:class", "spack.repo._PrependFileLoader"),
     # Spack classes that intersphinx is unable to resolve
+    ("py:class", "BuildStatus"),
     ("py:class", "GitOrStandardVersion"),
     ("py:class", "spack.bootstrap._common.QueryInfo"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),

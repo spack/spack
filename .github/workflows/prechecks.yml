@@ -40,7 +40,7 @@ jobs:
     # Check that __slots__ are used properly
     - name: slotscheck
       run: |
-        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor" lib/spack/spack/
+        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor|spack.new_installer_windows" lib/spack/spack/
 
   # Run style checks on the files that have been changed
   style:

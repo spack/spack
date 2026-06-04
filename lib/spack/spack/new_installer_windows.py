@@ -71,7 +71,7 @@ class WindowsTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: BuildStatus,
+        build_status: "BuildStatus",
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
@@ -155,10 +155,10 @@ class WindowsTerminalState(BaseTerminalState):
             if self.build_status.headless:
                 time.sleep(0.1)
                 continue
-            if msvcrt.kbhit():
-                char = msvcrt.getwch()
+            if msvcrt.kbhit():  # type: ignore[attr-defined]
+                char = msvcrt.getwch()  # type: ignore[attr-defined]
                 if char in ("\x00", "\xe0"):
-                    msvcrt.getwch()
+                    msvcrt.getwch()  # type: ignore[attr-defined]
                     continue
                 try:
                     self.stdin_w.sendall(char.encode("utf-8"))

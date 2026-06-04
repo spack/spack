@@ -47,7 +47,7 @@ class PosixTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: BuildStatus,
+        build_status: "BuildStatus",
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
