@@ -191,6 +191,11 @@ class SpackPaths:
 ignore_old_layout = False
 
 
+def set_ignore_layout(value):
+    global ignore_old_layout
+    ignore_old_layout = value
+
+
 def detect_old_spack_layout(paths):
     """Detect if the old Spack layout is present.
 
@@ -234,7 +239,6 @@ def detect_layout(scheme):
     if scheme != "old":
         raise ValueError(f"unknown layout scheme: {scheme!r} (expected 'old')")
 
-    global ignore_old_layout
     if ignore_old_layout:
         return False
 
@@ -384,6 +388,7 @@ class _PathsModule(types.ModuleType):
             "dir_is_occupied",
             "set_working_dir",
             "get_legacy_package_repo_path",
+            "set_ignore_layout",
         ):
             if name in module_dict:
                 return module_dict[name]

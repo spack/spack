@@ -889,12 +889,12 @@ def scope_layout_context(ignore_old=False):
     saved_config = spack.config.CONFIG
     try:
         if ignore_old:
-            spack.paths.ignore_old_layout = True
+            spack.paths.set_ignore_layout(True)
             spack.config.CONFIG = spack.config.create()
         yield
     finally:
         if ignore_old:
-            spack.paths.ignore_old_layout = False
+            spack.paths.set_ignore_layout(False)
             spack.config.CONFIG = saved_config
 
 
