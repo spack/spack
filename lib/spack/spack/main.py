@@ -935,6 +935,7 @@ def _old_dotspack_warning():
     reasons = []
     for scope in spack.config.CONFIG.scopes.values():
         if hasattr(scope, "path") and uses_old_dotspack(scope.path):
+            tty.debug(f"Scope {scope.name} uses ~/.spack: checking if this is a default")
             if getattr(scope, "backwards_compat_fallback", False):
                 reasons.append(f"Used by config scope: {scope.name}")
             else:
@@ -971,6 +972,7 @@ You can run
 
 for more info (including examples of what "divergence" means).
 """
+    tty.debug("No config scopes found that use old location (~/.spack)")
     return None
 
 
