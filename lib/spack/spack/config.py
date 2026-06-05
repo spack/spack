@@ -145,6 +145,9 @@ CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")
 # placeholder object for unspecified default for get methods
 default_sigil = object()
 
+#: Global flag to ignore user-fallback scope during config processing
+ignore_user_fallback = False
+
 
 def substitute_include_path(path, context):
     """Substitute path variables in include paths, with validation.
@@ -1275,6 +1278,10 @@ class OptionalInclude:
 
         Returns: ``True`` if the include condition is satisfied; else ``False``.
         """
+        # Check if we should ignore user-fallback scope
+        if ignore_user_fallback and self.name == "user-fallback":
+            return False
+
         # circular dependencies
         import spack.spec
 

@@ -885,14 +885,17 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
 @contextlib.contextmanager
 def scope_layout_context(ignore_old=False):
     saved_config = spack.config.CONFIG
+    saved_ignore_user_fallback = spack.config.ignore_user_fallback
     try:
         if ignore_old:
             spack.paths.set_ignore_layout(True)
+            spack.config.ignore_user_fallback = True
             spack.config.CONFIG = spack.config.create()
         yield
     finally:
         if ignore_old:
             spack.paths.set_ignore_layout(False)
+            spack.config.ignore_user_fallback = saved_ignore_user_fallback
             spack.config.CONFIG = saved_config
 
 
