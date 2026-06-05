@@ -202,8 +202,38 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
-                        warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
+                    prior_matches = [
+                        x for x in self._included_scopes if included_scope.name == x.name
+                    ]
+                    if prior_matches:
+                        prior_match = prior_matches[0]
+                        if hasattr(prior_match, "path"):
+                            at = f" at {prior_match.path}"
+                        else:
+                            at = ""
+
+                        if (
+                            hasattr(included_scope, "path")
+                            and pathlib.Path(included_scope.path).resolve()
+                            == pathlib.Path(os.path.expanduser("~/.config/spack")).resolve()
+                        ):
+                            # Spack's default configs include two mutually exclusive instances
+                            # of user config: a legacy one in ~/.spack, and a preferred one in
+                            # ~/.config/spack, if a higher priority "user" scope is activated
+                            # we don't warn when this default one is omitted.
+                            msg = (
+                                f"Dropping config scope '{included_scope.name}'"
+                                f" at {included_scope.path}"
+                                f" for higher-precedence scope with same name{at}"
+                            )
+                            if tty._debug:
+                                tty.debug(msg)
+                            else:
+                                saved_debug_msgs.append(msg)
+                        else:
+                            warnings.warn(
+                                f"Ignoring duplicate included scope: {included_scope.name}"
+                            )
                         continue
 
                     if included_scope not in self._included_scopes:
@@ -1082,6 +1112,20 @@ def override(
     finally:
         scope = CONFIG.remove_scope(overrides.name)
         assert scope is overrides
+
+
+saved_debug_msgs: List[str] = []
+
+
+def clear_accumulated_debug_msgs():
+    """tty.debug messages will be dropped at module definition time for main.py
+    Functions can save debugging output to be printed later (if the user has
+    enabled -d).
+    """
+    global saved_debug_msgs
+    for msg in saved_debug_msgs:
+        tty.debug(msg)
+    saved_debug_msgs = []
 
 
 #: Class for the relevance of an optional path conditioned on a limited

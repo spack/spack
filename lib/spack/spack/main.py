@@ -562,6 +562,7 @@ def setup_main_options(args):
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
+    spack.config.clear_accumulated_debug_msgs()
     tty.set_stacktrace(args.stacktrace)
 
     # debug must be set first so that it can even affect behavior of
