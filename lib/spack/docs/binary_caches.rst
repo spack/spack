@@ -324,10 +324,11 @@ The ``mirrors.yaml`` has to be edited directly to specify select and exclude pat
    mirrors:
      <name>:
        url: <url>
-       select: []
-       exclude: [python@3.14, ^mpich]
-
-This configuration includes all specs, except ``python@3.14`` and those that depend on ``mpich``.
+       select:
+       - "%gcc"  # include only specs that depend on gcc
+       exclude:
+       - "dev_path=*"  # except development specs
+       - "^mpich"  # and any spec that depends on mpich
 
 
 Relocation
