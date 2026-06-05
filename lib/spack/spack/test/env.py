@@ -1183,20 +1183,20 @@ def test_matrix_exclude_from_environment_manifest(tmp_path: pathlib.Path, mutabl
     spack_yaml = """
 spack:
   definitions:
-  - packages: [zlib-ng, zlib]
+  - packages: [foo, bar]
   specs:
   - matrix:
     - [$packages]
     exclude:
-    - "zlib-ng"
+    - "bar"
 """
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(spack_yaml)
 
     e = ev.Environment(tmp_path)
 
-    assert e.manifest.user_specs() == [{"matrix": [["$packages"]], "exclude": ["zlib-ng"]}]
-    assert e.user_specs.specs == [spack.spec.Spec("zlib")]
+    assert e.manifest.user_specs() == [{"matrix": [["$packages"]], "exclude": ["bar"]}]
+    assert e.user_specs.specs == [spack.spec.Spec("foo")]
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
