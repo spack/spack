@@ -1049,6 +1049,15 @@ def override(
     an internal config scope for it and push/pop that scope.
 
     """
+    import spack.util.path
+
+    if spack.util.path.is_frozen():
+        raise spack.error.ConfigError(
+            "Cannot instantiate alternate config: ..._home"
+            " variables have been frozen (generally this would occur if this function"
+            " is being called in a build subprocess)."
+        )
+
     if isinstance(path_or_scope, ConfigScope):
         overrides = path_or_scope
         CONFIG.push_scope(path_or_scope, priority=None)
@@ -2231,6 +2240,15 @@ def use_configuration(
     Returns:
         Configuration object associated with the scopes passed as arguments
     """
+    import spack.util.path
+
+    if spack.util.path.is_frozen():
+        raise spack.error.ConfigError(
+            "Cannot instantiate alternate config: ..._home"
+            " variables have been frozen (generally this would occur if this function"
+            " is being called in a build subprocess)."
+        )
+
     global CONFIG
 
     # Normalize input and construct a Configuration object
