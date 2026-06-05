@@ -386,7 +386,7 @@ def test_ensure_locked_new_lock(install_mockery, tmp_path: pathlib.Path, lock_ty
     with fs.working_dir(str(tmp_path)):
         ltype, lock = installer._ensure_locked(lock_type, spec.package)
         assert ltype == lock_type
-        assert lock is not None
+        assert isinstance(lock, lk.Lock)
         assert lock._reads == reads
         assert lock._writes == writes
 

@@ -361,7 +361,9 @@ class SpecLocker:
 
         return self.locks[key]
 
-    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.LockInterface:
+    def raw_lock(
+        self, spec: "spack.spec.Spec", timeout: Optional[float] = None
+    ) -> lk.LockInterface:
         """Returns a raw lock for a Spec, but doesn't keep track of it."""
         return lk.lock(
             str(self.lock_path),

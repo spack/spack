@@ -130,7 +130,7 @@ class DatabaseAction:
     __slots__ = ("spec", "prefix_lock")
 
     spec: "spack.spec.Spec"
-    prefix_lock: Optional[spack.util.lock.Lock]
+    prefix_lock: Optional[spack.util.lock.LockInterface]
 
     def save_to_db(self, db: spack.database.Database) -> None: ...
 
@@ -179,7 +179,7 @@ class ChildInfo(DatabaseAction):
         self.control_w_conn = control_w_conn
         self.log_path = log_path
         self.explicit = explicit
-        self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        self.prefix_lock: Optional[spack.util.lock.LockInterface] = None
 
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
@@ -1930,10 +1930,10 @@ class ScheduleResult(NamedTuple):
     blocked: bool
     #: ``(dag_hash, lock)`` pairs where the write lock is held and the caller must start the build
     #: and eventually release the lock.
-    to_start: List[Tuple[str, spack.util.lock.Lock]]
+    to_start: List[Tuple[str, spack.util.lock.LockInterface]]
     #: ``(dag_hash, spec, lock)`` triples found already installed by another process; the read lock
     #: is held and the caller must add it to retained_read_locks.
-    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]]
+    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.LockInterface]]
     #: Actions to mark already installed specs explicit in the DB.
     to_mark_explicit: List[MarkExplicitAction]
 
@@ -1980,8 +1980,8 @@ def schedule_builds(
         A :class:`ScheduleResult` with ``blocked``, ``to_start``, and ``newly_installed``
         fields; see :class:`ScheduleResult` for field semantics.
     """
-    to_start: List[Tuple[str, spack.util.lock.Lock]] = []
-    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
+    to_start: List[Tuple[str, spack.util.lock.LockInterface]] = []
+    newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.LockInterface]] = []
     to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
 
@@ -2528,7 +2528,7 @@ class PackageInstaller:
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
-        retained_read_locks: List[spack.util.lock.Lock] = []
+        retained_read_locks: List[spack.util.lock.LockInterface] = []
 
         failures: List[spack.spec.Spec] = []
         finished_pids: List[int] = []
@@ -2832,7 +2832,7 @@ class PackageInstaller:
     def _save_to_db(
         self,
         database_actions: List[DatabaseAction],
-        retained_read_locks: List[spack.util.lock.Lock],
+        retained_read_locks: List[spack.util.lock.LockInterface],
     ) -> bool:
         if not self.db.lock.try_acquire_write():
             return False
@@ -2862,7 +2862,7 @@ class PackageInstaller:
         self,
         selector: selectors.BaseSelector,
         jobserver: JobServer,
-        retained_read_locks: List[spack.util.lock.Lock],
+        retained_read_locks: List[spack.util.lock.LockInterface],
         database_actions: List[DatabaseAction],
     ) -> bool:
         """Try to schedule as many pending builds as possible.
@@ -2923,7 +2923,7 @@ class PackageInstaller:
         selector: selectors.BaseSelector,
         jobserver: JobServer,
         dag_hash: str,
-        prefix_lock: spack.util.lock.Lock,
+        prefix_lock: spack.util.lock.LockInterface,
     ) -> None:
         self.capacity -= 1
         explicit = dag_hash in self.explicit

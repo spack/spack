@@ -12,9 +12,9 @@ from typing import Optional
 import spack.error
 from spack.llnl.util.lock import (
     Lock,
-    LockInterface,
     LockDowngradeError,
     LockError,
+    LockInterface,
     LockTimeoutError,
     LockUpgradeError,
     ReadTransaction,
