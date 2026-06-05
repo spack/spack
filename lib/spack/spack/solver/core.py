@@ -77,7 +77,9 @@ class AspFunction:
 
 class _AspFunctionBuilder:
     def __getattr__(self, name: str) -> AspFunction:
-        # This is safe to do because AspFunction objects are never mutated
+        # Writing to __dict__ directly caches the result so repeated access to the
+        # same name bypasses __getattr__ and hits the instance dict instead.
+        # Safe because AspFunction objects are never mutated.
         f = AspFunction(name)
         self.__dict__[name] = f
         return f
