@@ -30,7 +30,11 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
 
     install("--fake", spec.name)
 
-    extension = f".{shell}" if shell == "bat" or shell == "pwsh" else ""
+    extension = ""
+    if shell == "bat":
+        extension = ".bat"
+    elif shell == "pwsh":
+        extension = ".ps1"
 
     for pkg in spec.traverse():
         pkg_load_script = os.path.join(pkg.prefix, ".spack", f"load{extension}")
