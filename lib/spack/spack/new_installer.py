@@ -2324,6 +2324,7 @@ class PackageInstaller:
             len(self.build_graph.nodes),
             verbose=verbose,
             filter_padding=spack.store.STORE.has_padding(),
+            is_tty=TerminalState.stdout_is_interactive()
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.build_status.actual_jobs = self.jobs
@@ -2367,7 +2368,6 @@ class PackageInstaller:
                 on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
             )
             terminal.setup()
-            self.build_status.is_tty = True
             stdin_reader = terminal.create_stdin_reader()
 
         # Finished builds that have not yet been written to the database.
