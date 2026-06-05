@@ -42,7 +42,6 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
-import spack.util.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.patch

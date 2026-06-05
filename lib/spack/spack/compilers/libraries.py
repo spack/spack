@@ -13,13 +13,13 @@ import tempfile
 from typing import Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
-import spack.util.path
 import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
 import spack.util.libc
 import spack.util.module_cmd
+import spack.util.path
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import path_contains_subdirectory, paths_containing_libs
 from spack.util.environment import filter_system_paths

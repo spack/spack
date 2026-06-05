@@ -9,11 +9,11 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
-import spack.util.path
 import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
+import spack.util.path
 from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
