@@ -602,8 +602,8 @@ gcc-runtime
     mirror("set", "--include-specs", "+shared", "example")
     assert spack.config.get("mirrors:example") == {
         "url": "http://example.com",
-        "exclude": ["foo"],
-        "include": ["+shared"],
+        "exclude": {"specs": ["foo"]},
+        "include": {"specs": ["+shared"]},
     }
 
 
@@ -636,8 +636,8 @@ gcc-runtime
     )
     assert spack.config.get("mirrors:example") == {
         "url": "http://example.com",
-        "exclude": exclude_path,
-        "include": include_path,
+        "exclude": {"files": [exclude_path]},
+        "include": {"files": [include_path]},
     }
 
 

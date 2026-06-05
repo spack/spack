@@ -141,13 +141,18 @@ Further customization of the mirror contents can be done by selectively excludin
 specs using the ``--exclude-file`` or ``--exclude-specs`` flags with
 ``spack mirror create``.
 
-Note that these only apply to source mirrors when using ``spack mirror create``. 
-This is because ``spack mirror create`` only generates source mirrors.
+Note that these flags only apply to source mirrors when used with ``spack mirror create``,
+since that command only generates source mirrors.
 
-The ``--exclude-file`` and ``--exclude-specs`` flags may also be used with ``spack mirror [create | add]``. These will populate an ``exclude`` section in the mirrors configuration.
-These are lists of abstract or concrete specs to configure what gets pushed to your mirror.
-There are corresponding options, and a corresponding config for ``include``'s.
-If overlapping inclusion and exclusions are applied the inclusion is preferred.
+The ``--exclude-file``, ``--exclude-specs``, ``--include-file``, and ``--include-specs``
+flags may also be used with ``spack mirror [add|set]``. When used with ``add`` or ``set``,
+these flags populate ``exclude`` and ``include`` sections in the mirrors configuration,
+which are lists of abstract or concrete specs that control what gets pushed to your mirror.
+If overlapping inclusions and exclusions are applied, the inclusion is preferred (i.e. a
+spec that matches both an ``exclude`` and an ``include`` entry will be pushed).
+
+The same filter flags are also available on ``spack buildcache push`` for restricting a
+single push operation without modifying the persistent mirror configuration.
 
 ^^^^^^^^^^^^
 Mirror files

@@ -230,6 +230,44 @@ def test_buildcache_exclude(tmp_path, install_mockery, mock_fetch):
     assert not (mirror_dir / missing_dirs / missing_file).exists()
 
 
+def test_buildcache_exclude_file_and_specs(tmp_path, install_mockery, mock_fetch):
+    """--exclude-file and --exclude-specs may be combined in a single buildcache push."""
+    mirror_dir = tmp_path / "mirror"
+
+    # libelf will be excluded via a file; libdwarf itself will be the install target
+    exclude_file = tmp_path / "exclude.txt"
+    exclude_file.write_text("libelf\n")
+
+    s = spack.concretize.concretize_one("libdwarf")
+    PackageInstaller([s.package], fake=True, explicit=True).install()
+
+    found_file = URLBuildcacheEntry.get_manifest_filename(s)
+    missing_file = URLBuildcacheEntry.get_manifest_filename(s["libelf"])
+    found_dirs = os.path.join(
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC), s.name
+    )
+    missing_dirs = os.path.join(
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC),
+        s["libelf"].name,
+    )
+
+    buildcache(
+        "push",
+        "--unsigned",
+        "--exclude-file",
+        str(exclude_file),
+        "--exclude-specs",
+        "mpich",  # additional CLI-only exclusion (not installed, harmless)
+        str(mirror_dir),
+        "libdwarf",
+    )
+
+    # libdwarf (not excluded) should be present
+    assert (mirror_dir / found_dirs / found_file).exists()
+    # libelf (excluded via file) should be absent
+    assert not (mirror_dir / missing_dirs / missing_file).exists()
+
+
 def test_buildcache_sync(
     mutable_mock_env_path,
     install_mockery,

@@ -97,22 +97,53 @@ class Mirror:
         binary = "b" if self.binary else " "
         print(f"{self.name: <{max_len}} [{source}{binary}] {url}")
 
+    def _read_filter_file(self, path: str) -> List[str]:
+        """Read spec strings from a filter file, one per line. Blank lines are skipped.
+        Emits a warning and returns an empty list if the file does not exist.
+
+        Note: differs from ``specs_from_text_file`` in ``cmd/mirror.py``, which
+        returns parsed ``Spec`` objects rather than raw strings and raises on a
+        missing file.  Filter assembly requires raw strings, and a missing file
+        should warn rather than abort, so that function cannot be reused here."""
+        if not os.path.isfile(path):
+            tty.warn(
+                f"{path} is not a valid file for mirror filter. "
+                "Please ensure the file exists or remove it from config."
+            )
+            return []
+        with open(path, "r", encoding="utf-8") as f:
+            return [line for line in f.read().splitlines() if line.strip()]
+
     def _get_spec_filters(self, key: str) -> List[str]:
         if isinstance(self._data, str):
             return []
-        filter_source = self._data.get(key, [])
-        if isinstance(filter_source, str):
-            if os.path.isfile(filter_source):
-                with open(filter_source, "r", encoding="utf-8") as file:
-                    filters = file.read().splitlines()
-                return filters
-            else:
-                tty.die(
-                    f"{filter_source} not a valid file. "
-                    "Please ensure file exists or remove from config."
-                )
-        else:
-            return filter_source
+        filter_source = self._data.get(key, {})
+
+        if not isinstance(filter_source, dict):
+            return []
+
+        result: List[str] = []
+        seen: set = set()
+
+        # Files have lower precedence — add them first
+        files = filter_source.get("files", [])
+        if isinstance(files, str):
+            files = [files]
+        for filepath in files:
+            for spec_str in self._read_filter_file(filepath):
+                if spec_str not in seen:
+                    result.append(spec_str)
+                    seen.add(spec_str)
+
+        # Inline specs have higher precedence — if already present from a
+        # file, move the entry to the end so the inline version wins.
+        for spec_str in filter_source.get("specs", []):
+            if spec_str in seen:
+                result.remove(spec_str)
+            result.append(spec_str)
+            seen.add(spec_str)
+
+        return result
 
     @property
     def name(self):
