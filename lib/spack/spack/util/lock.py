@@ -7,11 +7,13 @@
 import os
 import stat
 import sys
-from typing import Optional, Tuple
+from typing import Optional
 
 import spack.error
-from spack.llnl.util.lock import Lock as Llnl_lock
 from spack.llnl.util.lock import (
+    Lock,
+    LockInterface,
+    LockDowngradeError,
     LockError,
     LockTimeoutError,
     LockUpgradeError,
@@ -20,27 +22,19 @@ from spack.llnl.util.lock import (
 )
 
 
-class Lock(Llnl_lock):
-    """Lock that can be disabled.
+def lock(
+    path: str,
+    *,
+    start: int = 0,
+    length: int = 0,
+    default_timeout: Optional[float] = None,
+    debug: bool = False,
+    desc: str = "",
+    enable: bool = True,
+) -> LockInterface:
 
-    This overrides the ``_lock()`` and ``_unlock()`` methods from
-    ``spack.llnl.util.lock`` so that all the lock API calls will succeed, but
-    the actual locking mechanism can be disabled via ``_enable_locks``.
-    """
-
-    def __init__(
-        self,
-        path: str,
-        *,
-        start: int = 0,
-        length: int = 0,
-        default_timeout: Optional[float] = None,
-        debug: bool = False,
-        desc: str = "",
-        enable: bool = True,
-    ) -> None:
-        self._enable = sys.platform != "win32" and enable
-        super().__init__(
+    if sys.platform != "win32" and enable:
+        return Lock(
             path,
             start=start,
             length=length,
@@ -48,39 +42,9 @@ class Lock(Llnl_lock):
             debug=debug,
             desc=desc,
         )
-
-    def _reaffirm_lock(self) -> None:
-        if self._enable:
-            super()._reaffirm_lock()
-
-    def _lock(self, op: int, timeout: Optional[float] = 0.0) -> Tuple[float, int]:
-        if self._enable:
-            return super()._lock(op, timeout)
-        return 0.0, 0
-
-    def _poll_lock(self, op: int) -> bool:
-        if self._enable:
-            return super()._poll_lock(op)
-        return True
-
-    def _unlock(self) -> None:
-        """Unlock call that always succeeds."""
-        if self._enable:
-            super()._unlock()
-
-    def try_acquire_read(self) -> bool:
-        if self._enable:
-            return super().try_acquire_read()
-        return True
-
-    def try_acquire_write(self) -> bool:
-        if self._enable:
-            return super().try_acquire_write()
-        return True
-
-    def cleanup(self, *args) -> None:
-        if self._enable:
-            super().cleanup(*args)
+    return LockInterface(
+        path, start=start, length=length, default_timeout=default_timeout, debug=debug, desc=desc
+    )
 
 
 def check_lock_safety(path: str) -> None:
@@ -116,11 +80,13 @@ def check_lock_safety(path: str) -> None:
 
 
 __all__ = [
+    "LockDowngradeError",
     "LockError",
     "LockTimeoutError",
     "LockUpgradeError",
     "ReadTransaction",
     "WriteTransaction",
     "Lock",
+    "LockInterface",
     "check_lock_safety",
 ]

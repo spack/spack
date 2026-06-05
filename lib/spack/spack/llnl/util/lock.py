@@ -21,6 +21,7 @@ if sys.platform != "win32":
 
 __all__ = [
     "Lock",
+    "LockInterface",
     "LockDowngradeError",
     "LockUpgradeError",
     "LockTransaction",
@@ -173,7 +174,85 @@ class LockType:
         return op == LockType.READ or op == LockType.WRITE
 
 
-class Lock:
+class LockInterface:
+    """Base class / no-op implementation of the lock interface.
+
+    All methods are no-ops that return default values. ``release_read`` and
+    ``release_write`` still invoke ``release_fn`` so that ``LockTransaction``
+    teardown callbacks are invoked even when locking is disabled.
+
+    Used when locking is disabled.
+    """
+
+    def __init__(
+        self,
+        path: str,
+        *,
+        start: int = 0,
+        length: int = 0,
+        default_timeout: Optional[float] = None,
+        debug: bool = False,
+        desc: str = "",
+    ) -> None:
+        self.path = path
+
+        # byte range parameters
+        self._start = start
+        self._length = length
+
+        # enable debug mode
+        self.debug = debug
+
+        # optional debug description
+        self.desc = f" ({desc})" if desc else ""
+
+        # If the user doesn't set a default timeout, or if they choose
+        # None, 0, etc. then lock attempts will not time out (unless the
+        # user sets a timeout for each attempt)
+        self.default_timeout = default_timeout or None
+
+        # PID and host of lock holder (only used in debug mode)
+        self.pid: Optional[int] = None
+        self.old_pid: Optional[int] = None
+        self.host: Optional[str] = None
+        self.old_host: Optional[str] = None
+
+    def acquire_read(self, timeout: Optional[float] = None) -> bool:
+        return True
+
+    def acquire_write(self, timeout: Optional[float] = None) -> bool:
+        return True
+
+    def try_acquire_read(self) -> bool:
+        return True
+
+    def try_acquire_write(self) -> bool:
+        return True
+
+    def is_write_locked(self) -> bool:
+        return False
+
+    def downgrade_write_to_read(self, timeout: Optional[float] = None) -> None:
+        pass
+
+    def upgrade_read_to_write(self, timeout: Optional[float] = None) -> None:
+        pass
+
+    def release_read(self, release_fn: ReleaseFnType = None) -> bool:
+        if release_fn is not None:
+            return bool(release_fn())
+        return True
+
+    def release_write(self, release_fn: ReleaseFnType = None) -> bool:
+        if release_fn is not None:
+            return bool(release_fn())
+        return True
+
+    def cleanup(self) -> None:
+        pass
+
+
+class Lock(LockInterface):
     """This is an implementation of a filesystem lock using Python's lockf.
 
     In Python, ``lockf`` actually calls ``fcntl``, so this should work with any filesystem
@@ -216,32 +295,18 @@ class Lock:
             desc: optional debug message lock description, which is helpful for distinguishing
                 between different Spack locks.
         """
-        self.path = path
+        super().__init__(
+            path,
+            start=start,
+            length=length,
+            default_timeout=default_timeout,
+            debug=debug,
+            desc=desc,
+        )
         self._reads = 0
         self._writes = 0
         self._file_ref: Optional[OpenFile] = None
         self._cached_key: Optional[DevIno] = None
-
-        # byte range parameters
-        self._start = start
-        self._length = length
-
-        # enable debug mode
-        self.debug = debug
-
-        # optional debug description
-        self.desc = f" ({desc})" if desc else ""
-
-        # If the user doesn't set a default timeout, or if they choose
-        # None, 0, etc. then lock attempts will not time out (unless the
-        # user sets a timeout for each attempt)
-        self.default_timeout = default_timeout or None
-
-        # PID and host of lock holder (only used in debug mode)
-        self.pid: Optional[int] = None
-        self.old_pid: Optional[int] = None
-        self.host: Optional[str] = None
-        self.old_host: Optional[str] = None
 
     def _ensure_valid_handle(self) -> IO[bytes]:
         """Return a valid file handle for the lock file, opening or re-opening as needed.
@@ -758,7 +823,7 @@ class LockTransaction:
 
     def __init__(
         self,
-        lock: Lock,
+        lock: LockInterface,
         acquire: Optional[Callable[[], None]] = None,
         release: Optional[ExitFnType] = None,
         timeout: Optional[float] = None,
