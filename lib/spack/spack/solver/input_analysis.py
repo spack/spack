@@ -246,7 +246,6 @@ class NoStaticAnalysis(PossibleDependencyGraph):
             dep.depflag & allowed_deps for deplist in dependencies.values() for dep in deplist
         )
 
-    @lang.memoized
     def _is_possible(self, *, pkg_name):
         try:
             return self.is_allowed_on_this_platform(pkg_name=pkg_name) and self.can_be_installed(
