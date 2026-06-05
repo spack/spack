@@ -13,7 +13,7 @@ import tempfile
 from typing import Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
-import spack.llnl.path
+import spack.util.path
 import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
@@ -38,7 +38,7 @@ _LINK_DIR_ARG = re.compile(r"^-L(.:)?(?P<dir>[/\\].*)")
 _LIBPATH_ARG = re.compile(r"^[-/](LIBPATH|libpath):(?P<dir>.*)")
 
 
-@spack.llnl.path.system_path_filter
+@spack.util.path.system_path_filter
 def parse_non_system_link_dirs(compiler_debug_output: str) -> List[str]:
     """Parses link paths out of compiler debug output.
 

@@ -39,7 +39,7 @@ import spack.error
 import spack.util.url
 import spack.util.web
 import spack.version
-from spack.llnl.path import convert_to_posix_path
+from spack.util.path import convert_to_posix_path
 from spack.llnl.util.tty.color import cescape, colorize
 
 #

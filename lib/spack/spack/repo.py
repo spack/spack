@@ -42,7 +42,7 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.path
+import spack.util.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.patch
@@ -600,7 +600,7 @@ class RepoIndex:
         self._checker: Optional[FastPackageChecker] = None
         self.packages_path = packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}

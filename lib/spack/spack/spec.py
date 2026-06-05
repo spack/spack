@@ -86,7 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.path
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
@@ -100,6 +99,7 @@ import spack.spec_parser
 import spack.traverse
 import spack.util.gpg
 import spack.util.hash
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
@@ -1644,7 +1644,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2228,7 +2228,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
