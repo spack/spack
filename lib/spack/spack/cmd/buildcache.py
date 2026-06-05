@@ -427,7 +427,7 @@ def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirro
     removed_specs: List[Spec] = []
 
     for spec in specs:
-        if mirror.matches(spec):
+        if mirror.matches(spec, direction="push"):
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)

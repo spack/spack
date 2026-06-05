@@ -21,7 +21,7 @@ def post_install(spec, explicit):
 
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
-        if not mirror.matches(spec):
+        if not mirror.matches(spec, direction="push"):
             tty.debug(
                 f"{spec.name}: Skipped push to '{mirror.name}' due to select/exclude filters"
             )

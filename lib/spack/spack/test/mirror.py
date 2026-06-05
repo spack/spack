@@ -429,26 +429,26 @@ def test_mirror_matches(mock_packages, mutable_config):
 
     # No filters: everything matches
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com"})
-    assert m.matches(spec) is True
+    assert m.matches(spec, direction="fetch") is True
 
     # Exclude matches the spec
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["brillig"]})
-    assert m.matches(spec) is False
+    assert m.matches(spec, direction="fetch") is False
 
     # Select does not include the spec
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["canfail"]})
-    assert m.matches(spec) is False
+    assert m.matches(spec, direction="fetch") is False
 
     # Select includes the spec
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["brillig"]})
-    assert m.matches(spec) is True
+    assert m.matches(spec, direction="fetch") is True
 
     # Exclude does not match the spec
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["canfail"]})
-    assert m.matches(spec) is True
+    assert m.matches(spec, direction="fetch") is True
 
     # Select includes but exclude also matches: exclude wins
     m = spack.mirrors.mirror.Mirror(
         {"url": "https://example.com", "select": ["brillig"], "exclude": ["brillig"]}
     )
-    assert m.matches(spec) is False
+    assert m.matches(spec, direction="fetch") is False

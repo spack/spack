@@ -155,21 +155,15 @@ class Mirror:
             return False
         return self._data.get("autopush", False)
 
-    @property
-    def select(self) -> List[str]:
-        if isinstance(self._data, str):
-            return []
-        return self._data.get("select", [])
+    def select(self, direction: str) -> List[str]:
+        return self._get_value("select", direction) or []
 
-    @property
-    def exclude(self) -> List[str]:
-        if isinstance(self._data, str):
-            return []
-        return self._data.get("exclude", [])
+    def exclude(self, direction: str) -> List[str]:
+        return self._get_value("exclude", direction) or []
 
-    def matches(self, spec: "spack.spec.Spec") -> bool:
+    def matches(self, spec: "spack.spec.Spec", direction: str) -> bool:
         """Check if a spec passes this mirror's select/exclude filters."""
-        return _spec_matches_filters(spec, self.select, self.exclude)
+        return _spec_matches_filters(spec, self.select(direction), self.exclude(direction))
 
     @property
     def fetch_url(self) -> str:
