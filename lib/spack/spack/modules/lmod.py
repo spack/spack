@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import ClassVar, Dict, Optional, Tuple
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 import spack.config
 import spack.spec
@@ -80,7 +80,7 @@ class LmodConfiguration(BaseConfiguration):
 
 
     @property
-    def hierarchical(self):
+    def hierarchical(self) -> bool:
         """Returns if hierarchical mode has been enabled, True if not set."""
         return self.module.configuration(self.name).get("hierarchical", True)
 
@@ -92,7 +92,7 @@ class LmodFileLayout(BaseFileLayout):
     extension = "lua"
 
     @property
-    def modulerc(self):
+    def modulerc(self) -> str:
         """Returns the modulerc file associated with current module file"""
         return os.path.join(os.path.dirname(self.filename), f".modulerc.{self.extension}")
 
@@ -101,14 +101,14 @@ class LmodContext(BaseContext):
     """Context class for lmod module files."""
 
     @tengine.context_property
-    def conditionally_unlocked_paths(self):
+    def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        value = []
+        value: List[Tuple[str, str]] = []
         conditional_paths = self.layout.unlocked_paths
 
-        def manipulate_path(token):
+        def manipulate_path(token: str) -> str:
             if token in self.conf.hierarchy_tokens:
                 return "{0}_name, {0}_version".format(token)
             return '"' + token + '"'

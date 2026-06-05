@@ -5,7 +5,7 @@
 """This module implements the classes necessary to generate Tcl modules."""
 
 import os
-from typing import ClassVar, Dict, Optional
+from typing import ClassVar, Dict, List, Optional, Tuple
 
 import spack.spec
 import spack.tengine as tengine
@@ -41,7 +41,7 @@ class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
 
     @property
-    def modulerc(self):
+    def modulerc(self) -> str:
         """Returns the modulerc file associated with current module file"""
         return os.path.join(os.path.dirname(self.filename), ".modulerc")
 
@@ -50,20 +50,20 @@ class TclContext(BaseContext):
     """Context class for tcl module files."""
 
     @tengine.context_property
-    def prerequisites(self):
+    def prerequisites(self) -> List[str]:
         """List of modules that needs to be loaded automatically."""
         return self._create_module_list_of("specs_to_prereq")
 
     @tengine.context_property
-    def conditionally_unlocked_paths(self):
+    def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
         layout = make_layout(self.spec, self.conf.name)
-        value = []
+        value: List[Tuple[str, str]] = []
         conditional_paths = layout.unlocked_paths
 
-        def manipulate_path(token):
+        def manipulate_path(token: str) -> str:
             if token in self.conf.hierarchy_tokens:
                 return "{0}_name, {0}_version".format(token)
             return '"' + token + '"'
