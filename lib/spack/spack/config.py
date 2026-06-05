@@ -182,7 +182,6 @@ class ConfigScope:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
-        self.backwards_compat_fallback = False
         self.prefer_modify = False
         self.included = included
         self.when = when
