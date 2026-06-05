@@ -69,7 +69,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         load(shell, "mpileaks")
 
-        load_cmds = _get_load_cmds(mpileaks_spec, shell[2:])
+        load_cmds = _get_load_cmds(mpileaks_spec, shell)
 
         def extract_value(output, variable):
             value = []
