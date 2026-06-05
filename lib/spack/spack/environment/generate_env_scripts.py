@@ -55,7 +55,7 @@ def get_shell_unique_env_cmds(shell, prompt: str, view: str) -> str:
 
     despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
     prompt_cmds = spack.environment.shell.activate_prompt_cmds(shell, prompt)
-    view_cmd = spack.environment.shell.activate_view_cmds(shell, view)
+    view_cmd = spack.environment.shell.activate_view_cmds(view)
 
     cmds = despactivate_cmd + prompt_cmds + view_cmd
 
@@ -119,7 +119,7 @@ def write_env_activate_script(env, view: str = "default"):
     for shell in shells_avail:
         env_mods = EnvironmentModifications()
 
-        cmds = spack.environment.shell.activate_commands(env, shell, view)
+        cmds = spack.environment.shell.activate_commands(env, view)
         cmds += env_mods.shell_modifications(shell)
 
         activate_script_path = path_to_env_activate_shell_script(env, shell)
@@ -157,7 +157,7 @@ def update_env_activate_script(env, view: str = "default"):
         if lockfile_date == 0.00 or _lockfile_newer_than_script(
             lockfile_date, activate_script_path
         ):
-            cmds = spack.environment.shell.activate_commands(env, shell, view=view)
+            cmds = spack.environment.shell.activate_commands(env, view=view)
             cmds += env_mods.shell_modifications(shell)
 
             if shell == "bat":
