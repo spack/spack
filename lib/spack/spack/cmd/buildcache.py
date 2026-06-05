@@ -436,7 +436,7 @@ def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirro
         colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be pushed to the binary cache"
-            " because they match exclude patterns:\n"
+            " because they do not match the mirror's select/exclude filters:\n"
             f"{colified_output}"
         )
     return remaining_specs

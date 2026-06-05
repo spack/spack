@@ -314,7 +314,7 @@ Including and Excluding Specs in Build Caches
 
 .. versionadded:: 1.2
 
-When pushing to a build cache, you can specify select and exclude patterns in the mirror configuration to control which specs are included in or excluded from the build cache.
+When pushing to or fetching from a build cache, you can specify select and exclude patterns in the mirror configuration to control which specs are included in or excluded from the build cache.
 By default, all specs are included and none are excluded.
 
 The ``mirrors.yaml`` has to be edited directly to specify select and exclude patterns:
