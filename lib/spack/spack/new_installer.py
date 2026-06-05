@@ -2324,7 +2324,7 @@ class PackageInstaller:
             len(self.build_graph.nodes),
             verbose=verbose,
             filter_padding=spack.store.STORE.has_padding(),
-            is_tty=TerminalState.stdout_is_interactive()
+            is_tty=TerminalState.stdout_is_interactive(),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.build_status.actual_jobs = self.jobs
