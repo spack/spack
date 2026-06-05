@@ -2594,8 +2594,7 @@ class PackageInstaller:
 
         if failures:
             for s in failures:
-                dag_hash = s.dag_hash()
-                build_info = self.build_status.builds.get(dag_hash)
+                build_info = self.build_status.builds[s.dag_hash()]
                 if build_info and build_info.log_summary:
                     sys.stderr.write(build_info.log_summary)
             lines = [f"{s}: {self.log_paths[s.dag_hash()]}" for s in failures]
