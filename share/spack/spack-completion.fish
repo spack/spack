@@ -2440,7 +2440,7 @@ complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -
 complete -c spack -n '__fish_spack_using_command mirror destroy' -l mirror-url -r -d 'find mirror to destroy by url'
 
 # spack mirror add
-set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed n/name= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_add h/help scope= type= autopush unsigned signed view= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror add' -f
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror add' -s h -l help -d 'show this help message and exit'
@@ -2454,8 +2454,8 @@ complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -f -a s
 complete -c spack -n '__fish_spack_using_command mirror add' -l unsigned -d 'do not require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -f -a signed
 complete -c spack -n '__fish_spack_using_command mirror add' -l signed -d 'require signing and signature verification when pushing and installing from this build cache'
-complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -f -a view_name
-complete -c spack -n '__fish_spack_using_command mirror add' -l name -s n -r -d 'Name of the index view for a binary mirror'
+complete -c spack -n '__fish_spack_using_command mirror add' -l view -l name -s n -r -f -a view_name
+complete -c spack -n '__fish_spack_using_command mirror add' -l view -l name -s n -r -d 'Name of the index view for a binary mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -f -a s3_access_key_id
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror add' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable
@@ -2526,7 +2526,7 @@ complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password
 complete -c spack -n '__fish_spack_using_command mirror set-url' -l oci-password-variable -r -d 'environment variable containing password to use to connect to this OCI mirror'
 
 # spack mirror set
-set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= autopush no-autopush unsigned signed scope= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
+set -g __fish_spack_optspecs_spack_mirror_set h/help push fetch type= url= autopush no-autopush unsigned signed scope= view= s3-access-key-id= s3-access-key-id-variable= s3-access-key-secret-variable= s3-access-token-variable= s3-profile= s3-endpoint-url= oci-username= oci-username-variable= oci-password-variable=
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror set' -f -a '(__fish_spack_mirrors)'
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror set' -s h -l help -d 'show this help message and exit'
@@ -2548,6 +2548,8 @@ complete -c spack -n '__fish_spack_using_command mirror set' -l signed -f -a sig
 complete -c spack -n '__fish_spack_using_command mirror set' -l signed -d 'require signing and signature verification when pushing and installing from this build cache'
 complete -c spack -n '__fish_spack_using_command mirror set' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command mirror set' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command mirror set' -l view -l name -s n -r -f -a view_name
+complete -c spack -n '__fish_spack_using_command mirror set' -l view -l name -s n -r -d 'Name of the index view for a binary mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id -r -f -a s3_access_key_id
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id -r -d 'ID string to use to connect to this S3 mirror'
 complete -c spack -n '__fish_spack_using_command mirror set' -l s3-access-key-id-variable -r -f -a s3_access_key_id_variable

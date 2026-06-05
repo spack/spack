@@ -475,6 +475,18 @@ def test_mirror_crud(mutable_config):
     assert "No mirrors configured" in output
 
 
+def test_mirror_set_view(mutable_config):
+    mirror("add", "mirror", "http://spack.io")
+    output = mirror("list")
+    assert "https://spack.io" in output
+    assert "https://spack.io:someview" not in output
+
+    mirror("set", "--name", "someview")
+
+    output = mirror("list")
+    assert "https://spack.io:someview" in output
+
+
 def test_mirror_nonexisting(mutable_config):
     with pytest.raises(SpackCommandError):
         mirror("remove", "not-a-mirror")
