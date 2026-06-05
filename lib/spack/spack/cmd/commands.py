@@ -884,6 +884,9 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
 
 @contextlib.contextmanager
 def scope_layout_context(ignore_old=False):
+    """Disable conditionally activated scopes related to enforcing
+    old installation layout and the user configuration scope in ~/.spack.
+    """
     saved_config = spack.config.CONFIG
     saved_ignore_user_fallback = spack.config.ignore_user_fallback
     try:
