@@ -42,6 +42,7 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.env
+import spack.schema.spec_list
 import spack.spec
 import spack.store
 import spack.user_environment as uenv
@@ -3228,7 +3229,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
                 if "matrix" in item:
                     # Short form if the group is composed of only one matrix
-                    self._user_specs[group].append({"matrix": item["matrix"]})
+                    self._user_specs[group].append(
+                        {
+                            key: item[key]
+                            for key in spack.schema.spec_list.spec_list_properties
+                            if key in item
+                        }
+                    )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
 

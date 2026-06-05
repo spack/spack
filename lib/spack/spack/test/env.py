@@ -1178,6 +1178,41 @@ spack:
     assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
 
 
+def test_toolchain_matrix_exclude_from_environment_manifest(
+    tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that matrix excludes are preserved when the environment manifest is read."""
+    spack_yaml = """
+spack:
+  toolchains:
+    test_apple_clang:
+    - spec: "%c=apple-clang"
+      when: "%c"
+    - spec: "%cxx=apple-clang"
+      when: "%cxx"
+  definitions:
+  - packages: [zlib-ng, zlib]
+  - compilers: [test_apple_clang]
+  specs:
+  - matrix:
+    - [$packages]
+    - [$%compilers]
+    exclude:
+    - "zlib-ng %test_apple_clang"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+
+    e = ev.Environment(tmp_path)
+
+    assert e.manifest.user_specs() == [
+        {"matrix": [["$packages"], ["$%compilers"]], "exclude": ["zlib-ng %test_apple_clang"]}
+    ]
+    assert e.user_specs.specs == [
+        spack.spec.Spec("zlib %[when='%c'] c=apple-clang %[when='%cxx'] cxx=apple-clang")
+    ]
+
+
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
 @pytest.mark.parametrize("requirement_type", ["require", "prefer"])
 def test_using_toolchain_as_requirement(
