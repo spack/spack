@@ -12,7 +12,7 @@ from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
 from spack.error import SpackError
 from spack.llnl.util.filesystem import rename
-from spack.util.lock import Lock
+from spack.util.lock import LockInterface, lock
 
 
 def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:
@@ -114,7 +114,7 @@ class FileCache:
         self.root.mkdir(parents=True, exist_ok=True)
 
         self.lock_path = self.root / ".lock"
-        self._locks: Dict[str, Lock] = {}
+        self._locks: Dict[str, LockInterface] = {}
         self.lock_timeout = timeout
 
     def destroy(self):
@@ -143,7 +143,7 @@ class FileCache:
 
         if key_str not in self._locks:
             start, length = self._get_lock_offsets(key_str)
-            self._locks[key_str] = Lock(
+            self._locks[key_str] = lock(
                 str(self.lock_path),
                 start=start,
                 length=length,

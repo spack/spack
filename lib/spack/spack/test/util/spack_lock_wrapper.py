@@ -17,7 +17,7 @@ from spack.llnl.util.filesystem import getuid, group_ids
 def test_disable_locking(tmp_path: pathlib.Path):
     """Ensure that locks do no real locking when disabled."""
     lock_path = str(tmp_path / "lockfile")
-    lock = lk.Lock(lock_path, enable=False)
+    lock = lk.lock(lock_path, enable=False)
 
     lock.acquire_read()
     assert not os.path.exists(lock_path)

@@ -603,7 +603,7 @@ def test_parse_config_descriptor_git_1(tmp_path: pathlib.Path):
             "git": str(tmp_path / "repo.git"),
             "destination": str(tmp_path / "some/destination"),
         },
-        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
     )
 
     assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
@@ -617,7 +617,7 @@ def test_parse_config_descriptor_git_2(tmp_path: pathlib.Path):
     descriptor = spack.repo.parse_config_descriptor(
         name="name",
         descriptor={"git": str(tmp_path / "repo.git"), "paths": ["some/path"]},
-        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
     )
     assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
     assert descriptor.relative_paths == ["some/path"]
@@ -631,7 +631,7 @@ def test_remote_descriptor_no_git(tmp_path: pathlib.Path):
             "git": str(tmp_path / "repo.git"),
             "destination": str(tmp_path / "some/destination"),
         },
-        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
     )
 
     descriptor.initialize(fetch=True, git=None)
@@ -648,7 +648,7 @@ def test_remote_descriptor_update_no_git(tmp_path: pathlib.Path):
             "git": str(tmp_path / "repo.git"),
             "destination": str(tmp_path / "some/destination"),
         },
-        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
     )
 
     assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
@@ -661,7 +661,7 @@ def test_parse_config_descriptor_local(tmp_path: pathlib.Path):
     descriptor = spack.repo.parse_config_descriptor(
         name="name",
         descriptor=str(tmp_path / "local_repo"),
-        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
     )
     assert isinstance(descriptor, spack.repo.LocalRepoDescriptor)
     assert descriptor.name == "name"
@@ -674,7 +674,7 @@ def test_parse_config_descriptor_no_git(tmp_path: pathlib.Path):
         spack.repo.parse_config_descriptor(
             name="name",
             descriptor={"destination": str(tmp_path / "some/destination"), "paths": ["some/path"]},
-            lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+            lock=spack.util.lock.lock(str(tmp_path / "x"), enable=False),
         )
 
 
@@ -683,7 +683,7 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
     spack-repo-index.yaml file both when newly initialized and when already cloned."""
 
-    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    lock = spack.util.lock.lock(str(tmp_path / "x"), enable=False)
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
     # Construct 3 identical descriptors
@@ -776,7 +776,7 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
     construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
     spack-repo-index.yaml file both when newly initialized and when already cloned."""
 
-    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    lock = spack.util.lock.lock(str(tmp_path / "x"), enable=False)
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
     # Construct 3 identical descriptors
@@ -874,7 +874,7 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
     construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
     spack-repo-index.yaml file both when newly initialized and when already cloned."""
 
-    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    lock = spack.util.lock.lock(str(tmp_path / "x"), enable=False)
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
     # Construct 3 identical descriptors

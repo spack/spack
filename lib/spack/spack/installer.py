@@ -1569,7 +1569,7 @@ class PackageInstaller:
         self.build_tasks: Dict[str, Task] = {}
 
         # Cache of package locks for failed packages, keyed on package's ids
-        self.failed: Dict[str, Optional[lk.Lock]] = {}
+        self.failed: Dict[str, Optional[lk.LockInterface]] = {}
 
         # Cache the PID for distributed build messaging
         self.pid: int = os.getpid()
@@ -1581,7 +1581,7 @@ class PackageInstaller:
         self.layout = spack.store.STORE.layout
 
         # Locks on specs being built, keyed on the package's unique id
-        self.locks: Dict[str, Tuple[str, Optional[lk.Lock]]] = {}
+        self.locks: Dict[str, Tuple[str, Optional[lk.LockInterface]]] = {}
 
         # Cache fail_fast option to ensure if one build request asks to fail
         # fast then that option applies to all build requests.
@@ -1821,7 +1821,7 @@ class PackageInstaller:
 
     def _ensure_locked(
         self, lock_type: str, pkg: "spack.package_base.PackageBase"
-    ) -> Tuple[str, Optional[lk.Lock]]:
+    ) -> Tuple[str, Optional[lk.LockInterface]]:
         """
         Add a prefix lock of the specified type for the package spec
 

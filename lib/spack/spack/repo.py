@@ -72,9 +72,9 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
-def package_repository_lock() -> spack.util.lock.Lock:
+def package_repository_lock() -> spack.util.lock.LockInterface:
     """Lock for process safety when cloning remote package repositories"""
-    return spack.util.lock.Lock(
+    return spack.util.lock.lock(
         os.path.join(spack.paths.user_cache_path, "package-repository.lock")
     )
 
@@ -1741,7 +1741,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         tag: Optional[str],
         destination: str,
         relative_paths: Optional[List[str]],
-        lock: spack.util.lock.Lock,
+        lock: spack.util.lock.LockInterface,
     ) -> None:
         super().__init__(name)
         self.repository = repository
@@ -1982,7 +1982,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
     @staticmethod
     def from_config(
-        lock: spack.util.lock.Lock, config: spack.config.Configuration, scope=None
+        lock: spack.util.lock.LockInterface, config: spack.config.Configuration, scope=None
     ) -> "RepoDescriptors":
         return RepoDescriptors(
             {
@@ -2027,7 +2027,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
 
 def parse_config_descriptor(
-    name: Optional[str], descriptor: Any, lock: spack.util.lock.Lock
+    name: Optional[str], descriptor: Any, lock: spack.util.lock.LockInterface
 ) -> RepoDescriptor:
     """Parse a repository descriptor from validated configuration. This does not instantiate Repo
     objects, but merely turns the config into a more useful RepoDescriptor instance.

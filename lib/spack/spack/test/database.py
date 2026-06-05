@@ -59,7 +59,7 @@ def writable(database):
 
     try:
         # this is safe on all platforms during tests (tests get their own tmpdirs)
-        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
+        database.lock = spack.util.lock.lock(str(database._lock_path), enable=False)
         database.is_upstream = False
         db_root.chmod(mode=0o755)
         with database.write_transaction():
@@ -1007,11 +1007,12 @@ def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     assert "Unable to remove failure marking" in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Locking currently unsupported on Windows")
 @pytest.mark.db
 def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Add coverage to mark_failed."""
 
-    def _raise_exc(lock):
+    def _raise_exc(lock, timeout=None):
         raise lk.LockTimeoutError(lk.LockType.WRITE, "/mock-lock", 1.234, 10)
 
     with fs.working_dir(str(tmp_path)):
@@ -1052,7 +1053,7 @@ def test_prefix_failed(mutable_database, monkeypatch):
 def test_prefix_write_lock_error(mutable_database, monkeypatch):
     """Cover the prefix write lock exception."""
 
-    def _raise(db, spec):
+    def _raise(lock, timeout=None):
         raise lk.LockError("Mock lock error")
 
     s = spack.concretize.concretize_one("pkg-a")

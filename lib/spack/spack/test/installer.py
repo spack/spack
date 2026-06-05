@@ -321,6 +321,7 @@ def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
         installer._ensure_install_ready(spec.package)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="locks are no-ops on Windows")
 def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path, capfd):
     """Test _ensure_locked when a non-lock exception is raised."""
     mock_err_msg = "Mock exception error"
@@ -341,6 +342,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path,
         assert mock_err_msg in out
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="locks are no-ops on Windows")
 def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
     """Test _ensure_locked when already have lock."""
     installer = create_installer(["trivial-install-test-package"], {})
@@ -349,7 +351,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
 
     with fs.working_dir(str(tmp_path)):
         # Test "downgrade" of a read lock (to a read lock)
-        lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
+        lock = lk.lock("./test", default_timeout=1e-9, desc="test")
         lock_type = "read"
         tpl = (lock_type, lock)
         installer.locks[pkg_id] = tpl
@@ -366,7 +368,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
         assert "exception when releasing read lock" in out
 
         # Test "upgrade" of the read lock *with* read count to a write
-        lock._reads = 1
+        lock._reads = 1  # type: ignore[attr-defined]
         tpl = (lock_type, lock)
         assert installer._ensure_locked(lock_type, spec.package) == tpl
 
@@ -376,6 +378,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
         assert installer._ensure_locked(lock_type, spec.package) == tpl
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="locks are no-ops on Windows")
 @pytest.mark.parametrize("lock_type,reads,writes", [("read", 1, 0), ("write", 0, 1)])
 def test_ensure_locked_new_lock(install_mockery, tmp_path: pathlib.Path, lock_type, reads, writes):
     installer = create_installer(["pkg-a"], {})
@@ -803,15 +806,16 @@ def test_install_task_requeue_build_specs(install_mockery, monkeypatch):
     assert inst.package_id(popped_task.pkg.spec) in installer.build_tasks
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="locks are no-ops on Windows")
 def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path, capfd):
     """Test _release_lock for supposed write lock with exception."""
     installer = create_installer(["trivial-install-test-package"], {})
 
     pkg_id = "test"
     with fs.working_dir(str(tmp_path)):
-        lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
+        lock = lk.lock("./test", default_timeout=1e-9, desc="test")
         installer.locks[pkg_id] = ("write", lock)
-        assert lock._writes == 0
+        assert lock._writes == 0  # type: ignore[attr-defined]
 
         installer._release_lock(pkg_id)
         out = str(capfd.readouterr()[1])
@@ -923,15 +927,15 @@ def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch
     """Test _cleanup_failed exception path."""
     msg = "Fake release_write exception"
 
-    def _raise_except(lock):
+    def _raise_except(lock, release_fn=None):
         raise RuntimeError(msg)
 
     installer = create_installer(["trivial-install-test-package"], {})
 
-    monkeypatch.setattr(lk.Lock, "release_write", _raise_except)
+    monkeypatch.setattr(ulk.LockInterface, "release_write", _raise_except)
     pkg_id = "test"
     with fs.working_dir(str(tmp_path)):
-        lock = lk.Lock("./test", default_timeout=1e-9, desc="test")
+        lock = lk.lock("./test", default_timeout=1e-9, desc="test")
         installer.failed[pkg_id] = lock
 
         installer._cleanup_failed(pkg_id)

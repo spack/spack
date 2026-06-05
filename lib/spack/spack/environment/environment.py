@@ -1055,7 +1055,7 @@ class Environment:
         self.name = environment_name(self.path)
         self.env_subdir_path = env_subdir_path(self.path)
 
-        self.txlock = lk.Lock(self._transaction_lock_path)
+        self.txlock = lk.lock(self._transaction_lock_path)
 
         self._unify = None
         self.views: Dict[str, ViewDescriptor] = {}
@@ -1129,7 +1129,7 @@ class Environment:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self.txlock = lk.Lock(self._transaction_lock_path)
+        self.txlock = lk.lock(self._transaction_lock_path)
         self._repo = None
 
     def _re_read(self):

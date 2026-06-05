@@ -337,9 +337,9 @@ class SpecLocker:
         self.default_timeout = default_timeout
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
-        self.locks: Dict[Tuple[str, str], lk.Lock] = {}
+        self.locks: Dict[Tuple[str, str], lk.LockInterface] = {}
 
-    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+    def lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.LockInterface:
         """Returns a lock on a concrete spec.
 
         The lock is a byte range lock on the nth byte of a file.
@@ -361,9 +361,9 @@ class SpecLocker:
 
         return self.locks[key]
 
-    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.Lock:
+    def raw_lock(self, spec: "spack.spec.Spec", timeout: Optional[float] = None) -> lk.LockInterface:
         """Returns a raw lock for a Spec, but doesn't keep track of it."""
-        return lk.Lock(
+        return lk.lock(
             str(self.lock_path),
             start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
             length=1,
@@ -395,12 +395,12 @@ class SpecLocker:
         else:
             lock.release_write()
 
-    def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.Lock]]:
+    def clear(self, spec: "spack.spec.Spec") -> Tuple[bool, Optional[lk.LockInterface]]:
         key = self._lock_key(spec)
         lock = self.locks.pop(key, None)
         return bool(lock), lock
 
-    def clear_all(self, clear_fn: Optional[Callable[[lk.Lock], Any]] = None) -> None:
+    def clear_all(self, clear_fn: Optional[Callable[[lk.LockInterface], Any]] = None) -> None:
         if clear_fn is not None:
             for lock in self.locks.values():
                 clear_fn(lock)
@@ -496,7 +496,7 @@ class FailureTracker:
             except OSError as exc:
                 tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
 
-    def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
+    def mark(self, spec: "spack.spec.Spec") -> lk.LockInterface:
         """Marks a spec as failing to install.
 
         Args:
@@ -611,11 +611,11 @@ class Database:
         self.db_lock_timeout = lock_cfg.database_timeout
         tty.debug(f"DATABASE LOCK TIMEOUT: {str(self.db_lock_timeout)}s")
 
-        self.lock: Union[ForbiddenLock, lk.Lock]
+        self.lock: Union[ForbiddenLock, lk.LockInterface]
         if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
-            self.lock = lk.Lock(
+            self.lock = lk.lock(
                 str(self._lock_path),
                 default_timeout=self.db_lock_timeout,
                 desc="database",
