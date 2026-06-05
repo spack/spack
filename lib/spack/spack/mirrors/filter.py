@@ -24,15 +24,15 @@ class MirrorSpecFilter:
         False | True  | Keep
         True  | False | Skip
         """
-        filter = []
-        filtrate = []
+        included = []
+        excluded = []
         for spec in specs:
             skip = any([spec.satisfies(test) for test in self.exclude])
             keep = any([spec.satisfies(test) for test in self.include])
 
             if skip and not keep:
-                filtrate.append(spec)
+                excluded.append(spec)
             else:
-                filter.append(spec)
+                included.append(spec)
 
-        return filter, filtrate
+        return included, excluded

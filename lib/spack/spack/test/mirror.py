@@ -449,37 +449,13 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
 def test_mirror_parse_exin_clude():
     mirror_raw = {
         "url": "https://example.com",
-        "exclude": ["dev_path=*", "+shared"],
-        "include": ["+foo"],
+        "exclude": {"specs": ["dev_path=*", "+shared"]},
+        "include": {"specs": ["+foo"]},
     }
     m = spack.mirrors.mirror.Mirror(mirror_raw)
     assert "dev_path=*" in m.exclusions
+    assert "+shared" in m.exclusions
     assert "+foo" in m.inclusions
-
-
-def test_mirror_parses_exin_clude_as_file(capfd, tmp_path: pathlib.Path):
-    exclude_file = tmp_path / "filters" / "exclude.txt"
-    exclude_file.parent.mkdir(parents=True)
-    exclude_file.write_text(
-        """\
-dev_path=*
-+shared
-"""
-    )
-    mirror_raw = {
-        "url": "https://example.com",
-        "exclude": str(exclude_file),
-        "include": "include.txt",
-    }
-    # TODO figure out why SystemExit doesn't raise until the first assertion
-    # object creation should be where the exception get's raised
-    m = spack.mirrors.mirror.Mirror(mirror_raw)
-    with pytest.raises(SystemExit):
-        assert not m.inclusions
-    assert "dev_path=*" in m.exclusions
-    _, err = capfd.readouterr()
-    # should have a message to users to indicate the file does not exist
-    assert "include.txt" in err
 
 
 INPUT_SPEC_STRS = ["foo@main", "foo@main dev_path=/tmp", "foo@2.1.3"]
@@ -488,10 +464,10 @@ INPUT_SPEC_STRS = ["foo@main", "foo@main dev_path=/tmp", "foo@2.1.3"]
 @pytest.mark.parametrize(
     "include,exclude,gold",
     [
-        ([], [], [0, 1, 2]),
-        (["dev_path=*", "@main"], [], [0, 1, 2]),
-        ([], ["dev_path=*", "@main"], [2]),
-        (["dev_path=*"], ["@main"], [1, 2]),
+        ({}, {}, [0, 1, 2]),
+        ({"specs": ["dev_path=*", "@main"]}, {}, [0, 1, 2]),
+        ({}, {"specs": ["dev_path=*", "@main"]}, [2]),
+        ({"specs": ["dev_path=*"]}, {"specs": ["@main"]}, [1, 2]),
     ],
 )
 def test_filter_specs(include, exclude, gold):
@@ -500,13 +476,106 @@ def test_filter_specs(include, exclude, gold):
     m = spack.mirrors.mirror.Mirror(data)
     filter = MirrorSpecFilter(m)
 
-    filtered, filtrate = filter(input_specs)
+    included, excluded = filter(input_specs)
 
-    assert filtered is not None
-    assert filtrate is not None
+    assert included is not None
+    assert excluded is not None
 
     # lossless
-    assert (set(filtered) | set(filtrate)) == set(input_specs)
+    assert (set(included) | set(excluded)) == set(input_specs)
 
     for i in gold:
-        assert input_specs[i] in filtered
+        assert input_specs[i] in included
+
+
+def test_mirror_structured_filter_files_only(tmp_path: pathlib.Path):
+    """Structured format with only file entries reads specs from the file."""
+    filter_file = tmp_path / "exclude.txt"
+    filter_file.write_text("dev_path=*\n+shared\n")
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": {"files": [str(filter_file)]},
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    assert "dev_path=*" in m.exclusions
+    assert "+shared" in m.exclusions
+
+
+def test_mirror_structured_filter_multiple_files(tmp_path: pathlib.Path):
+    """Multiple files are merged into a single deduplicated list."""
+    file1 = tmp_path / "file1.txt"
+    file1.write_text("pkg-a\npkg-b\n")
+    file2 = tmp_path / "file2.txt"
+    file2.write_text("pkg-c\n")
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": {"files": [str(file1), str(file2)]},
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    assert set(m.exclusions) == {"pkg-a", "pkg-b", "pkg-c"}
+
+
+def test_mirror_structured_filter_files_as_string(tmp_path: pathlib.Path):
+    """A single file path given as a string (not list) is also accepted."""
+    filter_file = tmp_path / "exclude.txt"
+    filter_file.write_text("dev_path=*\n")
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": {"files": str(filter_file)},
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    assert "dev_path=*" in m.exclusions
+
+
+def test_mirror_structured_filter_missing_file_warns(capfd, tmp_path: pathlib.Path):
+    """A missing file in the structured format emits a warning and returns an empty list."""
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": {"files": [str(tmp_path / "nonexistent.txt")]},
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    # Should not raise; missing file produces an empty list with a warning
+    assert m.exclusions == []
+    _, err = capfd.readouterr()
+    assert "nonexistent.txt" in err
+
+
+def test_mirror_structured_filter_specs_override_files(tmp_path: pathlib.Path):
+    """Inline specs have higher precedence than file entries.
+
+    A spec that appears in both a file and the inline specs list should
+    appear only once in the assembled result, in the inline (later) position.
+    """
+    filter_file = tmp_path / "exclude.txt"
+    filter_file.write_text("dev_path=*\n+shared\n")
+    mirror_raw = {
+        "url": "https://example.com",
+        "exclude": {
+            "specs": ["+shared", "+bar"],  # +shared also in file
+            "files": [str(filter_file)],
+        },
+    }
+    m = spack.mirrors.mirror.Mirror(mirror_raw)
+    exclusions = m.exclusions
+    # All three unique specs present
+    assert set(exclusions) == {"dev_path=*", "+shared", "+bar"}
+    # +shared appears only once (no duplicate)
+    assert exclusions.count("+shared") == 1
+    # Inline specs (+shared, +bar) appear after file specs (dev_path=*)
+    assert exclusions.index("+shared") > exclusions.index("dev_path=*")
+    assert exclusions.index("+bar") > exclusions.index("dev_path=*")
+
+
+def test_filter_specs_from_file(tmp_path: pathlib.Path):
+    """MirrorSpecFilter correctly excludes specs loaded from a filter file."""
+    filter_file = tmp_path / "exclude.txt"
+    filter_file.write_text("dev_path=*\n@main\n")
+    input_specs = [spack.spec.Spec(s) for s in INPUT_SPEC_STRS]
+    m = spack.mirrors.mirror.Mirror({"exclude": {"files": [str(filter_file)]}})
+    f = MirrorSpecFilter(m)
+    included, excluded = f(input_specs)
+    assert (set(included) | set(excluded)) == set(input_specs)
+    # only foo@2.1.3 (index 2) should be included
+    assert input_specs[2] in included
+    assert input_specs[0] in excluded
+    assert input_specs[1] in excluded

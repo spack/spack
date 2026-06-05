@@ -1229,9 +1229,9 @@ def _url_push(
         return preexisting, excluded, errors
 
     if filter:
-        filtered, filtrate = filter(specs_to_upload)
-        excluded.extend(filtrate)
-        specs_to_upload = filtered
+        included, filter_excluded = filter(specs_to_upload)
+        excluded.extend(filter_excluded)
+        specs_to_upload = included
 
     total = len(specs_to_upload)
 

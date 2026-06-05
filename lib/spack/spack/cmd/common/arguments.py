@@ -633,25 +633,25 @@ def add_concretizer_args(subparser):
 
 
 def add_filter_args(subparser):
-    include_group = subparser.add_mutually_exclusive_group()
-    include_group.add_argument(
+    subparser.add_argument(
         "--include-file",
         help="specs which Spack should always try to add to a mirror"
-        " (listed in a file, one per line)",
+        " (listed in a file, one per line; may be combined with --include-specs)",
     )
-    include_group.add_argument(
+    subparser.add_argument(
         "--include-specs",
-        help="specs which Spack should always try to add to a mirror (specified on command line)",
+        help="specs which Spack should always try to add to a mirror"
+        " (specified on command line; may be combined with --include-file)",
     )
-    exclude_group = subparser.add_mutually_exclusive_group()
-    exclude_group.add_argument(
+    subparser.add_argument(
         "--exclude-file",
         help="specs which Spack should not try to add to a mirror"
-        " (listed in a file, one per line)",
+        " (listed in a file, one per line; may be combined with --exclude-specs)",
     )
-    exclude_group.add_argument(
+    subparser.add_argument(
         "--exclude-specs",
-        help="specs which Spack should not try to add to a mirror (specified on command line)",
+        help="specs which Spack should not try to add to a mirror"
+        " (specified on command line; may be combined with --exclude-file)",
     )
 
 
