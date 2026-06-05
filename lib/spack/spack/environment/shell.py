@@ -85,33 +85,27 @@ def activate_prompt_cmds(shell, prompt):
 
 
 def deactivate_commands(shell):
-    cmds = ""
+    # TODO: Color for bat
+    cmds = "_spack_env_unset SPACK_ENV\n"
+    cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
+
     if shell == "csh":
-        cmds += "_spack_env_unset SPACK_ENV\n"
-        cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
         cmds += "if ( $?SPACK_OLD_PROMPT ) "
         cmds += "    eval '_spack_env_set prompt SPACK_OLD_PROMPT &&"
         cmds += "          _spack_env_unset SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":
-        cmds += "_spack_env_unset SPACK_ENV\n"
-        cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
         cmds += "functions -e despacktivate;\n"
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.
         #
     elif shell == "bat":
-        # TODO: Color
-        cmds += '_spack_env_unset SPACK_ENV\n'
-        cmds += '_spack_env_unset SPACK_ENV_VIEW\n'
         # TODO: despacktivate
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
         if old_prompt:
-            cmds += f'_spack_env_set PROMPT {old_prompt}\n'
-            cmds += '_spack_env_unset SPACK_OLD_PROMPT\n'
+            cmds += f"_spack_env_set PROMPT {old_prompt}\n"
+            cmds += "_spack_env_unset SPACK_OLD_PROMPT\n"
     elif shell == "pwsh":
-        cmds += "_spack_env_unset SPACK_ENV\n"
-        cmds += "_spack_env_unset SPACK_ENV_VIEW\n"
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
             ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
@@ -119,12 +113,6 @@ def deactivate_commands(shell):
             " $spack_prompt}\n"
         )
     else:
-        cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
-        cmds += "_spack_env_unset SPACK_ENV;\n"
-        cmds += "fi;\n"
-        cmds += "if [ ! -z ${SPACK_ENV_VIEW+x} ]; then\n"
-        cmds += "_spack_env_unset SPACK_ENV_VIEW;\n"
-        cmds += "fi;\n"
         cmds += "alias despacktivate > /dev/null 2>&1 && unalias despacktivate;\n"
         cmds += "if [ ! -z ${SPACK_OLD_PS1+x} ]; then\n"
         cmds += "    if [ \"$SPACK_OLD_PS1\" = '$$$$' ]; then\n"
