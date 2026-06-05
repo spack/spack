@@ -46,7 +46,7 @@ from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.util.path import substitute_path_variables
 
-from .generate_env_scripts import update_env_activate_script
+from .generate_env_scripts import update_env_activate_script, write_env_deactivate_script
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
@@ -2287,6 +2287,7 @@ class Environment:
         for x in self.concretized_roots:
             x.new = False
         update_env_activate_script(self, os.environ.get(spack_env_view_var, "default"))
+        write_env_deactivate_script(self, os.environ.get(spack_env_view_var, "default"))
 
     def update_lockfile(self) -> None:
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:

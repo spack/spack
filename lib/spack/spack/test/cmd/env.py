@@ -215,11 +215,12 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
     new_activate_mtime = os.stat(path_to_activate_script).st_mtime
     new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
 
-    assert new_activate_mtime > initial_activate_mtime, \
+    assert new_activate_mtime > initial_activate_mtime, (
         "Activation script should be regenerated after lockfile change"
-    assert new_deactivate_mtime > initial_deactivate_mtime, \
+    )
+    assert new_deactivate_mtime > initial_deactivate_mtime, (
         "Deactivation script should be regenerated after lockfile change"
-
+    )
 
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
