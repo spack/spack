@@ -411,7 +411,7 @@ def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
         else:
             removed_specs.append(spec)
     if removed_specs:
-        colified_output = colify.colified(list(s.name for s in removed_specs), indent=4)
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
@@ -433,7 +433,7 @@ def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirro
             removed_specs.append(spec)
 
     if removed_specs:
-        colified_output = colify.colified(list(s.name for s in removed_specs), indent=4)
+        colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be pushed to the binary cache"
             " because they match exclude patterns:\n"

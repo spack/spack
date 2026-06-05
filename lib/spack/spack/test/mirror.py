@@ -452,3 +452,17 @@ def test_mirror_matches(mock_packages, mutable_config):
         {"url": "https://example.com", "select": ["brillig"], "exclude": ["brillig"]}
     )
     assert m.matches(spec, direction="fetch") is False
+
+    # Direction-specific filter overrides global filters
+    m = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "select": ["canfail"], "fetch": {"select": ["brillig"]}}
+    )
+    assert m.matches(spec, direction="fetch") is True
+    assert m.matches(spec, direction="push") is False
+
+    # Direction-specific and mirror-level config compose
+    m = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "select": ["brillig"], "fetch": {"exclude": ["brillig"]}}
+    )
+    assert m.matches(spec, direction="fetch") is False
+    assert m.matches(spec, direction="push") is True
