@@ -932,10 +932,10 @@ def test_cleanup_failed_err(install_mockery, tmp_path: pathlib.Path, monkeypatch
 
     installer = create_installer(["trivial-install-test-package"], {})
 
-    monkeypatch.setattr(ulk.LockInterface, "release_write", _raise_except)
     pkg_id = "test"
     with fs.working_dir(str(tmp_path)):
         lock = lk.lock("./test", default_timeout=1e-9, desc="test")
+        monkeypatch.setattr(type(lock), "release_write", _raise_except)
         installer.failed[pkg_id] = lock
 
         installer._cleanup_failed(pkg_id)
