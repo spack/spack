@@ -263,9 +263,11 @@ class Mirror:
             "access_token_variable",
             "profile",
             "endpoint_url",
+            "select",
+            "exclude",
         ]
         if top_level:
-            keys += ["binary", "source", "signed", "autopush", "select", "exclude"]
+            keys += ["binary", "source", "signed", "autopush"]
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:
