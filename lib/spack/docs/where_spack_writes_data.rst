@@ -70,9 +70,24 @@ Config values can reference these in any string field:
 Migrating user cache path and configs
 --------------------------------------
 
-If you have a ``~/.spack`` directory from before 1.2, each Spack command will print a warning until you run ``spack migrate``.
-Spack will continue using ``~/.spack`` as ``$state_home`` (for backward compatibility) until you migrate.
+Prior to 1.2, Spack used ``~/.spack`` to store the user config scope as well as some internal caches and the package repository.
 
+Spack 1.2+ will use XDG-compliant locations unless it detects this directory.
+Spack 1.2+ has some distinct behaviors depending on whether it was upgraded or is a "fresh" install:
+
+* In both cases, Spack will ``~/.spack`` as the user config scope if that exists and the new location (in ``~/.config/spack``) doesn't
+* Pre-1.2 instances that upgrade will also use ``~/.spack`` as a cache
+* Fresh clones of 1.2+ will use ``~/.spack`` as the user config scope, but will generate a warning and request that the user runs ``spack migrate``
+* Fresh clones of 1.2+ will automatically use ``~/.local/state/spack`` as a cache (but will copy package repositories from ``~/.spack``)
+* Both fresh and upgraded 1.2+ instances will prefer to use ``~/.config/spack`` as the user config scope if it exists
+* Pre-1.2 instances that upgrade will always use ``~/.spack`` as a cache
+
+Generally speaking:
+
+* If all your spack instances were upgraded to 1.2, then they will continue to use ``~/.spack`` for everything, and not warn
+* Fresh clones will encourage new-style paths
+
+``spack migrate`` is intended to help users move/copy important resources from ``~/.spack``.
 If all Spack instances are upgrading to 1.2+, run::
 
     spack migrate --clear
