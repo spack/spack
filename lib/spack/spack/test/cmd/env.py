@@ -222,6 +222,7 @@ def test_env_scripts_regenerate_after_lockfile_change(shell):
         "Deactivation script should be regenerated after lockfile change"
     )
 
+
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
