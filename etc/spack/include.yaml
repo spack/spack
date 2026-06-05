@@ -1,4 +1,10 @@
 include:
+  - name: user-fallback
+    path: ~/.spack
+    optional: true
+    prefer_modify: true
+    when: 'not exists("~/.config/spack") and "SPACK_USER_CONFIG_PATH" not in env and "SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
   # user configuration scope
   - name: user
     path_override_env_var: SPACK_USER_CONFIG_PATH
@@ -6,12 +12,6 @@ include:
     optional: true
     prefer_modify: true
     when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
-
-  - name: user-fallback
-    path: ~/.spack
-    optional: true
-    prefer_modify: true
-    when: 'not exists("~/.config/spack") and "SPACK_USER_CONFIG_PATH" not in env and "SPACK_DISABLE_LOCAL_CONFIG" not in env'
 
   # site configuration scope
   - name: "site"
