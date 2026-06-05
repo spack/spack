@@ -186,6 +186,44 @@ def test_env_update_activate_script(shell):
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
+def test_env_scripts_regenerate_after_lockfile_change(shell):
+    """Test that environment activation and deactivation scripts are regenerated
+    when the lockfile is modified"""
+    import time
+
+    env("create", "test")
+    environ = ev.read("test")
+
+    environ.add("mpileaks")
+    environ.concretize()
+    environ.write()
+
+    env("activate", f"--{shell}", "test")
+
+    path_to_activate_script = env_script.path_to_env_activate_shell_script(environ, shell)
+    path_to_deactivate_script = env_script.path_to_env_deactivate_shell_script(environ, shell)
+
+    initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
+    initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
+
+    time.sleep(0.1)
+
+    environ.add("mpich")
+    environ.concretize()
+    environ.write()
+
+    new_activate_mtime = os.stat(path_to_activate_script).st_mtime
+    new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
+
+    assert new_activate_mtime > initial_activate_mtime, \
+        "Activation script should be regenerated after lockfile change"
+    assert new_deactivate_mtime > initial_deactivate_mtime, \
+        "Deactivation script should be regenerated after lockfile change"
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
 def test_env_missing_deactivate_script(shell):
     """Test that environment deactivation script is recreated if missing"""
     env("create", "test")
