@@ -43,7 +43,6 @@ from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.url
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
@@ -51,6 +50,7 @@ import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.git
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
@@ -565,7 +565,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.llnl.url.determine_url_file_extension(self.url)
+            self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -717,7 +717,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
+        assert spack.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))

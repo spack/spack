@@ -30,10 +30,10 @@ from spack.vendor.typing_extensions import ParamSpec
 import spack
 import spack.config
 import spack.error
-import spack.llnl.url
 import spack.util.executable
 import spack.util.parallel
 import spack.util.path
+import spack.util.url
 import spack.util.url as url_util
 from spack.llnl.util import lang, tty
 from spack.llnl.util.filesystem import mkdirp, working_dir
@@ -932,7 +932,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in spack.llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in spack.util.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

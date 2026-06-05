@@ -5,9 +5,9 @@ import os
 from typing import TYPE_CHECKING, Optional
 
 import spack.fetch_strategy
-import spack.llnl.url
 import spack.oci.image
 import spack.repo
+import spack.util.url
 from spack.error import MirrorError
 from spack.llnl.util.filesystem import mkdirp, symlink
 
@@ -82,7 +82,7 @@ def _determine_extension(fetcher):
     if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = spack.llnl.url.determine_url_file_extension(fetcher.url)
+            ext = spack.util.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots

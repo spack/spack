@@ -13,9 +13,9 @@ import spack.error
 import spack.fetch_strategy
 import spack.llnl.util.filesystem
 import spack.util.spack_json as sjson
-from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
+from spack.util.url import allowed_archive
 
 if TYPE_CHECKING:
     import spack.package_base
