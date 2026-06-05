@@ -420,7 +420,7 @@ def test_mirror_name_or_url_dir_parsing(tmp_path: pathlib.Path):
 def test_spec_matches_filters(mock_packages, mutable_config, select, exclude, spec_str, expected):
     """Test the spec_matches_filters standalone function."""
     spec = spack.concretize.concretize_one(spec_str)
-    assert spack.mirrors.mirror.spec_matches_filters(spec, select, exclude) is expected
+    assert spack.mirrors.mirror._spec_matches_filters(spec, select, exclude) is expected
 
 
 def test_mirror_matches(mock_packages, mutable_config):

@@ -17,7 +17,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
@@ -32,7 +31,9 @@ from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.string import plural
+from spack.llnl.util import tty
 from spack.llnl.util.lang import elide_list, stable_partition
+from spack.llnl.util.tty import colify
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
@@ -401,16 +402,16 @@ def _format_spec(spec: Spec) -> str:
     return spec.cformat("{name}{@version}{/hash:7}")
 
 
-def _skip_no_redistribute_for_public(specs):
-    remaining_specs = list()
-    removed_specs = list()
+def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
     for spec in specs:
         if spec.package.redistribute_binary:
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)
     if removed_specs:
-        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
+        colified_output = colify.colified(list(s.name for s in removed_specs), indent=4)
         tty.debug(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
@@ -420,10 +421,10 @@ def _skip_no_redistribute_for_public(specs):
     return remaining_specs
 
 
-def _filter_specs_for_push(specs, mirror):
+def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirror) -> List[Spec]:
     """Filter specs based on mirror select/exclude patterns."""
-    remaining_specs = list()
-    removed_specs = list()
+    remaining_specs: List[Spec] = []
+    removed_specs: List[Spec] = []
 
     for spec in specs:
         if mirror.matches(spec):
@@ -432,8 +433,8 @@ def _filter_specs_for_push(specs, mirror):
             removed_specs.append(spec)
 
     if removed_specs:
-        colified_output = tty.colify.colified(list(s.name for s in removed_specs), indent=4)
-        tty.info(
+        colified_output = colify.colified(list(s.name for s in removed_specs), indent=4)
+        tty.debug(
             "The following specs will not be pushed to the binary cache"
             " because they match exclude patterns:\n"
             f"{colified_output}"

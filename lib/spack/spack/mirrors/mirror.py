@@ -4,7 +4,19 @@
 import operator
 import os
 import urllib.parse
-from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union, overload
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -14,6 +26,9 @@ import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
 
+if TYPE_CHECKING:
+    import spack.spec
+
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
@@ -21,7 +36,7 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
-def spec_matches_filters(spec: "spack.spec.Spec", select: List[str], exclude: List[str]) -> bool:
+def _spec_matches_filters(spec: "spack.spec.Spec", select: List[str], exclude: List[str]) -> bool:
     """Check if a spec matches select/exclude filters.
 
     A spec is included when:
@@ -154,7 +169,7 @@ class Mirror:
 
     def matches(self, spec: "spack.spec.Spec") -> bool:
         """Check if a spec passes this mirror's select/exclude filters."""
-        return spec_matches_filters(spec, self.select, self.exclude)
+        return _spec_matches_filters(spec, self.select, self.exclude)
 
     @property
     def fetch_url(self) -> str:
