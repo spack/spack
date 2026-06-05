@@ -821,7 +821,7 @@ class ViewAction:
 # env view
 #
 def env_view_setup_parser(subparser):
-    """\
+    """
     manage the environment's view
 
     provide the path when enabling a view with a non-default path
@@ -841,8 +841,6 @@ def env_view(args):
 
     if args.action == ViewAction.regenerate:
         env.regenerate_views()
-        generate_script.write_env_activate_script(env, args.view)
-        generate_script.write_env_deactivate_script(env, args.view)
     elif args.action == ViewAction.enable:
         if args.view_path:
             view_path = args.view_path
@@ -853,6 +851,10 @@ def env_view(args):
     elif args.action == ViewAction.disable:
         env.update_default_view(path_or_bool=False)
         env.write()
+
+        generate_script.write_env_activate_script(env, os.environ.get("SPACK_ENV_VIEW", ""))
+        generate_script.write_env_deactivate_script(env, os.environ.get("SPACK_ENV_VIEW", ""))
+
 
 
 #

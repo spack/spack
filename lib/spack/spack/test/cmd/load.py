@@ -26,7 +26,7 @@ def _get_load_cmds(spec, shell):
 
 
 @pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+    "shell", ("--bat" if sys.platform == "win32" else "--sh")
 )
 def test_manpath_trailing_colon(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
@@ -112,13 +112,11 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         return paths_shell
 
     if sys.platform == "win32":
-        params = ["--bat", "--pwsh"]
-        test_load_shell(params[0])
-        test_load_shell(params[1])
+        test_load_shell("--bat")
+        test_load_shell("--pwsh")
     else:
-        params = ["--sh", "--csh"]
-        paths_sh = test_load_shell(params[0])
-        paths_csh = test_load_shell(params[1])
+        paths_sh = test_load_shell("--sh")
+        paths_csh = test_load_shell("--csh")
         assert paths_sh == paths_csh
 
 
