@@ -20,7 +20,7 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
-import spack.llnl.string as string
+import spack.util.string as string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine

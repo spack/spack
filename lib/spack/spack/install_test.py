@@ -27,7 +27,7 @@ import spack.util.executable
 import spack.util.path
 import spack.util.spack_json as sjson
 from spack.error import InstallError
-from spack.llnl.string import plural
+from spack.util.string import plural
 from spack.llnl.util.lang import nullcontext
 from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec

@@ -61,7 +61,7 @@ import spack.spec
 import spack.util.crypto
 import spack.util.spack_yaml as syaml
 import spack.variant
-from spack.llnl.string import plural
+from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}

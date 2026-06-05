@@ -19,7 +19,7 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_lookup
-import spack.llnl.string
+import spack.util.string
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
@@ -599,7 +599,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

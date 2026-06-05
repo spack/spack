@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
-import spack.llnl.string
+import spack.util.string
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ import spack.llnl.string
     ],
 )
 def test_plural(arguments, expected):
-    assert spack.llnl.string.plural(*arguments) == expected
+    assert spack.util.string.plural(*arguments) == expected
 
 
 @pytest.mark.parametrize(
@@ -26,7 +26,7 @@ def test_plural(arguments, expected):
     [((["one", "two"],), ["'one'", "'two'"]), ((["one", "two"], "^"), ["^one^", "^two^"])],
 )
 def test_quote(arguments, expected):
-    assert spack.llnl.string.quote(*arguments) == expected
+    assert spack.util.string.quote(*arguments) == expected
 
 
 @pytest.mark.parametrize(
@@ -38,5 +38,5 @@ def test_quote(arguments, expected):
     ],
 )
 def test_comma_and_or(input, expected_and, expected_or):
-    assert spack.llnl.string.comma_and(input) == expected_and
-    assert spack.llnl.string.comma_or(input) == expected_or
+    assert spack.util.string.comma_and(input) == expected_and
+    assert spack.util.string.comma_or(input) == expected_or

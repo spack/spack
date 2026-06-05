@@ -7,7 +7,7 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import spack.llnl.string
+import spack.util.string
 import spack.llnl.util.lang
 import spack.repo
 import spack.spec
@@ -163,7 +163,7 @@ def checksum(parser, args):
             exit(0)
         url_dict = filtered_url_dict
     else:
-        tty.info(f"Found {spack.llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
+        tty.info(f"Found {spack.util.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options

@@ -20,7 +20,7 @@ import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
-from spack.llnl.string import plural
+from spack.util.string import plural
 from spack.llnl.util import tty
 
 description = "build and install packages"

@@ -54,7 +54,7 @@ import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.llnl.string import comma_and, quote
+from spack.util.string import comma_and, quote
 from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which

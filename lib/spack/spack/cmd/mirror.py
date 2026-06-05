@@ -22,7 +22,7 @@ import spack.util.parallel
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.string import comma_or
+from spack.util.string import comma_or
 
 description = "manage mirrors (source and binary)"
 section = "config"

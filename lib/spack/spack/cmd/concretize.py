@@ -9,7 +9,7 @@ import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
 import spack.llnl.util.tty as tty
-from spack.llnl.string import plural
+from spack.util.string import plural
 
 description = "concretize an environment and write a lockfile"
 section = "environments"

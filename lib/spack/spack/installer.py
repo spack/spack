@@ -62,7 +62,7 @@ import spack.rewiring
 import spack.store
 import spack.util.path
 import spack.util.timer as timer
-from spack.llnl.string import ordinal
+from spack.util.string import ordinal
 from spack.llnl.util.lang import pretty_seconds
 from spack.llnl.util.tty.color import colorize
 from spack.llnl.util.tty.log import log_output, preserve_terminal_settings
