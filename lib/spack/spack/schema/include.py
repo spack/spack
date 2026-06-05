@@ -45,12 +45,6 @@ properties: Dict[str, Any] = {
                             "raw form). Supports file, ftp, http, https schemes and "
                             "Spack/environment variables",
                         },
-                        "backwards_compat": {
-                            "type": "string",
-                            "description": "Fallback path to use if the primary path does not "
-                            "exist. Used for backwards compatibility when migrating config "
-                            "locations.",
-                        },
                         "sha256": {
                             "type": "string",
                             "description": "Required SHA256 hash for remote URLs to verify "

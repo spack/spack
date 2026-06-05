@@ -175,13 +175,14 @@ def substitute_include_path(path, context):
 
 
 class ConfigScope:
-    def __init__(self, name: str, included: bool = False) -> None:
+    def __init__(self, name: str, included: bool = False, when: str = "") -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.backwards_compat_fallback = False
         self.prefer_modify = False
         self.included = included
+        self.when = when
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -260,8 +261,9 @@ class DirectoryConfigScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -329,6 +331,7 @@ class SingleFileScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        when: str = "",
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -347,7 +350,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name, included)
+        super().__init__(name, included, when)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -1231,7 +1234,11 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True
+                config_name,
+                config_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
+                when=self.when,
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1241,6 +1248,7 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
+                when=self.when,
             )
         elif exists:
             raise ValueError(
@@ -1301,31 +1309,14 @@ class IncludePath(OptionalInclude):
     def __init__(self, entry: dict):
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
-        env_override = False
         if path_override_env_var and path_override_env_var in os.environ:
             path = os.environ[path_override_env_var]
-            env_override = True
         else:
             path = entry.get("path", "")
 
         context_prefix = f"({self.name}) " if self.name else ""
         context = f"{context_prefix}{path}"
-        new_path = substitute_include_path(path, context)
-        old_path = None
-        backwards_compat = entry.get("backwards_compat", None)
-        if backwards_compat:
-            old_path = substitute_include_path(backwards_compat, context)
-        self.backwards_compat_fallback = False
-        if (
-            not env_override
-            and old_path
-            and os.path.exists(old_path)
-            and not os.path.exists(new_path)
-        ):
-            self.path = old_path
-            self.backwards_compat_fallback = True
-        else:
-            self.path = new_path
+        self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1376,8 +1367,6 @@ class IncludePath(OptionalInclude):
 
         scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
-            if self.backwards_compat_fallback:
-                scope.backwards_compat_fallback = True
             self._scopes = [scope]
 
         return self._scopes

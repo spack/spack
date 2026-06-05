@@ -933,19 +933,27 @@ def _old_dotspack_warning():
 
     # Check if any config scope is using ~/.spack (means explicit configuration)
     reasons = []
+    # The 'when' condition for the fallback ~/.spack scope
+    fallback_when = (
+        'not exists("~/.config/spack") and "SPACK_USER_CONFIG_PATH" not in env'
+        ' and "SPACK_DISABLE_LOCAL_CONFIG" not in env'
+    )
+
     for scope in spack.config.CONFIG.scopes.values():
         if hasattr(scope, "path") and uses_old_dotspack(scope.path):
-            tty.debug(f"Scope {scope.name} uses ~/.spack: checking if this is a default")
-            if getattr(scope, "backwards_compat_fallback", False):
-                reasons.append(f"Used by config scope: {scope.name}")
+            tty.debug(f"Scope {scope.name} uses ~/.spack: checking if this is a fallback")
+            # Check if this is the fallback scope (has the specific 'when' condition)
+            if hasattr(scope, "when") and scope.when == fallback_when:
+                reasons.append("Fallback ~/.spack scope activated")
             else:
                 # A config scope explicitly targets ~/.spack: don't warn
                 tty.debug(
-                    f"Skip .spack warning: scope {scope.name} includes ~/.spack: {scope.path}"
+                    f"Skip .spack warning: scope {scope.name} explicitly"
+                    f" uses ~/.spack: {scope.path}"
                 )
                 return None
 
-    # If we found backwards_compat usage, return the warning message
+    # If we found fallback usage, return the warning message
     if reasons:
         return f"""\
 Spack is using the old ~/.spack directory layout.

@@ -5845,9 +5845,19 @@ def eval_conditional(string):
     # Import here to avoid circular dependencies
     import spack.paths
 
+    def exists(path):
+        """Check if a path exists, expanding ~ and environment variables."""
+        expanded = os.path.expanduser(os.path.expandvars(path))
+        return os.path.exists(expanded)
+
     valid_variables = get_host_environment()
     valid_variables.update(
-        {"re": re, "env": os.environ, "layout_detected": spack.paths.detect_layout}
+        {
+            "re": re,
+            "env": os.environ,
+            "layout_detected": spack.paths.detect_layout,
+            "exists": exists,
+        }
     )
     return eval(string, valid_variables)
 
