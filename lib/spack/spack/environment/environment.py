@@ -1718,17 +1718,12 @@ class Environment:
         """
         old_concretized_roots = self.concretized_roots[:]
         old_specs_by_hash = self.specs_by_hash.copy()
-        old_concrete_data = self.included_concrete_spec_data
 
         # This is slightly complicated to pass by value the correct portion of the way
         # down the stack
-        old_included_roots = {
-            env_name: concretized_user_specs[:]
-            for env_name, concretized_user_specs in self.included_concretized_user_specs.items()
-        }
-        old_included_order = {
-            env_name: concretized_order[:]
-            for env_name, concretized_order in self.included_concretized_order.items()
+        old_concrete_data = {
+            env_name: env_data.copy()
+            for env_name, env_data in self.included_concrete_spec_data.items()
         }
         old_included_by_hash = {
             env_name: env_by_hash.copy()
@@ -1740,8 +1735,6 @@ class Environment:
         except BaseException:
             self.concretized_roots = old_concretized_roots
             self.specs_by_hash = old_specs_by_hash
-            self.included_concretized_user_specs = old_included_roots
-            self.included_concretized_order = old_included_order
             self.included_specs_by_hash = old_included_by_hash
             self.included_concrete_spec_data = old_concrete_data
             raise
