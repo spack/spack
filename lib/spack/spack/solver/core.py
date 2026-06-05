@@ -63,8 +63,7 @@ class AspFunction:
         parts = []
         for arg in self.args:
             if type(arg) is str:
-                if "\\" in arg or "\n" in arg or '"' in arg:
-                    arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
+                arg = arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"")
                 parts.append(f'"{arg}"')
             elif type(arg) is AspFunction or type(arg) is int or type(arg) is AspVar:
                 parts.append(str(arg))
