@@ -57,7 +57,7 @@ connection = {
 }
 
 
-#: Mirror connection inside pull/push keys
+#: Mirror connection inside fetch/push keys
 fetch_and_push = {
     "description": "Mirror connection configuration for fetching or pushing packages, can be a"
     "simple URL string or detailed connection object",
@@ -76,13 +76,13 @@ fetch_and_push = {
     ],
 }
 
-#: Mirror connection when no pull/push keys are set
+#: Mirror connection when no fetch/push keys are set
 mirror_entry = {
     "type": "object",
     "description": "Mirror configuration entry supporting both source package archives and "
     "binary build caches with optional authentication",
     "additionalProperties": False,
-    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["pull"]}],
+    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["push"]}],
     "properties": {
         "source": {
             "type": "boolean",
