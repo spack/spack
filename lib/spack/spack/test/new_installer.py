@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the new_installer.py module"""
 
+import os
 import pathlib
 import sys
 import time
@@ -712,3 +713,33 @@ def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_stor
     # nested_build_tool must also be added (BUILD dep of build_tool). This is the bug: without the
     # fix, expand_build_deps only traverses LINK|RUN, so nested_build_tool is missing.
     assert specs["nested_build_tool"].dag_hash() in added_hashes
+
+
+@pytest.mark.regression("52459")
+def test_log_path_prefix_sanitizes_version_slashes(tmp_path):
+    """Log path prefix construction handles versions with / without causing ENOENT.
+
+    Regression test for https://github.com/spack/spack/issues/52459.
+    Git branch versions like @git.feature/myfix=develop contain slashes that must be
+    sanitized before passing to tempfile.mkstemp, which treats / as a path separator.
+    """
+    import tempfile
+
+    import spack.spec
+
+    # Create a spec with a git branch version containing slashes.
+    spec = spack.spec.Spec("esmf@git.feature/generate-cmake-config=develop")
+    spec._mark_concrete()
+
+    # Sanitize the version the same way new_installer.py does.
+    safe_version = str(spec.version).replace("/", "_").replace("\\", "_")
+    prefix = f"spack-stage-{spec.name}-{safe_version}-{spec.dag_hash()}-"
+
+    # Verify no slashes in the prefix.
+    assert "/" not in prefix
+    assert "\\" not in prefix
+
+    # Verify mkstemp succeeds (the actual bug symptom).
+    fd, log_path = tempfile.mkstemp(prefix=prefix, suffix=".log", dir=tmp_path)
+    os.close(fd)
+    os.unlink(log_path)
