@@ -25,9 +25,7 @@ def _get_load_cmds(spec, shell):
         return f.read()
 
 
-@pytest.mark.parametrize(
-    "shell", ("--bat" if sys.platform == "win32" else "--sh")
-)
+@pytest.mark.parametrize("shell", ("--bat" if sys.platform == "win32" else "--sh"))
 def test_manpath_trailing_colon(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):

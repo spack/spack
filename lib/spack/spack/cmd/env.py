@@ -856,7 +856,6 @@ def env_view(args):
         generate_script.write_env_deactivate_script(env, os.environ.get("SPACK_ENV_VIEW", ""))
 
 
-
 #
 # env status
 #
