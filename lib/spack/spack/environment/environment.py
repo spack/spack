@@ -2894,20 +2894,27 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
-def display_specs(specs: List[spack.spec.Spec], *, highlight_non_defaults: bool = False) -> None:
+def display_specs(
+    specs: List[spack.spec.Spec],
+    *,
+    highlight_non_defaults: bool = False,
+    status_fn: Optional[Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]] = None,
+) -> None:
     """Displays a list of specs traversed breadth-first, covering nodes, with install status.
 
     Args:
         specs: list of specs to be displayed
         highlight_non_defaults: if True, highlights non-default versions and variants in the specs
             being displayed
+        status_fn: callable mapping a spec to its InstallStatus; defaults to
+            ``spack.spec.Spec.install_status``
     """
     tree_string = spack.spec.tree(
         specs,
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=spack.spec.Spec.install_status,
+        status_fn=status_fn if status_fn is not None else spack.spec.Spec.install_status,
         highlight_version_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),

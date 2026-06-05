@@ -252,7 +252,7 @@ def make_env_decorator(env):
     return decorator
 
 
-def display_env(env, args, decorator, results):
+def display_env(env, args, decorator, results, status_fn=None):
     """Display extra find output when running in an environment.
 
     In an environment, ``spack find`` outputs a preliminary section
@@ -264,12 +264,13 @@ def display_env(env, args, decorator, results):
     tty.msg(f"In environment {env.name} ({root_spec_str})")
 
     concrete_specs = {x.root: env.specs_by_hash[x.hash] for x in env.concretized_roots}
+    _status_fn = status_fn if status_fn is not None else spack.spec.Spec.install_status
 
     def root_decorator(spec, string):
         """Decorate root specs with their install status if needed"""
         concrete = concrete_specs.get(spec)
         if concrete:
-            status = color.colorize(concrete.install_status().value)
+            status = color.colorize(_status_fn(concrete).value)
             hash = concrete.dag_hash()
         else:
             status = color.colorize(spack.spec.InstallStatus.absent.value)
@@ -430,7 +431,7 @@ def find(parser, args):
 
         if not args.format:
             if env:
-                display_env(env, args, decorator, results)
+                display_env(env, args, decorator, results, status_fn=status_fn)
 
         if not args.only_roots:
             display_results = list(results)
