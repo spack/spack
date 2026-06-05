@@ -20,10 +20,10 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
-import spack.util.string as string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
+import spack.util.string as string
 from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify

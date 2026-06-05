@@ -23,7 +23,6 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.util.string import comma_or
 from spack.llnl.util import tty
 from spack.llnl.util.filesystem import (
     mkdirp,
@@ -42,6 +41,7 @@ from spack.util.link_tree import (
     MultiPrefixMerger,
     SingleMergeConflictError,
 )
+from spack.util.string import comma_or
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 

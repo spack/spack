@@ -84,7 +84,6 @@ from spack import traverse
 from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.util.string import plural
 from spack.llnl.util.filesystem import join_path, symlink
 from spack.llnl.util.lang import dedupe, stable_partition
 from spack.llnl.util.tty.color import cescape, colorize
@@ -101,6 +100,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.string import plural
 
 #
 # This can be set by the user to globally disable parallel builds.

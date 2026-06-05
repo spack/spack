@@ -87,7 +87,6 @@ import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
 import spack.llnl.path
-import spack.util.string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
@@ -104,6 +103,7 @@ import spack.util.hash
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
 import spack.variant as vt
 import spack.version
 import spack.version as vn

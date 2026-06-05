@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Opt
 import spack.caches
 import spack.config
 import spack.error
-import spack.util.string
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.oci.image
@@ -27,6 +26,7 @@ import spack.util.crypto
 import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
+import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
 from spack.llnl.util.filesystem import (

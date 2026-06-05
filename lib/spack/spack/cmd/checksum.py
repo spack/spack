@@ -7,11 +7,11 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import spack.util.string
 import spack.llnl.util.lang
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.llnl.util import tty

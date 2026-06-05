@@ -20,8 +20,8 @@ import spack.store
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
-from spack.util.string import plural
 from spack.llnl.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
