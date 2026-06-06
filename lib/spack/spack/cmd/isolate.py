@@ -41,7 +41,7 @@ def _get_scope_indices(included_scopes, destination):
 
 def _isolate_bootstrap_config(new_user_path):
     bootstrap_yaml = {"bootstrap": {"root": os.path.join(new_user_path, "bootstrap")}}
-    with open(os.path.join(ISOLATE_PATH, "bootstrap.yaml"), "w") as f:
+    with open(os.path.join(ISOLATE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
         syaml.dump(bootstrap_yaml, f)
 
 
@@ -56,7 +56,7 @@ def _isolate_config_config(new_user_path):
             "misc_cache:": misc_cache_dir,
         }
     }
-    with open(os.path.join(ISOLATE_PATH, "config.yaml"), "w") as f:
+    with open(os.path.join(ISOLATE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
         syaml.dump(config_yaml, f)
 
 
@@ -70,7 +70,7 @@ def _isolate_repos_config(new_user_path):
             if "destination" not in value:
                 value["destination"] = os.path.join(new_user_path, "repos", key)
                 new_repos_config[key] = value
-    with open(os.path.join(ISOLATE_PATH, "repos.yaml"), "w") as f:
+    with open(os.path.join(ISOLATE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
         syaml.dump({"repos": new_repos_config}, f)
 
 
@@ -154,7 +154,7 @@ def isolate(parser, args):
     else:
         include_config.insert(0, new_user_scope)
 
-    with open(INCLUDE_PATH, "w") as f:
+    with open(INCLUDE_PATH, "w", encoding="utf-8") as f:
         syaml.dump({"include": include_config}, f)
 
     if args.bootstrap:
