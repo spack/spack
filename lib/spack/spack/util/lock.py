@@ -23,7 +23,7 @@ from spack.llnl.util.lock import (
 class Lock(Llnl_lock):
     """Lock that can be disabled.
 
-    This overrides the ``_lock()`` and ``_unlock()`` methods from
+    This overrides the ``_lock()`` and ``release()`` methods from
     ``spack.llnl.util.lock`` so that all the lock API calls will succeed, but
     the actual locking mechanism can be disabled via ``_enable_locks``.
     """
@@ -58,15 +58,15 @@ class Lock(Llnl_lock):
             return super()._lock(op, timeout)
         return 0.0, 0
 
-    def _poll_lock(self, op: int) -> bool:
+    def poll(self, op: int) -> bool:
         if self._enable:
-            return super()._poll_lock(op)
+            return super().poll(op)
         return True
 
-    def _unlock(self) -> None:
+    def release(self) -> None:
         """Unlock call that always succeeds."""
         if self._enable:
-            super()._unlock()
+            super().release()
 
     def try_acquire_read(self) -> bool:
         if self._enable:

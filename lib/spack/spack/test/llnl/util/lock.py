@@ -1245,10 +1245,10 @@ def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_m
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
         if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock._poll_lock(fcntl.LOCK_EX)
+            assert not lock.poll(fcntl.LOCK_EX)
         else:
             with pytest.raises(OSError, match=err_msg):
-                lock._poll_lock(fcntl.LOCK_EX)
+                lock.poll(fcntl.LOCK_EX)
 
         monkeypatch.undo()
         lock.release_read()

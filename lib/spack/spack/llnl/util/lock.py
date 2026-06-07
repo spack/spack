@@ -359,12 +359,7 @@ class Lock:
         self._log_acquiring("{0} LOCK".format(op_str))
         timeout = timeout or self.default_timeout
 
-        fh = self._ensure_valid_handle()
-
-        if LockType.to_module(op) == fcntl.LOCK_EX and fh.mode == "rb":
-            # Attempt to upgrade to write lock w/a read-only file.
-            # If the file were writable, we'd have opened it rb+
-            raise LockROFileError(self.path)
+        self.prepare(op)
 
         self._log_debug(
             "{} locking [{}:{}]: timeout {}".format(
@@ -378,7 +373,7 @@ class Lock:
         poll_intervals = Lock._poll_interval_generator()
 
         while True:
-            if self._poll_lock(op):
+            if self.poll(op):
                 return time.monotonic() - start_time, num_attempts
             if time.monotonic() >= end_time:
                 break
@@ -387,7 +382,13 @@ class Lock:
 
         raise LockTimeoutError(op, self.path, time.monotonic() - start_time, num_attempts)
 
-    def _poll_lock(self, op: int) -> bool:
+    def prepare(self, op: int) -> None:
+        """Ensure the lock file is open; raise if a write lock is requested on a read-only file."""
+        fh = self._ensure_valid_handle()
+        if LockType.to_module(op) == fcntl.LOCK_EX and fh.mode == "rb":
+            raise LockROFileError(self.path)
+
+    def poll(self, op: int) -> bool:
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
@@ -452,7 +453,7 @@ class Lock:
         self._file_ref.fh.flush()
         os.fsync(self._file_ref.fh.fileno())
 
-    def _unlock(self) -> None:
+    def release(self) -> None:
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
         Releases the lock regardless of mode. Note that read locks may be masquerading as write
@@ -529,8 +530,8 @@ class Lock:
             op = LockType.READ
         else:
             return
-        self._ensure_valid_handle()
-        if not self._poll_lock(op):
+        self.prepare(op)
+        if not self.poll(op):
             raise LockTimeoutError(op, self.path, time=0, attempts=1)
 
     def try_acquire_read(self) -> bool:
@@ -539,8 +540,8 @@ class Lock:
         Returns True if the lock was acquired, False if it would block.
         """
         if self._reads == 0 and self._writes == 0:
-            self._ensure_valid_handle()
-            if not self._poll_lock(LockType.READ):
+            self.prepare(LockType.READ)
+            if not self.poll(LockType.READ):
                 return False
             self._reads += 1
             self._log_acquired("READ LOCK", 0, 1)
@@ -556,10 +557,8 @@ class Lock:
         Returns True if the lock was acquired, False if it would block.
         """
         if self._writes == 0:
-            fh = self._ensure_valid_handle()
-            if LockType.to_module(LockType.WRITE) == fcntl.LOCK_EX and fh.mode == "rb":
-                raise LockROFileError(self.path)
-            if not self._poll_lock(LockType.WRITE):
+            self.prepare(LockType.WRITE)
+            if not self.poll(LockType.WRITE):
                 return False
             self._writes += 1
             self._log_acquired("WRITE LOCK", 0, 1)
@@ -644,7 +643,7 @@ class Lock:
             release_fn = release_fn or true_fn
             result = release_fn()
 
-            self._unlock()  # can raise LockError.
+            self.release()  # can raise LockError.
             self._reads = 0
             self._log_released(locktype)
             return bool(result)
@@ -679,7 +678,7 @@ class Lock:
             if self._reads > 0:
                 self._lock(LockType.READ)
             else:
-                self._unlock()  # can raise LockError.
+                self.release()  # can raise LockError.
 
             self._writes = 0
             self._log_released(locktype)
