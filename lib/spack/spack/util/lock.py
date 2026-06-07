@@ -7,9 +7,10 @@
 import os
 import stat
 import sys
-from typing import Optional, Tuple
+from typing import Optional
 
 import spack.error
+from spack.llnl.util.lock import DummyBackend
 from spack.llnl.util.lock import Lock as Llnl_lock
 from spack.llnl.util.lock import (
     LockError,
@@ -23,9 +24,8 @@ from spack.llnl.util.lock import (
 class Lock(Llnl_lock):
     """Lock that can be disabled.
 
-    This overrides the ``_lock()`` and ``release()`` methods from
-    ``spack.llnl.util.lock`` so that all the lock API calls will succeed, but
-    the actual locking mechanism can be disabled via ``_enable_locks``.
+    Swaps in a ``DummyBackend`` when ``enable`` is False (or on Windows), so all the lock API
+    calls will succeed without performing real filesystem locks.
     """
 
     def __init__(
@@ -39,7 +39,6 @@ class Lock(Llnl_lock):
         desc: str = "",
         enable: bool = True,
     ) -> None:
-        self._enable = sys.platform != "win32" and enable
         super().__init__(
             path,
             start=start,
@@ -48,39 +47,8 @@ class Lock(Llnl_lock):
             debug=debug,
             desc=desc,
         )
-
-    def _reaffirm_lock(self) -> None:
-        if self._enable:
-            super()._reaffirm_lock()
-
-    def _lock(self, op: int, timeout: Optional[float] = 0.0) -> Tuple[float, int]:
-        if self._enable:
-            return super()._lock(op, timeout)
-        return 0.0, 0
-
-    def poll(self, op: int) -> bool:
-        if self._enable:
-            return super().poll(op)
-        return True
-
-    def release(self) -> None:
-        """Unlock call that always succeeds."""
-        if self._enable:
-            super().release()
-
-    def try_acquire_read(self) -> bool:
-        if self._enable:
-            return super().try_acquire_read()
-        return True
-
-    def try_acquire_write(self) -> bool:
-        if self._enable:
-            return super().try_acquire_write()
-        return True
-
-    def cleanup(self, *args) -> None:
-        if self._enable:
-            super().cleanup(*args)
+        if sys.platform == "win32" or not enable:
+            self.backend = DummyBackend()
 
 
 def check_lock_safety(path: str) -> None:
