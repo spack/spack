@@ -402,10 +402,11 @@ class Lock:
             if self.debug:
                 # All locks read the owner PID and host
                 self._read_log_debug_data()
-                self._log_debug(
+                tty.debug(
                     "{0} locked {1} [{2}:{3}] (owner={4})".format(
                         LockType.to_str(op), self.path, self._start, self._length, self.pid
-                    )
+                    ),
+                    level=2,
                 )
 
                 # Exclusive locks write their PID/host
