@@ -359,6 +359,62 @@ def test_gitsubmodule(
 
 
 @pytest.mark.disable_clean_stage_check
+def test_git_no_cache_refetches_existing_stage(mock_git_repository, tmp_path: pathlib.Path):
+    testpath = str(tmp_path / "stage")
+    submodule_file = os.path.join(
+        "third_party",
+        "submodule0",
+        "r0_file_0",
+    )
+
+    first_fetcher = GitFetchStrategy(git=mock_git_repository.url)
+    with Stage(first_fetcher, path=testpath) as stage:
+        stage.fetch()
+        assert not os.path.isfile(os.path.join(stage.source_path, submodule_file))
+
+        no_cache_fetcher = GitFetchStrategy(
+            git=mock_git_repository.url, no_cache=True, submodules=True
+        )
+        stage.fetcher = stage.default_fetcher = no_cache_fetcher
+        no_cache_fetcher.stage = stage
+
+        stage.fetch()
+        assert os.path.isfile(os.path.join(stage.source_path, submodule_file))
+
+
+def test_git_commit_variant_preserves_no_cache(
+    mock_git_repository, mutable_mock_repo, monkeypatch
+):
+    t = mock_git_repository.checks["commit"]
+
+    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    monkeypatch.setitem(
+        pkg_class.versions,
+        Version("git"),
+        {"git": mock_git_repository.url, "no_cache": True},
+    )
+    pkg = pkg_class(Spec("git-test"))
+    pkg.spec.variants["commit"] = SingleValuedVariant("commit", t.args["commit"])
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, Version("git"))
+
+    assert fetcher.commit == t.args["commit"]
+    assert not fetcher.cache_enabled
+    assert not fetcher.cachable
+
+
+def test_gitsubmodule_cache_key_changes_with_submodules(mock_git_repository):
+    t = mock_git_repository.checks["commit"]
+
+    fetcher_without_submodules = GitFetchStrategy(**t.args)
+    args_with_submodules = copy.copy(t.args)
+    args_with_submodules["submodules"] = True
+    fetcher_with_submodules = GitFetchStrategy(**args_with_submodules)
+
+    assert fetcher_without_submodules.mirror_id() != fetcher_with_submodules.mirror_id()
+
+
+@pytest.mark.disable_clean_stage_check
 def test_gitsubmodules_callable(
     mock_git_repository, default_mock_concretization, mutable_mock_repo, monkeypatch
 ):

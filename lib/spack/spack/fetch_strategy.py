@@ -917,6 +917,26 @@ class GitFetchStrategy(VCSFetchStrategy):
                 sparse_string = "_".join(sparse_paths)
                 sparse_hash = hashlib.sha1(sparse_string.encode("utf-8")).hexdigest()
                 provenance_id = f"{provenance_id}_{sparse_hash}"
+            cache_options = []
+            submodules = self.submodules
+            if callable(submodules):
+                submodules = submodules(self.package) if self.package else True
+            if isinstance(submodules, str):
+                submodules = [submodules]
+            if submodules:
+                if isinstance(submodules, (list, tuple)):
+                    submodules = sorted(submodules)
+                cache_options.append(("submodules", submodules))
+            if self.submodules_delete:
+                cache_options.append(("submodules_delete", sorted(self.submodules_delete)))
+            if self.get_full_repo:
+                cache_options.append(("get_full_repo", True))
+            if self.skip_checkout:
+                cache_options.append(("skip_checkout", True))
+            if cache_options:
+                options_string = repr(cache_options)
+                options_hash = hashlib.sha1(options_string.encode("utf-8")).hexdigest()
+                provenance_id = f"{provenance_id}_{options_hash}"
             result = os.path.sep.join(["git", repo_path, provenance_id])
             return result
 
@@ -934,8 +954,12 @@ class GitFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug(f"Already fetched {self.stage.source_path}")
-            return
+            if not self.cache_enabled:
+                tty.debug(f"Removing cached git source from {self.stage.source_path}")
+                fs.remove_linked_tree(self.stage.source_path)
+            else:
+                tty.debug(f"Already fetched {self.stage.source_path}")
+                return
 
         self._clone_src()
         self.submodule_operations()
@@ -1649,7 +1673,11 @@ def _for_package_version(pkg, version=None):
                 commit = version_meta_data.get("commit")
             tag = version_meta_data.get("tag") or version_meta_data.get("branch")
 
-        kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
+        no_cache = bool(not commit)
+        if version_meta_data and "no_cache" in version_meta_data:
+            no_cache = version_meta_data["no_cache"]
+
+        kwargs = {"commit": commit, "tag": tag, "no_cache": no_cache}
         kwargs["git"] = git_url
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
@@ -1661,6 +1689,7 @@ def _for_package_version(pkg, version=None):
         if ref_version:
             kwargs["git"] = pkg.version_or_package_attr("git", ref_version)
             kwargs["submodules"] = pkg.version_or_package_attr("submodules", ref_version, False)
+            kwargs["no_cache"] = pkg.version_or_package_attr("no_cache", ref_version, no_cache)
 
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
