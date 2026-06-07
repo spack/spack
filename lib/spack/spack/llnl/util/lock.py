@@ -376,6 +376,7 @@ class Lock:
         default_timeout: Optional[float] = None,
         debug: bool = False,
         desc: str = "",
+        enable: bool = True,
     ) -> None:
         """Construct a new lock on the file at ``path``.
 
@@ -396,6 +397,8 @@ class Lock:
             debug: debug mode specific to locking
             desc: optional debug message lock description, which is helpful for distinguishing
                 between different Spack locks.
+            enable: when False, swap in a no-op backend so all lock operations succeed
+                without acquiring a real filesystem lock. Always disabled on Windows.
         """
         self.path = path
         self._reads = 0
@@ -416,7 +419,7 @@ class Lock:
         # user sets a timeout for each attempt)
         self.default_timeout = default_timeout or None
 
-        if sys.platform != "win32":
+        if sys.platform != "win32" and enable:
             self.backend: Union[PosixBackend, DummyBackend] = PosixBackend(
                 path, start, length, debug=debug
             )
