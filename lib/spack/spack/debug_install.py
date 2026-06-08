@@ -463,6 +463,10 @@ def _install_generated_headers(
         ".mod",
         ".pb.h",
         ".pb.cc",
+        ".c",
+        ".cc",
+        ".cpp",
+        ".cxx",
     }
     GENERATED_SOURCE_PREFIXES = {"moc_", "ui_", "qrc_"}
     EXCLUDED_DIRECTORY_NAMES = {"CMakeFiles", "Testing", "CTestFiles", ".cmake"}
