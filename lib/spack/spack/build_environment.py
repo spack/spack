@@ -753,6 +753,118 @@ def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     )
 
 
+def _inject_debuggable_prefix_map(
+    pkg: "spack.package_base.PackageBase", env: EnvironmentModifications
+) -> None:
+    """Append ``-ffile-prefix-map`` flags so DWARF symbols embed permanent paths.
+
+    Called from :func:`setup_package` when ``pkg._debuggable_install`` is
+    ``True``. This runs inside the **child process**, after the stage has
+    been fully set up and after ``set_wrapper_variables()`` has already
+    populated the ``SPACK_CFLAGS`` and similar variables.
+
+    The approach:
+        At compile time, tell the compiler to rewrite any DWARF path
+        reference that starts with the staging directory to start with the
+        permanent install directory instead.  The installed binary's DWARF
+        therefore contains the correct permanent path from the moment the
+        object file is created — no post-install binary patching needed.
+
+    Flag used:
+        ``-ffile-prefix-map=OLD=NEW`` (GCC 8+, Clang 10+)
+        Remaps both DWARF references *and* ``__FILE__`` macro expansions.
+
+    Two path pairs are remapped:
+
+    1. ``staging_src``   ``<prefix>/share/<pkg>/src/``
+       Covers all source files that the compiler compiled from the
+       source tree.
+
+    2. ``build_dir``     ``<prefix>/share/<pkg>/build/``
+       Covers CMake out-of-tree builds where object files reference
+       the build directory (e.g. generated ``config.h`` paths).
+       Resolved via ``builder.build_directory`` — the authoritative API —
+       not by heuristic directory name inspection.
+
+    NVCC and HIP wrappers use ``-Xcompiler`` syntax to forward the flag
+    to the host compiler. Device-side PTX is not covered.
+
+    Coverage is best-effort. The post-install verification step
+    (:meth:`BuildProcessInstaller._verify_dwarf_coverage`) reports
+    any remaining staging-path references.
+
+    Args:
+        pkg: the package being compiled
+        env: the :class:`~spack.util.environment.EnvironmentModifications`
+             object to append flags into
+    """
+
+    try:
+        staging_src = pkg.stage.source_path
+    except Exception:
+        staging_src = str(pkg.stage.path)
+
+    permanent_src = os.path.join(str(pkg.spec.prefix), "share", pkg.name, "src")
+
+    # Collect all (old, new) path pairs we need to remap.
+    remap_pairs = [(staging_src, permanent_src)]
+
+    # Resolve the out-of-tree build directory via the builder API.
+    # Using the API (not heuristics like startswith("spack-build-"))
+    # ensures packages that override build_directory are handled correctly.
+    try:
+        builder = spack.builder.create(pkg)
+        build_dir = getattr(builder, "build_directory", None)
+        if build_dir and os.path.isabs(build_dir) and build_dir != staging_src:
+            permanent_build = os.path.join(str(pkg.spec.prefix), "share", pkg.name, "build")
+            remap_pairs.append((build_dir, permanent_build))
+    except Exception as e:
+        tty.debug(
+            f"[debuggable] Could not resolve build_directory for "
+            f"{pkg.name}: {e}. Only source tree paths will be remapped."
+        )
+
+    # Build the flag strings for each remap pair.
+    # -ffile-prefix-map is the preferred flag (GCC 8+ / Clang 10+).
+    # It remaps both DWARF references AND __FILE__ / __BASE_FILE__ macros.
+    ffile_flags = [f"-ffile-prefix-map={old}={new}" for old, new in remap_pairs]
+
+    # Inject into Spack's compiler wrapper injection variables.
+    # These variables are read by lib/spack/env/cc and prepended to every
+    # compiler invocation. We use append_flags so existing flags set by
+    # the package's flag_handler are preserved.
+
+    debug_flags = ["-g"] + ffile_flags
+
+    for spack_var in ("SPACK_CFLAGS", "SPACK_CXXFLAGS", "SPACK_FFLAGS", "SPACK_FCFLAGS"):
+        #    env.append_flags(spack_var, "-g") # NEW LINE
+        for flag in debug_flags:
+            env.append_flags(spack_var, flag)
+
+    for raw_var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "FCFLAGS"):
+        for flag in debug_flags:
+            env.append_flags(raw_var, flag)
+
+    # NVCC and HIP use a wrapper syntax to forward flags to the host compiler.
+    # -Xcompiler passes flags through to the underlying gcc/clang invocation.
+    # Note: device-side PTX code does not use this DWARF format and is not
+    # covered by this flag injection.
+    #    nvcc_hip_flags = " ".join(f"-Xcompiler={flag}" for flag in ffile_flags)
+
+    # NVCC / HIP: forward both -g (host debug) and the remap flags
+    nvcc_hip_flags = "-Xcompiler=-g " + " ".join(f"-Xcompiler={flag}" for flag in ffile_flags)
+
+    if nvcc_hip_flags:
+        env.append_flags("CUDA_FLAGS", nvcc_hip_flags)
+        env.append_flags("NVCCFLAGS", nvcc_hip_flags)
+        env.append_flags("HIPFLAGS", nvcc_hip_flags)
+
+    # Log what we injected for debugging
+    tty.debug(f"[debuggable] injected DWARF prefix remapping for {pkg.name}:")
+    for old, new in remap_pairs:
+        tty.debug(f"[debuggable]   {old}    {new}")
+
+
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
@@ -768,12 +880,15 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
-    # setup compilers for build contexts
     need_compiler = context == Context.BUILD or (
         context == Context.TEST and pkg.test_requires_compiler
     )
     if need_compiler:
         set_wrapper_variables(pkg, env_mods)
+        # Inject -ffile-prefix-map flags if this is a debuggable build.
+        # Must be called AFTER set_wrapper_variables() so we are appending
+        # to already-established SPACK_CFLAGS rather than overwriting them.
+        # Must only run in BUILD context — not TEST context.
 
     # Platform specific setup goes before package specific setup. This is for setting
     # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
@@ -811,6 +926,10 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
             "A dependency has updated CPATH, this may lead pkg-config to assume that the package "
             "is part of the system includes and omit it when invoked with '--cflags'."
         )
+
+    # Inject debug flags LAST, after all other modifications, so nothing overwrites them.
+    if context == Context.BUILD and getattr(pkg, "_debuggable_install", False):
+        _inject_debuggable_prefix_map(pkg, env_mods)
 
     # First apply the clean environment changes
     env_base.apply_modifications()
@@ -1188,10 +1307,18 @@ def _setup_pkg_and_run(
         pkg = serialized_pkg.restore()
 
         if not kwargs.get("fake", False):
+            # Set _debuggable_install BEFORE setup_package() runs.
+            # setup_package() → _inject_debuggable_prefix_map() reads this attribute,
+            # but BuildProcessInstaller.run() (which used to set it) runs AFTER
+            # setup_package(). Moving the assignment here fixes the timing.
+            if kwargs.get("debuggable", False):
+                setattr(pkg, "_debuggable_install", True)
+
             kwargs["unmodified_env"] = os.environ.copy()
             kwargs["env_modifications"] = setup_package(
                 pkg, dirty=kwargs.get("dirty", False), context=Context.from_string(context)
             )
+
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
 

@@ -47,6 +47,7 @@ import spack.build_environment
 import spack.builder
 import spack.config
 import spack.database
+import spack.debug_install
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
@@ -788,6 +789,7 @@ class BuildRequest:
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
+            ("debuggable", False),  # NEW LINE
             ("root_policy", "auto"),
             ("keep_prefix", False),
             ("keep_stage", False),
@@ -1474,6 +1476,7 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
+        debuggable: bool = False,  # NEW PARAMETER
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = False,
@@ -1540,6 +1543,7 @@ class PackageInstaller:
             "install_deps": install_deps,
             "install_package": install_package,
             "install_source": install_source,
+            "debuggable": debuggable,  # NEW LINE
             "keep_prefix": keep_prefix,
             "keep_stage": keep_stage,
             "overwrite": overwrite or [],
@@ -2597,6 +2601,13 @@ class BuildProcessInstaller:
         # whether to install source code with the package
         self.install_source = install_args.get("install_source", False)
 
+        # whether installation was explicitly requested by the user
+        self.explicit = pkg.spec.dag_hash() in install_args.get("explicit", [])
+
+        self.debuggable = install_args.get("debuggable", False) and self.explicit
+
+        self._install_args = install_args  # stored for delegation to spack.debug_install
+
         is_develop = pkg.spec.is_develop
         # whether to keep the build stage after installation
         # Note: user commands do not have an explicit choice to disable
@@ -2612,9 +2623,6 @@ class BuildProcessInstaller:
 
         # whether to enable echoing of build output initially or not
         self.verbose = bool(install_args.get("verbose", False))
-
-        # whether installation was explicitly requested by the user
-        self.explicit = pkg.spec.dag_hash() in install_args.get("explicit", [])
 
         # env before starting installation
         self.unmodified_env = install_args.get("unmodified_env", {})
@@ -2638,6 +2646,9 @@ class BuildProcessInstaller:
 
         stage = self.pkg.stage
         stage.keep = self.keep_stage
+
+        if self.debuggable:
+            setattr(self.pkg, "_debuggable_install", True)
 
         with stage:
             if self.restage:
@@ -2668,10 +2679,13 @@ class BuildProcessInstaller:
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
-                if self.install_source:
-                    self._install_source()
-
-                self._real_install()
+                if self.debuggable:
+                    self._real_install()
+                    self._install_debuggable_sources()
+                else:
+                    if self.install_source:
+                        self._install_source()
+                    self._real_install()
 
             # Run post install hooks before build stage is removed.
             self.timer.start("post-install")
@@ -2769,6 +2783,47 @@ class BuildProcessInstaller:
         # After log, we can get all output/error files from the package stage
         combine_phase_logs(pkg.phase_log_files, pkg.log_path)
         log(pkg)
+
+    def _install_debuggable_sources(self) -> None:
+        """Install debug artifacts for a debuggable build.
+
+        Delegates to :func:`spack.debug_install.install_debug_artifacts`.
+        Called from :meth:`run` AFTER :meth:`_real_install` while the
+        staging directory is still present.
+        """
+        spack.debug_install.install_debug_artifacts(self.pkg)
+
+    def _collect_from_compile_commands(self) -> Set[str]:
+        """Parse compile_commands.json for source file paths.
+
+        Delegates to :func:`spack.debug_install._collect_from_compile_commands`.
+        """
+        return spack.debug_install._collect_from_compile_commands(self.pkg, self.pre)
+
+    def _install_sources_as_tree(self, files: Set[str], source_root: str, dest_root: str) -> None:
+        """Copy source files to a directory tree.
+
+        Delegates to :func:`spack.debug_install._install_sources_as_tree`.
+        """
+        spack.debug_install._install_sources_as_tree(
+            self.pkg, files, source_root, dest_root, self.pre
+        )
+
+    def _install_generated_headers(self, build_target: str) -> None:
+        """Copy generated headers from the CMake build directory.
+
+        Delegates to :func:`spack.debug_install._install_generated_headers`.
+        """
+        spack.debug_install._install_generated_headers(
+            self.pkg, build_target, self.pre, self.pkg_id
+        )
+
+    def _install_compile_commands(self, build_target: str) -> None:
+        """Copy compile_commands.json to the debug build directory.
+
+        Delegates to :func:`spack.debug_install._install_compile_commands`.
+        """
+        spack.debug_install._install_compile_commands(self.pkg, build_target, self.pre)
 
 
 def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> bool:
