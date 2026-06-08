@@ -294,6 +294,9 @@ jobs:
       run: |
           Remove-Item -Path (Get-Command gpg).Path
           Remove-Item -Path (Get-Command file).Path
+    - name: Bootstrap Gpg + File for unit tests
+      run: |
+          spack bootstrap now
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows
