@@ -290,6 +290,10 @@ jobs:
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
+    - name: Remove Spack Bootstrap Requirements
+      run: |
+          Remove-Item -Path (Get-Command gpg).Path
+          Remove-Item -Path (Get-Command file).Path
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows
