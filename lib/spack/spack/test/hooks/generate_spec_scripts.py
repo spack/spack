@@ -71,7 +71,7 @@ def test_load_unload_scripts_exist(
 
 
 @pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"]),
 )
 def test_contents_of_shell_scripts(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
@@ -97,10 +97,10 @@ def test_contents_of_shell_scripts(
             unload_script = f.read()
 
         assert re.search(
-            f"_spack_env_prepend {uenv.spack_loaded_hashes_var} {pkg.dag_hash()}", load_script
+            f"_spack_env_prepend {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} {os.pathsep}", load_script
         )
         assert re.search(
-            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()}",
+            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} {os.pathsep}",
             unload_script,
         )
 
@@ -133,8 +133,8 @@ def test_install_individual_specs_scripts(
     with open(path_to_mpich, "r", encoding="utf-8") as f:
         mpich_load = f.read()
 
-    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", dyninst_load)
-    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {mpich_spec.prefix} :", mpich_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} {os.pathsep}", dyninst_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {mpich_spec.prefix} {os.pathsep}", mpich_load)
 
     assert mpich_spec.name not in dyninst_load
     assert dyninst_spec.name not in mpich_load
@@ -148,6 +148,7 @@ def test_install_multiple_specs_shell_scripts(
 ):
     """Ensure that the each spec environment modifications are written to the apporiate
     shell script and aren't put together when multiple specs are installed at once"""
+
 
     dyninst_spec = Spec("dyninst")
     hypre_spec = Spec("hypre")
@@ -167,14 +168,14 @@ def test_install_multiple_specs_shell_scripts(
     with open(path_to_hypre, "r", encoding="utf-8") as f:
         hypre_load = f.read()
 
-    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", dyninst_load)
-    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", hypre_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} {os.pathsep}", dyninst_load)
+    assert re.search(f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} {os.pathsep}", hypre_load)
 
     assert not re.search(
-        f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} :", hypre_load
+        f"_spack_env_prepend CMAKE_PREFIX_PATH {dyninst_spec.prefix} {os.pathsep}", hypre_load
     )
     assert not re.search(
-        f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} :", dyninst_load
+        f"_spack_env_prepend CMAKE_PREFIX_PATH {hypre_spec.prefix} {os.pathsep}", dyninst_load
     )
 
     assert hypre_spec.name not in dyninst_load
