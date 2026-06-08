@@ -33,7 +33,8 @@ from spack.llnl.util.filesystem import (
     visit_directory_tree,
 )
 from spack.llnl.util.lang import index_by, match_predicate
-from spack.llnl.util.link_tree import (
+from spack.llnl.util.tty.color import colorize
+from spack.util.link_tree import (
     ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
@@ -41,7 +42,6 @@ from spack.llnl.util.link_tree import (
     MultiPrefixMerger,
     SingleMergeConflictError,
 )
-from spack.llnl.util.tty.color import colorize
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 

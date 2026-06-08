@@ -113,7 +113,6 @@ from spack.llnl.util.filesystem import (
     working_dir,
 )
 from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
-from spack.llnl.util.link_tree import LinkTree
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version
@@ -138,6 +137,7 @@ from spack.util.environment import is_system_path as _is_system_path
 from spack.util.executable import Executable, ProcessError, which, which_string
 from spack.util.filesystem import fix_darwin_install_name
 from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
+from spack.util.link_tree import LinkTree
 from spack.util.module_cmd import get_path_args_from_module_line
 from spack.util.module_cmd import module as module_command
 from spack.util.path import get_user

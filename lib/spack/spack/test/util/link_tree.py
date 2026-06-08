@@ -19,8 +19,8 @@ from spack.llnl.util.filesystem import (
     visit_directory_tree,
     working_dir,
 )
-from spack.llnl.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
 from spack.test.conftest import FsTree
+from spack.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
 
 
 @pytest.fixture

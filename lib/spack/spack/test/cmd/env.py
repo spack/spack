@@ -21,7 +21,6 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.error
 import spack.llnl.util.filesystem as fs
-import spack.llnl.util.link_tree
 import spack.llnl.util.tty as tty
 import spack.main
 import spack.modules
@@ -34,6 +33,7 @@ import spack.solver.asp
 import spack.stage
 import spack.store
 import spack.util.environment
+import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
@@ -2011,7 +2011,7 @@ def test_env_view_fails_dir_file(
         add("view-file")
         add("view-dir")
         with pytest.raises(
-            spack.llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
+            spack.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
         ):
             install()
 
