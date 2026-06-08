@@ -10,7 +10,8 @@ import os
 import pathlib
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Union
+import warnings
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import spack.error
 import spack.llnl.util.filesystem
@@ -294,7 +295,7 @@ class GpgUserId:
         self.type = data["type"]
         self.trust = GpgKeyTrust(data.get("trust", ""))
         if "created_at" not in data:
-            tty.warn("GPG Key User ID has no creation date")
+            warnings.warn("GPG Key User ID has no creation date")
             self.created_at = None
         else:
             self.created_at = datetime.datetime.fromtimestamp(int(data["created_at"]))
@@ -487,6 +488,7 @@ class Gpg:
 
         self._gpg: Optional[Executable] = None
         self._gpgconf: Optional[Executable] = None
+        self._version: Optional[spack.version.VersionType] = None
         self._socket_dir: Optional[pathlib.Path] = None
 
     @staticmethod
@@ -520,16 +522,29 @@ class Gpg:
 
         return gnupghome
 
-    def _create_gpgfn(self, finder: Callable[..., Optional[Executable]]) -> Optional[Executable]:
+    def _create_gpgfn(
+        self, finder: Callable[..., Optional[Tuple[Executable, spack.version.VersionType]]]
+    ) -> Optional[Executable]:
         """Create a GPG function wrapper"""
         import spack.bootstrap
 
         with spack.bootstrap.ensure_bootstrap_configuration():
             spack.bootstrap.ensure_gpg_in_path_or_raise()
-            gpgfn = finder()
+            result = finder()
 
-        if gpgfn:
-            gpgfn.add_default_env("GNUPGHOME", str(self.home))
+        if result is None:
+            return None
+
+        gpgfn, version = result
+
+        if self._version and version != self._version:
+            warnings.warn(
+                "Version mismatch between gpg and gpgconf. This may lead to unexpected behavior"
+            )
+        else:
+            self._version = version
+
+        gpgfn.add_default_env("GNUPGHOME", str(self.home))
 
         return gpgfn
 
@@ -565,6 +580,24 @@ class Gpg:
                 self.conf("--create-socketdir")
 
         return self._socket_dir
+
+    def list_keyfile(
+        self, keyfile: str, ktype: Union[GpgKeyType, List[GpgKeyType]] = GpgKeyType.PUBLIC
+    ) -> List[GpgKey]:
+        """List keys in a keyfile"""
+        assert self._version is not None, "GPG version is not set; ensure GPG is initialized"
+        ktypes = {ktype} if isinstance(ktype, GpgKeyType) else set(ktype)
+
+        gpg_args = ["--with-colons", "--with-fingerprint"]
+        if self._version >= spack.version.Version("2.2.8"):
+            gpg_args.append("--show-keys")
+        elif self._version >= spack.version.Version("2.1.23"):
+            gpg_args.extend(["--import-options", "show-only", "--import"])
+        else:
+            gpg_args.extend(["--import-options", "import-show", "--dry-run", "--import"])
+
+        output = self.gpg(*gpg_args, keyfile, output=str, error=str)
+        return [k for k in _parse_gpg_output(output) if k.type in ktypes]
 
     def _list_keys(self, *fprs, colons: bool = True, ktype: GpgKeyType = GpgKeyType.PUBLIC) -> str:
         gpg_args = []
@@ -633,7 +666,7 @@ class Gpg:
         """
 
         # This global method is safe to use to list keys in a file without importing them
-        imported_keys = extract_public_keys(keyfile)
+        imported_keys = self.list_keyfile(keyfile, ktype=[GpgKeyType.PUBLIC, GpgKeyType.SECRET])
         if not imported_keys:
             tty.info(f"No keys to trust in {keyfile}")
             return
@@ -938,31 +971,13 @@ def export_keys(location: str, keys: List[GpgKey], secret: bool = False):
 
 @_autoinit
 def extract_public_keys(keyfile: str):
-    """Extract the key ids from a file, including keys stored as secret keys.
-
-    A secret-key export contains both the private and public key material and
-    has the same fingerprint as the corresponding public key, so secret-key
-    files are valid input for trust operations.
+    """Extract the key ids from a file
 
     Args:
-        keyfile: file with the public or secret key(s)
+        keyfile: file with the public key
     """
     assert GPG
-    # Use --import-options show-only --import to list keys from a file without
-    # importing them.
-    output = GPG(
-        "--with-colons",
-        "--with-fingerprint",
-        "--import-options",
-        "show-only",
-        "--import",
-        keyfile,
-        output=str,
-        error=str,
-    )
-    return [
-        k for k in _parse_gpg_output(output) if k.type in (GpgKeyType.PUBLIC, GpgKeyType.SECRET)
-    ]
+    return GPG.list_keyfile(keyfile, ktype=GpgKeyType.PUBLIC)
 
 
 @_autoinit
@@ -1048,7 +1063,7 @@ def glist(trusted: bool, signing: bool, fmt: str = "default"):
         print(GPG.list_keys(ktype=GpgKeyType.SECRET, fmt=fmt))
 
 
-def _verify_exe_or_raise(exe):
+def _verify_exe_or_raise(exe) -> spack.version.VersionType:
     """Verify that the gpg executable is a new enough version."""
 
     msg = (
@@ -1066,11 +1081,14 @@ def _verify_exe_or_raise(exe):
     if not match:
         raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
 
-    if spack.version.Version(match.group(2)) < spack.version.Version("2"):
+    gpg_version = spack.version.Version(match.group(2))
+    if gpg_version < spack.version.Version("2"):
         raise SpackGPGError(msg)
 
+    return gpg_version
 
-def _gpgconf() -> Optional[Executable]:
+
+def _gpgconf() -> Optional[Tuple[Executable, spack.version.VersionType]]:
     """Get executable for gpgconf if it exists"""
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
     exe = spack.util.executable.which(*GPGCONF_NAMES)
@@ -1078,19 +1096,19 @@ def _gpgconf() -> Optional[Executable]:
         return None
 
     try:
-        _verify_exe_or_raise(exe)
+        version = _verify_exe_or_raise(exe)
         exe("--dry-run", "--create-socketdir", output=os.devnull, error=os.devnull)
-        return exe
+        return exe, version
     except spack.util.executable.ProcessError:
         # no dice
         return None
 
 
-def _gpg() -> Executable:
+def _gpg() -> Tuple[Executable, spack.version.VersionType]:
     """Get executable for gpg"""
     exe = spack.util.executable.which(*GPG_NAMES, required=True)
-    _verify_exe_or_raise(exe)
-    return exe
+    version = _verify_exe_or_raise(exe)
+    return exe, version
 
 
 def _socket_dir(gpgconf: Optional[Executable]) -> Optional[pathlib.Path]:
