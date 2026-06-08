@@ -10,6 +10,7 @@ import stat
 import spack.error
 from spack.llnl.util.lock import (
     Lock,
+    LockDowngradeError,
     LockError,
     LockTimeoutError,
     LockUpgradeError,
@@ -51,11 +52,12 @@ def check_lock_safety(path: str) -> None:
 
 
 __all__ = [
+    "check_lock_safety",
+    "Lock",
+    "LockDowngradeError",
     "LockError",
     "LockTimeoutError",
     "LockUpgradeError",
     "ReadTransaction",
     "WriteTransaction",
-    "Lock",
-    "check_lock_safety",
 ]
