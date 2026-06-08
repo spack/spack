@@ -1754,7 +1754,7 @@ def download_tarball(
         (mirror, layout_version)
         for mirror_metadata in urls_and_versions
         for mirror, layout_version in [fetch_url_to_mirror(mirror_metadata)]
-        if mirror.matches(spec, direction="fetch")
+        if mirror.matches_binary(spec, direction="fetch")
     ]
 
     for mirror, layout_version in mirrors:

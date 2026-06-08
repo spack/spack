@@ -422,12 +422,12 @@ def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
 
 
 def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirror) -> List[Spec]:
-    """Filter specs based on mirror select/exclude patterns."""
+    """Filter specs based on mirror include/exclude buildcache patterns."""
     remaining_specs: List[Spec] = []
     removed_specs: List[Spec] = []
 
     for spec in specs:
-        if mirror.matches(spec, direction="push"):
+        if mirror.matches_binary(spec, direction="push"):
             remaining_specs.append(spec)
         else:
             removed_specs.append(spec)
@@ -436,7 +436,7 @@ def _filter_specs_for_push(specs: List[Spec], mirror: spack.mirrors.mirror.Mirro
         colified_output = colify.colified([s.name for s in removed_specs], indent=4)
         tty.debug(
             "The following specs will not be pushed to the binary cache"
-            " because they do not match the mirror's select/exclude filters:\n"
+            " because they do not match the mirror's include/exclude filters:\n"
             f"{colified_output}"
         )
     return remaining_specs

@@ -54,14 +54,14 @@ overridable_per_direction = {
         "description": "Environment variable containing an access token for OCI registry "
         "authentication",
     },
-    "select": {
+    "include_binary": {
         "type": "array",
         "items": {"type": "string"},
         "description": "List of spec patterns to include for this build cache. "
         "If specified, only specs matching at least one pattern will be "
         "pushed or pulled (default: all specs).",
     },
-    "exclude": {
+    "exclude_binary": {
         "type": "array",
         "items": {"type": "string"},
         "description": "List of spec patterns to exclude from this build cache "

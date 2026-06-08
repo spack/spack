@@ -36,14 +36,14 @@ supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oc
 SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
-def _spec_matches_filters(spec: "spack.spec.Spec", select: List[str], exclude: List[str]) -> bool:
-    """Check if a spec matches select/exclude filters.
+def _spec_matches_filters(spec: "spack.spec.Spec", include: List[str], exclude: List[str]) -> bool:
+    """Check if a spec matches include/exclude filters.
 
     A spec is included when:
-    - select is empty, or spec matches at least one select pattern
+    - include is empty, or spec matches at least one include pattern
     - spec does not match any exclude pattern
     """
-    if select and not any(spec.satisfies(s) for s in select):
+    if include and not any(spec.satisfies(s) for s in include):
         return False
 
     if exclude and any(spec.satisfies(e) for e in exclude):
@@ -155,15 +155,17 @@ class Mirror:
             return False
         return self._data.get("autopush", False)
 
-    def select(self, direction: str) -> List[str]:
-        return self._get_value("select", direction) or []
+    def include_binary(self, direction: str) -> List[str]:
+        return self._get_value("include_binary", direction) or []
 
-    def exclude(self, direction: str) -> List[str]:
-        return self._get_value("exclude", direction) or []
+    def exclude_binary(self, direction: str) -> List[str]:
+        return self._get_value("exclude_binary", direction) or []
 
-    def matches(self, spec: "spack.spec.Spec", direction: str) -> bool:
-        """Check if a spec passes this mirror's select/exclude filters."""
-        return _spec_matches_filters(spec, self.select(direction), self.exclude(direction))
+    def matches_binary(self, spec: "spack.spec.Spec", direction: str) -> bool:
+        """Check if a spec passes this mirror's include/exclude buildcache filters."""
+        return _spec_matches_filters(
+            spec, self.include_binary(direction), self.exclude_binary(direction)
+        )
 
     @property
     def fetch_url(self) -> str:

@@ -424,45 +424,57 @@ def test_spec_matches_filters(mock_packages, mutable_config, select, exclude, sp
 
 
 def test_mirror_matches(mock_packages, mutable_config):
-    """Test that Mirror.matches() correctly applies select/exclude filters."""
+    """Test that Mirror.matches_binary() correctly applies select/exclude filters."""
     spec = spack.concretize.concretize_one("brillig")
 
     # No filters: everything matches
     m = spack.mirrors.mirror.Mirror({"url": "https://example.com"})
-    assert m.matches(spec, direction="fetch") is True
+    assert m.matches_binary(spec, direction="fetch") is True
 
     # Exclude matches the spec
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["brillig"]})
-    assert m.matches(spec, direction="fetch") is False
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude_binary": ["brillig"]})
+    assert m.matches_binary(spec, direction="fetch") is False
 
     # Select does not include the spec
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["canfail"]})
-    assert m.matches(spec, direction="fetch") is False
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "include_binary": ["canfail"]})
+    assert m.matches_binary(spec, direction="fetch") is False
 
     # Select includes the spec
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "select": ["brillig"]})
-    assert m.matches(spec, direction="fetch") is True
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "include_binary": ["brillig"]})
+    assert m.matches_binary(spec, direction="fetch") is True
 
     # Exclude does not match the spec
-    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude": ["canfail"]})
-    assert m.matches(spec, direction="fetch") is True
+    m = spack.mirrors.mirror.Mirror({"url": "https://example.com", "exclude_binary": ["canfail"]})
+    assert m.matches_binary(spec, direction="fetch") is True
 
     # Select includes but exclude also matches: exclude wins
     m = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "select": ["brillig"], "exclude": ["brillig"]}
+        {
+            "url": "https://example.com",
+            "include_binary": ["brillig"],
+            "exclude_binary": ["brillig"],
+        }
     )
-    assert m.matches(spec, direction="fetch") is False
+    assert m.matches_binary(spec, direction="fetch") is False
 
     # Direction-specific filter overrides global filters
     m = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "select": ["canfail"], "fetch": {"select": ["brillig"]}}
+        {
+            "url": "https://example.com",
+            "include_binary": ["canfail"],
+            "fetch": {"include_binary": ["brillig"]},
+        }
     )
-    assert m.matches(spec, direction="fetch") is True
-    assert m.matches(spec, direction="push") is False
+    assert m.matches_binary(spec, direction="fetch") is True
+    assert m.matches_binary(spec, direction="push") is False
 
     # Direction-specific and mirror-level config compose
     m = spack.mirrors.mirror.Mirror(
-        {"url": "https://example.com", "select": ["brillig"], "fetch": {"exclude": ["brillig"]}}
+        {
+            "url": "https://example.com",
+            "include_binary": ["brillig"],
+            "fetch": {"exclude_binary": ["brillig"]},
+        }
     )
-    assert m.matches(spec, direction="fetch") is False
-    assert m.matches(spec, direction="push") is True
+    assert m.matches_binary(spec, direction="fetch") is False
+    assert m.matches_binary(spec, direction="push") is True
