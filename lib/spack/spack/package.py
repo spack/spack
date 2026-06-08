@@ -34,7 +34,7 @@ from spack.builder import (
 )
 from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
-from spack.config import determine_number_of_jobs
+from spack.config import determine_number_of_jobs, get_user
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
     build_system,
@@ -140,7 +140,6 @@ from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
 from spack.util.link_tree import LinkTree
 from spack.util.module_cmd import get_path_args_from_module_line
 from spack.util.module_cmd import module as module_command
-from spack.util.path import get_user
 from spack.util.prefix import Prefix
 from spack.util.url import join as join_url
 from spack.util.windows_registry import HKEY, WindowsRegistryView

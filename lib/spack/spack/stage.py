@@ -83,7 +83,7 @@ def create_stage_root(path: str) -> None:
     user_uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
-    group_paths, user_node, user_paths = partition_path(path, sup.get_user())
+    group_paths, user_node, user_paths = partition_path(path, spack.config.get_user())
 
     for p in group_paths:
         if not os.path.exists(p):
@@ -162,8 +162,8 @@ def _resolve_paths(candidates):
     Adjustments involve removing extra $user from $tempdir if $tempdir includes
     $user and appending $user if it is not present in the path.
     """
-    temp_path = sup.canonicalize_path("$tempdir")
-    user = sup.get_user()
+    temp_path = spack.config.canonicalize_path("$tempdir")
+    user = spack.config.get_user()
     tmp_has_usr = user in temp_path.split(os.path.sep)
 
     paths = []
@@ -174,7 +174,7 @@ def _resolve_paths(candidates):
             path = path.replace("/$user", "", 1)
 
         # Ensure the path is unique per user.
-        can_path = sup.canonicalize_path(path)
+        can_path = spack.config.canonicalize_path(path)
         # When multiple users share a stage root, we can avoid conflicts between
         # them by adding a per-user subdirectory.
         # Avoid doing this on Windows to keep stage absolute path as short as possible.

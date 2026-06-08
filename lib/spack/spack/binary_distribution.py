@@ -518,7 +518,7 @@ class BinaryIndexCache:
 def binary_index_location():
     """Set up a BinaryIndexCache for remote buildcache dbs in the user's homedir."""
     cache_root = os.path.join(spack.caches.misc_cache_location(), "indices")
-    return spack.util.path.canonicalize_path(cache_root)
+    return spack.config.canonicalize_path(cache_root)
 
 
 #: Default binary cache index instance

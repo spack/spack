@@ -62,7 +62,6 @@ import spack.traverse
 import spack.util.crypto
 import spack.util.hash
 import spack.util.module_cmd as md
-import spack.util.path
 import spack.util.timer
 import spack.variant as vt
 import spack.version as vn
@@ -552,7 +551,7 @@ class ConcretizationCache:
             root = os.path.join(spack.caches.misc_cache_location(), "concretization")
 
         # cache is versioned so that we can easily upgrade it over time
-        self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
+        self.root = pathlib.Path(spack.config.canonicalize_path(root))
         self.root /= f"v{ConcretizationCache.VERSION}"
 
     def cleanup(self):
@@ -2983,7 +2982,7 @@ class SpackSolverSetup:
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
                     'dev_path="%s"'
-                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                    % spack.config.canonicalize_path(info["path"], default_wd=env.path)
                 )
                 for name, info in env.dev_specs.items()
             )
@@ -3907,7 +3906,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
+    path = spack.config.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (

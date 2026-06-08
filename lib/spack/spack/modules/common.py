@@ -195,7 +195,7 @@ def root_path(module_type: str, module_set: str) -> str:
     dir_name = "modules" if module_type == "tcl" else module_type
     fallback = os.path.join(spack.paths.share_path, dir_name)
     configured = spack.config.get(f"modules:{module_set}:roots", {})
-    return spack.util.path.canonicalize_path(configured.get(module_type, fallback))
+    return spack.config.canonicalize_path(configured.get(module_type, fallback))
 
 
 def generate_module_index(

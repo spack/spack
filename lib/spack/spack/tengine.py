@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 import spack.config
 import spack.extensions
 import spack.llnl.util.lang
-from spack.util.path import canonicalize_path
+from spack.config import canonicalize_path
 
 if TYPE_CHECKING:
     import spack.vendor.jinja2

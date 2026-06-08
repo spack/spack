@@ -49,11 +49,11 @@ import spack.user_environment as uenv
 import spack.util.environment
 import spack.util.hash
 import spack.util.lock as lk
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
+from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
 from spack.llnl.util.filesystem import copy_tree, islink, readlink
 from spack.llnl.util.lang import stable_partition
@@ -104,7 +104,7 @@ MARKER_FILE = ".spack-view"
 
 def env_root_path() -> str:
     """Override default root path if the user specified it"""
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("config:environments_root", default=default_env_path)
     )
 
@@ -464,7 +464,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
             return
         for name, entry in dev_specs.items():
             dev_path = substitute_path_variables(entry["path"])
-            expanded_path = spack.util.path.canonicalize_path(dev_path, default_wd=init_file_dir)
+            expanded_path = spack.config.canonicalize_path(dev_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry["path"] == expanded_path:
@@ -499,7 +499,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
             if not isinstance(entry, str):
                 continue
             repo_path = substitute_path_variables(entry)
-            expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
+            expanded_path = spack.config.canonicalize_path(repo_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:
@@ -694,7 +694,7 @@ class ViewDescriptor:
     ) -> None:
         self.base = base_path
         self.raw_root = root
-        self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
+        self.root = spack.config.canonicalize_path(root, default_wd=base_path)
         self.projections = projections or {}
         self.select = select or []
         self.exclude = exclude or []
@@ -713,7 +713,7 @@ class ViewDescriptor:
 
     def update_root(self, new_path: str) -> None:
         self.raw_root = new_path
-        self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
+        self.root = spack.config.canonicalize_path(new_path, default_wd=self.base)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -1235,8 +1235,7 @@ class Environment:
                 resolved = [os.path.join(destination, p) for p in include.paths]
             else:
                 resolved = [
-                    spack.util.path.canonicalize_path(p, default_wd=self.path)
-                    for p in include.paths
+                    spack.config.canonicalize_path(p, default_wd=self.path) for p in include.paths
                 ]
 
             for path in resolved:

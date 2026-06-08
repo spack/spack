@@ -24,7 +24,6 @@ import spack.repo
 import spack.report
 import spack.spec
 import spack.util.executable
-import spack.util.path
 import spack.util.spack_json as sjson
 from spack.error import InstallError
 from spack.llnl.util.lang import nullcontext
@@ -98,7 +97,7 @@ def get_test_stage_dir() -> str:
     Returns:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
     )
 

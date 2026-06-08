@@ -19,7 +19,6 @@ import spack.repo
 import spack.spec
 import spack.util.executable
 import spack.util.git
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
@@ -256,7 +255,7 @@ def _add_repo(
             raise SpackError("The 'destination' argument is only valid for git repositories")
         elif paths:
             raise SpackError("The --paths flag is only valid for git repositories")
-        entry = spack.util.path.canonicalize_path(path_or_repo)
+        entry = spack.config.canonicalize_path(path_or_repo)
 
     descriptor = spack.repo.parse_config_descriptor(
         name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
@@ -325,7 +324,7 @@ def _remove_repo(namespace_or_path, scope):
         key = namespace_or_path
     else:
         # delete by namespace or path (requires constructing the repo)
-        canon_path = spack.util.path.canonicalize_path(namespace_or_path)
+        canon_path = spack.config.canonicalize_path(namespace_or_path)
         descriptors = spack.repo.RepoDescriptors.from_config(
             spack.repo.package_repository_lock(), spack.config.CONFIG, scope=scope
         )

@@ -1139,9 +1139,6 @@ class OptionalInclude:
         Raises:
             ValueError: the required configuration path does not exist
         """
-        # circular dependencies
-        import spack.util.path
-
         # Ignore included concrete environment files (i.e., ``spack.lock``)
         # since they are not normal configuration (scope) files and their
         # processing is handled when the environment is processed.
@@ -1161,7 +1158,7 @@ class OptionalInclude:
         # But ensure that name is unique if there are multiple paths.
         if not self.name or len(getattr(self, "paths", [])) > 1:
             parent_path = pathlib.Path(getattr(parent_scope, "path", ""))
-            real_path = pathlib.Path(spack.util.path.substitute_path_variables(path))
+            real_path = pathlib.Path(substitute_path_variables(path))
 
             try:
                 included_name = real_path.relative_to(parent_path)
@@ -1264,7 +1261,6 @@ class IncludePath(OptionalInclude):
 
     def __init__(self, entry: dict):
         # circular dependencies
-        import spack.util.path
 
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
@@ -1272,7 +1268,7 @@ class IncludePath(OptionalInclude):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = spack.util.path.substitute_path_variables(path)
+        self.path = substitute_path_variables(path)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1317,7 +1313,8 @@ class IncludePath(OptionalInclude):
         # path for a local (or remote) file.
         tty.debug(f"Local base directory for {self.path} is {base}")
 
-        config_path = rfc_util.local_path(self.path, self.sha256, base)
+        canonical_path = canonicalize_path(self.path, base)
+        config_path = rfc_util.local_path(canonical_path, self.sha256, base)
         assert config_path
         self.destination = config_path
 
@@ -1344,17 +1341,14 @@ class GitIncludePaths(OptionalInclude):
 
     def __init__(self, entry: dict):
         # circular dependencies
-        import spack.util.path
 
         super().__init__(entry)
-        self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
+        self.git = substitute_path_variables(entry.get("git", ""))
 
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self._paths = [
-            spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
-        ]
+        self._paths = [substitute_path_variables(path) for path in entry.get("paths", [])]
         self.destination = None
         self.remote = True
 
@@ -2263,6 +2257,171 @@ def determine_number_of_jobs(
         pass
 
     return min(max_cpus, cfg.get("config:build_jobs", 16))
+
+
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.default_operating_system()
+    host_target = host_platform.default_target()
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        import getpass
+
+        return getpass.getuser()
+
+
+# return value for replacements with no match
+NOMATCH = object()
+
+
+# Substitutions to perform
+def replacements():
+    # break circular imports
+    import spack
+    import spack.environment as ev
+
+    arch = architecture()
+
+    return {
+        "spack": lambda: spack.paths.prefix,
+        "user": lambda: get_user(),
+        "tempdir": lambda: tempfile.gettempdir(),
+        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "spack_instance_id": lambda: spack.paths.spack_instance_id,
+        "architecture": lambda: arch,
+        "arch": lambda: arch,
+        "platform": lambda: arch.platform,
+        "operating_system": lambda: arch.os,
+        "os": lambda: arch.os,
+        "target": lambda: arch.target,
+        "target_family": lambda: arch.target.family,
+        "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
+        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
+        "spack_short_version": lambda: spack.get_short_version(),
+    }
+
+
+def substitute_config_variables(path):
+    """Substitute placeholders into paths.
+
+    Spack allows paths in configs to have some placeholders, as follows:
+
+    - $env                 The active Spack environment.
+    - $spack               The Spack instance's prefix
+    - $tempdir             Default temporary directory returned by tempfile.gettempdir()
+    - $user                The current user's username
+    - $user_cache_path     The user cache directory (~/.spack, unless overridden)
+    - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
+    - $architecture        The spack architecture triple for the current system
+    - $arch                The spack architecture triple for the current system
+    - $platform            The spack platform for the current system
+    - $os                  The OS of the current system
+    - $operating_system    The OS of the current system
+    - $target              The ISA target detected for the system
+    - $target_family       The family of the target detected for the system
+    - $date                The current date (YYYY-MM-DD)
+    - $spack_short_version The spack short version
+
+    These are substituted case-insensitively into the path, and users can
+    use either ``$var`` or ``${var}`` syntax for the variables. $env is only
+    replaced if there is an active environment, and should only be used in
+    environment yaml files.
+    """
+    _replacements = replacements()
+
+    # Look up replacements
+    def repl(match):
+        m = match.group(0)
+        key = m.strip("${}").lower()
+        repl = _replacements.get(key, lambda: m)()
+        return m if repl is NOMATCH else str(repl)
+
+    # Replace $var or ${var}.
+    return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
+
+
+def substitute_path_variables(path):
+    """Substitute config vars, expand environment vars, expand user home."""
+    path = substitute_config_variables(path)
+    path = os.path.expandvars(path)
+    path = os.path.expanduser(path)
+    return path
+
+
+def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
+    """Same as substitute_path_variables, but also take absolute path.
+
+    If the string is a yaml object with file annotations, make absolute paths
+    relative to that file's directory.
+    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
+
+    Arguments:
+        path: path being converted as needed
+        default_wd: optional working directory/root for non-yaml string paths
+
+    Returns: An absolute path or non-file URL with path variable substitution
+    """
+    import urllib.parse
+    import urllib.request
+
+    import spack.util.spack_yaml as syaml
+
+    # Get file in which path was written in case we need to make it absolute
+    # relative to that path.
+    filename = None
+    if isinstance(path, syaml.syaml_str):
+        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
+        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
+
+    path = substitute_path_variables(path)
+
+    # Ensure properly process a Windows path
+    win_path = pathlib.PureWindowsPath(path)
+    if win_path.drive:
+        # Assume only absolute paths are supported with a Windows drive
+        # (though DOS does allow drive-relative paths).
+        return os.path.normpath(str(win_path))
+
+    # Now process linux-like paths and remote URLs
+    url = urllib.parse.urlparse(path)
+    url_path = urllib.request.url2pathname(url.path)
+    if url.scheme:
+        if url.scheme != "file":
+            # Have a remote URL so simply return it with substitutions
+            return path
+
+        # Drop the URL scheme from the local path
+        path = url_path
+
+    if os.path.isabs(path):
+        return os.path.normpath(path)
+
+    # Have a relative path so prepend the appropriate dir to make it absolute
+    if filename:
+        # Prepend the directory of the syaml path
+        return os.path.normpath(os.path.join(filename, path))
+
+    # Prepend the default, if provided, or current working directory.
+    base = default_wd or os.getcwd()
+    import spack.llnl.util.tty as tty
+
+    tty.debug(f"Using working directory {base} as base for abspath")
+    return os.path.normpath(os.path.join(base, path))
 
 
 class ConfigSectionError(spack.error.ConfigError):

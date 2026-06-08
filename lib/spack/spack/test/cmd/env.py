@@ -37,6 +37,7 @@ import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.cmd.env import _env_create
+from spack.config import substitute_path_variables
 from spack.installer import PackageInstaller
 from spack.llnl.util.filesystem import readlink
 from spack.llnl.util.lang import dedupe
@@ -46,7 +47,6 @@ from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder
 from spack.traverse import traverse_nodes
 from spack.util.executable import Executable
-from spack.util.path import substitute_path_variables
 from spack.version import Version
 
 # TODO-27021

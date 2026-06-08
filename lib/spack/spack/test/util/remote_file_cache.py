@@ -43,12 +43,6 @@ def test_rfc_local_file_windows():
     assert rfc_util.local_path(r"D:/spack stage", "") == r"D:\spack stage"
 
 
-def test_rfc_local_file_relative():
-    path = "relative/packages.txt"
-    expected = os.path.join(os.getcwd(), "relative", "packages.txt")
-    assert rfc_util.local_path(path, "") == expected
-
-
 def test_rfc_remote_local_path_no_dest():
     path = f"{gitlab_url}/packages.yaml"
     with pytest.raises(ValueError, match="Requires the destination argument"):

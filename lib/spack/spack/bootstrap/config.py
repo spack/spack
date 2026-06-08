@@ -15,7 +15,6 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
-import spack.util.path
 from spack.llnl.util import tty
 
 #: Reference counter for the bootstrapping configuration context manager
@@ -42,7 +41,7 @@ def spec_for_current_python() -> str:
 
 def root_path() -> str:
     """Root of all the bootstrap related folders"""
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("bootstrap:root", spack.paths.default_user_bootstrap_path)
     )
 
@@ -77,12 +76,12 @@ def spack_python_interpreter() -> Generator:
 
 def _store_path() -> str:
     bootstrap_root_path = root_path()
-    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "store"))
+    return spack.config.canonicalize_path(os.path.join(bootstrap_root_path, "store"))
 
 
 def _config_path() -> str:
     bootstrap_root_path = root_path()
-    return spack.util.path.canonicalize_path(os.path.join(bootstrap_root_path, "config"))
+    return spack.config.canonicalize_path(os.path.join(bootstrap_root_path, "config"))
 
 
 @contextlib.contextmanager
