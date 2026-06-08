@@ -593,8 +593,9 @@ class Gpg:
             gpg_args.append("--show-keys")
         elif self._version >= spack.version.Version("2.1.23"):
             gpg_args.extend(["--import-options", "show-only", "--import"])
-        else:
+        elif self._version >= spack.version.Version("2.1.14"):
             gpg_args.extend(["--import-options", "import-show", "--dry-run", "--import"])
+        # For older versions of gpg we fall back to using keyfile as a bare positional argument.
 
         output = self.gpg(*gpg_args, keyfile, output=str, error=str)
         return [k for k in _parse_gpg_output(output) if k.type in ktypes]
