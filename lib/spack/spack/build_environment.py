@@ -99,6 +99,7 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.filesystem import join_path, symlink
 from spack.util.lang import dedupe, stable_partition
+from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.string import plural
 

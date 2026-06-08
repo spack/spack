@@ -17,6 +17,9 @@ import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.solver.asp as asp
 import spack.spec
+import spack.store
+import spack.traverse
+import spack.util.lang as lang
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"
