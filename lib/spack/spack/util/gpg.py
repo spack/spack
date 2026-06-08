@@ -620,16 +620,19 @@ class Gpg:
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
-        """Import a public key from a file and trust it.
+        """Import a key from a file and trust it.
+
+        The keyfile may contain public keys, secret keys (which embed public
+        key material), or both.
 
         Args:
-            keyfile: file with the public key
+            keyfile: file with the public or secret key(s)
             fprs: list of fingerprints to trust, if provided, then yes_to_all is ignored
             ownertrust: level of trust to assign to the key(s)
             yes_to_all: trust all keys in the file if True, otherwise ask for each key
         """
 
-        # This global method is safe to use to list keys in a file
+        # This global method is safe to use to list keys in a file without importing them
         imported_keys = extract_public_keys(keyfile)
         if not imported_keys:
             tty.info(f"No keys to trust in {keyfile}")
@@ -935,15 +938,31 @@ def export_keys(location: str, keys: List[GpgKey], secret: bool = False):
 
 @_autoinit
 def extract_public_keys(keyfile: str):
-    """Extract the public key ids from a file
+    """Extract the key ids from a file, including keys stored as secret keys.
+
+    A secret-key export contains both the private and public key material and
+    has the same fingerprint as the corresponding public key, so secret-key
+    files are valid input for trust operations.
 
     Args:
-        keyfile: file with the public key
+        keyfile: file with the public or secret key(s)
     """
     assert GPG
-    # Get the public keys we are about to import
-    output = GPG("--with-colons", "--with-fingerprint", keyfile, output=str, error=str)
-    return [k for k in _parse_gpg_output(output) if k.type == GpgKeyType.PUBLIC]
+    # Use --import-options show-only --import to list keys from a file without
+    # importing them.
+    output = GPG(
+        "--with-colons",
+        "--with-fingerprint",
+        "--import-options",
+        "show-only",
+        "--import",
+        keyfile,
+        output=str,
+        error=str,
+    )
+    return [
+        k for k in _parse_gpg_output(output) if k.type in (GpgKeyType.PUBLIC, GpgKeyType.SECRET)
+    ]
 
 
 @_autoinit
