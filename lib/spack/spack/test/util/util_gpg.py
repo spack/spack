@@ -161,6 +161,7 @@ def test_gpg_key_algorithm():
 
 
 @pytest.mark.maybeslow
+@pytest.mark.not_on_windows("does not run on windows")
 def test_trust_secret_key_file(tmp_path: pathlib.Path, mock_gnupghome):
     """Verify that `spack gpg trust` can import secret keys from a keyfile."""
     # Create a signing key in the current homedir.
