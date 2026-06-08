@@ -30,10 +30,10 @@ import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
-from spack.llnl.util.lang import attr_setdefault, index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
 from spack.util.filesystem import join_path
+from spack.util.lang import attr_setdefault, index_by
 
 from ..enums import InstallRecordStatus
 

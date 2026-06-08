@@ -24,7 +24,6 @@ import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
 from spack.llnl.util import tty
-from spack.llnl.util.lang import index_by, match_predicate
 from spack.llnl.util.tty.color import colorize
 from spack.util.filesystem import (
     mkdirp,
@@ -33,6 +32,7 @@ from spack.util.filesystem import (
     symlink,
     visit_directory_tree,
 )
+from spack.util.lang import index_by, match_predicate
 from spack.util.link_tree import (
     ConflictingSpecsError,
     DestinationMergeVisitor,

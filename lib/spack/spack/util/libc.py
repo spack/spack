@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 
 import spack.spec
 import spack.util.elf
-from spack.llnl.util.lang import memoized
+from spack.util.lang import memoized
 
 #: Pattern to distinguish glibc from other libc implementations
 GLIBC_PATTERN = r"\b(?:Free Software Foundation|Roland McGrath|Ulrich Depper)\b"

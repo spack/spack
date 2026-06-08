@@ -7,10 +7,10 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import spack.llnl.util.lang
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.lang
 import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
@@ -223,10 +223,7 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
 
     # Display table of checksum results.
     tty.msg(
-        f"Verified {num_verified} of {num_total}",
-        "",
-        *spack.llnl.util.lang.elide_list(results),
-        "",
+        f"Verified {num_verified} of {num_total}", "", *spack.util.lang.elide_list(results), ""
     )
 
     # Terminate at the end of function to prevent additional output.

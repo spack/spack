@@ -6,10 +6,10 @@ from typing import Optional
 
 import spack.vendor.archspec.cpu
 
-import spack.llnl.util.lang
+import spack.util.lang
 
 
-@spack.llnl.util.lang.lazy_lexicographic_ordering
+@spack.util.lang.lazy_lexicographic_ordering
 class Platform:
     """Platform is an abstract class extended by subclasses.
 

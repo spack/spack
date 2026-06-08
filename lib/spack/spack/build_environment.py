@@ -84,7 +84,6 @@ from spack import traverse
 from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.llnl.util.lang import dedupe, stable_partition
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
@@ -99,6 +98,7 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.filesystem import join_path, symlink
+from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.string import plural
 

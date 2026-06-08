@@ -41,7 +41,6 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_types
-import spack.llnl.util.lang
 import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color
@@ -61,6 +60,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.lang
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
@@ -2097,7 +2097,7 @@ def inode_cache():
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
+    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
         spack.binary_distribution.BinaryIndexCache
     )
 

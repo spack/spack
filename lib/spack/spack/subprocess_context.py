@@ -21,12 +21,12 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Optional
 
 import spack.config
-import spack.llnl.util.lang
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.lang
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -102,7 +102,7 @@ class GlobalStateMarshaler:
         if self.is_forked:
             return
 
-        self.config = spack.llnl.util.lang.ensure_unwrapped(spack.config.CONFIG)
+        self.config = spack.util.lang.ensure_unwrapped(spack.config.CONFIG)
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
         self.test_patches = TestPatches.create()

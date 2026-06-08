@@ -56,8 +56,8 @@ import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.lang import Singleton, ensure_unwrapped, memoized
 from spack.util.filesystem import working_dir
+from spack.util.lang import Singleton, ensure_unwrapped, memoized
 
 if TYPE_CHECKING:
     import spack.package_base

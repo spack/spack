@@ -11,14 +11,14 @@ from typing import Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 import spack.util.filesystem as fs
-from spack.llnl.util.lang import memoized
+import spack.util.lang
 from spack.util.filesystem import readlink, symlink
+from spack.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
 
@@ -120,7 +120,7 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
                 new_rpaths.append(new_rpath)
 
     # Deduplicate and flatten
-    args = list(itertools.chain.from_iterable(spack.llnl.util.lang.dedupe(args)))
+    args = list(itertools.chain.from_iterable(spack.util.lang.dedupe(args)))
     install_name_tool = executable.Executable("install_name_tool")
     if args:
         with fs.edit_in_place_through_temporary_file(cur_path) as temp_path:
@@ -308,7 +308,7 @@ def is_binary(filename: str) -> bool:
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _exists_dir(dirname):
     return os.path.isdir(dirname)
 

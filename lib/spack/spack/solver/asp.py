@@ -49,7 +49,6 @@ import spack.error
 import spack.externals_config
 import spack.hash_lookup
 import spack.hash_types as ht
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
@@ -61,6 +60,7 @@ import spack.store
 import spack.traverse
 import spack.util.crypto
 import spack.util.hash
+import spack.util.lang
 import spack.util.module_cmd as md
 import spack.util.timer
 import spack.variant as vt
@@ -68,8 +68,8 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
-from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
+from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
@@ -952,7 +952,7 @@ class PyclingoDriver:
                 finished = handle.wait(1.0)
 
             if not finished:
-                specs_str = ", ".join(spack.llnl.util.lang.elide_list([str(s) for s in specs], 4))
+                specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
@@ -1361,7 +1361,7 @@ class SpackSolverSetup:
         # Account for preferences in packages.yaml, if any
         if pkg.name in self.versions_from_yaml:
             ordered_versions = list(
-                spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
+                spack.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
@@ -1945,7 +1945,7 @@ class SpackSolverSetup:
 
             current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
             current_preferences = [x for x in current_preferences if x not in removed]
-            for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
+            for i, provider in enumerate(spack.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
                 self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
             self.gen.newline()
@@ -2454,7 +2454,7 @@ class SpackSolverSetup:
                         )
                     from_packages_yaml.extend(matches)
 
-            from_packages_yaml = list(spack.llnl.util.lang.dedupe(from_packages_yaml))
+            from_packages_yaml = list(spack.util.lang.dedupe(from_packages_yaml))
             for v in from_packages_yaml:
                 provenance = Provenance.PACKAGES_YAML
                 if isinstance(v, vn.GitVersion):

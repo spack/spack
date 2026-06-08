@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import spack.config
 import spack.extensions
-import spack.llnl.util.lang
+import spack.util.lang
 from spack.config import canonicalize_path
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ class ContextMeta(type):
                 context_properties.extend(x.context_properties)
             except AttributeError:
                 pass
-        context_properties = list(spack.llnl.util.lang.dedupe(context_properties))
+        context_properties = list(spack.util.lang.dedupe(context_properties))
 
         # Flush the list
         cls._new_context_properties = []
@@ -73,7 +73,7 @@ def make_environment(dirs: Optional[Tuple[str, ...]] = None) -> "spack.vendor.ji
     return make_environment_from_dirs(dirs)
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def make_environment_from_dirs(dirs: Tuple[str, ...]) -> "spack.vendor.jinja2.Environment":
     # Import at this scope to avoid slowing Spack startup down
     import spack.vendor.jinja2

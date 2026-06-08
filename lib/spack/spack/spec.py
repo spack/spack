@@ -86,7 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.patch
@@ -99,6 +98,7 @@ import spack.traverse
 import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
+import spack.util.lang as lang
 import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson

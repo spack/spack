@@ -54,11 +54,11 @@ import spack.builder
 import spack.config
 import spack.enums
 import spack.fetch_strategy
-import spack.llnl.util.lang
 import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
 from spack.util.string import plural
@@ -917,7 +917,7 @@ def _linting_package_file(pkgs, error_cls):
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -1009,7 +1009,7 @@ def _variant_issues_in_directives(pkgs, error_cls):
                 )
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -1350,7 +1350,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
                 error_cls(f"{pkg_name}: wrong 'when=' condition in 'resource' directives", details)
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives

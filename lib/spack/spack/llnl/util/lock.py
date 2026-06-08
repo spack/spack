@@ -11,7 +11,8 @@ from datetime import datetime
 from types import TracebackType
 from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
-from spack.llnl.util import lang, tty
+from spack.llnl.util import tty
+from spack.util import lang
 from spack.util.string import plural
 
 if sys.platform != "win32":

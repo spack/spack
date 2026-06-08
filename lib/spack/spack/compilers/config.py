@@ -15,12 +15,12 @@ import spack.config
 import spack.detection
 import spack.detection.path
 import spack.error
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.util.filesystem as fs
+import spack.util.lang
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
 from spack.util.environment import get_path
@@ -197,7 +197,7 @@ class CompilerRemover:
                 def _partition_match(external_yaml):
                     return not external_spec(external_yaml).satisfies(match)
 
-                to_keep, to_remove = spack.llnl.util.lang.stable_partition(
+                to_keep, to_remove = spack.util.lang.stable_partition(
                     externals_config, _partition_match
                 )
                 if not to_remove:

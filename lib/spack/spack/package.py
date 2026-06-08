@@ -71,7 +71,6 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.mixins import filter_compiler_wrappers
 from spack.multimethod import default_args, when
 from spack.operating_systems.linux_distro import kernel_version
@@ -136,6 +135,7 @@ from spack.util.filesystem import (
     windows_sfn,
     working_dir,
 )
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
 from spack.util.link_tree import LinkTree
 from spack.util.module_cmd import get_path_args_from_module_line

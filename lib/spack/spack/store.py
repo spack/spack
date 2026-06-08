@@ -31,10 +31,10 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
-import spack.llnl.util.lang
 import spack.package_prefs
 import spack.paths
 import spack.spec
+import spack.util.lang
 import spack.util.path
 from spack.llnl.util import tty
 from spack.util import filesystem as fs
@@ -296,7 +296,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
+STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
 
 def reinitialize():
@@ -306,7 +306,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
+    STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
     return token
 

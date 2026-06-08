@@ -17,12 +17,12 @@ from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Opt
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.oci.image
 import spack.resource
 import spack.spec
 import spack.util.crypto
+import spack.util.lang
 import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
@@ -1119,7 +1119,7 @@ def interactive_version_filter(
                 )
                 for v in sorted_and_filtered
             ]
-            tty.msg(". ".join(header), *spack.llnl.util.lang.elide_list(version_with_url))
+            tty.msg(". ".join(header), *spack.util.lang.elide_list(version_with_url))
             print()
 
         print_header = True

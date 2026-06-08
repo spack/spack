@@ -11,13 +11,13 @@ import spack.binary_distribution
 import spack.cmd as cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
+import spack.util.lang
 from spack.cmd.common import arguments
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.llnl.util.tty.color import colorize
@@ -229,7 +229,7 @@ def query_arguments(args):
     for attribute in ("start_date", "end_date"):
         date = getattr(args, attribute)
         if date:
-            q_args[attribute] = spack.llnl.util.lang.pretty_string_to_date(date)
+            q_args[attribute] = spack.util.lang.pretty_string_to_date(date)
 
     return q_args
 

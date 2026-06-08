@@ -61,7 +61,7 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
-from spack.llnl.util.lang import Singleton, dedupe, memoized
+from spack.util.lang import Singleton, dedupe, memoized
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
