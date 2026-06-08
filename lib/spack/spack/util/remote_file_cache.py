@@ -87,10 +87,9 @@ def local_path(path: str, sha256: str, dest: Optional[str] = None) -> str:
 
     # Path isn't remote so return normalized, absolute path with substitutions.
     if url.scheme in file_schemes:
-        ret = os.path.normpath(path)
-        if ret.startswith("file://"):
-            ret = ret[7:]
-        return ret
+        if path.startswith("file://"):
+            return os.path.normpath(path[7:])
+        return os.path.normpath(path)
 
     # If scheme is not valid, path is not a supported url.
     if validate_scheme(url.scheme):
