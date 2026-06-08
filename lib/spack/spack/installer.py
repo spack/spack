@@ -789,7 +789,7 @@ class BuildRequest:
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
-            ("debuggable", False),  # NEW LINE
+            ("debuggable", False),
             ("root_policy", "auto"),
             ("keep_prefix", False),
             ("keep_stage", False),
@@ -1476,7 +1476,7 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
-        debuggable: bool = False,  # NEW PARAMETER
+        debuggable: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = False,
@@ -1543,7 +1543,7 @@ class PackageInstaller:
             "install_deps": install_deps,
             "install_package": install_package,
             "install_source": install_source,
-            "debuggable": debuggable,  # NEW LINE
+            "debuggable": debuggable,
             "keep_prefix": keep_prefix,
             "keep_stage": keep_stage,
             "overwrite": overwrite or [],

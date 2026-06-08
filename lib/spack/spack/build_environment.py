@@ -789,10 +789,6 @@ def _inject_debuggable_prefix_map(
     NVCC and HIP wrappers use ``-Xcompiler`` syntax to forward the flag
     to the host compiler. Device-side PTX is not covered.
 
-    Coverage is best-effort. The post-install verification step
-    (:meth:`BuildProcessInstaller._verify_dwarf_coverage`) reports
-    any remaining staging-path references.
-
     Args:
         pkg: the package being compiled
         env: the :class:`~spack.util.environment.EnvironmentModifications`
@@ -837,19 +833,12 @@ def _inject_debuggable_prefix_map(
     debug_flags = ["-g"] + ffile_flags
 
     for spack_var in ("SPACK_CFLAGS", "SPACK_CXXFLAGS", "SPACK_FFLAGS", "SPACK_FCFLAGS"):
-        #    env.append_flags(spack_var, "-g") # NEW LINE
         for flag in debug_flags:
             env.append_flags(spack_var, flag)
 
     for raw_var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "FCFLAGS"):
         for flag in debug_flags:
             env.append_flags(raw_var, flag)
-
-    # NVCC and HIP use a wrapper syntax to forward flags to the host compiler.
-    # -Xcompiler passes flags through to the underlying gcc/clang invocation.
-    # Note: device-side PTX code does not use this DWARF format and is not
-    # covered by this flag injection.
-    #    nvcc_hip_flags = " ".join(f"-Xcompiler={flag}" for flag in ffile_flags)
 
     # NVCC / HIP: forward both -g (host debug) and the remap flags
     nvcc_hip_flags = "-Xcompiler=-g " + " ".join(f"-Xcompiler={flag}" for flag in ffile_flags)
@@ -1308,7 +1297,7 @@ def _setup_pkg_and_run(
 
         if not kwargs.get("fake", False):
             # Set _debuggable_install BEFORE setup_package() runs.
-            # setup_package() → _inject_debuggable_prefix_map() reads this attribute,
+            # setup_package(). _inject_debuggable_prefix_map() reads this attribute,
             # but BuildProcessInstaller.run() (which used to set it) runs AFTER
             # setup_package(). Moving the assignment here fixes the timing.
             if kwargs.get("debuggable", False):

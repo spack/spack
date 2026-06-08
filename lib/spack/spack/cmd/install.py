@@ -69,11 +69,11 @@ def install_kwargs_from_args(args):
         "keep_stage": args.keep_stage,
         "restage": not args.dont_restage,
         "install_source": args.install_source,
-        "debuggable": args.debuggable,  # NEW LINE
+        "debuggable": args.debuggable,
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "root_policy": root_policy,  # CHANGED
+        "root_policy": root_policy,
         "dependencies_policy": cache_opt(dep_use_bc, default),
         "include_build_deps": args.include_build_deps,
         "stop_at": args.until,
@@ -193,7 +193,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="install source files in prefix",
     )
 
-    # NEW FLAG
     subparser.add_argument(
         "--debuggable",
         action="store_true",

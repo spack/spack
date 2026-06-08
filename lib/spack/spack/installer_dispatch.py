@@ -28,7 +28,7 @@ def create_installer(
     install_deps: bool = True,
     install_package: bool = True,
     install_source: bool = False,
-    debuggable: bool = False,  # NEW
+    debuggable: bool = False,
     keep_prefix: bool = False,
     keep_stage: bool = False,
     restage: bool = True,
@@ -72,7 +72,7 @@ def create_installer(
         install_deps=install_deps,
         install_package=install_package,
         install_source=install_source,
-        debuggable=debuggable,  # NEW
+        debuggable=debuggable,
         keep_prefix=keep_prefix,
         keep_stage=keep_stage,
         restage=restage,

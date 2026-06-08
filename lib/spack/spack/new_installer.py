@@ -429,7 +429,7 @@ def worker_function(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
-    debuggable: bool,  # NEW
+    debuggable: bool,
     run_tests: bool,
     state: Connection,
     parent: Connection,
@@ -540,7 +540,7 @@ def worker_function(
                 skip_patch,
                 fake,
                 install_source,
-                debuggable,  # NEW
+                debuggable,
                 state_stream,
                 log_path,
                 spack.store.STORE,
@@ -995,7 +995,7 @@ def start_build(
     skip_patch: bool,
     fake: bool,
     install_source: bool,
-    debuggable: bool,  # NEW
+    debuggable: bool,
     run_tests: bool,
     jobserver: JobServer,
     log_path: str,
@@ -1031,7 +1031,7 @@ def start_build(
             skip_patch,
             fake,
             install_source,
-            debuggable,  # NEW
+            debuggable,
             run_tests,
             state_w_conn,
             output_w_conn,
@@ -2242,7 +2242,7 @@ class PackageInstaller:
         install_deps: bool = True,
         install_package: bool = True,
         install_source: bool = False,
-        debuggable: bool = False,  # NEW
+        debuggable: bool = False,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = True,
@@ -2260,7 +2260,7 @@ class PackageInstaller:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
         self.install_source = install_source
-        self.debuggable = debuggable  # NEW
+        self.debuggable = debuggable
         self.stop_at = stop_at
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
@@ -2826,7 +2826,7 @@ class PackageInstaller:
             skip_patch=self.skip_patch,
             fake=self.fake,
             install_source=self.install_source,
-            debuggable=self.debuggable and is_root,  # NEW
+            debuggable=self.debuggable and is_root,
             run_tests=run_tests,
             jobserver=jobserver,
             log_path=self.log_paths[dag_hash],
