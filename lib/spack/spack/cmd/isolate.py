@@ -22,7 +22,7 @@ INCLUDE_PATH = os.path.join(spack.paths.etc_path, "include.yaml")
 ISOLATE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 
 
-def _get_scope_indices(included_scopes, destination):
+def _get_scope_indices(included_scopes):
     user_index = None
     site_index = None
     system_index = None
@@ -60,19 +60,6 @@ def _isolate_config_config(new_user_path):
         syaml.dump(config_yaml, f)
 
 
-def _isolate_repos_config(new_user_path):
-    current_repos_config = spack.config.get("repos")
-    new_repos_config = {}
-    for key, value in current_repos_config.items():
-        if isinstance(value, str):
-            new_repos_config[key] = value
-        if isinstance(value, dict):
-            if "destination" not in value:
-                value["destination"] = os.path.join(new_user_path, "repos", key)
-                new_repos_config[key] = value
-    with open(os.path.join(ISOLATE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump({"repos": new_repos_config}, f)
-
 
 def _setup_isolate_scope(new_user_path, overwrite: bool):
     if os.path.exists(ISOLATE_PATH):
@@ -86,7 +73,6 @@ def _setup_isolate_scope(new_user_path, overwrite: bool):
     isolate_dict["path"] = ISOLATE_PATH
     _isolate_bootstrap_config(new_user_path)
     _isolate_config_config(new_user_path)
-    _isolate_repos_config(new_user_path)
     return isolate_dict
 
 
@@ -117,7 +103,7 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
         if overwrite:
             shutil.rmtree(destination)
         else:
-            raise Exception("Isolation destination already exists")
+            raise Exception(f"Isolation destination: {destination} already exists")
     os.mkdir(destination)
     return os.path.abspath(destination)
 
@@ -128,12 +114,44 @@ def _preserve_and_extract_include():
     )
     return include_config["include"]
 
-
+def _shim_user_path_in_exe(user_path):
+    if_line = lambda var: f'if [[ -z "${{{var}}}" ]]; then'
+    spaces = lambda n: f"{' ' * n}"
+    export_line = lambda var: f'export {var}={user_path}'
+    with open(spack.paths.spack_script, "r", encoding="utf-8") as f:
+        script_lines = f.read().split("\n")
+    new_lines = []
+    added_lines = []
+    for var in ('SPACK_USER_CONFIG_PATH', 'SPACK_USER_CACHE_PATH'):
+        added_lines += [
+            spaces(8) + if_line(var),
+            spaces(12) + export_line(var),
+            spaces(8) + "fi"
+        ]
+    rest_ind = None
+    for i, line in enumerate(script_lines):
+        if line.strip() == if_line:
+            new_lines += added_lines
+            rest_ind = i + len(added_lines)
+            break
+        elif line.strip().startswith("export SPACK_PYTHON"):
+            new_lines += added_lines
+            new_lines.append(line)
+            rest_ind = i + 1
+            break
+        else:
+            new_lines.append(line)
+    if rest_ind is None:
+        raise Exception("isolate: Failed to parse spack executable")
+    with open(spack.paths.spack_script, "w", encoding="utf-8") as f:
+        f.write("\n".join(new_lines + script_lines[rest_ind:]))
+        
+        
 def isolate(parser, args):
     destination = _ensure_destination_setup(args.destination, args.overwrite)
     include_config: list = _preserve_and_extract_include()
     user_index, site_index, system_index, old_isolate_index = _get_scope_indices(
-        include_config, destination
+        include_config
     )
     isolate_scope = _setup_isolate_scope(destination, args.overwrite)
     # insert the isolate scope above the below user and site but above system
@@ -157,6 +175,7 @@ def isolate(parser, args):
     with open(INCLUDE_PATH, "w", encoding="utf-8") as f:
         syaml.dump({"include": include_config}, f)
 
+    _shim_user_path_in_exe(destination)
     if args.bootstrap:
         del spack.config.CONFIG
         spack.config.CONFIG = spack.config.create()
