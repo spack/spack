@@ -804,3 +804,22 @@ class TestTcl:
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections["all"])
         assert projection in writer.layout.use_name
+
+    def test_hierarchical_conditional_modulepath_tcl_syntax(
+        self, modulefile_content, module_configuration
+    ):
+        """Tests that conditional MODULEPATH lines use Tcl variable syntax ($var)."""
+        module_configuration("complex_hierarchy")
+        # mpich provides mpi; compiled with gcc (non-core), so lapack/blas/python are missing.
+        # This produces conditional 'file join' lines that exercise manipulate_path.
+        content = modulefile_content("mpich@3.0.4 %gcc@=10.2.1")
+
+        file_join_lines = [line for line in content if "file join" in line]
+        assert file_join_lines
+
+        # Each line that mentions a missing token must use ${token_name} ${token_version}
+        for line in file_join_lines:
+            if "lapack" in line:
+                assert "${lapack_name} ${lapack_version}" in line, (
+                    f"Expected Tcl syntax '${{lapack_name}} ${{lapack_version}}' but got: {line!r}"
+                )

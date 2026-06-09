@@ -47,7 +47,7 @@ class TclContext(BaseContext):
 
         def manipulate_path(token: str) -> str:
             if token in self.conf.hierarchy_tokens:
-                return "{0}_name, {0}_version".format(token)
+                return "${{{0}_name}} ${{{0}_version}}".format(token)
             return '"' + token + '"'
 
         for services_needed, list_of_path_parts in conditional_paths.items():
