@@ -362,6 +362,7 @@ class BaseConfiguration:
         self._config: dict = _set_cfg.get(self.module_system, {})
         self.hierarchical: bool = self._config.get("hierarchical", self._default_hierarchical)
         self.arch_folder: bool = _set_cfg.get("arch_folder", True)
+        self.root: str = root_path(self.module_system, module_set_name)
         self.use_view: Union[bool, str] = _set_cfg.get("use_view", False)
         self.prefix_inspections: dict = syaml.syaml_dict()
         spack.schema.merge_yaml(
@@ -704,7 +705,7 @@ class FileLayout:
 
     def dirname(self) -> str:
         """Root folder for module files of this type."""
-        return root_path(self.conf.module_system, self.conf.name)
+        return self.conf.root
 
     @property
     def use_name(self) -> str:
@@ -1156,15 +1157,6 @@ class ModuleContext(tengine.Context):
         """Returns the list of paths that are unlocked unconditionally."""
         return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
-    def _manipulate_path(self, token: str) -> str:
-        return self.conf._manipulate_path(token)
-
-    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
-        return self.conf._format_condition(services_needed)
-
-    def _join_path(self, parts: Tuple[str, ...]) -> str:
-        return self.conf._join_path(parts)
-
     @tengine.context_property
     def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
         """Returns the list of paths that are unlocked conditionally.
@@ -1174,9 +1166,9 @@ class ModuleContext(tengine.Context):
         for services_needed, list_of_path_parts in self.layout.unlocked_paths.items():
             if services_needed is None:
                 continue
-            condition = self._format_condition(services_needed)
+            condition = self.conf.format_condition(services_needed)
             for parts in list_of_path_parts:
-                value.append((condition, self._join_path(parts)))
+                value.append((condition, self.conf.join_path(parts)))
         return value
 
 
@@ -1205,11 +1197,13 @@ class BaseModuleFileWriter:
     def __init__(
         self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
     ) -> None:
-        self.spec = spec
-
         self.conf = self.configuration_class.make_configuration(spec, module_set_name, explicit)
         self.layout = FileLayout(self.conf)
         self.context = ModuleContext(self.conf, self.layout)
+
+    @property
+    def spec(self) -> spack.spec.Spec:
+        return self.conf.spec
 
     def _get_template(self) -> str:
         """Gets the template that will be rendered for this spec."""
