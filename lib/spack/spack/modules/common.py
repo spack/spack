@@ -469,7 +469,7 @@ class BaseConfiguration:
     def exclude_env_vars(self):
         """List of variables that should be left unmodified."""
         filter_subsection = self.conf.get("filter", {})
-        return filter_subsection.get("exclude_env_vars", {})
+        return filter_subsection.get("exclude_env_vars", [])
 
     def _create_list_for(self, what):
         include = []

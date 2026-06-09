@@ -77,13 +77,14 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
     """
     core_compilers = []
     for compiler in spack.compilers.config.all_compilers(init_config=False):
-        try:
-            cc_dir = pathlib.Path(compiler.package.cc).parent
-            is_system_compiler = str(cc_dir) in spack.util.environment.SYSTEM_DIRS
-            if is_system_compiler:
-                core_compilers.append(compiler)
-        except (KeyError, TypeError, AttributeError):
-            continue
+        for attr in ("cc", "cxx", "fc"):
+            try:
+                path = getattr(compiler.package, attr)
+                if path and str(pathlib.Path(path).parent) in spack.util.environment.SYSTEM_DIRS:
+                    core_compilers.append(compiler)
+                    break
+            except (KeyError, TypeError, AttributeError):
+                continue
 
     if store and core_compilers:
         # If we asked to store core compilers, update the entry
