@@ -327,6 +327,7 @@ class BaseConfiguration:
     configuration: ClassVar[Callable[..., dict]]
     make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
     make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
+    make_context: ClassVar[Callable[..., "BaseContext"]]
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
@@ -551,8 +552,9 @@ class BaseContext(tengine.Context):
 
     """
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, layout: "BaseFileLayout") -> None:
         self.conf = configuration
+        self.layout = layout
 
     @tengine.context_property
     def spec(self):
@@ -769,8 +771,6 @@ class BaseModuleFileWriter:
     modulerc_header: List[str]
 
     make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
-    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
-    make_context: ClassVar[Callable[..., "BaseContext"]]
 
     def __init__(
         self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
@@ -779,8 +779,8 @@ class BaseModuleFileWriter:
 
         # Create the triplet of configuration/layout/context
         self.conf = self.make_configuration(spec, module_set_name, explicit)
-        self.layout = self.make_layout(spec, module_set_name, explicit)
-        self.context = self.make_context(spec, module_set_name, explicit)
+        self.layout = self.conf.make_layout(spec, module_set_name, explicit)
+        self.context = self.conf.make_context(spec, module_set_name, explicit, self.layout)
 
         # Check if a default template has been defined,
         # throw if not found

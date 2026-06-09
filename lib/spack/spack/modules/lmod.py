@@ -53,10 +53,16 @@ def make_layout(
 
 
 def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    spec: spack.spec.Spec,
+    module_set_name: str,
+    explicit: Optional[bool] = None,
+    layout: Optional[BaseFileLayout] = None,
 ) -> BaseContext:
     """Returns the context information for spec"""
-    return LmodContext(make_configuration(spec, module_set_name, explicit))
+    conf = make_configuration(spec, module_set_name, explicit)
+    if layout is None:
+        layout = make_layout(spec, module_set_name, explicit)
+    return LmodContext(conf, layout)
 
 
 def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
@@ -99,6 +105,7 @@ class LmodConfiguration(BaseConfiguration):
     configuration = staticmethod(configuration)
     make_configuration = staticmethod(make_configuration)
     make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
     default_projections = {"all": "{name}/{version}"}
 
@@ -462,19 +469,17 @@ class LmodContext(BaseContext):
     @lang.memoized
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name)
-        return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
+        return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
     @tengine.context_property
     def conditionally_unlocked_paths(self):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
         value = []
-        conditional_paths = layout.unlocked_paths
-        conditional_paths.pop(None)
-        for services_needed, list_of_path_parts in conditional_paths.items():
+        for services_needed, list_of_path_parts in self.layout.unlocked_paths.items():
+            if services_needed is None:
+                continue
             condition = " and ".join([x + "_name" for x in services_needed])
             for parts in list_of_path_parts:
 
@@ -484,7 +489,6 @@ class LmodContext(BaseContext):
                     return '"' + token + '"'
 
                 path = ", ".join([manipulate_path(x) for x in parts])
-
                 value.append((condition, path))
         return value
 
@@ -493,8 +497,6 @@ class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
     make_configuration = staticmethod(make_configuration)
-    make_layout = staticmethod(make_layout)
-    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.lua"
 

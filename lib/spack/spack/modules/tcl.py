@@ -47,10 +47,16 @@ def make_layout(
 
 
 def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    spec: spack.spec.Spec,
+    module_set_name: str,
+    explicit: Optional[bool] = None,
+    layout: Optional[BaseFileLayout] = None,
 ) -> BaseContext:
     """Returns the context information for spec"""
-    return TclContext(make_configuration(spec, module_set_name, explicit))
+    conf = make_configuration(spec, module_set_name, explicit)
+    if layout is None:
+        layout = make_layout(spec, module_set_name, explicit)
+    return TclContext(conf, layout)
 
 
 class TclConfiguration(BaseConfiguration):
@@ -60,6 +66,7 @@ class TclConfiguration(BaseConfiguration):
     configuration = staticmethod(configuration)
     make_configuration = staticmethod(make_configuration)
     make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
 
 class TclFileLayout(BaseFileLayout):
@@ -84,8 +91,6 @@ class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
 
     make_configuration = staticmethod(make_configuration)
-    make_layout = staticmethod(make_layout)
-    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.tcl"
 
