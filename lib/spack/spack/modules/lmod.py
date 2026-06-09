@@ -58,11 +58,7 @@ class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
     module_system = "lmod"
-
-    @property
-    def hierarchical(self) -> bool:
-        """Returns if hierarchical mode has been enabled, True if not set."""
-        return self.module.configuration(self.name).get("hierarchical", True)
+    _default_hierarchical = True
 
 
 class LmodFileLayout(BaseFileLayout):

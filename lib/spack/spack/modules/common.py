@@ -366,11 +366,18 @@ class BaseConfiguration:
     #: Name of the module system (must be set by each subclass)
     module_system: str
 
+    #: Default for the ``hierarchical`` config key when it is absent. Subclasses may override.
+    _default_hierarchical: bool = False
+
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
+        # Resolve once — self.module.configuration() traverses all config scopes
+        self.hierarchical: bool = self.module.configuration(self.name).get(
+            "hierarchical", self._default_hierarchical
+        )
         # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self.configuration(self.name), self.spec)
 
@@ -518,11 +525,6 @@ class BaseConfiguration:
             tty.debug(f"\tHIDDEN_AS_IMPLICIT : {self.spec.cshort_spec}")
 
         return hidden_as_implicit
-
-    @property
-    def hierarchical(self) -> bool:
-        """Returns if hierarchical mode has been enabled, False if not set."""
-        return self.module.configuration(self.name).get("hierarchical", False)
 
     @property
     def context(self) -> dict:
