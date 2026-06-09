@@ -45,24 +45,6 @@ def make_configuration(
         )
 
 
-def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseFileLayout:
-    """Returns the layout information for spec"""
-    return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
-
-
-def make_context(
-    spec: spack.spec.Spec,
-    module_set_name: str,
-    *,
-    explicit: Optional[bool] = None,
-    layout: BaseFileLayout,
-) -> BaseContext:
-    """Returns the context information for spec"""
-    return LmodContext(make_configuration(spec, module_set_name, explicit), layout)
-
-
 def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
     """Guesses the list of core compilers installed in the system.
 
@@ -103,8 +85,22 @@ class LmodConfiguration(BaseConfiguration):
     module_system = "lmod"
     configuration = staticmethod(configuration)
     make_configuration = staticmethod(make_configuration)
-    make_layout = staticmethod(make_layout)
-    make_context = staticmethod(make_context)
+
+    @staticmethod
+    def make_layout(
+        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> BaseFileLayout:
+        return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
+
+    @staticmethod
+    def make_context(
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        *,
+        explicit: Optional[bool] = None,
+        layout: BaseFileLayout,
+    ) -> BaseContext:
+        return LmodContext(make_configuration(spec, module_set_name, explicit), layout)
 
     default_projections = {"all": "{name}/{version}"}
 
