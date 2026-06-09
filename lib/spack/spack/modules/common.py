@@ -1182,12 +1182,53 @@ class BaseContext(tengine.Context):
         return value
 
 
+class ModulesError(spack.error.SpackError):
+    """Base error for modules."""
+
+
+class ModuleNotFoundError(ModulesError):
+    """Raised when a module cannot be found for a spec"""
+
+
+class DefaultTemplateNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute ``default_template`` has not been specified
+    in the derived classes.
+    """
+
+
+class HideCmdFormatNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute ``hide_cmd_format`` has not been specified
+    in the derived classes.
+    """
+
+
+class ModulercHeaderNotDefined(AttributeError, ModulesError):
+    """Raised if the attribute ``modulerc_header`` has not been specified
+    in the derived classes.
+    """
+
+
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
     modulerc_header: List[str]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
+
+    _required_attrs = (
+        ("default_template", DefaultTemplateNotDefined),
+        ("hide_cmd_format", HideCmdFormatNotDefined),
+        ("modulerc_header", ModulercHeaderNotDefined),
+    )
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        for attr, exc_type in BaseModuleFileWriter._required_attrs:
+            if not hasattr(cls, attr):
+                raise exc_type(
+                    f"'{cls.__name__}' object has no attribute '{attr}'\n"
+                    "Did you forget to define it in the class?"
+                )
 
     def __init__(
         self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
@@ -1200,36 +1241,6 @@ class BaseModuleFileWriter:
         self.context = self.conf.make_context(
             spec, module_set_name, explicit=explicit, layout=self.layout
         )
-
-        # Check if a default template has been defined,
-        # throw if not found
-        try:
-            self.default_template
-        except AttributeError:
-            msg = "'{0}' object has no attribute 'default_template'\n"
-            msg += "Did you forget to define it in the class?"
-            name = type(self).__name__
-            raise DefaultTemplateNotDefined(msg.format(name))
-
-        # Check if format for module hide command has been defined,
-        # throw if not found
-        try:
-            self.hide_cmd_format
-        except AttributeError:
-            msg = "'{0}' object has no attribute 'hide_cmd_format'\n"
-            msg += "Did you forget to define it in the class?"
-            name = type(self).__name__
-            raise HideCmdFormatNotDefined(msg.format(name))
-
-        # Check if modulerc header content has been defined,
-        # throw if not found
-        try:
-            self.modulerc_header
-        except AttributeError:
-            msg = "'{0}' object has no attribute 'modulerc_header'\n"
-            msg += "Did you forget to define it in the class?"
-            name = type(self).__name__
-            raise ModulercHeaderNotDefined(msg.format(name))
 
     def _get_template(self) -> str:
         """Gets the template that will be rendered for this spec."""
@@ -1423,32 +1434,6 @@ def disable_modules() -> Iterator[None]:
     disable_scope = spack.config.InternalConfigScope("disable_modules", data=data)
     with spack.config.override(disable_scope):
         yield
-
-
-class ModulesError(spack.error.SpackError):
-    """Base error for modules."""
-
-
-class ModuleNotFoundError(ModulesError):
-    """Raised when a module cannot be found for a spec"""
-
-
-class DefaultTemplateNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``default_template`` has not been specified
-    in the derived classes.
-    """
-
-
-class HideCmdFormatNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``hide_cmd_format`` has not been specified
-    in the derived classes.
-    """
-
-
-class ModulercHeaderNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``modulerc_header`` has not been specified
-    in the derived classes.
-    """
 
 
 class ModulesTemplateNotFoundError(ModulesError, RuntimeError):
