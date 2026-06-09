@@ -13,7 +13,7 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.main
-import spack.modules.common
+import spack.modules.error
 import spack.modules.lmod
 import spack.spec
 import spack.util.environment
@@ -335,14 +335,14 @@ class TestLmod:
         module_configuration("missing_core_compilers")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
         # Here we have an empty list
         module_configuration("core_compilers_empty")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
     def test_conflicts(self, modulefile_content, module_configuration):
@@ -362,7 +362,7 @@ class TestLmod:
 
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(spack.modules.common.ModulesError):
+        with pytest.raises(spack.modules.error.ModulesError):
             modulefile_content("mpileaks")
 
     def test_override_template_in_package(self, modulefile_content, module_configuration):

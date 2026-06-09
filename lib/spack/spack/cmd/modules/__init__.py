@@ -14,6 +14,7 @@ import spack.config
 import spack.error
 import spack.modules
 import spack.modules.common
+import spack.modules.error
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
@@ -229,7 +230,7 @@ def find(module_type, specs, args):
                 required=True,
             )
         )
-    except spack.modules.common.ModuleNotFoundError as e:
+    except spack.modules.error.ModuleNotFoundError as e:
         tty.die(e.message)
 
     if not all(modules):

@@ -63,6 +63,15 @@ from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.util.lang import Singleton, dedupe, memoized
 
+from .error import (
+    CoreCompilersNotFoundError,
+    DefaultTemplateNotDefined,
+    HideCmdFormatNotDefined,
+    ModulercHeaderNotDefined,
+    ModulesError,
+    ModulesTemplateNotFoundError,
+)
+
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     "name",
@@ -1193,32 +1202,6 @@ class ModuleContext(tengine.Context):
         return value
 
 
-class ModulesError(spack.error.SpackError):
-    """Base error for modules."""
-
-
-class ModuleNotFoundError(ModulesError):
-    """Raised when a module cannot be found for a spec"""
-
-
-class DefaultTemplateNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``default_template`` has not been specified
-    in the derived classes.
-    """
-
-
-class HideCmdFormatNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``hide_cmd_format`` has not been specified
-    in the derived classes.
-    """
-
-
-class ModulercHeaderNotDefined(AttributeError, ModulesError):
-    """Raised if the attribute ``modulerc_header`` has not been specified
-    in the derived classes.
-    """
-
-
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
@@ -1445,13 +1428,3 @@ def disable_modules() -> Iterator[None]:
     disable_scope = spack.config.InternalConfigScope("disable_modules", data=data)
     with spack.config.override(disable_scope):
         yield
-
-
-class ModulesTemplateNotFoundError(ModulesError, RuntimeError):
-    """Raised if the template for a module file was not found."""
-
-
-class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
-    """Error raised if the key ``core_compilers`` has not been specified
-    in the configuration file.
-    """

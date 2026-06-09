@@ -11,6 +11,7 @@ import spack.vendor.archspec.cpu
 import spack.concretize
 import spack.config
 import spack.modules.common
+import spack.modules.error
 import spack.modules.tcl
 import spack.spec
 import spack.util.environment
@@ -357,7 +358,7 @@ class TestTcl:
 
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(spack.modules.common.ModulesError):
+        with pytest.raises(spack.modules.error.ModulesError):
             modulefile_content("mpileaks")
 
     def test_module_index(
@@ -731,14 +732,14 @@ class TestTcl:
         module_configuration("missing_core_compilers")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
         # Here we have an empty list
         module_configuration("core_compilers_empty")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.common.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
     def test_guess_core_compilers(self, factory, module_configuration, monkeypatch):

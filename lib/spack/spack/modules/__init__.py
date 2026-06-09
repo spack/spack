@@ -16,6 +16,7 @@ import spack.store
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules
+from .error import ModuleNotFoundError
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
 
@@ -74,7 +75,7 @@ def get_module(
         if not os.path.isfile(writer.layout.filename):
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
-                raise common.ModuleNotFoundError(
+                raise ModuleNotFoundError(
                     "The module for package {} should be at {}, but it does not exist".format(
                         spec.format(fmt_str), writer.layout.filename
                     )
