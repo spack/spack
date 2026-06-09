@@ -13,9 +13,10 @@ import codecs
 import re
 import selectors
 import sys
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
 
 import spack.database
+import spack.spec
 import spack.util.lock
 
 if TYPE_CHECKING:
@@ -120,7 +121,7 @@ class DatabaseAction:
 
     __slots__ = ("spec", "prefix_lock")
 
-    spec: "spack.spec.Spec"
+    spec: spack.spec.Spec
     prefix_lock: Optional[spack.util.lock.Lock]
 
     def save_to_db(self, db: spack.database.Database) -> None: ...
@@ -142,3 +143,70 @@ class FdInfo:
     def __init__(self, pid: int, name: str) -> None:
         self.pid = pid
         self.name = name
+
+
+class JobServerBase(abc.ABC):
+    """Abstract base for controlling build concurrency."""
+
+    def __init__(self, num_jobs: int) -> None:
+        #: The number of jobs to run concurrently
+        self.num_jobs = num_jobs
+        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
+        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
+        #: reflect that yet. This value is used in the UI. The value self.target_jobs can only be
+        #: modified if Spack owns the jobserver, and not when it's attached to a parent jobserver.
+        self.target_jobs = num_jobs
+
+    def has_target_parallelism(self) -> bool:
+        return self.num_jobs == self.target_jobs
+
+    @abc.abstractmethod
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
+        """Return a tuple of (makeflags, data) to be passed to the child process. The makeflags are
+        meant to be set in the child process's environment, and the data is implementation specific
+        data serialized and sent to the child process for jobserver support."""
+
+    @abc.abstractmethod
+    def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
+        """Listen or stop listening for jobserver events on the given selector."""
+
+    @abc.abstractmethod
+    def increase_parallelism(self) -> None:
+        """Increase the target parallelism by one."""
+
+    @abc.abstractmethod
+    def decrease_parallelism(self) -> None:
+        """Decrease the target parallelism by one."""
+
+    @abc.abstractmethod
+    def acquire(self, jobs: int) -> int:
+        """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of tokens
+        actually acquired (may be less than requested, or zero)."""
+
+    @abc.abstractmethod
+    def release(self) -> None:
+        """Release a token back to the jobserver."""
+
+    @abc.abstractmethod
+    def close(self) -> None:
+        """Close any resources associated with the jobserver."""
+
+
+class NoopJobServer(JobServerBase):
+    """Dummy jobserver for platforms lacking jobserver support."""
+
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
+        return (None, None)
+
+    def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None: ...
+
+    def increase_parallelism(self) -> None: ...
+
+    def decrease_parallelism(self) -> None: ...
+
+    def acquire(self, jobs: int) -> int:
+        return 0
+
+    def release(self) -> None: ...
+
+    def close(self) -> None: ...

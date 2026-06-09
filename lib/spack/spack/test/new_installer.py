@@ -18,11 +18,11 @@ from spack.new_installer import (
     BinaryCacheMiss,
     BuildGraph,
     PackageInstaller,
-    PosixJobServer,
     PrefixPivoter,
     _node_to_roots,
     schedule_builds,
 )
+from spack.new_installer_posix import PosixJobServer
 from spack.test.traverse import create_dag
 
 

@@ -14,8 +14,8 @@ import os
 import pathlib
 import stat
 
-from spack.new_installer import PosixJobServer
 from spack.new_installer_posix import (
+    PosixJobServer,
     create_jobserver_fifo,
     get_jobserver_config,
     open_existing_jobserver_fifo,
@@ -217,8 +217,9 @@ class TestJobServer:
         js = PosixJobServer(8)
 
         try:
-            flags = js.makeflags(Spec("gmake@=4.4"))
+            flags, data = js.makeflags_and_data(Spec("gmake@=4.4"))
             assert flags == f" -j8 --jobserver-auth=fifo:{js.fifo_path}"
+            assert data is None
         finally:
             js.close()
 
@@ -227,8 +228,9 @@ class TestJobServer:
         js = PosixJobServer(8)
 
         try:
-            flags = js.makeflags(Spec("gmake@=4.0"))
+            flags, data = js.makeflags_and_data(Spec("gmake@=4.0"))
             assert flags == f" -j8 --jobserver-auth={js.r},{js.w}"
+            assert data == (js.r_conn, js.w_conn)
         finally:
             js.close()
 
@@ -237,8 +239,9 @@ class TestJobServer:
         js = PosixJobServer(8)
 
         try:
-            flags = js.makeflags(Spec("gmake@=3.9"))
+            flags, data = js.makeflags_and_data(Spec("gmake@=3.9"))
             assert flags == f" -j8 --jobserver-fds={js.r},{js.w}"
+            assert data == (js.r_conn, js.w_conn)
         finally:
             js.close()
 
@@ -247,8 +250,9 @@ class TestJobServer:
         js = PosixJobServer(6)
 
         try:
-            flags = js.makeflags(None)
+            flags, data = js.makeflags_and_data(None)
             assert flags == f" -j6 --jobserver-auth=fifo:{js.fifo_path}"
+            assert data is None
         finally:
             js.close()
 
@@ -389,7 +393,7 @@ class TestJobServer:
         js = PosixJobServer(3)
         try:
             original_num = js.num_jobs
-            js.maybe_discard_tokens()  # to_discard == 0
+            js._maybe_discard_tokens()  # to_discard == 0
             assert js.num_jobs == original_num
         finally:
             js.close()
@@ -401,7 +405,7 @@ class TestJobServer:
             # Manually set target lower to create a discard requirement.
             js.target_jobs = js.num_jobs - 2
             original_num = js.num_jobs
-            js.maybe_discard_tokens()
+            js._maybe_discard_tokens()
             assert js.num_jobs < original_num
         finally:
             js.close()
@@ -415,7 +419,7 @@ class TestJobServer:
             original_num = js.num_jobs
             # Artificially lower target so a discard is requested, but pipe is empty.
             js.target_jobs = js.num_jobs - 1
-            js.maybe_discard_tokens()  # Should not raise; num_jobs unchanged.
+            js._maybe_discard_tokens()  # Should not raise; num_jobs unchanged.
             assert js.num_jobs == original_num
         finally:
             js.close()

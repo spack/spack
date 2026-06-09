@@ -18,7 +18,7 @@ import tty
 import warnings
 from multiprocessing import Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Callable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.database
 import spack.llnl.util.tty
@@ -30,6 +30,7 @@ from spack.new_installer_base import (
     BaseTerminalState,
     DatabaseAction,
     FdInfo,
+    JobServerBase,
     StdinReaderBase,
 )
 
@@ -328,20 +329,13 @@ class PosixTee:
         self.parent.close()
 
 
-class PosixJobServer:
+class PosixJobServer(JobServerBase):
     """Attach to an existing POSIX jobserver or create a FIFO-based one."""
 
     def __init__(self, num_jobs: int) -> None:
+        super().__init__(num_jobs)
         #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
         self.tokens_acquired = 0
-        #: The number of jobs to run concurrently. This translates to `num_jobs - 1` tokens in the
-        #: jobserver.
-        self.num_jobs = num_jobs
-        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
-        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
-        #: reflect that yet. This value is used in the UI. The invariant is that self.target_jobs
-        #: can only be modified if self.created is True.
-        self.target_jobs = num_jobs
         self.fifo_path: Optional[str] = None
         self.created = False
         self._setup()
@@ -375,20 +369,23 @@ class PosixJobServer:
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
         self.created = True
 
-    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
-        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
+    def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
         if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
-        elif not gmake or gmake.satisfies("@4.0:"):
-            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
+            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}", None
+        # For non-FIFO jobservers, ensure the pipes are inherited by the child process
+        pipes = (self.r_conn, self.w_conn)
+        if not gmake or gmake.satisfies("@4.0:"):
+            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}", pipes
         else:
-            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
+            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}", pipes
 
-    def has_target_parallelism(self) -> bool:
-        return self.num_jobs == self.target_jobs
+    def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
+        if wake and self.r not in selector.get_map():
+            selector.register(self.r, selectors.EVENT_READ, "jobserver")
+        elif not wake and self.r in selector.get_map():
+            selector.unregister(self.r)
 
     def increase_parallelism(self) -> None:
-        """Add one token to the jobserver to increase parallelism; this should always work."""
         if not self.created:
             return
         self.target_jobs += 1
@@ -399,13 +396,12 @@ class PosixJobServer:
         self.num_jobs += 1
 
     def decrease_parallelism(self) -> None:
-        """Request an eventual concurrency decrease by 1."""
         if not self.created or self.target_jobs <= 1:
             return
         self.target_jobs -= 1
-        self.maybe_discard_tokens()
+        self._maybe_discard_tokens()
 
-    def maybe_discard_tokens(self) -> None:
+    def _maybe_discard_tokens(self) -> None:
         """Try to get reduce parallelism by discarding tokens."""
         to_discard = self.num_jobs - self.target_jobs
         if to_discard <= 0:
@@ -417,8 +413,6 @@ class PosixJobServer:
             pass
 
     def acquire(self, jobs: int) -> int:
-        """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
-        tokens actually acquired (may be less than requested, or zero)."""
         try:
             num_acquired = len(os.read(self.r, jobs))
             self.tokens_acquired += num_acquired
@@ -427,7 +421,6 @@ class PosixJobServer:
             return 0
 
     def release(self) -> None:
-        """Release a token back to the jobserver."""
         # The last job to quit has an implicit token, so don't release if we have none.
         if self.tokens_acquired == 0:
             return

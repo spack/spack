@@ -37,6 +37,7 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     FrozenSet,
@@ -79,6 +80,7 @@ from spack.new_installer_base import (
     BaseTerminalState,
     DatabaseAction,
     FdInfo,
+    JobServerBase,
     StdinReaderBase,
 )
 from spack.subprocess_context import GlobalStateMarshaler
@@ -87,9 +89,11 @@ from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
 if sys.platform == "win32":
+    from spack.new_installer_base import NoopJobServer as JobServer
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
-    from spack.new_installer_posix import PosixChildInfo, PosixJobServer, PosixTee
+    from spack.new_installer_posix import PosixChildInfo, PosixTee
+    from spack.new_installer_posix import PosixJobServer as JobServer
     from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
@@ -285,9 +289,7 @@ def worker_function(
     state: Connection,
     parent: Connection,
     echo_control: Connection,
-    makeflags: str,
-    js1: Optional[Connection],
-    js2: Optional[Connection],
+    jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
     stop_before: Optional[str] = None,
@@ -312,9 +314,9 @@ def worker_function(
         state: Connection to send state updates to
         parent: Connection to send build output to
         echo_control: Connection to receive echo control messages from
-        makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
-        js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
-        js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
+        jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
+            opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
+            inherited in the build process)
         log_path: Path to the log file to write build output to
         global_state: Global state to restore
     """
@@ -351,7 +353,9 @@ def worker_function(
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-    os.environ["MAKEFLAGS"] = makeflags
+    makeflags, _ = jobserver_info
+    if makeflags is not None:
+        os.environ["MAKEFLAGS"] = makeflags
 
     # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
     # much ourselves, but what we print should appear before output from `make` and other build
@@ -695,7 +699,7 @@ def start_build(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    jobserver: PosixJobServer,
+    jobserver: JobServerBase,
     log_path: str,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
@@ -709,8 +713,7 @@ def start_build(
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
     gmake = next(iter(spec.dependencies("gmake")), None)
-    makeflags = jobserver.makeflags(gmake)
-    fifo = "--jobserver-auth=fifo:" in makeflags
+    jobserver_details = jobserver.makeflags_and_data(gmake)
 
     # As a performance optimization, we do not serialize the environment which
     # is slow to serialize and not needed in the build job
@@ -733,9 +736,7 @@ def start_build(
             state_w_conn,
             output_w_conn,
             control_r_conn,
-            makeflags,
-            None if fifo else jobserver.r_conn,
-            None if fifo else jobserver.w_conn,
+            jobserver_details,
             log_path,
             GlobalStateMarshaler(serialize_env=False),
             stop_before,
@@ -1605,7 +1606,7 @@ def schedule_builds(
     overwrite_time: float,
     capacity: int,
     needs_jobserver_token: bool,
-    jobserver: PosixJobServer,
+    jobserver: JobServerBase,
     explicit: Set[str],
 ) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
@@ -2009,7 +2010,7 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         spack.store.STORE.install_sbang()
-        jobserver = PosixJobServer(self.jobs)
+        jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
 
         # Set up terminal handling (cbreak, signals, stdin registration)
@@ -2050,16 +2051,13 @@ class PackageInstaller:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
                 # spec is not locked by another process. Also listen if the target parallelism is
                 # reduced.
-                wake_on_jobserver = (
+                wake_on_jobserver = bool(
                     self.pending_builds
                     and self.capacity
                     and not blocked
                     or not jobserver.has_target_parallelism()
                 )
-                if wake_on_jobserver and jobserver.r not in selector.get_map():
-                    selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not wake_on_jobserver and jobserver.r in selector.get_map():
-                    selector.unregister(jobserver.r)
+                jobserver.update_selector(selector, wake_on_jobserver)
 
                 stdin_ready = False
 
@@ -2100,7 +2098,7 @@ class PackageInstaller:
                         terminal.drain_sigwinch()
                         self.build_status.on_resize()
                     elif data == "jobserver" and not jobserver.has_target_parallelism():
-                        jobserver.maybe_discard_tokens()
+                        jobserver._maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
@@ -2261,7 +2259,7 @@ class PackageInstaller:
         self,
         pid: int,
         current_time: float,
-        jobserver: PosixJobServer,
+        jobserver: JobServerBase,
         selector: selectors.BaseSelector,
         failures: List[spack.spec.Spec],
         database_actions: List[DatabaseAction],
@@ -2368,7 +2366,7 @@ class PackageInstaller:
     def _schedule_builds(
         self,
         selector: selectors.BaseSelector,
-        jobserver: PosixJobServer,
+        jobserver: JobServerBase,
         retained_read_locks: List[spack.util.lock.Lock],
         database_actions: List[DatabaseAction],
     ) -> bool:
@@ -2428,7 +2426,7 @@ class PackageInstaller:
     def _start(
         self,
         selector: selectors.BaseSelector,
-        jobserver: PosixJobServer,
+        jobserver: JobServerBase,
         dag_hash: str,
         prefix_lock: spack.util.lock.Lock,
     ) -> None:
