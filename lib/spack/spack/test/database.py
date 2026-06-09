@@ -32,7 +32,6 @@ import spack.vendor.jsonschema
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
-import spack.llnl.util.lock as lk
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -40,6 +39,7 @@ import spack.spec
 import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller

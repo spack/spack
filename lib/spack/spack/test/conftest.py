@@ -41,7 +41,6 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_types
-import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color
 import spack.modules.common
@@ -61,6 +60,7 @@ import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
 import spack.util.lang
+import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
@@ -2083,15 +2083,15 @@ def mock_test_stage(mutable_config, tmp_path: Path):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    spack.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in spack.llnl.util.lock.FILE_TRACKER._descriptors.values())
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.util.lock.FILE_TRACKER._descriptors.values())
+    spack.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)

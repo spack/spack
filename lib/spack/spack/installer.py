@@ -50,7 +50,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.package_base
@@ -60,6 +59,7 @@ import spack.report
 import spack.rewiring
 import spack.store
 import spack.util.filesystem as fs
+import spack.util.lock as lk
 import spack.util.path
 import spack.util.timer as timer
 from spack.llnl.util.tty.color import colorize

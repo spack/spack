@@ -20,7 +20,6 @@ import spack.error
 import spack.hooks
 import spack.installer as inst
 import spack.installer_dispatch
-import spack.llnl.util.lock as ulk
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
@@ -30,6 +29,7 @@ import spack.spec
 import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
+import spack.util.lock as ulk
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
 
