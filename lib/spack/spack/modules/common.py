@@ -1172,6 +1172,29 @@ class BaseContext(tengine.Context):
         """Returns the list of paths that are unlocked unconditionally."""
         return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
+    def _manipulate_path(self, token: str) -> str:
+        raise NotImplementedError
+
+    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
+        raise NotImplementedError
+
+    def _join_path(self, parts: Tuple[str, ...]) -> str:
+        raise NotImplementedError
+
+    @tengine.context_property
+    def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
+        """Returns the list of paths that are unlocked conditionally.
+        Each item in the list is a tuple with the structure (condition, path).
+        """
+        value: List[Tuple[str, str]] = []
+        for services_needed, list_of_path_parts in self.layout.unlocked_paths.items():
+            if services_needed is None:
+                continue
+            condition = self._format_condition(services_needed)
+            for parts in list_of_path_parts:
+                value.append((condition, self._join_path(parts)))
+        return value
+
 
 class BaseModuleFileWriter:
     default_template: str

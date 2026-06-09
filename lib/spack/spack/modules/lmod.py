@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import spack.config
 import spack.spec
-import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
@@ -77,29 +76,16 @@ class LmodFileLayout(BaseFileLayout):
 class LmodContext(BaseContext):
     """Context class for lmod module files."""
 
-    @tengine.context_property
-    def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
-        """Returns the list of paths that are unlocked conditionally.
-        Each item in the list is a tuple with the structure (condition, path).
-        """
-        value: List[Tuple[str, str]] = []
-        conditional_paths = self.layout.unlocked_paths
+    def _manipulate_path(self, token: str) -> str:
+        if token in self.conf.hierarchy_tokens:
+            return "{0}_name, {0}_version".format(token)
+        return '"' + token + '"'
 
-        def manipulate_path(token: str) -> str:
-            if token in self.conf.hierarchy_tokens:
-                return "{0}_name, {0}_version".format(token)
-            return '"' + token + '"'
+    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
+        return " and ".join([x + "_name" for x in services_needed])
 
-        for services_needed, list_of_path_parts in conditional_paths.items():
-            if services_needed is None:
-                continue
-
-            condition = " and ".join([x + "_name" for x in services_needed])
-            for parts in list_of_path_parts:
-                path = ", ".join([manipulate_path(x) for x in parts])
-                value.append((condition, path))
-
-        return value
+    def _join_path(self, parts: Tuple[str, ...]) -> str:
+        return ", ".join([self._manipulate_path(x) for x in parts])
 
 
 class LmodModulefileWriter(BaseModuleFileWriter):

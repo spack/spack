@@ -80,29 +80,16 @@ class TclContext(BaseContext):
         """List of modules that needs to be loaded automatically."""
         return self._create_module_list_of("specs_to_prereq")
 
-    @tengine.context_property
-    def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:
-        """Returns the list of paths that are unlocked conditionally.
-        Each item in the list is a tuple with the structure (condition, path).
-        """
-        value: List[Tuple[str, str]] = []
-        conditional_paths = self.layout.unlocked_paths
+    def _manipulate_path(self, token: str) -> str:
+        if token in self.conf.hierarchy_tokens:
+            return "${{{0}_name}} ${{{0}_version}}".format(token)
+        return '"' + token + '"'
 
-        def manipulate_path(token: str) -> str:
-            if token in self.conf.hierarchy_tokens:
-                return "${{{0}_name}} ${{{0}_version}}".format(token)
-            return '"' + token + '"'
+    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
+        return " && ".join(["[string length $" + x + "_name]" for x in services_needed])
 
-        for services_needed, list_of_path_parts in conditional_paths.items():
-            if services_needed is None:
-                continue
-
-            condition = " && ".join(["[string length $" + x + "_name]" for x in services_needed])
-            for parts in list_of_path_parts:
-                path = " ".join([manipulate_path(x) for x in parts])
-                value.append((condition, path))
-
-        return value
+    def _join_path(self, parts: Tuple[str, ...]) -> str:
+        return " ".join([self._manipulate_path(x) for x in parts])
 
 
 class TclModulefileWriter(BaseModuleFileWriter):
