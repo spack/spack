@@ -34,7 +34,7 @@ import pathlib
 import re
 import string
 import warnings
-from typing import IO, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, Union
+from typing import IO, Callable, ClassVar, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 import spack.vendor.jinja2
 
@@ -201,33 +201,31 @@ def root_path(module_type: str, module_set: str) -> str:
 def generate_module_index(
     root: str, modules: List["BaseModuleFileWriter"], overwrite: bool = False
 ) -> None:
+    entries = {}
     index_path = os.path.join(root, "module-index.yaml")
-    if overwrite or not os.path.exists(index_path):
-        entries = syaml.syaml_dict()
-    else:
+    if not overwrite and os.path.exists(index_path):
         with open(index_path, encoding="utf-8") as index_file:
-            yaml_content = syaml.load(index_file)
-            entries = yaml_content["module_index"]
+            entries = syaml.load(index_file)["module_index"]
 
     for m in modules:
-        entry = {"path": m.layout.filename, "use_name": m.layout.use_name}
-        entries[m.spec.dag_hash()] = entry
-    index = {"module_index": entries}
+        entries[m.spec.dag_hash()] = {"path": m.layout.filename, "use_name": m.layout.use_name}
+
     fs.mkdirp(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
-        syaml.dump(index, default_flow_style=False, stream=index_file)
+        syaml.dump({"module_index": entries}, default_flow_style=False, stream=index_file)
 
 
 def _generate_upstream_module_index() -> "UpstreamModuleIndex":
     module_indices = read_module_indices()
-
     return UpstreamModuleIndex(spack.store.STORE.db, module_indices)
 
 
 upstream_module_index = Singleton(_generate_upstream_module_index)
 
 
-ModuleIndexEntry = collections.namedtuple("ModuleIndexEntry", ["path", "use_name"])
+class ModuleIndexEntry(NamedTuple):
+    path: str
+    use_name: str
 
 
 def read_module_index(root: str) -> Dict[str, ModuleIndexEntry]:
