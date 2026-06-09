@@ -92,8 +92,9 @@ if sys.platform == "win32":
     from spack.new_installer_base import NoopJobServer as JobServer
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
-    from spack.new_installer_posix import PosixChildInfo, PosixTee
+    from spack.new_installer_posix import PosixChildInfo as ChildInfo
     from spack.new_installer_posix import PosixJobServer as JobServer
+    from spack.new_installer_posix import PosixTee as Tee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
@@ -375,7 +376,7 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = PosixTee(echo_control, parent, log_path)
+    tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
@@ -703,7 +704,7 @@ def start_build(
     log_path: str,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
-) -> PosixChildInfo:
+) -> ChildInfo:
     """Start a new build."""
     # Create pipes for the child's output, state reporting, and control.
     state_r_conn, state_w_conn = Pipe(duplex=False)
@@ -754,9 +755,7 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return PosixChildInfo(
-        proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit
-    )
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
 
 
 class BuildInfo:
@@ -1858,7 +1857,7 @@ class NullReportData(ReportData):
         pass
 
 
-def _signal_children(running_builds: Dict[int, PosixChildInfo], sig: signal.Signals) -> None:
+def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
         try:
@@ -1974,7 +1973,7 @@ class PackageInstaller:
         self.pending_expansions: List[str] = []
 
         self.verbose = verbose
-        self.running_builds: Dict[int, PosixChildInfo] = {}
+        self.running_builds: Dict[int, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
@@ -2484,7 +2483,7 @@ class PackageInstaller:
         self.report_data.start_record(spec)
 
     def _handle_child_logs(
-        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
         try:
@@ -2505,24 +2504,20 @@ class PackageInstaller:
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
-    def _drain_child_output(
-        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
-    ) -> None:
+    def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         r_fd = child_info.output_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_logs(r_fd, child_info, selector)
 
-    def _drain_child_state(
-        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
-    ) -> None:
+    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
         r_fd = child_info.state_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_state(r_fd, child_info, selector)
 
     def _handle_child_state(
-        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
         try:

@@ -2,18 +2,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Abstract base classes for the new_installer TUI terminal state and stdin reading.
-
-Kept in a leaf module (no imports from new_installer.py or the platform modules) so that
-new_installer_posix and new_installer_windows can import from here without introducing a
-circular dependency."""
+"""Abstract base classes for new_installer:
+TUI terminal state, IPC channels, and job scheduling."""
 
 import abc
 import codecs
+import io
+import os
 import re
 import selectors
+import socket
 import sys
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
+import threading
+from multiprocessing import Process
+from multiprocessing.connection import Connection
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.database
 import spack.spec
@@ -21,6 +24,9 @@ import spack.util.lock
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
+
+#: Size of the output buffer for child processes
+OUTPUT_BUFFER_SIZE = 32768
 
 
 class StdinReaderBase:
@@ -145,6 +151,65 @@ class FdInfo:
         self.name = name
 
 
+class ChildInfo(DatabaseAction):
+    """Base class for child process info. Subclassed per platform for IPC channel types."""
+
+    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
+
+    def __init__(
+        self,
+        proc: Process,
+        spec: spack.spec.Spec,
+        output_r_conn: Connection,
+        state_r_conn: Connection,
+        control_w_conn: Connection,
+        log_path: str,
+        explicit: bool = False,
+    ) -> None:
+        self.proc = proc
+        self.spec = spec
+        self.output_r_conn = output_r_conn
+        self.state_r_conn = state_r_conn
+        self.control_w_conn = control_w_conn
+        self.log_path = log_path
+        self.explicit = explicit
+        self.prefix_lock: Optional[spack.util.lock.Lock] = None
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        return db._add(self.spec, explicit=self.explicit)
+
+    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+        """Register output, state, and sentinel channels with the selector."""
+        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
+        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+
+    def close(self, selector: selectors.BaseSelector) -> int:
+        """Unregister and close file descriptors, and join the child process.
+        Returns the exit code of the child process."""
+        try:
+            selector.unregister(self.output_r_conn.fileno())
+        except KeyError:
+            pass
+        try:
+            selector.unregister(self.state_r_conn.fileno())
+        except KeyError:
+            pass
+        try:
+            selector.unregister(self.proc.sentinel)
+        except (KeyError, ValueError):
+            pass
+        self.output_r_conn.close()
+        self.state_r_conn.close()
+        self.control_w_conn.close()
+        self.proc.join()
+        exit_code = self.proc.exitcode
+        assert exit_code is not None, "Finished build should have exit code set"
+        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
+            self.proc.close()
+        return exit_code
+
+
 class JobServerBase(abc.ABC):
     """Abstract base for controlling build concurrency."""
 
@@ -210,3 +275,50 @@ class NoopJobServer(JobServerBase):
     def release(self) -> None: ...
 
     def close(self) -> None: ...
+
+
+class Tee(abc.ABC):
+    """Emulates ./build 2>&1 | tee build.log. Output is sent to a log file and the parent
+    process (if echoing is enabled). The control socket is used to enable/disable echoing."""
+
+    def __init__(
+        self,
+        control: Union[Connection, socket.socket],
+        parent: Union[Connection, socket.socket],
+        log_path: str,
+    ) -> None:
+        self.control = control
+        self.parent = parent
+        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+        # redirect their file descriptors in addition to the original fds 1 and 2.
+        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+        self.saved_fds = {fd: os.dup(fd) for fd in fds}
+        #: The path of the log file
+        self.log_path = log_path
+        log_file = open(self.log_path, "ab")
+        r, w = os.pipe()
+        self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
+        self.tee_thread.start()
+        for fd in fds:
+            os.dup2(w, fd)
+        os.close(w)
+
+    @abc.abstractmethod
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        """Read from log_r, write to log_file; echo to parent when enabled. Runs in a thread."""
+        pass
+
+    def close(self) -> None:
+        # Closing stdout and stderr should close the last reference to the write end of the pipe,
+        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
+        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
+        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
+        sys.stdout.flush()
+        sys.stderr.flush()
+        for fd, saved_fd in self.saved_fds.items():
+            os.dup2(saved_fd, fd)
+            os.close(saved_fd)
+        self.tee_thread.join()
+        # Only then close the other fds.
+        self.control.close()
+        self.parent.close()
