@@ -231,40 +231,6 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
-    """Forward log_r to file_w and parent_w (if echoing is enabled).
-    Echoing is enabled and disabled by reading from control_r."""
-    echo_on = False
-    selector = selectors.DefaultSelector()
-    selector.register(log_r, selectors.EVENT_READ)
-    selector.register(control_r, selectors.EVENT_READ)
-
-    try:
-        with log_file, open(parent_w, "wb", closefd=False) as parent:
-            while True:
-                for key, _ in selector.select():
-                    if key.fd == log_r:
-                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                        if not data:  # EOF: exit the thread
-                            return
-                        log_file.write(data)
-                        log_file.flush()
-                        if echo_on:
-                            parent.write(data)
-                            parent.flush()
-
-                    elif key.fd == control_r:
-                        control_data = os.read(control_r, 1)
-                        if not control_data:
-                            return
-                        else:
-                            echo_on = control_data == b"1"
-    except OSError:  # do not raise
-        pass
-    finally:
-        os.close(log_r)
-
-
 class PosixTee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
     process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
@@ -280,15 +246,46 @@ class PosixTee:
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
-        self.tee_thread = threading.Thread(
-            target=tee,
-            args=(self.control.fileno(), r, log_file, self.parent.fileno()),
-            daemon=True,
-        )
+        self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
         self.tee_thread.start()
         for fd in fds:
             os.dup2(w, fd)
         os.close(w)
+
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        """Forward log_r to log_file and parent (if echoing is enabled).
+        Echoing is enabled and disabled by reading from control."""
+        control_r = self.control.fileno()
+        parent_w = self.parent.fileno()
+        echo_on = False
+        selector = selectors.DefaultSelector()
+        selector.register(log_r, selectors.EVENT_READ)
+        selector.register(control_r, selectors.EVENT_READ)
+
+        try:
+            with log_file, open(parent_w, "wb", closefd=False) as parent:
+                while True:
+                    for key, _ in selector.select():
+                        if key.fd == log_r:
+                            data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                            if not data:  # EOF: exit the thread
+                                return
+                            log_file.write(data)
+                            log_file.flush()
+                            if echo_on:
+                                parent.write(data)
+                                parent.flush()
+
+                        elif key.fd == control_r:
+                            control_data = os.read(control_r, 1)
+                            if not control_data:
+                                return
+                            else:
+                                echo_on = control_data == b"1"
+        except OSError:  # do not raise
+            pass
+        finally:
+            os.close(log_r)
 
     def close(self) -> None:
         # Closing stdout and stderr should close the last reference to the write end of the pipe,
