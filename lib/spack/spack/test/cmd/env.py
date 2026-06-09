@@ -3653,7 +3653,7 @@ spack:
 
 def test_modules_exist_after_env_install(installed_environment, monkeypatch):
     # Some caching issue
-    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
+    monkeypatch.setattr(spack.modules.tcl.TclConfiguration, "_registry", {})
     with installed_environment(
         """
 spack:

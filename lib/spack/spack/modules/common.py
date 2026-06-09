@@ -31,7 +31,7 @@ import datetime
 import os
 import re
 import string
-from typing import Callable, ClassVar, List, Optional
+from typing import Callable, ClassVar, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jinja2
 
@@ -323,7 +323,9 @@ class BaseConfiguration:
     #: Name of the module system (must be set by each subclass)
     module_system: str
 
-    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
+    _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
+
     make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
     make_context: ClassVar[Callable[..., "BaseContext"]]
 
@@ -331,6 +333,18 @@ class BaseConfiguration:
     def configuration(cls, module_set_name: str) -> dict:
         """Returns the raw configuration dict for this module system."""
         return spack.config.get(f"modules:{module_set_name}:{cls.module_system}", {})
+
+    @classmethod
+    def make_configuration(
+        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> "BaseConfiguration":
+        """Returns the cached configuration object for spec."""
+        explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
+        key = (spec.dag_hash(), module_set_name, explicit)
+        try:
+            return cls._registry[key]
+        except KeyError:
+            return cls._registry.setdefault(key, cls(spec, module_set_name, explicit))
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
@@ -773,7 +787,7 @@ class BaseModuleFileWriter:
     hide_cmd_format: str
     modulerc_header: List[str]
 
-    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    configuration_class: ClassVar[Type["BaseConfiguration"]]
 
     def __init__(
         self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
@@ -781,7 +795,7 @@ class BaseModuleFileWriter:
         self.spec = spec
 
         # Create the triplet of configuration/layout/context
-        self.conf = self.make_configuration(spec, module_set_name, explicit)
+        self.conf = self.configuration_class.make_configuration(spec, module_set_name, explicit)
         self.layout = self.conf.make_layout(spec, module_set_name, explicit)
         self.context = self.conf.make_context(
             spec, module_set_name, explicit=explicit, layout=self.layout

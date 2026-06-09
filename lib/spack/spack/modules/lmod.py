@@ -7,7 +7,7 @@ import itertools
 import os
 import pathlib
 import warnings
-from typing import Dict, List, Optional, Tuple
+from typing import ClassVar, Dict, List, Optional
 
 import spack.compilers.config
 import spack.config
@@ -20,23 +20,6 @@ import spack.util.environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-# Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
-
-
-def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseConfiguration:
-    """Returns the lmod configuration for spec"""
-    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-    key = (spec.dag_hash(), module_set_name, explicit)
-    try:
-        return configuration_registry[key]
-    except KeyError:
-        return configuration_registry.setdefault(
-            key, LmodConfiguration(spec, module_set_name, explicit)
-        )
 
 
 def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
@@ -77,13 +60,14 @@ class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
     module_system = "lmod"
-    make_configuration = staticmethod(make_configuration)
+    _registry: ClassVar[Dict] = {}
 
     @staticmethod
     def make_layout(
         spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
     ) -> BaseFileLayout:
-        return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodFileLayout(configuration)
 
     @staticmethod
     def make_context(
@@ -93,7 +77,8 @@ class LmodConfiguration(BaseConfiguration):
         explicit: Optional[bool] = None,
         layout: BaseFileLayout,
     ) -> BaseContext:
-        return LmodContext(make_configuration(spec, module_set_name, explicit), layout)
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodContext(configuration, layout)
 
     default_projections = {"all": "{name}/{version}"}
 
@@ -484,7 +469,7 @@ class LmodContext(BaseContext):
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
-    make_configuration = staticmethod(make_configuration)
+    configuration_class = LmodConfiguration
 
     default_template = "modules/modulefile.lua"
 

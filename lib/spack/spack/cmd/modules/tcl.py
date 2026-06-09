@@ -34,7 +34,7 @@ def setdefault(module_type, specs, args):
     spack.cmd.modules.one_spec_or_raise(specs)
     spec = specs[0]
     data = {"modules": {args.module_set_name: {"tcl": {"defaults": [str(spec)]}}}}
-    spack.modules.tcl.configuration_registry = {}
+    spack.modules.tcl.TclConfiguration._registry = {}
     scope = spack.config.InternalConfigScope("tcl-setdefault", data)
     with spack.config.override(scope):
         writer = spack.modules.module_types["tcl"](spec, args.module_set_name)

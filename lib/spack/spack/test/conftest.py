@@ -1383,7 +1383,7 @@ class ConfigUpdate:
         self.monkeypatch.setattr(
             conf_cls, "configuration", staticmethod(mock_config.writer_configuration)
         )
-        self.monkeypatch.setattr(self.writer_mod, "configuration_registry", {})
+        self.monkeypatch.setattr(conf_cls, "_registry", {})
 
 
 @pytest.fixture()
