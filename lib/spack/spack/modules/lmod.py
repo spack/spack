@@ -3,55 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import Dict, Optional, Tuple
+from typing import ClassVar, Dict, Optional, Tuple
 
-import spack.config
 import spack.spec
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-#: lmod specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:lmod", {})
-
-
-# Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
-
-
-def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseConfiguration:
-    """Returns the lmod configuration for spec"""
-    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-    key = (spec.dag_hash(), module_set_name, explicit)
-    try:
-        return configuration_registry[key]
-    except KeyError:
-        return configuration_registry.setdefault(
-            key, LmodConfiguration(spec, module_set_name, explicit)
-        )
-
-
-def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseFileLayout:
-    """Returns the layout information for spec"""
-    return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
-
-
-def make_context(
-    spec: spack.spec.Spec,
-    module_set_name: str,
-    explicit: Optional[bool] = None,
-    layout: Optional[BaseFileLayout] = None,
-) -> BaseContext:
-    """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name, explicit)
-    if layout is None:
-        layout = make_layout(spec, module_set_name, explicit)
-    return LmodContext(conf, layout)
 
 
 class LmodConfiguration(BaseConfiguration):
@@ -59,9 +15,25 @@ class LmodConfiguration(BaseConfiguration):
 
     module_system = "lmod"
     _default_hierarchical = True
-    configuration = staticmethod(configuration)
-    make_configuration = staticmethod(make_configuration)
-    make_layout = staticmethod(make_layout)
+    _registry: ClassVar[Dict] = {}
+
+    @staticmethod
+    def make_layout(
+        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> BaseFileLayout:
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodFileLayout(configuration)
+
+    @staticmethod
+    def make_context(
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        *,
+        explicit: Optional[bool] = None,
+        layout: BaseFileLayout,
+    ) -> BaseContext:
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodContext(configuration, layout)
 
 
 class LmodFileLayout(BaseFileLayout):
@@ -94,9 +66,7 @@ class LmodContext(BaseContext):
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
-    make_configuration = staticmethod(make_configuration)
-    make_layout = staticmethod(make_layout)
-    make_context = staticmethod(make_context)
+    configuration_class = LmodConfiguration
 
     default_template = "modules/modulefile.lua"
 
