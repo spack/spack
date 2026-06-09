@@ -1379,7 +1379,6 @@ class ConfigUpdate:
         spack.config.set("modules:default", config_settings)
         mock_config = MockConfig(config_settings, self.writer_key)
 
-        self.monkeypatch.setattr(spack.modules.common, "configuration", mock_config.configuration)
         self.monkeypatch.setattr(
             self.writer_mod, "configuration", mock_config.writer_configuration
         )

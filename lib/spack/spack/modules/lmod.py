@@ -95,6 +95,11 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
+    module_system = "lmod"
+    configuration = staticmethod(configuration)
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+
     default_projections = {"all": "{name}/{version}"}
 
     compiler: Optional[spack.spec.Spec]
@@ -486,6 +491,10 @@ class LmodContext(BaseContext):
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
+
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.lua"
 

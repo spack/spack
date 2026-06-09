@@ -28,11 +28,10 @@ import collections
 import contextlib
 import copy
 import datetime
-import inspect
 import os
 import re
 import string
-from typing import List, Optional
+from typing import Callable, ClassVar, List, Optional
 
 import spack.vendor.jinja2
 
@@ -57,13 +56,6 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.context import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
-
-
-#: config section for this file
-def configuration(module_set_name):
-    config_path = f"modules:{module_set_name}"
-    return spack.config.get(config_path, {})
-
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -328,23 +320,27 @@ class BaseConfiguration:
 
     default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
 
+    #: Name of the module system (must be set by each subclass)
+    module_system: str
+
+    #: Module-level helpers — each subclass assigns these as staticmethod(...)
+    configuration: ClassVar[Callable[..., dict]]
+    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
+
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
         # Dictionary of configuration options that should be applied to the spec
-        self.conf = merge_config_rules(self.module.configuration(self.name), self.spec)
-
-    @property
-    def module(self):
-        return inspect.getmodule(self)
+        self.conf = merge_config_rules(self.configuration(self.name), self.spec)
 
     @property
     def projections(self):
         """Projection from specs to module names"""
         # backwards compatibility for naming_scheme key
-        conf = self.module.configuration(self.name)
+        conf = self.configuration(self.name)
         if "naming_scheme" in conf:
             default = {"all": conf["naming_scheme"]}
         else:
@@ -415,7 +411,7 @@ class BaseConfiguration:
 
         # A few variables for convenience of writing the method
         spec = self.spec
-        conf = self.module.configuration(self.name)
+        conf = self.configuration(self.name)
 
         # Compute the list of matching include / exclude rules, and whether excluded as implicit
         include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
@@ -440,7 +436,7 @@ class BaseConfiguration:
     def hidden(self):
         """Returns True if the module has been hidden, False otherwise."""
 
-        conf = self.module.configuration(self.name)
+        conf = self.configuration(self.name)
 
         hidden_as_implicit = not self.explicit and conf.get("hide_implicits", False)
 
@@ -477,7 +473,7 @@ class BaseConfiguration:
     def _create_list_for(self, what):
         include = []
         for item in self.conf[what]:
-            if not self.module.make_configuration(item, self.name).excluded:
+            if not self.make_configuration(item, self.name).excluded:
                 include.append(item)
         return include
 
@@ -507,8 +503,7 @@ class BaseFileLayout:
 
     def dirname(self):
         """Root folder for module files of this type."""
-        module_system = str(self.conf.module.__name__).split(".")[-1]
-        return root_path(module_system, self.conf.name)
+        return root_path(self.conf.module_system, self.conf.name)
 
     @property
     def use_name(self):
@@ -759,9 +754,8 @@ class BaseContext(tengine.Context):
         return specs + literals
 
     def _create_module_list_of(self, what):
-        m = self.conf.module
         name = self.conf.name
-        return [m.make_layout(x, name).use_name for x in getattr(self.conf, what)]
+        return [self.conf.make_layout(x, name).use_name for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):
@@ -774,17 +768,19 @@ class BaseModuleFileWriter:
     hide_cmd_format: str
     modulerc_header: List[str]
 
+    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
+    make_context: ClassVar[Callable[..., "BaseContext"]]
+
     def __init__(
         self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
     ) -> None:
         self.spec = spec
 
-        m = self.module
-
         # Create the triplet of configuration/layout/context
-        self.conf = m.make_configuration(spec, module_set_name, explicit)
-        self.layout = m.make_layout(spec, module_set_name, explicit)
-        self.context = m.make_context(spec, module_set_name, explicit)
+        self.conf = self.make_configuration(spec, module_set_name, explicit)
+        self.layout = self.make_layout(spec, module_set_name, explicit)
+        self.context = self.make_context(spec, module_set_name, explicit)
 
         # Check if a default template has been defined,
         # throw if not found
@@ -816,18 +812,13 @@ class BaseModuleFileWriter:
             name = type(self).__name__
             raise ModulercHeaderNotDefined(msg.format(name))
 
-    @property
-    def module(self):
-        return inspect.getmodule(self)
-
     def _get_template(self):
         """Gets the template that will be rendered for this spec."""
         # Get templates and put them in the order of importance:
         # 1. template specified in "modules.yaml"
         # 2. template specified in a package directly
         # 3. default template (must be defined, check in __init__)
-        module_system_name = str(self.module.__name__).split(".")[-1]
-        package_attribute = f"{module_system_name}_template"
+        package_attribute = f"{self.conf.module_system}_template"
         choices = [
             self.conf.template,
             getattr(self.spec.package, package_attribute, None),
@@ -891,8 +882,7 @@ class BaseModuleFileWriter:
         context = self.context.to_dict()
 
         # Attribute from package
-        module_name = str(self.module.__name__).split(".")[-1]
-        attr_name = f"{module_name}_context"
+        attr_name = f"{self.conf.module_system}_context"
         pkg_update = getattr(self.spec.package, attr_name, {})
         context.update(pkg_update)
 

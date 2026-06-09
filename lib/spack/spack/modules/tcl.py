@@ -56,6 +56,11 @@ def make_context(
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
+    module_system = "tcl"
+    configuration = staticmethod(configuration)
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+
 
 class TclFileLayout(BaseFileLayout):
     """File layout for tcl module files."""
@@ -77,6 +82,10 @@ class TclContext(BaseContext):
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
+
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.tcl"
 
