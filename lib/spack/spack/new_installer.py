@@ -1216,6 +1216,7 @@ class BuildStatus:
         #: When True, suppress all terminal output (process is in background).
         #: Controlling code is responsible for modifying this variable based on process state
         self.headless = False
+        self.term_title = spack.config.get("config:install_status", True) and self.is_tty
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -1375,6 +1376,18 @@ class BuildStatus:
         self.blocked = blocked
         self.dirty = True
 
+    def _update_terminal_title(self, clear: bool = False) -> None:
+        if not self.term_title:
+            return
+
+        term_title = ""
+
+        if not clear:
+            term_title = f"Spack: {self.completed}/{self.total} - {self.actual_jobs} jobs"
+
+        self.stdout.write(f"\x1b]0;{term_title}\x07")
+        self.stdout.flush()
+
     def set_jobs(self, actual: int, target: int) -> None:
         """Set the actual and target number of jobs to run concurrently."""
         if actual == self.actual_jobs and target == self.target_jobs:
@@ -1382,6 +1395,7 @@ class BuildStatus:
         self.actual_jobs = actual
         self.target_jobs = target
         self.dirty = True
+        self._update_terminal_title()
 
     def update_state(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
@@ -1403,6 +1417,7 @@ class BuildStatus:
                     self.tracked_build_id = ""
 
         self.dirty = True
+        self._update_terminal_title()
 
         # For non-TTY output, print state changes immediately
         if not self.is_tty and not self.headless:
@@ -1559,6 +1574,9 @@ class BuildStatus:
 
         # Schedule next UI update
         self.next_update = now + SPINNER_INTERVAL / 2
+
+        if finalize:
+            self._update_terminal_title(True)
 
     def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""

@@ -631,22 +631,22 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock._file_ref.fh.mode == "rb+"
+    assert lock.backend._file_ref.fh.mode == "rb+"
 
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert not lock._file_ref.fh.closed  # recycle the file handle for next lock
+    assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
 
 
 def test_release_write_downgrades_to_shared(private_lock_path):
@@ -694,7 +694,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
-        assert lock._file_ref.fh.mode == "rb"
+        assert lock.backend._file_ref.fh.mode == "rb"
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
@@ -1101,8 +1101,8 @@ class LockDebugOutput:
             # p1 takes write lock and writes pid/host to file
             barrier.wait()  # ------------------------------------ 1
 
-        assert lock.pid == p1_pid
-        assert lock.host == self.host
+        assert lock.backend.pid == p1_pid
+        assert lock.backend.host == self.host
 
         # wait for p2 to verify contents of file
         barrier.wait()  # ---------------------------------------- 2
@@ -1112,11 +1112,11 @@ class LockDebugOutput:
 
         # verify pid/host info again
         with lk.ReadTransaction(lock):
-            assert lock.old_pid == p1_pid
-            assert lock.old_host == self.host
+            assert lock.backend.old_pid == p1_pid
+            assert lock.backend.old_host == self.host
 
-            assert lock.pid == p2_pid
-            assert lock.host == self.host
+            assert lock.backend.pid == p2_pid
+            assert lock.backend.host == self.host
 
         barrier.wait()  # ---------------------------------------- 4
 
@@ -1134,18 +1134,18 @@ class LockDebugOutput:
 
         # verify that p1 wrote information to lock file
         with lk.ReadTransaction(lock):
-            assert lock.pid == p1_pid
-            assert lock.host == self.host
+            assert lock.backend.pid == p1_pid
+            assert lock.backend.host == self.host
 
         barrier.wait()  # ---------------------------------------- 2
 
         # take a write lock on the file and verify pid/host info
         with lk.WriteTransaction(lock):
-            assert lock.old_pid == p1_pid
-            assert lock.old_host == self.host
+            assert lock.backend.old_pid == p1_pid
+            assert lock.backend.old_host == self.host
 
-            assert lock.pid == p2_pid
-            assert lock.host == self.host
+            assert lock.backend.pid == p2_pid
+            assert lock.backend.host == self.host
 
             barrier.wait()  # ------------------------------------ 3
 
@@ -1245,10 +1245,10 @@ def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_m
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
         if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock._poll_lock(fcntl.LOCK_EX)
+            assert not lock.backend.poll(fcntl.LOCK_EX)
         else:
             with pytest.raises(OSError, match=err_msg):
-                lock._poll_lock(fcntl.LOCK_EX)
+                lock.backend.poll(fcntl.LOCK_EX)
 
         monkeypatch.undo()
         lock.release_read()

@@ -1044,7 +1044,7 @@ def read_specs_in_index(mirror_directory, view):
         database -> installs -> hashes...
     """
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
-        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_LAYOUT_VERSIONS[0], view
+        f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_URL_LAYOUT_VERSIONS[0], view
     )
     fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
     result = fetcher.conditional_fetch()

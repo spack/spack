@@ -18,7 +18,8 @@ from spack.oci.image import is_oci_url
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 #: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
+BINARY_MEDIA_TYPE_VERSION = 2
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -179,17 +180,18 @@ class Mirror:
         # Only check the fetch configuration, the push configuration is whatever the latest
         # mirror version is which should support all configurable features.
 
-        # All configured mirrors support the latest version
-        supported_versions = [SUPPORTED_LAYOUT_VERSIONS[0]]
-        has_view = self.fetch_view is not None
-
         # Check if the mirror supports older layout versions
-        # OCI - Only return the newest version, the layout version is a dummy version since OCI
-        #       has its own layout.
+        # OCI - Return the tarball media type version, not the url layout version.
+        #       TODO: Clean up the distinction between these two versions
         # Views - Only versions >=3 support the views feature
-        if not is_oci_url(self.fetch_url) and not has_view:
-            supported_versions.extend(SUPPORTED_LAYOUT_VERSIONS[1:])
+        if is_oci_url(self.fetch_url):
+            return [BINARY_MEDIA_TYPE_VERSION]
 
+        # All configured mirrors support the latest version
+        supported_versions = [SUPPORTED_URL_LAYOUT_VERSIONS[0]]
+        has_view = self.fetch_view is not None
+        if not has_view:
+            supported_versions.extend(SUPPORTED_URL_LAYOUT_VERSIONS[1:])
         return supported_versions
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool) -> bool:

@@ -9,7 +9,7 @@ import sys
 import time
 from datetime import datetime
 from types import TracebackType
-from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type
+from typing import IO, Callable, Dict, Generator, Optional, Tuple, Type, Union
 
 from spack.llnl.util import lang, tty
 
@@ -31,6 +31,8 @@ __all__ = [
     "LockPermissionError",
     "LockROFileError",
     "CantCreateLockError",
+    "PosixBackend",
+    "DummyBackend",
 ]
 
 
@@ -70,7 +72,7 @@ class OpenFileTracker:
     no ``Lock`` in this process still needs it).
 
     Descriptors are *not* released on unlock; they are kept alive across lock/unlock cycles so that
-    the next lock operation can skip re-opening the file. ``Lock._ensure_valid_handle``
+    the next lock operation can skip re-opening the file. ``PosixBackend._ensure_valid_handle``
     re-validates the on-disk inode before each lock operation and drops a stale descriptor when
     the file was deleted and replaced.
     """
@@ -173,75 +175,32 @@ class LockType:
         return op == LockType.READ or op == LockType.WRITE
 
 
-class Lock:
-    """This is an implementation of a filesystem lock using Python's lockf.
+class PosixBackend:
+    """fcntl-based lock backend for POSIX systems."""
 
-    In Python, ``lockf`` actually calls ``fcntl``, so this should work with any filesystem
-    implementation that supports locking through the fcntl calls. This includes distributed
-    filesystems like Lustre (when flock is enabled) and recent NFS versions.
-
-    Note that this is for managing contention over resources *between* processes and not for
-    managing contention between threads in a process: the functions of this object are not
-    thread-safe. A process also must not maintain multiple locks on the same file (or, more
-    specifically, on overlapping byte ranges in the same file).
-    """
-
-    def __init__(
-        self,
-        path: str,
-        *,
-        start: int = 0,
-        length: int = 0,
-        default_timeout: Optional[float] = None,
-        debug: bool = False,
-        desc: str = "",
-    ) -> None:
-        """Construct a new lock on the file at ``path``.
-
-        By default, the lock applies to the whole file.  Optionally, caller can specify a byte
-        range beginning ``start`` bytes from the start of the file and extending ``length`` bytes
-        from there.
-
-        This exposes a subset of fcntl locking functionality.  It does not currently expose the
-        ``whence`` parameter -- ``whence`` is always ``os.SEEK_SET`` and ``start`` is always
-        evaluated from the beginning of the file.
-
-        Args:
-            path: path to the lock
-            start: optional byte offset at which the lock starts
-            length: optional number of bytes to lock
-            default_timeout: seconds to wait for lock attempts, where None means to wait
-                indefinitely
-            debug: debug mode specific to locking
-            desc: optional debug message lock description, which is helpful for distinguishing
-                between different Spack locks.
-        """
+    def __init__(self, path: str, start: int, length: int, debug: bool = False) -> None:
         self.path = path
-        self._reads = 0
-        self._writes = 0
-        self._file_ref: Optional[OpenFile] = None
-        self._cached_key: Optional[DevIno] = None
-
-        # byte range parameters
         self._start = start
         self._length = length
-
-        # enable debug mode
         self.debug = debug
-
-        # optional debug description
-        self.desc = f" ({desc})" if desc else ""
-
-        # If the user doesn't set a default timeout, or if they choose
-        # None, 0, etc. then lock attempts will not time out (unless the
-        # user sets a timeout for each attempt)
-        self.default_timeout = default_timeout or None
-
-        # PID and host of lock holder (only used in debug mode)
+        self._file_ref: Optional[OpenFile] = None
+        self._cached_key: Optional[DevIno] = None
+        # PID and host of the lock holder (only used in debug mode)
         self.pid: Optional[int] = None
         self.old_pid: Optional[int] = None
         self.host: Optional[str] = None
         self.old_host: Optional[str] = None
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["_file_ref"]
+        del state["_cached_key"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._file_ref = None
+        self._cached_key = None
 
     def _ensure_valid_handle(self) -> IO[bytes]:
         """Return a valid file handle for the lock file, opening or re-opening as needed.
@@ -292,102 +251,13 @@ class Lock:
 
         return self._file_ref.fh
 
-    @staticmethod
-    def _poll_interval_generator(
-        _wait_times: Optional[Tuple[float, float, float]] = None,
-    ) -> Generator[float, None, None]:
-        """This implements a backoff scheme for polling a contended resource by suggesting a
-        succession of wait times between polls.
-
-        It suggests a poll interval of .1s until 2 seconds have passed, then a poll interval of
-        .2s until 10 seconds have passed, and finally (for all requests after 10s) suggests a poll
-        interval of .5s.
-
-        This doesn't actually track elapsed time, it estimates the waiting time as though the
-        caller always waits for the full length of time suggested by this function.
-        """
-        num_requests = 0
-        stage1, stage2, stage3 = _wait_times or (1e-1, 2e-1, 5e-1)
-        wait_time = stage1
-        while True:
-            if num_requests >= 60:  # 40 * .2 = 8
-                wait_time = stage3
-            elif num_requests >= 20:  # 20 * .1 = 2
-                wait_time = stage2
-            num_requests += 1
-            yield wait_time
-
-    def __repr__(self) -> str:
-        """Formal representation of the lock."""
-        rep = f"{self.__class__.__name__}("
-        for attr, value in self.__dict__.items():
-            rep += f"{attr}={value.__repr__()}, "
-        return f"{rep.strip(', ')})"
-
-    def __str__(self) -> str:
-        """Readable string (with key fields) of the lock."""
-        location = f"{self.path}[{self._start}:{self._length}]"
-        timeout = f"timeout={self.default_timeout}"
-        activity = f"#reads={self._reads}, #writes={self._writes}"
-        return f"({location}, {timeout}, {activity})"
-
-    def __getstate__(self):
-        """Don't include file handles or counts in pickled state."""
-        state = self.__dict__.copy()
-        del state["_file_ref"]
-        del state["_reads"]
-        del state["_writes"]
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self._file_ref = None
-        self._reads = 0
-        self._writes = 0
-
-    def _lock(self, op: int, timeout: Optional[float] = None) -> Tuple[float, int]:
-        """This takes a lock using POSIX locks (``fcntl.lockf``).
-
-        The lock is implemented as a spin lock using a nonblocking call to ``lockf()``.
-
-        If the lock times out, it raises a ``LockError``. If the lock is successfully acquired, the
-        total wait time and the number of attempts is returned.
-        """
-        assert LockType.is_valid(op)
-        op_str = LockType.to_str(op)
-
-        self._log_acquiring("{0} LOCK".format(op_str))
-        timeout = timeout or self.default_timeout
-
+    def prepare(self, op: int) -> None:
+        """Ensure the lock file is open; raise if a write lock is requested on a read-only file."""
         fh = self._ensure_valid_handle()
-
         if LockType.to_module(op) == fcntl.LOCK_EX and fh.mode == "rb":
-            # Attempt to upgrade to write lock w/a read-only file.
-            # If the file were writable, we'd have opened it rb+
             raise LockROFileError(self.path)
 
-        self._log_debug(
-            "{} locking [{}:{}]: timeout {}".format(
-                op_str.lower(), self._start, self._length, lang.pretty_seconds(timeout or 0)
-            )
-        )
-
-        start_time = time.monotonic()
-        end_time = float("inf") if not timeout else start_time + timeout
-        num_attempts = 1
-        poll_intervals = Lock._poll_interval_generator()
-
-        while True:
-            if self._poll_lock(op):
-                return time.monotonic() - start_time, num_attempts
-            if time.monotonic() >= end_time:
-                break
-            time.sleep(next(poll_intervals))
-            num_attempts += 1
-
-        raise LockTimeoutError(op, self.path, time.monotonic() - start_time, num_attempts)
-
-    def _poll_lock(self, op: int) -> bool:
+    def poll(self, op: int) -> bool:
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
@@ -402,10 +272,11 @@ class Lock:
             if self.debug:
                 # All locks read the owner PID and host
                 self._read_log_debug_data()
-                self._log_debug(
+                tty.debug(
                     "{0} locked {1} [{2}:{3}] (owner={4})".format(
                         LockType.to_str(op), self.path, self._start, self._length, self.pid
-                    )
+                    ),
+                    level=2,
                 )
 
                 # Exclusive locks write their PID/host
@@ -451,7 +322,7 @@ class Lock:
         self._file_ref.fh.flush()
         os.fsync(self._file_ref.fh.fileno())
 
-    def _unlock(self) -> None:
+    def release(self) -> None:
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
         Releases the lock regardless of mode. Note that read locks may be masquerading as write
@@ -461,8 +332,187 @@ class Lock:
         fcntl.lockf(
             self._file_ref.fh.fileno(), fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET
         )
+
+    def cleanup(self, path: str) -> None:
+        """Remove the lock file."""
+        os.unlink(path)
+
+
+class DummyBackend:
+    """No-op lock backend: all operations succeed without acquiring any real locks."""
+
+    def prepare(self, op: int) -> None:
+        pass
+
+    def poll(self, op: int) -> bool:
+        return True
+
+    def release(self) -> None:
+        pass
+
+    def cleanup(self, path: str) -> None:
+        pass
+
+
+class Lock:
+    """This is an implementation of a filesystem lock using Python's lockf.
+
+    In Python, ``lockf`` actually calls ``fcntl``, so this should work with any filesystem
+    implementation that supports locking through the fcntl calls. This includes distributed
+    filesystems like Lustre (when flock is enabled) and recent NFS versions.
+
+    Note that this is for managing contention over resources *between* processes and not for
+    managing contention between threads in a process: the functions of this object are not
+    thread-safe. A process also must not maintain multiple locks on the same file (or, more
+    specifically, on overlapping byte ranges in the same file).
+    """
+
+    def __init__(
+        self,
+        path: str,
+        *,
+        start: int = 0,
+        length: int = 0,
+        default_timeout: Optional[float] = None,
+        debug: bool = False,
+        desc: str = "",
+        enable: bool = True,
+    ) -> None:
+        """Construct a new lock on the file at ``path``.
+
+        By default, the lock applies to the whole file.  Optionally, caller can specify a byte
+        range beginning ``start`` bytes from the start of the file and extending ``length`` bytes
+        from there.
+
+        This exposes a subset of fcntl locking functionality.  It does not currently expose the
+        ``whence`` parameter -- ``whence`` is always ``os.SEEK_SET`` and ``start`` is always
+        evaluated from the beginning of the file.
+
+        Args:
+            path: path to the lock
+            start: optional byte offset at which the lock starts
+            length: optional number of bytes to lock
+            default_timeout: seconds to wait for lock attempts, where None means to wait
+                indefinitely
+            debug: debug mode specific to locking
+            desc: optional debug message lock description, which is helpful for distinguishing
+                between different Spack locks.
+            enable: when False, swap in a no-op backend so all lock operations succeed
+                without acquiring a real filesystem lock. Always disabled on Windows.
+        """
+        self.path = path
         self._reads = 0
         self._writes = 0
+
+        # byte range parameters
+        self._start = start
+        self._length = length
+
+        # enable debug mode
+        self.debug = debug
+
+        # optional debug description
+        self.desc = f" ({desc})" if desc else ""
+
+        # If the user doesn't set a default timeout, or if they choose
+        # None, 0, etc. then lock attempts will not time out (unless the
+        # user sets a timeout for each attempt)
+        self.default_timeout = default_timeout or None
+
+        if sys.platform != "win32" and enable:
+            self.backend: Union[PosixBackend, DummyBackend] = PosixBackend(
+                path, start, length, debug=debug
+            )
+        else:
+            self.backend = DummyBackend()
+
+    @staticmethod
+    def _poll_interval_generator(
+        _wait_times: Optional[Tuple[float, float, float]] = None,
+    ) -> Generator[float, None, None]:
+        """This implements a backoff scheme for polling a contended resource by suggesting a
+        succession of wait times between polls.
+
+        It suggests a poll interval of .1s until 2 seconds have passed, then a poll interval of
+        .2s until 10 seconds have passed, and finally (for all requests after 10s) suggests a poll
+        interval of .5s.
+
+        This doesn't actually track elapsed time, it estimates the waiting time as though the
+        caller always waits for the full length of time suggested by this function.
+        """
+        num_requests = 0
+        stage1, stage2, stage3 = _wait_times or (1e-1, 2e-1, 5e-1)
+        wait_time = stage1
+        while True:
+            if num_requests >= 60:  # 40 * .2 = 8
+                wait_time = stage3
+            elif num_requests >= 20:  # 20 * .1 = 2
+                wait_time = stage2
+            num_requests += 1
+            yield wait_time
+
+    def __repr__(self) -> str:
+        """Formal representation of the lock."""
+        rep = f"{self.__class__.__name__}("
+        for attr, value in self.__dict__.items():
+            rep += f"{attr}={value.__repr__()}, "
+        return f"{rep.strip(', ')})"
+
+    def __str__(self) -> str:
+        """Readable string (with key fields) of the lock."""
+        location = f"{self.path}[{self._start}:{self._length}]"
+        timeout = f"timeout={self.default_timeout}"
+        activity = f"#reads={self._reads}, #writes={self._writes}"
+        return f"({location}, {timeout}, {activity})"
+
+    def __getstate__(self):
+        """Don't include counts in pickled state (backend handles its own file handles)."""
+        state = self.__dict__.copy()
+        del state["_reads"]
+        del state["_writes"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._reads = 0
+        self._writes = 0
+
+    def _lock(self, op: int, timeout: Optional[float] = None) -> Tuple[float, int]:
+        """This takes a lock using POSIX locks (``fcntl.lockf``).
+
+        The lock is implemented as a spin lock using a nonblocking call to ``lockf()``.
+
+        If the lock times out, it raises a ``LockError``. If the lock is successfully acquired, the
+        total wait time and the number of attempts is returned.
+        """
+        assert LockType.is_valid(op)
+        op_str = LockType.to_str(op)
+
+        self._log_acquiring("{0} LOCK".format(op_str))
+        timeout = timeout or self.default_timeout
+
+        self.backend.prepare(op)
+
+        self._log_debug(
+            "{} locking [{}:{}]: timeout {}".format(
+                op_str.lower(), self._start, self._length, lang.pretty_seconds(timeout or 0)
+            )
+        )
+
+        start_time = time.monotonic()
+        end_time = float("inf") if not timeout else start_time + timeout
+        num_attempts = 1
+        poll_intervals = Lock._poll_interval_generator()
+
+        while True:
+            if self.backend.poll(op):
+                return time.monotonic() - start_time, num_attempts
+            if time.monotonic() >= end_time:
+                break
+            time.sleep(next(poll_intervals))
+            num_attempts += 1
+
+        raise LockTimeoutError(op, self.path, time.monotonic() - start_time, num_attempts)
 
     def acquire_read(self, timeout: Optional[float] = None) -> bool:
         """Acquires a recursive, shared lock for reading.
@@ -528,8 +578,8 @@ class Lock:
             op = LockType.READ
         else:
             return
-        self._ensure_valid_handle()
-        if not self._poll_lock(op):
+        self.backend.prepare(op)
+        if not self.backend.poll(op):
             raise LockTimeoutError(op, self.path, time=0, attempts=1)
 
     def try_acquire_read(self) -> bool:
@@ -538,8 +588,8 @@ class Lock:
         Returns True if the lock was acquired, False if it would block.
         """
         if self._reads == 0 and self._writes == 0:
-            self._ensure_valid_handle()
-            if not self._poll_lock(LockType.READ):
+            self.backend.prepare(LockType.READ)
+            if not self.backend.poll(LockType.READ):
                 return False
             self._reads += 1
             self._log_acquired("READ LOCK", 0, 1)
@@ -555,10 +605,8 @@ class Lock:
         Returns True if the lock was acquired, False if it would block.
         """
         if self._writes == 0:
-            fh = self._ensure_valid_handle()
-            if LockType.to_module(LockType.WRITE) == fcntl.LOCK_EX and fh.mode == "rb":
-                raise LockROFileError(self.path)
-            if not self._poll_lock(LockType.WRITE):
+            self.backend.prepare(LockType.WRITE)
+            if not self.backend.poll(LockType.WRITE):
                 return False
             self._writes += 1
             self._log_acquired("WRITE LOCK", 0, 1)
@@ -643,7 +691,7 @@ class Lock:
             release_fn = release_fn or true_fn
             result = release_fn()
 
-            self._unlock()  # can raise LockError.
+            self.backend.release()  # can raise LockError.
             self._reads = 0
             self._log_released(locktype)
             return bool(result)
@@ -678,7 +726,7 @@ class Lock:
             if self._reads > 0:
                 self._lock(LockType.READ)
             else:
-                self._unlock()  # can raise LockError.
+                self.backend.release()  # can raise LockError.
 
             self._writes = 0
             self._log_released(locktype)
@@ -689,7 +737,7 @@ class Lock:
 
     def cleanup(self) -> None:
         if self._reads == 0 and self._writes == 0:
-            os.unlink(self.path)
+            self.backend.cleanup(self.path)
         else:
             raise LockError("Attempting to cleanup active lock.")
 
