@@ -89,34 +89,24 @@ def _format_env_var_name(spec: spack.spec.Spec, var_name_fmt: str) -> str:
     )
 
 
-def _check_tokens_are_valid(format_string: str, message: str) -> None:
-    """Checks that the tokens used in the format string are valid in
-    the context of module file and environment variable naming.
+def _check_tokens_are_valid(format_string: str, error_message: str) -> None:
+    """Checks that the tokens used in the format string are valid.
 
     Args:
-        format_string (str): string containing the format to be checked. This
-            is supposed to be a 'template' for ``Spec.format``
-
-        message (str): first sentence of the error message in case invalid
-            tokens are found
-
+        format_string: template string for ``Spec.format`` that will be checked
+        error_message: error message if invalid tokens are found
     """
     named_tokens = re.findall(r"{(\w*)}", format_string)
     invalid_tokens = [x for x in named_tokens if x.lower() not in _valid_tokens]
     if invalid_tokens:
         raise RuntimeError(
-            f"{message} [{', '.join(invalid_tokens)}]. "
+            f"{error_message} [{', '.join(invalid_tokens)}]. "
             f"Did you check your 'modules.yaml' configuration?"
         )
 
 
 def update_dictionary_extending_lists(target: dict, update: dict) -> None:
-    """Updates a dictionary, but extends lists instead of overriding them.
-
-    Args:
-        target: dictionary to be updated
-        update: update to be applied
-    """
+    """Updates a dictionary, but extends lists instead of overriding them."""
     for key in update:
         value = target.get(key, None)
         if isinstance(value, list):
@@ -128,14 +118,11 @@ def update_dictionary_extending_lists(target: dict, update: dict) -> None:
 
 
 def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec.Spec]:
-    """Returns the list of dependent specs for a given spec.
+    """Returns the list of dependencies for a given spec.
 
     Args:
         spec: spec to be analyzed
         request: one of ``"none"``, ``"run"``, ``"direct"``, ``"all"``
-
-    Returns:
-        list of requested dependencies
     """
     if request == "none":
         return []
@@ -172,20 +159,15 @@ def _store_core_compilers(
 
 
 def merge_config_rules(configuration: dict, spec: spack.spec.Spec) -> dict:
-    """Parses the module specific part of a configuration and returns a
-    dictionary containing the actions to be performed on the spec passed as
-    an argument.
+    """Parses the module specific part of a configuration and returns a dictionary containing the
+    actions to be performed on the spec passed as an argument.
 
     Args:
-        configuration: module specific configuration (e.g. entries under
-            the top-level 'tcl' key)
+        configuration: module specific configuration (e.g. entries under the top-level 'tcl' key)
         spec: spec for which we need to generate a module file
-
-    Returns:
-        dict: actions to be taken on the spec passed as an argument
     """
-    # The keyword 'all' is always evaluated first, all the others are
-    # evaluated in order of appearance in the module file
+    # The keyword 'all' is always evaluated first, all the others are evaluated in order of
+    # appearance in the module file
     spec_configuration = copy.deepcopy(configuration.get("all", {}))
     for constraint, action in configuration.items():
         if spec.satisfies(constraint):
@@ -193,52 +175,27 @@ def merge_config_rules(configuration: dict, spec: spack.spec.Spec) -> dict:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, copy.deepcopy(action))
 
-    # Transform keywords for dependencies or prerequisites into a list of spec
+    for key, default in (("autoload", "direct"), ("prerequisites", "none")):
+        dep_request = spec_configuration.get(key, default)
+        spec_configuration[key] = dependencies(spec, request=dep_request)
 
-    # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get("autoload", "direct")
-    spec_configuration["autoload"] = dependencies(spec, autoload_strategy)
-
-    # Which instead we want to mark as prerequisites
-    prerequisite_strategy = spec_configuration.get("prerequisites", "none")
-    spec_configuration["prerequisites"] = dependencies(spec, prerequisite_strategy)
-
-    # Attach options that are spec-independent to the spec-specific
-    # configuration
-
-    # Hash length in module files
-    hash_length = configuration.get("hash_length", 7)
-    spec_configuration["hash_length"] = hash_length
-
-    verbose = configuration.get("verbose", False)
-    spec_configuration["verbose"] = verbose
-
-    # module defaults per-package
-    defaults = configuration.get("defaults", [])
-    spec_configuration["defaults"] = defaults
+    for key, default in (("hash_length", 7), ("verbose", False), ("defaults", [])):
+        spec_configuration[key] = configuration.get(key, default)
 
     return spec_configuration
 
 
-def root_path(name: str, module_set_name: str) -> str:
+def root_path(module_type: str, module_set: str) -> str:
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system to be used (``"tcl"`` or ``"lmod"``)
-        module_set_name: name of the set of module configs to use
-
-    Returns:
-        root folder for module file installation
+        module_type: module type to be used
+        module_set: name of the set of module configs to use
     """
-    defaults = {"lmod": "$spack/share/spack/lmod", "tcl": "$spack/share/spack/modules"}
-    # Root folders where the various module files should be written
-    roots = spack.config.get(f"modules:{module_set_name}:roots", {})
-
-    # Merge config values into the defaults so we prefer configured values
-    roots = spack.schema.merge_yaml(defaults, roots)
-
-    path = roots.get(name, os.path.join(spack.paths.share_path, name))
-    return spack.util.path.canonicalize_path(path)
+    dir_name = "modules" if module_type == "tcl" else module_type
+    fallback = os.path.join(spack.paths.share_path, dir_name)
+    configured = spack.config.get(f"modules:{module_set}:roots", {})
+    return spack.util.path.canonicalize_path(configured.get(module_type, fallback))
 
 
 def generate_module_index(
@@ -416,7 +373,7 @@ class BaseConfiguration:
         # issue #2884 for reference
         msg = "some tokens cannot be part of the module naming scheme"
         for projection in projections.values():
-            _check_tokens_are_valid(projection, message=msg)
+            _check_tokens_are_valid(projection, error_message=msg)
 
         return projections
 
@@ -1051,7 +1008,7 @@ class BaseContext(tengine.Context):
             # Ensure all the tokens are valid in this context
             msg = "some tokens cannot be expanded in an environment variable name"
 
-            _check_tokens_are_valid(x.name, message=msg)
+            _check_tokens_are_valid(x.name, error_message=msg)
             x.name = _format_env_var_name(self.spec, x.name)
             if self.modification_needs_formatting(x):
                 try:
