@@ -336,15 +336,6 @@ class BaseConfiguration:
         cls._registry = {}
 
     @classmethod
-    def configuration(cls, module_set_name: str) -> dict:
-        """Returns the raw configuration dict for this module system."""
-        return (
-            spack.config.CONFIG.get_config("modules")
-            .get(module_set_name, {})
-            .get(cls.module_system, {})
-        )
-
-    @classmethod
     def make_configuration(
         cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
     ) -> "BaseConfiguration":
@@ -368,7 +359,7 @@ class BaseConfiguration:
         self.explicit = explicit
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
-        self._config: dict = self.configuration(module_set_name)
+        self._config: dict = _set_cfg.get(self.module_system, {})
         self.hierarchical: bool = self._config.get("hierarchical", self._default_hierarchical)
         self.arch_folder: bool = _set_cfg.get("arch_folder", True)
         self.use_view: Union[bool, str] = _set_cfg.get("use_view", False)

@@ -1353,18 +1353,6 @@ def gen_mock_layout(tmp_path: Path):
     yield create_layout
 
 
-class MockConfig:
-    def __init__(self, configuration, writer_key):
-        self._configuration = configuration
-        self.writer_key = writer_key
-
-    def configuration(self, module_set_name):
-        return self._configuration
-
-    def writer_configuration(self, module_set_name):
-        return self.configuration(module_set_name)[self.writer_key]
-
-
 class ConfigUpdate:
     def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
         self.root_for_conf = root_for_conf
@@ -1377,12 +1365,8 @@ class ConfigUpdate:
         with open(file, encoding="utf-8") as f:
             config_settings = syaml.load_config(f)
         spack.config.set("modules:default", config_settings)
-        mock_config = MockConfig(config_settings, self.writer_key)
 
         conf_cls = getattr(self.writer_mod, self.writer_key.capitalize() + "Configuration")
-        self.monkeypatch.setattr(
-            conf_cls, "configuration", staticmethod(mock_config.writer_configuration)
-        )
         self.monkeypatch.setattr(conf_cls, "_registry", {})
 
 
