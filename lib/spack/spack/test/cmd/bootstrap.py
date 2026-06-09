@@ -104,7 +104,7 @@ def test_list_sources_url(config, tmp_path):
 
     # Relative URL
     metadata = {"type": "install", "description": "test", "info": {"url": "../../bootstrap_cache"}}
-    with open(metadata_yaml, "w") as f:
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
     with spack.config.override(
         "bootstrap",
@@ -118,7 +118,7 @@ def test_list_sources_url(config, tmp_path):
 
     # Absolute URL
     metadata = {"type": "install", "description": "test", "info": {"url": "/bootstrap_cache"}}
-    with open(metadata_yaml, "w") as f:
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
     with spack.config.override(
         "bootstrap",
