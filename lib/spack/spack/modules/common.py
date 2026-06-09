@@ -355,12 +355,11 @@ class BaseConfiguration:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        # Resolve once — configuration() traverses all config scopes
-        self.hierarchical: bool = self.configuration(self.name).get(
-            "hierarchical", self._default_hierarchical
-        )
+        # Cache once — configuration() traverses all config scopes on every call
+        self._config = self.configuration(self.name)
+        self.hierarchical: bool = self._config.get("hierarchical", self._default_hierarchical)
         # Dictionary of configuration options that should be applied to the spec
-        self.conf = merge_config_rules(self.configuration(self.name), self.spec)
+        self.conf = merge_config_rules(self._config, self.spec)
 
         self.default_projections = {"all": "{name}/{version}-{compiler.name}-{compiler.version}"}
         if self.hierarchical:
@@ -391,7 +390,7 @@ class BaseConfiguration:
     def projections(self) -> Dict[str, str]:
         """Projection from specs to module names"""
         # backwards compatibility for naming_scheme key
-        conf = self.configuration(self.name)
+        conf = self._config
         if "naming_scheme" in conf:
             default = {"all": conf["naming_scheme"]}
         else:
@@ -462,7 +461,7 @@ class BaseConfiguration:
 
         # A few variables for convenience of writing the method
         spec = self.spec
-        conf = self.configuration(self.name)
+        conf = self._config
 
         # Compute the list of matching include / exclude rules, and whether excluded as implicit
         include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
@@ -494,7 +493,7 @@ class BaseConfiguration:
             ):
                 return False
 
-        conf = self.configuration(self.name)
+        conf = self._config
 
         hidden_as_implicit = not self.explicit and conf.get("hide_implicits", False)
 
@@ -554,7 +553,7 @@ class BaseConfiguration:
             return self._core_compilers
 
         compilers = []
-        for c in self.configuration(self.name).get("core_compilers", []):
+        for c in self._config.get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
@@ -573,12 +572,12 @@ class BaseConfiguration:
     @property
     def core_specs(self) -> List[str]:
         """Returns the list of "Core" specs"""
-        return self.configuration(self.name).get("core_specs", [])
+        return self._config.get("core_specs", [])
 
     @property
     def filter_hierarchy_specs(self) -> Dict[str, List[str]]:
         """Returns the dict of specs with modified hierarchies"""
-        return self.configuration(self.name).get("filter_hierarchy_specs", {})
+        return self._config.get("filter_hierarchy_specs", {})
 
     @property
     @memoized
@@ -586,7 +585,7 @@ class BaseConfiguration:
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        configured = self.configuration(self.name).get("hierarchy", [])
+        configured = self._config.get("hierarchy", [])
         return list(dedupe(itertools.chain(configured, ["compiler"])))
 
     @property
