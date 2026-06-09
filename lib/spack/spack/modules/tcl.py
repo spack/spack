@@ -5,36 +5,11 @@
 """This module implements the classes necessary to generate Tcl modules."""
 
 import os
-from typing import ClassVar, Dict, List, Optional, Tuple
+from typing import ClassVar, Dict, List, Tuple
 
-import spack.spec
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-class TclConfiguration(BaseConfiguration):
-    """Configuration class for tcl module files."""
-
-    module_system = "tcl"
-    _registry: ClassVar[Dict] = {}
-
-    @staticmethod
-    def make_layout(
-        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> BaseFileLayout:
-        return TclFileLayout(TclConfiguration.make_configuration(spec, module_set_name, explicit))
-
-    @staticmethod
-    def make_context(
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        *,
-        explicit: Optional[bool] = None,
-        layout: BaseFileLayout,
-    ) -> BaseContext:
-        configuration = TclConfiguration.make_configuration(spec, module_set_name, explicit)
-        return TclContext(configuration, layout)
 
 
 class TclFileLayout(BaseFileLayout):
@@ -64,6 +39,15 @@ class TclContext(BaseContext):
 
     def _join_path(self, parts: Tuple[str, ...]) -> str:
         return " ".join([self._manipulate_path(x) for x in parts])
+
+
+class TclConfiguration(BaseConfiguration):
+    """Configuration class for tcl module files."""
+
+    module_system = "tcl"
+    _registry: ClassVar[Dict] = {}
+    layout_class = TclFileLayout
+    context_class = TclContext
 
 
 class TclModulefileWriter(BaseModuleFileWriter):

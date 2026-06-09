@@ -34,19 +34,7 @@ import pathlib
 import re
 import string
 import warnings
-from typing import (
-    IO,
-    Callable,
-    ClassVar,
-    Dict,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import IO, ClassVar, Dict, Iterator, List, NamedTuple, Optional, Tuple, Type, Union
 
 import spack.vendor.jinja2
 
@@ -330,8 +318,9 @@ class BaseConfiguration:
     #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
     _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
 
-    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
-    make_context: ClassVar[Callable[..., "BaseContext"]]
+    #: Layout and context classes: must be set on each concrete subclass
+    layout_class: ClassVar[Type["BaseFileLayout"]]
+    context_class: ClassVar[Type["BaseContext"]]
 
     @classmethod
     def configuration(cls, module_set_name: str) -> dict:
@@ -349,6 +338,23 @@ class BaseConfiguration:
             return cls._registry[key]
         except KeyError:
             return cls._registry.setdefault(key, cls(spec, module_set_name, explicit))
+
+    @classmethod
+    def make_layout(
+        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> "BaseFileLayout":
+        return cls.layout_class(cls.make_configuration(spec, module_set_name, explicit))
+
+    @classmethod
+    def make_context(
+        cls,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        *,
+        explicit: Optional[bool] = None,
+        layout: "BaseFileLayout",
+    ) -> "BaseContext":
+        return cls.context_class(cls.make_configuration(spec, module_set_name, explicit), layout)
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file

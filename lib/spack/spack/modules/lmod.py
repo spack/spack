@@ -3,37 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-from typing import ClassVar, Dict, Optional, Tuple
-
-import spack.spec
+from typing import ClassVar, Dict, Tuple
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-class LmodConfiguration(BaseConfiguration):
-    """Configuration class for lmod module files."""
-
-    module_system = "lmod"
-    _default_hierarchical = True
-    _registry: ClassVar[Dict] = {}
-
-    @staticmethod
-    def make_layout(
-        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> BaseFileLayout:
-        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
-        return LmodFileLayout(configuration)
-
-    @staticmethod
-    def make_context(
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        *,
-        explicit: Optional[bool] = None,
-        layout: BaseFileLayout,
-    ) -> BaseContext:
-        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
-        return LmodContext(configuration, layout)
 
 
 class LmodFileLayout(BaseFileLayout):
@@ -61,6 +33,16 @@ class LmodContext(BaseContext):
 
     def _join_path(self, parts: Tuple[str, ...]) -> str:
         return ", ".join([self._manipulate_path(x) for x in parts])
+
+
+class LmodConfiguration(BaseConfiguration):
+    """Configuration class for lmod module files."""
+
+    module_system = "lmod"
+    _default_hierarchical = True
+    _registry: ClassVar[Dict] = {}
+    layout_class = LmodFileLayout
+    context_class = LmodContext
 
 
 class LmodModulefileWriter(BaseModuleFileWriter):
