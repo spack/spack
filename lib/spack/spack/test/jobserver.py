@@ -69,8 +69,8 @@ class TestCreateJobserverFifo:
             assert os.path.exists(path)
             assert stat.S_ISFIFO(os.stat(path).st_mode)
             assert (os.stat(path).st_mode & 0o777) == 0o600
-            assert fcntl.fcntl(r, fcntl.F_GETFD) != -1
-            assert fcntl.fcntl(w, fcntl.F_GETFD) != -1
+            assert fcntl.fcntl(r, fcntl.F_GETFD) >= 0
+            assert fcntl.fcntl(w, fcntl.F_GETFD) >= 0
             assert fcntl.fcntl(r, fcntl.F_GETFL) & os.O_NONBLOCK
         finally:
             os.close(r)
@@ -114,8 +114,8 @@ class TestOpenExistingJobserverFifo:
         assert result is not None
 
         r, w = result
-        assert fcntl.fcntl(r, fcntl.F_GETFD) != -1
-        assert fcntl.fcntl(w, fcntl.F_GETFD) != -1
+        assert fcntl.fcntl(r, fcntl.F_GETFD) >= 0
+        assert fcntl.fcntl(w, fcntl.F_GETFD) >= 0
         assert fcntl.fcntl(r, fcntl.F_GETFL) & os.O_NONBLOCK
 
         os.close(r)
@@ -143,8 +143,8 @@ class TestJobServer:
             assert js.fifo_path is not None
             assert os.path.exists(js.fifo_path)
             assert js.tokens_acquired == 0
-            assert fcntl.fcntl(js.r, fcntl.F_GETFD) != -1
-            assert fcntl.fcntl(js.w, fcntl.F_GETFD) != -1
+            assert fcntl.fcntl(js.r, fcntl.F_GETFD) >= 0
+            assert fcntl.fcntl(js.w, fcntl.F_GETFD) >= 0
         finally:
             js.close()
 

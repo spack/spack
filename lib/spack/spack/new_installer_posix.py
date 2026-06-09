@@ -361,9 +361,13 @@ class PosixJobServer(JobServerBase):
         elif type(fifo_config) is tuple:
             # Old style pipe-based jobserver. Validate the fds before using them.
             r, w = fifo_config
-            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
+            try:
+                fcntl.fcntl(r, fcntl.F_GETFD)
+                fcntl.fcntl(w, fcntl.F_GETFD)
                 self.r, self.w = r, w
                 return
+            except OSError:  # raised if invalid
+                pass
 
         # No existing jobserver we can connect to: create a FIFO-based one.
         self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
