@@ -1306,7 +1306,7 @@ class SpackSolverSetup:
     gen: "ProblemInstanceBuilder"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
+    def __init__(self, tests: spack.concretize.TestsType = False, prefer_oldest: bool = False):
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
@@ -1357,6 +1357,9 @@ class SpackSolverSetup:
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
 
+        # If true, prefer oldest versions instead of newest during concretization
+        self.prefer_oldest: bool = prefer_oldest
+
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
         version_provenance = self.possible_versions[pkg.name]
@@ -1376,7 +1379,10 @@ class SpackSolverSetup:
                 fn.pkg_fact(pkg.name, fn.version_deprecation_penalty(len(ordered_versions)))
             )
 
-        for weight, declared_version in enumerate(ordered_versions):
+        # If prefer_oldest is enabled, reverse the version order so that the oldest
+        # versions get the lowest weights in the optimization.
+        version_order = list(reversed(ordered_versions)) if self.prefer_oldest else ordered_versions
+        for weight, declared_version in enumerate(version_order):
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
             for origin in version_provenance[declared_version]:
                 self.gen.fact(
@@ -3923,6 +3929,8 @@ class Solver:
             packages_with_externals=self.packages_with_externals,
         )
 
+        self.prefer_oldest: bool = spack.config.get("concretizer:prefer_oldest", False)
+
     @staticmethod
     def _extract_concrete_specs(specs: Sequence[spack.spec.Spec]) -> List[spack.spec.Spec]:
         return [s for s in spack.traverse.traverse_nodes(specs) if s.concrete]
@@ -3954,7 +3962,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, prefer_oldest=self.prefer_oldest)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
@@ -4005,7 +4013,7 @@ class Solver:
         specs = [s.lookup_hash() for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, prefer_oldest=self.prefer_oldest)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False

@@ -255,6 +255,13 @@ properties: Dict[str, Any] = {
                     },
                 },
             },
+            "prefer_oldest": {
+                "type": "boolean",
+                "default": False,
+                "description": "If true, prefer the oldest version of packages during "
+                "concretization instead of the newest. Useful for CI testing against "
+                "the oldest supported versions of dependencies.",
+            },
             "externals": {
                 "type": "object",
                 "description": "Configuration for how Spack handles external packages during "
