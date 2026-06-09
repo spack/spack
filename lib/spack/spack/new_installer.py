@@ -77,7 +77,7 @@ import spack.util.environment
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
-from spack.new_installer_terminal import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import BaseTerminalState, StdinReaderBase
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events

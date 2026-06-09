@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 import spack.llnl.util.tty
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
-from spack.new_installer_terminal import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import BaseTerminalState, StdinReaderBase
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus

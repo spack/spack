@@ -14,7 +14,7 @@ import time
 from ctypes import wintypes
 from typing import TYPE_CHECKING, Callable, Optional
 
-from spack.new_installer_terminal import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import BaseTerminalState, StdinReaderBase
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
