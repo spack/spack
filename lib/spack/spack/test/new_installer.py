@@ -17,8 +17,8 @@ from spack.new_installer import (
     OVERWRITE_GARBAGE_SUFFIX,
     BinaryCacheMiss,
     BuildGraph,
-    JobServer,
     PackageInstaller,
+    PosixJobServer,
     PrefixPivoter,
     _node_to_roots,
     schedule_builds,
@@ -329,7 +329,7 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
@@ -359,7 +359,7 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
@@ -389,7 +389,7 @@ class TestScheduleBuilds:
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
         # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
-        jobserver = JobServer(num_jobs=1)
+        jobserver = PosixJobServer(num_jobs=1)
         try:
             result = schedule_builds(
                 pending,
@@ -415,7 +415,7 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         # Pre-register the lock in the prefix_locker cache, then patch try_acquire to fail.
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
@@ -446,7 +446,7 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
@@ -475,7 +475,7 @@ class TestScheduleBuilds:
         spec_b = self._make_spec("trivial-smoke-test")
         pending = [spec_a.dag_hash(), spec_b.dag_hash()]
         bg = _FakeBuildGraph([spec_a, spec_b])
-        jobserver = JobServer(num_jobs=4)
+        jobserver = PosixJobServer(num_jobs=4)
         # Patch spec_a's lock to always fail, simulating an external write lock.
         lock_a = temporary_store.prefix_locker.lock(spec_a)
         monkeypatch.setattr(lock_a, "try_acquire_write", lambda: False)
@@ -516,7 +516,7 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
@@ -555,7 +555,7 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
@@ -584,7 +584,7 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)  # installation_time = now()
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
@@ -616,7 +616,7 @@ class TestScheduleBuilds:
         temporary_store.db.add(spec, explicit=False)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,

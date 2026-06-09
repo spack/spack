@@ -15,7 +15,7 @@ import pathlib
 import stat
 
 from spack.new_installer import (
-    JobServer,
+    PosixJobServer,
     create_jobserver_fifo,
     get_jobserver_config,
     open_existing_jobserver_fifo,
@@ -132,11 +132,11 @@ ALL_TOKENS = 100
 
 
 class TestJobServer:
-    """Test JobServer class functionality."""
+    """Test PosixJobServer class functionality."""
 
     def test_creates_new_jobserver(self):
         """Should create a new FIFO-based jobserver when none exists."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
 
         try:
             assert js.created is True
@@ -150,7 +150,7 @@ class TestJobServer:
 
     def test_attaches_to_existing_fifo(self):
         """Should attach to existing FIFO jobserver from environment."""
-        js1 = JobServer(4)
+        js1 = PosixJobServer(4)
         assert js1.fifo_path
 
         try:
@@ -169,7 +169,7 @@ class TestJobServer:
 
     def test_acquire_tokens(self):
         """Should acquire tokens from jobserver."""
-        js = JobServer(5)
+        js = PosixJobServer(5)
 
         try:
             assert js.acquire(2) == 2
@@ -186,7 +186,7 @@ class TestJobServer:
 
     def test_release_tokens(self):
         """Should release tokens back to jobserver."""
-        js = JobServer(5)
+        js = PosixJobServer(5)
 
         try:
             assert js.acquire(2) == 2
@@ -203,7 +203,7 @@ class TestJobServer:
 
     def test_release_without_tokens_is_noop(self):
         """Releasing without acquired tokens should be a no-op."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
 
         try:
             assert js.tokens_acquired == 0
@@ -214,7 +214,7 @@ class TestJobServer:
 
     def test_makeflags_fifo_gmake_44(self):
         """Should return FIFO format for gmake >= 4.4."""
-        js = JobServer(8)
+        js = PosixJobServer(8)
 
         try:
             flags = js.makeflags(Spec("gmake@=4.4"))
@@ -224,7 +224,7 @@ class TestJobServer:
 
     def test_makeflags_pipe_gmake_40(self):
         """Should return pipe format for gmake 4.0-4.3."""
-        js = JobServer(8)
+        js = PosixJobServer(8)
 
         try:
             flags = js.makeflags(Spec("gmake@=4.0"))
@@ -234,7 +234,7 @@ class TestJobServer:
 
     def test_makeflags_old_format_gmake_3(self):
         """Should return old --jobserver-fds format for gmake < 4.0."""
-        js = JobServer(8)
+        js = PosixJobServer(8)
 
         try:
             flags = js.makeflags(Spec("gmake@=3.9"))
@@ -244,7 +244,7 @@ class TestJobServer:
 
     def test_makeflags_no_gmake(self):
         """Should return FIFO format when no gmake (modern default)."""
-        js = JobServer(6)
+        js = PosixJobServer(6)
 
         try:
             flags = js.makeflags(None)
@@ -254,7 +254,7 @@ class TestJobServer:
 
     def test_close_removes_created_fifo(self):
         """Should remove FIFO and directory if created by this instance."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
         fifo_path = js.fifo_path
         assert fifo_path and os.path.exists(fifo_path)
         js.close()
@@ -262,7 +262,7 @@ class TestJobServer:
 
     def test_file_descriptors_are_inheritable(self):
         """Should set file descriptors as inheritable for child processes."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
 
         try:
             assert os.get_inheritable(js.r)
@@ -272,7 +272,7 @@ class TestJobServer:
 
     def test_connection_objects_exist(self):
         """Should create Connection objects for fd inheritance."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
 
         try:
             assert js.r_conn is not None and js.r_conn.fileno() == js.r
@@ -282,26 +282,26 @@ class TestJobServer:
 
     def test_close_warns_when_spack_holds_tokens(self):
         """Should warn when Spack closes the jobserver while still holding acquired tokens."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
         js.acquire(1)  # Spack acquires a token without releasing it
         with pytest.warns(UserWarning, match="Spack failed to release jobserver tokens"):
             js.close()
 
     def test_close_warns_when_subprocess_holds_tokens(self):
         """Should warn when a subprocess acquired a token but never released it."""
-        js1 = JobServer(4)
+        js1 = PosixJobServer(4)
         os.read(js1.r, 1)  # A subprocess acquires a token without releasing it
         with pytest.warns(UserWarning, match="1 jobserver token was not released"):
             js1.close()
 
-        js2 = JobServer(4)
+        js2 = PosixJobServer(4)
         os.read(js2.r, 2)  # A subprocess acquires two tokens without releasing them
         with pytest.warns(UserWarning, match="2 jobserver tokens were not released"):
             js2.close()
 
     def test_has_target_parallelism(self):
         """has_target_parallelism() should be True initially."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
         try:
             assert js.has_target_parallelism() is True
             js.target_jobs = js.num_jobs - 1
@@ -312,7 +312,7 @@ class TestJobServer:
     def test_increase_parallelism_not_created(self):
         """increase_parallelism() should be a no-op when not self.created."""
         # Simulate an externally attached jobserver by patching created after construction.
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             original_num = js.num_jobs
             original_target = js.target_jobs
@@ -329,7 +329,7 @@ class TestJobServer:
 
     def test_increase_parallelism(self):
         """increase_parallelism() should increment num_jobs and target_jobs and add a token."""
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             original_num = js.num_jobs
             original_target = js.target_jobs
@@ -343,7 +343,7 @@ class TestJobServer:
 
     def test_decrease_parallelism_at_floor(self):
         """decrease_parallelism() should not go below target_jobs == 1."""
-        js = JobServer(1)
+        js = PosixJobServer(1)
         try:
             # target_jobs starts at 1
             assert js.target_jobs == 1
@@ -354,7 +354,7 @@ class TestJobServer:
 
     def test_decrease_parallelism_token_available(self):
         """When pipe has tokens, decrease_parallelism discards one immediately."""
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             # 3-job server starts with 2 tokens in the pipe.
             original_num = js.num_jobs
@@ -368,7 +368,7 @@ class TestJobServer:
     def test_decrease_parallelism_no_token_available(self):
         """When all tokens are held, decrease_parallelism defers the discard.
         A subsequent increase cancels the pending decrease instead of adding a token."""
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             # Drain the pipe so no tokens are available for immediate discard.
             assert js.acquire(ALL_TOKENS) == js.num_jobs - 1
@@ -386,7 +386,7 @@ class TestJobServer:
 
     def test_maybe_discard_tokens_noop_at_target(self):
         """maybe_discard_tokens() should be a no-op when num_jobs == target_jobs."""
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             original_num = js.num_jobs
             js.maybe_discard_tokens()  # to_discard == 0
@@ -396,7 +396,7 @@ class TestJobServer:
 
     def test_maybe_discard_tokens_discards_when_available(self):
         """maybe_discard_tokens() should consume tokens from the pipe."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
         try:
             # Manually set target lower to create a discard requirement.
             js.target_jobs = js.num_jobs - 2
@@ -408,7 +408,7 @@ class TestJobServer:
 
     def test_maybe_discard_tokens_noop_on_blocking(self):
         """maybe_discard_tokens() should not raise when pipe is empty."""
-        js = JobServer(3)
+        js = PosixJobServer(3)
         try:
             # Drain all tokens from the pipe (simulates subprocesses holding them).
             assert js.acquire(ALL_TOKENS) == js.num_jobs - 1
@@ -422,7 +422,7 @@ class TestJobServer:
 
     def test_release_discards_token_when_target_below_num(self):
         """release() should discard a token (not return it) when target_jobs < num_jobs."""
-        js = JobServer(4)
+        js = PosixJobServer(4)
         try:
             # Acquire a token.
             assert js.acquire(1) == 1

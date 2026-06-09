@@ -147,8 +147,8 @@ class DatabaseAction:
 
 
 class MarkExplicitAction(DatabaseAction):
-    """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
-    used when no build process was needed."""
+    """Action to mark an already installed spec as explicitly installed. Similar to PosixChildInfo,
+    but used when no build process was needed."""
 
     __slots__ = ()
 
@@ -160,7 +160,7 @@ class MarkExplicitAction(DatabaseAction):
         db._mark(self.spec, "explicit", True)
 
 
-class ChildInfo(DatabaseAction):
+class PosixChildInfo(DatabaseAction):
     """Information about a child process."""
 
     __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
@@ -265,7 +265,7 @@ def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) 
         os.close(log_r)
 
 
-class Tee:
+class PosixTee:
     """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
     process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
 
@@ -518,7 +518,7 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(echo_control, parent, log_path)
+    tee = PosixTee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
@@ -828,7 +828,7 @@ def _install(
         spack.hooks.post_install(spec, explicit)
 
 
-class JobServer:
+class PosixJobServer:
     """Attach to an existing POSIX jobserver or create a FIFO-based one."""
 
     def __init__(self, num_jobs: int) -> None:
@@ -985,11 +985,11 @@ def start_build(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    jobserver: JobServer,
+    jobserver: PosixJobServer,
     log_path: str,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
-) -> ChildInfo:
+) -> PosixChildInfo:
     """Start a new build."""
     # Create pipes for the child's output, state reporting, and control.
     state_r_conn, state_w_conn = Pipe(duplex=False)
@@ -1043,7 +1043,9 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
+    return PosixChildInfo(
+        proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit
+    )
 
 
 def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
@@ -1968,7 +1970,7 @@ def schedule_builds(
     overwrite_time: float,
     capacity: int,
     needs_jobserver_token: bool,
-    jobserver: JobServer,
+    jobserver: PosixJobServer,
     explicit: Set[str],
 ) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
@@ -2220,7 +2222,7 @@ class NullReportData(ReportData):
         pass
 
 
-def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
+def _signal_children(running_builds: Dict[int, PosixChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
         try:
@@ -2336,7 +2338,7 @@ class PackageInstaller:
         self.pending_expansions: List[str] = []
 
         self.verbose = verbose
-        self.running_builds: Dict[int, ChildInfo] = {}
+        self.running_builds: Dict[int, PosixChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
@@ -2372,7 +2374,7 @@ class PackageInstaller:
 
     def _installer(self) -> None:
         spack.store.STORE.install_sbang()
-        jobserver = JobServer(self.jobs)
+        jobserver = PosixJobServer(self.jobs)
         selector = selectors.DefaultSelector()
 
         # Set up terminal handling (cbreak, signals, stdin registration)
@@ -2624,7 +2626,7 @@ class PackageInstaller:
         self,
         pid: int,
         current_time: float,
-        jobserver: JobServer,
+        jobserver: PosixJobServer,
         selector: selectors.BaseSelector,
         failures: List[spack.spec.Spec],
         database_actions: List[DatabaseAction],
@@ -2731,7 +2733,7 @@ class PackageInstaller:
     def _schedule_builds(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: PosixJobServer,
         retained_read_locks: List[spack.util.lock.Lock],
         database_actions: List[DatabaseAction],
     ) -> bool:
@@ -2791,7 +2793,7 @@ class PackageInstaller:
     def _start(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: PosixJobServer,
         dag_hash: str,
         prefix_lock: spack.util.lock.Lock,
     ) -> None:
@@ -2855,7 +2857,7 @@ class PackageInstaller:
         self.report_data.start_record(spec)
 
     def _handle_child_logs(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
         try:
@@ -2876,20 +2878,24 @@ class PackageInstaller:
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
-    def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
+    def _drain_child_output(
+        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
+    ) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         r_fd = child_info.output_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_logs(r_fd, child_info, selector)
 
-    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
+    def _drain_child_state(
+        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
+    ) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
         r_fd = child_info.state_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_state(r_fd, child_info, selector)
 
     def _handle_child_state(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
         try:
