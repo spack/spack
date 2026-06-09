@@ -379,29 +379,6 @@ class BaseConfiguration:
     #: Name of the module system (must be set by each subclass)
     module_system: str
 
-    #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
-    _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
-
-    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
-    make_context: ClassVar[Callable[..., "BaseContext"]]
-
-    @classmethod
-    def configuration(cls, module_set_name: str) -> dict:
-        """Returns the raw configuration dict for this module system."""
-        return spack.config.get(f"modules:{module_set_name}:{cls.module_system}", {})
-
-    @classmethod
-    def make_configuration(
-        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> "BaseConfiguration":
-        """Returns the cached configuration object for spec."""
-        explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-        key = (spec.dag_hash(), module_set_name, explicit)
-        try:
-            return cls._registry[key]
-        except KeyError:
-            return cls._registry.setdefault(key, cls(spec, module_set_name, explicit))
-
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
@@ -437,11 +414,6 @@ class BaseConfiguration:
     @property
     def module(self):
         return inspect.getmodule(self)
-
-    @property
-    def module_system(self) -> str:
-        """Returns name of used module system."""
-        return str(self.module.__name__).rsplit(".", maxsplit=1)[-1]
 
     @property
     def projections(self) -> Dict[str, str]:

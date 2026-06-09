@@ -58,26 +58,6 @@ class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
     module_system = "lmod"
-    _registry: ClassVar[Dict] = {}
-
-    @staticmethod
-    def make_layout(
-        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> BaseFileLayout:
-        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
-        return LmodFileLayout(configuration)
-
-    @staticmethod
-    def make_context(
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        *,
-        explicit: Optional[bool] = None,
-        layout: BaseFileLayout,
-    ) -> BaseContext:
-        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
-        return LmodContext(configuration, layout)
-
 
     @property
     def hierarchical(self) -> bool:

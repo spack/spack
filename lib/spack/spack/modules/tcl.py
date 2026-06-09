@@ -17,24 +17,6 @@ class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
     module_system = "tcl"
-    _registry: ClassVar[Dict] = {}
-
-    @staticmethod
-    def make_layout(
-        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> BaseFileLayout:
-        return TclFileLayout(TclConfiguration.make_configuration(spec, module_set_name, explicit))
-
-    @staticmethod
-    def make_context(
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        *,
-        explicit: Optional[bool] = None,
-        layout: BaseFileLayout,
-    ) -> BaseContext:
-        configuration = TclConfiguration.make_configuration(spec, module_set_name, explicit)
-        return TclContext(configuration, layout)
 
 
 class TclFileLayout(BaseFileLayout):
