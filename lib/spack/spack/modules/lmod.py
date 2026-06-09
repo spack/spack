@@ -59,6 +59,9 @@ class LmodConfiguration(BaseConfiguration):
 
     module_system = "lmod"
     _default_hierarchical = True
+    configuration = staticmethod(configuration)
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
 
 
 class LmodFileLayout(BaseFileLayout):

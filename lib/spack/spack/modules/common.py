@@ -28,7 +28,6 @@ import collections
 import contextlib
 import copy
 import datetime
-import inspect
 import itertools
 import os
 import pathlib
@@ -369,13 +368,17 @@ class BaseConfiguration:
     #: Default for the ``hierarchical`` config key when it is absent. Subclasses may override.
     _default_hierarchical: bool = False
 
+    configuration: ClassVar[Callable[..., dict]]
+    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
+
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        # Resolve once — self.module.configuration() traverses all config scopes
-        self.hierarchical: bool = self.module.configuration(self.name).get(
+        # Resolve once — configuration() traverses all config scopes
+        self.hierarchical: bool = self.configuration(self.name).get(
             "hierarchical", self._default_hierarchical
         )
         # Dictionary of configuration options that should be applied to the spec
@@ -405,10 +408,6 @@ class BaseConfiguration:
                             "compiler."
                         )
                     break
-
-    @property
-    def module(self):
-        return inspect.getmodule(self)
 
     @property
     def projections(self) -> Dict[str, str]:
@@ -577,7 +576,7 @@ class BaseConfiguration:
             return self._core_compilers
 
         compilers = []
-        for c in self.module.configuration(self.name).get("core_compilers", []):
+        for c in self.configuration(self.name).get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
@@ -596,12 +595,12 @@ class BaseConfiguration:
     @property
     def core_specs(self) -> List[str]:
         """Returns the list of "Core" specs"""
-        return self.module.configuration(self.name).get("core_specs", [])
+        return self.configuration(self.name).get("core_specs", [])
 
     @property
     def filter_hierarchy_specs(self) -> Dict[str, List[str]]:
         """Returns the dict of specs with modified hierarchies"""
-        return self.module.configuration(self.name).get("filter_hierarchy_specs", {})
+        return self.configuration(self.name).get("filter_hierarchy_specs", {})
 
     @property
     @memoized
@@ -609,7 +608,7 @@ class BaseConfiguration:
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        configured = self.module.configuration(self.name).get("hierarchy", [])
+        configured = self.configuration(self.name).get("hierarchy", [])
         return list(dedupe(itertools.chain(configured, ["compiler"])))
 
     @property
