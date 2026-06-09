@@ -49,14 +49,12 @@ def make_layout(
 def make_context(
     spec: spack.spec.Spec,
     module_set_name: str,
+    *,
     explicit: Optional[bool] = None,
-    layout: Optional[BaseFileLayout] = None,
+    layout: BaseFileLayout,
 ) -> BaseContext:
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name, explicit)
-    if layout is None:
-        layout = make_layout(spec, module_set_name, explicit)
-    return TclContext(conf, layout)
+    return TclContext(make_configuration(spec, module_set_name, explicit), layout)
 
 
 class TclConfiguration(BaseConfiguration):

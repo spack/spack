@@ -780,7 +780,9 @@ class BaseModuleFileWriter:
         # Create the triplet of configuration/layout/context
         self.conf = self.make_configuration(spec, module_set_name, explicit)
         self.layout = self.conf.make_layout(spec, module_set_name, explicit)
-        self.context = self.conf.make_context(spec, module_set_name, explicit, self.layout)
+        self.context = self.conf.make_context(
+            spec, module_set_name, explicit=explicit, layout=self.layout
+        )
 
         # Check if a default template has been defined,
         # throw if not found
