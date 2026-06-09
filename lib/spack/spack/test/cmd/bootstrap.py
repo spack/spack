@@ -15,6 +15,7 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.spack_yaml as syaml
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
 
@@ -102,9 +103,9 @@ def test_list_sources_url(config, tmp_path):
     metadata_yaml = tmp_path / "metadata.yaml"
 
     # Relative URL
-    metadata_yaml.write_text(
-        "type: install\ndescription: test\ninfo:\n  url: ../../bootstrap_cache\n"
-    )
+    metadata = {"type": "install", "description": "test", "info": {"url": "../../bootstrap_cache"}}
+    with open(metadata_yaml, "w") as f:
+        syaml.dump(metadata, f)
     with spack.config.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
@@ -112,10 +113,13 @@ def test_list_sources_url(config, tmp_path):
         output = _bootstrap("list")
     match = re.search(r"url:(.+)", output)
     url = match.group(1).strip()
-    assert os.path.isabs(url)
+    expected = os.path.normpath(os.path.join(str(tmp_path), "../../bootstrap_cache"))
+    assert url == expected
 
     # Absolute URL
-    metadata_yaml.write_text("type: install\ndescription: test\ninfo:\n  url: /bootstrap_cache\n")
+    metadata = {"type": "install", "description": "test", "info": {"url": "/bootstrap_cache"}}
+    with open(metadata_yaml, "w") as f:
+        syaml.dump(metadata, f)
     with spack.config.override(
         "bootstrap",
         {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
@@ -123,7 +127,7 @@ def test_list_sources_url(config, tmp_path):
         output = _bootstrap("list")
     match = re.search(r"url:(.+)", output)
     url = match.group(1).strip()
-    assert os.path.isabs(url)
+    assert url == "/bootstrap_cache"
 
 
 def test_list_sources(config):
