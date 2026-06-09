@@ -175,33 +175,60 @@ class ChildInfo(DatabaseAction):
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
 
+    @property
+    @abc.abstractmethod
+    def output_connection_handle(self):
+        """Accesor for underlying connection handle"""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def state_connection_handle(self):
+        """Accesor for underlying connection handle"""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def sentinel(self):
+        """Accessor for process sentinel"""
+        pass
+
+    def _setup_handles(self) -> None:
+        pass
+
+    def _cleanup_handles(self) -> None:
+        self.output_r_conn.close()
+        self.state_r_conn.close()
+        self.control_w_conn.close()
+
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
 
     def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
         """Register output, state, and sentinel channels with the selector."""
-        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
-        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
-        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        self._setup_handles()
+        selector.register(
+            self.output_connection_handle, selectors.EVENT_READ, FdInfo(pid, "output")
+        )
+        selector.register(self.state_connection_handle, selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
 
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
         try:
-            selector.unregister(self.output_r_conn.fileno())
+            selector.unregister(self.output_connection_handle)
         except KeyError:
             pass
         try:
-            selector.unregister(self.state_r_conn.fileno())
+            selector.unregister(self.state_connection_handle)
         except KeyError:
             pass
         try:
-            selector.unregister(self.proc.sentinel)
+            selector.unregister(self.sentinel)
         except (KeyError, ValueError):
             pass
-        self.output_r_conn.close()
-        self.state_r_conn.close()
-        self.control_w_conn.close()
+        self._cleanup_handles()
         self.proc.join()
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"

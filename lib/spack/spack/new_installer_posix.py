@@ -197,6 +197,18 @@ class PosixTerminalState(BaseTerminalState):
 class PosixChildInfo(ChildInfo):
     """Posix Compatible class for Child Information"""
 
+    @property
+    def output_connection_handle(self):
+        return self.output_r_conn.fileno()
+
+    @property
+    def state_connection_handle(self):
+        return self.state_r_conn.fileno()
+
+    @property
+    def sentinel(self):
+        return self.proc.sentinel
+
 
 class PosixTee(Tee):
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
