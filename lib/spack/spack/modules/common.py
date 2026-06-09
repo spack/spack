@@ -320,8 +320,6 @@ class BaseConfiguration:
 
     #: Layout class must be set on each concrete subclass
     layout_class: ClassVar[Type["BaseFileLayout"]]
-    #: Context class must be set on each concrete subclass
-    context_class: ClassVar[Type["BaseContext"]]
 
     @classmethod
     def configuration(cls, module_set_name: str) -> dict:
@@ -355,7 +353,7 @@ class BaseConfiguration:
         explicit: Optional[bool] = None,
         layout: "BaseFileLayout",
     ) -> "BaseContext":
-        return cls.context_class(cls.make_configuration(spec, module_set_name, explicit), layout)
+        return BaseContext(cls.make_configuration(spec, module_set_name, explicit), layout)
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
@@ -693,7 +691,11 @@ class BaseFileLayout:
 
     @property
     def modulerc(self) -> str:
-        raise NotImplementedError
+        """Returns the modulerc file for this module file."""
+        dirname = os.path.dirname(self.filename)
+        if self.extension:
+            return os.path.join(dirname, f".modulerc.{self.extension}")
+        return os.path.join(dirname, ".modulerc")
 
     @property
     def spec(self) -> spack.spec.Spec:
@@ -962,6 +964,11 @@ class BaseContext(tengine.Context):
         # the configure option section
         return None
 
+    @tengine.context_property
+    def prerequisites(self) -> List[str]:
+        """List of modules that must be loaded before this one."""
+        return self._create_module_list_of("specs_to_prereq")
+
     def modification_needs_formatting(
         self,
         modification: Union[
@@ -1170,13 +1177,13 @@ class BaseContext(tengine.Context):
         return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
     def _manipulate_path(self, token: str) -> str:
-        raise NotImplementedError
+        return self.conf._manipulate_path(token)
 
     def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
-        raise NotImplementedError
+        return self.conf._format_condition(services_needed)
 
     def _join_path(self, parts: Tuple[str, ...]) -> str:
-        raise NotImplementedError
+        return self.conf._join_path(parts)
 
     @tengine.context_property
     def conditionally_unlocked_paths(self) -> List[Tuple[str, str]]:

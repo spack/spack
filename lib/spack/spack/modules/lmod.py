@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from typing import ClassVar, Dict, Tuple
 
-from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
+from .common import BaseConfiguration, BaseFileLayout, BaseModuleFileWriter
 
 
 class LmodFileLayout(BaseFileLayout):
@@ -13,26 +12,6 @@ class LmodFileLayout(BaseFileLayout):
 
     #: file extension of lua module files
     extension = "lua"
-
-    @property
-    def modulerc(self) -> str:
-        """Returns the modulerc file associated with current module file"""
-        return os.path.join(os.path.dirname(self.filename), f".modulerc.{self.extension}")
-
-
-class LmodContext(BaseContext):
-    """Context class for lmod module files."""
-
-    def _manipulate_path(self, token: str) -> str:
-        if token in self.conf.hierarchy_tokens:
-            return "{0}_name, {0}_version".format(token)
-        return '"' + token + '"'
-
-    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
-        return " and ".join([x + "_name" for x in services_needed])
-
-    def _join_path(self, parts: Tuple[str, ...]) -> str:
-        return ", ".join([self._manipulate_path(x) for x in parts])
 
 
 class LmodConfiguration(BaseConfiguration):
@@ -42,7 +21,17 @@ class LmodConfiguration(BaseConfiguration):
     _default_hierarchical = True
     _registry: ClassVar[Dict] = {}
     layout_class = LmodFileLayout
-    context_class = LmodContext
+
+    def _manipulate_path(self, token: str) -> str:
+        if token in self.hierarchy_tokens:
+            return "{0}_name, {0}_version".format(token)
+        return '"' + token + '"'
+
+    def _format_condition(self, services_needed: Tuple[str, ...]) -> str:
+        return " and ".join([x + "_name" for x in services_needed])
+
+    def _join_path(self, parts: Tuple[str, ...]) -> str:
+        return ", ".join([self._manipulate_path(token) for token in parts])
 
 
 class LmodModulefileWriter(BaseModuleFileWriter):
