@@ -117,7 +117,7 @@ def _check_tokens_are_valid(format_string: str, error_message: str) -> None:
 def update_dictionary_extending_lists(target: dict, update: dict) -> None:
     """Updates a dictionary, but extends lists instead of overriding them."""
     for key in update:
-        value = target.get(key, None)
+        value = target.get(key)
         if isinstance(value, list):
             target[key].extend(update[key])
         elif isinstance(value, dict):
@@ -249,14 +249,11 @@ def _read_module_index(str_or_file: IO[str]) -> Dict[str, ModuleIndexEntry]:
     """Read in the mapping of spec hash to module location/name. For a given
     Spack installation there is assumed to be (at most) one such mapping
     per module type."""
-    yaml_content = syaml.load(str_or_file)
-    index = {}
-    yaml_index = yaml_content["module_index"]
-    for dag_hash, module_properties in yaml_index.items():
-        index[dag_hash] = ModuleIndexEntry(
-            module_properties["path"], module_properties["use_name"]
-        )
-    return index
+    yaml_index = syaml.load(str_or_file)["module_index"]
+    return {
+        dag_hash: ModuleIndexEntry(props["path"], props["use_name"])
+        for dag_hash, props in yaml_index.items()
+    }
 
 
 def read_module_indices() -> List[Dict[str, Dict[str, ModuleIndexEntry]]]:
@@ -265,11 +262,12 @@ def read_module_indices() -> List[Dict[str, Dict[str, ModuleIndexEntry]]]:
     module_indices = []
 
     for install_properties in other_spack_instances.values():
-        module_type_to_index = {}
-        module_type_to_root = install_properties.get("modules", {})
-        for module_type, root in module_type_to_root.items():
-            module_type_to_index[module_type] = read_module_index(root)
-        module_indices.append(module_type_to_index)
+        module_indices.append(
+            {
+                module_type: read_module_index(root)
+                for module_type, root in install_properties.get("modules", {}).items()
+            }
+        )
 
     return module_indices
 
@@ -302,11 +300,10 @@ class UpstreamModuleIndex:
                 f"where {spec} is installed"
             )
             return None
-        if spec.dag_hash() in module_type_index:
-            return module_type_index[spec.dag_hash()]
-        else:
+        entry = module_type_index.get(spec.dag_hash())
+        if entry is None:
             tty.debug(f"No module is available for upstream package {spec}")
-            return None
+        return entry
 
 
 class BaseConfiguration:
@@ -539,11 +536,11 @@ class BaseConfiguration:
         return filter_subsection.get("exclude_env_vars", [])
 
     def _create_list_for(self, what: str) -> List[spack.spec.Spec]:
-        include = []
-        for item in self.conf[what]:
-            if not self.make_configuration(item, self.name).excluded:
-                include.append(item)
-        return include
+        return [
+            item
+            for item in self.conf[what]
+            if not self.make_configuration(item, self.name).excluded
+        ]
 
     @property
     def verbose(self) -> Optional[bool]:
@@ -637,6 +634,7 @@ class BaseConfiguration:
         return requirements
 
     @property
+    @memoized
     def provides(self) -> Dict[str, spack.spec.Spec]:
         """Returns a dictionary mapping all the services provided by this
         spec to the spec itself.
@@ -670,12 +668,9 @@ class BaseConfiguration:
         """Returns a dictionary of the services that are currently
         available.
         """
-        available = {}
         # What is available is what I require plus what I provide.
         # 'compiler' is the only key that may be overridden.
-        available.update(self.requires)
-        available.update(self.provides)
-        return available
+        return {**self.requires, **self.provides}
 
     @property
     @memoized
@@ -752,8 +747,7 @@ class FileLayout:
             # list of the path parts
             requires = self.conf.requires
             hierarchy = self.conf.hierarchy_tokens
-            path_parts = lambda x: self.token_to_path(x, requires[x])
-            parts = [path_parts(x) for x in hierarchy if x in requires]
+            parts = [self.token_to_path(x, requires[x]) for x in hierarchy if x in requires]
 
             if not parts:
                 raise ModulesError(
@@ -852,10 +846,10 @@ class FileLayout:
 
         # Compute the paths that are unconditionally added
         # and append them to the dictionary (key = None)
+        hierarchy = self.conf.hierarchy_tokens
+        available = self.conf.available
         available_combination = []
         for item in to_be_processed:
-            hierarchy = self.conf.hierarchy_tokens
-            available = self.conf.available
             ac = [x for x in hierarchy if x in item]
             available_combination.append(tuple(ac))
             parts = [self.token_to_path(x, available[x]) for x in ac]
@@ -872,13 +866,12 @@ class FileLayout:
         for ii in range(len(missing)):
             missing_combinations += itertools.combinations(missing, ii + 1)
 
+        token2path = lambda x: self.token_to_path(x, available[x])
+
         # Attach the services required to each combination
         for m in missing_combinations:
             to_be_processed = [m + x for x in available_combination]
             for item in to_be_processed:
-                hierarchy = self.conf.hierarchy_tokens
-                available = self.conf.available
-                token2path = lambda x: self.token_to_path(x, available[x])
                 parts = []
                 for x in hierarchy:
                     if x not in item:
@@ -1140,7 +1133,7 @@ class ModuleContext(tengine.Context):
     def version_part(self) -> str:
         """Version of this provider."""
         s = self.spec
-        return "-".join([str(s.version), s.dag_hash(length=7)])
+        return f"{s.version}-{s.dag_hash(length=7)}"
 
     @tengine.context_property
     def provides(self) -> Dict[str, spack.spec.Spec]:
@@ -1217,11 +1210,7 @@ class BaseModuleFileWriter:
         # 2. template specified in a package directly
         # 3. default template (must be defined, check in __init__)
         package_attribute = f"{self.conf.module_system}_template"
-        for candidate in [
-            self.conf.template,
-            getattr(self.spec.package, package_attribute, None),
-            self.default_template,  # This is always defined at this point
-        ]:
+        for candidate in [self.conf.template, getattr(self.spec.package, package_attribute, None)]:
             if candidate:
                 return candidate
         return self.default_template
@@ -1339,7 +1328,7 @@ class BaseModuleFileWriter:
 
             # add hide command if module is hidden
             elif not already_hidden and hidden:
-                if len(content) == 0:
+                if not content:
                     content = self.modulerc_header.copy()
                 content.append(hide_module_cmd)
                 updated = True
@@ -1351,12 +1340,12 @@ class BaseModuleFileWriter:
 
         # no modulerc file change if no content update
         if updated:
-            is_empty = content == self.modulerc_header or len(content) == 0
+            is_empty = content == self.modulerc_header or not content
             # remove existing modulerc if empty
             if modulerc_exists and is_empty:
                 os.remove(modulerc_path)
             # create or update modulerc
-            elif content != self.modulerc_header:
+            elif not is_empty:
                 # ensure file ends with a newline character
                 content.append("")
                 with open(modulerc_path, "w", encoding="utf-8") as f:
