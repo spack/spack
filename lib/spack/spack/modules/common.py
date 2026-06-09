@@ -324,11 +324,16 @@ class BaseConfiguration:
     #: Default for the ``hierarchical`` config key when it is absent. Subclasses may override.
     _default_hierarchical: bool = False
 
-    #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
     _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
 
     #: File extension for module files (empty string means no extension)
     file_extension: ClassVar[str] = ""
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, "module_system"):
+            raise AttributeError(f"'{cls.__name__}' must define a 'module_system' class attribute")
+        cls._registry = {}
 
     @classmethod
     def configuration(cls, module_set_name: str) -> dict:
@@ -353,17 +358,6 @@ class BaseConfiguration:
     ) -> "FileLayout":
         return FileLayout(cls.make_configuration(spec, module_set_name, explicit))
 
-    @classmethod
-    def make_context(
-        cls,
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        *,
-        explicit: Optional[bool] = None,
-        layout: "FileLayout",
-    ) -> "ModuleContext":
-        return ModuleContext(cls.make_configuration(spec, module_set_name, explicit), layout)
-
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
         self.spec = spec
@@ -372,6 +366,7 @@ class BaseConfiguration:
         # Cache once — configuration() traverses all config scopes on every call
         self._config = self.configuration(self.name)
         self.hierarchical: bool = self._config.get("hierarchical", self._default_hierarchical)
+        self.arch_folder: bool = spack.config.get(f"modules:{module_set_name}:arch_folder", True)
         # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self._config, self.spec)
 
@@ -732,10 +727,7 @@ class FileLayout:
     @property
     def arch_dirname(self) -> str:
         """Returns the root folder for THIS architecture"""
-        # Architecture sub-folder
-        arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
-        if arch_folder_conf:
-            # include an arch specific folder between root and filename
+        if self.conf.arch_folder:
             if self.conf.hierarchical:
                 arch_folder = "-".join(
                     [str(self.spec.platform), str(self.spec.os), str(self.spec.target.family)]
@@ -1224,12 +1216,9 @@ class BaseModuleFileWriter:
     ) -> None:
         self.spec = spec
 
-        # Create the triplet of configuration/layout/context
         self.conf = self.configuration_class.make_configuration(spec, module_set_name, explicit)
-        self.layout = self.conf.make_layout(spec, module_set_name, explicit)
-        self.context = self.conf.make_context(
-            spec, module_set_name, explicit=explicit, layout=self.layout
-        )
+        self.layout = FileLayout(self.conf)
+        self.context = ModuleContext(self.conf, self.layout)
 
     def _get_template(self) -> str:
         """Gets the template that will be rendered for this spec."""

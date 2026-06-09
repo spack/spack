@@ -4,7 +4,7 @@
 
 """This module implements the classes necessary to generate Tcl modules."""
 
-from typing import ClassVar, Dict, Tuple
+from typing import Tuple
 
 from .common import BaseConfiguration, BaseModuleFileWriter
 
@@ -13,7 +13,6 @@ class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
     module_system = "tcl"
-    _registry: ClassVar[Dict] = {}
 
     def _manipulate_path(self, token: str) -> str:
         if token in self.hierarchy_tokens:

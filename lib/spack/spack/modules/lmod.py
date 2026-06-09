@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import ClassVar, Dict, Tuple
+from typing import Tuple
 
 from .common import BaseConfiguration, BaseModuleFileWriter
 
@@ -12,7 +12,6 @@ class LmodConfiguration(BaseConfiguration):
 
     module_system = "lmod"
     _default_hierarchical = True
-    _registry: ClassVar[Dict] = {}
     file_extension = "lua"
 
     def _manipulate_path(self, token: str) -> str:
