@@ -768,8 +768,12 @@ class BaseFileLayout:
             path_parts = lambda x: self.token_to_path(x, requires[x])
             parts = [path_parts(x) for x in hierarchy if x in requires]
 
-            if parts:
-                filename = os.path.join(*parts, filename)
+            if not parts:
+                raise ModulesError(
+                    f"{self.spec.short_spec}: hierarchical module has no resolved requirements; "
+                    "cannot construct the module file path"
+                )
+            filename = os.path.join(*parts, filename)
 
         # Return the absolute path
         return os.path.join(self.arch_dirname, filename)
