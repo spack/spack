@@ -352,8 +352,8 @@ class BaseConfiguration:
         *,
         explicit: Optional[bool] = None,
         layout: "BaseFileLayout",
-    ) -> "BaseContext":
-        return BaseContext(cls.make_configuration(spec, module_set_name, explicit), layout)
+    ) -> "ModuleContext":
+        return ModuleContext(cls.make_configuration(spec, module_set_name, explicit), layout)
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file
@@ -893,15 +893,8 @@ class BaseFileLayout:
         return unlocked
 
 
-class BaseContext(tengine.Context):
-    """Provides the base context needed for template rendering.
-
-    This class needs to be sub-classed for specific module types. The
-    following attributes need to be implemented:
-
-    - fields
-
-    """
+class ModuleContext(tengine.Context):
+    """Provides the context dictionary used by the template engine to render a module file."""
 
     def __init__(self, configuration, layout: "BaseFileLayout") -> None:
         self.conf = configuration
