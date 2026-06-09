@@ -6,7 +6,7 @@ import pathlib
 
 import pytest
 
-import spack.llnl.util.tty as tty
+import spack.util.tty as tty
 import spack.reporters.extract
 import spack.util.filesystem as fs
 from spack.install_test import TestStatus

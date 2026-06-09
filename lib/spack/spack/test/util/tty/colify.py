@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from spack.llnl.util.tty.colify import colify, colify_table
+from spack.util.tty.colify import colify, colify_table
 
 # table as 3 rows x 6 columns
 lorem_table = [

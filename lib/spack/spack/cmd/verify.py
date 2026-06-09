@@ -7,9 +7,9 @@ from typing import List, Optional
 
 import spack.cmd
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
+import spack.util.tty as tty
 import spack.verify
 import spack.verify_libraries
 from spack.cmd.common import arguments

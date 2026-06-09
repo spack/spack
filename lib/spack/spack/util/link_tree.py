@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
-import spack.llnl.util.tty as tty
+import spack.util.tty as tty
 import spack.util.filesystem as fs
 
 __all__ = ["LinkTree"]

@@ -22,12 +22,12 @@ import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
 import spack.util.filesystem as fs
+import spack.util.tty as tty
 import spack.util.web as web_util
 from spack import traverse
 from spack.reporters import CDash, CDashConfiguration

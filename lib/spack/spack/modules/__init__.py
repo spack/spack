@@ -9,10 +9,10 @@ include Tcl or Lua modules, and others.
 import os
 from typing import Dict, Optional, Type
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.tty as tty
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules

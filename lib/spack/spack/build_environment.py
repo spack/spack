@@ -68,7 +68,6 @@ import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.multimethod
 import spack.package_base
 import spack.paths
@@ -80,11 +79,11 @@ import spack.store
 import spack.subprocess_context
 import spack.util.executable
 import spack.util.module_cmd
+import spack.util.tty as tty
 from spack import traverse
 from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -101,6 +100,7 @@ from spack.util.filesystem import join_path, symlink
 from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.string import plural
+from spack.util.tty.color import cescape, colorize
 
 #
 # This can be set by the user to globally disable parallel builds.

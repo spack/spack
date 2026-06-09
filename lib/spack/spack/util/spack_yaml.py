@@ -22,7 +22,7 @@ from typing import IO, Any, Callable, Dict, List, Optional, Union
 from spack.vendor.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
 import spack.error
-from spack.llnl.util.tty.color import cextra, clen, colorize
+from spack.util.tty.color import cextra, clen, colorize
 
 # Only export load and dump
 __all__ = ["load", "dump", "SpackYAMLError"]

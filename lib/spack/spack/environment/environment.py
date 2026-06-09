@@ -36,8 +36,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.installer_dispatch
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -52,6 +50,8 @@ import spack.util.hash
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
+import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
 from spack.config import substitute_path_variables

@@ -12,7 +12,7 @@ import re
 import subprocess
 from typing import MutableMapping, Optional
 
-import spack.llnl.util.tty as tty
+import spack.util.tty as tty
 from spack.error import SpackError
 
 # This list is not exhaustive. Currently we only use load and unload

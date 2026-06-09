@@ -18,9 +18,9 @@ import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
 import spack.error
-from spack.llnl.util import tty
 from spack.util.lang import dedupe
 from spack.util.path import path_to_os_path, system_path_filter
+from spack.util import tty
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
 # Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exclude it

@@ -12,7 +12,7 @@ import shutil
 import sys
 from typing import IO, Any, List, Optional
 
-from spack.llnl.util.tty.color import cextra, clen
+from spack.util.tty.color import cextra, clen
 
 
 class ColumnConfig:

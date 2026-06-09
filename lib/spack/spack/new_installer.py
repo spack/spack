@@ -61,8 +61,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.tty
-import spack.llnl.util.tty.color
 import spack.mirrors.mirror
 import spack.report
 import spack.sandbox
@@ -74,6 +72,8 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.tty
+import spack.util.tty.color
 from spack.installer import _do_fake_install, dump_packages
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
@@ -583,18 +583,18 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         if os.path.lexists(pkg.env_mods_path):
             shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
     except OSError as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
     try:
         if os.path.lexists(pkg.configure_args_path):
             shutil.copy2(pkg.configure_args_path, pkg.install_configure_args_path)
     except OSError as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     # Archive install-phase test log if present
     try:
         pkg.archive_install_test_log()
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     # Archive package-specific files matched by archive_files glob patterns
     try:
@@ -616,29 +616,27 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
                         fs.mkdirp(os.path.dirname(target))
                         fs.install(f, target)
                     except Exception as e:
-                        spack.llnl.util.tty.debug(e)
+                        spack.util.tty.debug(e)
                         errors.write(f"[FAILED TO ARCHIVE]: {f}")
             if errors.getvalue():
                 error_file = os.path.join(target_dir, "errors.txt")
                 fs.mkdirp(target_dir)
                 with open(error_file, "w", encoding="utf-8") as err:
                     err.write(errors.getvalue())
-                spack.llnl.util.tty.warn(
-                    f"Errors occurred when archiving files.\n\tSee: {error_file}"
-                )
+                spack.util.tty.warn(f"Errors occurred when archiving files.\n\tSee: {error_file}")
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     try:
         packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
         dump_packages(pkg.spec, packages_dir)
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     try:
         spack.store.STORE.layout.write_host_environment(pkg.spec)
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
 
 def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
@@ -808,14 +806,14 @@ def _install(
                 send_state(f"stopped before {stop_before}", state_stream)
                 raise spack.error.StopPhase(f"Stopping before '{stop_before}'")
             send_state(phase.name, state_stream)
-            spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
+            spack.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
             # Run the install phase with debug output enabled.
-            old_debug = spack.llnl.util.tty.debug_level()
-            spack.llnl.util.tty.set_debug(1)
+            old_debug = spack.util.tty.debug_level()
+            spack.util.tty.set_debug(1)
             try:
                 phase.execute()
             finally:
-                spack.llnl.util.tty.set_debug(old_debug)
+                spack.util.tty.set_debug(old_debug)
             if stop_at is not None and phase.name == stop_at:
                 send_state(f"stopped after {stop_at}", state_stream)
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
@@ -902,6 +900,81 @@ def start_build(
     return ChildInfo(
         proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
     )
+
+
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
+    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
+
+    Args:
+        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
+    """
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
+    if not makeflags:
+        return None
+    # We can have the following flags:
+    # --jobserver-fds=R,W (before GNU make 4.2)
+    # --jobserver-auth=fifo:PATH or --jobserver-auth=R,W (after GNU make 4.2)
+    # In case of multiple, the last one wins.
+    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
+    if not matches:
+        return None
+    last_match: str = matches[-1]
+    assert isinstance(last_match, str)
+    if last_match.startswith("fifo:"):
+        return last_match[5:]
+    parts = last_match.split(",", 1)
+    if len(parts) != 2:
+        return None
+    try:
+        return int(parts[0]), int(parts[1])
+    except ValueError:
+        return None
+
+
+def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
+    """Create a new jobserver FIFO with the specified number of job tokens."""
+    tmpdir = tempfile.mkdtemp()
+    fifo_path = os.path.join(tmpdir, "jobserver_fifo")
+
+    try:
+        os.mkfifo(fifo_path, 0o600)
+        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        write_fd = os.open(fifo_path, os.O_WRONLY)
+        # write num_jobs - 1 tokens, because the first job is implicit
+        os.write(write_fd, b"+" * (num_jobs - 1))
+        return read_fd, write_fd, fifo_path
+    except Exception:
+        try:
+            os.unlink(fifo_path)
+        except OSError as e:
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
+            pass
+        try:
+            os.rmdir(tmpdir)
+        except OSError as e:
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
+            pass
+        raise
+
+
+def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
+    """Open an existing jobserver FIFO for reading and writing."""
+    try:
+        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        write_fd = os.open(fifo_path, os.O_WRONLY)
+        return read_fd, write_fd
+    except OSError:
+        return None
+
+
+class FdInfo:
+    """Information about a file descriptor mapping."""
+
+    __slots__ = ("pid", "name")
+
+    def __init__(self, pid: int, name: str) -> None:
+        self.pid = pid
+        self.name = name
 
 
 class BuildInfo:
@@ -994,7 +1067,7 @@ class BuildStatus:
         if color is not None:
             self.color = color
         else:
-            self.color = spack.llnl.util.tty.color.get_color_when(stdout)
+            self.color = spack.util.tty.color.get_color_when(stdout)
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -2370,7 +2443,7 @@ class PackageInstaller:
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
         except Exception as e:
-            spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:

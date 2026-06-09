@@ -75,6 +75,8 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.llnl.util import tty
 from spack.util import filesystem, lang
+from spack.llnl.util import filesystem, lang
+from spack.util import tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 

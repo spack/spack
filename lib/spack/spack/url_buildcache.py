@@ -23,7 +23,6 @@ import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
@@ -33,6 +32,7 @@ import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.mirrors.mirror import BINARY_MEDIA_TYPE_VERSION
+import spack.util.tty as tty
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo

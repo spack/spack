@@ -46,7 +46,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
@@ -60,6 +59,7 @@ import spack.util.file_permissions as fp
 import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.util.lang import Singleton, dedupe
@@ -76,6 +76,12 @@ from .error import (
 EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
+
+
+#: config section for this file
+def configuration(module_set_name):
+    config_path = f"modules:{module_set_name}"
+    return spack.config.get(config_path, {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (

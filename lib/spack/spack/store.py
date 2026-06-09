@@ -35,7 +35,7 @@ import spack.paths
 import spack.spec
 import spack.util.lang
 import spack.util.path
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util import filesystem as fs
 
 #: default installation root, relative to the Spack install path

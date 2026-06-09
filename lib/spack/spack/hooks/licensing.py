@@ -4,8 +4,8 @@
 
 import os
 
-import spack.llnl.util.tty as tty
 import spack.util.editor as ed
+import spack.util.tty as tty
 from spack.util.filesystem import mkdirp, symlink
 
 

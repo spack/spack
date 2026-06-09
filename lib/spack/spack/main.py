@@ -35,9 +35,6 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -45,6 +42,9 @@ import spack.spec
 import spack.util.environment
 import spack.util.lang
 import spack.util.lock
+import spack.util.tty as tty
+import spack.util.tty.colify
+import spack.util.tty.color as color
 
 from .enums import ConfigScopePriority
 
@@ -387,7 +387,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
+            cols = spack.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
             msg = "invalid choice: %r choose from:\n%s" % (value, cols)
             raise argparse.ArgumentError(action, msg)
 

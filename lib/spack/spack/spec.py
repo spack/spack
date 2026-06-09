@@ -86,8 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as clr
 import spack.patch
 import spack.paths
 import spack.platforms
@@ -104,6 +102,8 @@ import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
+import spack.util.tty as tty
+import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
@@ -158,7 +158,7 @@ IDENTIFIER_RE = r"\w[\w-]*"
 
 # Coloring of specs when using color output. Fields are printed with
 # different colors to enhance readability.
-# See spack.llnl.util.tty.color for descriptions of the color codes.
+# See spack.util.tty.color for descriptions of the color codes.
 COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures

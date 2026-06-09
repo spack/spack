@@ -43,7 +43,6 @@ from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
 import spack.util.crypto as crypto
@@ -51,6 +50,7 @@ import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.url
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version

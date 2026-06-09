@@ -9,10 +9,10 @@ import os
 from typing import Optional, Union
 
 import spack.cmd
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
 import spack.util.editor
+import spack.util.tty as tty
 
 description = "open package files in ``$EDITOR``"
 section = "packaging"

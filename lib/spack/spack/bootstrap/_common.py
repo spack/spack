@@ -22,7 +22,7 @@ import spack.store
 import spack.util.environment
 import spack.util.executable
 import spack.util.filesystem as fs
-from spack.llnl.util import tty
+from spack.util import tty
 
 from .config import spec_for_current_python
 

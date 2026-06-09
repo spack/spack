@@ -10,13 +10,12 @@ from typing import Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
-
-import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
 import spack.util.filesystem as fs
 import spack.util.lang
+import spack.util.tty as tty
 from spack.util.filesystem import readlink, symlink
 from spack.util.lang import memoized
 

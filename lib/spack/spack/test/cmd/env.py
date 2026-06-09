@@ -20,7 +20,6 @@ import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.modules
 import spack.modules.tcl
@@ -47,6 +46,7 @@ from spack.traverse import traverse_nodes
 from spack.util.executable import Executable
 from spack.util.filesystem import readlink
 from spack.util.lang import dedupe
+import spack.util.tty as tty
 from spack.version import Version
 
 # TODO-27021

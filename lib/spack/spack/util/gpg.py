@@ -14,11 +14,11 @@ import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.util.executable
 import spack.util.filesystem
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 import spack.version
 from spack.util.executable import Executable
 

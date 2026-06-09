@@ -43,8 +43,6 @@ import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_types
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -66,6 +64,8 @@ import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
+import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
@@ -2266,7 +2266,7 @@ def mock_fetch_url_text(mock_config_data, monkeypatch):
 def mock_tty_stdout(monkeypatch):
     """Make sys.stdout.isatty() return True, while forcing no color output."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-    with spack.llnl.util.tty.color.color_when("never"):
+    with spack.util.tty.color.color_when("never"):
         yield
 
 

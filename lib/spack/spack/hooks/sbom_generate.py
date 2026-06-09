@@ -9,8 +9,8 @@ import urllib.parse
 
 import spack.error
 import spack.util.spack_json as sjson
-from spack.llnl.util import tty
 from spack.store import STORE
+from spack.util import tty
 
 
 def get_license(pkg):

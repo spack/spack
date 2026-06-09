@@ -13,9 +13,9 @@ import spack.compilers.config
 import spack.config
 import spack.error
 import spack.hash_lookup
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
+import spack.util.tty as tty
 from spack.spec import ArchSpec, CompilerSpec, Spec
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]

@@ -7,8 +7,8 @@ import sys
 from typing import Dict, Iterable, List
 
 import spack.environment
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify as colify
+import spack.util.tty as tty
+import spack.util.tty.colify as colify
 import spack.repo
 import spack.util.string
 

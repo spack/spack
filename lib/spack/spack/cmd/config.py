@@ -11,8 +11,6 @@ from typing import List
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.schema
 import spack.schema.env
 import spack.spec
@@ -20,9 +18,11 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify_table
 from spack.util.editor import editor
+from spack.util.tty.colify import colify_table
 
 description = "get and set configuration options"
 section = "config"

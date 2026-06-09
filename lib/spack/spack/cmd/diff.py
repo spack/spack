@@ -9,11 +9,11 @@ import sys
 import spack.cmd
 import spack.environment as ev
 import spack.hash_lookup
-import spack.llnl.util.tty as tty
 import spack.solver.asp as asp
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.color import cprint, get_color_when
+from spack.util.tty.color import cprint, get_color_when
 
 description = "compare two specs"
 section = "query"

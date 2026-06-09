@@ -8,8 +8,8 @@ import sys
 import warnings
 from typing import Callable, List, Optional
 
-import spack.llnl.util.tty as tty
 import spack.util.spack_yaml
+import spack.util.tty as tty
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
 

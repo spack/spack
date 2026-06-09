@@ -8,11 +8,11 @@ import sys
 
 import spack.cmd
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.store
+import spack.util.tty as tty
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
+from spack.util.tty.colify import colify
 
 description = "show packages that depend on another"
 section = "query"

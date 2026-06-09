@@ -9,9 +9,9 @@ import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import spack
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.util.executable
+import spack.util.tty as tty
 from spack.package import CompilerError
 from spack.util.lang import classproperty, memoized
 

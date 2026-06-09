@@ -12,7 +12,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
-import spack.llnl.util.tty as _tty
+import spack.util.tty as _tty
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -158,6 +158,9 @@ pwd = getcwd
 #: Alias for :func:`os.rename`
 rename = rename
 
+#: Alias for :func:`os.rename` (with certain Windows-specific changes)
+rename = rename
+
 #: Alias for :func:`os.makedirs`
 makedirs = makedirs
 
@@ -178,9 +181,6 @@ rmtree = rmtree
 
 #: Alias for :func:`os.readlink` (with certain Windows-specific changes)
 readlink = readlink
-
-#: Alias for :func:`os.rename` (with certain Windows-specific changes)
-rename = rename
 
 #: Alias for :func:`os.symlink` (with certain Windows-specific changes)
 symlink = symlink

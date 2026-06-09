@@ -50,7 +50,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
@@ -73,6 +72,7 @@ import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.timer as timer
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
