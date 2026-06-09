@@ -35,7 +35,7 @@ import pathlib
 import re
 import string
 import warnings
-from typing import IO, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import IO, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple, Union
 
 import spack.vendor.jinja2
 
@@ -709,6 +709,10 @@ class BaseFileLayout:
         self.conf = configuration
 
     @property
+    def modulerc(self) -> str:
+        raise NotImplementedError
+
+    @property
     def spec(self) -> spack.spec.Spec:
         """Spec under consideration"""
         return self.conf.spec
@@ -1200,6 +1204,9 @@ class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
     modulerc_header: List[str]
+    make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
+    make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
+    make_context: ClassVar[Callable[..., "BaseContext"]]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
 
@@ -1208,12 +1215,10 @@ class BaseModuleFileWriter:
     ) -> None:
         self.spec = spec
 
-        m = self.module
-
         # Create the triplet of configuration/layout/context
-        self.conf = m.make_configuration(spec, module_set_name, explicit)
-        self.layout = m.make_layout(spec, module_set_name, explicit)
-        self.context = m.make_context(spec, module_set_name, explicit, self.layout)
+        self.conf = self.make_configuration(spec, module_set_name, explicit)
+        self.layout = self.make_layout(spec, module_set_name, explicit)
+        self.context = self.make_context(spec, module_set_name, explicit, self.layout)
 
         # Check if a default template has been defined,
         # throw if not found
@@ -1245,10 +1250,6 @@ class BaseModuleFileWriter:
             name = type(self).__name__
             raise ModulercHeaderNotDefined(msg.format(name))
 
-    @property
-    def module(self):
-        return inspect.getmodule(self)
-
     def _get_template(self) -> str:
         """Gets the template that will be rendered for this spec."""
         # Get templates and put them in the order of importance:
@@ -1256,15 +1257,14 @@ class BaseModuleFileWriter:
         # 2. template specified in a package directly
         # 3. default template (must be defined, check in __init__)
         package_attribute = f"{self.conf.module_system}_template"
-        choices = [
+        for candidate in [
             self.conf.template,
             getattr(self.spec.package, package_attribute, None),
             self.default_template,  # This is always defined at this point
-        ]
-        # Filter out false-ish values
-        choices = list(filter(lambda x: bool(x), choices))
-        # ... and return the first match
-        return choices.pop(0)
+        ]:
+            if candidate:
+                return candidate
+        return self.default_template
 
     def write(self, overwrite: bool = False) -> None:
         """Writes the module file.

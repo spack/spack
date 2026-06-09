@@ -95,7 +95,9 @@ class TclContext(BaseContext):
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
 
-    configuration_class = TclConfiguration
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.tcl"
 

@@ -91,7 +91,9 @@ class LmodContext(BaseContext):
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
 
-    configuration_class = LmodConfiguration
+    make_configuration = staticmethod(make_configuration)
+    make_layout = staticmethod(make_layout)
+    make_context = staticmethod(make_context)
 
     default_template = "modules/modulefile.lua"
 
