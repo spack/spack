@@ -68,6 +68,19 @@ class TestLmod:
         module, spec = factory("libelf%clang@15.0.0")
         assert "Core" in module.layout.available_path_parts
 
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_compiler_built_with_core_compiler_is_in_core(
+        self, modules_config, module_configuration, factory
+    ):
+        """A compiler package built with a core compiler must itself land in Core/.
+
+        Without this the hierarchy is broken: the user loads Core/clang/15.0.0,
+        which should reveal Core/gcc/10.2.1 (not Compiler/clang/15.0.0/gcc/10.2.1).
+        """
+        module_configuration(modules_config)
+        module, spec = factory("gcc@10.2.1%clang@15.0.0")
+        assert "Core" in module.layout.available_path_parts
+
     def test_file_layout(self, compiler, provider, factory, module_configuration):
         """Tests the layout of files in the hierarchy is the one expected."""
         module_configuration("complex_hierarchy")

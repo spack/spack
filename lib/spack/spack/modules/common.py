@@ -800,12 +800,22 @@ class BaseFileLayout:
         """List of path parts that are currently available. Needed to
         construct the file name.
         """
-        # List of available services
         available = self.conf.available
-        # List of services that are part of the hierarchy
+        requires = self.conf.requires
+        provides = self.conf.provides
         hierarchy = self.conf.hierarchy_tokens
-        # Tokenize each part that is both in the hierarchy and available
-        return [self.token_to_path(x, available[x]) for x in hierarchy if x in available]
+        parts = []
+        for x in hierarchy:
+            if x not in available:
+                continue
+            # A spec that provides hierarchy token X (e.g. a compiler) is placed in the directory
+            # corresponding to what it *requires* for X, not what it provides.
+            # For instance gcc@12 built with a core compiler belongs in Core/, not Compiler/gcc/12/
+            if x in provides and x in requires:
+                parts.append(self.token_to_path(x, requires[x]))
+            else:
+                parts.append(self.token_to_path(x, available[x]))
+        return parts
 
     @property
     @memoized
