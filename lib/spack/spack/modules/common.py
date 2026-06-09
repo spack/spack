@@ -379,6 +379,7 @@ class BaseConfiguration:
             self.default_projections = {"all": "{name}/{version}"}
 
         self.compiler = None
+        self._core_compilers: Optional[List[spack.spec.Spec]] = None
         if self.hierarchical:
             candidates = collections.defaultdict(list)
             language_virtuals = ("c", "cxx", "fortran")
@@ -570,6 +571,9 @@ class BaseConfiguration:
             CoreCompilersNotFoundError: if the key was not specified in the configuration file or
                 the sequence is empty
         """
+        if self._core_compilers is not None:
+            return self._core_compilers
+
         compilers = []
         for c in self.module.configuration(self.name).get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
@@ -584,7 +588,8 @@ class BaseConfiguration:
             msg = 'the key "core_compilers" must be set in modules.yaml'
             raise CoreCompilersNotFoundError(msg)
 
-        return compilers
+        self._core_compilers = compilers
+        return self._core_compilers
 
     @property
     def core_specs(self) -> List[str]:
