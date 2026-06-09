@@ -40,6 +40,7 @@ from typing import IO, Callable, ClassVar, Dict, Iterator, List, Optional, Tuple
 import spack.vendor.jinja2
 
 import spack.build_environment
+import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.deptypes as dt
@@ -157,40 +158,26 @@ def dependencies(spec: spack.spec.Spec, request: str = "all") -> List[spack.spec
     raise ValueError(f'request "{request}" is not one of "none", "direct", "run", "all"')
 
 
-def _guess_core_compilers(
-    name: str, module_system: str, store: bool = False
-) -> List[spack.spec.Spec]:
-    """Guesses and returns the list of core compilers installed in the system.
+def _has_system_driver(compiler: spack.spec.Spec) -> bool:
+    """Returns True if any of the compiler's C, C++, or Fortran drivers lives in a system dir."""
+    for attr in ("cc", "cxx", "fc"):
+        try:
+            path = getattr(compiler.package, attr)
+        except (KeyError, TypeError, AttributeError):
+            continue
+        if path and str(pathlib.Path(path).parent) in spack.util.environment.SYSTEM_DIRS:
+            return True
+    return False
 
-    Args:
-        module_system: module system in use ("tcl" or "lmod")
-        store: if True writes the core compilers to the
-            modules.yaml configuration file
-    """
-    core_compilers = []
-    for compiler in spack.compilers.config.all_compilers(init_config=False):
-        for attr in ("cc", "cxx", "fc"):
-            try:
-                path = getattr(compiler.package, attr)
-                if path and str(pathlib.Path(path).parent) in spack.util.environment.SYSTEM_DIRS:
-                    core_compilers.append(compiler)
-                    break
-            except (KeyError, TypeError, AttributeError):
-                continue
 
-    if store and core_compilers:
-        # If we asked to store core compilers, update the entry
-        # in the default modify scope (i.e. within the directory hierarchy
-        # of Spack itself)
-        modules_cfg = spack.config.get(
-            "modules:" + name, {}, scope=spack.config.default_modify_scope()
-        )
-        modules_cfg.setdefault(module_system, {})["core_compilers"] = [
-            str(x) for x in core_compilers
-        ]
-        spack.config.set("modules:" + name, modules_cfg, scope=spack.config.default_modify_scope())
-
-    return core_compilers
+def _store_core_compilers(
+    module_set: str, module_system: str, core_compilers: List[spack.spec.Spec]
+) -> None:
+    """Writes a list of core compilers to the modules.yaml configuration file."""
+    default_scope = spack.config.default_modify_scope()
+    modules_cfg = spack.config.get(f"modules:{module_set}", {}, scope=default_scope)
+    modules_cfg.setdefault(module_system, {})["core_compilers"] = [str(x) for x in core_compilers]
+    spack.config.set(f"modules:{module_set}", modules_cfg, scope=default_scope)
 
 
 def merge_config_rules(configuration: dict, spec: spack.spec.Spec) -> dict:
@@ -588,7 +575,10 @@ class BaseConfiguration:
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
-            compilers = _guess_core_compilers(self.name, self.module_system, store=True)
+            all_compilers = spack.compilers.config.all_compilers(init_config=False)
+            compilers = [c for c in all_compilers if _has_system_driver(c)]
+            if compilers:
+                _store_core_compilers(self.name, self.module_system, compilers)
 
         if not compilers:
             msg = 'the key "core_compilers" must be set in modules.yaml'
