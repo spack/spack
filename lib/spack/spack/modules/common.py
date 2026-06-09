@@ -766,10 +766,8 @@ class BaseFileLayout:
             path_parts = lambda x: self.token_to_path(x, requires[x])
             parts = [path_parts(x) for x in hierarchy if x in requires]
 
-            # My relative path if just a join of all the parts
-            hierarchy_name = os.path.join(*parts)
-
-            filename = os.path.join(hierarchy_name, filename)
+            if parts:
+                filename = os.path.join(*parts, filename)
 
         # Return the absolute path
         return os.path.join(self.arch_dirname, filename)
