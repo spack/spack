@@ -63,14 +63,6 @@ from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
 
-
-
-#: config section for this file
-def configuration(module_set_name: str) -> dict:
-    config_path = f"modules:{module_set_name}"
-    return spack.config.get(config_path, {})
-
-
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     "name",
