@@ -101,7 +101,10 @@ def test_contents_of_shell_scripts(
             load_script,
         )
         assert re.search(
-            f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} {pkg.dag_hash()} {os.pathsep}",
+            (
+                f"_spack_env_remove_value {uenv.spack_loaded_hashes_var} "
+                f"{pkg.dag_hash()} {os.pathsep}"
+            ),
             unload_script,
         )
 
