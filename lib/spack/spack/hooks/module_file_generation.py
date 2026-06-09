@@ -22,7 +22,7 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type](spec, name, explicit)
+            generator = spack.modules.module_types[module_type].from_spec(spec, name, explicit)
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:

@@ -246,11 +246,13 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(module_cls(x, args.module_set_name).layout.filename)
+    module_exist = lambda x: os.path.exists(
+        module_cls.from_spec(x, args.module_set_name).layout.filename
+    )
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-    modules = [module_cls(spec, args.module_set_name) for spec in specs_with_modules]
+    modules = [module_cls.from_spec(spec, args.module_set_name) for spec in specs_with_modules]
 
     if not modules:
         tty.die("No module file matches your query")
@@ -299,7 +301,9 @@ def refresh(module_type, specs, args):
 
     # Skip unknown packages.
     writers = [
-        cls(spec, args.module_set_name) for spec in specs if spack.repo.PATH.exists(spec.name)
+        cls.from_spec(spec, args.module_set_name)
+        for spec in specs
+        if spack.repo.PATH.exists(spec.name)
     ]
 
     # Filter excluded packages early

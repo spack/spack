@@ -63,7 +63,7 @@ def test_modules_written_with_proper_permissions(
 
     # The code tested is common to all module types, but has to be tested from
     # one. Tcl picked at random
-    generator = spack.modules.tcl.TclModulefileWriter(spec, "default")
+    generator = spack.modules.tcl.TclModulefileWriter.from_spec(spec, "default")
     generator.write()
 
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
@@ -77,7 +77,7 @@ def test_modules_default_symlink(
     mock_module_defaults(spec.format("{name}{@version}"), True)
 
     generator_cls = spack.modules.module_types[module_type]
-    generator = generator_cls(spec, "default")
+    generator = generator_cls.from_spec(spec, "default")
     generator.write()
 
     link_path = os.path.join(os.path.dirname(mock_module_filename), "default")
@@ -177,7 +177,7 @@ def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeyp
     """Test that installed packages that have been removed are still loadable"""
     spec = spack.concretize.concretize_one("trivial-install-test-package")
     PackageInstaller([spec.package], explicit=True).install()
-    spack.modules.module_types["tcl"](spec, "default", True).write()
+    spack.modules.module_types["tcl"].from_spec(spec, "default", True).write()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError("Repo package access is disabled for test")
@@ -224,5 +224,5 @@ def test_check_module_set_name(mutable_config):
 @pytest.mark.parametrize("module_type", ["tcl", "lmod"])
 def test_module_writers_are_pickleable(default_mock_concretization, module_type):
     s = default_mock_concretization("mpileaks")
-    writer = spack.modules.module_types[module_type](s, "default")
+    writer = spack.modules.module_types[module_type].from_spec(s, "default")
     assert pickle.loads(pickle.dumps(writer)).spec == s

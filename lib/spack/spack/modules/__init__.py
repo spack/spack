@@ -71,7 +71,7 @@ def get_module(
         else:
             return module.use_name
     else:
-        writer = module_types[module_type](spec, module_set_name)
+        writer = module_types[module_type].from_spec(spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:

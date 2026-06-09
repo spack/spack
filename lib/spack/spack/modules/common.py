@@ -1194,12 +1194,17 @@ class BaseModuleFileWriter:
                     "Did you forget to define it in the class?"
                 )
 
-    def __init__(
-        self, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> None:
-        self.conf = self.configuration_class.make_configuration(spec, module_set_name, explicit)
-        self.layout = FileLayout(self.conf)
-        self.context = ModuleContext(self.conf, self.layout)
+    def __init__(self, conf: "BaseConfiguration") -> None:
+        self.conf = conf
+        self.layout = FileLayout(conf)
+        self.context = ModuleContext(conf, self.layout)
+
+    @classmethod
+    def from_spec(
+        cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> "BaseModuleFileWriter":
+        conf = cls.configuration_class.make_configuration(spec, module_set_name, explicit)
+        return cls(conf)
 
     @property
     def spec(self) -> spack.spec.Spec:
