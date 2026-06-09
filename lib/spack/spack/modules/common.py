@@ -338,7 +338,11 @@ class BaseConfiguration:
     @classmethod
     def configuration(cls, module_set_name: str) -> dict:
         """Returns the raw configuration dict for this module system."""
-        return spack.config.get(f"modules:{module_set_name}:{cls.module_system}", {})
+        return (
+            spack.config.CONFIG.get_config("modules")
+            .get(module_set_name, {})
+            .get(cls.module_system, {})
+        )
 
     @classmethod
     def make_configuration(
@@ -359,14 +363,20 @@ class BaseConfiguration:
         return FileLayout(cls.make_configuration(spec, module_set_name, explicit))
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
-        # Spec for which we want to generate a module file
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        # Cache once — configuration() traverses all config scopes on every call
-        self._config = self.configuration(self.name)
+        _modules_cfg = spack.config.CONFIG.get_config("modules")
+        _set_cfg = _modules_cfg.get(module_set_name, {})
+        self._config: dict = self.configuration(module_set_name)
         self.hierarchical: bool = self._config.get("hierarchical", self._default_hierarchical)
-        self.arch_folder: bool = spack.config.get(f"modules:{module_set_name}:arch_folder", True)
+        self.arch_folder: bool = _set_cfg.get("arch_folder", True)
+        self.use_view: Union[bool, str] = _set_cfg.get("use_view", False)
+        self.prefix_inspections: dict = syaml.syaml_dict()
+        spack.schema.merge_yaml(
+            self.prefix_inspections, _modules_cfg.get("prefix_inspections", {})
+        )
+        spack.schema.merge_yaml(self.prefix_inspections, _set_cfg.get("prefix_inspections", {}))
         # Dictionary of configuration options that should be applied to the spec
         self.conf = merge_config_rules(self._config, self.spec)
 
@@ -980,18 +990,7 @@ class ModuleContext(tengine.Context):
         ]
     ]:
         """List of environment modifications to be processed."""
-        # Modifications guessed by inspecting the spec prefix
-        prefix_inspections = syaml.syaml_dict()
-        spack.schema.merge_yaml(
-            prefix_inspections, spack.config.get("modules:prefix_inspections", {})
-        )
-        spack.schema.merge_yaml(
-            prefix_inspections,
-            spack.config.get(f"modules:{self.conf.name}:prefix_inspections", {}),
-        )
-
-        use_view = spack.config.get(f"modules:{self.conf.name}:use_view", False)
-
+        use_view = self.conf.use_view
         assert isinstance(use_view, (bool, str))
 
         if use_view:
@@ -1014,7 +1013,9 @@ class ModuleContext(tengine.Context):
             view = None
 
         env = spack.util.environment.inspect_path(
-            self.spec.prefix, prefix_inspections, exclude=spack.util.environment.is_system_path
+            self.spec.prefix,
+            self.conf.prefix_inspections,
+            exclude=spack.util.environment.is_system_path,
         )
 
         # Let the extendee/dependency modify their extensions/dependencies
@@ -1071,8 +1072,7 @@ class ModuleContext(tengine.Context):
                 continue
             if cmd.name == "MANPATH":
                 return True
-        else:
-            return False
+        return False
 
     @tengine.context_property
     def conflicts(self) -> List[str]:
@@ -1338,13 +1338,8 @@ class BaseModuleFileWriter:
         updated = False
 
         if modulerc_exists:
-            # retrieve modulerc content
             with open(modulerc_path, encoding="utf-8") as f:
-                content = f.readlines()
-                content = "".join(content).split("\n")
-                # remove last empty item if any
-                if len(content[-1]) == 0:
-                    del content[-1]
+                content = f.read().splitlines()
             already_hidden = hide_module_cmd in content
 
             # remove hide command if module not hidden
