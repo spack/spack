@@ -13,6 +13,50 @@ import spack.tengine as tengine
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
+#: Tcl specific part of the configuration
+def configuration(module_set_name: str) -> dict:
+    return spack.config.get(f"modules:{module_set_name}:tcl", {})
+
+
+# Caches the configuration {spec_hash: configuration}
+configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
+
+
+def make_configuration(
+    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+) -> BaseConfiguration:
+    """Returns the tcl configuration for spec"""
+    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
+    key = (spec.dag_hash(), module_set_name, explicit)
+    try:
+        return configuration_registry[key]
+    except KeyError:
+        return configuration_registry.setdefault(
+            key, TclConfiguration(spec, module_set_name, explicit)
+        )
+
+
+def make_layout(
+    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+) -> BaseFileLayout:
+    """Returns the layout information for spec"""
+    return TclFileLayout(make_configuration(spec, module_set_name, explicit))
+
+
+def make_context(
+    spec: spack.spec.Spec,
+    module_set_name: str,
+    explicit: Optional[bool] = None,
+    layout: Optional[BaseFileLayout] = None,
+) -> BaseContext:
+    """Returns the context information for spec"""
+    conf = make_configuration(spec, module_set_name, explicit)
+    if layout is None:
+        layout = make_layout(spec, module_set_name, explicit)
+    return TclContext(conf, layout)
+
+
+
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
@@ -41,9 +85,8 @@ class TclContext(BaseContext):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
         value: List[Tuple[str, str]] = []
-        conditional_paths = layout.unlocked_paths
+        conditional_paths = self.layout.unlocked_paths
 
         def manipulate_path(token: str) -> str:
             if token in self.conf.hierarchy_tokens:

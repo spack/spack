@@ -1164,11 +1164,9 @@ class BaseContext(tengine.Context):
         return self.conf.missing
 
     @tengine.context_property
-    @memoized
     def unlocked_paths(self) -> List[str]:
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = self.conf.module.make_layout(self.spec, self.conf.name)
-        return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
+        return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
 
 class BaseModuleFileWriter:
@@ -1183,12 +1181,12 @@ class BaseModuleFileWriter:
     ) -> None:
         self.spec = spec
 
+        m = self.module
+
         # Create the triplet of configuration/layout/context
-        self.conf = self.configuration_class.make_configuration(spec, module_set_name, explicit)
-        self.layout = self.conf.make_layout(spec, module_set_name, explicit)
-        self.context = self.conf.make_context(
-            spec, module_set_name, explicit=explicit, layout=self.layout
-        )
+        self.conf = m.make_configuration(spec, module_set_name, explicit)
+        self.layout = m.make_layout(spec, module_set_name, explicit)
+        self.context = m.make_context(spec, module_set_name, explicit, self.layout)
 
         # Check if a default template has been defined,
         # throw if not found
