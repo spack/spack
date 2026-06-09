@@ -21,12 +21,6 @@ from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
-
-#: lmod specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:lmod", {})
-
-
 # Caches the configuration {spec_hash: configuration}
 configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
 
@@ -83,7 +77,6 @@ class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
     module_system = "lmod"
-    configuration = staticmethod(configuration)
     make_configuration = staticmethod(make_configuration)
 
     @staticmethod
@@ -137,7 +130,7 @@ class LmodConfiguration(BaseConfiguration):
                 the sequence is empty
         """
         compilers = []
-        for c in configuration(self.name).get("core_compilers", []):
+        for c in self.configuration(self.name).get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
@@ -152,12 +145,12 @@ class LmodConfiguration(BaseConfiguration):
     @property
     def core_specs(self):
         """Returns the list of "Core" specs"""
-        return configuration(self.name).get("core_specs", [])
+        return self.configuration(self.name).get("core_specs", [])
 
     @property
     def filter_hierarchy_specs(self):
         """Returns the dict of specs with modified hierarchies"""
-        return configuration(self.name).get("filter_hierarchy_specs", {})
+        return self.configuration(self.name).get("filter_hierarchy_specs", {})
 
     @property
     @lang.memoized
@@ -165,7 +158,7 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        tokens = configuration(self.name).get("hierarchy", [])
+        tokens = self.configuration(self.name).get("hierarchy", [])
 
         # Append 'compiler' which is always implied
         tokens.append("compiler")

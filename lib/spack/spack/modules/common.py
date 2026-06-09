@@ -323,11 +323,14 @@ class BaseConfiguration:
     #: Name of the module system (must be set by each subclass)
     module_system: str
 
-    #: Module-level helpers — each subclass assigns these as staticmethod(...)
-    configuration: ClassVar[Callable[..., dict]]
     make_configuration: ClassVar[Callable[..., "BaseConfiguration"]]
     make_layout: ClassVar[Callable[..., "BaseFileLayout"]]
     make_context: ClassVar[Callable[..., "BaseContext"]]
+
+    @classmethod
+    def configuration(cls, module_set_name: str) -> dict:
+        """Returns the raw configuration dict for this module system."""
+        return spack.config.get(f"modules:{module_set_name}:{cls.module_system}", {})
 
     def __init__(self, spec: spack.spec.Spec, module_set_name: str, explicit: bool) -> None:
         # Spec for which we want to generate a module file

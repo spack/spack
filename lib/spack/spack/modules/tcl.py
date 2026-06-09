@@ -9,17 +9,10 @@ non-hierarchical modules.
 import os
 from typing import Dict, Optional, Tuple
 
-import spack.config
 import spack.spec
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-#: Tcl specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:tcl", {})
-
 
 # Caches the configuration {spec_hash: configuration}
 configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
@@ -43,7 +36,6 @@ class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
     module_system = "tcl"
-    configuration = staticmethod(configuration)
     make_configuration = staticmethod(make_configuration)
 
     @staticmethod
