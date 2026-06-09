@@ -15,6 +15,9 @@ import selectors
 import sys
 from typing import TYPE_CHECKING, Callable, Optional
 
+import spack.database
+import spack.util.lock
+
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
 
@@ -106,3 +109,36 @@ class BaseTerminalState(abc.ABC):
     def should_enter_foreground(self) -> bool:
         """Return True if the process should switch from headless to foreground mode."""
         pass
+
+
+#: Size of the output buffer for child processes
+OUTPUT_BUFFER_SIZE = 32768
+
+
+class DatabaseAction:
+    """Base class for objects that need to be persisted to the database."""
+
+    __slots__ = ("spec", "prefix_lock")
+
+    spec: "spack.spec.Spec"
+    prefix_lock: Optional[spack.util.lock.Lock]
+
+    def save_to_db(self, db: spack.database.Database) -> None: ...
+
+    def release_prefix_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+        self.prefix_lock = None
+
+
+class FdInfo:
+    """Information about a file descriptor mapping."""
+
+    __slots__ = ("pid", "name")
+
+    def __init__(self, pid: int, name: str) -> None:
+        self.pid = pid
+        self.name = name

@@ -24,17 +24,14 @@ import glob
 import io
 import json
 import os
-import re
 import selectors
 import shlex
 import shutil
 import signal
 import sys
 import tempfile
-import threading
 import time
 import traceback
-import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
@@ -77,7 +74,13 @@ import spack.util.environment
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration
-from spack.new_installer_base import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import (
+    OUTPUT_BUFFER_SIZE,
+    BaseTerminalState,
+    DatabaseAction,
+    FdInfo,
+    StdinReaderBase,
+)
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 from spack.util.log_parse import make_log_context, parse_log_events
@@ -86,8 +89,7 @@ from spack.util.path import padding_filter, padding_filter_bytes
 if sys.platform == "win32":
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
-    import fcntl
-
+    from spack.new_installer_posix import PosixChildInfo, PosixJobServer, PosixTee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
@@ -108,8 +110,6 @@ CLEANUP_TIMEOUT = 2.0
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
 
-#: Size of the output buffer for child processes
-OUTPUT_BUFFER_SIZE = 32768
 
 #: Suffix for temporary backup during overwrite install
 OVERWRITE_BACKUP_SUFFIX = ".old"
@@ -127,25 +127,6 @@ class ExitCode:
     BUILD_CACHE_MISS = 4
 
 
-class DatabaseAction:
-    """Base class for objects that need to be persisted to the database."""
-
-    __slots__ = ("spec", "prefix_lock")
-
-    spec: "spack.spec.Spec"
-    prefix_lock: Optional[spack.util.lock.Lock]
-
-    def save_to_db(self, db: spack.database.Database) -> None: ...
-
-    def release_prefix_lock(self) -> None:
-        if self.prefix_lock is not None:
-            try:
-                self.prefix_lock.release_write()
-            except Exception:
-                pass
-        self.prefix_lock = None
-
-
 class MarkExplicitAction(DatabaseAction):
     """Action to mark an already installed spec as explicitly installed. Similar to PosixChildInfo,
     but used when no build process was needed."""
@@ -158,65 +139,6 @@ class MarkExplicitAction(DatabaseAction):
 
     def save_to_db(self, db: spack.database.Database) -> None:
         db._mark(self.spec, "explicit", True)
-
-
-class PosixChildInfo(DatabaseAction):
-    """Information about a child process."""
-
-    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
-
-    def __init__(
-        self,
-        proc: Process,
-        spec: spack.spec.Spec,
-        output_r_conn: Connection,
-        state_r_conn: Connection,
-        control_w_conn: Connection,
-        log_path: str,
-        explicit: bool = False,
-    ) -> None:
-        self.proc = proc
-        self.spec = spec
-        self.output_r_conn = output_r_conn
-        self.state_r_conn = state_r_conn
-        self.control_w_conn = control_w_conn
-        self.log_path = log_path
-        self.explicit = explicit
-        self.prefix_lock: Optional[spack.util.lock.Lock] = None
-
-    def save_to_db(self, db: spack.database.Database) -> None:
-        return db._add(self.spec, explicit=self.explicit)
-
-    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
-        """Register output, state, and sentinel channels with the selector."""
-        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
-        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
-        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
-
-    def close(self, selector: selectors.BaseSelector) -> int:
-        """Unregister and close file descriptors, and join the child process.
-        Returns the exit code of the child process."""
-        try:
-            selector.unregister(self.output_r_conn.fileno())
-        except KeyError:
-            pass
-        try:
-            selector.unregister(self.state_r_conn.fileno())
-        except KeyError:
-            pass
-        try:
-            selector.unregister(self.proc.sentinel)
-        except (KeyError, ValueError):
-            pass
-        self.output_r_conn.close()
-        self.state_r_conn.close()
-        self.control_w_conn.close()
-        self.proc.join()
-        exit_code = self.proc.exitcode
-        assert exit_code is not None, "Finished build should have exit code set"
-        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
-            self.proc.close()
-        return exit_code
 
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
@@ -235,78 +157,6 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     """Send a notification that the package was installed from binary cache."""
     json.dump({"installed_from_binary_cache": True}, state_pipe, separators=(",", ":"))
     state_pipe.write("\n")
-
-
-class PosixTee:
-    """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
-
-    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
-        self.control = control
-        self.parent = parent
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The path of the log file
-        self.log_path = log_path
-        log_file = open(self.log_path, "ab")
-        r, w = os.pipe()
-        self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
-        self.tee_thread.start()
-        for fd in fds:
-            os.dup2(w, fd)
-        os.close(w)
-
-    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
-        """Forward log_r to log_file and parent (if echoing is enabled).
-        Echoing is enabled and disabled by reading from control."""
-        control_r = self.control.fileno()
-        parent_w = self.parent.fileno()
-        echo_on = False
-        selector = selectors.DefaultSelector()
-        selector.register(log_r, selectors.EVENT_READ)
-        selector.register(control_r, selectors.EVENT_READ)
-
-        try:
-            with log_file, open(parent_w, "wb", closefd=False) as parent:
-                while True:
-                    for key, _ in selector.select():
-                        if key.fd == log_r:
-                            data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                            if not data:  # EOF: exit the thread
-                                return
-                            log_file.write(data)
-                            log_file.flush()
-                            if echo_on:
-                                parent.write(data)
-                                parent.flush()
-
-                        elif key.fd == control_r:
-                            control_data = os.read(control_r, 1)
-                            if not control_data:
-                                return
-                            else:
-                                echo_on = control_data == b"1"
-        except OSError:  # do not raise
-            pass
-        finally:
-            os.close(log_r)
-
-    def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
-        sys.stdout.flush()
-        sys.stderr.flush()
-        for fd, saved_fd in self.saved_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
-        self.tee_thread.join()
-        # Only then close the other fds.
-        self.control.close()
-        self.parent.close()
 
 
 def install_from_buildcache(
@@ -831,149 +681,6 @@ def _install(
         spack.hooks.post_install(spec, explicit)
 
 
-class PosixJobServer:
-    """Attach to an existing POSIX jobserver or create a FIFO-based one."""
-
-    def __init__(self, num_jobs: int) -> None:
-        #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
-        self.tokens_acquired = 0
-        #: The number of jobs to run concurrently. This translates to `num_jobs - 1` tokens in the
-        #: jobserver.
-        self.num_jobs = num_jobs
-        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
-        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
-        #: reflect that yet. This value is used in the UI. The invariant is that self.target_jobs
-        #: can only be modified if self.created is True.
-        self.target_jobs = num_jobs
-        self.fifo_path: Optional[str] = None
-        self.created = False
-        self._setup()
-        # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
-        os.set_inheritable(self.r, True)
-        os.set_inheritable(self.w, True)
-        # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
-        # Connection objects close the fd as they are garbage collected, so store them.
-        self.r_conn = Connection(self.r)
-        self.w_conn = Connection(self.w)
-
-    def _setup(self) -> None:
-
-        fifo_config = get_jobserver_config()
-
-        if type(fifo_config) is str:
-            # FIFO-based jobserver. Try to open the FIFO.
-            open_attempt = open_existing_jobserver_fifo(fifo_config)
-            if open_attempt:
-                self.r, self.w = open_attempt
-                self.fifo_path = fifo_config
-                return
-        elif type(fifo_config) is tuple:
-            # Old style pipe-based jobserver. Validate the fds before using them.
-            r, w = fifo_config
-            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
-                self.r, self.w = r, w
-                return
-
-        # No existing jobserver we can connect to: create a FIFO-based one.
-        self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
-        self.created = True
-
-    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
-        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
-        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
-        elif not gmake or gmake.satisfies("@4.0:"):
-            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
-        else:
-            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
-
-    def has_target_parallelism(self) -> bool:
-        return self.num_jobs == self.target_jobs
-
-    def increase_parallelism(self) -> None:
-        """Add one token to the jobserver to increase parallelism; this should always work."""
-        if not self.created:
-            return
-        self.target_jobs += 1
-        # If a decrease was pending, don't add a token.
-        if self.target_jobs <= self.num_jobs:
-            return
-        os.write(self.w, b"+")
-        self.num_jobs += 1
-
-    def decrease_parallelism(self) -> None:
-        """Request an eventual concurrency decrease by 1."""
-        if not self.created or self.target_jobs <= 1:
-            return
-        self.target_jobs -= 1
-        self.maybe_discard_tokens()
-
-    def maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
-        to_discard = self.num_jobs - self.target_jobs
-        if to_discard <= 0:
-            return
-        try:
-            # The read may return zero or just fewer bytes than requested; we'll try again later.
-            self.num_jobs -= len(os.read(self.r, to_discard))
-        except BlockingIOError:
-            pass
-
-    def acquire(self, jobs: int) -> int:
-        """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
-        tokens actually acquired (may be less than requested, or zero)."""
-        try:
-            num_acquired = len(os.read(self.r, jobs))
-            self.tokens_acquired += num_acquired
-            return num_acquired
-        except BlockingIOError:
-            return 0
-
-    def release(self) -> None:
-        """Release a token back to the jobserver."""
-        # The last job to quit has an implicit token, so don't release if we have none.
-        if self.tokens_acquired == 0:
-            return
-        self.tokens_acquired -= 1
-        if self.target_jobs < self.num_jobs:
-            # If a decrease in parallelism is requested, discard a token instead of releasing it.
-            self.num_jobs -= 1
-        else:
-            os.write(self.w, b"+")
-
-    def close(self) -> None:
-        if self.created and self.num_jobs > 1:
-            if self.tokens_acquired != 0:
-                # It's a non-fatal internal error to close the jobserver with acquired tokens.
-                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
-            else:
-                # Verify that all build processes released the tokens they acquired.
-                total = self.num_jobs - 1
-                drained = self.acquire(total)
-                if drained != total:
-                    n = total - drained
-                    warnings.warn(
-                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
-                        "by the build processes. This can indicate that the build ran with "
-                        "limited parallelism.",
-                        stacklevel=2,
-                    )
-
-        self.r_conn.close()
-        self.w_conn.close()
-
-        # Remove the FIFO if we created it.
-        if self.created and self.fifo_path:
-            try:
-                os.unlink(self.fifo_path)
-            except OSError:
-                pass
-            try:
-                os.rmdir(os.path.dirname(self.fifo_path))
-            except OSError:
-                pass
-
-
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -1049,81 +756,6 @@ def start_build(
     return PosixChildInfo(
         proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit
     )
-
-
-def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
-
-    Args:
-        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
-    """
-    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
-    if not makeflags:
-        return None
-    # We can have the following flags:
-    # --jobserver-fds=R,W (before GNU make 4.2)
-    # --jobserver-auth=fifo:PATH or --jobserver-auth=R,W (after GNU make 4.2)
-    # In case of multiple, the last one wins.
-    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
-    if not matches:
-        return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
-    if last_match.startswith("fifo:"):
-        return last_match[5:]
-    parts = last_match.split(",", 1)
-    if len(parts) != 2:
-        return None
-    try:
-        return int(parts[0]), int(parts[1])
-    except ValueError:
-        return None
-
-
-def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
-    """Create a new jobserver FIFO with the specified number of job tokens."""
-    tmpdir = tempfile.mkdtemp()
-    fifo_path = os.path.join(tmpdir, "jobserver_fifo")
-
-    try:
-        os.mkfifo(fifo_path, 0o600)
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        # write num_jobs - 1 tokens, because the first job is implicit
-        os.write(write_fd, b"+" * (num_jobs - 1))
-        return read_fd, write_fd, fifo_path
-    except Exception:
-        try:
-            os.unlink(fifo_path)
-        except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
-            pass
-        try:
-            os.rmdir(tmpdir)
-        except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
-            pass
-        raise
-
-
-def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
-    """Open an existing jobserver FIFO for reading and writing."""
-    try:
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        return read_fd, write_fd
-    except OSError:
-        return None
-
-
-class FdInfo:
-    """Information about a file descriptor mapping."""
-
-    __slots__ = ("pid", "name")
-
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
-        self.name = name
 
 
 class BuildInfo:
