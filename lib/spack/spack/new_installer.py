@@ -187,6 +187,12 @@ class PosixChildInfo(DatabaseAction):
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
 
+    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+        """Register output, state, and sentinel channels with the selector."""
+        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
+        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
@@ -2838,13 +2844,7 @@ class PackageInstaller:
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
-        selector.register(
-            child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
-        )
-        selector.register(
-            child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
-        )
-        selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        child_info.register_with_selector(selector, pid)
         self.build_status.add_build(
             child_info.spec,
             explicit=explicit,
