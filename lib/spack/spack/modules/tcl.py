@@ -6,11 +6,7 @@
 
 from typing import ClassVar, Dict, Tuple
 
-from .common import BaseConfiguration, BaseFileLayout, BaseModuleFileWriter
-
-
-class TclFileLayout(BaseFileLayout):
-    """File layout for tcl module files."""
+from .common import BaseConfiguration, BaseModuleFileWriter
 
 
 class TclConfiguration(BaseConfiguration):
@@ -18,7 +14,6 @@ class TclConfiguration(BaseConfiguration):
 
     module_system = "tcl"
     _registry: ClassVar[Dict] = {}
-    layout_class = TclFileLayout
 
     def _manipulate_path(self, token: str) -> str:
         if token in self.hierarchy_tokens:

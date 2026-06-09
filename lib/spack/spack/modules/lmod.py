@@ -4,14 +4,7 @@
 
 from typing import ClassVar, Dict, Tuple
 
-from .common import BaseConfiguration, BaseFileLayout, BaseModuleFileWriter
-
-
-class LmodFileLayout(BaseFileLayout):
-    """File layout for lmod module files."""
-
-    #: file extension of lua module files
-    extension = "lua"
+from .common import BaseConfiguration, BaseModuleFileWriter
 
 
 class LmodConfiguration(BaseConfiguration):
@@ -20,7 +13,7 @@ class LmodConfiguration(BaseConfiguration):
     module_system = "lmod"
     _default_hierarchical = True
     _registry: ClassVar[Dict] = {}
-    layout_class = LmodFileLayout
+    file_extension = "lua"
 
     def _manipulate_path(self, token: str) -> str:
         if token in self.hierarchy_tokens:

@@ -327,8 +327,8 @@ class BaseConfiguration:
     #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
     _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
 
-    #: Layout class must be set on each concrete subclass
-    layout_class: ClassVar[Type["BaseFileLayout"]]
+    #: File extension for module files (empty string means no extension)
+    file_extension: ClassVar[str] = ""
 
     @classmethod
     def configuration(cls, module_set_name: str) -> dict:
@@ -350,8 +350,8 @@ class BaseConfiguration:
     @classmethod
     def make_layout(
         cls, spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-    ) -> "BaseFileLayout":
-        return cls.layout_class(cls.make_configuration(spec, module_set_name, explicit))
+    ) -> "FileLayout":
+        return FileLayout(cls.make_configuration(spec, module_set_name, explicit))
 
     @classmethod
     def make_context(
@@ -360,7 +360,7 @@ class BaseConfiguration:
         module_set_name: str,
         *,
         explicit: Optional[bool] = None,
-        layout: "BaseFileLayout",
+        layout: "FileLayout",
     ) -> "ModuleContext":
         return ModuleContext(cls.make_configuration(spec, module_set_name, explicit), layout)
 
@@ -687,13 +687,8 @@ class BaseConfiguration:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
 
-class BaseFileLayout:
-    """Provides information on the layout of module files. Needs to be
-    sub-classed for specific module types.
-    """
-
-    #: This needs to be redefined
-    extension: Optional[str] = None
+class FileLayout:
+    """Provides information on the layout of module files."""
 
     def __init__(self, configuration):
         self.conf = configuration
@@ -702,8 +697,8 @@ class BaseFileLayout:
     def modulerc(self) -> str:
         """Returns the modulerc file for this module file."""
         dirname = os.path.dirname(self.filename)
-        if self.extension:
-            return os.path.join(dirname, f".modulerc.{self.extension}")
+        if self.conf.file_extension:
+            return os.path.join(dirname, f".modulerc.{self.conf.file_extension}")
         return os.path.join(dirname, ".modulerc")
 
     @property
@@ -755,8 +750,8 @@ class BaseFileLayout:
         """Name of the module file for the current spec."""
         # Just the name of the file
         filename = self.use_name
-        if self.extension:
-            filename = f"{self.use_name}.{self.extension}"
+        if self.conf.file_extension:
+            filename = f"{self.use_name}.{self.conf.file_extension}"
 
         if self.conf.hierarchical:
             # Get the list of requirements and build an **ordered**
@@ -905,7 +900,7 @@ class BaseFileLayout:
 class ModuleContext(tengine.Context):
     """Provides the context dictionary used by the template engine to render a module file."""
 
-    def __init__(self, configuration, layout: "BaseFileLayout") -> None:
+    def __init__(self, configuration, layout: "FileLayout") -> None:
         self.conf = configuration
         self.layout = layout
 

@@ -6,8 +6,7 @@ import pathlib
 import pytest
 
 import spack.concretize
-import spack.modules.lmod
-import spack.modules.tcl
+import spack.modules.common
 import spack.spec
 
 
@@ -45,7 +44,5 @@ def factory(request, mock_modules_root):
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmp_path: pathlib.Path):
     filename = tmp_path / "module"
-    # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", str(filename))
+    monkeypatch.setattr(spack.modules.common.FileLayout, "filename", str(filename))
     yield str(filename)
