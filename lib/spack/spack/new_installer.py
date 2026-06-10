@@ -1127,7 +1127,7 @@ class BuildStatus:
         self.dirty = True
 
     def _update_terminal_title(self, clear: bool = False) -> None:
-        if not self.term_title:
+        if not self.term_title or self.headless:
             return
 
         term_title = ""
