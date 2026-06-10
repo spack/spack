@@ -14,7 +14,6 @@ from spack.main import SpackCommand
 from spack.spec import Spec
 
 install = SpackCommand("install")
-# TODO: Add shells for windows when shell script is written
 
 
 @pytest.mark.parametrize(

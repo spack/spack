@@ -123,4 +123,4 @@ def load(parser, args):
             source = "." if shell == "sh" else "source"
             commands = f"{source} {load_script_path}"
 
-        print(f"{commands}")
+        sys.stdout.write(commands)

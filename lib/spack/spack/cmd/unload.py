@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import sys
 
 import spack.cmd
 import spack.cmd.common
@@ -115,4 +116,4 @@ def unload(parser, args):
             source = "." if shell == "sh" else "source"
             commands = f"{source} {unload_script_path}"
 
-        print(f"{commands}")
+        sys.stdout.write(commands)
