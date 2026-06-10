@@ -168,6 +168,12 @@ class Mirror:
         )
 
     @property
+    def private(self) -> bool:
+        if isinstance(self._data, str):
+            return False
+        return self._data.get("private", False)
+
+    @property
     def fetch_url(self) -> str:
         """Get the valid, canonicalized fetch URL"""
         return self.get_url("fetch")
