@@ -28,6 +28,7 @@ import selectors
 import shlex
 import shutil
 import signal
+import socket
 import sys
 import tempfile
 import time
@@ -90,17 +91,16 @@ from spack.util.path import padding_filter, padding_filter_bytes
 
 if sys.platform == "win32":
     from spack.new_installer_base import NoopJobServer as JobServer
+    from spack.new_installer_windows import WindowsSentinelBridge as ExitNotifier
+    from spack.new_installer_windows import WindowsTee as Tee
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
+    from spack.new_installer_windows import make_state_stream, read_connection, write_connection
 else:
     from spack.new_installer_posix import PosixExitNotifier as ExitNotifier
     from spack.new_installer_posix import PosixJobServer as JobServer
-    from spack.new_installer_posix import (
-        PosixTee,
-        make_state_stream,
-        read_connection,
-        write_connection,
-    )
+    from spack.new_installer_posix import PosixTee as Tee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
+    from spack.new_installer_posix import make_state_stream, read_connection, write_connection
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -119,7 +119,6 @@ CLEANUP_TIMEOUT = 2.0
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
-
 
 #: Suffix for temporary backup during overwrite install
 OVERWRITE_BACKUP_SUFFIX = ".old"
@@ -470,7 +469,7 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = PosixTee(echo_control, parent, log_path)
+    tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     state_stream = make_state_stream(state)
@@ -800,10 +799,19 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    # Create pipes for the child's output, state reporting, and control.
-    state_r_conn, state_w_conn = Pipe(duplex=False)
-    output_r_conn, output_w_conn = Pipe(duplex=False)
-    control_r_conn, control_w_conn = Pipe(duplex=False)
+    # Set the read ends non-blocking so the selector-based loop never blocks.
+    if sys.platform == "win32":
+        state_r_conn, state_w_conn = socket.socketpair()
+        output_r_conn, output_w_conn = socket.socketpair()
+        control_r_conn, control_w_conn = socket.socketpair()
+        output_r_conn.setblocking(False)
+        state_r_conn.setblocking(False)
+    else:
+        state_r_conn, state_w_conn = Pipe(duplex=False)
+        output_r_conn, output_w_conn = Pipe(duplex=False)
+        control_r_conn, control_w_conn = Pipe(duplex=False)
+        os.set_blocking(output_r_conn.fileno(), False)
+        os.set_blocking(state_r_conn.fileno(), False)
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
@@ -844,10 +852,6 @@ def start_build(
     state_w_conn.close()
     output_w_conn.close()
     control_r_conn.close()
-
-    # Set the read ends to non-blocking: in principle redundant with epoll/kqueue, but safer.
-    os.set_blocking(output_r_conn.fileno(), False)
-    os.set_blocking(state_r_conn.fileno(), False)
 
     return ChildInfo(
         proc,
