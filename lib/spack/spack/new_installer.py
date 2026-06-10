@@ -20,6 +20,7 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
+import codecs
 import glob
 import io
 import json
@@ -119,7 +120,6 @@ CLEANUP_TIMEOUT = 2.0
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
-
 
 #: Suffix for temporary backup during overwrite install
 OVERWRITE_BACKUP_SUFFIX = ".old"
@@ -269,7 +269,7 @@ class PrefixPivoter:
         return os.path.lexists(path)
 
     def _rename(self, src: str, dst: str) -> None:
-        os.rename(src, dst)
+        fs.rename(src, dst)
 
     def _mkdtemp(self, dir: str, prefix: str, suffix: str) -> str:
         return tempfile.mkdtemp(dir=dir, prefix=prefix, suffix=suffix)
@@ -292,9 +292,9 @@ def worker_function(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    state: Connection,
-    parent: Connection,
-    echo_control: Connection,
+    state: Union[Connection, socket.socket],
+    parent: Union[Connection, socket.socket],
+    echo_control: Union[Connection, socket.socket],
     jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
@@ -333,12 +333,13 @@ def worker_function(
 
     global_state.restore()
 
-    # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
-    # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
-    os.setpgid(0, 0)
+    if sys.platform != "win32":
+        # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
+        # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        os.setpgid(0, 0)
 
-    # Reset SIGTSTP to default in case the parent had a custom handler.
-    signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        # Reset SIGTSTP to default in case the parent had a custom handler.
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -347,13 +348,13 @@ def worker_function(
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        os.killpg(0, signal.SIGTERM)
-
-        try:
-            while True:
-                os.waitpid(-1, 0)
-        except ChildProcessError:
-            pass
+        if sys.platform != "win32":
+            os.killpg(0, signal.SIGTERM)
+            try:
+                while True:
+                    os.waitpid(-1, 0)
+            except ChildProcessError:
+                pass
 
         raise KeyboardInterrupt("Installation interrupted")
 
@@ -363,15 +364,10 @@ def worker_function(
     if makeflags is not None:
         os.environ["MAKEFLAGS"] = makeflags
 
-    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
-    # much ourselves, but what we print should appear before output from `make` and other build
-    # tools.
-    sys.stdout = os.fdopen(
-        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
-    )
-    sys.stderr = os.fdopen(
-        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
-    )
+    # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
+    # line-buffered wrappers after the Tee starts.
+    _stdout_enc = sys.stdout.encoding or "utf-8"
+    _stderr_enc = sys.stderr.encoding or "utf-8"
 
     # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
     # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
@@ -384,6 +380,16 @@ def worker_function(
     tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
+    # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
+    # than ConsoleIO (WriteConsoleW). On Windows, if fds 1/2 are still console handles when
+    # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
+    # ERROR_INVALID_FUNCTION. Post-dup2 the fds are pipe handles, so FileIO is chosen.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=_stdout_enc, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
+    )
     state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
@@ -1940,6 +1946,8 @@ class PackageInstaller:
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
 
+        # Per-pid incremental UTF-8 decoders for state pipes
+        self.state_decoders: Dict[int, codecs.IncrementalDecoder] = {}
         # Buffer for incoming, partially received state data from child processes
         self.state_buffers: Dict[int, str] = {}
 
@@ -2493,6 +2501,7 @@ class PackageInstaller:
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
+        self.state_decoders[pid] = codecs.getincrementaldecoder("utf-8")(errors="replace")
         child_info.register_with_selector(selector, pid)
         self.build_status.add_build(
             child_info.spec,
@@ -2543,6 +2552,10 @@ class PackageInstaller:
         """Handle reading state updates from a child process pipe."""
         pid = child_info.proc.pid
         assert pid is not None
+        # state_decoders / state_buffers are keyed by PID rather than fd: on Windows the state
+        # channel is a socket.socket, whose handle is not a stable POSIX-style fd.
+        # IncrementalDecoder handles partial UTF-8 sequences that socket.recv() may return.
+        decoder = self.state_decoders[pid]
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
@@ -2557,16 +2570,30 @@ class PackageInstaller:
                 selector.unregister(key.fileobj)
             except (KeyError, OSError):
                 pass
+            final_text = decoder.decode(b"", final=True)
+            if final_text:
+                self._process_state_string(pid, child_info, final_text)
             self.state_buffers.pop(pid, None)
             return
 
-        # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(pid, "") + data.decode(errors="replace")
-        lines = buffer.split("\n")
+        text = decoder.decode(data)
+        if text:
+            self._process_state_string(pid, child_info, text)
 
+    def _process_state_string(self, pid: int, child_info: ChildInfo, text: str) -> None:
+        buffer = self.state_buffers.get(pid, "") + text
+        lines = buffer.split("\n")
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
         self.state_buffers[pid] = lines.pop()
+
+        # Guard against unbounded buffer growth if a subprocess inherits the state fd and writes
+        # without newline terminators. Cap at 1 MB, keeping any partial in-progress line.
+        if len(self.state_buffers[pid]) > 1024 * 1024:
+            last_newline = self.state_buffers[pid].rfind("\n")
+            self.state_buffers[pid] = (
+                "" if last_newline < 0 else self.state_buffers[pid][last_newline + 1 :]
+            )
 
         for line in lines:
             if not line:
