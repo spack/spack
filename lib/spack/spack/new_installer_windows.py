@@ -2,19 +2,28 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Windows-specific terminal state and stdin reader for the new_installer TUI."""
+"""Windows-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
 import ctypes
+import io
 import msvcrt
+import os
 import selectors
 import shutil
 import socket
 import threading
 import time
 from ctypes import wintypes
-from typing import TYPE_CHECKING, Callable, Optional
+from multiprocessing import Process
+from typing import TYPE_CHECKING, Callable, Optional, cast
 
-from spack.new_installer_base import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import (
+    OUTPUT_BUFFER_SIZE,
+    BaseTerminalState,
+    ProcessExitNotifier,
+    StdinReaderBase,
+    Tee,
+)
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
@@ -25,6 +34,8 @@ ENABLE_ECHO_INPUT = 0x0004
 ENABLE_QUICK_EDIT_MODE = 0x0040
 ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
+WIN_STD_OUTPUT_HANDLE = -11
+WIN_STD_ERROR_HANDLE = -12
 
 
 class WindowsStdinReader(StdinReaderBase):
@@ -178,3 +189,98 @@ class WindowsTerminalState(BaseTerminalState):
                     self.sigwinch_w.sendall(b"\x00")
                 except OSError:
                     pass
+
+
+class WindowsSentinelBridge(ProcessExitNotifier):
+    """Process-exit notifier for Windows: a thread joins the process and pokes a socket so the
+    selector wakes up (Windows process handles cannot be registered with the selector directly)."""
+
+    def __init__(self, proc: Process) -> None:
+        self.rsock, self.wsock = socket.socketpair()
+        self.rsock.setblocking(False)
+        self.proc = proc
+        self.thread = threading.Thread(target=self._wait, daemon=True)
+        self.thread.start()
+
+    def _wait(self) -> None:
+        self.proc.join()
+        try:
+            self.wsock.sendall(b"x")
+        except OSError:
+            pass
+        self.wsock.close()
+
+    @property
+    def fileobj(self) -> socket.socket:
+        return self.rsock
+
+    def close(self) -> None:
+        self.rsock.close()
+
+
+class WindowsTee(Tee):
+    """Tee for Windows: control and parent channels are sockets; stdout/stderr handles are
+    redirected via SetStdHandle so the child process inherits the write end of the pipe."""
+
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        _echo = False
+        control_r = cast(socket.socket, self.control)
+        parent_w = cast(socket.socket, self.parent)
+
+        def _control_reader() -> None:
+            nonlocal _echo
+            while True:
+                try:
+                    data = control_r.recv(1)
+                    if not data:
+                        break
+                    _echo = data == b"1"
+                except OSError:
+                    break
+
+        threading.Thread(target=_control_reader, daemon=True).start()
+        try:
+            with log_file:
+                while True:
+                    try:
+                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                    except OSError:
+                        break
+                    if not data:
+                        break
+                    log_file.write(data)
+                    log_file.flush()
+                    if _echo:
+                        try:
+                            parent_w.sendall(data)
+                        except OSError:
+                            pass
+        finally:
+            os.close(log_r)
+
+    def _setup_handles(self) -> None:
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        self._saved_win32_stdout = kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
+        self._saved_win32_stderr = kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE)
+        h_write = msvcrt.get_osfhandle(1)  # type: ignore[attr-defined]
+        os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)  # type: ignore[attr-defined]
+
+    def _restore_handles(self) -> None:
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
+
+
+def make_state_stream(state: socket.socket) -> io.TextIOWrapper:
+    """Wrap the write end of the state socketpair as a line-buffered text stream."""
+    return state.makefile("w", buffering=1, encoding="utf-8", newline="\n")
+
+
+def read_connection(conn: socket.socket, max_size: int = 4096) -> bytes:
+    return conn.recv(max_size)
+
+
+def write_connection(conn: socket.socket, data: bytes) -> None:
+    conn.sendall(data)
