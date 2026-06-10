@@ -127,7 +127,7 @@ def test_list_sources_url(config, tmp_path):
         output = _bootstrap("list")
     match = re.search(r"url:(.+)", output)
     url = match.group(1).strip()
-    assert url == "/bootstrap_cache"
+    assert url == os.path.abspath("/bootstrap_cache")
 
 
 def test_list_sources(config):
