@@ -421,12 +421,13 @@ def worker_function(
 
     global_state.restore()
 
-    # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
-    # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
-    os.setpgid(0, 0)
+    if sys.platform != "win32":
+        # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
+        # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        os.setpgid(0, 0)
 
-    # Reset SIGTSTP to default in case the parent had a custom handler.
-    signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        # Reset SIGTSTP to default in case the parent had a custom handler.
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -435,13 +436,13 @@ def worker_function(
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        os.killpg(0, signal.SIGTERM)
-
-        try:
-            while True:
-                os.waitpid(-1, 0)
-        except ChildProcessError:
-            pass
+        if sys.platform != "win32":
+            os.killpg(0, signal.SIGTERM)
+            try:
+                while True:
+                    os.waitpid(-1, 0)
+            except ChildProcessError:
+                pass
 
         raise KeyboardInterrupt("Installation interrupted")
 
@@ -451,15 +452,10 @@ def worker_function(
     if makeflags is not None:
         os.environ["MAKEFLAGS"] = makeflags
 
-    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
-    # much ourselves, but what we print should appear before output from `make` and other build
-    # tools.
-    sys.stdout = os.fdopen(
-        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
-    )
-    sys.stderr = os.fdopen(
-        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
-    )
+    # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
+    # line-buffered wrappers after the Tee starts.
+    _stdout_enc = sys.stdout.encoding or "utf-8"
+    _stderr_enc = sys.stderr.encoding or "utf-8"
 
     # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
     # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
@@ -472,6 +468,16 @@ def worker_function(
     tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
+    # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
+    # than ConsoleIO (WriteConsoleW). On Windows, if fds 1/2 are still console handles when
+    # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
+    # ERROR_INVALID_FUNCTION. Post-dup2 the fds are pipe handles, so FileIO is chosen.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=_stdout_enc, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
+    )
     state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
