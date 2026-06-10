@@ -2213,14 +2213,12 @@ complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a co
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack isolate
-set -g __fish_spack_optspecs_spack_isolate h/help overwrite bootstrap
+set -g __fish_spack_optspecs_spack_isolate h/help overwrite
 
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'Overwrite existing isolation if necessary'
-complete -c spack -n '__fish_spack_using_command isolate' -l bootstrap -f -a bootstrap
-complete -c spack -n '__fish_spack_using_command isolate' -l bootstrap -d 'Bootstrap clingo, repos, and compiler config after isolation'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
