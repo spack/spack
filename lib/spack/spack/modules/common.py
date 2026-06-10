@@ -318,8 +318,9 @@ class BaseConfiguration:
     #: Per-subclass cache: must be assigned as ClassVar[Dict] = {} in each concrete subclass
     _registry: ClassVar[Dict[Tuple[str, str, bool], "BaseConfiguration"]]
 
-    #: Layout and context classes: must be set on each concrete subclass
+    #: Layout class must be set on each concrete subclass
     layout_class: ClassVar[Type["BaseFileLayout"]]
+    #: Context class must be set on each concrete subclass
     context_class: ClassVar[Type["BaseContext"]]
 
     @classmethod
