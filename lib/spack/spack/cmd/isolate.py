@@ -60,7 +60,6 @@ def _isolate_config_config(new_user_path):
         syaml.dump(config_yaml, f)
 
 
-
 def _setup_isolate_scope(new_user_path, overwrite: bool):
     if os.path.exists(ISOLATE_PATH):
         if overwrite:
@@ -114,20 +113,17 @@ def _preserve_and_extract_include():
     )
     return include_config["include"]
 
+
 def _shim_user_path_in_exe(user_path):
     if_line = lambda var: f'if [[ -z "${{{var}}}" ]]; then'
     spaces = lambda n: f"{' ' * n}"
-    export_line = lambda var: f'export {var}={user_path}'
+    export_line = lambda var: f"export {var}={user_path}"
     with open(spack.paths.spack_script, "r", encoding="utf-8") as f:
         script_lines = f.read().split("\n")
     new_lines = []
     added_lines = []
-    for var in ('SPACK_USER_CONFIG_PATH', 'SPACK_USER_CACHE_PATH'):
-        added_lines += [
-            spaces(8) + if_line(var),
-            spaces(12) + export_line(var),
-            spaces(8) + "fi"
-        ]
+    for var in ("SPACK_USER_CONFIG_PATH", "SPACK_USER_CACHE_PATH"):
+        added_lines += [spaces(8) + if_line(var), spaces(12) + export_line(var), spaces(8) + "fi"]
     rest_ind = None
     for i, line in enumerate(script_lines):
         if line.strip() == if_line:
@@ -145,14 +141,12 @@ def _shim_user_path_in_exe(user_path):
         raise Exception("isolate: Failed to parse spack executable")
     with open(spack.paths.spack_script, "w", encoding="utf-8") as f:
         f.write("\n".join(new_lines + script_lines[rest_ind:]))
-        
-        
+
+
 def isolate(parser, args):
     destination = _ensure_destination_setup(args.destination, args.overwrite)
     include_config: list = _preserve_and_extract_include()
-    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(
-        include_config
-    )
+    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
     isolate_scope = _setup_isolate_scope(destination, args.overwrite)
     # insert the isolate scope above the below user and site but above system
     if old_isolate_index is not None:

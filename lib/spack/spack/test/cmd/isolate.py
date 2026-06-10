@@ -1,15 +1,17 @@
-import pytest
 import shutil
-from spack.test.conftest import _create_mock_configuration_scopes
-import os
-import textwrap
-import spack.main
-import spack.config
-import spack.paths
+
+import pytest
+
 import spack.cmd.isolate
+import spack.config
+import spack.main
+import spack.paths
+from spack.test.conftest import _create_mock_configuration_scopes
 
 sp_isolate = spack.main.SpackCommand("isolate")
 sp_config = spack.main.SpackCommand("config")
+
+
 @pytest.fixture(scope="function")
 def mutable_config_with_dir(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     """Like config, but tests can modify the configuration."""
@@ -19,6 +21,7 @@ def mutable_config_with_dir(tmp_path_factory: pytest.TempPathFactory, configurat
     scopes = _create_mock_configuration_scopes(mutable_dir)
     with spack.config.use_configuration(*scopes) as cfg:
         yield cfg, mutable_dir
+
 
 @pytest.fixture(scope="function")
 def mock_pre_isolate_config(mutable_config_with_dir, monkeypatch):
@@ -44,7 +47,7 @@ def test_isolate_smoke_test(mock_pre_isolate_config, tmp_path):
     assert (isolate_scope_path / "config.yaml").exists()
     # we reload the config after isolation
     with spack.config.use_configuration(cfg_dir / "spack"):
-       assert "isolate" in sp_config("scopes")
+        assert "isolate" in sp_config("scopes")
 
 
 def test_isolate_added_config(mock_pre_isolate_config, tmp_path):
@@ -54,4 +57,3 @@ def test_isolate_added_config(mock_pre_isolate_config, tmp_path):
     with spack.config.use_configuration(cfg_dir / "spack"):
         sp_config("add", "config:build_jobs:42")
         assert (isolated_path / "config.yaml").exists()
-    
