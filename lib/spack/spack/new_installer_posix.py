@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""POSIX-specific terminal state and stdin reader for the new_installer TUI."""
+"""POSIX-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
 import fcntl
 import io
@@ -13,9 +13,9 @@ import signal
 import sys
 import tempfile
 import termios
-import threading
 import tty
 import warnings
+from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
@@ -26,7 +26,9 @@ from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
     JobServerBase,
+    ProcessExitNotifier,
     StdinReaderBase,
+    Tee,
 )
 
 if TYPE_CHECKING:
@@ -193,27 +195,18 @@ class PosixTerminalState(BaseTerminalState):
         return not _is_background_tty(sys.stdin)
 
 
-class PosixTee:
-    """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
+class PosixExitNotifier(ProcessExitNotifier):
+    """Process-exit notifier for POSIX: the multiprocessing sentinel fd is selector-watchable."""
 
-    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
-        self.control = control
-        self.parent = parent
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The path of the log file
-        self.log_path = log_path
-        log_file = open(self.log_path, "ab")
-        r, w = os.pipe()
-        self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
-        self.tee_thread.start()
-        for fd in fds:
-            os.dup2(w, fd)
-        os.close(w)
+    def __init__(self, proc: Process) -> None:
+        self.proc = proc
 
+    @property
+    def fileobj(self) -> int:
+        return self.proc.sentinel
+
+
+class PosixTee(Tee):
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         """Forward log_r to log_file and parent (if echoing is enabled).
         Echoing is enabled and disabled by reading from control."""
@@ -248,21 +241,6 @@ class PosixTee:
             pass
         finally:
             os.close(log_r)
-
-    def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
-        sys.stdout.flush()
-        sys.stderr.flush()
-        for fd, saved_fd in self.saved_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
-        self.tee_thread.join()
-        # Only then close the other fds.
-        self.control.close()
-        self.parent.close()
 
 
 class PosixJobServer(JobServerBase):

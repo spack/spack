@@ -34,7 +34,6 @@ import time
 import traceback
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
-from multiprocessing.connection import Connection
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -79,7 +78,9 @@ from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
     FdInfo,
+    IpcChannel,
     JobServerBase,
+    ProcessExitNotifier,
     StdinReaderBase,
 )
 from spack.subprocess_context import GlobalStateMarshaler
@@ -91,6 +92,7 @@ if sys.platform == "win32":
     from spack.new_installer_base import NoopJobServer as JobServer
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
+    from spack.new_installer_posix import PosixExitNotifier as ExitNotifier
     from spack.new_installer_posix import PosixJobServer as JobServer
     from spack.new_installer_posix import PosixTee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
@@ -166,15 +168,24 @@ class MarkExplicitAction(DatabaseAction):
 class ChildInfo(DatabaseAction):
     """Information about a child process."""
 
-    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
+    __slots__ = (
+        "proc",
+        "output_r_conn",
+        "state_r_conn",
+        "control_w_conn",
+        "notifier",
+        "explicit",
+        "log_path",
+    )
 
     def __init__(
         self,
         proc: Process,
         spec: spack.spec.Spec,
-        output_r_conn: Connection,
-        state_r_conn: Connection,
-        control_w_conn: Connection,
+        output_r_conn: IpcChannel,
+        state_r_conn: IpcChannel,
+        control_w_conn: IpcChannel,
+        notifier: ProcessExitNotifier,
         log_path: str,
         explicit: bool = False,
     ) -> None:
@@ -183,6 +194,7 @@ class ChildInfo(DatabaseAction):
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
+        self.notifier = notifier
         self.log_path = log_path
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
@@ -192,28 +204,29 @@ class ChildInfo(DatabaseAction):
 
     def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
         """Register output, state, and sentinel channels with the selector."""
-        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
-        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
-        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
+        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.notifier.fileobj, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
 
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
         try:
-            selector.unregister(self.output_r_conn.fileno())
-        except KeyError:
+            selector.unregister(self.output_r_conn)
+        except (KeyError, OSError):
             pass
         try:
-            selector.unregister(self.state_r_conn.fileno())
-        except KeyError:
+            selector.unregister(self.state_r_conn)
+        except (KeyError, OSError):
             pass
         try:
-            selector.unregister(self.proc.sentinel)
-        except (KeyError, ValueError):
+            selector.unregister(self.notifier.fileobj)
+        except (KeyError, ValueError, OSError):
             pass
         self.output_r_conn.close()
         self.state_r_conn.close()
         self.control_w_conn.close()
+        self.notifier.close()
         self.proc.join()
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"
@@ -363,9 +376,9 @@ def worker_function(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    state: Connection,
-    parent: Connection,
-    echo_control: Connection,
+    state: IpcChannel,
+    parent: IpcChannel,
+    echo_control: IpcChannel,
     jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
@@ -831,7 +844,16 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
+    return ChildInfo(
+        proc,
+        spec,
+        output_r_conn,
+        state_r_conn,
+        control_w_conn,
+        ExitNotifier(proc),
+        log_path,
+        explicit,
+    )
 
 
 class BuildInfo:
@@ -858,7 +880,7 @@ class BuildInfo:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection],
+        control_w_conn: Optional[IpcChannel],
         log_path: Optional[str] = None,
         start_time: float = 0.0,
     ) -> None:
@@ -940,7 +962,7 @@ class BuildStatus:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection] = None,
+        control_w_conn: Optional[IpcChannel] = None,
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
