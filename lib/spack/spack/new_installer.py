@@ -358,7 +358,7 @@ class PrefixPivoter:
         return os.path.lexists(path)
 
     def _rename(self, src: str, dst: str) -> None:
-        os.rename(src, dst)
+        fs.rename(src, dst)
 
     def _mkdtemp(self, dir: str, prefix: str, suffix: str) -> str:
         return tempfile.mkdtemp(dir=dir, prefix=prefix, suffix=suffix)
