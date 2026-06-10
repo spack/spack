@@ -1,27 +1,16 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Here we consolidate the logic for creating an abstract description
-of the information that module systems need.
+"""This module contains the logic for generating environment module files for each installed spec.
 
-This information maps **a single spec** to:
+The logic is split across four classes:
 
-* a unique module filename
-* the module file content
+* ``BaseConfiguration``: queries the ``modules.yaml`` configuration for a given spec.
+* ``FileLayout``: derives the on-disk path and the *use name* of a module file.
+* ``ModuleContext``: builds the Jinja2 template context dictionary.
+* ``BaseModuleFileWriter``: uses the three classes above to write, update, and remove module files.
 
-and is divided among four classes:
-
-* a configuration class that provides a convenient interface to query
-  details about the configuration for the spec under consideration.
-* a layout class that provides the information associated with module
-  file names and directories
-* a context class that provides the dictionary used by the template engine
-  to generate the module file
-* a writer that collects and uses the information above to either write
-  or remove the module file
-
-Each of the four classes needs to be sub-classed when implementing a new
-module type.
+To add a new module type, subclass ``BaseConfiguration`` and ``BaseModuleFileWriter``.
 """
 
 import collections
@@ -307,8 +296,8 @@ class UpstreamModuleIndex:
 
 
 class BaseConfiguration:
-    """Manipulates the information needed to generate a module file to make
-    querying easier. It needs to be sub-classed for specific module types.
+    """Reads the ``modules`` section of the configuration for a given spec and exposes it as a
+    set of properties used by ``FileLayout``, ``ModuleContext``, and ``BaseModuleFileWriter``.
     """
 
     default_projections: Dict[str, str]
@@ -544,9 +533,7 @@ class BaseConfiguration:
 
     @property
     def verbose(self) -> Optional[bool]:
-        """Returns True if the module file needs to be verbose, False
-        otherwise
-        """
+        """Returns the verbosity setting, or None if not configured."""
         return self.conf.get("verbose")
 
     @property
@@ -704,10 +691,7 @@ class FileLayout:
 
     @property
     def use_name(self) -> str:
-        """Returns the 'use' name of the module i.e. the name you have to type
-        to console to use it. This implementation fits the needs of most
-        non-hierarchical layouts.
-        """
+        """Returns the name used to load the module (e.g. with ``module load``)."""
         projection = proj.get_projection(self.conf.projections, self.spec)
         if not projection:
             projection = self.conf.default_projections["all"]
@@ -723,7 +707,7 @@ class FileLayout:
 
     @property
     def arch_dirname(self) -> str:
-        """Returns the root folder for THIS architecture"""
+        """Returns the root folder for this architecture."""
         if self.conf.arch_folder:
             if self.conf.hierarchical:
                 arch_folder = "-".join(
@@ -736,7 +720,7 @@ class FileLayout:
 
     @property
     def filename(self) -> str:
-        """Name of the module file for the current spec."""
+        """Absolute path to the module file for the current spec."""
         # Just the name of the file
         filename = self.use_name
         if self.conf.file_extension:
@@ -1091,7 +1075,7 @@ class ModuleContext(tengine.Context):
 
     @tengine.context_property
     def autoload(self) -> List[str]:
-        """List of modules that needs to be loaded automatically."""
+        """List of modules that need to be loaded automatically."""
         # From 'autoload' configuration option
         specs = self._create_module_list_of("specs_to_load")
         # From 'load' configuration option
