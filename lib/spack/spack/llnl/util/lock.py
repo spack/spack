@@ -859,6 +859,72 @@ class WriteTransaction(LockTransaction):
         return self._lock.release_write(release_fn)
 
 
+class TryReadTransaction(ReadTransaction):
+    """Non-blocking ReadTransaction: yields True if the lock was acquired, and False if acquiring
+    it would block, in which case the body must skip its work::
+
+        with TryReadTransaction(lock, acquire=...) as acquired:
+            if not acquired:
+                return
+            ...
+    """
+
+    _acquired = False
+
+    def __enter__(self) -> bool:
+        # The acquire function must only run on the outermost acquisition
+        outermost = self._lock._reads == 0 and self._lock._writes == 0
+        if not self._lock.try_acquire_read():
+            return False
+        self._acquired = True
+        if outermost and self._acquire_fn:
+            self._acquire_fn()
+        return True
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> bool:
+        if not self._acquired:
+            return False
+        return super().__exit__(exc_type, exc_value, traceback)
+
+
+class TryWriteTransaction(WriteTransaction):
+    """Non-blocking WriteTransaction: yields True if the lock was acquired, and False if acquiring
+    it would block, in which case the body must skip its work::
+
+        with TryWriteTransaction(lock, acquire=..., release=...) as acquired:
+            if not acquired:
+                return
+            ...
+    """
+
+    _acquired = False
+
+    def __enter__(self) -> bool:
+        # The acquire function must only run on the outermost acquisition
+        outermost = self._lock._writes == 0
+        if not self._lock.try_acquire_write():
+            return False
+        self._acquired = True
+        if outermost and self._acquire_fn:
+            self._acquire_fn()
+        return True
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> bool:
+        if not self._acquired:
+            return False
+        return super().__exit__(exc_type, exc_value, traceback)
+
+
 class LockError(Exception):
     """Raised for any errors related to locks."""
 

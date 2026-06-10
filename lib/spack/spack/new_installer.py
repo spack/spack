@@ -1758,11 +1758,9 @@ def schedule_builds(
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
-    if not db.lock.try_acquire_read():
-        return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
-
-    try:
-        db._read()  # refresh in-memory snapshot under the read lock
+    with db.try_read_transaction() as acquired:
+        if not acquired:
+            return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
         idx = 0
         while capacity and idx < len(pending):
@@ -1846,9 +1844,6 @@ def schedule_builds(
             to_start.append((dag_hash, lock))
             capacity -= 1
             needs_jobserver_token = True  # all subsequent jobs need a token
-
-    finally:
-        db.lock.release_read()
 
     return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
@@ -2428,10 +2423,9 @@ class PackageInstaller:
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately
         if the DB read lock is unavailable."""
-        if not self.db.lock.try_acquire_read():
-            return
-        try:
-            self.db._read()
+        with self.db.try_read_transaction() as acquired:
+            if not acquired:
+                return
             dep_policy = (
                 "source_only"
                 if (self.dependencies_policy == "auto" and not self.has_mirrors)
@@ -2446,22 +2440,17 @@ class PackageInstaller:
                 )
             self.build_status.total += len(newly_added)
             self.pending_expansions.clear()
-        finally:
-            self.db.lock.release_read()
 
     def _save_to_db(
         self,
         database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
     ) -> bool:
-        if not self.db.lock.try_acquire_write():
-            return False
-        try:
-            self.db._read()
+        with self.db.try_write_transaction() as acquired:
+            if not acquired:
+                return False
             for action in database_actions:
                 action.save_to_db(self.db)
-        finally:
-            self.db.lock.release_write(self.db._write)
 
         # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
         # other processes can see the specs are installed, while preventing concurrent uninstalls.

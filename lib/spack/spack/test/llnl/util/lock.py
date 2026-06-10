@@ -1083,6 +1083,109 @@ def test_nested_reads(lock_path):
                     assert vals["read"] == 1
 
 
+@pytest.mark.parametrize(
+    "transaction,type", [(lk.TryReadTransaction, "read"), (lk.TryWriteTransaction, "write")]
+)
+def test_try_transaction(lock_path, transaction, type):
+    """When uncontended, try-transactions yield True and behave like blocking transactions."""
+
+    def enter_fn():
+        vals["entered_fn"] = True
+
+    def exit_fn(t, v, tb):
+        vals["exited_fn"] = True
+        vals["exception"] = t or v or tb
+
+    vals = collections.defaultdict(lambda: False)
+    lock = AssertLock(lock_path, vals)
+
+    with transaction(lock, acquire=enter_fn, release=exit_fn) as acquired:
+        assert acquired
+        assert vals["entered_fn"]
+        assert not vals["released_%s" % type]
+
+    assert vals["exited_fn"]
+    assert vals["released_%s" % type]
+    assert not vals["exception"]
+
+
+@pytest.mark.parametrize(
+    "transaction,attr",
+    [(lk.TryReadTransaction, "try_acquire_read"), (lk.TryWriteTransaction, "try_acquire_write")],
+)
+def test_try_transaction_blocked(lock_path, transaction, attr, monkeypatch):
+    """When the lock would block, try-transactions yield False and call no functions on exit."""
+
+    def enter_fn():
+        vals["entered_fn"] = True
+
+    def exit_fn(t, v, tb):
+        vals["exited_fn"] = True
+
+    vals = collections.defaultdict(lambda: False)
+    lock = AssertLock(lock_path, vals)
+    monkeypatch.setattr(lock, attr, lambda: False)
+
+    with transaction(lock, acquire=enter_fn, release=exit_fn) as acquired:
+        assert not acquired
+
+    assert not vals["entered_fn"]
+    assert not vals["exited_fn"]
+    assert lock._reads == 0 and lock._writes == 0
+
+    # exceptions raised in the body still propagate
+    with pytest.raises(ValueError):
+        with transaction(lock, acquire=enter_fn, release=exit_fn) as acquired:
+            assert not acquired
+            raise ValueError()
+
+
+def test_try_transaction_with_exception(lock_path):
+    """An exception in the body propagates and is forwarded to the release function."""
+
+    def exit_fn(t, v, tb):
+        vals["exception"] = t or v or tb
+
+    vals = collections.defaultdict(lambda: False)
+    lock = AssertLock(lock_path, vals)
+
+    with pytest.raises(ValueError):
+        with lk.TryWriteTransaction(lock, release=exit_fn) as acquired:
+            assert acquired
+            raise ValueError()
+
+    assert vals["exception"]
+    assert vals["released_write"]
+    assert lock._reads == 0 and lock._writes == 0
+
+
+def test_try_transaction_nested(lock_path):
+    """Nested try-transactions acquire, but do not re-run the acquire function, and the release
+    function only runs when the outermost write lock is released."""
+
+    def read():
+        vals["read"] += 1
+
+    def write(t, v, tb):
+        vals["wrote"] += 1
+
+    vals = collections.defaultdict(lambda: 0)
+    lock = AssertLock(lock_path, vals)
+
+    with lk.WriteTransaction(lock, acquire=read, release=write):
+        assert vals["read"] == 1
+        with lk.TryWriteTransaction(lock, acquire=read, release=write) as acquired:
+            assert acquired
+            assert vals["read"] == 1
+        assert vals["wrote"] == 0
+        with lk.TryReadTransaction(lock, acquire=read) as acquired:
+            assert acquired
+            assert vals["read"] == 1
+        assert lock._writes == 1
+    assert vals["wrote"] == 1
+    assert lock._reads == 0 and lock._writes == 0
+
+
 class LockDebugOutput:
     def __init__(self, lock_path):
         self.lock_path = lock_path

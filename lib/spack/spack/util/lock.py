@@ -15,6 +15,8 @@ from spack.llnl.util.lock import (
     LockTimeoutError,
     LockUpgradeError,
     ReadTransaction,
+    TryReadTransaction,
+    TryWriteTransaction,
     WriteTransaction,
 )
 
@@ -59,5 +61,7 @@ __all__ = [
     "LockTimeoutError",
     "LockUpgradeError",
     "ReadTransaction",
+    "TryReadTransaction",
+    "TryWriteTransaction",
     "WriteTransaction",
 ]

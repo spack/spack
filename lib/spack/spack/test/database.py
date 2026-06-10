@@ -626,6 +626,53 @@ def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
         assert new_rec.installed == rec.installed
 
 
+def test_try_write_transaction(mutable_database, monkeypatch):
+    """try_write_transaction persists changes on success and yields False without doing anything
+    when acquiring the lock would block."""
+    db = spack.store.STORE.db
+
+    spec = db.query_one("mpileaks ^zmpi")
+    with db.try_write_transaction() as acquired:
+        assert acquired
+        db._remove(spec)
+
+    db._state_is_inconsistent = True  # force re-read from disk
+    with db.read_transaction():
+        assert db.query_local_by_spec_hash(spec.dag_hash()) is None
+
+    monkeypatch.setattr(db.lock, "try_acquire_write", lambda: False)
+    with db.try_write_transaction() as acquired:
+        assert not acquired
+
+
+def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
+    """Regression test: an exception inside try_write_transaction must not flush the possibly
+    inconsistent in-memory database to disk; the next transaction re-reads it instead."""
+    db = spack.store.STORE.db
+
+    with pytest.raises(ValueError):
+        with db.try_write_transaction() as acquired:
+            assert acquired
+            db._data.clear()
+            db._installed_prefixes.clear()
+            raise ValueError("interrupted transaction")
+
+    with db.read_transaction():
+        assert db.query("mpileaks")
+
+
+def test_try_read_transaction(mutable_database, monkeypatch):
+    db = spack.store.STORE.db
+
+    with db.try_read_transaction() as acquired:
+        assert acquired
+        assert db.query("mpileaks")
+
+    monkeypatch.setattr(db.lock, "try_acquire_read", lambda: False)
+    with db.try_read_transaction() as acquired:
+        assert not acquired
+
+
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
     _check_db_sanity(database)
