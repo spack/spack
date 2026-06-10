@@ -56,6 +56,7 @@ def test_isolate_smoke_test(mock_pre_isolate_config):
     with spack.config.use_configuration(cfg_dir / "spack"):
         assert "isolate" in sp_config("scopes")
 
+
 def test_isolate_added_config(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
     isolated_path = iso_root / "test-isolation"
