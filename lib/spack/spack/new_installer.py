@@ -2023,8 +2023,11 @@ class PackageInstaller:
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
 
-        # Buffer for incoming, partially received state data from child processes
-        self.state_buffers: Dict[int, str] = {}
+        # Buffer for incoming, partially received state data from child processes. Kept as raw
+        # bytes and split on b"\n": the newline byte cannot occur inside a multi-byte UTF-8
+        # sequence, so framing is safe without decoding partial reads. Keyed by PID rather than fd
+        # because on Windows the state channel is a socket whose handle is not a stable POSIX fd.
+        self.state_buffers: Dict[int, bytes] = {}
 
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
@@ -2626,6 +2629,8 @@ class PackageInstaller:
         self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
+        pid = child_info.proc.pid
+        assert pid is not None
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
@@ -2640,16 +2645,16 @@ class PackageInstaller:
                 selector.unregister(key.fileobj)
             except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(key.fd, None)
+            self.state_buffers.pop(pid, None)
             return
 
-        # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(key.fd, "") + data.decode(errors="replace")
-        lines = buffer.split("\n")
-
+        # Accumulate raw bytes and split on the newline byte. We never decode a partial read; only
+        # complete lines are handed to json.loads(), which decodes the (UTF-8) bytes itself.
+        buffer = self.state_buffers.get(pid, b"") + data
+        lines = buffer.split(b"\n")
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[key.fd] = lines.pop()
+        self.state_buffers[pid] = lines.pop()
 
         for line in lines:
             if not line:
