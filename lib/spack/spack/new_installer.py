@@ -48,6 +48,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
 from spack.vendor.typing_extensions import Literal
@@ -921,7 +922,7 @@ class BuildStatus:
     def __init__(
         self,
         total: int,
-        stdout: io.TextIOWrapper = sys.stdout,  # type: ignore[assignment]
+        stdout: Optional[io.TextIOWrapper] = None,
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
@@ -929,6 +930,8 @@ class BuildStatus:
         verbose: bool = False,
         filter_padding: bool = False,
     ) -> None:
+        if stdout is None:
+            stdout = cast(io.TextIOWrapper, sys.stdout)
         #: Ordered dict of build ID -> info
         self.total = total
         self.completed = 0
