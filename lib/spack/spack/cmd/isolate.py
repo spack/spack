@@ -8,7 +8,6 @@ from typing import cast
 
 from spack.vendor.ruamel.yaml.compat import ordereddict
 
-import spack.concretize
 import spack.config
 import spack.paths
 import spack.schema.include
@@ -90,11 +89,6 @@ def setup_parser(subparser: ArgumentParser):
     subparser.add_argument(
         "--overwrite", action="store_true", help="Overwrite existing isolation if necessary"
     )
-    subparser.add_argument(
-        "--bootstrap",
-        action="store_true",
-        help="Bootstrap clingo, repos, and compiler config after isolation",
-    )
 
 
 def _ensure_destination_setup(destination: str, overwrite: bool):
@@ -170,7 +164,3 @@ def isolate(parser, args):
         syaml.dump({"include": include_config}, f)
 
     _shim_user_path_in_exe(destination)
-    if args.bootstrap:
-        del spack.config.CONFIG
-        spack.config.CONFIG = spack.config.create()
-        spack.concretize.concretize_one("zlib")
