@@ -25,6 +25,9 @@ import spack.util.lock
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
 
+# IPC state channel type: Connection on POSIX, socket on Windows
+StateChannel = Union[Connection, socket.socket]
+
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 32768
 
@@ -160,9 +163,9 @@ class ChildInfo(DatabaseAction):
         self,
         proc: Process,
         spec: spack.spec.Spec,
-        output_r_conn: Connection,
-        state_r_conn: Connection,
-        control_w_conn: Connection,
+        output_r_conn: Union[Connection, socket.socket],
+        state_r_conn: Union[Connection, socket.socket],
+        control_w_conn: Union[Connection, socket.socket],
         log_path: str,
         explicit: bool = False,
     ) -> None:
@@ -177,20 +180,23 @@ class ChildInfo(DatabaseAction):
 
     @property
     @abc.abstractmethod
-    def output_connection_handle(self):
-        """Accesor for underlying connection handle"""
+    def output_connection_handle(self) -> Union[int, socket.socket]:
+        """Accesor for underlying output connection handle.
+        fd on linux, socket on Windows"""
         pass
 
     @property
     @abc.abstractmethod
-    def state_connection_handle(self):
-        """Accesor for underlying connection handle"""
+    def state_connection_handle(self) -> Union[int, socket.socket]:
+        """Accesor for underlying process state connection handle.
+        fd on linux, socket on Windows"""
         pass
 
     @property
     @abc.abstractmethod
     def sentinel(self):
-        """Accessor for process sentinel"""
+        """Accessor for process sentinel
+        proc.sentinel on linux, WindowsSentinelBridge on Windows"""
         pass
 
     def _setup_handles(self) -> None:
@@ -328,7 +334,14 @@ class Tee(abc.ABC):
         self.tee_thread.start()
         for fd in fds:
             os.dup2(w, fd)
+        self._setup_handles()
         os.close(w)
+
+    def _setup_handles(self) -> None:
+        pass
+
+    def _restore_handles(self) -> None:
+        pass
 
     @abc.abstractmethod
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
@@ -349,3 +362,4 @@ class Tee(abc.ABC):
         # Only then close the other fds.
         self.control.close()
         self.parent.close()
+        self._restore_handles()

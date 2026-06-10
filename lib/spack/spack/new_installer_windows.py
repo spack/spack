@@ -2,22 +2,33 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Windows-specific terminal state and stdin reader for the new_installer TUI."""
+"""Windows-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
 import ctypes
+import io
 import msvcrt
+import os
 import selectors
 import shutil
 import socket
 import threading
 import time
 from ctypes import wintypes
-from typing import TYPE_CHECKING, Callable, Optional
+from multiprocessing import Process
+from typing import TYPE_CHECKING, Callable, List, Optional, cast
 
-from spack.new_installer_base import BaseTerminalState, StdinReaderBase
+from spack.new_installer_base import (
+    OUTPUT_BUFFER_SIZE,
+    BaseTerminalState,
+    ChildInfo,
+    StateChannel,
+    StdinReaderBase,
+    Tee,
+)
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
+    from spack.spec import Spec
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -25,6 +36,8 @@ ENABLE_ECHO_INPUT = 0x0004
 ENABLE_QUICK_EDIT_MODE = 0x0040
 ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
+WIN_STD_OUTPUT_HANDLE = -11
+WIN_STD_ERROR_HANDLE = -12
 
 
 class WindowsStdinReader(StdinReaderBase):
@@ -178,3 +191,157 @@ class WindowsTerminalState(BaseTerminalState):
                     self.sigwinch_w.sendall(b"\x00")
                 except OSError:
                     pass
+
+
+class WindowsSentinelBridge:
+    """Waits for a process to exit and sends a byte to a socket to wake the selector."""
+
+    def __init__(self, proc: Process) -> None:
+        self.rsock, self.wsock = socket.socketpair()
+        self.rsock.setblocking(False)
+        self.proc = proc
+        self.thread = threading.Thread(target=self._wait, daemon=True)
+        self.thread.start()
+
+    def _wait(self) -> None:
+        self.proc.join()
+        try:
+            self.wsock.sendall(b"x")
+        except OSError:
+            pass
+        self.wsock.close()
+
+    def fileno(self) -> int:
+        return self.rsock.fileno()
+
+    def recv(self, size: int) -> bytes:
+        try:
+            return self.rsock.recv(size)
+        except BlockingIOError:
+            return b""
+
+    def close(self) -> None:
+        self.rsock.close()
+
+
+class WindowsChildInfo(ChildInfo):
+    """ChildInfo for Windows: output and state use socket.socketpair(); sentinel via bridge."""
+
+    __slots__ = ("bridge",)
+
+    def __init__(
+        self,
+        proc: Process,
+        spec: "Spec",
+        output_r_conn: socket.socket,
+        state_r_conn: socket.socket,
+        control_w_conn: socket.socket,
+        log_path: str,
+        explicit: bool = False,
+    ) -> None:
+        super().__init__(
+            proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit
+        )
+        self.bridge: Optional[WindowsSentinelBridge] = None
+
+    @property
+    def output_connection_handle(self):
+        return self.output_r_conn
+
+    @property
+    def state_connection_handle(self):
+        return self.state_r_conn
+
+    @property
+    def sentinel(self):
+        return self.bridge
+
+    def _setup_handles(self) -> None:
+        cast(socket.socket, self.output_r_conn).setblocking(False)
+        cast(socket.socket, self.state_r_conn).setblocking(False)
+        self.bridge = WindowsSentinelBridge(self.proc)
+
+    def _cleanup_handles(self) -> None:
+        if self.bridge is not None:
+            self.bridge.close()
+        super()._cleanup_handles()
+
+
+class WindowsTee(Tee):
+    """Tee for Windows: control and parent channels are sockets; stdout/stderr handles are
+    redirected via SetStdHandle so the child process inherits the write end of the pipe."""
+
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        _echo: List[bool] = [False]
+        control_r = cast(socket.socket, self.control)
+        parent_w = cast(socket.socket, self.parent)
+
+        def _control_reader() -> None:
+            nonlocal _echo
+            while True:
+                try:
+                    data = control_r.recv(1)
+                    if not data:
+                        break
+                    _echo[0] = data == b"1"
+                except OSError:
+                    break
+
+        threading.Thread(target=_control_reader, daemon=True).start()
+        try:
+            with log_file:
+                while True:
+                    try:
+                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                    except OSError:
+                        break
+                    if not data:
+                        break
+                    log_file.write(data)
+                    log_file.flush()
+                    if _echo[0]:
+                        try:
+                            parent_w.sendall(data)
+                        except OSError:
+                            pass
+        finally:
+            os.close(log_r)
+
+    def _setup_handles(self) -> None:
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        self._saved_win32_stdout = kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
+        self._saved_win32_stderr = kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE)
+        h_write = msvcrt.get_osfhandle(1)  # type: ignore[attr-defined]
+        os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)  # type: ignore[attr-defined]
+        self._h_write = h_write
+
+    def _restore_handles(self) -> None:
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
+
+
+def make_state_stream(state: StateChannel) -> io.TextIOWrapper:
+    """Wrap the write end of the state socketpair as a line-buffered text stream."""
+    return cast(socket.socket, state).makefile("w", buffering=1, encoding="utf-8")
+
+
+def read_connection(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
+    """Read from a selector key using os.read() on the key fd."""
+    try:
+        return cast(socket.socket, key.fileobj).recv(max_size)
+    except BlockingIOError:
+        # caller handles: spurious wakeup, same on POSIX and Windows
+        # need to short circuit to prevent OS error from catching
+        raise
+    except (EOFError, OSError):
+        # normalize EOF/connection-closed to empty bytes
+        # aligns Windows socket behavior with posix pipe behavior
+        return b""
+
+
+def write_connection(conn: StateChannel, data: bytes) -> None:
+    """Write to a socket connection endpoint"""
+    cast(socket.socket, conn).sendall(data)

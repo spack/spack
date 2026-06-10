@@ -28,6 +28,7 @@ import selectors
 import shlex
 import shutil
 import signal
+import socket
 import sys
 import tempfile
 import time
@@ -90,12 +91,16 @@ from spack.util.path import padding_filter, padding_filter_bytes
 
 if sys.platform == "win32":
     from spack.new_installer_base import NoopJobServer as JobServer
+    from spack.new_installer_windows import WindowsChildInfo as ChildInfo
+    from spack.new_installer_windows import WindowsTee as Tee
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
+    from spack.new_installer_windows import make_state_stream, read_connection, write_connection
 else:
     from spack.new_installer_posix import PosixChildInfo as ChildInfo
     from spack.new_installer_posix import PosixJobServer as JobServer
     from spack.new_installer_posix import PosixTee as Tee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
+    from spack.new_installer_posix import make_state_stream, read_connection, write_connection
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -379,7 +384,7 @@ def worker_function(
     tee = Tee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
-    state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -706,10 +711,24 @@ def start_build(
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    # Create pipes for the child's output, state reporting, and control.
-    state_r_conn, state_w_conn = Pipe(duplex=False)
-    output_r_conn, output_w_conn = Pipe(duplex=False)
-    control_r_conn, control_w_conn = Pipe(duplex=False)
+    # Create IPC channels. On POSIX use Pipe() (anonymous pipe/fd); on Windows use socketpair()
+    # because anonymous pipes cannot be registered with the Windows selector.
+    state_r_conn: Union[Connection, socket.socket]
+    state_w_conn: Union[Connection, socket.socket]
+    output_r_conn: Union[Connection, socket.socket]
+    output_w_conn: Union[Connection, socket.socket]
+    # On Windows, use socketpair() for the control channel; anonymous pipes don't support the
+    # non-blocking I/O the Windows tee thread needs. On POSIX, use Pipe() like other channels.
+    control_r_conn: Union[Connection, socket.socket]
+    control_w_conn: Union[Connection, socket.socket]
+    if sys.platform == "win32":
+        state_r_conn, state_w_conn = socket.socketpair()
+        output_r_conn, output_w_conn = socket.socketpair()
+        control_r_conn, control_w_conn = socket.socketpair()
+    else:
+        state_r_conn, state_w_conn = Pipe(duplex=False)
+        output_r_conn, output_w_conn = Pipe(duplex=False)
+        control_r_conn, control_w_conn = Pipe(duplex=False)
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
@@ -751,9 +770,10 @@ def start_build(
     output_w_conn.close()
     control_r_conn.close()
 
-    # Set the read ends to non-blocking: in principle redundant with epoll/kqueue, but safer.
-    os.set_blocking(output_r_conn.fileno(), False)
-    os.set_blocking(state_r_conn.fileno(), False)
+    if sys.platform != "win32":
+        # Set the read ends to non-blocking: in principle redundant with epoll/kqueue, but safer.
+        os.set_blocking(output_r_conn.fileno(), False)
+        os.set_blocking(state_r_conn.fileno(), False)
 
     return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
 
@@ -782,7 +802,7 @@ class BuildInfo:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection],
+        control_w_conn: Optional[Union[Connection, socket.socket]],
         log_path: Optional[str] = None,
         start_time: float = 0.0,
     ) -> None:
@@ -864,7 +884,7 @@ class BuildStatus:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection] = None,
+        control_w_conn: Optional[Union[Connection, socket.socket]] = None,
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
@@ -876,7 +896,7 @@ class BuildStatus:
         if self.verbose and not self.tracked_build_id and control_w_conn is not None:
             self.tracked_build_id = spec.dag_hash()
             try:
-                os.write(control_w_conn.fileno(), b"1")
+                write_connection(control_w_conn, b"1")
             except OSError:
                 pass
 
@@ -905,7 +925,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -970,7 +990,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
 
@@ -1002,7 +1022,7 @@ class BuildStatus:
             try:
                 conn = new_build.control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"1")
+                    write_connection(conn, b"1")
             except (KeyError, OSError):
                 pass
 
@@ -2085,9 +2105,9 @@ class PackageInstaller:
                         # Child output (logs and state updates)
                         child_info = self.running_builds[data.pid]
                         if data.name == "output":
-                            self._handle_child_logs(key.fd, child_info, selector)
+                            self._handle_child_logs(key, child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(key.fd, child_info, selector)
+                            self._handle_child_state(key, child_info, selector)
                         elif data.name == "sentinel":
                             finished_pids.append(data.pid)
                     elif data == "stdin":
@@ -2483,13 +2503,13 @@ class PackageInstaller:
         self.report_data.start_record(spec)
 
     def _handle_child_logs(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(key, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
             return
         except OSError:
@@ -2497,8 +2517,8 @@ class PackageInstaller:
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(key.fileobj)
+            except (KeyError, OSError):
                 pass
             return
 
@@ -2506,24 +2526,27 @@ class PackageInstaller:
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        r_fd = child_info.output_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_logs(r_fd, child_info, selector)
+        obj = child_info.output_r_conn
+        while obj in selector.get_map():
+            self._handle_child_logs(selector.get_map()[obj], child_info, selector)
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
-        r_fd = child_info.state_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_state(r_fd, child_info, selector)
+        # Must drain before child.close() to consume any remaining data before bridges close.
+        obj = child_info.state_r_conn
+        while obj in selector.get_map():
+            self._handle_child_state(selector.get_map()[obj], child_info, selector)
 
     def _handle_child_state(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
+        self, key: selectors.SelectorKey, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
+        pid = child_info.proc.pid
+        assert pid is not None
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(key, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
             return
         except OSError:
@@ -2531,19 +2554,19 @@ class PackageInstaller:
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(key.fileobj)
+            except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(r_fd, None)
+            self.state_buffers.pop(pid, None)
             return
 
         # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(r_fd, "") + data.decode(errors="replace")
+        buffer = self.state_buffers.get(pid, "") + data.decode(errors="replace")
         lines = buffer.split("\n")
 
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[r_fd] = lines.pop()
+        self.state_buffers[pid] = lines.pop()
 
         for line in lines:
             if not line:
