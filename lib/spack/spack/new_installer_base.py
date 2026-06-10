@@ -2,23 +2,34 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Abstract base classes for the new_installer TUI terminal state and stdin reading.
-
-Kept in a leaf module (no imports from new_installer.py or the platform modules) so that
-new_installer_posix and new_installer_windows can import from here without introducing a
-circular dependency."""
+"""Abstract base classes for new_installer:
+TUI terminal state, IPC channels, and job scheduling."""
 
 import abc
 import codecs
+import io
+import os
 import re
 import selectors
+import socket
 import sys
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
+import threading
+from multiprocessing.connection import Connection
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.spec
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
+
+# Inter-process communication type
+if sys.platform == "win32":
+    IpcChannel = socket.socket
+else:
+    IpcChannel = Connection
+
+#: Size of the output buffer for child processes
+OUTPUT_BUFFER_SIZE = 32768
 
 
 class StdinReaderBase:
@@ -110,10 +121,6 @@ class BaseTerminalState(abc.ABC):
         pass
 
 
-#: Size of the output buffer for child processes
-OUTPUT_BUFFER_SIZE = 32768
-
-
 class FdInfo:
     """Information about a file descriptor mapping."""
 
@@ -122,6 +129,18 @@ class FdInfo:
     def __init__(self, pid: int, name: str) -> None:
         self.pid = pid
         self.name = name
+
+
+class ProcessExitNotifier(abc.ABC):
+    """Selector-watchable handle that becomes readable when the child process exits."""
+
+    @property
+    @abc.abstractmethod
+    def fileobj(self) -> Union[int, socket.socket]:
+        """Object/fd to register with the selector to detect process exit."""
+
+    def close(self) -> None:
+        """Release any resources. Default: nothing to release."""
 
 
 class JobServerBase(abc.ABC):
@@ -189,3 +208,53 @@ class NoopJobServer(JobServerBase):
     def release(self) -> None: ...
 
     def close(self) -> None: ...
+
+
+class Tee(abc.ABC):
+    """Emulates ./build 2>&1 | tee build.log. Output is sent to a log file and the parent
+    process (if echoing is enabled). The control socket is used to enable/disable echoing."""
+
+    def __init__(self, control: IpcChannel, parent: IpcChannel, log_path: str) -> None:
+        self.control = control
+        self.parent = parent
+        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
+        # redirect their file descriptors in addition to the original fds 1 and 2.
+        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
+        self.saved_fds = {fd: os.dup(fd) for fd in fds}
+        #: The path of the log file
+        self.log_path = log_path
+        log_file = open(self.log_path, "ab")
+        r, w = os.pipe()
+        self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
+        self.tee_thread.start()
+        for fd in fds:
+            os.dup2(w, fd)
+        self._setup_handles()
+        os.close(w)
+
+    def _setup_handles(self) -> None:
+        pass
+
+    def _restore_handles(self) -> None:
+        pass
+
+    @abc.abstractmethod
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        """Read from log_r, write to log_file; echo to parent when enabled. Runs in a thread."""
+        pass
+
+    def close(self) -> None:
+        # Closing stdout and stderr should close the last reference to the write end of the pipe,
+        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
+        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
+        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
+        sys.stdout.flush()
+        sys.stderr.flush()
+        for fd, saved_fd in self.saved_fds.items():
+            os.dup2(saved_fd, fd)
+            os.close(saved_fd)
+        self.tee_thread.join()
+        # Only then close the other fds.
+        self.control.close()
+        self.parent.close()
+        self._restore_handles()
