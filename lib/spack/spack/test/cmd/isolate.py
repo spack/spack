@@ -71,3 +71,22 @@ config:
   build_jobs: 42
 """
         assert text == expected_text
+
+
+def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
+    _, iso_root = mock_pre_isolate_config
+    isolated_path = iso_root / "test-isolation"
+    sp_isolate(str(isolated_path))
+    with pytest.raises(Exception):
+        sp_isolate(str(isolated_path))
+    sp_isolate("--overwrite", str(isolated_path))
+
+
+def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
+    _, iso_root = mock_pre_isolate_config
+    isolated_path1 = iso_root / "test-isolation1"
+    isolated_path2 = iso_root / "test-isolation2"
+    sp_isolate(str(isolated_path1))
+    with pytest.raises(Exception):
+        sp_isolate(str(isolated_path2))
+    sp_isolate("--overwrite", str(isolated_path2))
