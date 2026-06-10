@@ -64,7 +64,7 @@ def test_isolate_added_config(mock_pre_isolate_config):
     with spack.config.use_configuration(cfg_dir / "spack"):
         sp_config("add", "config:build_jobs:42")
         assert (isolated_path / "config.yaml").exists()
-        with open(isolated_path / "config.yaml") as f:
+        with open(isolated_path / "config.yaml", "r", encoding="utf-8") as f:
             text = f.read()
         expected_text = """\
 config:
