@@ -78,7 +78,6 @@ from spack.llnl.util.lang import pretty_duration
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
-    DatabaseAction,
     FdInfo,
     JobServerBase,
     StdinReaderBase,
@@ -92,8 +91,8 @@ if sys.platform == "win32":
     from spack.new_installer_base import NoopJobServer as JobServer
     from spack.new_installer_windows import WindowsTerminalState as TerminalState
 else:
-    from spack.new_installer_posix import PosixChildInfo, PosixTee
     from spack.new_installer_posix import PosixJobServer as JobServer
+    from spack.new_installer_posix import PosixTee
     from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
@@ -131,9 +130,28 @@ class ExitCode:
     BUILD_CACHE_MISS = 4
 
 
+class DatabaseAction:
+    """Base class for objects that need to be persisted to the database."""
+
+    __slots__ = ("spec", "prefix_lock")
+
+    spec: spack.spec.Spec
+    prefix_lock: Optional[spack.util.lock.Lock]
+
+    def save_to_db(self, db: spack.database.Database) -> None: ...
+
+    def release_prefix_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+        self.prefix_lock = None
+
+
 class MarkExplicitAction(DatabaseAction):
-    """Action to mark an already installed spec as explicitly installed. Similar to PosixChildInfo,
-    but used when no build process was needed."""
+    """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
+    used when no build process was needed."""
 
     __slots__ = ()
 
@@ -143,6 +161,65 @@ class MarkExplicitAction(DatabaseAction):
 
     def save_to_db(self, db: spack.database.Database) -> None:
         db._mark(self.spec, "explicit", True)
+
+
+class ChildInfo(DatabaseAction):
+    """Information about a child process."""
+
+    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
+
+    def __init__(
+        self,
+        proc: Process,
+        spec: spack.spec.Spec,
+        output_r_conn: Connection,
+        state_r_conn: Connection,
+        control_w_conn: Connection,
+        log_path: str,
+        explicit: bool = False,
+    ) -> None:
+        self.proc = proc
+        self.spec = spec
+        self.output_r_conn = output_r_conn
+        self.state_r_conn = state_r_conn
+        self.control_w_conn = control_w_conn
+        self.log_path = log_path
+        self.explicit = explicit
+        self.prefix_lock: Optional[spack.util.lock.Lock] = None
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        return db._add(self.spec, explicit=self.explicit)
+
+    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+        """Register output, state, and sentinel channels with the selector."""
+        selector.register(self.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output"))
+        selector.register(self.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+
+    def close(self, selector: selectors.BaseSelector) -> int:
+        """Unregister and close file descriptors, and join the child process.
+        Returns the exit code of the child process."""
+        try:
+            selector.unregister(self.output_r_conn.fileno())
+        except KeyError:
+            pass
+        try:
+            selector.unregister(self.state_r_conn.fileno())
+        except KeyError:
+            pass
+        try:
+            selector.unregister(self.proc.sentinel)
+        except (KeyError, ValueError):
+            pass
+        self.output_r_conn.close()
+        self.state_r_conn.close()
+        self.control_w_conn.close()
+        self.proc.join()
+        exit_code = self.proc.exitcode
+        assert exit_code is not None, "Finished build should have exit code set"
+        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
+            self.proc.close()
+        return exit_code
 
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
@@ -703,7 +780,7 @@ def start_build(
     log_path: str,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
-) -> PosixChildInfo:
+) -> ChildInfo:
     """Start a new build."""
     # Create pipes for the child's output, state reporting, and control.
     state_r_conn, state_w_conn = Pipe(duplex=False)
@@ -754,9 +831,7 @@ def start_build(
     os.set_blocking(output_r_conn.fileno(), False)
     os.set_blocking(state_r_conn.fileno(), False)
 
-    return PosixChildInfo(
-        proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit
-    )
+    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
 
 
 class BuildInfo:
@@ -1858,7 +1933,7 @@ class NullReportData(ReportData):
         pass
 
 
-def _signal_children(running_builds: Dict[int, PosixChildInfo], sig: signal.Signals) -> None:
+def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
         try:
@@ -1974,7 +2049,7 @@ class PackageInstaller:
         self.pending_expansions: List[str] = []
 
         self.verbose = verbose
-        self.running_builds: Dict[int, PosixChildInfo] = {}
+        self.running_builds: Dict[int, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
@@ -2484,7 +2559,7 @@ class PackageInstaller:
         self.report_data.start_record(spec)
 
     def _handle_child_logs(
-        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading output logs from a child process pipe."""
         try:
@@ -2505,24 +2580,20 @@ class PackageInstaller:
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
 
-    def _drain_child_output(
-        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
-    ) -> None:
+    def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         r_fd = child_info.output_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_logs(r_fd, child_info, selector)
 
-    def _drain_child_state(
-        self, child_info: PosixChildInfo, selector: selectors.BaseSelector
-    ) -> None:
+    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
         r_fd = child_info.state_r_conn.fileno()
         while r_fd in selector.get_map():
             self._handle_child_state(r_fd, child_info, selector)
 
     def _handle_child_state(
-        self, r_fd: int, child_info: PosixChildInfo, selector: selectors.BaseSelector
+        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
     ) -> None:
         """Handle reading state updates from a child process pipe."""
         try:

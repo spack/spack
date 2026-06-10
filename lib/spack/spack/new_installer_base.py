@@ -15,9 +15,7 @@ import selectors
 import sys
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
 
-import spack.database
 import spack.spec
-import spack.util.lock
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
@@ -114,25 +112,6 @@ class BaseTerminalState(abc.ABC):
 
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 32768
-
-
-class DatabaseAction:
-    """Base class for objects that need to be persisted to the database."""
-
-    __slots__ = ("spec", "prefix_lock")
-
-    spec: spack.spec.Spec
-    prefix_lock: Optional[spack.util.lock.Lock]
-
-    def save_to_db(self, db: spack.database.Database) -> None: ...
-
-    def release_prefix_lock(self) -> None:
-        if self.prefix_lock is not None:
-            try:
-                self.prefix_lock.release_write()
-            except Exception:
-                pass
-        self.prefix_lock = None
 
 
 class FdInfo:
