@@ -94,7 +94,12 @@ if sys.platform == "win32":
 else:
     from spack.new_installer_posix import PosixExitNotifier as ExitNotifier
     from spack.new_installer_posix import PosixJobServer as JobServer
-    from spack.new_installer_posix import PosixTee
+    from spack.new_installer_posix import (
+        PosixTee,
+        make_state_stream,
+        read_connection,
+        write_connection,
+    )
     from spack.new_installer_posix import PosixTerminalState as TerminalState
 
 if TYPE_CHECKING:
@@ -468,7 +473,7 @@ def worker_function(
     tee = PosixTee(echo_control, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
-    state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -974,7 +979,7 @@ class BuildStatus:
         if self.verbose and not self.tracked_build_id and control_w_conn is not None:
             self.tracked_build_id = spec.dag_hash()
             try:
-                os.write(control_w_conn.fileno(), b"1")
+                write_connection(control_w_conn, b"1")
             except OSError:
                 pass
 
@@ -1003,7 +1008,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -1068,7 +1073,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
 
@@ -1100,7 +1105,7 @@ class BuildStatus:
             try:
                 conn = new_build.control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"1")
+                    write_connection(conn, b"1")
             except (KeyError, OSError):
                 pass
 
@@ -2183,9 +2188,9 @@ class PackageInstaller:
                         # Child output (logs and state updates)
                         child_info = self.running_builds[data.pid]
                         if data.name == "output":
-                            self._handle_child_logs(key.fd, child_info, selector)
+                            self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(key.fd, child_info, selector)
+                            self._handle_child_state(child_info, selector)
                         elif data.name == "sentinel":
                             finished_pids.append(data.pid)
                     elif data == "stdin":
@@ -2580,68 +2585,69 @@ class PackageInstaller:
         )
         self.report_data.start_record(spec)
 
-    def _handle_child_logs(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
-    ) -> None:
-        """Handle reading output logs from a child process pipe."""
+    def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
+        """Handle reading output logs from a child process pipe. Returns False once the channel
+        has reached EOF and was unregistered, True while it remains open."""
+        conn = child_info.output_r_conn
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(conn, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
-            return
+            return True
         except OSError:
             data = None
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(conn)
+            except (KeyError, OSError):
                 pass
-            return
+            return False
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
+        return True
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        r_fd = child_info.output_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_logs(r_fd, child_info, selector)
+        while self._handle_child_logs(child_info, selector):
+            pass
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
-        r_fd = child_info.state_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_state(r_fd, child_info, selector)
+        # Must drain before child.close() to consume any remaining data before bridges close.
+        while self._handle_child_state(child_info, selector):
+            pass
 
-    def _handle_child_state(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
-    ) -> None:
-        """Handle reading state updates from a child process pipe."""
+    def _handle_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
+        """Handle reading state updates from a child process pipe. Returns False once the channel
+        has reached EOF and was unregistered, True while it remains open."""
+        conn = child_info.state_r_conn
+        fd = conn.fileno()
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(conn, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
-            return
+            return True
         except OSError:
             data = None
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(conn)
+            except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(r_fd, None)
-            return
+            self.state_buffers.pop(fd, None)
+            return False
 
         # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(r_fd, "") + data.decode(errors="replace")
+        buffer = self.state_buffers.get(fd, "") + data.decode(errors="replace")
         lines = buffer.split("\n")
 
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[r_fd] = lines.pop()
+        self.state_buffers[fd] = lines.pop()
 
         for line in lines:
             if not line:
@@ -2658,6 +2664,8 @@ class PackageInstaller:
                 )
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+
+        return True
 
 
 class BinaryCacheMiss(spack.error.SpackError):
