@@ -2228,6 +2228,7 @@ class PackageInstaller:
                     for child in self.running_builds.values():
                         child.proc.terminate()
                     self.pending_builds.clear()
+                    self.pending_expansions.clear()
 
                 if stdin_ready and stdin_reader is not None:
                     for char in stdin_reader.read():
