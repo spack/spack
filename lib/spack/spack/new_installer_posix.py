@@ -445,3 +445,16 @@ def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
         return read_fd, write_fd
     except OSError:
         return None
+
+
+def make_state_stream(state: Connection) -> io.TextIOWrapper:
+    """Wrap the write end of the state Pipe as a line-buffered text stream."""
+    return os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+
+
+def read_connection(key: selectors.SelectorKey, max_size: int = 4096) -> bytes:
+    return os.read(key.fd, max_size)
+
+
+def write_connection(conn: Connection, data: bytes) -> None:
+    os.write(conn.fileno(), data)
