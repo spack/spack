@@ -154,6 +154,7 @@ def test_load_first(shell, install_mockery, mock_fetch, mock_archive, mock_packa
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that spack load prints an error message without a shell."""
     install("--fake", "mpileaks")
+    os.environ["SPACK_SHELL"] = ""
 
     out = load("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out

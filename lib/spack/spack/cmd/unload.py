@@ -82,15 +82,15 @@ def unload(parser, args):
     else:
         specs = spack.store.STORE.db.query(hashes=hashes)
 
-    if not args.shell:
+    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
+
+    if not shell:
         specs_str = " ".join(args.specs) or "SPECS"
 
         spack.cmd.common.shell_init_instructions(
             "spack unload", "    eval `spack unload {sh_arg}` %s" % specs_str
         )
         return 1
-
-    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
 
     for spec in specs:
         commands = ""

@@ -91,14 +91,14 @@ def load(parser, args):
         spack.cmd.disambiguate_spec(spec, env, first=args.load_first) for spec in constraint_specs
     ]
 
-    if not args.shell:
+    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
+
+    if not shell:
         specs_str = " ".join(str(s) for s in constraint_specs) or "SPECS"
         spack.cmd.common.shell_init_instructions(
             "spack load", f"    eval `spack load {{sh_arg}} {specs_str}`"
         )
         return 1
-
-    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
 
     for spec in specs:
         commands = ""
