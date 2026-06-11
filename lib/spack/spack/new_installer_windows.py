@@ -5,6 +5,7 @@
 """Windows-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
 import ctypes
+import functools
 import io
 import msvcrt
 import os
@@ -21,7 +22,7 @@ from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
     ProcessExitNotifier,
-    StdinReaderBase,
+    StdinReader,
     Tee,
 )
 
@@ -36,21 +37,6 @@ ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
 WIN_STD_OUTPUT_HANDLE = -11
 WIN_STD_ERROR_HANDLE = -12
-
-
-class WindowsStdinReader(StdinReaderBase):
-    """Non-blocking stdin reader for Windows using socket.recv() on the stdin socketpair."""
-
-    def __init__(self, fd: int, sock: socket.socket) -> None:
-        super().__init__()
-        self.fd = fd
-        self.sock = sock
-
-    def read(self) -> str:
-        try:
-            return self._decode(self.sock.recv(1024))
-        except OSError:
-            return ""
 
 
 class WindowsTerminalState(BaseTerminalState):
@@ -100,8 +86,8 @@ class WindowsTerminalState(BaseTerminalState):
         self.sigwinch_r, self.sigwinch_w = socket.socketpair()
         self.sigwinch_r.setblocking(False)
 
-    def create_stdin_reader(self) -> WindowsStdinReader:
-        return WindowsStdinReader(self.stdin_r.fileno(), sock=self.stdin_r)
+    def create_stdin_reader(self) -> StdinReader:
+        return StdinReader(functools.partial(self.stdin_r.recv, 1024))
 
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout

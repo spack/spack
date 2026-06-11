@@ -5,6 +5,7 @@
 """POSIX-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
 import fcntl
+import functools
 import io
 import os
 import re
@@ -27,26 +28,12 @@ from spack.new_installer_base import (
     BaseTerminalState,
     JobServerBase,
     ProcessExitNotifier,
-    StdinReaderBase,
+    StdinReader,
     Tee,
 )
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
-
-
-class PosixStdinReader(StdinReaderBase):
-    """Non-blocking stdin reader for POSIX"""
-
-    def __init__(self, fd: int) -> None:
-        super().__init__()
-        self.fd = fd
-
-    def read(self) -> str:
-        try:
-            return self._decode(os.read(self.fd, 1024))
-        except OSError:
-            return ""
 
 
 class PosixTerminalState(BaseTerminalState):
@@ -71,8 +58,8 @@ class PosixTerminalState(BaseTerminalState):
         self.sigwinch_r = -1
         self.sigwinch_w = -1
 
-    def create_stdin_reader(self) -> PosixStdinReader:
-        return PosixStdinReader(sys.stdin.fileno())
+    def create_stdin_reader(self) -> StdinReader:
+        return StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
 
     def setup(self) -> None:
         """Set cbreak mode, register stdin and signal pipes in the selector."""

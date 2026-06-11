@@ -11,6 +11,7 @@ if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
 
+import functools
 import io
 import os
 from multiprocessing import Pipe
@@ -18,7 +19,12 @@ from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
 from spack.new_installer import BuildStatus
-from spack.new_installer_posix import PosixStdinReader as StdinReader
+from spack.new_installer_base import StdinReader
+
+
+def _fd_reader(fd: int) -> StdinReader:
+    """StdinReader reading from a raw fd, as PosixTerminalState.create_stdin_reader does."""
+    return StdinReader(functools.partial(os.read, fd, 1024))
 
 
 class MockConnection:
@@ -1490,7 +1496,7 @@ class TestStdinReader:
     def test_basic_ascii(self):
         r, w = os.pipe()
         try:
-            reader = StdinReader(r)
+            reader = _fd_reader(r)
             os.write(w, b"abc")
             assert reader.read() == "abc"
         finally:
@@ -1500,7 +1506,7 @@ class TestStdinReader:
     def test_ansi_stripping(self):
         r, w = os.pipe()
         try:
-            reader = StdinReader(r)
+            reader = _fd_reader(r)
             os.write(w, b"hello\x1b[Aworld\x1b[B!")
             assert reader.read() == "helloworld!"
         finally:
@@ -1510,7 +1516,7 @@ class TestStdinReader:
     def test_multibyte_utf8(self):
         r, w = os.pipe()
         try:
-            reader = StdinReader(r)
+            reader = _fd_reader(r)
             encoded = "é".encode("utf-8")  # 0xc3 0xa9
             os.write(w, encoded[:1])
             # First read: incomplete char, decoder buffers it
@@ -1526,5 +1532,5 @@ class TestStdinReader:
         r, w = os.pipe()
         os.close(w)
         os.close(r)
-        reader = StdinReader(r)
+        reader = _fd_reader(r)
         assert reader.read() == ""

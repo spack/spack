@@ -32,15 +32,19 @@ else:
 OUTPUT_BUFFER_SIZE = 32768
 
 
-class StdinReaderBase:
-    """Base class for platform-specific non-blocking stdin reading with UTF-8 decoding.
+class StdinReader:
+    """Non-blocking stdin reading with UTF-8 decoding, on top of a platform-specific function
+    that reads raw bytes.
 
-    The input is the backing file descriptor for stdin (instead of the TextIOWrapper) to
-    avoid double buffering issues: the event loop triggers when the fd is ready to read, and if we
-    do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
-    internally, which the event loop is not aware of, and user input doesn't come through."""
+    Raw bytes are read from the backing file descriptor or socket for stdin (instead of the
+    TextIOWrapper) to avoid double buffering issues: the event loop triggers when the fd is ready
+    to read, and if we do a partial read from the TextIOWrapper, it will likely drain the fd and
+    buffer the remainder internally, which the event loop is not aware of, and user input doesn't
+    come through."""
 
-    def __init__(self) -> None:
+    def __init__(self, read_raw: Callable[[], bytes]) -> None:
+        #: Platform-specific function that reads available raw bytes from stdin
+        self.read_raw = read_raw
         #: Handle multi-byte UTF-8 characters
         self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         #: For stripping out arrow and navigation keys
@@ -50,7 +54,10 @@ class StdinReaderBase:
         return self.ansi_escape_re.sub("", self.decoder.decode(raw))
 
     def read(self) -> str:
-        raise NotImplementedError
+        try:
+            return self._decode(self.read_raw())
+        except OSError:
+            return ""
 
 
 class BaseTerminalState(abc.ABC):
@@ -77,7 +84,7 @@ class BaseTerminalState(abc.ABC):
         return sys.stdin.isatty()
 
     @abc.abstractmethod
-    def create_stdin_reader(self) -> StdinReaderBase:
+    def create_stdin_reader(self) -> StdinReader:
         pass
 
     @abc.abstractmethod

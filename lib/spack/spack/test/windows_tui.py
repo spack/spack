@@ -9,6 +9,7 @@ into the selector-based event loop.  All tests here use pytest's monkeypatch and
 plain fake objects so that no real Win32 API calls are required.
 """
 
+import functools
 import os
 import selectors
 import shutil
@@ -24,6 +25,7 @@ if sys.platform != "win32":
 from ctypes import wintypes
 
 import spack.new_installer_windows as _niw
+from spack.new_installer_base import StdinReader
 from spack.new_installer_windows import (
     ENABLE_ECHO_INPUT,
     ENABLE_EXTENDED_FLAGS,
@@ -32,7 +34,6 @@ from spack.new_installer_windows import (
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     WindowsTerminalState,
 )
-from spack.new_installer_windows import WindowsStdinReader as StdinReader
 
 
 class _FakeSelector:
@@ -468,7 +469,7 @@ class TestStdinReaderSocketPath:
         r, w = socket.socketpair()
         # Keep blocking so recv() returns data immediately, mirroring production behaviour
         # where read() is only called after the selector has already signalled data ready.
-        reader = StdinReader(r.fileno(), sock=r)
+        reader = StdinReader(functools.partial(r.recv, 1024))
         return reader, r, w
 
     def test_basic_ascii_via_socket(self):

@@ -83,7 +83,7 @@ from spack.new_installer_base import (
     IpcChannel,
     JobServerBase,
     ProcessExitNotifier,
-    StdinReaderBase,
+    StdinReader,
 )
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
@@ -2133,7 +2133,7 @@ class PackageInstaller:
 
         # Set up terminal handling (cbreak, signals, stdin registration)
         terminal: Optional[BaseTerminalState] = None
-        stdin_reader: Optional[StdinReaderBase] = None
+        stdin_reader: Optional[StdinReader] = None
         if TerminalState.stdin_is_interactive():
             terminal = TerminalState(
                 selector,
