@@ -869,7 +869,15 @@ class TryReadTransaction(ReadTransaction):
             ...
     """
 
-    _acquired = False
+    def __init__(
+        self,
+        lock: Lock,
+        acquire: Optional[Callable[[], None]] = None,
+        release: Optional[ExitFnType] = None,
+        timeout: Optional[float] = None,
+    ) -> None:
+        super().__init__(lock, acquire=acquire, release=release, timeout=timeout)
+        self._acquired = False
 
     def __enter__(self) -> bool:
         # The acquire function must only run on the outermost acquisition
@@ -902,7 +910,15 @@ class TryWriteTransaction(WriteTransaction):
             ...
     """
 
-    _acquired = False
+    def __init__(
+        self,
+        lock: Lock,
+        acquire: Optional[Callable[[], None]] = None,
+        release: Optional[ExitFnType] = None,
+        timeout: Optional[float] = None,
+    ) -> None:
+        super().__init__(lock, acquire=acquire, release=release, timeout=timeout)
+        self._acquired = False
 
     def __enter__(self) -> bool:
         # The acquire function must only run on the outermost acquisition
