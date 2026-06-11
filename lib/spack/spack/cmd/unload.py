@@ -113,7 +113,11 @@ def unload(parser, args):
                 except Exception as err:
                     tty.die(f"Error writing to {unload_script_path}\n{err}")
 
-            source = "." if shell == "sh" else "source"
-            commands = f"{source} {unload_script_path}"
+            if shell in ("csh", "fish"):
+                commands = f"source {unload_script_path}\n"
+            elif shell == "bat":
+                commands = f"call {unload_script_path}\n"
+            else:  # sh, pwsh
+                commands = f". {unload_script_path}\n"
 
         sys.stdout.write(commands)
