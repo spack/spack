@@ -275,7 +275,8 @@ class WindowsTee(Tee):
 
 def make_state_stream(state: socket.socket) -> io.TextIOWrapper:
     """Wrap the write end of the state socketpair as a line-buffered text stream."""
-    return state.makefile("w", buffering=1, encoding="utf-8", newline="\n")
+    buffer = state.makefile("wb")
+    return io.TextIOWrapper(buffer, encoding="utf-8", newline="\n", line_buffering=True)
 
 
 def read_connection(conn: socket.socket, max_size: int = 4096) -> bytes:
