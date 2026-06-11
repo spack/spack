@@ -101,6 +101,7 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
 
 def test_list_sources_url(config, tmp_path):
     metadata_yaml = tmp_path / "metadata.yaml"
+    absolute_url = str(tmp_path / "bootstrap_cache")
 
     # Relative URL
     metadata = {"type": "install", "description": "test", "info": {"url": "../../bootstrap_cache"}}
@@ -117,7 +118,7 @@ def test_list_sources_url(config, tmp_path):
     assert url == expected
 
     # Absolute URL
-    metadata = {"type": "install", "description": "test", "info": {"url": "/bootstrap_cache"}}
+    metadata = {"type": "install", "description": "test", "info": {"url": absolute_url}}
     with open(metadata_yaml, "w", encoding="utf-8") as f:
         syaml.dump(metadata, f)
     with spack.config.override(
@@ -127,7 +128,7 @@ def test_list_sources_url(config, tmp_path):
         output = _bootstrap("list")
     match = re.search(r"url:(.+)", output)
     url = match.group(1).strip()
-    assert url == os.path.abspath("/bootstrap_cache")
+    assert url == absolute_url
 
 
 def test_list_sources(config):
