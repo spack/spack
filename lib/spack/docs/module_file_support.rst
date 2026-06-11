@@ -62,7 +62,7 @@ The table below summarizes the essential information associated with the differe
 
 
 +----------+-------------------+-------------------------+--------------------------------------------------+------------------+
-|          | Default           | Default root directory  | Default template file                            | Compatible tools |
+| Language | Default           | Default root directory  | Default template file                            | Compatible tools |
 |          | hierarchical mode |                         |                                                  |                  |
 +==========+===================+=========================+==================================================+==================+
 | ``Tcl``  | non-hierarchical  | ``share/spack/modules`` | ``share/spack/templates/modules/modulefile.tcl`` | Environment      |
@@ -70,6 +70,28 @@ The table below summarizes the essential information associated with the differe
 +----------+-------------------+-------------------------+--------------------------------------------------+------------------+
 | ``Lua``  | hierarchical      | ``share/spack/lmod``    | ``share/spack/templates/modules/modulefile.lua`` | Lmod             |
 +----------+-------------------+-------------------------+--------------------------------------------------+------------------+
+
+.. _flat-vs-hierarchical:
+
+Flat and hierarchical module files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In **flat** (non-hierarchical) mode, all module files are installed in a single directory.
+Default settings are such that:
+
+* Each module name encodes the package version, compiler, and a hash to distinguish builds with different configurations.
+* Every installed package has a visible module, and dependencies are made available through :ref:`autoloading <autoloading-dependencies>`.
+
+The naming scheme can be customized as the later :ref:`modules-projections` section shows.
+
+In **hierarchical** mode, module files are organized into layers: ``Core``, ``Compiler``, and optionally additional layers such as ``mpi``, ``lapack``, or ``python``.
+Loading a compiler module extends ``MODULEPATH`` to reveal the packages built with that compiler.
+Similarly, loading an MPI module reveals the MPI-dependent packages, and so on.
+Users are therefore only offered packages that are coherent with their loaded environment.
+
+Flat mode is the default for ``tcl``, while hierarchical mode is the default for ``lmod``, but either generator supports either mode.
+Set ``hierarchical: true`` under the ``tcl`` key to enable hierarchical Tcl modules, or ``hierarchical: false`` under the ``lmod`` key to generate flat Lua modules.
+See :ref:`hierarchical-modules` for the full configuration options and tool-version requirements.
 
 
 Spack ships with sensible defaults for the generation of module files, but you can customize many aspects of it to accommodate package or site specific needs.
@@ -425,18 +447,24 @@ When specifying module names by projection with hierarchical mode enabled, we re
    For Environment Modules versions prior to 4.2, it is important to express the conflict on both module files conflicting with each other.
 
 
-Module files can be organized in a hierarchical way.
-This is the default when ``lmod`` is activated and it can be enabled for ``tcl`` with ``hierarchical: true``.
-The hierarchy always contains the ``Core`` and ``Compiler`` layers, but can be extended to include any package or virtual package in Spack.
-A case that could be useful in practice is for instance:
+The default projection for module files differs by mode.
+When hierarchical mode is enabled the default is ``{name}/{version}``; in flat mode it is ``{name}/{version}-{compiler.name}-{compiler.version}``.
+See :ref:`hierarchical-modules` for configuration details.
+
+.. _hierarchical-modules:
+
+Hierarchical module files
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``hierarchy``, ``core_compilers``, and ``core_specs`` keys configure which layers the hierarchy contains and which packages are placed in the ``Core`` layer.
+The hierarchy always contains at least the ``Core`` and ``Compiler`` layers, but can be extended to include any virtual package in Spack.
+
+A typical ``lmod`` configuration looks like this:
 
 .. code-block:: yaml
 
    modules:
      default:
-       enable:
-       - lmod
-       - tcl
        lmod:
          core_compilers:
          - "gcc@13"
@@ -446,6 +474,13 @@ A case that could be useful in practice is for instance:
          - "mpi"
          - "lapack"
          - "python"
+
+For ``tcl``, hierarchical mode must be explicitly enabled with ``hierarchical: true``:
+
+.. code-block:: yaml
+
+   modules:
+     default:
        tcl:
          hierarchical: true
          core_compilers:
@@ -457,10 +492,10 @@ A case that could be useful in practice is for instance:
          - "lapack"
          - "python"
 
-that will generate a hierarchy in which the ``python``, ``lapack`` and ``mpi`` layer can be switched independently.
-This allows a site to build the same libraries or applications against different implementations of ``mpi`` and ``lapack``, and with different versions of those implementations and of ``python``, and let the module tool switch safely from among the resulting installs.
+Both configurations generate a hierarchy in which the ``python``, ``lapack`` and ``mpi`` layers can be switched independently.
+A site can build the same libraries or applications against different MPI and LAPACK implementations and different versions of Python, and let the module tool switch safely between the resulting installs.
 
-All packages built with a compiler in ``core_compilers`` and all packages that satisfy a spec in ``core_specs`` will be put in the ``Core`` hierarchy of the module files.
+All packages built with a compiler listed in ``core_compilers``, and all packages that satisfy a spec in ``core_specs``, are placed in the ``Core`` layer.
 
 .. note::
 
@@ -476,11 +511,6 @@ All packages built with a compiler in ``core_compilers`` and all packages that s
 
    For hierarchies that are deeper than three layers ``lmod spider`` may have some issues.
    See `this discussion on the Lmod project <https://github.com/TACC/Lmod/issues/114>`_.
-
-When hierarchical mode is enabled, the default projection for module files is ``{name}/{version}``.
-Otherwise, it is ``{name}/{version}-{compiler.name}-{compiler.version}``.
-
-Conversely, ``lmod`` can be configured to generate flat (non-hierarchical) module files with ``hierarchical: false``.
 
 .. _customize-env-modifications:
 
