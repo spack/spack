@@ -89,10 +89,8 @@ class BaseTerminalState(abc.ABC):
         """Restore input settings and signal handlers. Called before the final UI render."""
         pass
 
-    @abc.abstractmethod
     def teardown_output(self) -> None:
         """Restore output settings. Called after the final UI render."""
-        pass
 
     def teardown(self) -> None:
         self.teardown_input()
@@ -103,22 +101,24 @@ class BaseTerminalState(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def enter_background(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def handle_continue(self) -> None:
-        pass
-
-    @abc.abstractmethod
     def drain_sigwinch(self) -> None:
         """Drain the platform-specific sigwinch notification channel."""
         pass
 
-    @abc.abstractmethod
+    # The methods below are job-control hooks: a platform with suspend/resume support (SIGTSTP/
+    # SIGCONT on POSIX) overrides them to transition between foreground and headless mode. The
+    # defaults are for platforms without job control, where the process never goes headless after
+    # setup().
+
+    def enter_background(self) -> None:
+        pass
+
+    def handle_continue(self) -> None:
+        pass
+
     def should_enter_foreground(self) -> bool:
         """Return True if the process should switch from headless to foreground mode."""
-        pass
+        return False
 
 
 class FdInfo:

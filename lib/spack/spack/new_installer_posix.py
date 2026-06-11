@@ -119,9 +119,6 @@ class PosixTerminalState(BaseTerminalState):
             except Exception as e:
                 spack.llnl.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
 
-    def teardown_output(self) -> None:
-        pass
-
     def _handle_sigtstp(self, signum: int, frame: object) -> None:
         """Restore terminal before suspending, then re-install handler after resume."""
 

@@ -147,19 +147,8 @@ class WindowsTerminalState(BaseTerminalState):
         self.build_status.headless = False
         self.build_status.dirty = True
 
-    def enter_background(self) -> None:
-        if self.stdin_r.fileno() in self.selector.get_map():
-            self.selector.unregister(self.stdin_r)
-        self.build_status.headless = True
-
-    def handle_continue(self) -> None:
-        self.enter_foreground()
-
     def drain_sigwinch(self) -> None:
         self.sigwinch_r.recv(64)
-
-    def should_enter_foreground(self) -> bool:
-        return True
 
     def _input_thread(self) -> None:
         while self._running:

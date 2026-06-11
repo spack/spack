@@ -10,7 +10,6 @@ plain fake objects so that no real Win32 API calls are required.
 """
 
 import os
-import selectors
 import shutil
 import socket
 import sys
@@ -302,16 +301,6 @@ class TestForegroundBackground:
 
         tags = [data for _, _, data in sel.register_calls]
         assert "stdin" not in tags
-
-    def test_enter_background_unregisters_stdin_and_sets_headless(self):
-        """enter_background() unregisters stdin_r and sets headless=True."""
-        state, sel, bs, k32 = _make_state(headless=False)
-        sel._reg[state.stdin_r.fileno()] = (state.stdin_r, selectors.EVENT_READ, "stdin")
-
-        state.enter_background()
-
-        assert sel.unregister_calls
-        assert bs.headless is True
 
 
 class TestInputThread:
