@@ -4,6 +4,7 @@
 
 import argparse
 import copy
+import functools
 import sys
 from typing import List, Optional, Tuple
 
@@ -349,9 +350,11 @@ def _find_query(
         completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
         results = spack.solver.reuse.spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
+            is_reusable=functools.partial(
+                spack.solver.reuse._is_reusable,
+                packages_with_externals=packages_with_externals,
+                local=True,
+            ),
         ).selected_specs()
     elif env:
         all_env_specs = env.all_specs()

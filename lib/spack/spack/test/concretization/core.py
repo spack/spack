@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import functools
 import gzip
 import json
 import os
@@ -50,7 +51,7 @@ from spack.externals import ExternalDependencyError
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import Result
-from spack.solver.reuse import spec_filter_from_packages_yaml
+from spack.solver.reuse import _is_reusable, spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
@@ -2077,9 +2078,9 @@ spack:
         completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
+            is_reusable=functools.partial(
+                _is_reusable, packages_with_externals=packages_with_externals, local=True
+            ),
         ).selected_specs()
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
@@ -2111,9 +2112,9 @@ spack:
         completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
+            is_reusable=functools.partial(
+                _is_reusable, packages_with_externals=packages_with_externals, local=True
+            ),
         ).selected_specs()
 
         # The variant definition is similar to
@@ -2467,9 +2468,9 @@ packages:
         completion_mode = mutable_config.get("concretizer:externals:completion")
         external_specs = spec_filter_from_packages_yaml(
             external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
+            is_reusable=functools.partial(
+                _is_reusable, packages_with_externals=packages_with_externals, local=True
+            ),
         ).selected_specs()
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
