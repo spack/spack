@@ -435,7 +435,7 @@ def by_path(
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    repository = PATH.ensure_unwrapped()
+    repository = spack.llnl.util.lang.ensure_unwrapped(PATH)
 
     executor: concurrent.futures.Executor
     if max_workers == 1:

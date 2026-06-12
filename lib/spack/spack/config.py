@@ -526,10 +526,6 @@ class Configuration:
         self.scopes = lang.PriorityOrderedMapping()
         self.updated_scopes_by_section: Dict[str, List[ConfigScope]] = defaultdict(list)
 
-    def ensure_unwrapped(self) -> "Configuration":
-        """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
-        return self
-
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
         return next(self.scopes.reversed_values())  # type: ignore

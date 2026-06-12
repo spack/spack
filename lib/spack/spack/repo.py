@@ -58,7 +58,7 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.lang import Singleton, memoized
+from spack.llnl.util.lang import Singleton, ensure_unwrapped, memoized
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -760,10 +760,6 @@ class RepoPath:
         for p in self.python_paths():
             if p in sys.path:
                 sys.path.remove(p)
-
-    def ensure_unwrapped(self) -> "RepoPath":
-        """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
-        return self
 
     def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
@@ -2213,7 +2209,7 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH.ensure_unwrapped()
+                    repo = ensure_unwrapped(PATH)
 
                 # We need to compare the base package name
                 pkg_name = name_from_fullname(name)
