@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import shutil
 
 import pytest
@@ -8,7 +9,6 @@ import pytest
 import spack.cmd.isolate
 import spack.config
 import spack.main
-import spack.paths
 from spack.test.conftest import _create_mock_configuration_scopes
 
 sp_isolate = spack.main.SpackCommand("isolate")
@@ -31,27 +31,24 @@ def mock_pre_isolate_config(mutable_config_with_dir, monkeypatch, tmp_path):
     _, cfg_dir = mutable_config_with_dir
     include_path = cfg_dir / "spack" / "include.yaml"
     isolate_path = cfg_dir / "isolate"
-    user_path = cfg_dir / "user"
+    preserved_include_path = cfg_dir / "spack" / ".isolate.include.yaml"
     # These paths usually live in spack/etc/spack
     monkeypatch.setattr(spack.cmd.isolate, "INCLUDE_PATH", str(include_path))
     monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_PATH", str(isolate_path))
-    # Unit tests shouldn't touch the spack exe
-    monkeypatch.setattr(spack.cmd.isolate, "_shim_user_path_in_exe", lambda _: None)
-    # These are the changes made by _shim_user_path_in_exe
-    monkeypatch.setattr(spack.paths, "user_cache_path", user_path)
-    monkeypatch.setattr(spack.paths, "user_config_path", user_path)
+    monkeypatch.setattr(spack.cmd.isolate, "PRESERVED_INCLUDE_PATH", str(preserved_include_path))
+
     yield cfg_dir, tmp_path
 
 
 def test_isolate_smoke_test(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
-    isolate_scope_path = cfg_dir / "isolate"
     isolated_path = iso_root / "test-isolation"
-    sp_isolate(str(isolated_path))
-    assert isolate_scope_path.exists()
+    sp_isolate("--path", str(isolated_path))
+    assert os.path.exists(spack.cmd.isolate.ISOLATE_PATH)
+    assert os.path.exists(spack.cmd.isolate.PRESERVED_INCLUDE_PATH)
     assert isolated_path.exists()
-    assert (isolate_scope_path / "bootstrap.yaml").exists()
-    assert (isolate_scope_path / "config.yaml").exists()
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_PATH, "bootstrap.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_PATH, "config.yaml"))
     # we reload the config after isolation
     with spack.config.use_configuration(cfg_dir / "spack"):
         assert "isolate" in sp_config("scopes")
@@ -60,7 +57,7 @@ def test_isolate_smoke_test(mock_pre_isolate_config):
 def test_isolate_added_config(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
     isolated_path = iso_root / "test-isolation"
-    sp_isolate(str(isolated_path))
+    sp_isolate("--path", str(isolated_path))
     with spack.config.use_configuration(cfg_dir / "spack"):
         sp_config("add", "config:build_jobs:42")
         assert (isolated_path / "config.yaml").exists()
@@ -76,17 +73,26 @@ config:
 def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
     _, iso_root = mock_pre_isolate_config
     isolated_path = iso_root / "test-isolation"
-    sp_isolate(str(isolated_path))
+    sp_isolate("--path", str(isolated_path))
     with pytest.raises(Exception):
-        sp_isolate(str(isolated_path))
-    sp_isolate("--overwrite", str(isolated_path))
+        sp_isolate("--path", str(isolated_path))
+    sp_isolate("--overwrite", "--path", str(isolated_path))
 
 
 def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
     _, iso_root = mock_pre_isolate_config
     isolated_path1 = iso_root / "test-isolation1"
     isolated_path2 = iso_root / "test-isolation2"
-    sp_isolate(str(isolated_path1))
+    sp_isolate("--path", str(isolated_path1))
     with pytest.raises(Exception):
-        sp_isolate(str(isolated_path2))
-    sp_isolate("--overwrite", str(isolated_path2))
+        sp_isolate("--path", str(isolated_path2))
+    sp_isolate("--overwrite", "--path", str(isolated_path2))
+
+
+def test_isolate_undo(mock_pre_isolate_config):
+    cfg_dir, iso_root = mock_pre_isolate_config
+    isolated_path = iso_root / "test-isolation"
+    sp_isolate("--path", str(isolated_path))
+    sp_isolate("--undo")
+    with spack.config.use_configuration(cfg_dir / "spack"):
+        assert "isolate" not in sp_config("scopes")
