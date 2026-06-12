@@ -787,6 +787,11 @@ class SingletonInstantiationError(Exception):
     """Error that indicates a singleton that cannot instantiate."""
 
 
+def ensure_unwrapped(obj):
+    """Returns the real object behind a Singleton"""
+    return obj.instance if isinstance(obj, Singleton) else obj
+
+
 def get_entry_points(*, group: str):
     """Wrapper for ``importlib.metadata.entry_points``
 
