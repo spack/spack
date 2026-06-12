@@ -73,6 +73,7 @@ from spack.util import tty
 from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control
+from .context import Context
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
@@ -4011,7 +4012,14 @@ class Solver:
     and passes the setup method to the driver, as well.
     """
 
-    def __init__(self, *, specs_factory: Optional[SpecFiltersFactory] = None):
+    def __init__(
+        self,
+        *,
+        context: Optional[Context] = None,
+        specs_factory: Optional[SpecFiltersFactory] = None,
+    ):
+        self.context = context or Context.default()
+
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(init_config=True)
 
@@ -4024,7 +4032,7 @@ class Solver:
         )
         completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(
-            configuration=spack.config.CONFIG,
+            context=self.context,
             external_parser=spack.externals_config.create_external_parser(
                 self.packages_with_externals, completion_mode
             ),

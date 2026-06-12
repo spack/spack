@@ -19,6 +19,7 @@ import spack.binary_distribution
 import spack.config
 import spack.repo
 import spack.store
+from spack.llnl.util.lang import ensure_unwrapped
 
 
 class Context(NamedTuple):
@@ -47,10 +48,10 @@ class Context(NamedTuple):
 
     @classmethod
     def default(cls) -> "Context":
-        """Return a context wrapping the current process globals (the migration shim)."""
+        """Returns a context wrapping the current process globals (the migration shim)."""
         return cls(
-            config=spack.config.CONFIG,
-            store=spack.store.STORE,
-            repo=spack.repo.PATH,
-            binary_index=spack.binary_distribution.BINARY_INDEX,
+            config=ensure_unwrapped(spack.config.CONFIG),
+            store=ensure_unwrapped(spack.store.STORE),
+            repo=ensure_unwrapped(spack.repo.PATH),
+            binary_index=ensure_unwrapped(spack.binary_distribution.BINARY_INDEX),
         )

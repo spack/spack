@@ -33,6 +33,7 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.context
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
@@ -2741,7 +2742,9 @@ packages:
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
-        monkeypatch.setattr(spack.solver.reuse, "_specs_from_mirror", lambda: [reused])
+        monkeypatch.setattr(
+            spack.solver.reuse, "_specs_from_mirror", lambda binary_index: [reused]
+        )
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
         with spack.config.override(
@@ -3346,7 +3349,12 @@ def test_filtering_reused_specs(
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
+        context=spack.solver.context.Context(
+            config=mutable_config,
+            store=spack.store.create(mutable_config),
+            repo=spack.repo.PATH,
+            binary_index=spack.binary_distribution.BINARY_INDEX,
+        ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
     )
@@ -3387,7 +3395,12 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
+        context=spack.solver.context.Context(
+            config=mutable_config,
+            store=spack.store.create(mutable_config),
+            repo=spack.repo.PATH,
+            binary_index=spack.binary_distribution.BINARY_INDEX,
+        ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
     )
@@ -5309,15 +5322,16 @@ packages:
 
 def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
     """Tests that we get a warning when a binary mirror has no index."""
+    binary_index = spack.binary_distribution.BinaryIndexCache()
 
-    def fake_update_cache():
-        spack.binary_distribution.BINARY_INDEX.mirrors_without_index = {"file:///fake-mirror"}
-        return []
+    def fake_update():
+        binary_index.mirrors_without_index = {"file:///fake-mirror"}
 
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", fake_update_cache)
+    monkeypatch.setattr(binary_index, "update", fake_update)
+    monkeypatch.setattr(binary_index, "get_all_built_specs", lambda: [])
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
-        spack.solver.reuse._specs_from_mirror()
+        spack.solver.reuse._specs_from_mirror(binary_index)
 
 
 @pytest.mark.parametrize(

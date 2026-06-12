@@ -11,53 +11,109 @@ import spack.binary_distribution
 import spack.config
 import spack.repo
 import spack.spec
-import spack.store
 import spack.traverse
 import spack.util.path
 from spack.active_environment import active_environment
+from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
+from .context import Context
 from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
     import spack.environment
+    import spack.store
+
+
+class _LazyExternalDbHashes(typing.Container[str]):
+    """Lazily resolve, and memoize, the dag hashes of locally installed cray-manifest
+    ("external-db") specs.
+
+    The local DB is queried at most once, and only if an external local spec is actually
+    checked for reusability -- which happens only when reuse is enabled. This keeps the
+    common reuse-off solve from touching the store DB at all.
+    """
+
+    def __init__(self, store: "spack.store.Store") -> None:
+        self._store = store
+        self._cached: Optional[typing.FrozenSet[str]] = None
+
+    def _resolve(self) -> typing.FrozenSet[str]:
+        if self._cached is None:
+            self._cached = frozenset(
+                s.dag_hash()
+                for s in self._store.db.query_local(
+                    origin="external-db", installed=InstallRecordStatus.ANY
+                )
+            )
+        return self._cached
+
+    def __contains__(self, dag_hash: object) -> bool:
+        return dag_hash in self._resolve()
 
 
 def spec_filter_from_store(
-    configuration, *, packages_with_externals, include, exclude
+    store,
+    *,
+    packages_with_externals,
+    external_db_hashes: typing.Container[str] = frozenset(),
+    include,
+    exclude,
 ) -> SpecFilter:
-    """Constructs a filter that takes the specs from the current store."""
+    """Constructs a filter that takes the specs from the store passed as argument."""
     is_reusable = functools.partial(
-        _is_reusable, packages_with_externals=packages_with_externals, local=True
+        _is_reusable,
+        packages_with_externals=packages_with_externals,
+        local=True,
+        external_db_hashes=external_db_hashes,
     )
-    factory = functools.partial(_specs_from_store, configuration=configuration)
+    factory = functools.partial(_specs_from_store, store=store)
     return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
-def spec_filter_from_buildcache(*, packages_with_externals, include, exclude) -> SpecFilter:
+def spec_filter_from_buildcache(
+    binary_index, *, packages_with_externals, include, exclude
+) -> SpecFilter:
     """Constructs a filter that takes the specs from the configured buildcaches."""
     is_reusable = functools.partial(
         _is_reusable, packages_with_externals=packages_with_externals, local=False
     )
-    return SpecFilter(
-        factory=_specs_from_mirror, is_usable=is_reusable, include=include, exclude=exclude
-    )
+    factory = functools.partial(_specs_from_mirror, binary_index=binary_index)
+    return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
-def spec_filter_from_environment(*, packages_with_externals, include, exclude, env) -> SpecFilter:
+def spec_filter_from_environment(
+    *,
+    packages_with_externals,
+    external_db_hashes: typing.Container[str] = frozenset(),
+    include,
+    exclude,
+    env,
+) -> SpecFilter:
     is_reusable = functools.partial(
-        _is_reusable, packages_with_externals=packages_with_externals, local=True
+        _is_reusable,
+        packages_with_externals=packages_with_externals,
+        local=True,
+        external_db_hashes=external_db_hashes,
     )
     factory = functools.partial(_specs_from_environment, env=env)
     return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
 
 def spec_filter_from_packages_yaml(
-    *, external_parser: ExternalSpecsParser, packages_with_externals, include, exclude
+    *,
+    external_parser: ExternalSpecsParser,
+    packages_with_externals,
+    external_db_hashes: typing.Container[str] = frozenset(),
+    include,
+    exclude,
 ) -> SpecFilter:
     is_reusable = functools.partial(
-        _is_reusable, packages_with_externals=packages_with_externals, local=True
+        _is_reusable,
+        packages_with_externals=packages_with_externals,
+        local=True,
+        external_db_hashes=external_db_hashes,
     )
     return SpecFilter(
         external_parser.all_specs, is_usable=is_reusable, include=include, exclude=exclude
@@ -69,7 +125,12 @@ def _has_runtime_dependencies(spec: spack.spec.Spec) -> bool:
     return spec.original_spec_format() >= 5
 
 
-def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) -> bool:
+def _is_reusable(
+    spec: spack.spec.Spec,
+    packages_with_externals,
+    local: bool,
+    external_db_hashes: typing.Container[str] = frozenset(),
+) -> bool:
     """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
     external, or it's external with matching packages.yaml entry. The latter prevents two issues:
 
@@ -82,6 +143,9 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
     Arguments:
         spec: the spec to check
         packages_with_externals: the pre-processed packages configuration
+        local: whether the spec comes from a local source (the store or an environment)
+        external_db_hashes: dag hashes of locally installed specs imported from a cray manifest
+            (origin "external-db"). Pre-computed once by the caller so this check is O(1).
     """
     if "dev_path" in spec.variants:
         return False
@@ -93,10 +157,8 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
         return _has_runtime_dependencies(spec)
 
     # Cray external manifest externals are always reusable
-    if local:
-        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-        if record and record.origin == "external-db":
-            return True
+    if local and spec.dag_hash() in external_db_hashes:
+        return True
 
     try:
         provided = spack.repo.PATH.get(spec).provided_virtual_names()
@@ -118,21 +180,21 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
     return False
 
 
-def _specs_from_store(configuration):
-    store = spack.store.create(configuration)
+def _specs_from_store(store):
     with store.db.read_transaction():
         return store.db.query(installed=True)
 
 
-def _specs_from_mirror():
+def _specs_from_mirror(binary_index):
     try:
-        specs = spack.binary_distribution.update_cache_and_get_specs()
+        binary_index.update()
+        specs = binary_index.get_all_built_specs()
     except (spack.binary_distribution.FetchCacheError, IndexError):
         # this is raised when no mirrors had indices.
         # TODO: update mirror configuration so it can indicate that the
         # TODO: source cache (or any mirror really) doesn't have binaries.
         return []
-    for url in sorted(spack.binary_distribution.BINARY_INDEX.mirrors_without_index):
+    for url in sorted(binary_index.mirrors_without_index):
         warnings.warn(f"the mirror at {url} cannot be used in concretization (no index found)")
     return specs
 
@@ -162,7 +224,7 @@ class ReusableSpecsSelector:
     def __init__(
         self,
         *,
-        configuration: spack.config.Configuration,
+        context: Context,
         external_parser: ExternalSpecsParser,
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
@@ -170,23 +232,33 @@ class ReusableSpecsSelector:
         # Local import to break circular dependencies
         import spack.environment
 
-        self.configuration = configuration
-        self.store = spack.store.create(configuration)
+        self.configuration = context.config
+        self.store = context.store
+        self.binary_index = context.binary_index
+        # Lazily resolve the hashes of locally installed cray-manifest ("external-db") specs.
+        # The DB is queried at most once, and only if an external local spec is actually
+        # checked -- i.e. only when reuse is enabled. This makes the per-spec reusability
+        # check O(1) membership without touching the store DB on the common reuse-off path.
+        self._external_db_hashes = _LazyExternalDbHashes(self.store)
         self.reuse_strategy = ReuseStrategy.ROOTS
         reuse_yaml = self.configuration.get("concretizer:reuse", False)
 
         self.reuse_sources = []
         if factory is not None:
             is_reusable = functools.partial(
-                _is_reusable, packages_with_externals=packages_with_externals, local=True
+                _is_reusable,
+                packages_with_externals=packages_with_externals,
+                local=True,
+                external_db_hashes=self._external_db_hashes,
             )
-            self.reuse_sources.extend(factory(is_reusable, configuration))
+            self.reuse_sources.extend(factory(is_reusable, self.configuration))
 
         if not isinstance(reuse_yaml, Mapping):
             self.reuse_sources.append(
                 spec_filter_from_packages_yaml(
                     external_parser=external_parser,
                     packages_with_externals=packages_with_externals,
+                    external_db_hashes=self._external_db_hashes,
                     include=[],
                     exclude=[],
                 )
@@ -200,13 +272,17 @@ class ReusableSpecsSelector:
             self.reuse_sources.extend(
                 [
                     spec_filter_from_store(
-                        configuration=self.configuration,
+                        self.store,
                         packages_with_externals=packages_with_externals,
+                        external_db_hashes=self._external_db_hashes,
                         include=[],
                         exclude=[],
                     ),
                     spec_filter_from_buildcache(
-                        packages_with_externals=packages_with_externals, include=[], exclude=[]
+                        self.binary_index,
+                        packages_with_externals=packages_with_externals,
+                        include=[],
+                        exclude=[],
                     ),
                 ]
             )
@@ -232,6 +308,7 @@ class ReusableSpecsSelector:
                         self.reuse_sources.append(
                             spec_filter_from_environment(
                                 packages_with_externals=packages_with_externals,
+                                external_db_hashes=self._external_db_hashes,
                                 include=include,
                                 exclude=exclude,
                                 env=spack.environment.environment_from_name_or_dir(env_dir),
@@ -240,8 +317,9 @@ class ReusableSpecsSelector:
                 elif source["type"] == "local":
                     self.reuse_sources.append(
                         spec_filter_from_store(
-                            self.configuration,
+                            self.store,
                             packages_with_externals=packages_with_externals,
+                            external_db_hashes=self._external_db_hashes,
                             include=include,
                             exclude=exclude,
                         )
@@ -249,6 +327,7 @@ class ReusableSpecsSelector:
                 elif source["type"] == "buildcache":
                     self.reuse_sources.append(
                         spec_filter_from_buildcache(
+                            self.binary_index,
                             packages_with_externals=packages_with_externals,
                             include=include,
                             exclude=exclude,
@@ -263,6 +342,7 @@ class ReusableSpecsSelector:
                         spec_filter_from_packages_yaml(
                             external_parser=external_parser,
                             packages_with_externals=packages_with_externals,
+                            external_db_hashes=self._external_db_hashes,
                             include=include,
                             exclude=exclude,
                         )
@@ -274,6 +354,7 @@ class ReusableSpecsSelector:
                     spec_filter_from_packages_yaml(
                         external_parser=external_parser,
                         packages_with_externals=packages_with_externals,
+                        external_db_hashes=self._external_db_hashes,
                         include=[],
                         exclude=[],
                     )

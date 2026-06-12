@@ -1046,10 +1046,28 @@ def mock_configuration_scopes(configuration_dir):
     yield _create_mock_configuration_scopes(configuration_dir)
 
 
+@contextlib.contextmanager
+def _use_configuration_and_store(*scopes):
+    """Activate config ``scopes`` and reset the store so it re-derives from them.
+
+    The store is derived from the configuration, so swapping the configuration without
+    reinitializing the store leaves the global ``spack.store.STORE`` singleton pinned to a
+    stale, incoherent store that another fixture happened to materialize it against (e.g. the
+    ``database`` fixture's mock store). ``spack.environment`` pairs configuration activation with
+    ``spack.store.reinitialize()`` for the same reason; the test config fixtures must do the same.
+    """
+    with spack.config.use_configuration(*scopes) as cfg:
+        store_token = spack.store.reinitialize()
+        try:
+            yield cfg
+        finally:
+            spack.store.restore(store_token)
+
+
 @pytest.fixture(scope="function")
 def config(mock_configuration_scopes):
     """This fixture activates/deactivates the mock configuration."""
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+    with _use_configuration_and_store(*mock_configuration_scopes) as config:
         yield config
 
 
@@ -1060,7 +1078,7 @@ def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     shutil.copytree(configuration_dir, mutable_dir)
 
     scopes = _create_mock_configuration_scopes(mutable_dir)
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -1073,7 +1091,7 @@ def mutable_empty_config(tmp_path_factory: pytest.TempPathFactory, configuration
         for name in ["site", "system", "user"]
     ]
 
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 

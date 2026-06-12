@@ -27,6 +27,7 @@ import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
+from spack.enums import InstallRecordStatus
 
 pytestmark = [
     pytest.mark.skipif(
@@ -455,8 +456,20 @@ def test_reusable_externals_cray_manifest(temporary_store, manifest_file):
     # Get any imported spec
     spec = temporary_store.db.query_local()[0]
 
+    # The reuse machinery pre-computes the hashes of cray-manifest ("external-db") specs once.
+    external_db_hashes = frozenset(
+        s.dag_hash()
+        for s in temporary_store.db.query_local(
+            origin="external-db", installed=InstallRecordStatus.ANY
+        )
+    )
+
     # Reusable if imported locally
-    assert spack.solver.reuse._is_reusable(spec, packages_with_externals={}, local=True)
+    assert spack.solver.reuse._is_reusable(
+        spec, packages_with_externals={}, local=True, external_db_hashes=external_db_hashes
+    )
 
     # If cray manifest entries end up in a build cache somehow, they are not reusable
-    assert not spack.solver.reuse._is_reusable(spec, packages_with_externals={}, local=False)
+    assert not spack.solver.reuse._is_reusable(
+        spec, packages_with_externals={}, local=False, external_db_hashes=external_db_hashes
+    )
