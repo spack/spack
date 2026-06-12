@@ -35,7 +35,9 @@ def compiler_config_files():
     for scope in configuration.writable_scopes:
         name = scope.name
 
-        from_packages_yaml = CompilerFactory.from_packages_yaml(configuration, scope=name)
+        from_packages_yaml = CompilerFactory.from_packages_yaml(
+            configuration, scope=name, repo=spack.repo.PATH
+        )
         if from_packages_yaml:
             config_files.append(configuration.get_config_filename(name, "packages"))
 
@@ -89,16 +91,26 @@ def select_new_compilers(
     """Given a list of compilers, remove those that are already defined in
     the configuration.
     """
-    compilers_in_config = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+    compilers_in_config = all_compilers_from(
+        configuration=spack.config.CONFIG, scope=scope, repo=spack.repo.PATH
+    )
     return [c for c in candidates if c not in compilers_in_config]
 
 
-def supported_compilers() -> List[str]:
-    """Returns all the currently supported compiler packages"""
-    return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
+def supported_compilers(*, repo: Optional[spack.repo.RepoPath] = None) -> List[str]:
+    """Returns all the currently supported compiler packages.
+
+    Args:
+        repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
+    """
+    if repo is None:
+        repo = spack.repo.PATH
+    return sorted(repo.packages_with_tags(COMPILER_TAG))
 
 
-def all_compilers(scope: Optional[str] = None, init_config: bool = True) -> List[spack.spec.Spec]:
+def all_compilers(
+    *, scope: Optional[str] = None, init_config: bool = True
+) -> List[spack.spec.Spec]:
     """Returns all the compilers from the current global configuration.
 
     Args:
@@ -106,11 +118,12 @@ def all_compilers(scope: Optional[str] = None, init_config: bool = True) -> List
             configuration is used.
         init_config: if True, search for compilers if none is found in configuration.
     """
-    compilers = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+    configuration, repo = spack.config.CONFIG, spack.repo.PATH
+    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     if not compilers and init_config:
-        _init_packages_yaml(spack.config.CONFIG, scope=scope)
-        compilers = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+        _init_packages_yaml(configuration, scope=scope)
+        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     return compilers
 
@@ -142,16 +155,20 @@ def _init_packages_yaml(
 
 
 def all_compilers_from(
-    configuration: spack.config.Configuration, scope: Optional[str] = None
+    configuration: spack.config.Configuration,
+    scope: Optional[str] = None,
+    *,
+    repo: spack.repo.RepoPath,
 ) -> List[spack.spec.Spec]:
-    """Returns all the compilers from the current global configuration.
+    """Returns all the compilers from the given configuration.
 
     Args:
         configuration: configuration to be queried
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
+        repo: package repository used to enumerate compiler packages.
     """
-    compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope)
+    compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope, repo=repo)
     return compilers
 
 
@@ -225,7 +242,7 @@ def compilers_for_arch(
     arch_spec: spack.spec.ArchSpec, *, scope: Optional[str] = None
 ) -> List[spack.spec.Spec]:
     """Returns the compilers that can be used on the input architecture"""
-    compilers = all_compilers_from(spack.config.CONFIG, scope=scope)
+    compilers = all_compilers_from(spack.config.CONFIG, scope=scope, repo=spack.repo.PATH)
     query = f"platform={arch_spec.platform} target=:{arch_spec.target}"
     return [x for x in compilers if x.satisfies(query)]
 
@@ -257,14 +274,17 @@ class CompilerFactory:
 
     @staticmethod
     def from_packages_yaml(
-        configuration: spack.config.Configuration, *, scope: Optional[str] = None
+        configuration: spack.config.Configuration,
+        *,
+        scope: Optional[str] = None,
+        repo: spack.repo.RepoPath,
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
-        compiler_package_names = supported_compilers()
+        compiler_package_names = supported_compilers(repo=repo)
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        external_parser = ExternalSpecsParser(init_external_dicts)
+        external_parser = ExternalSpecsParser(init_external_dicts, repo=repo)
         valid_compiler_specs = []
         for name, external_specs_and_config in external_parser.specs_by_name.items():
             if name not in compiler_package_names:

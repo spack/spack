@@ -148,7 +148,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
     Returns: path to the package repository's git root directory or None
     """
     descriptors = spack.repo.RepoDescriptors.from_config(
-        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
+        lock=spack.repo.package_repository_lock(spack.config.CONFIG), config=spack.config.CONFIG
     )
     path = pathlib.Path(path)
     prefix: Optional[pathlib.Path] = None

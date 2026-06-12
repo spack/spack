@@ -9,6 +9,7 @@ import pytest
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.repo
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.module_cmd
@@ -27,7 +28,9 @@ def call_compiler(exe, *args, **kwargs):
 
 @pytest.fixture()
 def mock_gcc(config):
-    compilers = spack.compilers.config.all_compilers_from(configuration=config)
+    compilers = spack.compilers.config.all_compilers_from(
+        configuration=config, repo=spack.repo.PATH
+    )
     assert compilers, "No compilers available"
 
     compilers.sort(key=lambda x: (x.name == "gcc", x.version))

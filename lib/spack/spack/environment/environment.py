@@ -219,7 +219,9 @@ def validate_env_name(name):
 def set_active_environment(env: Optional["Environment"]) -> None:
     """Set or clear the active environment, keeping the "$env" config substitution in sync."""
     spack.active_environment._active_environment = env
-    spack.config.CONFIG.env_path = env.path if env is not None else None
+    # Write through the singleton: setting the attribute on the wrapper would leave it unset on
+    # the Configuration that code holding an unwrapped reference reads.
+    ensure_unwrapped(spack.config.CONFIG).env_path = env.path if env is not None else None
 
 
 def activate(env, use_env_repo=False):
@@ -1362,8 +1364,12 @@ class Environment:
 
     @property
     def dev_specs(self):
+        return self.dev_specs_from(spack.config.CONFIG)
+
+    def dev_specs_from(self, config: spack.config.Configuration):
+        """Return the develop specs declared in ``config``, keyed by package name."""
         dev_specs = {}
-        dev_config = spack.config.CONFIG.get("develop", {})
+        dev_config = config.get("develop", {})
         for name, entry in dev_config.items():
             local_entry = {"spec": str(entry["spec"])}
             # default path is the spec name

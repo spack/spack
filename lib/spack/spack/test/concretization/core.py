@@ -1,10 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import contextlib
 import gzip
 import json
 import os
 import pathlib
+import pickle
 import platform
 import re
 import sys
@@ -17,12 +19,14 @@ import spack.vendor.jinja2
 
 import spack.archspec
 import spack.binary_distribution
+import spack.caches
 import spack.cmd
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
 import spack.concretize_ui
 import spack.config
+import spack.context_factory
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
@@ -35,11 +39,13 @@ import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.solver.clauses
+import spack.solver.compat
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
 import spack.spec
 import spack.spec_filter
+import spack.store
 import spack.traverse
 import spack.util.file_cache
 import spack.util.filesystem
@@ -47,20 +53,21 @@ import spack.util.hash
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
+import spack.version.git_ref_lookup
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.externals_config import create_external_parser
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
 from spack.solver.asp import Result
-from spack.solver.reuse import spec_filter_from_packages_yaml
+from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
 from spack.test.utilities import RecordingUI
 from spack.util.filesystem import getuid
-from spack.version import Version, VersionList, ver
+from spack.version import GitVersion, Version, VersionList, ver
 
 
 def check_spec(abstract, concrete):
@@ -2105,14 +2112,7 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
         with mutable_config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
@@ -2139,14 +2139,7 @@ spack:
     @pytest.mark.regression("51112")
     def test_variant_penalty(self, mutable_config):
         """Test package preferences during concretization."""
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
 
         # The variant definition is similar to
         #
@@ -2505,14 +2498,7 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            packages_with_externals=packages_with_externals,
-            include=[],
-            exclude=[],
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, specs, reuse=external_specs)
@@ -2799,7 +2785,9 @@ packages:
         # Prepare a mock mirror that returns an old version of dyninst
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
-        monkeypatch.setattr(spack.solver.reuse, "_specs_from_mirror", lambda: [reused])
+        monkeypatch.setattr(
+            spack.solver.reuse, "_specs_from_mirror", lambda binary_index, config: [reused]
+        )
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
         with mutable_config.override(
@@ -3276,6 +3264,7 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3294,6 +3283,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3312,6 +3302,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3331,6 +3322,7 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3342,6 +3334,7 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
         spec,
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3399,13 +3392,16 @@ def test_filtering_reused_specs(
     """Tests that we can select which specs are to be reused, using constraints as filters"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
+    context = spack.context_factory.default()
     packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config
+        mutable_config, repo=context.repo
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        context=context,
+        external_parser=create_external_parser(
+            packages_with_externals, completion_mode, repo=context.repo
+        ),
         packages_with_externals=packages_with_externals,
     )
     specs = selector.reusable_specs(roots)
@@ -3440,13 +3436,16 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     """Tests that we can turn on/off sources of reusable specs"""
     # Assume all specs have a runtime dependency
     mutable_config.set("concretizer:reuse", reuse_yaml)
+    context = spack.context_factory.default()
     packages_with_externals = spack.externals_config.external_config_with_implicit_externals(
-        mutable_config
+        mutable_config, repo=context.repo
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        configuration=mutable_config,
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        context=context,
+        external_parser=create_external_parser(
+            packages_with_externals, completion_mode, repo=context.repo
+        ),
         packages_with_externals=packages_with_externals,
     )
     specs = selector.reusable_specs(["mpileaks"])
@@ -4545,7 +4544,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs, repo=result.repo)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4619,7 +4618,7 @@ def test_concretization_cache_store_skips_spliced_results(mock_packages, use_con
     assert abstract_dep._hash is None
     assert root._hash is None
 
-    result = Result(specs=[Spec("pkg-a")])
+    result = Result(specs=[Spec("pkg-a")], repo=spack.repo.PATH)
     result.answers = [(0, 0, {nid: root})]
 
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
@@ -4685,8 +4684,8 @@ def test_concretization_cache_roundtrip(
     # Assert that we're actually hitting the cache
     cache_fetch = spack.solver.asp.ConcretizationCache.fetch
 
-    def _ensure_cache_hits(self, problem: str, specs):
-        result, statistics = cache_fetch(self, problem, specs)
+    def _ensure_cache_hits(self, problem: str, specs, *, repo):
+        result, statistics = cache_fetch(self, problem, specs, repo=repo)
         assert result, "Expected successful concretization cache hit"
         assert statistics, "Expected statistics to be non null on cache hit"
         return result, statistics
@@ -4733,8 +4732,8 @@ def test_concretization_cache_reapplies_patches_on_hit(
     # as if a new patch directive had been added to the package.
     original_inject = spack.spec._inject_patches_variant
 
-    def inject_with_new_patch(root):
-        original_inject(root)
+    def inject_with_new_patch(root, *, repo):
+        original_inject(root, repo=repo)
         for s in root.traverse():
             if s.name == "patch" and not s.concrete and "patches" in s.variants:
                 existing = list(s.variants["patches"].value)
@@ -4843,11 +4842,11 @@ def test_concretization_cache_removes_corrupt_entries(use_concretization_cache, 
     """A corrupt concretization cache entry is a cache miss and the entry is deleted."""
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
     problem = "corrupt entry test"
-    cache.store(problem, Result(specs=[]), statistics=[])
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=[])
     cache_path = cache._cache_path_from_problem(problem)
     cache_path.write_bytes(corrupt(cache_path.read_bytes()))
 
-    assert cache.fetch(problem, specs=[]) == (None, None)
+    assert cache.fetch(problem, [], repo=spack.repo.PATH) == (None, None)
     assert not cache_path.exists()
 
 
@@ -5226,7 +5225,7 @@ def test_imposed_spec_dependency_duplication(mock_packages: spack.repo.Repo):
     pkg = mock_packages.get_pkg_class("trigger-and-effect-deps")
     setup = spack.solver.asp.SpackSolverSetup()
     setup.gen = spack.solver.asp.ProblemInstanceBuilder()
-    setup.clauses = spack.solver.clauses.SpecClauseGenerator()
+    setup.clauses = spack.solver.clauses.SpecClauseGenerator(repo=spack.repo.PATH)
     setup.package_dependencies_rules(pkg)
     setup.trigger_rules()
     setup.effect_rules()
@@ -5385,15 +5384,16 @@ packages:
 
 def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
     """Tests that we get a warning when a binary mirror has no index."""
+    binary_index = spack.binary_distribution.BinaryIndexCache(config=spack.config.CONFIG)
 
-    def fake_update_cache():
-        spack.binary_distribution.BINARY_INDEX.mirrors_without_index = {"file:///fake-mirror"}
-        return []
+    def fake_update(*, config):
+        binary_index.mirrors_without_index = {"file:///fake-mirror"}
 
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", fake_update_cache)
+    monkeypatch.setattr(binary_index, "update", fake_update)
+    monkeypatch.setattr(binary_index, "get_all_built_specs", lambda: [])
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
-        spack.solver.reuse._specs_from_mirror()
+        spack.solver.reuse._specs_from_mirror(binary_index, spack.config.CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -5425,7 +5425,7 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     A failed cache store must not propagate as a concretization failure -- the cache is an
     optimization, and the concretization that produced ``result`` already succeeded.
     """
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache = spack.solver.asp.ConcretizationCache(root=str(use_concretization_cache))
     problem = "write failure test"
 
     def failing_rename(src, dst):
@@ -5433,8 +5433,8 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
 
     monkeypatch.setattr(spack.util.filesystem, "rename", failing_rename)
 
-    # store() must not raise even though the final rename did
-    cache.store(problem, Result(specs=[]), statistics=[])
+    # store() must not raise even though os.replace did
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)
@@ -5453,14 +5453,14 @@ def test_concretization_cache_fetch_updates_lru_time(use_concretization_cache):
     """
     cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
     problem = "lru update test"
-    cache.store(problem, Result(specs=[]), statistics=["stats"])
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=["stats"])
     cache_path = cache._cache_path_from_problem(problem)
 
     # backdate the entry, then check that a hit brings its mtime back to the present
     old_time = cache_path.stat().st_mtime - 3600
     os.utime(cache_path, (old_time, old_time))
 
-    result, _ = cache.fetch(problem, specs=[])
+    result, _ = cache.fetch(problem, [], repo=spack.repo.PATH)
     assert result is not None
     assert cache_path.stat().st_mtime > old_time + 1800
 
@@ -5480,12 +5480,12 @@ def test_concretization_cache_store_readonly_cache(use_concretization_cache):
     os.chmod(cache.root, 0o555)
     try:
         # existing but read-only cache root
-        cache.store("read-only store test", Result(specs=[]), statistics=[])
+        cache.store("read-only store test", Result(specs=[], repo=spack.repo.PATH), statistics=[])
         assert not cache._cache_path_from_problem("read-only store test").exists()
 
         # missing cache root that can't be created because its parent is read-only
         nested = spack.solver.asp.ConcretizationCache(str(cache.root / "sub"))
-        nested.store("read-only mkdir test", Result(specs=[]), statistics=[])
+        nested.store("read-only mkdir test", Result(specs=[], repo=spack.repo.PATH), statistics=[])
         assert not nested.root.exists()
     finally:
         os.chmod(cache.root, old_mode)
@@ -5500,7 +5500,7 @@ def test_concretization_cache_entries_follow_umask(use_concretization_cache):
     # typical umask for a setgid, group-writable shared cache
     old_umask = os.umask(0o007)
     try:
-        cache.store("umask problem", Result(specs=[]), statistics=[])
+        cache.store("umask problem", Result(specs=[], repo=spack.repo.PATH), statistics=[])
     finally:
         os.umask(old_umask)
 
@@ -5772,3 +5772,330 @@ def test_target_star_concretizes(mock_packages, config):
 def test_solve_kind_from_unify_configuration(unify, expected):
     """Tests the mapping from 'concretizer:unify' to the kind of solve it prescribes."""
     assert spack.concretize.solve_kind(unify) is expected
+
+
+class _UnusableGlobal:
+    """Stands in for a process global that the code under test must not reach for."""
+
+    def __init__(self, name: str) -> None:
+        self._name = name
+
+    def __getattr__(self, item):
+        raise AssertionError(
+            f"{self._name} was read instead of the injected context (attribute {item!r})"
+        )
+
+
+#: Process globals a solve must not reach for, by the SpackContext field that replaces each.
+_CONTEXT_GLOBALS = {
+    "config": (spack.config, "CONFIG"),
+    "repo": (spack.repo, "PATH"),
+    "misc_cache": (spack.caches, "MISC_CACHE"),
+    "store": (spack.store, "STORE"),
+    "binary_index": (spack.binary_distribution, "BINARY_INDEX"),
+}
+
+
+@pytest.fixture()
+def break_globals(monkeypatch):
+    """Returns a context manager making the named process globals raise on any use.
+
+    It is a context manager rather than a plain fixture so a test can break the globals after
+    every other fixture is set up, and restore them before those fixtures are torn down: the
+    database and mock package fixtures use ``spack.repo.PATH`` while tearing down.
+    """
+
+    @contextlib.contextmanager
+    def _break(*names: str):
+        spack.solver.compat.clingo()
+        with monkeypatch.context() as m:
+            for name in names:
+                module, attribute = _CONTEXT_GLOBALS[name]
+                m.setattr(module, attribute, _UnusableGlobal(f"{module.__name__}.{attribute}"))
+            yield
+
+    return _break
+
+
+@pytest.fixture()
+def injected_context(mutable_config, mock_packages_repo):
+    """A context whose repositories are the mock ones, built before any global is broken."""
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    return spack.context_factory.from_config(mutable_config)
+
+
+@pytest.mark.parametrize(
+    "requests,config_settings",
+    [
+        (["pkg-a"], {}),
+        (["mpileaks"], {}),
+        (["mpi"], {}),
+        (["mpileaks"], {"packages:all:require": ["~debug"]}),
+        (["mpileaks"], {"packages:all:require": ["+nonexistent-variant"]}),
+        (
+            ["externaltest"],
+            {
+                "packages:externaltool": {
+                    "externals": [
+                        {"spec": "externaltool@1.0", "prefix": "/path/to/external_tool"}
+                    ],
+                    "buildable": False,
+                }
+            },
+        ),
+        (["mpileaks"], {"concretizer:reuse": True}),
+        (["mpileaks"], {"concretizer:static_analysis": True}),
+        (["git-test-commit@git.main=1.0"], {}),
+    ],
+    ids=[
+        "plain",
+        "dependencies",
+        "virtual-root",
+        "requirement-under-all",
+        "unsatisfiable-requirement-under-all",
+        "externals",
+        "reuse",
+        "static-analysis",
+        "git-version",
+    ],
+)
+def test_solve_never_reads_the_global_repository(
+    break_globals, injected_context, mutable_config, requests, config_settings
+):
+    """A solve driven by an injected context resolves packages through that context's
+    repositories, so breaking the process-wide ``spack.repo.PATH`` does not affect it."""
+    for key, value in config_settings.items():
+        mutable_config.set(key, value)
+
+    with break_globals("repo"):
+        result = spack.solver.asp.Solver(context=injected_context).solve(
+            [Spec(x) for x in requests]
+        )
+
+        # Inspect the lazily computed results to trigger repo lookup
+        assert result.specs and all(s.concrete for s in result.specs)
+        assert result.specs_by_input is not None
+        assert result.unsolved_specs == []
+
+
+def test_solve_in_rounds_never_reads_the_global_repository(break_globals, injected_context):
+    """``solve_in_rounds`` yields between rounds, and must not reach the global either."""
+    with break_globals("repo"):
+        solver = spack.solver.asp.Solver(context=injected_context)
+        results = list(solver.solve_in_rounds([Spec("mpileaks"), Spec("libelf")]))
+
+        assert results and any(r.specs for r in results)
+        for result in results:
+            assert all(s.concrete for s in result.specs)
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_explicit_splice_never_reads_the_global_repository(
+    break_globals, mutable_config, database_mutable_config, mock_packages_repo, transitive
+):
+    """Tests that splicing resolves virtuals to decide what matches, and must do so through the
+    injected context's repositories.
+    """
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    mpich_spec = database_mutable_config.query("mpich")[0]
+    mutable_config.set(
+        "concretizer",
+        {
+            "splice": {
+                "explicit": [
+                    {
+                        "target": "mpi",
+                        "replacement": f"/{mpich_spec.dag_hash()}",
+                        "transitive": transitive,
+                    }
+                ]
+            }
+        },
+    )
+    context = spack.context_factory.from_config(mutable_config)
+
+    with break_globals("repo"):
+        result = spack.solver.asp.Solver(context=context).solve([Spec("hdf5 ^zmpi")])
+
+        assert result.specs
+        assert result.specs[0].satisfies(f"^mpich@{mpich_spec.version}", repo=context.repo)
+
+
+def test_reuse_from_store_never_reads_the_global_repository(
+    break_globals, mutable_config, database_mutable_config, mock_packages_repo
+):
+    """Tests that filtering reusable specs out of the store matches them against the injected
+    repositories, including when the match has to resolve a virtual.
+    """
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    mutable_config.set("concretizer:reuse", True)
+    context = spack.context_factory.from_config(mutable_config)
+
+    with break_globals("repo"):
+        result = spack.solver.asp.Solver(context=context).solve([Spec("mpileaks ^mpi")])
+
+        assert result.specs and result.specs[0].concrete
+
+
+@pytest.mark.parametrize(
+    "requests,config_settings",
+    [
+        (["pkg-a"], {}),
+        (["mpileaks"], {}),
+        (["mpileaks"], {"concretizer:reuse": True}),
+        (["mpileaks"], {"packages:all:require": ["~debug"]}),
+    ],
+    ids=["plain", "dependencies", "reuse", "requirement-under-all"],
+)
+def test_solve_never_reads_the_global_config_or_misc_cache(
+    break_globals, injected_context, mutable_config, requests, config_settings
+):
+    """A solve reads its configuration and its caches from the injected context, so breaking
+    the process-wide ``spack.config.CONFIG`` and ``spack.caches.MISC_CACHE`` does not affect
+    it.
+    """
+    for key, value in config_settings.items():
+        mutable_config.set(key, value)
+
+    with break_globals("config", "misc_cache"):
+        result = spack.solver.asp.Solver(context=injected_context).solve(
+            [Spec(x) for x in requests]
+        )
+
+        assert result.specs and all(s.concrete for s in result.specs)
+        assert result.unsolved_specs == []
+
+
+@pytest.mark.parametrize(
+    "request_str,config_settings",
+    [
+        ("mpileaks", {}),
+        # Static analysis evaluates ``can_be_installed`` for ``pkg-b``, which, being
+        # non-buildable, falls through to a buildcache query. Concretizing with ``foobar=baz``
+        # keeps pkg-b out of the result, so pruning it does not make the solve unsatisfiable.
+        (
+            "pkg-a foobar=baz",
+            {
+                "concretizer:static_analysis": True,
+                "concretizer:reuse": True,
+                "packages:pkg-b:buildable": False,
+            },
+        ),
+    ],
+    ids=["plain", "static-analysis"],
+)
+def test_solve_reads_no_context_global_at_all(
+    break_globals, injected_context, mutable_config, request_str, config_settings
+):
+    """Tests that solve does not read any of the global carried by the context."""
+    for key, value in config_settings.items():
+        mutable_config.set(key, value)
+
+    with break_globals(*_CONTEXT_GLOBALS):
+        result = spack.solver.asp.Solver(context=injected_context).solve([Spec(request_str)])
+
+        assert result.specs and result.specs[0].concrete
+
+
+def test_buildcache_query_never_reads_the_global_config(break_globals, injected_context):
+    """Querying an injected buildcache index reads the injected configuration."""
+    with break_globals(*_CONTEXT_GLOBALS):
+        query = spack.binary_distribution.BinaryCacheQuery(
+            True, index=injected_context.binary_index, config=injected_context.config
+        )
+
+        assert query(Spec("pkg-a")) == []
+
+
+def test_concretization_cache_never_reads_the_global_config(
+    break_globals, mutable_mock_env_path, mutable_config, mock_packages
+):
+    """The concretization cache expands ``$env`` in its configured path, which is the one
+    place a solve used to reach for the global configuration to find the active environment.
+    """
+    ev.create("test_conc_cache_globals")
+
+    with ev.read("test_conc_cache_globals") as env:
+        mutable_config.set(
+            "concretizer:concretization_cache",
+            {"enable": True, "url": "$env/concretization", "entry_limit": 10},
+        )
+        context = spack.context_factory.from_config(spack.config.CONFIG)
+
+        with break_globals("config", "misc_cache"):
+            solver = spack.solver.asp.Solver(context=context)
+            first = solver.solve([Spec("pkg-a")])
+            second = solver.solve([Spec("pkg-a")])
+
+        assert first.specs and second.specs
+        assert first.specs[0] == second.specs[0]
+        # The cache is configured under "$env", so it is written inside the environment.
+        assert os.path.isdir(os.path.join(env.path, "concretization"))
+        assert not os.path.exists(os.path.join(env.path, "$env"))
+
+
+def test_git_ref_lookup_uses_the_injected_cache_and_config(
+    break_globals, injected_context, monkeypatch, tmp_path
+):
+    """The ref lookup keeps its metadata in a cache and hands its git settings to the fetcher.
+    Both come from the injected context rather than the process-wide singletons.
+    """
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", "https://example.com/repo.git", raising=False
+    )
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "git_metadata"))
+    lookup = spack.version.git_ref_lookup.GitRefLookup(
+        "git-test-commit",
+        repo=injected_context.repo,
+        misc_cache=cache,
+        config=injected_context.config,
+    )
+
+    with break_globals("config", "misc_cache", "repo"):
+        lookup.data = {"deadbeef": ("1.0", 0)}
+        lookup.save()
+        lookup.data = {}
+        lookup.load_data()
+        fetcher_config = lookup.fetcher.config
+
+    assert lookup.data == {"deadbeef": ["1.0", 0]}
+    assert fetcher_config is injected_context.config
+
+
+def test_develop_specs_never_read_the_global_config(
+    break_globals, mutable_mock_env_path, mutable_config, mock_packages, tmp_path
+):
+    """Develop specs are declared in configuration and their paths are expanded against it,
+    so a solve has to read both from the injected context."""
+    develop_dir = tmp_path / "build"
+    develop_dir.mkdir()
+    ev.create("test_develop_globals")
+
+    with ev.read("test_develop_globals"):
+        mutable_config.set(
+            "develop", {"develop-test": {"spec": "develop-test@develop", "path": str(develop_dir)}}
+        )
+        context = spack.context_factory.from_config(spack.config.CONFIG)
+
+        with break_globals("config", "misc_cache"):
+            result = spack.solver.asp.Solver(context=context).solve([Spec("develop-test@develop")])
+
+        assert result.specs
+        assert str(develop_dir) in result.specs[0].variants["dev_path"]
+
+
+def test_concrete_git_version_carries_no_ref_lookup(mock_packages, config):
+    """The solver resolves a git version to a standard one, so the concrete spec needs no ref
+    lookup to report it. Nothing is attached, and pickling the spec does not drag along the
+    repositories, caches and configuration a lookup would hold.
+    """
+    spec = spack.concretize.concretize_one("git-test-commit@git.main=1.0")
+
+    git_versions = [x.version for x in spec.traverse() if isinstance(x.version, GitVersion)]
+    assert git_versions, "the concretized spec has no git version to check"
+    # Reading the public ref_lookup property would perform the lookup it is meant to avoid.
+    assert all(x._ref_lookup is None for x in git_versions)
+
+    # The version is reported without one, here and after crossing a process boundary.
+    assert str(spec.version.ref_version) == "1.0"
+    assert str(pickle.loads(pickle.dumps(spec)).version.ref_version) == "1.0"

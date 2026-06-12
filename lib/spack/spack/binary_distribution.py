@@ -190,15 +190,23 @@ class BinaryIndexCache:
     absolutely necessary.
     """
 
-    def __init__(self, cache_root: Optional[str] = None):
-        self._index_cache_root: str = cache_root or binary_index_location()
+    def __init__(
+        self, cache_root: Optional[str] = None, *, config: spack.config.Configuration
+    ) -> None:
+        """
+        Args:
+            cache_root: directory holding the cached indices. If None, it is derived from
+                ``config``.
+            config: configuration this index cache derives from.
+        """
+        self._index_cache_root: str = cache_root or binary_index_location(config=config)
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = "contents.json"
 
         # a FileCache instance storing copies of remote binary cache indices
         self._index_file_cache: file_cache.FileCache = file_cache.FileCache(
-            self._index_cache_root, enable_lock=spack.config.CONFIG.get("config:locks", True)
+            self._index_cache_root, enable_lock=config.get("config:locks", True)
         )
         self._index_file_cache_initialized = False
 
@@ -331,7 +339,7 @@ class BinaryIndexCache:
             for new_entry in found_list:
                 current_list.add(new_entry.strip_view())
 
-    def update(self, with_cooldown: bool = False) -> None:
+    def update(self, with_cooldown: bool = False, *, config: spack.config.Configuration) -> None:
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -339,13 +347,17 @@ class BinaryIndexCache:
         to confirm it is the same as what is stored locally.  Otherwise, the
         buildcache ``index.json`` and ``index.json.hash`` files are retrieved
         from each configured mirror and stored locally (both in memory and
-        on disk under ``_index_cache_root``)."""
+        on disk under ``_index_cache_root``).
+
+        Args:
+            with_cooldown: skip mirrors whose index was fetched recently (within the TTL).
+            config: configuration to read the mirror list and TTL from."""
         self._init_local_index_cache()
         self.mirrors_without_index = set()
 
         supported_mirror_versions = {
             (m.fetch_url, m.fetch_view): m.supported_layout_versions
-            for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+            for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
         }
 
         # If we have a cached index for a mirror which is no longer configured, remove it
@@ -354,7 +366,9 @@ class BinaryIndexCache:
         # Fetch or update the other indexes
         errors, all_failed = [], True
         for (url, view), versions in supported_mirror_versions.items():
-            result = self._fetch_mirror_index(url, view, versions=versions, cooldown=with_cooldown)
+            result = self._fetch_mirror_index(
+                url, view, versions=versions, cooldown=with_cooldown, config=config
+            )
             if result.error:
                 errors.append(result.error)
 
@@ -382,13 +396,19 @@ class BinaryIndexCache:
             self.regenerate_spec_cache(clear_existing=clear_cache)
 
     def _fetch_mirror_index(
-        self, url: str, view: Optional[str], *, versions: List[int], cooldown: bool
+        self,
+        url: str,
+        view: Optional[str],
+        *,
+        versions: List[int],
+        cooldown: bool,
+        config: spack.config.Configuration,
     ) -> _MirrorIndexResult:
         """Fetches the index of a mirror, using a highest-version first approach, and returning
         after the first success.
         """
         now = time.time()
-        ttl = spack.config.CONFIG.get_config("config").get("binary_index_ttl", 600)
+        ttl = config.get_config("config").get("binary_index_ttl", 600)
         for version in versions:
             meta = MirrorMetadata(url, version, view)
             cache_entry = self._local_index_cache.get(str(meta))
@@ -514,14 +534,19 @@ class BinaryIndexCache:
         return True
 
 
-def binary_index_location():
+def binary_index_location(*, config: spack.config.Configuration):
     """Set up a BinaryIndexCache for remote buildcache dbs in the user's homedir."""
-    cache_root = os.path.join(spack.caches.misc_cache_location(), "indices")
+    cache_root = os.path.join(spack.caches.misc_cache_location(config=config), "indices")
     return spack.config.canonicalize_path(cache_root)
 
 
+def _binary_index() -> BinaryIndexCache:
+    """Build the default binary cache index from the global configuration."""
+    return BinaryIndexCache(config=spack.config.CONFIG)
+
+
 #: Default binary cache index instance
-BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(BinaryIndexCache))
+BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(_binary_index))
 
 
 def compute_hash(data):
@@ -2224,7 +2249,7 @@ def get_mirrors_for_spec(spec: spack.spec.Spec, index_only: bool = False) -> Lis
     return results
 
 
-def update_cache_and_get_specs():
+def update_cache_and_get_specs(index=None, *, config: spack.config.Configuration):
     """
     Get all concrete specs for build caches available on configured mirrors.
     Initialization of internal cache data structures is done as lazily as
@@ -2232,11 +2257,17 @@ def update_cache_and_get_specs():
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
 
+    Args:
+        index: buildcache index to query. If None, the global ``BINARY_INDEX`` is used.
+        config: configuration listing the mirrors to update from.
+
     Raises:
         FetchCacheError
     """
-    BINARY_INDEX.update()
-    return BINARY_INDEX.get_all_built_specs()
+    if index is None:
+        index = BINARY_INDEX
+    index.update(config=config)
+    return index.get_all_built_specs()
 
 
 def load_buildcache_index() -> None:
@@ -2519,15 +2550,19 @@ def download_single_spec(
 class BinaryCacheQuery:
     """Callable object to query if a spec is in a binary cache"""
 
-    def __init__(self, all_architectures):
+    def __init__(
+        self, all_architectures, index=None, *, config: spack.config.Configuration
+    ) -> None:
         """
         Args:
             all_architectures (bool): if True consider all the spec for querying,
                 otherwise restrict to the current default architecture
+            index: buildcache index to query. If None, the global ``BINARY_INDEX`` is used.
+            config: configuration listing the mirrors to query.
         """
         self.all_architectures = all_architectures
 
-        specs = update_cache_and_get_specs()
+        specs = update_cache_and_get_specs(index, config=config)
 
         if not self.all_architectures:
             arch = spack.spec.Spec.default_arch()

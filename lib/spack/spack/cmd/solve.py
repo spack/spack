@@ -10,6 +10,7 @@ import spack
 import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
+import spack.concretize
 import spack.config
 import spack.hash_types as ht
 import spack.package_base
@@ -179,6 +180,7 @@ def solve(parser, args):
     if not specs:
         return
 
+    spack.concretize.ensure_compilers_in_configuration()
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
