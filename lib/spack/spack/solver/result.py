@@ -8,7 +8,7 @@ typed against a result without depending on how it is produced.
 """
 
 import enum
-from typing import Dict, List, NamedTuple
+from typing import Dict, List, NamedTuple, Tuple
 
 import spack.repo
 import spack.spec
@@ -177,17 +177,18 @@ def spec_dict_from_json(data: Dict) -> SpecDict:
 class Result:
     """Result of an ASP solve."""
 
-    def __init__(self, specs):
+    def __init__(self, specs, *, repo: spack.repo.RepoPath):
+        self.repo = repo
         self.satisfiable = None
         self.optimal = None
         self.warnings = None
         self.nmodels = 0
 
         # specs ordered by optimization level
-        self.answers = []
+        self.answers: List[Tuple[List[int], int, SpecDict]] = []
 
         # names of optimization criteria
-        self.criteria = []
+        self.criteria: List[OptimizationCriteria] = []
 
         # Abstract user requests
         self.abstract_specs = specs
@@ -251,17 +252,19 @@ class Result:
             # The specs must be unified to get here, so it is safe to associate any satisfying spec
             # with the input. Multiple inputs may be matched to the same concrete spec
             node = min_dupe_node(pkg=input_spec.name)
-            if spack.repo.PATH.is_virtual(input_spec.name):
+            if self.repo.is_virtual(input_spec.name):
                 providers = [
-                    spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
+                    spec.name
+                    for spec in answer.values()
+                    if self.repo.get(spec).provides(input_spec.name)
                 ]
                 node = min_dupe_node(pkg=providers[0])
             candidate = answer.get(node)
 
-            if candidate and candidate.satisfies(input_spec):
+            if candidate and candidate.satisfies(input_spec, repo=self.repo):
                 self._concrete_specs.append(answer[node])
                 self._concrete_specs_by_input[input_spec] = answer[node]
-            elif candidate and candidate.build_spec.satisfies(input_spec):
+            elif candidate and candidate.build_spec.satisfies(input_spec, repo=self.repo):
                 tty.warn(
                     "explicit splice configuration has caused the concretized spec"
                     f" {candidate} not to satisfy the input spec {input_spec}"
@@ -295,14 +298,14 @@ class Result:
         }
 
     @staticmethod
-    def from_dict(obj: dict, specs: List[spack.spec.Spec]):
+    def from_dict(obj: dict, specs: List[spack.spec.Spec], *, repo: spack.repo.RepoPath):
         """Returns Result object from compatible dictionary, for the given input specs.
 
         The stored abstract specs are troubleshooting metadata and are deliberately not
         deserialized: the caller's input specs are authoritative. This also keeps cache
         entries with unreadable abstract spec data usable.
         """
-        result = Result(specs)
+        result = Result(specs, repo=repo)
         result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
         result.optimal = obj["optimal"]
         result.warnings = obj["warnings"]

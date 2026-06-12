@@ -652,7 +652,9 @@ def mock_binary_index(monkeypatch, tmp_path_factory: pytest.TempPathFactory):
     """
     tmpdir = tmp_path_factory.mktemp("mock_binary_index")
     index_path = tmpdir / "binary_index"
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(index_path))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(index_path), config=spack.config.CONFIG
+    )
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
@@ -1049,10 +1051,21 @@ def mock_configuration_scopes(configuration_dir):
     yield _create_mock_configuration_scopes(configuration_dir)
 
 
+@contextlib.contextmanager
+def _use_configuration_and_store(*scopes):
+    """Activate config scopes and reset the store so it re-derives from them."""
+    with spack.config.use_configuration(*scopes) as cfg:
+        store_token = spack.store.reinitialize()
+        try:
+            yield cfg
+        finally:
+            spack.store.restore(store_token)
+
+
 @pytest.fixture(scope="function")
 def config(mock_configuration_scopes):
     """This fixture activates/deactivates the mock configuration."""
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+    with _use_configuration_and_store(*mock_configuration_scopes) as config:
         yield config
 
 
@@ -1063,7 +1076,7 @@ def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     shutil.copytree(configuration_dir, mutable_dir)
 
     scopes = _create_mock_configuration_scopes(mutable_dir)
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -1076,7 +1089,7 @@ def mutable_empty_config(tmp_path_factory: pytest.TempPathFactory, configuration
         for name in ["site", "system", "user"]
     ]
 
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -2185,7 +2198,7 @@ def inode_cache():
 def brand_new_binary_cache():
     yield
     spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
-        spack.binary_distribution.BinaryIndexCache
+        spack.binary_distribution._binary_index
     )
 
 

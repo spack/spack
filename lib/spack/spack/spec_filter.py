@@ -17,6 +17,7 @@ class SpecFilter:
         is_usable: Callable[[spack.spec.Spec], bool],
         include: List[str],
         exclude: List[str],
+        repo=None,
     ) -> None:
         """
         Args:
@@ -26,20 +27,22 @@ class SpecFilter:
             include: if present, a spec must match at least one entry in the list,
                 to be in the output
             exclude: if present, a spec must not match any entry in the list to be in the output
+            repo: repositories used to match specs. Defaults to the process-wide ones.
         """
         self.factory = factory
         self.is_usable = is_usable
         self.include = include
         self.exclude = exclude
+        self.repo = repo
 
     def is_selected(self, s: spack.spec.Spec) -> bool:
         if not self.is_usable(s):
             return False
 
-        if self.include and not any(s.satisfies(c) for c in self.include):
+        if self.include and not any(s.satisfies(c, repo=self.repo) for c in self.include):
             return False
 
-        if self.exclude and any(s.satisfies(c) for c in self.exclude):
+        if self.exclude and any(s.satisfies(c, repo=self.repo) for c in self.exclude):
             return False
 
         return True

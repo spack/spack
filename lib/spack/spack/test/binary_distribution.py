@@ -21,6 +21,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.mirrors.mirror
@@ -325,7 +326,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Conf
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -341,7 +342,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Conf
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -358,7 +359,7 @@ def test_use_bin_index_active_env_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -378,7 +379,7 @@ def test_use_bin_index_active_env_with_view(
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -395,7 +396,7 @@ def test_use_bin_index_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -416,7 +417,7 @@ def test_use_bin_index_with_view(
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -1609,12 +1610,14 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     def no_index(*args, **kwargs):
         raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
 
-    binary_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "index_cache"))
+    binary_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "index_cache"), config=mutable_config
+    )
     monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        binary_index.update()
+        binary_index.update(config=mutable_config)
 
     concretization_warnings = [
         w for w in caught if "cannot be used in concretization" in str(w.message)
@@ -1625,14 +1628,16 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
 
 def test_load_buildcache_index(monkeypatch, tmp_path):
     """Tests that load_buildcache_index uses the local cache (no network call)."""
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "idx"), config=spack.config.CONFIG
+    )
     regenerate_calls = []
     update_calls = []
 
     def fake_regenerate(clear_existing=False):
         regenerate_calls.append(clear_existing)
 
-    def fake_update(with_cooldown=False):
+    def fake_update(with_cooldown=False, *, config=None):
         update_calls.append(with_cooldown)
 
     monkeypatch.setattr(mock_index, "regenerate_spec_cache", fake_regenerate)
@@ -1646,7 +1651,9 @@ def test_load_buildcache_index(monkeypatch, tmp_path):
 
 def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
     """Tests that load_buildcache_index swallows errors; status display never breaks a command."""
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "idx"), config=spack.config.CONFIG
+    )
 
     def exploding_regenerate(clear_existing=False):
         raise OSError("disk error")

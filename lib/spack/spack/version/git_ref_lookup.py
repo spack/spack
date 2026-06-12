@@ -39,8 +39,11 @@ class GitRefLookup:
     """An object for cached lookups of git refs. GitRefLookup objects delegate to the MISC_CACHE
     for locking."""
 
-    def __init__(self, pkg_name):
+    def __init__(self, pkg_name, *, repo=None, misc_cache=None, config=None):
         self.pkg_name = pkg_name
+        self._repo = repo
+        self._misc_cache = misc_cache
+        self._config = config
 
         self.data: Dict[str, Tuple[Optional[str], int]] = {}
 
@@ -62,16 +65,22 @@ class GitRefLookup:
         return self._cache_key
 
     @property
+    def misc_cache(self):
+        """Cache holding the ref metadata. Defaults to the process-wide one."""
+        return self._misc_cache if self._misc_cache is not None else spack.caches.MISC_CACHE
+
+    @property
     def cache_path(self):
         if not self._cache_path:
-            self._cache_path = spack.caches.MISC_CACHE.cache_path(self.cache_key)
+            self._cache_path = self.misc_cache.cache_path(self.cache_key)
         return self._cache_path
 
     @property
     def pkg(self):
         if not self._pkg:
             try:
-                pkg = spack.repo.PATH.get_pkg_class(self.pkg_name)
+                repo = self._repo if self._repo is not None else spack.repo.PATH
+                pkg = repo.get_pkg_class(self.pkg_name)
                 pkg.git
             except (spack.repo.RepoError, AttributeError) as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
@@ -82,7 +91,7 @@ class GitRefLookup:
     def fetcher(self):
         if not self._fetcher:
             # We require the full git repository history
-            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git, config=self._config)
             fetcher.get_full_repo = True
             self._fetcher = fetcher
         return self._fetcher
@@ -94,12 +103,12 @@ class GitRefLookup:
 
     def save(self):
         """Save the data to file"""
-        with spack.caches.MISC_CACHE.write_transaction(self.cache_key) as (old, new):
+        with self.misc_cache.write_transaction(self.cache_key) as (old, new):
             sjson.dump(self.data, new)
 
     def load_data(self):
         """Load data if the path already exists."""
-        with spack.caches.MISC_CACHE.read_transaction(self.cache_key) as cache_file:
+        with self.misc_cache.read_transaction(self.cache_key) as cache_file:
             if cache_file is not None:
                 self.data = sjson.load(cache_file)
 
@@ -210,7 +219,9 @@ class GitRefLookup:
         return prev_version, distance
 
 
-def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
+def assign_git_version(
+    pkg_name: str, version: VersionType, *, repo=None, misc_cache=None, config=None
+) -> VersionType:
     """Return ``version`` with a Spack version assigned, by looking its ref up in the git
     repository of package ``pkg_name``. This may trigger a git clone.
 
@@ -237,7 +248,9 @@ def assign_git_version(pkg_name: str, version: VersionType) -> VersionType:
     """
     if not isinstance(version, GitVersion) or version.std_version is not None:
         return version
-    version_string, distance = GitRefLookup(pkg_name).get(version.ref)
+    version_string, distance = GitRefLookup(
+        pkg_name, repo=repo, misc_cache=misc_cache, config=config
+    ).get(version.ref)
     version_string = version_string or "0"
     # Add a -git.<distance> suffix when we're not exactly on a tag
     if distance > 0:
@@ -251,7 +264,9 @@ def _needs_assignment(node: "spack.spec.Spec") -> bool:
     )
 
 
-def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
+def assign_git_versions(
+    spec: "spack.spec.Spec", *, repo=None, misc_cache=None, config=None
+) -> "spack.spec.Spec":
     """Return a copy of ``spec`` in which every git ref version is assigned a Spack version, or
     ``spec`` itself when there are no git ref versions to assign."""
     if not any(_needs_assignment(node) for node in spec.traverse()):
@@ -260,6 +275,11 @@ def assign_git_versions(spec: "spack.spec.Spec") -> "spack.spec.Spec":
     for node in result.traverse():
         if _needs_assignment(node):
             node.versions = VersionList(
-                [assign_git_version(node.fullname, v) for v in node.versions]
+                [
+                    assign_git_version(
+                        node.fullname, v, repo=repo, misc_cache=misc_cache, config=config
+                    )
+                    for v in node.versions
+                ]
             )
     return result

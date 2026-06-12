@@ -8,6 +8,7 @@ import sys
 
 import spack.cmd
 import spack.hash_lookup
+import spack.repo
 import spack.util.spack_json as sjson
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -84,7 +85,7 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
             b.trim(pkg_name)
 
     # Prepare a clause generator to parse differences
-    generator = clauses.SpecClauseGenerator()
+    generator = clauses.SpecClauseGenerator(repo=spack.repo.PATH)
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.

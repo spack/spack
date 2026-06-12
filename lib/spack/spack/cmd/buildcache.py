@@ -625,7 +625,9 @@ def install_fn(args):
     if not args.specs:
         args.subparser.error("a spec argument is required to install from a buildcache")
 
-    query = spack.binary_distribution.BinaryCacheQuery(all_architectures=args.otherarch)
+    query = spack.binary_distribution.BinaryCacheQuery(
+        all_architectures=args.otherarch, config=spack.config.CONFIG
+    )
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
     for match in matches:
         spack.binary_distribution.install_single_spec(
@@ -636,7 +638,7 @@ def install_fn(args):
 def list_fn(args):
     """list binary packages available from mirrors"""
     try:
-        specs = spack.binary_distribution.update_cache_and_get_specs()
+        specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
     except spack.binary_distribution.FetchCacheError as e:
         tty.die(e)
 

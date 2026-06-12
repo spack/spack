@@ -36,7 +36,7 @@ def _get_builtin_repo_info() -> Optional[str]:
     """Get the builtin package repository git commit sha."""
     # Get builtin from config
     descriptors = spack.repo.RepoDescriptors.from_config(
-        spack.repo.package_repository_lock(), spack.config.CONFIG
+        spack.repo.package_repository_lock(spack.config.CONFIG), spack.config.CONFIG
     )
     if "builtin" not in descriptors:
         return None

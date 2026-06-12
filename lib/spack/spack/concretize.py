@@ -46,6 +46,7 @@ SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 
 if TYPE_CHECKING:
+    from spack.solver.asp import Solver
     from spack.solver.reuse import SpecFiltersFactory
 
 
@@ -54,6 +55,24 @@ def _needs_solving(abstract: Spec, concrete: Optional[Spec]) -> bool:
     through unchanged, and is not reported to a frontend.
     """
     return concrete is None and not abstract.concrete
+
+
+def ensure_compilers_in_configuration() -> None:
+    """Write the compilers found on the system to packages.yaml, if none are configured.
+
+    A solve sees compilers as externals declared in the configuration, so detection has to run
+    before it, and in the parent process of a parallel concretization: the workers would
+    otherwise write the configuration file at the same time.
+    """
+    _ = spack.compilers.config.all_compilers()
+
+
+def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
+    """Return a solver to concretize with, with the compilers already in the configuration."""
+    from spack.solver.asp import Solver
+
+    ensure_compilers_in_configuration()
+    return Solver(specs_factory=factory)
 
 
 def _concretize_specs_together(
@@ -70,10 +89,8 @@ def _concretize_specs_together(
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
     """
-    from spack.solver.asp import Solver
-
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
+    result = _solver(factory=factory).solve(
         abstract_specs, tests=tests, allow_deprecated=allow_deprecated
     )
     return [s.copy() for s in result.specs]
@@ -135,7 +152,6 @@ def _concretize_together_when_possible(
         factory: optional factory to produce a list of specs to be reused
         ui: frontend to report progress to.
     """
-    from spack.solver.asp import Solver
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
     old_concrete_to_abstract = {
@@ -149,7 +165,7 @@ def _concretize_together_when_possible(
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
     j = 0
     start = time.monotonic()
-    for result in Solver(specs_factory=factory).solve_in_rounds(
+    for result in _solver(factory=factory).solve_in_rounds(
         to_concretize, tests=tests, allow_deprecated=allow_deprecated
     ):
         now = time.monotonic()
@@ -220,9 +236,7 @@ def _concretize_separately(
     # all the indexes if there's any need for that.
     _ = spack.repo.PATH.provider_index
 
-    # Ensure we have compilers in packages.yaml to avoid that
-    # processes try to write the config file in parallel
-    _ = spack.compilers.config.all_compilers()
+    ensure_compilers_in_configuration()
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
     # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
@@ -310,8 +324,6 @@ def _concretize_one(
 
 def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
     """Run the single solve that concretizes ``spec``, and pick its answer."""
-    from spack.solver.asp import Solver
-
     for node in spec.traverse():
         if not node.name:
             raise spack.error.SpecError(
@@ -319,9 +331,7 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
             )
 
     allow_deprecated = spack.config.CONFIG.get("config:deprecated", False)
-    result = Solver(specs_factory=factory).solve(
-        [spec], tests=tests, allow_deprecated=allow_deprecated
-    )
+    result = _solver(factory=factory).solve([spec], tests=tests, allow_deprecated=allow_deprecated)
 
     # take the best answer
     opt, i, answer = min(result.answers)
