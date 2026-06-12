@@ -16,6 +16,7 @@ import spack.util.path
 from spack.active_environment import active_environment
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.spec_filter import SpecFilter
 
 from .context import Context
@@ -119,6 +120,19 @@ def _is_reusable(
                 return True
 
     return False
+
+
+def reusable_external_specs(configuration: spack.config.Configuration) -> List[spack.spec.Spec]:
+    """Return the reusable external specs declared in a configuration's ``packages.yaml``."""
+    packages_with_externals = external_config_with_implicit_externals(configuration)
+    completion_mode = configuration.get("concretizer:externals:completion")
+    spec_filter = spec_filter_from_packages_yaml(
+        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        is_reusable=functools.partial(
+            _is_reusable, packages_with_externals=packages_with_externals, local=True
+        ),
+    )
+    return spec_filter.selected_specs()
 
 
 def _specs_from_store(store):

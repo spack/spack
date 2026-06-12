@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
 import gzip
 import json
 import os
@@ -48,10 +47,10 @@ import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.externals_config import create_external_parser
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import Result
-from spack.solver.reuse import _is_reusable, spec_filter_from_packages_yaml
+from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 from spack.version import Version, VersionList, ver
@@ -2074,14 +2073,7 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            is_reusable=functools.partial(
-                _is_reusable, packages_with_externals=packages_with_externals, local=True
-            ),
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config)
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
@@ -2108,14 +2100,7 @@ spack:
     @pytest.mark.regression("51112")
     def test_variant_penalty(self, mutable_config):
         """Test package preferences during concretization."""
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            is_reusable=functools.partial(
-                _is_reusable, packages_with_externals=packages_with_externals, local=True
-            ),
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config)
 
         # The variant definition is similar to
         #
@@ -2464,14 +2449,7 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        packages_with_externals = external_config_with_implicit_externals(mutable_config)
-        completion_mode = mutable_config.get("concretizer:externals:completion")
-        external_specs = spec_filter_from_packages_yaml(
-            external_parser=create_external_parser(packages_with_externals, completion_mode),
-            is_reusable=functools.partial(
-                _is_reusable, packages_with_externals=packages_with_externals, local=True
-            ),
-        ).selected_specs()
+        external_specs = reusable_external_specs(mutable_config)
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, specs, reuse=external_specs)

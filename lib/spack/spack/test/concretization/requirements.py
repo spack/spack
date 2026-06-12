@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import functools
 import pathlib
 
 import pytest
@@ -19,11 +18,10 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.old_installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.solver.requirements import RequirementParser
-from spack.solver.reuse import _is_reusable, spec_filter_from_packages_yaml
+from spack.solver.reuse import reusable_external_specs
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
@@ -1319,14 +1317,7 @@ def test_requirements_on_compilers_and_reuse(
     reused_nodes = list(reused_spec.traverse())
     update_packages_config(packages_yaml)
     root_specs = [Spec(input_spec)]
-    packages_with_externals = external_config_with_implicit_externals(mutable_config)
-    completion_mode = mutable_config.get("concretizer:externals:completion")
-    external_specs = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
-        is_reusable=functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True
-        ),
-    ).selected_specs()
+    external_specs = reusable_external_specs(mutable_config)
 
     with spack.config.override("concretizer:reuse", True):
         solver = spack.solver.asp.Solver()
@@ -1509,14 +1500,7 @@ packages:
     update_packages_config(packages_yaml)
     initial_mpileaks = spack.concretize.concretize_one("mpileaks+debug")
     reused_nodes = list(initial_mpileaks.traverse())
-    packages_with_externals = external_config_with_implicit_externals(mutable_config)
-    completion_mode = mutable_config.get("concretizer:externals:completion")
-    external_specs = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
-        is_reusable=functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True
-        ),
-    ).selected_specs()
+    external_specs = reusable_external_specs(mutable_config)
 
     # Ask for just "mpileaks" and check the spec is reused
     with spack.config.override("concretizer:reuse", True):

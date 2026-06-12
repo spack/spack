@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import functools
 import os
 import pathlib
 
@@ -18,21 +17,13 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 from spack.environment.environment import ViewDescriptor
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
-from spack.solver.reuse import _is_reusable, spec_filter_from_packages_yaml
+from spack.solver.reuse import reusable_external_specs
 from spack.version import Version
 
 
 def _concretize_with_reuse(*, root_str, reused_str, config):
     reused_spec = spack.concretize.concretize_one(reused_str)
-    packages_with_externals = external_config_with_implicit_externals(config)
-    completion_mode = config.get("concretizer:externals:completion")
-    external_specs = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
-        is_reusable=functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True
-        ),
-    ).selected_specs()
+    external_specs = reusable_external_specs(config)
     setup = spack.solver.asp.SpackSolverSetup(tests=False)
     driver = spack.solver.asp.PyclingoDriver()
     result, _, _ = driver.solve(

@@ -1048,14 +1048,7 @@ def mock_configuration_scopes(configuration_dir):
 
 @contextlib.contextmanager
 def _use_configuration_and_store(*scopes):
-    """Activate config ``scopes`` and reset the store so it re-derives from them.
-
-    The store is derived from the configuration, so swapping the configuration without
-    reinitializing the store leaves the global ``spack.store.STORE`` singleton pinned to a
-    stale, incoherent store that another fixture happened to materialize it against (e.g. the
-    ``database`` fixture's mock store). ``spack.environment`` pairs configuration activation with
-    ``spack.store.reinitialize()`` for the same reason; the test config fixtures must do the same.
-    """
+    """Activate config scopes and reset the store so it re-derives from them."""
     with spack.config.use_configuration(*scopes) as cfg:
         store_token = spack.store.reinitialize()
         try:
