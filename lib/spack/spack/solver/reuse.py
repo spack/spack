@@ -23,41 +23,13 @@ from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
     import spack.environment
-    import spack.store
-
-
-class _LazyExternalDbHashes(typing.Container[str]):
-    """Lazily resolve, and memoize, the dag hashes of locally installed cray-manifest
-    ("external-db") specs.
-
-    The local DB is queried at most once, and only if an external local spec is actually
-    checked for reusability -- which happens only when reuse is enabled. This keeps the
-    common reuse-off solve from touching the store DB at all.
-    """
-
-    def __init__(self, store: "spack.store.Store") -> None:
-        self._store = store
-        self._cached: Optional[typing.FrozenSet[str]] = None
-
-    def _resolve(self) -> typing.FrozenSet[str]:
-        if self._cached is None:
-            self._cached = frozenset(
-                s.dag_hash()
-                for s in self._store.db.query_local(
-                    origin="external-db", installed=InstallRecordStatus.ANY
-                )
-            )
-        return self._cached
-
-    def __contains__(self, dag_hash: object) -> bool:
-        return dag_hash in self._resolve()
 
 
 def spec_filter_from_store(
     store,
     *,
     packages_with_externals,
-    external_db_hashes: typing.Container[str] = frozenset(),
+    external_db_hashes: typing.FrozenSet[str] = frozenset(),
     include,
     exclude,
 ) -> SpecFilter:
@@ -86,7 +58,7 @@ def spec_filter_from_buildcache(
 def spec_filter_from_environment(
     *,
     packages_with_externals,
-    external_db_hashes: typing.Container[str] = frozenset(),
+    external_db_hashes: typing.FrozenSet[str] = frozenset(),
     include,
     exclude,
     env,
@@ -105,7 +77,7 @@ def spec_filter_from_packages_yaml(
     *,
     external_parser: ExternalSpecsParser,
     packages_with_externals,
-    external_db_hashes: typing.Container[str] = frozenset(),
+    external_db_hashes: typing.FrozenSet[str] = frozenset(),
     include,
     exclude,
 ) -> SpecFilter:
@@ -129,7 +101,7 @@ def _is_reusable(
     spec: spack.spec.Spec,
     packages_with_externals,
     local: bool,
-    external_db_hashes: typing.Container[str] = frozenset(),
+    external_db_hashes: typing.FrozenSet[str] = frozenset(),
 ) -> bool:
     """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
     external, or it's external with matching packages.yaml entry. The latter prevents two issues:
@@ -235,11 +207,14 @@ class ReusableSpecsSelector:
         self.configuration = context.config
         self.store = context.store
         self.binary_index = context.binary_index
-        # Lazily resolve the hashes of locally installed cray-manifest ("external-db") specs.
-        # The DB is queried at most once, and only if an external local spec is actually
-        # checked -- i.e. only when reuse is enabled. This makes the per-spec reusability
-        # check O(1) membership without touching the store DB on the common reuse-off path.
-        self._external_db_hashes = _LazyExternalDbHashes(self.store)
+        # Pre-compute the hashes of locally installed cray-manifest ("external-db") specs once,
+        # so the per-spec reusability check is O(1) membership instead of a DB query per spec.
+        self._external_db_hashes = frozenset(
+            s.dag_hash()
+            for s in self.store.db.query_local(
+                origin="external-db", installed=InstallRecordStatus.ANY
+            )
+        )
         self.reuse_strategy = ReuseStrategy.ROOTS
         reuse_yaml = self.configuration.get("concretizer:reuse", False)
 
