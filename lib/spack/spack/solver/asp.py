@@ -67,12 +67,12 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.spack_context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control
-from .context import Context
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
@@ -1382,9 +1382,9 @@ class SpackSolverSetup:
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
     def __init__(
-        self, tests: spack.concretize.TestsType = False, *, context: Optional[Context] = None
+        self, tests: spack.concretize.TestsType = False, *, context: Optional[SpackContext] = None
     ):
-        self.context = context or Context.default()
+        self.context = context or SpackContext.default()
         self.possible_graph = create_graph_analyzer(self.context)
 
         # these are all initialized in setup()
@@ -3480,7 +3480,7 @@ class ProblemInstanceBuilder:
 
 
 def possible_compilers(
-    *, context: Context
+    *, context: SpackContext
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
@@ -4036,10 +4036,10 @@ class Solver:
     def __init__(
         self,
         *,
-        context: Optional[Context] = None,
+        context: Optional[SpackContext] = None,
         specs_factory: Optional[SpecFiltersFactory] = None,
     ):
-        self.context = context or Context.default()
+        self.context = context or SpackContext.default()
 
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(

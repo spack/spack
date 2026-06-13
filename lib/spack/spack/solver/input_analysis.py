@@ -17,10 +17,9 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
+from spack.spack_context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import lang, tty
-
-from .context import Context
 
 
 class PossibleGraph(NamedTuple):
@@ -361,7 +360,7 @@ class StaticAnalysis(NoStaticAnalysis):
         return False
 
 
-def create_graph_analyzer(context: Context) -> PossibleDependencyGraph:
+def create_graph_analyzer(context: SpackContext) -> PossibleDependencyGraph:
     static_analysis = context.config.get("concretizer:static_analysis", False)
     if static_analysis:
         return StaticAnalysis(

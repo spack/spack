@@ -33,10 +33,10 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
-import spack.solver.context
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
+import spack.spack_context
 import spack.spec
 import spack.spec_filter
 import spack.store
@@ -3333,7 +3333,7 @@ def test_filtering_reused_specs(
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.solver.context.Context(
+        context=spack.spack_context.SpackContext(
             config=mutable_config,
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,
@@ -3379,7 +3379,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.solver.context.Context(
+        context=spack.spack_context.SpackContext(
             config=mutable_config,
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,

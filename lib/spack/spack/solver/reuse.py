@@ -17,9 +17,9 @@ from spack.active_environment import active_environment
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
 from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.spack_context import SpackContext
 from spack.spec_filter import SpecFilter
 
-from .context import Context
 from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
@@ -184,7 +184,7 @@ class ReusableSpecsSelector:
     def __init__(
         self,
         *,
-        context: Context,
+        context: SpackContext,
         external_parser: ExternalSpecsParser,
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
