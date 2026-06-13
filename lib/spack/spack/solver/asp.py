@@ -595,11 +595,8 @@ class ConcretizationCache:
     # Used to version cache files. Bump this when the cache format changes.
     VERSION = 1
 
-    def __init__(self, root: Union[str, None] = None, entry_limit: int = 1000):
+    def __init__(self, root: str, entry_limit: int = 1000):
         self.entry_limit = entry_limit
-        if root is None:
-            root = os.path.join(spack.caches.misc_cache_location(), "concretization")
-
         # cache is versioned so that we can easily upgrade it over time
         self.root = pathlib.Path(spack.config.canonicalize_path(root))
         self.root /= f"v{ConcretizationCache.VERSION}"
@@ -4039,8 +4036,13 @@ class Solver:
             configuration=self.context.config, init_config=True
         )
 
+        cache_root = self.context.config.get("concretizer:concretization_cache:url", None)
+        if cache_root is None:
+            cache_root = os.path.join(
+                spack.caches.misc_cache_location(config=self.context.config), "concretization"
+            )
         self._conc_cache = ConcretizationCache(
-            root=self.context.config.get("concretizer:concretization_cache:url", None),
+            root=cache_root,
             entry_limit=self.context.config.get(
                 "concretizer:concretization_cache:entry_limit", 1000
             ),

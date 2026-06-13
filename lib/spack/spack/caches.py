@@ -13,18 +13,18 @@ import spack.util.file_cache
 import spack.util.lang
 
 
-def misc_cache_location():
+def misc_cache_location(*, config: spack.config.Configuration) -> str:
     """The ``MISC_CACHE`` is Spack's cache for small data.
 
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
+    path = config.get("config:misc_cache", spack.paths.default_misc_cache_path)
     return spack.config.canonicalize_path(path)
 
 
 def _misc_cache():
-    path = misc_cache_location()
+    path = misc_cache_location(config=spack.config.CONFIG)
     return spack.util.file_cache.FileCache(
         path, enable_lock=spack.config.CONFIG.get("config:locks", True)
     )
