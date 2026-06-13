@@ -55,7 +55,6 @@ import spack.platforms
 import spack.repo
 import spack.solver.splicing
 import spack.spec
-import spack.store
 import spack.traverse
 import spack.util.crypto
 import spack.util.hash
@@ -410,17 +409,18 @@ def spec_dict_from_json(data: Dict) -> SpecDict:
 class Result:
     """Result of an ASP solve."""
 
-    def __init__(self, specs):
+    def __init__(self, specs, *, repo: spack.repo.RepoPath):
+        self.repo = repo
         self.satisfiable = None
         self.optimal = None
         self.warnings = None
         self.nmodels = 0
 
         # specs ordered by optimization level
-        self.answers = []
+        self.answers: List[Tuple[List[int], int, SpecDict]] = []
 
         # names of optimization criteria
-        self.criteria = []
+        self.criteria: List[OptimizationCriteria] = []
 
         # Abstract user requests
         self.abstract_specs = specs
@@ -484,9 +484,11 @@ class Result:
             # The specs must be unified to get here, so it is safe to associate any satisfying spec
             # with the input. Multiple inputs may be matched to the same concrete spec
             node = SpecBuilder.make_node(pkg=input_spec.name)
-            if spack.repo.PATH.is_virtual(input_spec.name):
+            if self.repo.is_virtual(input_spec.name):
                 providers = [
-                    spec.name for spec in answer.values() if spec.package.provides(input_spec.name)
+                    spec.name
+                    for spec in answer.values()
+                    if self.repo.get(spec).provides(input_spec.name)
                 ]
                 node = SpecBuilder.make_node(pkg=providers[0])
             candidate = answer.get(node)
@@ -543,14 +545,14 @@ class Result:
         }
 
     @staticmethod
-    def from_dict(obj: dict, specs: List[spack.spec.Spec]):
+    def from_dict(obj: dict, specs: List[spack.spec.Spec], *, repo: spack.repo.RepoPath):
         """Returns Result object from compatible dictionary, for the given input specs.
 
         The stored abstract specs are troubleshooting metadata and are deliberately not
         deserialized: the caller's input specs are authoritative. This also keeps cache
         entries with unreadable abstract spec data usable.
         """
-        result = Result(specs)
+        result = Result(specs, repo=repo)
         result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
         result.optimal = obj["optimal"]
         result.warnings = obj["warnings"]
@@ -594,8 +596,8 @@ class ConcretizationCache:
     # Used to version cache files. Bump this when the cache format changes.
     VERSION = 1
 
-    def __init__(self, root: Union[str, None] = None):
-        root = root or spack.config.get("concretizer:concretization_cache:url", None)
+    def __init__(self, root: Union[str, None] = None, entry_limit: int = 1000):
+        self.entry_limit = entry_limit
         if root is None:
             root = os.path.join(spack.caches.misc_cache_location(), "concretization")
 
@@ -606,14 +608,12 @@ class ConcretizationCache:
     def cleanup(self):
         """Prunes the concretization cache according to configured entry
         count limits. Cleanup is done in LRU ordering."""
-        entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
-
         try:
             entries = list(self.cache_entries())
         except FileNotFoundError:
             return
 
-        if len(entries) <= entry_limit:
+        if len(entries) <= self.entry_limit:
             return
 
         # collect stat info for mod time about all entries
@@ -630,7 +630,7 @@ class ConcretizationCache:
         removal_queue.sort()  # sort items for removal, ascending, so oldest first
 
         # Try to remove the oldest half of the cache.
-        for _, path in removal_queue[: entry_limit // 2]:
+        for _, path in removal_queue[: self.entry_limit // 2]:
             self._remove_entry(pathlib.Path(path))
 
     def cache_entries(self) -> Iterator["os.DirEntry"]:
@@ -710,7 +710,7 @@ class ConcretizationCache:
         self.cleanup()
 
     def fetch(
-        self, problem: str, specs: List[spack.spec.Spec]
+        self, problem: str, specs: List[spack.spec.Spec], *, repo: spack.repo.RepoPath
     ) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
 
@@ -756,7 +756,7 @@ class ConcretizationCache:
             return None, None
 
         try:
-            result = Result.from_dict(results, specs)
+            result = Result.from_dict(results, specs, repo=repo)
         except (
             KeyError,
             TypeError,
@@ -1039,7 +1039,7 @@ class PyclingoDriver:
         timer.stop("solve")
 
         # once done, construct the solve result
-        result = Result(specs)
+        result = Result(specs, repo=setup.context.repo)
         result.satisfiable = solve_result.satisfiable
         if not result.satisfiable:
             return result
@@ -1142,7 +1142,7 @@ class PyclingoDriver:
             output.out.write("\n".join(problem))
 
         if output.setup_only:
-            return Result(specs), None, None
+            return Result(specs, repo=setup.context.repo), None, None
 
         # strip and order the ASP problem for caching and deterministic solves
         problem = _strip_asp_problem(problem)
@@ -1155,7 +1155,7 @@ class PyclingoDriver:
         timer.stop("ordering")
 
         timer.start("cache-check")
-        use_cache = spack.config.get("concretizer:concretization_cache:enable", False)
+        use_cache = setup.context.config.get("concretizer:concretization_cache:enable", False)
         cache = self._conc_cache if use_cache else None
 
         # load control files to add to the input representation
@@ -1166,7 +1166,7 @@ class PyclingoDriver:
         cache_key = None
         if cache:
             cache_key = _make_cache_key(problem_str, control_file_paths)
-            result, concretization_stats = cache.fetch(cache_key, specs)
+            result, concretization_stats = cache.fetch(cache_key, specs, repo=setup.context.repo)
         timer.stop("cache-check")
 
         # run the solver
@@ -1182,7 +1182,9 @@ class PyclingoDriver:
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
-            post_process_concretization_result(spec_dict)
+            post_process_concretization_result(
+                spec_dict, configuration=setup.context.config, repo=setup.context.repo
+            )
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
@@ -1537,7 +1539,7 @@ class SpackSolverSetup:
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
         self.gen.h2("Compatible OS from concretizer config file")
-        os_data = spack.config.get("concretizer:os_compatible", {})
+        os_data = self.context.config.get("concretizer:os_compatible", {})
         for recent, reusable in os_data.items():
             for old in reusable:
                 self.gen.fact(fn.os_compatible(recent, old))
@@ -2933,7 +2935,7 @@ class SpackSolverSetup:
             )
 
     def _validate_input_specs(self, specs: Sequence[spack.spec.Spec]) -> None:
-        _check_unknown_virtuals_in_input_specs(specs)
+        _check_unknown_virtuals_in_input_specs(specs, repo=self.context.repo)
 
         repo = self.context.repo
         analyzer = self.possible_graph
@@ -3006,13 +3008,13 @@ class SpackSolverSetup:
         self.gen = ProblemInstanceBuilder()
 
         # Get compilers from buildcaches only if injected through "reuse" specs
-        supported_compilers = spack.compilers.config.supported_compilers()
+        supported_compilers = self.context.repo.packages_with_tags(
+            spack.compilers.config.COMPILER_TAG
+        )
         compilers_from_reuse = {
             x for x in reuse if x.name in supported_compilers and not x.external
         }
-        candidate_compilers, self.rejected_compilers = possible_compilers(
-            configuration=self.context.config, store=self.context.store
-        )
+        candidate_compilers, self.rejected_compilers = possible_compilers(context=self.context)
         reuse_from_compilers = traverse.traverse_nodes(
             [x for x in candidate_compilers if not x.external], deptype=("link", "run")
         )
@@ -3053,7 +3055,9 @@ class SpackSolverSetup:
             self.gen.fact(fn.deprecated_versions_not_allowed())
 
         self.gen.newline()
-        for pkg_name in spack.compilers.config.supported_compilers():
+        for pkg_name in sorted(
+            self.context.repo.packages_with_tags(spack.compilers.config.COMPILER_TAG)
+        ):
             self.gen.fact(fn.compiler_package(pkg_name))
 
         # Calculate develop specs
@@ -3163,7 +3167,7 @@ class SpackSolverSetup:
         return self.gen
 
     def compiler_mixing(self):
-        should_mix = spack.config.get("concretizer:compiler_mixing", True)
+        should_mix = self.context.config.get("concretizer:compiler_mixing", True)
         if should_mix is True:
             return
         # anything besides should_mix: true
@@ -3476,12 +3480,12 @@ class ProblemInstanceBuilder:
 
 
 def possible_compilers(
-    *, configuration, store: spack.store.Store
+    *, context: Context
 ) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
     # Compilers defined in configuration
-    for c in spack.compilers.config.all_compilers_from(configuration):
+    for c in spack.compilers.config.all_compilers_from(context.config):
         if spack.platforms.using_libc_compatibility() and not c_compiler_runs(c):
             rejected.add(c)
             try:
@@ -3513,9 +3517,11 @@ def possible_compilers(
         result.add(c)
 
     # Compilers from the local store
-    supported_compilers = spack.compilers.config.supported_compilers()
+    supported_compilers = sorted(
+        context.repo.packages_with_tags(spack.compilers.config.COMPILER_TAG)
+    )
     for pkg_name in supported_compilers:
-        result.update(store.db.query(pkg_name))
+        result.update(context.store.db.query(pkg_name))
 
     return result, rejected
 
@@ -3840,7 +3846,9 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
         specs.update(new_specs)
 
 
-def post_process_concretization_result(specs: SpecDict) -> None:
+def post_process_concretization_result(
+    specs: SpecDict, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
+) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
     These post-steps depend on package information like patches, package hash, etc. They
@@ -3860,11 +3868,11 @@ def post_process_concretization_result(specs: SpecDict) -> None:
 
     for s in specs.values():
         # Add external paths to specs with just external modules
-        _ensure_external_path_if_external(s)
+        _ensure_external_path_if_external(s, repo=repo)
         _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
-        _specs_with_commits(s)
+        _specs_with_commits(s, repo=repo)
 
     # mark concrete and assign hashes to all specs in the solve
     for root in roots.values():
@@ -3892,13 +3900,15 @@ def post_process_concretization_result(specs: SpecDict) -> None:
                     spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                 )
 
-    new_specs = execute_explicit_splices(specs)
+    new_specs = execute_explicit_splices(specs, configuration=configuration)
     specs.clear()
     specs.update(new_specs)
 
 
-def execute_explicit_splices(specs: SpecDict) -> SpecDict:
-    splice_config = spack.config.CONFIG.get("concretizer:splice:explicit", [])
+def execute_explicit_splices(
+    specs: SpecDict, *, configuration: spack.config.Configuration
+) -> SpecDict:
+    splice_config = configuration.get("concretizer:splice:explicit", [])
     splice_triples = []
     for splice_set in splice_config:
         target = splice_set["target"]
@@ -3932,8 +3942,8 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
     return new_specs
 
 
-def _specs_with_commits(spec):
-    pkg_class = spack.repo.PATH.get_pkg_class(spec.fullname)
+def _specs_with_commits(spec, *, repo: spack.repo.RepoPath):
+    pkg_class = repo.get_pkg_class(spec.fullname)
     if not pkg_class.needs_commit(spec.version):
         return
 
@@ -3959,13 +3969,13 @@ def _specs_with_commits(spec):
     assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
 
-def _ensure_external_path_if_external(spec: spack.spec.Spec) -> None:
+def _ensure_external_path_if_external(spec: spack.spec.Spec, *, repo: spack.repo.RepoPath) -> None:
     if not spec.external_modules or spec.external_path:
         return
 
     # Get the path from the module the package can override the default
     # (this is mostly needed for Cray)
-    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg_cls = repo.get_pkg_class(spec.name)
     package = pkg_cls(spec)
     spec.external_path = getattr(package, "external_prefix", None) or md.path_from_modules(
         spec.external_modules
@@ -4032,9 +4042,16 @@ class Solver:
         self.context = context or Context.default()
 
         # Compute possible compilers first, so we see them as externals
-        _ = spack.compilers.config.all_compilers(init_config=True)
+        _ = spack.compilers.config.all_compilers(
+            configuration=self.context.config, init_config=True
+        )
 
-        self._conc_cache = ConcretizationCache()
+        self._conc_cache = ConcretizationCache(
+            root=self.context.config.get("concretizer:concretization_cache:url", None),
+            entry_limit=self.context.config.get(
+                "concretizer:concretization_cache:entry_limit", 1000
+            ),
+        )
         self.driver = PyclingoDriver(conc_cache=self._conc_cache)
 
         # Compute packages configuration with implicit externals once and reuse it
@@ -4173,7 +4190,9 @@ class _SkipConcreteVisitor(traverse.BaseVisitor):
         return super().neighbors(item)
 
 
-def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> None:
+def _check_unknown_virtuals_in_input_specs(
+    specs: Sequence[spack.spec.Spec], *, repo: spack.repo.RepoPath
+) -> None:
     """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
     errors = []
     for root in specs:
@@ -4181,7 +4200,7 @@ def _check_unknown_virtuals_in_input_specs(specs: Sequence[spack.spec.Spec]) -> 
         visitor = traverse.CoverNodesVisitor(_SkipConcreteVisitor())
         for edge in traverse.traverse_breadth_first_edges_generator(root_edges, visitor):
             for virtual in edge.virtuals:
-                if not spack.repo.PATH.is_virtual(virtual):
+                if not repo.is_virtual(virtual):
                     errors.append(f"'{virtual}' in '{root}' is not a known virtual package")
     if not errors:
         return

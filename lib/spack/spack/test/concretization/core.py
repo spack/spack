@@ -2073,7 +2073,7 @@ spack:
         ]
         root_spec = Spec("pkg-a foobar=bar")
 
-        external_specs = reusable_external_specs(mutable_config)
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
         with spack.config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
@@ -2100,7 +2100,7 @@ spack:
     @pytest.mark.regression("51112")
     def test_variant_penalty(self, mutable_config):
         """Test package preferences during concretization."""
-        external_specs = reusable_external_specs(mutable_config)
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
 
         # The variant definition is similar to
         #
@@ -2449,7 +2449,7 @@ packages:
         know a concretization exists.
         """
         specs = [Spec(s) for s in specs]
-        external_specs = reusable_external_specs(mutable_config)
+        external_specs = reusable_external_specs(mutable_config, repo=spack.repo.PATH)
         solver = spack.solver.asp.Solver()
         setup = spack.solver.asp.SpackSolverSetup()
         result, _, _ = solver.driver.solve(setup, specs, reuse=external_specs)
@@ -3200,6 +3200,7 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3218,6 +3219,7 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3236,6 +3238,7 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3255,6 +3258,7 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
             }
         },
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -3266,6 +3270,7 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
         spec,
         {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
         local=False,
+        repo=spack.repo.PATH,
     )
 
 
@@ -4471,7 +4476,7 @@ def test_result_roundtrip(mock_packages, config, specs):
     """Test that a solve result can be serialized and brought back."""
     solver = spack.solver.asp.Solver()
     result = solver.solve(specs)
-    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs)
+    roundtrip = spack.solver.asp.Result.from_dict(result.to_dict(), specs, repo=result.repo)
 
     # ensure that we didn't duplicate spec objects during the round trip -- specs need
     # to come back as exactly the same graph they were before.
@@ -4605,8 +4610,8 @@ def test_concretization_cache_roundtrip(
     # Assert that we're actually hitting the cache
     cache_fetch = spack.solver.asp.ConcretizationCache.fetch
 
-    def _ensure_cache_hits(self, problem: str, specs):
-        result, statistics = cache_fetch(self, problem, specs)
+    def _ensure_cache_hits(self, problem: str, specs, *, repo):
+        result, statistics = cache_fetch(self, problem, specs, repo=repo)
         assert result, "Expected successful concretization cache hit"
         assert statistics, "Expected statistics to be non null on cache hit"
         return result, statistics
@@ -4720,7 +4725,7 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
 def corrupt_cache_entry(use_concretization_cache):
     """Yields a cache and path for a fake entry. After the test body writes a corrupt file
     to the path, the fixture asserts that fetch returns a miss and removes the file."""
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache = spack.solver.asp.ConcretizationCache(root=str(use_concretization_cache))
     problem = "some asp problem"
     cache_path = cache._cache_path_from_problem(problem)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -4732,7 +4737,7 @@ def corrupt_cache_entry(use_concretization_cache):
     yield cache, cache_path, write_gzip_json
 
     assert cache_path.exists(), "test should have written a corrupt file"
-    result, stats = cache.fetch(problem, [])
+    result, stats = cache.fetch(problem, [], repo=spack.repo.PATH)
     assert result is None
     assert stats is None
     assert not cache_path.exists(), "corrupt cache entry should have been removed"
@@ -5342,7 +5347,7 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     A failed cache store must not propagate as a concretization failure -- the cache is an
     optimization, and the concretization that produced ``result`` already succeeded.
     """
-    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache = spack.solver.asp.ConcretizationCache(root=str(use_concretization_cache))
     problem = "write failure test"
 
     def failing_replace(src, dst):
@@ -5351,7 +5356,7 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     monkeypatch.setattr(os, "replace", failing_replace)
 
     # store() must not raise even though os.replace did
-    cache.store(problem, Result(specs=[]), statistics=[])
+    cache.store(problem, Result(specs=[], repo=spack.repo.PATH), statistics=[])
 
     # The final cache path should not exist
     cache_path = cache._cache_path_from_problem(problem)

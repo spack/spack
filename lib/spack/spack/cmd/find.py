@@ -344,7 +344,9 @@ def _find_query(
     q_args = query_arguments(args)
     concretized_but_not_installed = []
     if args.show_configured_externals:
-        results = spack.solver.reuse.reusable_external_specs(spack.config.CONFIG)
+        results = spack.solver.reuse.reusable_external_specs(
+            spack.config.CONFIG, repo=spack.repo.PATH
+        )
     elif env:
         all_env_specs = env.all_specs()
         if args.constraint:

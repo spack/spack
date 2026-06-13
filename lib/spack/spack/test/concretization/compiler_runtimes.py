@@ -23,7 +23,7 @@ from spack.version import Version
 
 def _concretize_with_reuse(*, root_str, reused_str, config):
     reused_spec = spack.concretize.concretize_one(reused_str)
-    external_specs = reusable_external_specs(config)
+    external_specs = reusable_external_specs(config, repo=spack.repo.PATH)
     setup = spack.solver.asp.SpackSolverSetup(tests=False)
     driver = spack.solver.asp.PyclingoDriver()
     result, _, _ = driver.solve(

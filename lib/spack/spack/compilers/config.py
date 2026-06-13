@@ -98,19 +98,28 @@ def supported_compilers() -> List[str]:
     return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
 
 
-def all_compilers(scope: Optional[str] = None, init_config: bool = True) -> List[spack.spec.Spec]:
-    """Returns all the compilers from the current global configuration.
+def all_compilers(
+    *,
+    scope: Optional[str] = None,
+    init_config: bool = True,
+    configuration: Optional[spack.config.Configuration] = None,
+) -> List[spack.spec.Spec]:
+    """Returns all the compilers from the given configuration.
 
     Args:
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
         init_config: if True, search for compilers if none is found in configuration.
+        configuration: configuration to be queried. If None, the global configuration is used.
     """
-    compilers = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+    if configuration is None:
+        configuration = spack.config.CONFIG
+
+    compilers = all_compilers_from(configuration=configuration, scope=scope)
 
     if not compilers and init_config:
-        _init_packages_yaml(spack.config.CONFIG, scope=scope)
-        compilers = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+        _init_packages_yaml(configuration, scope=scope)
+        compilers = all_compilers_from(configuration=configuration, scope=scope)
 
     return compilers
 

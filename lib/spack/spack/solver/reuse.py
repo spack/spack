@@ -71,6 +71,8 @@ def _is_reusable(
     spec: spack.spec.Spec,
     packages_with_externals,
     local: bool,
+    *,
+    repo: spack.repo.RepoPath,
     external_db_hashes: typing.FrozenSet[str] = frozenset(),
 ) -> bool:
     """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
@@ -86,6 +88,7 @@ def _is_reusable(
         spec: the spec to check
         packages_with_externals: the pre-processed packages configuration
         local: whether the spec comes from a local source (the store or an environment)
+        repo: repository used to look up the virtuals a package provides
         external_db_hashes: dag hashes of locally installed specs imported from a cray manifest
             (origin "external-db"). Pre-computed once by the caller so this check is O(1).
     """
@@ -103,7 +106,7 @@ def _is_reusable(
         return True
 
     try:
-        provided = spack.repo.PATH.get(spec).provided_virtual_names()
+        provided = repo.get(spec).provided_virtual_names()
     except spack.repo.RepoError:
         provided = []
 
@@ -122,14 +125,16 @@ def _is_reusable(
     return False
 
 
-def reusable_external_specs(configuration: spack.config.Configuration) -> List[spack.spec.Spec]:
+def reusable_external_specs(
+    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
+) -> List[spack.spec.Spec]:
     """Return the reusable external specs declared in a configuration's ``packages.yaml``."""
     packages_with_externals = external_config_with_implicit_externals(configuration)
     completion_mode = configuration.get("concretizer:externals:completion")
     spec_filter = spec_filter_from_packages_yaml(
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         is_reusable=functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=True
+            _is_reusable, packages_with_externals=packages_with_externals, local=True, repo=repo
         ),
     )
     return spec_filter.selected_specs()
@@ -189,6 +194,7 @@ class ReusableSpecsSelector:
 
         self.configuration = context.config
         self.store = context.store
+        self.repo = context.repo
         self.binary_index = context.binary_index
         # Pre-compute the hashes of locally installed cray-manifest ("external-db") specs once,
         # so the per-spec reusability check is O(1) membership instead of a DB query per spec.
@@ -204,10 +210,14 @@ class ReusableSpecsSelector:
             _is_reusable,
             packages_with_externals=packages_with_externals,
             local=True,
+            repo=self.repo,
             external_db_hashes=external_db_hashes,
         )
         mirror_is_reusable = functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=False
+            _is_reusable,
+            packages_with_externals=packages_with_externals,
+            local=False,
+            repo=self.repo,
         )
         self.reuse_strategy = ReuseStrategy.ROOTS
         reuse_yaml = self.configuration.get("concretizer:reuse", False)

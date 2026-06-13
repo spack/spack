@@ -23,6 +23,7 @@ import spack.concretize
 import spack.cray_manifest
 import spack.platforms
 import spack.platforms.test
+import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
@@ -466,10 +467,18 @@ def test_reusable_externals_cray_manifest(temporary_store, manifest_file):
 
     # Reusable if imported locally
     assert spack.solver.reuse._is_reusable(
-        spec, packages_with_externals={}, local=True, external_db_hashes=external_db_hashes
+        spec,
+        packages_with_externals={},
+        local=True,
+        repo=spack.repo.PATH,
+        external_db_hashes=external_db_hashes,
     )
 
     # If cray manifest entries end up in a build cache somehow, they are not reusable
     assert not spack.solver.reuse._is_reusable(
-        spec, packages_with_externals={}, local=False, external_db_hashes=external_db_hashes
+        spec,
+        packages_with_externals={},
+        local=False,
+        repo=spack.repo.PATH,
+        external_db_hashes=external_db_hashes,
     )
