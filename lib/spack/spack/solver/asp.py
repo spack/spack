@@ -2971,7 +2971,7 @@ class SpackSolverSetup:
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
-                spack.spec.Spec.ensure_valid_variants(s)
+                spack.spec.Spec.ensure_valid_variants(s, repo=self.context.repo)
 
     def setup(
         self,

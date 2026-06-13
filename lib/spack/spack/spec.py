@@ -2964,11 +2964,11 @@ class Spec:
 
             # Ensure correctness of variants (if the spec is not virtual)
             if not spack.repo.PATH.is_virtual(spec.name):
-                Spec.ensure_valid_variants(spec)
+                Spec.ensure_valid_variants(spec, repo=spack.repo.PATH)
                 substitute_abstract_variants(spec)
 
     @staticmethod
-    def ensure_valid_variants(spec: "Spec") -> None:
+    def ensure_valid_variants(spec: "Spec", *, repo: spack.repo.RepoPath) -> None:
         """Ensures that the variant attached to the given spec are valid.
 
         Raises:
@@ -2978,7 +2978,7 @@ class Spec:
         if spec.concrete:
             return
 
-        pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
+        pkg_cls = repo.get_pkg_class(spec.fullname)
         pkg_variants = pkg_cls.variant_names()
         # reserved names are variants that may be set on any package
         # but are not necessarily recorded by the package's class
