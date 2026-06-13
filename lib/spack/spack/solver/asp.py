@@ -3859,7 +3859,7 @@ def post_process_concretization_result(specs: SpecDict, *, context: SpackContext
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
     for root in roots.values():
-        spack.spec._inject_patches_variant(root)
+        spack.spec._inject_patches_variant(root, repo=context.repo)
 
     for s in specs.values():
         # Add external paths to specs with just external modules

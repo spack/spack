@@ -4658,8 +4658,8 @@ def test_concretization_cache_reapplies_patches_on_hit(
     # as if a new patch directive had been added to the package.
     original_inject = spack.spec._inject_patches_variant
 
-    def inject_with_new_patch(root):
-        original_inject(root)
+    def inject_with_new_patch(root, *, repo):
+        original_inject(root, repo=repo)
         for s in root.traverse():
             if s.name == "patch" and not s.concrete and "patches" in s.variants:
                 existing = list(s.variants["patches"].value)

@@ -5736,7 +5736,7 @@ def eval_conditional(string):
     return eval(string, valid_variables)
 
 
-def _inject_patches_variant(root: Spec) -> None:
+def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
     # This dictionary will store object IDs rather than Specs as keys
     # since the Spec __hash__ will change as patches are added to them
     spec_to_patches: Dict[int, Set[spack.patch.Patch]] = {}
@@ -5752,7 +5752,7 @@ def _inject_patches_variant(root: Spec) -> None:
         # Add any patches from the package to the spec.
         node_patches = {
             patch
-            for cond, patch_list in spack.repo.PATH.get_pkg_class(s.fullname).patches.items()
+            for cond, patch_list in repo.get_pkg_class(s.fullname).patches.items()
             if s.satisfies(cond)
             for patch in patch_list
         }
@@ -5764,7 +5764,7 @@ def _inject_patches_variant(root: Spec) -> None:
         if dspec.spec.concrete:
             continue
 
-        pkg_deps = spack.repo.PATH.get_pkg_class(dspec.parent.fullname).dependencies
+        pkg_deps = repo.get_pkg_class(dspec.parent.fullname).dependencies
 
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
