@@ -1384,7 +1384,9 @@ class SpackSolverSetup:
         self.possible_graph = create_graph_analyzer(self.context)
 
         # these are all initialized in setup()
-        self.requirement_parser = RequirementParser(spack.config.CONFIG)
+        self.requirement_parser = RequirementParser(
+            configuration=self.context.config, repo=self.context.repo
+        )
         self.possible_virtuals: Set[str] = set()
 
         # pkg_name -> version -> list of possible origins (package.py, installed, etc.)
@@ -3033,7 +3035,7 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs())  # type: ignore[type-var]
+        self.libcs = sorted(all_libcs(self.context.config))  # type: ignore[type-var]
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:

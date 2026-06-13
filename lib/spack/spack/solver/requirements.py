@@ -30,13 +30,15 @@ def _mark_str(raw) -> str:
     return f"{mark.name}:{mark.line + 1}: "
 
 
-def _check_unknown_virtuals_on_edges(raw_strs: List[str], specs: List["spack.spec.Spec"]) -> None:
+def _check_unknown_virtuals_on_edges(
+    raw_strs: List[str], specs: List["spack.spec.Spec"], *, repo: spack.repo.RepoPath
+) -> None:
     """Raise if any edge in *specs* requires a virtual that does not exist in the repository."""
     errors = []
     for raw, spec in zip(raw_strs, specs):
         for edge in spack.traverse.traverse_edges([spec], root=False):
             for virtual in edge.virtuals:
-                if not spack.repo.PATH.is_virtual(virtual):
+                if not repo.is_virtual(virtual):
                     errors.append(
                         f"{_mark_str(raw)}'{virtual}' in '{raw}' is not a known virtual package"
                     )
@@ -169,10 +171,11 @@ def conflict(
 class RequirementParser:
     """Parses requirements from package.py files and configuration, and returns rules."""
 
-    def __init__(self, configuration: spack.config.Configuration):
+    def __init__(self, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath):
         self.config = configuration
-        self.runtime_pkgs = spack.repo.PATH.packages_with_tags("runtime")
-        self.compiler_pkgs = spack.repo.PATH.packages_with_tags("compiler")
+        self.repo = repo
+        self.runtime_pkgs = repo.packages_with_tags("runtime")
+        self.compiler_pkgs = repo.packages_with_tags("compiler")
         self.preferences_from_input: List[Tuple[spack.spec.Spec, str]] = []
         self.toolchains = configuration.get_config("toolchains")
         self._warned_compiler_all: set = set()
@@ -341,7 +344,7 @@ class RequirementParser:
                     for constraint in raw_strs
                 ]
                 _check_unknown_targets(raw_strs, constraints)
-                _check_unknown_virtuals_on_edges(raw_strs, constraints)
+                _check_unknown_virtuals_on_edges(raw_strs, constraints, repo=self.repo)
                 when_str = requirement.get("when")
                 when = self._parse_and_expand(when_str) if when_str else spack.spec.EMPTY_SPEC
 

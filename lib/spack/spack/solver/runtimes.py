@@ -7,7 +7,6 @@ import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
 import spack.hash_lookup
-import spack.repo
 import spack.spec
 import spack.util.libc
 import spack.version
@@ -242,8 +241,9 @@ class RuntimePropertyRecorder:
         facts for the runtimes.
         """
         self._setup.gen.h2("Runtimes: declarations")
+        repo = self._setup.context.repo
         runtime_pkgs = sorted(
-            {x.name for x in self.injected_dependencies if not spack.repo.PATH.is_virtual(x.name)}
+            {x.name for x in self.injected_dependencies if not repo.is_virtual(x.name)}
         )
         for runtime_pkg in runtime_pkgs:
             self._setup.gen.fact(fn.runtime(runtime_pkg))
@@ -264,11 +264,11 @@ class RuntimePropertyRecorder:
         self._setup.effect_rules()
 
 
-def all_libcs() -> Set[spack.spec.Spec]:
+def all_libcs(configuration: spack.config.Configuration) -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
     libcs = set()
-    for c in spack.compilers.config.all_compilers_from(spack.config.CONFIG):
+    for c in spack.compilers.config.all_compilers_from(configuration):
         candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
         if candidate is not None:
             libcs.add(candidate)
