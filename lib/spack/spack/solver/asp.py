@@ -1013,9 +1013,9 @@ class PyclingoDriver:
 
         timer.start("solve")
         # A timeout of 0 means no timeout
-        time_limit = spack.config.CONFIG.get("concretizer:timeout", 0)
+        time_limit = setup.context.config.get("concretizer:timeout", 0)
         timeout_end = time.monotonic() + time_limit if time_limit > 0 else float("inf")
-        error_on_timeout = spack.config.CONFIG.get("concretizer:error_on_timeout", True)
+        error_on_timeout = setup.context.config.get("concretizer:error_on_timeout", True)
         with self.control.solve(on_model=on_model, async_=True) as handle:
             # Allow handling of interrupts every second.
             #
@@ -1046,7 +1046,9 @@ class PyclingoDriver:
 
         timer.start("construct_specs")
         # get the best model
-        builder = SpecBuilder(specs, hash_lookup=setup.reusable_and_possible)
+        builder = SpecBuilder(
+            specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
+        )
         min_cost, best_model = min(models)
 
         # first check for errors
@@ -3009,7 +3011,7 @@ class SpackSolverSetup:
             x for x in reuse if x.name in supported_compilers and not x.external
         }
         candidate_compilers, self.rejected_compilers = possible_compilers(
-            configuration=spack.config.CONFIG
+            configuration=self.context.config, store=self.context.store
         )
         reuse_from_compilers = traverse.traverse_nodes(
             [x for x in candidate_compilers if not x.external], deptype=("link", "run")
@@ -3472,7 +3474,9 @@ class ProblemInstanceBuilder:
         self.asp_problem.append("")
 
 
-def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
+def possible_compilers(
+    *, configuration, store: spack.store.Store
+) -> Tuple[Set["spack.spec.Spec"], Set["spack.spec.Spec"]]:
     result, rejected = set(), set()
 
     # Compilers defined in configuration
@@ -3510,7 +3514,7 @@ def possible_compilers(*, configuration) -> Tuple[Set["spack.spec.Spec"], Set["s
     # Compilers from the local store
     supported_compilers = spack.compilers.config.supported_compilers()
     for pkg_name in supported_compilers:
-        result.update(spack.store.STORE.db.query(pkg_name))
+        result.update(store.db.query(pkg_name))
 
     return result, rejected
 
@@ -3551,8 +3555,9 @@ class SpecBuilder:
         """
         return NodeId(id="0", pkg=pkg)
 
-    def __init__(self, specs, hash_lookup=None):
+    def __init__(self, specs, *, repo: spack.repo.RepoPath, hash_lookup=None):
         self._specs: Dict[NodeId, spack.spec.Spec] = {}
+        self.repo = repo
 
         # Matches parent nodes to splice node
         self._splices: SpliceDict = {}
@@ -3679,7 +3684,7 @@ class SpecBuilder:
                 )
 
                 pkg = node.pkg
-                if spack.repo.PATH.is_virtual(pkg):
+                if self.repo.is_virtual(pkg):
                     continue
 
                 # if we've already gotten a concrete spec for this pkg, we're done, unless
@@ -4033,9 +4038,9 @@ class Solver:
 
         # Compute packages configuration with implicit externals once and reuse it
         self.packages_with_externals = (
-            spack.externals_config.external_config_with_implicit_externals(spack.config.CONFIG)
+            spack.externals_config.external_config_with_implicit_externals(self.context.config)
         )
-        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
+        completion_mode = self.context.config.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(
             context=self.context,
             external_parser=spack.externals_config.create_external_parser(
