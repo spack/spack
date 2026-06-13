@@ -9,6 +9,7 @@ import spack.cmd
 import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.solver.context import Context
 from spack.solver.input_analysis import create_graph_analyzer
 from spack.util import tty
 from spack.util.tty.colify import colify
@@ -68,7 +69,7 @@ def dependencies(parser, args):
 
     else:
         spec = specs[0]
-        dependencies, virtuals, _ = create_graph_analyzer().possible_dependencies(
+        dependencies, virtuals, _ = create_graph_analyzer(Context.default()).possible_dependencies(
             spec,
             transitive=args.transitive,
             expand_virtuals=args.expand_virtuals,

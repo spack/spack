@@ -1377,8 +1377,11 @@ class SpackSolverSetup:
     gen: "ProblemInstanceBuilder"
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
-    def __init__(self, tests: spack.concretize.TestsType = False):
-        self.possible_graph = create_graph_analyzer()
+    def __init__(
+        self, tests: spack.concretize.TestsType = False, *, context: Optional[Context] = None
+    ):
+        self.context = context or Context.default()
+        self.possible_graph = create_graph_analyzer(self.context)
 
         # these are all initialized in setup()
         self.requirement_parser = RequirementParser(spack.config.CONFIG)
@@ -4071,7 +4074,7 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, context=self.context)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
         result = self.driver.solve(
@@ -4121,7 +4124,7 @@ class Solver:
         specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
-        setup = SpackSolverSetup(tests=tests)
+        setup = SpackSolverSetup(tests=tests, context=self.context)
 
         # Tell clingo that we don't have to solve all the inputs at once
         setup.concretize_everything = False

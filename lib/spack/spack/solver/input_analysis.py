@@ -20,6 +20,8 @@ from spack.error import SpackError
 from spack.spec import EMPTY_SPEC
 from spack.util import lang, tty
 
+from .context import Context
+
 
 class PossibleGraph(NamedTuple):
     real_pkgs: Set[str]
@@ -29,6 +31,11 @@ class PossibleGraph(NamedTuple):
 
 class PossibleDependencyGraph:
     """Returns information needed to set up an ASP problem"""
+
+    #: Configuration and repository the analysis is performed against. Set by subclasses, and
+    #: read by the counters that consume the graph, so they don't reach for process globals.
+    configuration: spack.config.Configuration
+    repo: spack.repo.RepoPath
 
     def unreachable(self, *, pkg_name: str, when_spec: spack.spec.Spec) -> bool:
         """Returns true if the context can determine that the condition cannot ever
@@ -354,16 +361,16 @@ class StaticAnalysis(NoStaticAnalysis):
         return False
 
 
-def create_graph_analyzer() -> PossibleDependencyGraph:
-    static_analysis = spack.config.CONFIG.get("concretizer:static_analysis", False)
+def create_graph_analyzer(context: Context) -> PossibleDependencyGraph:
+    static_analysis = context.config.get("concretizer:static_analysis", False)
     if static_analysis:
         return StaticAnalysis(
-            configuration=spack.config.CONFIG,
-            repo=spack.repo.PATH,
-            store=spack.store.STORE,
-            binary_index=spack.binary_distribution.BINARY_INDEX,
+            configuration=context.config,
+            repo=context.repo,
+            store=context.store,
+            binary_index=context.binary_index,
         )
-    return NoStaticAnalysis(configuration=spack.config.CONFIG, repo=spack.repo.PATH)
+    return NoStaticAnalysis(configuration=context.config, repo=context.repo)
 
 
 class Counter:
@@ -391,7 +398,7 @@ class Counter:
 
         self._possible_dependencies: Set[str] = set()
         self._possible_virtuals: Set[str] = {
-            x.name for x in specs if spack.repo.PATH.is_virtual(x.name)
+            x.name for x in specs if possible_graph.repo.is_virtual(x.name)
         }
 
     def possible_dependencies(self) -> Set[str]:
@@ -475,7 +482,7 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
     def possible_packages_facts(self, gen, fn):
         build_tools = set()
         for current_tag in ("build-tools", "compiler"):
-            build_tools.update(spack.repo.PATH.packages_with_tags(current_tag))
+            build_tools.update(self.possible_graph.repo.packages_with_tags(current_tag))
 
         gen.h2("Packages with at most a single node")
         for package_name in sorted(self.possible_dependencies() - build_tools):
@@ -483,8 +490,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         gen.newline()
 
         gen.h2("Packages with multiple possible nodes (build-tools)")
-        default = spack.config.CONFIG.get("concretizer:duplicates:max_dupes:default", 1)
-        duplicates = spack.config.CONFIG.get("concretizer:duplicates:max_dupes", {})
+        configuration = self.possible_graph.configuration
+        default = configuration.get("concretizer:duplicates:max_dupes:default", 1)
+        duplicates = configuration.get("concretizer:duplicates:max_dupes", {})
         for package_name in sorted(self.possible_dependencies() & build_tools):
             max_dupes = duplicates.get(package_name, default)
             gen.fact(fn.max_dupes(package_name, max_dupes))
@@ -518,7 +526,7 @@ class FullDuplicatesCounter(MinimalDuplicatesCounter):
         gen.h2("Build unification sets ")
         build_tools = set()
         for current_tag in ("build-tools", "compiler"):
-            build_tools.update(spack.repo.PATH.packages_with_tags(current_tag))
+            build_tools.update(self.possible_graph.repo.packages_with_tags(current_tag))
 
         for name in sorted(self.possible_dependencies() & build_tools):
             gen.fact(fn.multiple_unification_sets(name))
@@ -543,7 +551,7 @@ def create_counter(
     tests: spack.concretize.TestsType,
     possible_graph: PossibleDependencyGraph,
 ) -> Counter:
-    strategy = spack.config.CONFIG.get("concretizer:duplicates:strategy", "none")
+    strategy = possible_graph.configuration.get("concretizer:duplicates:strategy", "none")
     if strategy == "full":
         return FullDuplicatesCounter(specs, tests=tests, possible_graph=possible_graph)
     if strategy == "minimal":
