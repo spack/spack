@@ -1433,7 +1433,7 @@ class SpackSolverSetup:
         self.libcs: List[spack.spec.Spec] = []
 
         # If true, we have to load the code for synthesizing splices
-        self.enable_splicing: bool = spack.config.CONFIG.get("concretizer:splice:automatic")
+        self.enable_splicing: bool = self.context.config.get("concretizer:splice:automatic")
 
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
@@ -1998,7 +1998,7 @@ class SpackSolverSetup:
             self.gen.newline()
 
     def virtual_requirements_and_weights(self):
-        virtual_preferences = spack.config.CONFIG.get("packages:all:providers", {})
+        virtual_preferences = self.context.config.get("packages:all:providers", {})
 
         self.gen.h1("Virtual requirements and weights")
         for virtual_str in sorted(self.possible_virtuals):
@@ -2275,7 +2275,7 @@ class SpackSolverSetup:
 
         if name:
             clauses.append(
-                f.node(name) if not spack.repo.PATH.is_virtual(name) else f.virtual_node(name)
+                f.node(name) if not self.context.repo.is_virtual(name) else f.virtual_node(name)
             )
         if spec.namespace:
             clauses.append(f.namespace(name, spec.namespace))
@@ -2303,7 +2303,7 @@ class SpackSolverSetup:
 
             for value in variant.values:
                 # ensure that the value *can* be valid for the spec
-                if name and not spec.concrete and not spack.repo.PATH.is_virtual(name):
+                if name and not spec.concrete and not self.context.repo.is_virtual(name):
                     variant_defs = vt.prevalidate_variant_value(
                         self.pkg_class(name), variant, spec
                     )
@@ -2494,7 +2494,7 @@ class SpackSolverSetup:
         self, possible_pkgs: Set[str], *, require_checksum: bool, allow_deprecated: bool
     ):
         """Declare any versions in specs not declared in packages."""
-        packages_yaml = spack.config.CONFIG.get_config("packages")
+        packages_yaml = self.context.config.get_config("packages")
         for pkg_name in sorted(possible_pkgs):
             pkg_cls = self.pkg_class(pkg_name)
 
@@ -2642,7 +2642,7 @@ class SpackSolverSetup:
                 continue
             candidate_targets.append(x)
 
-        host_compatible = spack.config.CONFIG.get("concretizer:targets:host_compatible")
+        host_compatible = self.context.config.get("concretizer:targets:host_compatible")
         for spec in specs:
             if not spec.architecture or not spec.architecture.target:
                 continue
@@ -2849,7 +2849,7 @@ class SpackSolverSetup:
 
         try:
             # Only consider installed packages for repo we know
-            spack.repo.PATH.get(spec)
+            self.context.repo.get(spec)
         except (spack.repo.UnknownNamespaceError, spack.repo.UnknownPackageError) as e:
             tty.debug(f"[REUSE] Issues when trying to reuse {spec.short_spec}: {str(e)}")
             return
@@ -2887,7 +2887,7 @@ class SpackSolverSetup:
     def impossible_dependencies_check(self, specs) -> None:
         for edge in traverse.traverse_edges(specs):
             possible_deps = self.pkgs
-            if spack.repo.PATH.is_virtual(edge.spec.name):
+            if self.context.repo.is_virtual(edge.spec.name):
                 possible_deps = self.possible_virtuals
             if edge.spec.name not in possible_deps and not str(edge.when):
                 raise InvalidDependencyError(
@@ -2900,7 +2900,7 @@ class SpackSolverSetup:
         impossible = []
 
         for spec in traverse.traverse_nodes(specs):
-            if spack.repo.PATH.is_virtual(spec.name):
+            if self.context.repo.is_virtual(spec.name):
                 continue
             if spec.name not in self.pkgs:
                 continue  # conditional dependency that won't be satisfied
@@ -2935,7 +2935,7 @@ class SpackSolverSetup:
     def _validate_input_specs(self, specs: Sequence[spack.spec.Spec]) -> None:
         _check_unknown_virtuals_in_input_specs(specs)
 
-        repo = spack.repo.PATH
+        repo = self.context.repo
         analyzer = self.possible_graph
 
         for root in specs:
@@ -3000,7 +3000,7 @@ class SpackSolverSetup:
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
-                spack.externals_config.external_config_with_implicit_externals(spack.config.CONFIG)
+                spack.externals_config.external_config_with_implicit_externals(self.context.config)
             )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
@@ -3182,7 +3182,7 @@ class SpackSolverSetup:
 
         for compiler in self.possible_compilers:
             try:
-                compiler_cls = spack.repo.PATH.get_pkg_class(compiler.name)
+                compiler_cls = self.context.repo.get_pkg_class(compiler.name)
             except spack.repo.UnknownPackageError:
                 pass
             else:
@@ -3266,7 +3266,8 @@ class SpackSolverSetup:
 
             requirements.append(
                 fn.attr(
-                    "virtual_root" if spack.repo.PATH.is_virtual(spec.name) else "root", spec.name
+                    "virtual_root" if self.context.repo.is_virtual(spec.name) else "root",
+                    spec.name,
                 )
             )
             requirements = [x for x in requirements if x.args[0] != "depends_on"]
@@ -3305,7 +3306,7 @@ class SpackSolverSetup:
             ) -> List[AspFunction]:
                 ret = remove_facts("virtual_node")(name, input_spec, requirements)
                 for edge in input_spec.traverse_edges(root=False, cover="edges"):
-                    if spack.repo.PATH.is_virtual(edge.spec.name):
+                    if self.context.repo.is_virtual(edge.spec.name):
                         parent_name = name if edge.parent is input_spec else edge.parent.name
                         ret.append(fn.attr("uses_virtual", parent_name, edge.spec.name))
                 return ret
@@ -3339,7 +3340,7 @@ class SpackSolverSetup:
         versions. If they are abstract and statically have no match, then we
         need to throw an error. This function assumes all possible versions are already
         registered in self.possible_versions."""
-        for pkg_name, d in spack.config.CONFIG.get_config("packages").items():
+        for pkg_name, d in self.context.config.get_config("packages").items():
             if pkg_name == "all" or "require" not in d:
                 continue
 
@@ -3401,7 +3402,7 @@ class SpackSolverSetup:
         if pkg_name in self.explicitly_required_namespaces:
             namespace = self.explicitly_required_namespaces[pkg_name]
             request = f"{namespace}.{pkg_name}"
-        return spack.repo.PATH.get_pkg_class(request)
+        return self.context.repo.get_pkg_class(request)
 
 
 class _Head:
