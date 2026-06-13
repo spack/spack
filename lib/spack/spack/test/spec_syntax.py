@@ -1275,7 +1275,9 @@ def test_spec_by_hash_tokens(text, tokens):
 def test_spec_by_hash(database, monkeypatch, config):
     mpileaks = database.query_one("mpileaks ^zmpi")
     b = spack.concretize.concretize_one("pkg-b")
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda index=None: [b]
+    )
 
     hash_str = f"/{mpileaks.dag_hash()}"
     parsed_spec = SpecParser(hash_str).next_spec()
@@ -1450,7 +1452,7 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
     monkeypatch.setattr(
         spack.binary_distribution,
         "update_cache_and_get_specs",
-        lambda: [spec1_concrete, spec2_concrete],
+        lambda index=None: [spec1_concrete, spec2_concrete],
     )
 
     # Ordering is tricky -- for constraints we want after, for names we want before

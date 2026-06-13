@@ -2243,7 +2243,7 @@ def get_mirrors_for_spec(spec: spack.spec.Spec, index_only: bool = False) -> Lis
     return results
 
 
-def update_cache_and_get_specs():
+def update_cache_and_get_specs(index=None):
     """
     Get all concrete specs for build caches available on configured mirrors.
     Initialization of internal cache data structures is done as lazily as
@@ -2251,11 +2251,16 @@ def update_cache_and_get_specs():
     local index cache (essentially a no-op if it has been done already and
     nothing has changed on the configured mirrors.)
 
+    Args:
+        index: buildcache index to query. If None, the global ``BINARY_INDEX`` is used.
+
     Raises:
         FetchCacheError
     """
-    BINARY_INDEX.update()
-    return BINARY_INDEX.get_all_built_specs()
+    if index is None:
+        index = BINARY_INDEX
+    index.update()
+    return index.get_all_built_specs()
 
 
 def load_buildcache_index() -> None:
@@ -2538,15 +2543,20 @@ def download_single_spec(
 class BinaryCacheQuery:
     """Callable object to query if a spec is in a binary cache"""
 
-    def __init__(self, all_architectures):
+    def __init__(self, all_architectures, index=None):
         """
         Args:
             all_architectures (bool): if True consider all the spec for querying,
                 otherwise restrict to the current default architecture
+            index: buildcache index to query. If None, the global ``BINARY_INDEX`` is used.
         """
         self.all_architectures = all_architectures
 
-        specs = update_cache_and_get_specs()
+        # Keep the default-index call signature identical to the historical one, so existing
+        # callers (and test stubs) that replace ``update_cache_and_get_specs`` keep working.
+        specs = (
+            update_cache_and_get_specs() if index is None else update_cache_and_get_specs(index)
+        )
 
         if not self.all_architectures:
             arch = spack.spec.Spec.default_arch()

@@ -43,7 +43,6 @@ import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
 import spack.concretize
-import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
@@ -1182,9 +1181,7 @@ class PyclingoDriver:
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
-            post_process_concretization_result(
-                spec_dict, configuration=setup.context.config, repo=setup.context.repo
-            )
+            post_process_concretization_result(spec_dict, context=setup.context)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
@@ -2081,7 +2078,7 @@ class SpackSolverSetup:
 
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
-                spack.hash_lookup.replace_hash(spec)
+                spack.hash_lookup.replace_hash(spec, context=self.context)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
@@ -3846,9 +3843,7 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
         specs.update(new_specs)
 
 
-def post_process_concretization_result(
-    specs: SpecDict, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
-) -> None:
+def post_process_concretization_result(specs: SpecDict, *, context: SpackContext) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
     These post-steps depend on package information like patches, package hash, etc. They
@@ -3868,11 +3863,11 @@ def post_process_concretization_result(
 
     for s in specs.values():
         # Add external paths to specs with just external modules
-        _ensure_external_path_if_external(s, repo=repo)
+        _ensure_external_path_if_external(s, repo=context.repo)
         _develop_specs_from_env(s, active_environment())
 
         # check for commits must happen after all version adaptations are complete
-        _specs_with_commits(s, repo=repo)
+        _specs_with_commits(s, repo=context.repo)
 
     # mark concrete and assign hashes to all specs in the solve
     for root in roots.values():
@@ -3900,15 +3895,13 @@ def post_process_concretization_result(
                     spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                 )
 
-    new_specs = execute_explicit_splices(specs, configuration=configuration)
+    new_specs = execute_explicit_splices(specs, context=context)
     specs.clear()
     specs.update(new_specs)
 
 
-def execute_explicit_splices(
-    specs: SpecDict, *, configuration: spack.config.Configuration
-) -> SpecDict:
-    splice_config = configuration.get("concretizer:splice:explicit", [])
+def execute_explicit_splices(specs: SpecDict, *, context: SpackContext) -> SpecDict:
+    splice_config = context.config.get("concretizer:splice:explicit", [])
     splice_triples = []
     for splice_set in splice_config:
         target = splice_set["target"]
@@ -3934,7 +3927,7 @@ def execute_explicit_splices(
 
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
-                    spack.hash_lookup.replace_hash(replacement)
+                    spack.hash_lookup.replace_hash(replacement, context=context)
                 current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
@@ -4096,7 +4089,7 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
         """
-        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s, context=self.context) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests, context=self.context)
@@ -4146,7 +4139,7 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
-        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s, context=self.context) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests, context=self.context)
