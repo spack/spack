@@ -5426,9 +5426,10 @@ def test_concretization_cache_skips_automatic_splice(
 
 @pytest.mark.xfail(
     strict=True,
-    reason="supported_compilers() hardcodes spack.repo.PATH (compilers/config.py); the solver "
-    "passes context.config down the compiler-config chain but never threads repo. Remove this "
-    "marker once that leak is closed.",
+    reason="The injected RepoPath still builds its package index through the global "
+    "spack.caches.MISC_CACHE, which lazily reads spack.config.CONFIG; nulling CONFIG makes that "
+    "lazy init fail. Closing this needs a config-derived cache threaded into Repo/RepoPath "
+    "construction (repo layer, separate from the solver). Remove this marker once that is done.",
 )
 def test_solve_uses_injected_context_not_globals(
     tmp_path, monkeypatch, config, mock_packages, mock_packages_repo

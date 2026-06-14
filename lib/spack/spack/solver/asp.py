@@ -3037,7 +3037,9 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
-        self.libcs = sorted(all_libcs(self.context.config))  # type: ignore[type-var]
+        self.libcs = sorted(  # type: ignore[type-var]
+            all_libcs(self.context.config, repo=self.context.repo)
+        )
 
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
@@ -3483,7 +3485,7 @@ def possible_compilers(
     result, rejected = set(), set()
 
     # Compilers defined in configuration
-    for c in spack.compilers.config.all_compilers_from(context.config):
+    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
         if spack.platforms.using_libc_compatibility() and not c_compiler_runs(c):
             rejected.add(c)
             try:
@@ -4037,7 +4039,7 @@ class Solver:
 
         # Compute possible compilers first, so we see them as externals
         _ = spack.compilers.config.all_compilers(
-            configuration=self.context.config, init_config=True
+            configuration=self.context.config, init_config=True, repo=self.context.repo
         )
 
         cache_root = self.context.config.get("concretizer:concretization_cache:url", None)

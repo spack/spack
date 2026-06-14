@@ -293,7 +293,9 @@ class ReusableSpecsSelector:
                     has_external_source = True
                     if include:
                         # Since libcs are implicit externals, we need to implicitly include them
-                        include = include + sorted(all_libcs(self.configuration))  # type: ignore[type-var]
+                        include = include + sorted(  # type: ignore[type-var]
+                            all_libcs(self.configuration, repo=self.repo)
+                        )
                     self.reuse_sources.append(
                         spec_filter_from_packages_yaml(
                             external_parser=external_parser,

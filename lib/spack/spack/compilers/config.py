@@ -93,9 +93,15 @@ def select_new_compilers(
     return [c for c in candidates if c not in compilers_in_config]
 
 
-def supported_compilers() -> List[str]:
-    """Returns all the currently supported compiler packages"""
-    return sorted(spack.repo.PATH.packages_with_tags(COMPILER_TAG))
+def supported_compilers(*, repo: Optional[spack.repo.RepoPath] = None) -> List[str]:
+    """Returns all the currently supported compiler packages.
+
+    Args:
+        repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
+    """
+    if repo is None:
+        repo = spack.repo.PATH
+    return sorted(repo.packages_with_tags(COMPILER_TAG))
 
 
 def all_compilers(
@@ -103,6 +109,7 @@ def all_compilers(
     scope: Optional[str] = None,
     init_config: bool = True,
     configuration: Optional[spack.config.Configuration] = None,
+    repo: Optional[spack.repo.RepoPath] = None,
 ) -> List[spack.spec.Spec]:
     """Returns all the compilers from the given configuration.
 
@@ -111,15 +118,17 @@ def all_compilers(
             configuration is used.
         init_config: if True, search for compilers if none is found in configuration.
         configuration: configuration to be queried. If None, the global configuration is used.
+        repo: package repository used to enumerate compiler packages. If None, the global
+            ``spack.repo.PATH`` is used.
     """
     if configuration is None:
         configuration = spack.config.CONFIG
 
-    compilers = all_compilers_from(configuration=configuration, scope=scope)
+    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     if not compilers and init_config:
         _init_packages_yaml(configuration, scope=scope)
-        compilers = all_compilers_from(configuration=configuration, scope=scope)
+        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
 
     return compilers
 
@@ -151,7 +160,10 @@ def _init_packages_yaml(
 
 
 def all_compilers_from(
-    configuration: spack.config.Configuration, scope: Optional[str] = None
+    configuration: spack.config.Configuration,
+    scope: Optional[str] = None,
+    *,
+    repo: Optional[spack.repo.RepoPath] = None,
 ) -> List[spack.spec.Spec]:
     """Returns all the compilers from the current global configuration.
 
@@ -159,8 +171,10 @@ def all_compilers_from(
         configuration: configuration to be queried
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
+        repo: package repository used to enumerate compiler packages. If None, the global
+            ``spack.repo.PATH`` is used.
     """
-    compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope)
+    compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope, repo=repo)
     return compilers
 
 
@@ -266,10 +280,13 @@ class CompilerFactory:
 
     @staticmethod
     def from_packages_yaml(
-        configuration: spack.config.Configuration, *, scope: Optional[str] = None
+        configuration: spack.config.Configuration,
+        *,
+        scope: Optional[str] = None,
+        repo: Optional[spack.repo.RepoPath] = None,
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
-        compiler_package_names = supported_compilers()
+        compiler_package_names = supported_compilers(repo=repo)
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
