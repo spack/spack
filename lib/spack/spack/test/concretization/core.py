@@ -5422,3 +5422,37 @@ def test_concretization_cache_skips_automatic_splice(
     spec2 = spack.concretize.concretize_one(goal)
     assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="supported_compilers() hardcodes spack.repo.PATH (compilers/config.py); the solver "
+    "passes context.config down the compiler-config chain but never threads repo. Remove this "
+    "marker once that leak is closed.",
+)
+def test_solve_uses_injected_context_not_globals(
+    tmp_path, monkeypatch, config, mock_packages, mock_packages_repo
+):
+    """A solve driven by an explicit SpackContext must not read the process globals.
+
+    The context is built entirely from fixture objects (and an explicit cache root). We then
+    null exactly the four globals that ``SpackContext`` wraps; if any part of the solve reached
+    for one of them instead of the injected context, it would raise ``AttributeError``.
+    """
+    context = spack.spack_context.SpackContext(
+        config=config,
+        store=spack.store.create(config),
+        repo=spack.repo.RepoPath(mock_packages_repo),
+        binary_index=spack.binary_distribution.BinaryIndexCache(cache_root=str(tmp_path)),
+    )
+
+    monkeypatch.setattr(spack.config, "CONFIG", None)
+    monkeypatch.setattr(spack.store, "STORE", None)
+    monkeypatch.setattr(spack.repo, "PATH", None)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
+
+    result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a")])
+
+    assert result.specs, "the solve produced no concrete spec"
+    concrete = result.specs[0]
+    assert concrete.concrete and concrete.name == "pkg-a"
