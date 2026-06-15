@@ -77,7 +77,9 @@ class ClingoBootstrapConcretizer:
 
         candidates = [
             x
-            for x in spack.compilers.config.CompilerFactory.from_packages_yaml(spack.config.CONFIG)
+            for x in spack.compilers.config.CompilerFactory.from_packages_yaml(
+                spack.config.CONFIG, repo=spack.repo.PATH
+            )
             if x.name == compiler_name
         ]
         if not candidates:

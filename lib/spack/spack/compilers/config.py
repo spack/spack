@@ -36,7 +36,9 @@ def compiler_config_files():
     for scope in configuration.writable_scopes:
         name = scope.name
 
-        from_packages_yaml = CompilerFactory.from_packages_yaml(configuration, scope=name)
+        from_packages_yaml = CompilerFactory.from_packages_yaml(
+            configuration, scope=name, repo=spack.repo.PATH
+        )
         if from_packages_yaml:
             config_files.append(configuration.get_config_filename(name, "packages"))
 
@@ -283,7 +285,7 @@ class CompilerFactory:
         configuration: spack.config.Configuration,
         *,
         scope: Optional[str] = None,
-        repo: Optional[spack.repo.RepoPath] = None,
+        repo: spack.repo.RepoPath,
     ) -> List[spack.spec.Spec]:
         """Returns the compiler specs defined in the "packages" section of the configuration"""
         compiler_package_names = supported_compilers(repo=repo)
