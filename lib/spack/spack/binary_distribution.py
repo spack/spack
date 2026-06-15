@@ -190,7 +190,9 @@ class BinaryIndexCache:
     """
 
     def __init__(self, cache_root: Optional[str] = None):
-        self._index_cache_root: str = cache_root or binary_index_location()
+        self._index_cache_root: str = cache_root or binary_index_location(
+            config=spack.config.CONFIG
+        )
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = "contents.json"
@@ -513,11 +515,9 @@ class BinaryIndexCache:
         return True
 
 
-def binary_index_location():
+def binary_index_location(*, config: spack.config.Configuration):
     """Set up a BinaryIndexCache for remote buildcache dbs in the user's homedir."""
-    cache_root = os.path.join(
-        spack.caches.misc_cache_location(config=spack.config.CONFIG), "indices"
-    )
+    cache_root = os.path.join(spack.caches.misc_cache_location(config=config), "indices")
     return spack.config.canonicalize_path(cache_root)
 
 
