@@ -495,8 +495,11 @@ def _try_install_from_binary_cache(
         unsigned: if ``True`` or ``False`` override the mirror signature verification defaults
         timer: timer to keep track of binary install phases.
     """
-    # Early exit if no binary mirrors are configured.
-    if not spack.mirrors.mirror.MirrorCollection(binary=True):
+    # Early exit if no binary mirror accepts this spec (select/exclude filters).
+    if not any(
+        m.matches_binary(pkg.spec, direction="fetch")
+        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    ):
         return False
 
     tty.debug(f"Searching for binary cache of {package_id(pkg.spec)}")
