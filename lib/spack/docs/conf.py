@@ -96,6 +96,7 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
+        "_spack_root/lib/spack/spack/new_installer_windows.py",
     ]
 )
 sphinx_apidoc(
@@ -104,6 +105,7 @@ sphinx_apidoc(
         "--implicit-namespaces",
         ".spack/spack-packages/repos/spack_repo",
         ".spack/spack-packages/repos/spack_repo/builtin/packages",
+        ".spack/spack-packages/repos/spack_repo/builtin/build_systems/generic.py",
     ]
 )
 
@@ -356,6 +358,7 @@ nitpick_ignore = [
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     ("py:class", "spack.repo._PrependFileLoader"),
     # Spack classes that intersphinx is unable to resolve
+    ("py:class", "BuildStatus"),
     ("py:class", "GitOrStandardVersion"),
     ("py:class", "spack.bootstrap._common.QueryInfo"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
@@ -366,6 +369,7 @@ nitpick_ignore = [
     ("py:class", "spack.traverse.EdgeAndDepth"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
+    ("py:class", "SpecFiltersFactory"),
     # TypeVar that is not handled correctly
     ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
     ("py:class", "spack.llnl.util.lang.K"),
@@ -378,6 +382,8 @@ nitpick_ignore = [
     ("py:obj", "spack.llnl.util.lang.KT"),
     ("py:obj", "spack.llnl.util.lang.V"),
     ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:class", "_P"),
+    ("py:class", "spack.util.web._R"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

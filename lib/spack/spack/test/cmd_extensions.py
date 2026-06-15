@@ -94,7 +94,7 @@ def hello_world(parser, args):
 
 @pytest.fixture(scope="function")
 def hello_world_cmd(hello_world_extension):
-    """Create and return an invokable "hello-world" extension command."""
+    """Create and return an invocable "hello-world" extension command."""
     yield spack.main.SpackCommand("hello-world")
 
 
@@ -143,9 +143,7 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(
-                    ext_pname=extension.pname
-                ),
+""".format(ext_pname=extension.pname),
             )
 
             init_file = extension.main / "__init__.py"

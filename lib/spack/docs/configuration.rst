@@ -386,8 +386,8 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. _config-overrides:
 
-Overriding entire sections
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding configuration values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Above, the user ``config.yaml`` only overrides specific settings in the default ``config.yaml``.
 Sometimes, it is useful to *completely* override lower-precedence settings.
@@ -411,6 +411,19 @@ Spack will ignore all lower-precedence configuration under the ``config::`` sect
    config:
      install_tree:
        root: /some/other/directory
+
+Similarly,
+
+.. code-block:: yaml
+   :emphasize-lines: 2
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-install-tree
+
+   config:
+     install_tree::
+       root: /some/other/directory
+
+Will override all config settings within the ``install_tree`` sub-section.
 
 
 List-valued settings

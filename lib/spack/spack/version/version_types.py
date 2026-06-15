@@ -595,7 +595,7 @@ class GitVersion(ConcreteVersion):
 
         if self.ref_lookup is None:
             raise VersionLookupError(
-                f"git ref '{self.ref}' cannot be looked up: " "call attach_lookup first"
+                f"git ref '{self.ref}' cannot be looked up: call attach_lookup first"
             )
 
         version_string, distance = self.ref_lookup.get(self.ref)
@@ -684,7 +684,7 @@ class GitVersion(ConcreteVersion):
         if isinstance(other, GitVersion):
             return (self.ref_version, self.ref) <= (other.ref_version, other.ref)
         if isinstance(other, StandardVersion):
-            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparsion.
+            # Note: GitVersion hash=1.2.3 > StandardVersion 1.2.3, so use < comparison.
             return self.ref_version < other
         if isinstance(other, ClosedOpenRange):
             # Equality is not a thing

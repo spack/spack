@@ -36,6 +36,9 @@ class Gcc(CompilerPackage, Package):
         description="Compilers and runtime libraries to build",
     )
 
+    # This variant is here so that we can test having externals using the non-default value
+    variant("binutils", default=True, description="")
+
     provides("c", "cxx", when="languages=c,c++")
     provides("c", when="languages=c")
     provides("cxx", when="languages=c++")

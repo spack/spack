@@ -87,7 +87,7 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
 def dependents(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
-        tty.die("spack dependents takes only one spec.")
+        args.subparser.error("takes only one spec")
 
     if args.installed:
         env = ev.active_environment()

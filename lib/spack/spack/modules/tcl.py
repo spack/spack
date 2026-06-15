@@ -5,55 +5,38 @@
 """This module implements the classes necessary to generate Tcl
 non-hierarchical modules.
 """
-import os
-from typing import Dict, Optional, Tuple
 
-import spack.config
+import os
+from typing import ClassVar, Dict, Optional
+
 import spack.spec
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 
 
-#: Tcl specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:tcl", {})
-
-
-# Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
-
-
-def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseConfiguration:
-    """Returns the tcl configuration for spec"""
-    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-    key = (spec.dag_hash(), module_set_name, explicit)
-    try:
-        return configuration_registry[key]
-    except KeyError:
-        return configuration_registry.setdefault(
-            key, TclConfiguration(spec, module_set_name, explicit)
-        )
-
-
-def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseFileLayout:
-    """Returns the layout information for spec"""
-    return TclFileLayout(make_configuration(spec, module_set_name, explicit))
-
-
-def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseContext:
-    """Returns the context information for spec"""
-    return TclContext(make_configuration(spec, module_set_name, explicit))
-
-
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
+
+    module_system = "tcl"
+    _registry: ClassVar[Dict] = {}
+
+    @staticmethod
+    def make_layout(
+        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> BaseFileLayout:
+        return TclFileLayout(TclConfiguration.make_configuration(spec, module_set_name, explicit))
+
+    @staticmethod
+    def make_context(
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        *,
+        explicit: Optional[bool] = None,
+        layout: BaseFileLayout,
+    ) -> BaseContext:
+        configuration = TclConfiguration.make_configuration(spec, module_set_name, explicit)
+        return TclContext(configuration, layout)
 
 
 class TclFileLayout(BaseFileLayout):
@@ -76,6 +59,8 @@ class TclContext(BaseContext):
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
+
+    configuration_class = TclConfiguration
 
     default_template = "modules/modulefile.tcl"
 

@@ -11,7 +11,7 @@ import textwrap
 import traceback
 from datetime import datetime
 from types import TracebackType
-from typing import Callable, Iterator, NoReturn, Optional, Type, Union
+from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
 
 from .color import cescape, clen, cprint, cwrite
 
@@ -185,7 +185,7 @@ def info(
     message: Union[Exception, str],
     *args,
     format: str = "*b",
-    stream: Optional[io.IOBase] = None,
+    stream: Optional[IO[str]] = None,
     wrap: bool = False,
     break_long_words: bool = False,
     countback: int = 3,
@@ -201,7 +201,7 @@ def info(
     cprint(
         "@%s{%s==>} %s%s"
         % (format, st_text, get_timestamp(), cescape(_output_filter(str(message)))),
-        stream=stream,  # type: ignore[arg-type]
+        stream=stream,
     )
     for arg in args:
         if wrap:
@@ -225,44 +225,30 @@ def verbose(message, *args, format: str = "c", **kwargs) -> None:
 
 
 def debug(
-    message, *args, level: int = 1, format: str = "g", stream: Optional[io.IOBase] = None, **kwargs
+    message, *args, level: int = 1, format: str = "g", stream: Optional[IO[str]] = None, **kwargs
 ) -> None:
     """Print a debug message if the debug level is set."""
     if is_debug(level):
         stream_arg = stream or sys.stderr
-        info(message, *args, format=format, stream=stream_arg, **kwargs)  # type: ignore[arg-type]
+        info(message, *args, format=format, stream=stream_arg, **kwargs)
 
 
-def error(
-    message, *args, format: str = "*r", stream: Optional[io.IOBase] = None, **kwargs
-) -> None:
+def error(message, *args, format: str = "*r", stream: Optional[IO[str]] = None, **kwargs) -> None:
     """Print an error message."""
     if not error_enabled():
         return
 
     stream = stream or sys.stderr
-    info(
-        f"Error: {message}",
-        *args,
-        format=format,
-        stream=stream,  # type: ignore[arg-type]
-        **kwargs,
-    )
+    info(f"Error: {message}", *args, format=format, stream=stream, **kwargs)
 
 
-def warn(message, *args, format: str = "*Y", stream: Optional[io.IOBase] = None, **kwargs) -> None:
+def warn(message, *args, format: str = "*Y", stream: Optional[IO[str]] = None, **kwargs) -> None:
     """Print a warning message."""
     if not warn_enabled():
         return
 
     stream = stream or sys.stderr
-    info(
-        f"Warning: {message}",
-        *args,
-        format=format,
-        stream=stream,  # type: ignore[arg-type]
-        **kwargs,
-    )
+    info(f"Warning: {message}", *args, format=format, stream=stream, **kwargs)
 
 
 def die(message, *args, countback: int = 4, **kwargs) -> NoReturn:

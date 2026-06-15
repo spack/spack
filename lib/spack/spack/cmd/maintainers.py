@@ -5,7 +5,6 @@
 import argparse
 from collections import defaultdict
 
-import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as color
 import spack.repo
 from spack.llnl.util.tty.colify import colify
@@ -123,7 +122,7 @@ def maintainers(parser, args):
 
     if args.by_user:
         if not args.package_or_user:
-            tty.die("spack maintainers --by-user requires a user or --all")
+            args.subparser.error("--by-user requires a user or --all")
 
         packages = union_values(maintainers_to_packages(args.package_or_user))
         colify(packages)
@@ -131,7 +130,7 @@ def maintainers(parser, args):
 
     else:
         if not args.package_or_user:
-            tty.die("spack maintainers requires a package or --all")
+            args.subparser.error("requires a package or --all")
 
         users = union_values(packages_to_maintainers(args.package_or_user))
         colify(users)

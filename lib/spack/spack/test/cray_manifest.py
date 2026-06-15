@@ -8,6 +8,7 @@ rather than `spec_from_entry`, since the former does additional work to
 establish dependency relationships (and in general the manifest-parsing
 logic needs to consume all related specs in a single pass).
 """
+
 import json
 import pathlib
 

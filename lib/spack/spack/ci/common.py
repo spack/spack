@@ -92,7 +92,6 @@ def copy_files_to_artifacts(
         compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-
         if compress_artifacts:
             copy_gzipped(src, artifacts_dir)
         else:
@@ -268,7 +267,8 @@ class CDashHandler:
         group_id = None
 
         try:
-            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
+            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                response_text = response.read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
 
@@ -543,7 +543,7 @@ class SpackCIConfig:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -570,7 +570,12 @@ class SpackCIConfig:
 
     # Generate IR from the configs
     def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
+        """Generate the IR from the Spack CI configurations.
+
+        Generate makes use of special strings that need to be expanded by python format.
+
+            env_dir: The concrete environment directory used in downstream jobs
+        """
 
         jobs = self.ir["jobs"]
 
@@ -579,8 +584,8 @@ class SpackCIConfig:
             {
                 "build-job": {
                     "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
+                        "spack env activate --without-view {env_dir}",
+                        "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
                 }
@@ -588,18 +593,33 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+        update_index_extra_args = []
+        if buildcache_destination.push_view:
+            update_index_extra_args.extend(["--name", buildcache_destination.push_view])
+            option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
+            if option == "append":
+                # Running this in CI relies on a guarentee from the calling context that there is
+                # only a single writer or the build cache view doesn't require a complete view
+                # after each append.
+                tty.warn("Using --append to update buildcache-destination mirror index view")
+                update_index_extra_args.extend(["-y", "--append"])
+            elif option == "force":
+                update_index_extra_args.append("--force")
+            else:
+                raise SpackCIError(f"Unrecognized value: SPACK_CI_BUILDCACHE_VIEW={option}")
+
         # Job overrides
         overrides = [
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
+                    "script:": [
+                        "spack env activate --without-view {env_dir}",
+                        "spack -v buildcache update-index --keys "
+                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                    ]
                 }
             },
             # Add signing job tags
@@ -713,8 +733,8 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _urlopen(request)
-                        config = json.load(response)
+                        with _urlopen(request) as response:
+                            config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI

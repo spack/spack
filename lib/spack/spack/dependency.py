@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Data structures that represent Spack's dependency relationships."""
+
 from typing import TYPE_CHECKING, Dict, List, Type
 
 import spack.deptypes as dt

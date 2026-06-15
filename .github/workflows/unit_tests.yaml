@@ -37,10 +37,10 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -60,7 +60,7 @@ jobs:
       run: |
           # See https://github.com/coveragepy/coveragepy/issues/2082
           pip install --upgrade pip pytest pytest-xdist pytest-cov "coverage<=7.11.0"
-          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade "mypy>=0.900" "click" "ruff"
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -84,7 +84,7 @@ jobs:
           UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.14' }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
         path: coverage
@@ -93,10 +93,10 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: '3.11'
     - name: Install System packages
@@ -112,7 +112,7 @@ jobs:
       run: "brew install kcov"
     - name: Install Python packages
       run: |
-          pip install --upgrade pip pytest coverage[toml] pytest-xdist
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -123,7 +123,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-shell
         path: coverage
@@ -140,7 +140,7 @@ jobs:
           dnf install -y \
               bzip2 curl gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -149,7 +149,7 @@ jobs:
           . .github/workflows/bin/setup_git.sh
     - name: Setup a virtual environment with platform-python
       run: |
-          /usr/libexec/platform-python -m venv ~/platform-spack 
+          /usr/libexec/platform-python -m venv ~/platform-spack
           source ~/platform-spack/bin/activate
           pip install --upgrade pip pytest coverage[toml] pytest-xdist
     - name: Bootstrap Spack development environment and run unit tests
@@ -157,16 +157,16 @@ jobs:
           source ~/platform-spack/bin/activate
           source share/spack/setup-env.sh
           spack debug report
-          spack -d bootstrap now --dev
+          spack -d bootstrap now
           pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: '3.13'
     - name: Install System packages
@@ -175,8 +175,8 @@ jobs:
           sudo apt-get -y install coreutils gfortran graphviz gnupg2
     - name: Install Python packages
       run: |
-          pip install --upgrade pip pytest coverage[toml] pytest-cov clingo pytest-xdist
-          pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click" "black"
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
+          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
     - name: Run unit tests (full suite with coverage)
       env:
           COVERAGE: true
@@ -188,10 +188,48 @@ jobs:
         spack bootstrap disable github-actions-v2
         spack bootstrap status
         spack solve zlib
-        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/core.py
-    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-clingo-cffi
+        path: coverage
+        include-hidden-files: true
+  # Test for the clingo based solver (using the development clingo v6 from Test PyPI).
+  # clingo v6 is still pre-release; allow this job to fail without blocking the workflow.
+  clingo-v6:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: '3.13'
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          sudo apt-get -y install coreutils gfortran graphviz gnupg2
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
+          pip install --upgrade -r .github/workflows/requirements/style/requirements.txt
+          pip install --upgrade --pre --extra-index-url https://test.pypi.org/simple clingo
+    - name: Run unit tests (full suite with coverage)
+      env:
+          COVERAGE: true
+          COVERAGE_FILE: coverage/.coverage-clingo-v6
+      run: |
+        . share/spack/setup-env.sh
+        spack bootstrap disable spack-install
+        spack bootstrap disable github-actions-v0.6
+        spack bootstrap disable github-actions-v2
+        spack bootstrap status
+        spack solve zlib
+        pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+      with:
+        name: coverage-clingo-v6
         path: coverage
         include-hidden-files: true
   # Run unit tests on MacOS
@@ -202,17 +240,17 @@ jobs:
         os: [macos-15-intel, macos-latest]
         python-version: ["3.14"]
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
           pip install --upgrade pip
           # See https://github.com/coveragepy/coveragepy/issues/2082
-          pip install --upgrade pytest coverage[toml] pytest-xdist pytest-cov "coverage<=7.11.0"
+          pip install --upgrade -r .github/workflows/requirements/unit_tests/requirements.txt
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg kcov
@@ -226,7 +264,7 @@ jobs:
         spack bootstrap disable spack-install
         spack solve zlib
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
-    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
         path: coverage
@@ -239,15 +277,16 @@ jobs:
           powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: '3.14'
     - name: Install Python packages
       run: |
-          python -m pip install --upgrade pip pywin32 pytest-cov clingo "coverage<=7.11.0"
+          python -m pip install --upgrade pip -r .github/workflows/requirements/unit_tests/requirements.txt
+          python -m pip install --upgrade pip -r .github/workflows/requirements/style/requirements.txt
     - name: Create local develop
       run: |
         ./.github/workflows/bin/setup_git.ps1
@@ -257,7 +296,7 @@ jobs:
       run: |
         python -m pytest -x --verbose --cov --cov-config=pyproject.toml
         ./share/spack/qa/validate_last_exit.ps1
-    - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-windows
         path: coverage
@@ -271,16 +310,16 @@ jobs:
 
     steps:
       - name: Checkout Spack (current)
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           path: spack-current
       - name: Checkout Spack (previous)
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           path: spack-previous
           ref: ${{ github.event.pull_request.base.sha || github.event.before }}
       - name: Checkout Spack Packages
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
         with:
           repository: spack/spack-packages
           path: spack-packages

@@ -5,6 +5,7 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
+
 import collections.abc
 import enum
 import functools
@@ -597,6 +598,9 @@ class DisjointSetsOfValues(collections.abc.Sequence):
         )
         return object_without_empty_set
 
+    def __iter__(self):
+        return itertools.chain.from_iterable(self.sets)
+
     def __getitem__(self, idx):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]
 
@@ -827,7 +831,7 @@ class InconsistentValidationError(spack.error.SpecError):
     """Raised if the wrong validator is used to validate a variant."""
 
     def __init__(self, vspec, variant):
-        msg = 'trying to validate variant "{0.name}" ' 'with the validator of "{1.name}"'
+        msg = 'trying to validate variant "{0.name}" with the validator of "{1.name}"'
         super().__init__(msg.format(vspec, variant))
 
 

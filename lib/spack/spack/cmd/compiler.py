@@ -7,6 +7,7 @@ import sys
 from typing import List, Optional
 
 import spack.binary_distribution
+import spack.cmd
 import spack.compilers.config
 import spack.config
 import spack.llnl.util.tty as tty
@@ -180,11 +181,20 @@ def compiler_info(args):
 def compiler_list(args):
     compilers = _all_available_compilers(scope=args.scope, remote=args.remote)
 
+    if not sys.stdout.isatty():
+        for c in sorted(compilers):  # type: ignore
+            print(c.format("{name}@{version}"))
+        return
+
+    status_fn = (
+        spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        if args.remote
+        else spack.spec.Spec.install_status
+    )
+
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
     if len(compilers) == 0:
-        if not sys.stdout.isatty():
-            return
         msg = "No compilers available"
         if args.scope is None:
             msg += ". Run `spack compiler find` to autodetect compilers"
@@ -213,9 +223,7 @@ def compiler_list(args):
             os_str += f"-{target}"
         cname = f"{spack.spec.COMPILER_COLOR}{{{name}}} {os_str}"
         tty.hline(colorize(cname), char="-")
-        result = {
-            colorize(c.install_status().value) + c.format("{name}@{version}") for c in compilers
-        }
+        result = {colorize(status_fn(c).value) + c.format("{name}@{version}") for c in compilers}
         colify(reversed(sorted(result)))
 
 

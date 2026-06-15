@@ -7,6 +7,7 @@ import re
 import sys
 
 import spack
+import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
 import spack.config
@@ -21,6 +22,7 @@ import spack.spec
 description = "concretize a specs using an ASP solver"
 section = "developer"
 level = "long"
+
 
 #: output options
 show_options = ("asp", "opt", "output", "solutions")
@@ -97,7 +99,8 @@ def _process_result(result, show, required_format, kwargs):
                 elif required_format == "json":
                     sys.stdout.write(spec.to_json(hash=ht.dag_hash))
         else:
-            sys.stdout.write(spack.spec.tree(result.specs, color=sys.stdout.isatty(), **kwargs))
+            tree_str = spack.spec.tree(result.specs, color=sys.stdout.isatty(), **kwargs)
+            sys.stdout.write(tree_str)
         print()
 
     if result.unsolved_specs and "solutions" in show:
@@ -106,18 +109,23 @@ def _process_result(result, show, required_format, kwargs):
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    install_status_fn = spack.spec.Spec.install_status
-
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
+
+    show_status = args.install_status
+    if show_status:
+        spack.binary_distribution.load_buildcache_index()
+        status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+    else:
+        status_fn = None
 
     kwargs = {
         "cover": args.cover,
         "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
-        "status_fn": install_status_fn if args.install_status else None,
+        "status_fn": status_fn,
         "hashes": args.long or args.very_long,
         "highlight_version_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
@@ -148,7 +156,7 @@ def solve(parser, args):
     elif env:
         specs = list(env.user_specs)
     else:
-        tty.die("spack solve requires at least one spec or an active environment")
+        args.subparser.error("requires at least one spec or an active environment")
 
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None

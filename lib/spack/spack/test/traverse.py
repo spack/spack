@@ -237,7 +237,7 @@ def test_breadth_first_versus_depth_first_tree(abstract_specs_chain):
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
     ] == [(0, "chain-a"), (1, "chain-b"), (1, "chain-c"), (1, "chain-d")]
 
-    # DFS will disover all nodes along the chain a -> b -> c -> d.
+    # DFS will discover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
         for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
@@ -405,7 +405,7 @@ def test_traverse_edges_topo(abstract_specs_toposort):
         for e in traverse.traverse_edges(input_specs, order="topo", cover="edges", root=False)
     ]
 
-    # See figure above, we have 7 edges (excluding artifical ones to the root)
+    # See figure above, we have 7 edges (excluding artificial ones to the root)
     assert set(edges) == set(
         [("A", "B"), ("A", "C"), ("B", "F"), ("B", "G"), ("C", "D"), ("D", "B"), ("E", "D")]
     )
@@ -435,7 +435,7 @@ def test_traverse_nodes_no_deps(abstract_specs_dtuse):
 def test_topo_is_bfs_for_trees(cover):
     """For trees, both DFS and BFS produce a topological order, but BFS is the most sensible for
     our applications, where we typically want to avoid that transitive dependencies shadow direct
-    depenencies in global search paths, etc. This test ensures that for trees, the default topo
+    dependencies in global search paths, etc. This test ensures that for trees, the default topo
     order coincides with BFS."""
     binary_tree = create_dag(
         nodes=["A", "B", "C", "D", "E", "F", "G"],

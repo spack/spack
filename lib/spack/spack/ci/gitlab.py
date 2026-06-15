@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
+import pathlib
+import shlex
 import shutil
 import urllib
 from typing import List, Optional
@@ -104,13 +106,15 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         spack_ci: An object containing the configured attributes of all jobs in the pipeline
         options: An object containing all the pipeline options gathered from yaml, env, etc...
     """
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR") or os.getcwd()
+    ci_project_dir = (
+        pathlib.Path(os.environ.get("CI_PROJECT_DIR") or os.getcwd()).absolute().resolve()
+    )
     generate_job_name = os.environ.get("CI_JOB_NAME", "job-does-not-exist")
     generate_pipeline_id = os.environ.get("CI_PIPELINE_ID", "pipeline-does-not-exist")
-    artifacts_root = options.artifacts_root
-    if artifacts_root.startswith(ci_project_dir):
-        artifacts_root = os.path.relpath(artifacts_root, ci_project_dir)
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
+    artifacts_root = pathlib.Path(options.artifacts_root)
+    if ci_project_dir == artifacts_root or ci_project_dir in artifacts_root.parents:
+        artifacts_root = artifacts_root.relative_to(ci_project_dir)
+    pipeline_artifacts_dir = (ci_project_dir / artifacts_root).absolute().resolve()
     output_file = options.output_file
 
     if not output_file:
@@ -123,18 +127,18 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
     spack_ci_ir = spack_ci.generate_ir()
 
-    concrete_env_dir = os.path.join(pipeline_artifacts_dir, "concrete_environment")
+    concrete_env_dir = pipeline_artifacts_dir / "concrete_environment"
 
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
     # concrete environment directory, along with the spack.lock file.
-    if not os.path.exists(concrete_env_dir):
-        os.makedirs(concrete_env_dir)
+    if not concrete_env_dir.exists():
+        concrete_env_dir.mkdir(parents=True)
 
     # Copy the manifest and handle relative included paths
-    with open(options.env.manifest_path, "r", encoding="utf-8") as fin, open(
-        os.path.join(concrete_env_dir, "spack.yaml"), "w", encoding="utf-8"
-    ) as fout:
+    with open(options.env.manifest_path, "r", encoding="utf-8") as fin, (
+        concrete_env_dir / "spack.yaml"
+    ).open("w", encoding="utf-8") as fout:
         data = syaml.load(fin)
         if "spack" not in data:
             raise spack.config.ConfigSectionError(
@@ -150,10 +154,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             if parsed.scheme not in file_schemes:
                 return path
 
-            if os.path.isabs(expanded_path):
+            if os.path.isabs(parsed.path):
                 return path
             abs_path = path_util.canonicalize_path(path, orig_root)
-            return os.path.relpath(abs_path, start=new_root)
+            return pathlib.Path(os.path.relpath(abs_path, new_root)).as_posix()
 
         # If there are no includes, just copy
         if "include" in data["spack"]:
@@ -172,15 +176,15 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
             data["spack"]["include"] = fixed_includes
 
-            os.makedirs(concrete_env_dir, exist_ok=True)
+            concrete_env_dir.mkdir(parents=True, exist_ok=True)
         syaml.dump(data, fout)
 
-    shutil.copyfile(options.env.lock_path, os.path.join(concrete_env_dir, "spack.lock"))
+    shutil.copyfile(options.env.lock_path, str(concrete_env_dir / "spack.lock"))
 
-    job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
-    job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
-    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
-    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
+    job_log_dir = pipeline_artifacts_dir / "logs"
+    job_repro_dir = pipeline_artifacts_dir / "reproduction"
+    job_test_dir = pipeline_artifacts_dir / "tests"
+    user_artifacts_dir = pipeline_artifacts_dir / "user_data"
 
     # We communicate relative paths to the downstream jobs to avoid issues in
     # situations where the CI_PROJECT_DIR varies between the pipeline
@@ -188,14 +192,14 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # checks out the project into a runner-specific directory, for example,
     # and different runners are picked for generate and rebuild jobs.
 
-    rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
-    rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
-    rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
-    rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
-    rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
+    rel_concrete_env_dir = concrete_env_dir.relative_to(ci_project_dir)
+    rel_job_log_dir = job_log_dir.relative_to(ci_project_dir)
+    rel_job_repro_dir = job_repro_dir.relative_to(ci_project_dir)
+    rel_job_test_dir = job_test_dir.relative_to(ci_project_dir)
+    rel_user_artifacts_dir = user_artifacts_dir.relative_to(ci_project_dir)
 
     def main_script_replacements(cmd):
-        return cmd.replace("{env_dir}", rel_concrete_env_dir)
+        return cmd.replace("{env_dir}", shlex.quote(rel_concrete_env_dir.as_posix()))
 
     output_object = {}
     job_id = 0
@@ -278,10 +282,10 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
                 {
                     "when": "always",
                     "paths": [
-                        rel_job_log_dir,
-                        rel_job_repro_dir,
-                        rel_job_test_dir,
-                        rel_user_artifacts_dir,
+                        rel_job_log_dir.as_posix(),
+                        rel_job_repro_dir.as_posix(),
+                        rel_job_test_dir.as_posix(),
+                        rel_user_artifacts_dir.as_posix(),
                     ],
                 },
             )
@@ -314,8 +318,8 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     # the only purpose is to specify a list of sources and destinations for
     # everything that should be copied.
     distinguish_stack = options.stack_name if options.stack_name else "rebuilt"
-    manifest_path = os.path.join(
-        pipeline_artifacts_dir, "specs_to_copy", f"copy_{distinguish_stack}_specs.json"
+    manifest_path = (
+        pipeline_artifacts_dir / "specs_to_copy" / f"copy_{distinguish_stack}_specs.json"
     )
     maybe_generate_manifest(pipeline, options, manifest_path)
 
@@ -378,21 +382,35 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             output_object["sign-pkgs"] = signing_job
 
         if options.rebuild_index:
+            # Create a dummy job that runs as the stage before reindex.
+            # This job will be used to ensure reindex doesn't run until
+            # the other build jobs complete.
+            stage_names.append("stage-wait")
+            wait_job = spack_ci_ir["jobs"]["noop"]["attributes"]
+            wait_job["stage"] = "stage-wait"
+            wait_job["retry"] = 0
+            wait_job["when"] = "always"
+            wait_job["script"] = ["echo 'Open the pod bay doors HAL'"]
+            wait_job["dependencies"] = []
+
+            output_object["wait-for-build-jobs"] = wait_job
+
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
 
             final_job["stage"] = "stage-rebuild-index"
-            target_mirror = options.buildcache_destination.push_url
-            final_job["script"] = unpack_script(
-                final_job["script"],
-                op=lambda cmd: cmd.replace("{index_target_mirror}", target_mirror),
-            )
+            final_job["script"] = unpack_script(final_job["script"], op=main_script_replacements)
 
             final_job["when"] = "always"
             final_job["retry"] = service_job_retries
             final_job["interruptible"] = True
-            final_job["dependencies"] = []
+            # update-index needs to download generate artifacts
+            # it also needs to wait until all of the other stages complete.
+            final_job["needs"] = [
+                {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"},
+                "wait-for-build-jobs",
+            ]
 
             output_object["rebuild-index"] = final_job
 
@@ -407,13 +425,13 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
         output_object["variables"] = {
-            "SPACK_ARTIFACTS_ROOT": artifacts_root,
-            "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir,
+            "SPACK_ARTIFACTS_ROOT": artifacts_root.as_posix(),
+            "SPACK_CONCRETE_ENV_DIR": rel_concrete_env_dir.as_posix(),
             "SPACK_VERSION": spack_version,
             "SPACK_CHECKOUT_VERSION": version_to_clone,
-            "SPACK_JOB_LOG_DIR": rel_job_log_dir,
-            "SPACK_JOB_REPRO_DIR": rel_job_repro_dir,
-            "SPACK_JOB_TEST_DIR": rel_job_test_dir,
+            "SPACK_JOB_LOG_DIR": rel_job_log_dir.as_posix(),
+            "SPACK_JOB_REPRO_DIR": rel_job_repro_dir.as_posix(),
+            "SPACK_JOB_TEST_DIR": rel_job_test_dir.as_posix(),
             "SPACK_PIPELINE_TYPE": options.pipeline_type.name if options.pipeline_type else "None",
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(options.prune_up_to_date),

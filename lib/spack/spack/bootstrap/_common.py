@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Common basic functions used through the spack.bootstrap package"""
+
 import fnmatch
 import glob
 import importlib

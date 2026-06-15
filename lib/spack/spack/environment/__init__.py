@@ -54,8 +54,10 @@ upgrade Spack to use them.
      - ``v4``
      - ``v5``
      - ``v6``
+     - ``v7``
    * - ``v0.12:0.14``
      - ✅
+     -
      -
      -
      -
@@ -68,10 +70,12 @@ upgrade Spack to use them.
      -
      -
      -
+     -
    * - ``v0.17``
      - ✅
      - ✅
      - ✅
+     -
      -
      -
      -
@@ -82,6 +86,7 @@ upgrade Spack to use them.
      - ✅
      -
      -
+     -
    * - ``v0.22:v0.23``
      - ✅
      - ✅
@@ -89,7 +94,17 @@ upgrade Spack to use them.
      - ✅
      - ✅
      -
-   * - ``v1.0:``
+     -
+   * - ``v1.0:1.1``
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     - ✅
+     -
+   * - ``v1.2:``
+     - ✅
      - ✅
      - ✅
      - ✅
@@ -480,10 +495,11 @@ Version 6
 Version 6 uses specs where compilers are modeled as real dependencies, and not as a node attribute.
 It doesn't change the top-level lockfile format.
 
-As part of Spack v1.0, compilers stopped being a node attribute, and became a build-only dependency. Packages may
-declare a dependency on the c, cxx, or fortran languages, which are now treated as virtuals, and compilers would
-be providers for one or more of those languages. Compilers can also inject runtime dependency, on the node being
-compiled. The compiler-wrapper is explicitly represented as a node in the DAG, and enters the hash.
+As part of Spack v1.0, compilers stopped being a node attribute, and became a build-only
+dependency. Packages may declare a dependency on the c, cxx, or fortran languages, which are now
+treated as virtuals, and compilers would be providers for one or more of those languages. Compilers
+can also inject runtime dependency, on the node being compiled. The compiler-wrapper is explicitly
+represented as a node in the DAG, and enters the hash.
 
 .. code-block:: json
 
@@ -543,11 +559,46 @@ compiled. The compiler-wrapper is explicitly represented as a node in the DAG, a
         },
       }
     }
+
+Version 7
+---------
+
+Version 7 adds the additional attribute ``group`` to ``roots``.
+
+As part of Spack v1.2 each environment can define multiple groups of specs, and fine-tune their
+concretization separately. This attribute is needed to associate each root spec with the
+corresponding group.
+
+.. code-block:: json
+
+    {
+      "_meta": {
+        "file-type": "spack-lockfile",
+        "lockfile-version": 7,
+        "specfile-version": 5
+      },
+      "spack": {
+        "version": "1.2.0.dev0",
+        "type": "git",
+        "commit": "94b055476f874f424f20e3c0f33b0f22de29220a"
+      },
+      "roots": [
+        {
+          "hash": "o72mlpqvb5xijyqg4iyubpnvd5bfcomb",
+          "spec": "hdf5",
+          "group": "default"
+        }
+      ],
+      "concrete_specs": {
+      }
+    }
+
 """
 
 from .environment import (
     TOP_LEVEL_KEY,
     Environment,
+    EnvironmentConcretizer,
     SpackEnvironmentConfigError,
     SpackEnvironmentDevelopError,
     SpackEnvironmentError,
@@ -572,8 +623,10 @@ from .environment import (
     installed_specs,
     is_env_dir,
     is_latest_format,
+    lockfile_include_key,
     lockfile_name,
     manifest_file,
+    manifest_include_name,
     manifest_name,
     no_active_environment,
     read,
@@ -586,6 +639,7 @@ from .environment import (
 __all__ = [
     "TOP_LEVEL_KEY",
     "Environment",
+    "EnvironmentConcretizer",
     "SpackEnvironmentConfigError",
     "SpackEnvironmentDevelopError",
     "SpackEnvironmentError",
@@ -610,8 +664,10 @@ __all__ = [
     "installed_specs",
     "is_env_dir",
     "is_latest_format",
+    "lockfile_include_key",
     "lockfile_name",
     "manifest_file",
+    "manifest_include_name",
     "manifest_name",
     "no_active_environment",
     "read",

@@ -7,6 +7,7 @@ import glob
 import hashlib
 import io
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -67,7 +68,7 @@ def compute_stage_name(spec):
     else:
         spec_stage_structure += "{name}-{version}"
     # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
-    # config:stage_name. This is a fix for how to handle staging an abstact spec (see #51305)
+    # config:stage_name. This is a fix for how to handle staging an abstract spec (see #51305)
     stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     return spec.format_path(format_string=stage_name_structure)
 
@@ -396,7 +397,7 @@ class Stage(AbstractStage):
 
     When used as a context manager, the stage is automatically
     destroyed if no exception is raised by the context. If an
-    excpetion is raised, the stage is left in the filesystem and NOT
+    exception is raised, the stage is left in the filesystem and NOT
     destroyed, for potential reuse later.
 
     You can also use the stage's create/destroy functions manually,
@@ -736,6 +737,16 @@ class Stage(AbstractStage):
 
     def destroy(self):
         """Removes this stage directory."""
+        # On Windows a directory that is the CWD of any process cannot be deleted (WinError 32).
+        # Proactively chdir to the parent before removal so the worker's CWD doesn't block rmtree.
+        if sys.platform == "win32":
+            try:
+                cwd = pathlib.Path(os.getcwd()).resolve()
+                stage = pathlib.Path(self.path).resolve()
+                if cwd == stage or stage in cwd.parents:
+                    os.chdir(stage.parent)
+            except OSError:
+                pass
         remove_linked_tree(self.path)
 
         # Make sure we don't end up in a removed directory
@@ -974,13 +985,16 @@ class DevelopStage(AbstractStage):
         self._source_path = dev_path
 
         # The path of a link that will point to this stage
-        if os.path.isabs(reference_link):
-            link_path = reference_link
+        if reference_link:
+            if os.path.isabs(reference_link):
+                link_path = reference_link
+            else:
+                link_path = os.path.join(self._source_path, reference_link)
+            if not os.path.isdir(os.path.dirname(link_path)):
+                raise StageError(f"The directory containing {link_path} must exist")
+            self.reference_link = link_path
         else:
-            link_path = os.path.join(self._source_path, reference_link)
-        if not os.path.isdir(os.path.dirname(link_path)):
-            raise StageError(f"The directory containing {link_path} must exist")
-        self.reference_link = link_path
+            self.reference_link = None
 
     @property
     def source_path(self):
@@ -1007,10 +1021,11 @@ class DevelopStage(AbstractStage):
 
     def create(self):
         super().create()
-        try:
-            symlink(self.path, self.reference_link)
-        except (AlreadyExistsError, FileExistsError):
-            pass
+        if self.reference_link:
+            try:
+                symlink(self.path, self.reference_link)
+            except (AlreadyExistsError, FileExistsError):
+                pass
 
     def destroy(self):
         # Destroy all files, but do not follow symlinks
@@ -1018,10 +1033,11 @@ class DevelopStage(AbstractStage):
             shutil.rmtree(self.path)
         except FileNotFoundError:
             pass
-        try:
-            os.remove(self.reference_link)
-        except FileNotFoundError:
-            pass
+        if self.reference_link:
+            try:
+                os.remove(self.reference_link)
+            except FileNotFoundError:
+                pass
         self.created = False
 
     def restage(self):
@@ -1294,7 +1310,7 @@ def get_checksums_for_versions(
         else:
             version_hashes[version] = result
 
-    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as executor:
+    with spack.util.parallel.make_concurrent_executor(concurrency) as executor:
         results = [
             (version, executor.submit(_fetch_and_checksum, url, fetch_options, keep_stage))
             for url, version in search_arguments

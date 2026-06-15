@@ -28,6 +28,7 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+
 import io
 import os
 import pathlib
@@ -169,7 +170,7 @@ def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the version of the package. Thefore, hyperspecific regexes should
+    # the version of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
@@ -357,7 +358,7 @@ def parse_name_offset(
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the name of the package. Thefore, hyperspecific regexes should
+    # the name of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
@@ -531,7 +532,7 @@ def substitute_version(path: str, new_version) -> str:
 
        >>> substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
        "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
-    """
+    """  # noqa: E501
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
 
     new_path = ""

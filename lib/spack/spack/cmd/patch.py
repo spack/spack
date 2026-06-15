@@ -26,7 +26,7 @@ def patch(parser, args):
     if not args.specs:
         env = ev.active_environment()
         if not env:
-            tty.die("`spack patch` requires a spec or an active environment")
+            args.subparser.error("requires a spec or an active environment")
         return _patch_env(env)
 
     if args.no_checksum:

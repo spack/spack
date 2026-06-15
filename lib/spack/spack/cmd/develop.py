@@ -108,7 +108,7 @@ def assure_concrete_spec(env: spack.environment.Environment, spec: spack.spec.Sp
                 if not m_spec.satisfies(test_spec):
                     raise SpackError(
                         f"{spec.name}: has multiple concrete instances in the graph that can't be"
-                        " satisified by a single develop spec. To use `spack develop` ensure one"
+                        " satisfied by a single develop spec. To use `spack develop` ensure one"
                         " of the following:"
                         f"\n a) {spec.name} nodes can satisfy the same develop spec (minimally "
                         "this means they all share the same version)"
@@ -183,7 +183,7 @@ def update_env(
 
         # If we are automatically mutating the concrete specs for dev provenance, do so
         if apply_changes:
-            env.apply_develop(spec, _abs_code_path(env, spec, specified_path))
+            env.apply_develop([spec], [_abs_code_path(env, spec, specified_path)])
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -215,7 +215,7 @@ def _dev_spec_generator(args, env):
     """
     if not args.spec:
         if args.clone is False:
-            raise SpackError("No spec provided to spack develop command")
+            args.subparser.error("no spec provided")
 
         for name, entry in env.dev_specs.items():
             path = entry.get("path", name)
@@ -227,9 +227,9 @@ def _dev_spec_generator(args, env):
     else:
         specs = spack.cmd.parse_specs(args.spec)
         if (args.path or args.build_directory) and len(specs) > 1:
-            raise SpackError(
-                "spack develop requires at most one named spec when using the --path or"
-                " --build-directory arguments"
+            args.subparser.error(
+                "requires at most one named spec when using the --path or --build-directory "
+                "arguments"
             )
 
         for spec in specs:
@@ -252,7 +252,7 @@ def _dev_spec_generator(args, env):
 
 
 def develop(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="develop")
+    env = spack.cmd.require_active_env(args.subparser)
 
     for spec, abspath in _dev_spec_generator(args, env):
         assure_concrete_spec(env, spec)

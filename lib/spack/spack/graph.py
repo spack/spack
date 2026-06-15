@@ -37,6 +37,7 @@ kind of like the graph git shows with ``git log --graph``, e.g.
 
 :func:`graph_dot` will output a graph of a spec (or multiple specs) in dot format.
 """
+
 import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
@@ -522,11 +523,11 @@ class DAGWithDependencyTypes(DotGraphBuilder):
         colormap = {"build": "dodgerblue", "link": "crimson", "run": "goldenrod"}
         label = ""
         if edge.virtuals:
-            label = f" xlabel=\"virtuals={','.join(edge.virtuals)}\""
+            label = f' xlabel="virtuals={",".join(edge.virtuals)}"'
         return (
             edge.parent.dag_hash(),
             edge.spec.dag_hash(),
-            f"[color=\"{':'.join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}\""
+            f'[color="{":".join(colormap[x] for x in dt.flag_to_tuple(edge.depflag))}"'
             + label
             + "]",
         )

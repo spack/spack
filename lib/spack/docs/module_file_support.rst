@@ -447,7 +447,7 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
    :class: note
 
    When ``lmod`` is activated Spack will generate a set of hierarchical lua module files that are understood by Lmod.
-   The hierarchy always contains the ``Core`` and ``Compiler`` layers, but can be extended to include any virtual packages present in Spack.
+   The hierarchy always contains the ``Core`` and ``Compiler`` layers, but can be extended to include any package or virtual package in Spack.
    A case that could be useful in practice is for instance:
 
    .. code-block:: yaml
@@ -460,13 +460,14 @@ When specifying module names by projection for Lmod modules, we recommend NOT in
             core_compilers:
             - "gcc@4.8"
             core_specs:
-            - "python"
+            - "r"
             hierarchy:
             - "mpi"
             - "lapack"
+            - "python"
 
-   that will generate a hierarchy in which the ``lapack`` and ``mpi`` layer can be switched independently.
-   This allows a site to build the same libraries or applications against different implementations of ``mpi`` and ``lapack``, and let Lmod switch safely from one to the other.
+   that will generate a hierarchy in which the ``python``, ``lapack`` and ``mpi`` layer can be switched independently.
+   This allows a site to build the same libraries or applications against different implementations of ``mpi`` and ``lapack``, and with different versions of those implementations and of ``python``, and let Lmod switch safely from among the resulting installs.
 
    All packages built with a compiler in ``core_compilers`` and all packages that satisfy a spec in ``core_specs`` will be put in the ``Core`` hierarchy of the lua modules.
 

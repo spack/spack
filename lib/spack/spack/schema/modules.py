@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 import spack.schema.environment
@@ -67,15 +68,13 @@ module_file_configuration = {
             "additionalKeysAreSpecs": True,
             "additionalProperties": {"type": "string"},  # key
         },
-        "environment": {
-            **spack.schema.environment.definition,
-            "description": "Custom environment variable modifications to apply in this module "
-            "file",
-        },
+        "environment": spack.schema.environment.ref_env_modifications,
     },
 }
 
-projections_scheme = spack.schema.projections.properties["projections"]
+ref_module_file_configuration = {"$ref": "#/definitions/module_file_configuration"}
+
+projections_scheme = {"$ref": "#/definitions/projections"}
 
 common_props = {
     "verbose": {
@@ -125,10 +124,7 @@ common_props = {
         "description": "Custom directory structure and naming convention for module files using "
         "projection format",
     },
-    "all": {
-        **module_file_configuration,
-        "description": "Default configuration applied to all module files in this module set",
-    },
+    "all": ref_module_file_configuration,
 }
 
 tcl_configuration = {
@@ -138,7 +134,7 @@ tcl_configuration = {
     "Lmod",
     "additionalKeysAreSpecs": True,
     "properties": {**common_props},
-    "additionalProperties": module_file_configuration,
+    "additionalProperties": ref_module_file_configuration,
 }
 
 lmod_configuration = {
@@ -172,7 +168,7 @@ lmod_configuration = {
             "additionalProperties": array_of_strings,
         },
     },
-    "additionalProperties": module_file_configuration,
+    "additionalProperties": ref_module_file_configuration,
 }
 
 module_config_properties = {
@@ -259,5 +255,10 @@ schema = {
     "title": "Spack module file configuration file schema",
     "type": "object",
     "additionalProperties": False,
+    "definitions": {
+        "module_file_configuration": module_file_configuration,
+        "projections": spack.schema.projections.projections,
+        "env_modifications": spack.schema.environment.env_modifications,
+    },
     "properties": properties,
 }

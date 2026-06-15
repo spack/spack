@@ -31,7 +31,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def remove(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="remove")
+    env = spack.cmd.require_active_env(args.subparser)
 
     with env.write_transaction():
         if args.all:

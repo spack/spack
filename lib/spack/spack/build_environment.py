@@ -14,7 +14,7 @@ There are two parts to the build environment:
    This is how things are set up when install() is called.  Spack
    takes advantage of each package being in its own module by adding a
    bunch of command-like functions (like configure(), make(), etc.) in
-   the package's module scope.  Ths allows package writers to call
+   the package's module scope.  This allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
    readable and more like the shell script from which someone is
@@ -48,13 +48,13 @@ from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
     Any,
+    BinaryIO,
     Callable,
     Dict,
     List,
     Optional,
     Sequence,
     Set,
-    TextIO,
     Tuple,
     Type,
     Union,
@@ -79,8 +79,9 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.module_cmd
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.llnl.string import plural
@@ -100,7 +101,6 @@ from spack.util.environment import (
 )
 from spack.util.executable import Executable
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -199,9 +199,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -218,9 +218,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
+        input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable] = ...,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        error: spack.util.executable.OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -237,8 +237,8 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: spack.util.executable.OutType = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
@@ -787,9 +787,9 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     tty.debug("setup_package: adding compiler wrappers paths")
     env_by_name = env_mods.group_by_name()
     for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
-        assert isinstance(
-            x, PrependPath
-        ), "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        assert isinstance(x, PrependPath), (
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        )
         env_mods.prepend_path("PATH", x.value)
 
     # Check whether we want to force RPATH or RUNPATH
@@ -1117,7 +1117,7 @@ def load_external_modules(context: SetupContext) -> None:
     for spec, _ in context.external:
         external_modules = spec.external_modules or []
         for external_module in external_modules:
-            load_module(external_module)
+            spack.util.module_cmd.load_module(external_module)
 
 
 def _setup_pkg_and_run(
@@ -1654,7 +1654,7 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
 
 
 def write_log_summary(out, log_type, log, last=None):
-    errors, warnings = parse_log_events(log)
+    errors, warnings, _ = parse_log_events(log)
     nerr = len(errors)
     nwar = len(warnings)
 

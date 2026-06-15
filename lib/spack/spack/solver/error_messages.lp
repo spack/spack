@@ -126,7 +126,7 @@ error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constra
 % causation tracking error for no or multiple virtual providers
 error(0, "Cannot find a valid provider for virtual {0}", Virtual, startcauses, Cause, CID)
   :- attr("virtual_node", node(X, Virtual)),
-     not provider(_, node(X, Virtual)),
+     not has_provider(node(X, Virtual)),
      imposed_constraint(EID, "dependency_holds", Parent, Virtual, Type),
      pkg_fact(TriggerPkg, condition_effect(Cause, EID)),
      condition_holds(Cause, node(CID, TriggerPkg)).

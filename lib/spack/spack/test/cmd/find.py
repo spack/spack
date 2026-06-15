@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import json
 import os
 import pathlib
@@ -16,6 +17,7 @@ import spack.environment as ev
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
@@ -215,6 +217,15 @@ def test_display_json_deps(database, capfd):
     _check_json_output_deps(spec_list)
 
 
+@pytest.mark.regression("52219")
+def test_display_abstract_hash():
+    spec = spack.spec.Spec("/foobar")
+    out = io.StringIO()
+
+    spack.cmd.display_specs([spec], output=out)  # errors on failure
+    assert "/foobar" in out.getvalue()
+
+
 @pytest.mark.db
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
@@ -275,15 +286,15 @@ def test_find_format_deps_paths(database, config):
         output
         == f"""\
 mpileaks-2.3                   {mpileaks.prefix}
-    callpath-1.0               {mpileaks['callpath'].prefix}
-        dyninst-8.2            {mpileaks['dyninst'].prefix}
-            libdwarf-20130729  {mpileaks['libdwarf'].prefix}
-            libelf-0.8.13      {mpileaks['libelf'].prefix}
-    compiler-wrapper-1.0       {mpileaks['compiler-wrapper'].prefix}
-    gcc-10.2.1                 {mpileaks['gcc'].prefix}
-    gcc-runtime-10.2.1         {mpileaks['gcc-runtime'].prefix}
-    zmpi-1.0                   {mpileaks['zmpi'].prefix}
-        fake-1.0               {mpileaks['fake'].prefix}
+    callpath-1.0               {mpileaks["callpath"].prefix}
+        dyninst-8.2            {mpileaks["dyninst"].prefix}
+            libdwarf-20130729  {mpileaks["libdwarf"].prefix}
+            libelf-0.8.13      {mpileaks["libelf"].prefix}
+    compiler-wrapper-1.0       {mpileaks["compiler-wrapper"].prefix}
+    gcc-10.2.1                 {mpileaks["gcc"].prefix}
+    gcc-runtime-10.2.1         {mpileaks["gcc-runtime"].prefix}
+    zmpi-1.0                   {mpileaks["zmpi"].prefix}
+        fake-1.0               {mpileaks["fake"].prefix}
 
 """
     )
@@ -380,7 +391,7 @@ spack:
     with ev.read("combined_env"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -417,7 +428,7 @@ spack:
     with ev.read("test3"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
@@ -536,3 +547,52 @@ def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     install("--fake", f"git-test-commit commit={commits[0]}")
     output = find(f"commit={commits[0]}")
     assert "git-test-commit" in output
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "spack_yaml,expected,not_expected",
+    [
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  - group: extras
+    specs:
+    - libelf
+""",
+            [
+                "2 root specs",
+                # Group names
+                "extras",
+                "default",
+                # root specs
+                "mpileaks",
+                "libelf",
+            ],
+            [],
+        ),
+        (
+            """
+spack:
+  specs:
+  - group: tools
+    specs:
+    - libelf
+""",
+            ["1 root spec", "tools", "libelf"],
+            ["1 root specs", "default"],
+        ),
+    ],
+)
+def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: pathlib.Path):
+    """Tests that the output of spack find contains expected matches when using an
+    environment with groups.
+    """
+    (tmp_path / "spack.yaml").write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        output = find()
+
+    assert all(x in output for x in expected)
+    assert all(x not in output for x in not_expected)

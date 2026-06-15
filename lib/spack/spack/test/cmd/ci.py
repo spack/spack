@@ -119,27 +119,45 @@ def ci_generate_test(
     Additional positional arguments will be added to the 'spack generate' call.
     """
 
-    def _func(spack_yaml_content, *args, fail_on_error=True):
-        spack_yaml = tmp_path / "spack.yaml"
-        spack_yaml.write_text(spack_yaml_content)
-        ev.create("test", init_file=spack_yaml, with_view=False)
-        outputfile = tmp_path / ".gitlab-ci.yml"
-        with ev.read("test"):
-            output = ci_cmd(
-                "generate", "--output-file", str(outputfile), *args, fail_on_error=fail_on_error
-            )
+    def _func(spack_yaml_content, *args, fail_on_error=True, raise_on_error=True):
+        try:
+            spack_yaml = tmp_path / "spack.yaml"
+            spack_yaml.write_text(spack_yaml_content)
+            ev.create("test", init_file=spack_yaml, with_view=False)
+            outputfile = tmp_path / ".gitlab-ci.yml"
+            with ev.read("test"):
+                output = ci_cmd(
+                    "generate",
+                    "--output-file",
+                    str(outputfile),
+                    *args,
+                    fail_on_error=fail_on_error,
+                )
 
-        return spack_yaml, outputfile, output
+            return spack_yaml, outputfile, output
+        except ci.SpackCIError as e:
+            if raise_on_error:
+                raise e
+            return None, None, e
 
     return _func
 
 
-def test_ci_generate_with_env(ci_generate_test, tmp_path: pathlib.Path, mock_binary_index):
+@pytest.mark.parametrize("with_view", (False, True, "append", "force", "invalid_view_mode"))
+def test_ci_generate_with_env(
+    ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, with_view
+):
     """Make sure we can get a .gitlab-ci.yml from an environment file
     which has the gitlab-ci, cdash, and mirrors sections.
     """
     mirror_url = tmp_path / "ci-mirror"
-    spack_yaml, outputfile, _ = ci_generate_test(
+    mirror_config = {"url": str(mirror_url)}
+    if with_view:
+        mirror_config["view"] = "someview"
+        if isinstance(with_view, str):
+            os.environ["SPACK_CI_BUILDCACHE_VIEW"] = with_view
+
+    spack_yaml, outputfile, output = ci_generate_test(
         f"""\
 spack:
   definitions:
@@ -155,7 +173,7 @@ spack:
     - matrix:
       - [$old-gcc-pkgs]
   mirrors:
-    buildcache-destination: {mirror_url}
+    buildcache-destination: {mirror_config}
   ci:
     pipeline-gen:
     - submapping:
@@ -185,7 +203,14 @@ spack:
 """,
         "--artifacts-root",
         str(tmp_path / "my_artifacts_root"),
+        raise_on_error=False,
     )
+
+    if with_view == "invalid_view_mode":
+        assert isinstance(output, ci.SpackCIError)
+        assert "SPACK_CI_BUILDCACHE_VIEW=invalid_view_mode" in str(output)
+        return
+
     yaml_contents = syaml.load(outputfile.read_text())
 
     assert "workflow" in yaml_contents
@@ -193,14 +218,25 @@ spack:
     assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
     assert "stages" in yaml_contents
-    assert len(yaml_contents["stages"]) == 6
+    assert len(yaml_contents["stages"]) == 7
     assert yaml_contents["stages"][0] == "stage-0"
-    assert yaml_contents["stages"][5] == "stage-rebuild-index"
+    assert yaml_contents["stages"][5] == "stage-wait"
+    assert yaml_contents["stages"][6] == "stage-rebuild-index"
 
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
+    # Handle view parameter
+    if isinstance(with_view, bool):
+        with_view = "append" if with_view else ""
+
+    if with_view == "append":
+        with_view = "--name someview -y --append"
+    elif with_view == "force":
+        with_view = "--name someview --force"
+
     assert (
-        rebuild_job["script"][0] == f"spack buildcache update-index --keys {mirror_url.as_uri()}"
+        rebuild_job["script"][1]
+        == f"spack -v buildcache update-index --keys {with_view} buildcache-destination"
     )
     assert rebuild_job["custom_attribute"] == "custom!"
 
@@ -332,12 +368,12 @@ spack:
             "git checkout ${SPACK_REF}",
             "popd",
         ]
-        assert ci_obj["script"][1].startswith("cd ")
-        ci_obj["script"][1] = "cd ENV"
+        assert ci_obj["script"][1].startswith("spack env activate --without-view ")
+        ci_obj["script"][1] = "spack env activate --without-view ENV"
         assert ci_obj["script"] == [
             "spack -d ci rebuild",
-            "cd ENV",
-            "spack env activate --without-view .",
+            "spack env activate --without-view ENV",
+            "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
             "spack ci rebuild",
         ]
         assert ci_obj["after_script"] == ["rm -rf /some/path/spack"]
@@ -876,7 +912,7 @@ spack:
             # Validate resulting buildcache (database) index
             layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
             mirror_metadata = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
-            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(mirror_metadata, None)
+            index_fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
             result = index_fetcher.conditional_fetch()
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
@@ -1026,7 +1062,7 @@ spack:
             assert the_elt["after_script"][0] == "post step one"
         if "dependent-install" in ci_key:
             # The dependent-install match specifies that we keep the two
-            # top level variables, but add a third specifc one.  It
+            # top level variables, but add a third specific one.  It
             # also adds a custom tag which should be combined with
             # the top-level tag.
             the_elt = yaml_contents[ci_key]
@@ -1047,7 +1083,12 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
+    tmp_path: pathlib.Path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_fetch,
+    mock_binary_index,
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"
@@ -1674,7 +1715,8 @@ spack:
     with open(tmp_path / ".gitlab-ci.yml", encoding="utf-8") as f:
         pipeline_doc = syaml.load(f)
         assert fst not in pipeline_doc["rebuild-index"]["script"][0]
-        assert snd in pipeline_doc["rebuild-index"]["script"][0]
+        assert "env activate" in pipeline_doc["rebuild-index"]["script"][0]
+        assert "buildcache-destination" in pipeline_doc["rebuild-index"]["script"][1]
 
 
 def dynamic_mapping_setup(tmp_path: pathlib.Path):
@@ -1855,11 +1897,13 @@ spack:
     # Make sure there are only two jobs and two stages
     stages = pipeline_doc["stages"]
     copy_stage = "copy"
+    wait_stage = "stage-wait"
     rebuild_index_stage = "stage-rebuild-index"
 
-    assert len(stages) == 2
+    assert len(stages) == 3
     assert stages[0] == copy_stage
-    assert stages[1] == rebuild_index_stage
+    assert stages[1] == wait_stage
+    assert stages[2] == rebuild_index_stage
 
     rebuild_index_job = pipeline_doc["rebuild-index"]
     assert rebuild_index_job["stage"] == rebuild_index_stage

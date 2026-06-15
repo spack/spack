@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import filecmp
 import os
 import re
 import shutil
@@ -11,13 +10,8 @@ import sys
 import tempfile
 
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
-import spack.package_prefs
-import spack.paths
-import spack.spec
 import spack.store
-from spack.util.socket import _gethostname
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
@@ -38,11 +32,6 @@ else:
     except Exception:
         # ignore any error a sane default is set already
         pass
-
-#: Groupdb does not exist on Windows, prevent imports
-#: on supported systems
-if sys.platform != "win32":
-    import grp
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
@@ -189,50 +178,6 @@ def filter_shebangs_in_directory(directory, filenames=None):
             tty.debug("Patched overlong shebang in %s" % path)
 
 
-def install_sbang():
-    """Ensure that ``sbang`` is installed in the root of Spack's install_tree.
-
-    This is the shortest known publicly accessible path, and installing
-    ``sbang`` here ensures that users can access the script and that
-    ``sbang`` itself is in a short path.
-    """
-    # copy in a new version of sbang if it differs from what's in spack
-    sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
-        return
-
-    # make $install_tree/bin
-    sbang_bin_dir = os.path.dirname(sbang_path)
-    fs.mkdirp(sbang_bin_dir)
-
-    # get permissions for bin dir from configuration files
-    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all"))
-    config_mode = spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all"))
-
-    if group_name:
-        os.chmod(sbang_bin_dir, config_mode)  # Use package directory permissions
-    else:
-        fs.set_install_permissions(sbang_bin_dir)
-
-    # set group on sbang_bin_dir if not already set (only if set in configuration)
-    # TODO: after we drop python2 support, use shutil.chown to avoid gid lookups that
-    # can fail for remote groups
-    if group_name and os.stat(sbang_bin_dir).st_gid != grp.getgrnam(group_name).gr_gid:
-        os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
-
-    # copy over the fresh copy of `sbang`
-    sbang_tmp_path = os.path.join(sbang_bin_dir, f".sbang.{_gethostname()}.{os.getpid()}.tmp")
-    shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
-
-    # set permissions on `sbang` (including group if set in configuration)
-    os.chmod(sbang_tmp_path, config_mode)
-    if group_name:
-        os.chown(sbang_tmp_path, os.stat(sbang_tmp_path).st_uid, grp.getgrnam(group_name).gr_gid)
-
-    # Finally, move the new `sbang` into place atomically
-    os.rename(sbang_tmp_path, sbang_path)
-
-
 def post_install(spec, explicit=None):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
@@ -243,8 +188,6 @@ def post_install(spec, explicit=None):
     if spec.external:
         tty.debug("SKIP: shebang filtering [external package]")
         return
-
-    install_sbang()
 
     for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)

@@ -14,6 +14,7 @@ This is mainly done by the ``ExternalSpecsParser`` class, which is responsible f
 The helper function ``extract_dicts_from_configuration`` is used to transform the configuration
 into the intermediate representation.
 """
+
 import re
 import uuid
 import warnings
@@ -115,6 +116,15 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                 if name not in node.variants:
                     # Cannot use Spec.constrain, because we lose information on the variant type
                     node.variants[name] = vdef.make_default()
+                elif (
+                    node.variants[name].type != vdef.variant_type
+                    and len(node.variants[name].values) == 1
+                ):
+                    # Spec parsing defaults to MULTI for non-boolean variants. Correct the type
+                    # using the package definition, preserving the user-specified value.
+                    existing = node.variants[name]
+                    corrected = vdef.make_variant(*existing.values)
+                    node.variants.substitute(corrected)
             changed = True
 
 

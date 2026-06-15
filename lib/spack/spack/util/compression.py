@@ -54,7 +54,15 @@ def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
         # also have other extensions (on Unix) such as tgz, tbz2, ...
         archive_file = archive_file_no_ext + "-input"
         shutil.move(archive_file_no_ext, archive_file)
-    tar = which("tar", required=True)
+    if sys.platform == "win32":
+        # Prefer the Windows-native tar (System32) over MSYS2/Git-bundled tar
+        # The latter of which does not handle windows paths well
+        # Windows system tar is at a fixed location and is now available on all versions
+        # of Windows supported by Spack
+        windir = os.environ.get("WINDIR", r"C:\Windows")
+        tar = which(os.path.join(windir, "System32", "tar.exe")) or which("tar", required=True)
+    else:
+        tar = which("tar", required=True)
     # GNU tar's --no-same-owner is not as portable, -o works for BSD tar too. This flag is relevant
     # when extracting archives as root, where tar attempts to set original ownership of files. This
     # is redundant when distributing tarballs, as the tarballs are created on different systems
@@ -128,7 +136,7 @@ def _gunzip(archive_file: str) -> str:
 
 
 def _py_gunzip(archive_file: str) -> str:
-    """Returns path to gunzip'd file. Decompresses `.gz` compressed archvies via python gzip
+    """Returns path to gunzip'd file. Decompresses `.gz` compressed archives via python gzip
     module"""
     decompressed_file = os.path.basename(
         spack.llnl.url.strip_compression_extension(archive_file, "gz")
@@ -522,7 +530,7 @@ def extension_from_magic_numbers_by_stream(
     """Returns the typical extension for the opened file, without leading ``.``, based on its magic
     numbers.
 
-    If the stream does not represent file type recongized by Spack (see
+    If the stream does not represent file type recognized by Spack (see
     :py:data:`SUPPORTED_FILETYPES`), the method will return None
 
     Args:

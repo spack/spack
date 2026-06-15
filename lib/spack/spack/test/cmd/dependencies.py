@@ -20,8 +20,9 @@ MPIS = [
     "multi-provider-mpi",
     "zmpi",
 ]
-COMPILERS = ["gcc", "llvm"]
+COMPILERS = ["gcc", "llvm", "compiler-with-deps"]
 MPI_DEPS = ["fake"]
+COMPILER_DEPS = ["binutils-for-test", "zlib"]
 
 
 @pytest.mark.parametrize(
@@ -30,7 +31,13 @@ MPI_DEPS = ["fake"]
         (["mpileaks"], set(["callpath"] + MPIS + COMPILERS)),
         (
             ["--transitive", "mpileaks"],
-            set(["callpath", "dyninst", "libdwarf", "libelf"] + MPIS + MPI_DEPS + COMPILERS),
+            set(
+                ["callpath", "dyninst", "libdwarf", "libelf"]
+                + MPIS
+                + MPI_DEPS
+                + COMPILERS
+                + COMPILER_DEPS
+            ),
         ),
         (["--transitive", "--deptype=link,run", "dtbuild1"], {"dtlink2", "dtrun2"}),
         (["--transitive", "--deptype=build", "dtbuild1"], {"dtbuild2", "dtlink2"}),

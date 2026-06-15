@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import functools
 import os
 import re
 from typing import Optional
@@ -18,7 +19,7 @@ spack_version = __version__
 #: version is incremented when the package API is extended in a backwards-compatible way. The major
 #: version is incremented upon breaking changes. This version is changed independently from the
 #: Spack version.
-package_api_version = (2, 4)
+package_api_version = (2, 5)
 
 #: The minimum Package API version that this version of Spack is compatible with. This should
 #: always be a tuple of the form ``(major, 0)``, since compatibility with vX.Y implies
@@ -37,6 +38,7 @@ def __try_int(v):
 spack_version_info = tuple([__try_int(v) for v in __version__.split(".")])
 
 
+@functools.lru_cache(maxsize=None)
 def get_spack_commit() -> Optional[str]:
     """Get the Spack git commit sha.
 

@@ -7,9 +7,11 @@
 In a normal Spack installation, this is invoked from the bin/spack script
 after the system path is set up.
 """
+
 import argparse
 import gc
 import inspect
+import multiprocessing
 import operator
 import os
 import pstats
@@ -41,8 +43,6 @@ import spack.paths
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.store
-import spack.util.debug
 import spack.util.environment
 import spack.util.lock
 
@@ -156,7 +156,6 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
 
     def add_argument(self, action):
         if action.help is not argparse.SUPPRESS:
-
             # find all invocations
             get_invocation = self._format_action_invocation
             invocation_lengths = [color.clen(get_invocation(action)) + self._current_indent]
@@ -370,6 +369,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 help=module.description,
                 description=module.description,
             )
+            subparser.set_defaults(subparser=subparser)
             module.setup_parser(subparser)
 
         # return the callable function for the command
@@ -505,7 +505,7 @@ def make_argument_parser(**kwargs):
         default="SPACK_BACKTRACE" in os.environ,
         help="always show backtraces for exceptions",
     )
-    debug.add_argument("--pdb", action="store_true", help="run spack under the pdb debugger")
+    debug.add_argument("--pdb", action="store_true", help=argparse.SUPPRESS)
     debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
     debug.add_argument(
         "-m", "--mock", action="store_true", help="use mock packages instead of real ones"
@@ -538,28 +538,12 @@ def make_argument_parser(**kwargs):
         help="do not use filesystem locking (unsafe)",
     )
 
-    profile = parser.add_argument_group("profiling")
-    profile.add_argument(
-        "-p",
-        "--profile",
-        action="store_true",
-        dest="spack_profile",
-        help="profile execution using cProfile",
+    debug.add_argument(
+        "-p", "--profile", action="store_true", dest="spack_profile", help=argparse.SUPPRESS
     )
-    profile.add_argument("--profile-file", default=None, help="Filename to save profile data to.")
-    profile.add_argument(
-        "--sorted-profile",
-        default=None,
-        metavar="STAT",
-        help="profile and sort by STAT, which can be: calls, ncalls,\n"
-        "cumtime, cumulative, filename, line, module",
-    )
-    profile.add_argument(
-        "--lines",
-        default=20,
-        action="store",
-        help="lines of profile output or 'all' (default: 20)",
-    )
+    debug.add_argument("--profile-file", default=None, help=argparse.SUPPRESS)
+    debug.add_argument("--sorted-profile", default=None, metavar="STAT", help=argparse.SUPPRESS)
+    debug.add_argument("--lines", default=20, action="store", help=argparse.SUPPRESS)
 
     return parser
 
@@ -587,7 +571,6 @@ def setup_main_options(args):
         spack.error.SHOW_BACKTRACE = True
 
     if args.debug:
-        spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.TRACING_ENABLED = True
 
@@ -646,7 +629,7 @@ def _invoke_command(command, parser, args, unknown_args):
         return_val = command(parser, args, unknown_args)
     else:
         if unknown_args:
-            tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
+            args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
         return_val = command(parser, args)
 
     # Allow commands to return and error code if they want
@@ -848,17 +831,6 @@ def print_setup_info(*info):
         roots_val = ":".join(reversed(paths))
         shell_set("_sp_%s_roots" % name, roots_val)
 
-    # print environment module system if available. This can be expensive
-    # on clusters, so skip it if not needed.
-    if "modules" in info:
-        generic_arch = spack.vendor.archspec.cpu.host().family
-        module_spec = "environment-modules target={0}".format(generic_arch)
-        specs = spack.store.STORE.db.query(module_spec)
-        if specs:
-            shell_set("_sp_module_prefix", specs[-1].prefix)
-        else:
-            shell_set("_sp_module_prefix", "not_installed")
-
 
 def restore_macos_dyld_vars():
     """
@@ -899,8 +871,7 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
                 )
             if key in all_commands:
                 tty.warn(
-                    f"Alias '{key}' (mapping to '{value}') attempts to override"
-                    " built-in command."
+                    f"Alias '{key}' (mapping to '{value}') attempts to override built-in command."
                 )
 
     if cmd_name not in all_commands:
@@ -980,7 +951,7 @@ def _main(argv=None):
     # them, which reduces startup latency.
     parser = make_argument_parser()
     parser.add_argument("command", nargs=argparse.REMAINDER)
-    args, unknown = parser.parse_known_args(argv)
+    args = parser.parse_args(argv)
 
     # Just print help and exit if run with no arguments at all
     no_args = (len(sys.argv) == 1) if argv is None else (len(argv) == 0)
@@ -1097,8 +1068,39 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
 
     # now we can actually execute the command.
     if main_args.spack_profile or main_args.sorted_profile or main_args.profile_file:
+        new_args = [sys.executable, "-m", "cProfile"]
+        if main_args.sorted_profile:
+            new_args.extend(["-s", main_args.sorted_profile])
+        if main_args.profile_file:
+            new_args.extend(["-o", main_args.profile_file])
+        new_args.append(spack.paths.spack_script)
+        skip_next = False
+        for arg in sys.argv[1:]:
+            if skip_next:
+                skip_next = False
+                continue
+            if arg in ("--sorted-profile", "--profile-file", "--lines"):
+                skip_next = True
+                continue
+            if arg.startswith(("--sorted-profile=", "--profile-file=", "--lines=")):
+                continue
+            if arg in ("--profile", "-p"):
+                continue
+            new_args.append(arg)
+        formatted_args = " ".join(shlex.quote(a) for a in new_args)
+        tty.warn(
+            "The --profile flag is deprecated and will be removed in Spack v1.3. "
+            f"Use `{formatted_args}` instead."
+        )
         _profile_wrapper(command, main_args, parser, args, unknown)
     elif main_args.pdb:
+        new_args = [sys.executable, "-m", "pdb", spack.paths.spack_script]
+        new_args.extend(arg for arg in sys.argv[1:] if arg != "--pdb")
+        formatted_args = " ".join(shlex.quote(arg) for arg in new_args)
+        tty.warn(
+            "The --pdb flag is deprecated and will be removed in Spack v1.3. "
+            f"Use `{formatted_args}` instead."
+        )
         import pdb
 
         pdb.runctx("_invoke_command(command, parser, args, unknown)", globals(), locals())
@@ -1120,6 +1122,17 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
+    if (
+        sys.platform == "darwin"
+        and multiprocessing.get_start_method(allow_none=True) is None
+        and spack.config.get("config:installer") == "new"
+    ):
+        # Forkserver is significantly faster than spawn. This has to be configured once and early
+        # in the process.
+        multiprocessing.set_start_method("forkserver")
+    # When using the forkserver start method, preload the following modules to improve startup
+    # time of child processes.
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.new_installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)

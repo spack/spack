@@ -66,7 +66,7 @@ class TestMultiValuedVariant:
         assert not a.satisfies(c) and not c.satisfies(a)
 
         # SingleValuedVariant and MultiValuedVariant with the same single concrete value do satisfy
-        # eachother
+        # each other
         b_sv = SingleValuedVariant("foo", "bar")
         assert b.satisfies(b_sv) and b_sv.satisfies(b)
         d_sv = SingleValuedVariant("foo", True)

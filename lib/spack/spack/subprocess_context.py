@@ -11,6 +11,7 @@ installations performed in Spack unit tests may include additional
 modifications to global state in memory that must be replicated in the
 child process.
 """
+
 import importlib
 import io
 import multiprocessing
@@ -20,10 +21,12 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Optional
 
 import spack.config
+import spack.llnl.util.lang
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
+import spack.util.gpg
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -71,7 +74,7 @@ class PackageInstallContext:
         ctx: Optional[multiprocessing.context.BaseContext] = None,
     ):
         ctx = ctx or multiprocessing.get_context()
-        self.global_state = GlobalStateMarshaler(ctx=ctx)
+        self.global_state = GlobalStateMarshaler(ctx=ctx, serialize_env=True)
         self.pkg = pkg if ctx.get_start_method() == "fork" else serialize(pkg)
         self.spack_working_dir = spack.paths.spack_working_dir
 
@@ -89,28 +92,47 @@ class GlobalStateMarshaler:
     """
 
     def __init__(
-        self, *, ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None
+        self,
+        *,
+        ctx: Optional[Optional[multiprocessing.context.BaseContext]] = None,
+        serialize_env: bool = False,
     ) -> None:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
         if self.is_forked:
             return
 
-        from spack.environment import active_environment
-
-        self.config = spack.config.CONFIG.ensure_unwrapped()
+        self.config = spack.llnl.util.lang.ensure_unwrapped(spack.config.CONFIG)
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
         self.test_patches = TestPatches.create()
-        self.env = active_environment()
+        self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
+        if serialize_env:
+            from spack.environment import active_environment
+
+            self.env = active_environment()
+        else:
+            self.env = None
 
     def restore(self):
         if self.is_forked:
+            # Erase singletons that hold open SSL contexts / boto3 clients, since OpenSSL
+            # and botocore connection pools are not fork-safe.
+            from spack.oci import opener
+            from spack.util import web
+            from spack.util.s3 import s3_client_cache
+
+            web.urlopen._instance = None
+            opener.urlopen._instance = None
+            s3_client_cache.clear()
             return
         spack.config.CONFIG = self.config
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
+        if self.gnupg_home:
+            spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
+            spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
         self.test_patches.restore()
         if self.env:
             from spack.environment import activate

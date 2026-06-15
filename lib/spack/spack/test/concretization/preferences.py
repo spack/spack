@@ -167,11 +167,16 @@ class TestConcretizePreferences:
                 {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
                 "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
             ),
+            (
+                {"url": "$SOMEPATH/mpileaks-1.0.tar.gz"},
+                "file:///some/where/else/mpileaks-2.3.tar.gz",
+            ),
             ({}, "http://www.spack.llnl.gov/mpileaks-2.3.tar.gz"),
         ],
     )
-    def test_config_set_pkg_property_url(self, update, expected, mock_packages_repo):
+    def test_config_set_pkg_property_url(self, update, expected, mock_packages_repo, monkeypatch):
         """Test setting an existing attribute in the package class"""
+        monkeypatch.setenv("SOMEPATH", "file:///some/where/else")
         update_packages("mpileaks", "package_attributes", update)
         with spack.repo.use_repositories(mock_packages_repo):
             spec = concretize("mpileaks")

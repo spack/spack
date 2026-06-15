@@ -6,6 +6,7 @@
 .. literalinclude:: ../spack/schema/ci.py
    :lines: 16-
 """
+
 from typing import Any, Dict
 
 # Schema for script fields
@@ -31,10 +32,9 @@ image_schema = {
     ]
 }
 
-# Additional attributes are allow
-# and will be forwarded directly to the
-# CI target YAML for each job.
-attributes_schema = {
+# Additional attributes are allowed and will be forwarded directly to the CI target YAML for each
+# job.
+ci_job_attributes = {
     "type": "object",
     "additionalProperties": True,
     "properties": {
@@ -50,6 +50,8 @@ attributes_schema = {
     },
 }
 
+ref_ci_job_attributes = {"$ref": "#/definitions/ci_job_attributes"}
+
 submapping_schema = {
     "type": "object",
     "additionalProperties": False,
@@ -64,8 +66,8 @@ submapping_schema = {
                 "required": ["match"],
                 "properties": {
                     "match": {"type": "array", "items": {"type": "string"}},
-                    "build-job": attributes_schema,
-                    "build-job-remove": attributes_schema,
+                    "build-job": ref_ci_job_attributes,
+                    "build-job-remove": ref_ci_job_attributes,
                 },
             },
         },
@@ -101,7 +103,10 @@ def job_schema(name: str):
     return {
         "type": "object",
         "additionalProperties": False,
-        "properties": {f"{name}-job": attributes_schema, f"{name}-job-remove": attributes_schema},
+        "properties": {
+            f"{name}-job": ref_ci_job_attributes,
+            f"{name}-job-remove": ref_ci_job_attributes,
+        },
     }
 
 
@@ -142,5 +147,6 @@ schema = {
     "title": "Spack CI configuration file schema",
     "type": "object",
     "additionalProperties": False,
+    "definitions": {"ci_job_attributes": ci_job_attributes},
     "properties": properties,
 }

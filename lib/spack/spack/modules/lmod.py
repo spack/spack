@@ -7,57 +7,19 @@ import itertools
 import os
 import pathlib
 import warnings
-from typing import Dict, List, Optional, Tuple
+from typing import ClassVar, Dict, List, Optional
 
 import spack.compilers.config
 import spack.config
 import spack.error
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
-import spack.repo
 import spack.spec
 import spack.tengine as tengine
 import spack.util.environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-#: lmod specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:lmod", {})
-
-
-# Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
-
-
-def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseConfiguration:
-    """Returns the lmod configuration for spec"""
-    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-    key = (spec.dag_hash(), module_set_name, explicit)
-    try:
-        return configuration_registry[key]
-    except KeyError:
-        return configuration_registry.setdefault(
-            key, LmodConfiguration(spec, module_set_name, explicit)
-        )
-
-
-def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseFileLayout:
-    """Returns the layout information for spec"""
-    return LmodFileLayout(make_configuration(spec, module_set_name, explicit))
-
-
-def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseContext:
-    """Returns the context information for spec"""
-    return LmodContext(make_configuration(spec, module_set_name, explicit))
 
 
 def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
@@ -72,13 +34,14 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
     """
     core_compilers = []
     for compiler in spack.compilers.config.all_compilers(init_config=False):
-        try:
-            cc_dir = pathlib.Path(compiler.package.cc).parent
-            is_system_compiler = str(cc_dir) in spack.util.environment.SYSTEM_DIRS
-            if is_system_compiler:
-                core_compilers.append(compiler)
-        except (KeyError, TypeError, AttributeError):
-            continue
+        for attr in ("cc", "cxx", "fc"):
+            try:
+                path = getattr(compiler.package, attr)
+                if path and str(pathlib.Path(path).parent) in spack.util.environment.SYSTEM_DIRS:
+                    core_compilers.append(compiler)
+                    break
+            except (KeyError, TypeError, AttributeError):
+                continue
 
     if store and core_compilers:
         # If we asked to store core compilers, update the entry
@@ -96,6 +59,27 @@ def guess_core_compilers(name, store=False) -> List[spack.spec.Spec]:
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
 
+    module_system = "lmod"
+    _registry: ClassVar[Dict] = {}
+
+    @staticmethod
+    def make_layout(
+        spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
+    ) -> BaseFileLayout:
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodFileLayout(configuration)
+
+    @staticmethod
+    def make_context(
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        *,
+        explicit: Optional[bool] = None,
+        layout: BaseFileLayout,
+    ) -> BaseContext:
+        configuration = LmodConfiguration.make_configuration(spec, module_set_name, explicit)
+        return LmodContext(configuration, layout)
+
     default_projections = {"all": "{name}/{version}"}
 
     compiler: Optional[spack.spec.Spec]
@@ -104,20 +88,23 @@ class LmodConfiguration(BaseConfiguration):
         super().__init__(spec, module_set_name, explicit)
 
         candidates = collections.defaultdict(list)
+        language_virtuals = ("c", "cxx", "fortran")
+
         for node in spec.traverse(deptype=("link", "run")):
-            candidates["c"].extend(node.dependencies(virtuals=("c",)))
-            candidates["cxx"].extend(node.dependencies(virtuals=("c",)))
+            for language in language_virtuals:
+                candidates[language].extend(node.dependencies(virtuals=(language,)))
 
-        if candidates["c"]:
-            self.compiler = candidates["c"][0]
-            if len(set(candidates["c"])) > 1:
-                warnings.warn(
-                    f"{spec.short_spec} uses more than one compiler, and might not fit the "
-                    f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler."
-                )
+        self.compiler = None
 
-        elif not candidates["c"]:
-            self.compiler = None
+        for language in language_virtuals:
+            if candidates[language]:
+                self.compiler = candidates[language][0]
+                if len(set(candidates[language])) > 1:
+                    warnings.warn(
+                        f"{spec.short_spec} uses more than one compiler, and might not fit the "
+                        f"LMod hierarchy. Using {self.compiler.short_spec} as the LMod compiler."
+                    )
+                break
 
     @property
     def core_compilers(self) -> List[spack.spec.Spec]:
@@ -128,7 +115,7 @@ class LmodConfiguration(BaseConfiguration):
                 the sequence is empty
         """
         compilers = []
-        for c in configuration(self.name).get("core_compilers", []):
+        for c in self.configuration(self.name).get("core_compilers", []):
             compilers.extend(spack.spec.Spec(f"%{c}").dependencies())
 
         if not compilers:
@@ -143,12 +130,12 @@ class LmodConfiguration(BaseConfiguration):
     @property
     def core_specs(self):
         """Returns the list of "Core" specs"""
-        return configuration(self.name).get("core_specs", [])
+        return self.configuration(self.name).get("core_specs", [])
 
     @property
     def filter_hierarchy_specs(self):
         """Returns the dict of specs with modified hierarchies"""
-        return configuration(self.name).get("filter_hierarchy_specs", {})
+        return self.configuration(self.name).get("filter_hierarchy_specs", {})
 
     @property
     @lang.memoized
@@ -156,16 +143,7 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. ``compiler`` is always present.
         """
-        tokens = configuration(self.name).get("hierarchy", [])
-
-        # Check if all the tokens in the hierarchy are virtual specs.
-        # If not warn the user and raise an error.
-        not_virtual = [t for t in tokens if t != "compiler" and not spack.repo.PATH.is_virtual(t)]
-        if not_virtual:
-            msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
-            msg += "Please check the 'modules.yaml' configuration files"
-            msg = msg.format(", ".join(not_virtual))
-            raise NonVirtualInHierarchyError(msg)
+        tokens = self.configuration(self.name).get("hierarchy", [])
 
         # Append 'compiler' which is always implied
         tokens.append("compiler")
@@ -183,10 +161,7 @@ class LmodConfiguration(BaseConfiguration):
         The ``compiler`` key is always present among the requirements.
         """
         # If it's a core_spec, lie and say it requires a core compiler
-        if (
-            any(self.spec.satisfies(core_spec) for core_spec in self.core_specs)
-            or self.compiler is None
-        ):
+        if any(self.spec.satisfies(core_spec) for core_spec in self.core_specs):
             return {"compiler": self.core_compilers[0]}
 
         hierarchy_filter_list = []
@@ -197,17 +172,18 @@ class LmodConfiguration(BaseConfiguration):
 
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
+        requirements = {"compiler": self.compiler or self.core_compilers[0]}
 
-        requirements = {"compiler": self.compiler}
-        # For each virtual dependency in the hierarchy
+        # For each dependency in the hierarchy
         for x in self.hierarchy_tokens:
             # Skip anything filtered for this spec
             if x in hierarchy_filter_list:
                 continue
 
             # If I depend on it
-            if x in self.spec and not self.spec.package.provides(x):
+            if x in self.spec and not (self.spec.name == x or self.spec.package.provides(x)):
                 requirements[x] = self.spec[x]  # record the actual provider
+
         return requirements
 
     @property
@@ -230,7 +206,7 @@ class LmodConfiguration(BaseConfiguration):
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
-            if self.spec.package.provides(x):
+            if self.spec.name == x or self.spec.package.provides(x):
                 provides[x] = self.spec
         return provides
 
@@ -255,7 +231,9 @@ class LmodConfiguration(BaseConfiguration):
     @property
     def hidden(self):
         # Never hide a module that opens a hierarchy
-        if any(self.spec.package.provides(x) for x in self.hierarchy_tokens):
+        if any(
+            self.spec.name == x or self.spec.package.provides(x) for x in self.hierarchy_tokens
+        ):
             return False
         return super().hidden
 
@@ -464,19 +442,17 @@ class LmodContext(BaseContext):
     @lang.memoized
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        layout = make_layout(self.spec, self.conf.name)
-        return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
+        return [os.path.join(*parts) for parts in self.layout.unlocked_paths[None]]
 
     @tengine.context_property
     def conditionally_unlocked_paths(self):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        layout = make_layout(self.spec, self.conf.name)
         value = []
-        conditional_paths = layout.unlocked_paths
-        conditional_paths.pop(None)
-        for services_needed, list_of_path_parts in conditional_paths.items():
+        for services_needed, list_of_path_parts in self.layout.unlocked_paths.items():
+            if services_needed is None:
+                continue
             condition = " and ".join([x + "_name" for x in services_needed])
             for parts in list_of_path_parts:
 
@@ -486,13 +462,14 @@ class LmodContext(BaseContext):
                     return '"' + token + '"'
 
                 path = ", ".join([manipulate_path(x) for x in parts])
-
                 value.append((condition, path))
         return value
 
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
+
+    configuration_class = LmodConfiguration
 
     default_template = "modules/modulefile.lua"
 
@@ -504,10 +481,4 @@ class LmodModulefileWriter(BaseModuleFileWriter):
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
     """Error raised if the key ``core_compilers`` has not been specified
     in the configuration file.
-    """
-
-
-class NonVirtualInHierarchyError(spack.error.SpackError, TypeError):
-    """Error raised if non-virtual specs are used as hierarchy tokens in
-    the lmod section of ``modules.yaml``.
     """

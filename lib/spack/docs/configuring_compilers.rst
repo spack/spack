@@ -269,7 +269,7 @@ For example:
 
 .. code-block:: spec
 
-   $ spack install gcc@14+binutils
+   $ spack install gcc@14
 
 Once the compiler is installed, you can start using it without additional configuration:
 

@@ -744,4 +744,39 @@ You can assign class-level attributes in the configuration:
 Attributes set this way will be accessible to any method executed in the package.py file (e.g. the ``install()`` method).
 Values for these attributes may be any value parseable by yaml.
 
-These can only be applied to specific packages, not "all" or virtual packages.
+Variable substitution in package attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package attribute values support variable substitution, allowing you to use Spack-specific variables, environment variables, and user path expansion in your configuration.
+This is particularly useful for specifying paths relative to your Spack installation, environment, or home directory.
+
+For example, you can reference local source archives or build artifacts:
+
+.. code-block:: yaml
+
+   packages:
+     mypackage:
+       package_attributes:
+         # Use Spack installation directory
+         url: file://$spack/local-sources/mypackage-1.0.tar.gz
+         # Use environment name
+         git: $env/mypackage.git
+         # Use environment variables
+         custom_path: ${HOME}/build/artifacts
+         # Use user expansion
+         license_file: ~/licenses/mypackage.lic
+
+All the variables documented in :ref:`config-file-variables` are supported, including:
+
+* ``$spack``: path to the Spack installation
+* ``$env``: path to the currently active environment
+* ``$user``: current user name
+* ``${VARNAME}``: environment variables
+* ``~`` or ``~user``: user home directory expansion
+
+Variable substitution is applied to string values in ``package_attributes``.
+This allows you to create portable configurations that adapt to different environments and user contexts.
+
+.. note::
+
+   These can only be applied to specific packages, not "all" or virtual packages.
