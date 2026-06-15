@@ -34,6 +34,7 @@ import spack.platforms
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
+import spack.solver.compat
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
@@ -2723,7 +2724,7 @@ packages:
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
         monkeypatch.setattr(
-            spack.solver.reuse, "_specs_from_mirror", lambda binary_index: [reused]
+            spack.solver.reuse, "_specs_from_mirror", lambda binary_index, config: [reused]
         )
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
@@ -5311,14 +5312,14 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
     """Tests that we get a warning when a binary mirror has no index."""
     binary_index = spack.binary_distribution.BinaryIndexCache()
 
-    def fake_update():
+    def fake_update(*, config):
         binary_index.mirrors_without_index = {"file:///fake-mirror"}
 
     monkeypatch.setattr(binary_index, "update", fake_update)
     monkeypatch.setattr(binary_index, "get_all_built_specs", lambda: [])
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
-        spack.solver.reuse._specs_from_mirror(binary_index)
+        spack.solver.reuse._specs_from_mirror(binary_index, spack.config.CONFIG)
 
 
 @pytest.mark.parametrize(
@@ -5427,17 +5428,6 @@ def test_concretization_cache_skips_automatic_splice(
     assert spec1 == spec2
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="A solve still reads process globals at three remaining site groups: (1) the clingo "
-    "bootstrap path (solver/compat.py -> ensure_bootstrap_configuration) reads config.CONFIG, "
-    "repo.PATH and store.STORE by design -- this is the out-of-scope bootstrap config swap, and "
-    "only fires when clingo is not yet warmed; (2) external-spec parsing (externals.py / "
-    "externals_config.py) reads repo.PATH at ~7 sites; (3) buildcache-reuse mirror enumeration "
-    "(BinaryIndexCache.update -> MirrorCollection) reads config.CONFIG. Closing this needs the "
-    "test to warm clingo before nulling globals, plus injecting repo into externals and config "
-    "into the reuse mirror lookup. Remove this marker once those are done.",
-)
 def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mock_packages_repo):
     """A solve driven by an explicit SpackContext must not read the process globals.
 
@@ -5447,10 +5437,18 @@ def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mo
     of context construction or the solve reached for a global instead of the injected config, it
     would raise ``AttributeError``.
 
+    The clingo bootstrap path (``solver/compat.py`` -> ``ensure_bootstrap_configuration``) reads
+    the process globals by design -- it swaps in an isolated bootstrap config/store/platform -- so
+    it is deliberately out of scope. We warm clingo up front (a one-time, process-global operation)
+    so that swap does not fire during the measured solve.
+
     ``monkeypatch`` is listed after ``mutable_config`` so its undo runs first at teardown,
     restoring ``spack.config.CONFIG`` before the ``mutable_config`` fixture tears down its scope.
     """
     mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+
+    # Warm the out-of-scope clingo bootstrap path before nulling the globals it legitimately reads.
+    spack.solver.compat.clingo()
 
     monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.store, "STORE", None)

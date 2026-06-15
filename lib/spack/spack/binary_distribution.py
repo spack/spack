@@ -332,7 +332,9 @@ class BinaryIndexCache:
             for new_entry in found_list:
                 current_list.add(new_entry.strip_view())
 
-    def update(self, with_cooldown: bool = False) -> None:
+    def update(
+        self, with_cooldown: bool = False, *, config: Optional[spack.config.Configuration] = None
+    ) -> None:
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -340,13 +342,20 @@ class BinaryIndexCache:
         to confirm it is the same as what is stored locally.  Otherwise, the
         buildcache ``index.json`` and ``index.json.hash`` files are retrieved
         from each configured mirror and stored locally (both in memory and
-        on disk under ``_index_cache_root``)."""
+        on disk under ``_index_cache_root``).
+
+        Args:
+            with_cooldown: skip mirrors whose index was fetched recently (within the TTL).
+            config: configuration to read the mirror list and TTL from. If None, the global
+                ``spack.config.CONFIG`` is used."""
+        if config is None:
+            config = spack.config.CONFIG
         self._init_local_index_cache()
         self.mirrors_without_index = set()
 
         supported_mirror_versions = {
             (m.fetch_url, m.fetch_view): m.supported_layout_versions
-            for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+            for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
         }
 
         # If we have a cached index for a mirror which is no longer configured, remove it
@@ -355,7 +364,9 @@ class BinaryIndexCache:
         # Fetch or update the other indexes
         errors, all_failed = [], True
         for (url, view), versions in supported_mirror_versions.items():
-            result = self._fetch_mirror_index(url, view, versions=versions, cooldown=with_cooldown)
+            result = self._fetch_mirror_index(
+                url, view, versions=versions, cooldown=with_cooldown, config=config
+            )
             if result.error:
                 errors.append(result.error)
 
@@ -383,13 +394,19 @@ class BinaryIndexCache:
             self.regenerate_spec_cache(clear_existing=clear_cache)
 
     def _fetch_mirror_index(
-        self, url: str, view: Optional[str], *, versions: List[int], cooldown: bool
+        self,
+        url: str,
+        view: Optional[str],
+        *,
+        versions: List[int],
+        cooldown: bool,
+        config: spack.config.Configuration,
     ) -> _MirrorIndexResult:
         """Fetches the index of a mirror, using a highest-version first approach, and returning
         after the first success.
         """
         now = time.time()
-        ttl = spack.config.CONFIG.get_config("config").get("binary_index_ttl", 600)
+        ttl = config.get_config("config").get("binary_index_ttl", 600)
         for version in versions:
             meta = MirrorMetadata(url, version, view)
             cache_entry = self._local_index_cache.get(str(meta))

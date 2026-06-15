@@ -448,6 +448,8 @@ class MirrorCollection(Mapping[str, Mirror]):
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
+        *,
+        config: Optional[spack.config.Configuration] = None,
     ):
         """Initialize a mirror collection.
 
@@ -462,11 +464,15 @@ class MirrorCollection(Mapping[str, Mirror]):
                     If None, do not filter on source mirrors.
             autopush: If True, only include mirrors that have autopush enabled.
                       If False, omit mirrors that have autopush enabled.
-                      If None, do not filter on autopush."""
+                      If None, do not filter on autopush.
+            config: configuration to look up mirrors from when ``mirrors`` is None. If None, the
+                    global ``spack.config.CONFIG`` is used."""
+        if config is None:
+            config = spack.config.CONFIG
         mirrors_data = (
             mirrors.items()
             if mirrors is not None
-            else spack.config.CONFIG.get_config("mirrors", scope=scope).items()
+            else config.get_config("mirrors", scope=scope).items()
         )
         mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 

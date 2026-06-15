@@ -35,10 +35,10 @@ def spec_filter_from_store(store, *, is_reusable, include=None, exclude=None) ->
 
 
 def spec_filter_from_buildcache(
-    binary_index, *, is_reusable, include=None, exclude=None
+    binary_index, *, config: spack.config.Configuration, is_reusable, include=None, exclude=None
 ) -> SpecFilter:
     """Constructs a filter that takes the specs from the configured buildcaches."""
-    factory = functools.partial(_specs_from_mirror, binary_index=binary_index)
+    factory = functools.partial(_specs_from_mirror, binary_index=binary_index, config=config)
     return SpecFilter(
         factory=factory, is_usable=is_reusable, include=include or [], exclude=exclude or []
     )
@@ -147,9 +147,9 @@ def _specs_from_store(store):
         return store.db.query(installed=True)
 
 
-def _specs_from_mirror(binary_index):
+def _specs_from_mirror(binary_index, config: spack.config.Configuration):
     try:
-        binary_index.update()
+        binary_index.update(config=config)
         specs = binary_index.get_all_built_specs()
     except (spack.binary_distribution.FetchCacheError, IndexError):
         # this is raised when no mirrors had indices.
@@ -243,7 +243,11 @@ class ReusableSpecsSelector:
             self.reuse_sources.extend(
                 [
                     spec_filter_from_store(self.store, is_reusable=local_is_reusable),
-                    spec_filter_from_buildcache(self.binary_index, is_reusable=mirror_is_reusable),
+                    spec_filter_from_buildcache(
+                        self.binary_index,
+                        config=self.configuration,
+                        is_reusable=mirror_is_reusable,
+                    ),
                 ]
             )
         else:
@@ -286,6 +290,7 @@ class ReusableSpecsSelector:
                     self.reuse_sources.append(
                         spec_filter_from_buildcache(
                             self.binary_index,
+                            config=self.configuration,
                             is_reusable=mirror_is_reusable,
                             include=include,
                             exclude=exclude,
