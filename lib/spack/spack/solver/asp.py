@@ -3000,7 +3000,9 @@ class SpackSolverSetup:
         reuse = reuse or []
         if packages_with_externals is None:
             packages_with_externals = (
-                spack.externals_config.external_config_with_implicit_externals(self.context.config)
+                spack.externals_config.external_config_with_implicit_externals(
+                    self.context.config, repo=self.context.repo
+                )
             )
         self._validate_input_specs(specs)
         self.gen = ProblemInstanceBuilder()
@@ -4057,13 +4059,15 @@ class Solver:
 
         # Compute packages configuration with implicit externals once and reuse it
         self.packages_with_externals = (
-            spack.externals_config.external_config_with_implicit_externals(self.context.config)
+            spack.externals_config.external_config_with_implicit_externals(
+                self.context.config, repo=self.context.repo
+            )
         )
         completion_mode = self.context.config.get("concretizer:externals:completion")
         self.selector = ReusableSpecsSelector(
             context=self.context,
             external_parser=spack.externals_config.create_external_parser(
-                self.packages_with_externals, completion_mode
+                self.packages_with_externals, completion_mode, repo=self.context.repo
             ),
             factory=specs_factory,
             packages_with_externals=self.packages_with_externals,

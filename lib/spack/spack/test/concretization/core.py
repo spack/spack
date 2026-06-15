@@ -5429,32 +5429,35 @@ def test_concretization_cache_skips_automatic_splice(
 
 @pytest.mark.xfail(
     strict=True,
-    reason="The injected RepoPath still builds its package index through the global "
-    "spack.caches.MISC_CACHE, which lazily reads spack.config.CONFIG; nulling CONFIG makes that "
-    "lazy init fail. Closing this needs a config-derived cache threaded into Repo/RepoPath "
-    "construction (repo layer, separate from the solver). Remove this marker once that is done.",
+    reason="A solve still reads process globals at three remaining site groups: (1) the clingo "
+    "bootstrap path (solver/compat.py -> ensure_bootstrap_configuration) reads config.CONFIG, "
+    "repo.PATH and store.STORE by design -- this is the out-of-scope bootstrap config swap, and "
+    "only fires when clingo is not yet warmed; (2) external-spec parsing (externals.py / "
+    "externals_config.py) reads repo.PATH at ~7 sites; (3) buildcache-reuse mirror enumeration "
+    "(BinaryIndexCache.update -> MirrorCollection) reads config.CONFIG. Closing this needs the "
+    "test to warm clingo before nulling globals, plus injecting repo into externals and config "
+    "into the reuse mirror lookup. Remove this marker once those are done.",
 )
-def test_solve_uses_injected_context_not_globals(
-    tmp_path, monkeypatch, config, mock_packages, mock_packages_repo
-):
+def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mock_packages_repo):
     """A solve driven by an explicit SpackContext must not read the process globals.
 
-    The context is built entirely from fixture objects (and an explicit cache root). We then
-    null exactly the four globals that ``SpackContext`` wraps; if any part of the solve reached
-    for one of them instead of the injected context, it would raise ``AttributeError``.
+    We register the mock repository in the configuration, null exactly the four globals that
+    ``SpackContext`` wraps, and only then build the context with ``SpackContext.from_config`` --
+    so the production constructor itself runs with the globals already unavailable. If any part
+    of context construction or the solve reached for a global instead of the injected config, it
+    would raise ``AttributeError``.
+
+    ``monkeypatch`` is listed after ``mutable_config`` so its undo runs first at teardown,
+    restoring ``spack.config.CONFIG`` before the ``mutable_config`` fixture tears down its scope.
     """
-    context = spack.spack_context.SpackContext(
-        config=config,
-        store=spack.store.create(config),
-        repo=spack.repo.RepoPath(mock_packages_repo),
-        binary_index=spack.binary_distribution.BinaryIndexCache(cache_root=str(tmp_path)),
-    )
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
 
     monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.store, "STORE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
 
+    context = spack.spack_context.SpackContext.from_config(mutable_config)
     result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a")])
 
     assert result.specs, "the solve produced no concrete spec"

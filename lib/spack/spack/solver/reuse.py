@@ -129,10 +129,12 @@ def reusable_external_specs(
     configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
 ) -> List[spack.spec.Spec]:
     """Return the reusable external specs declared in a configuration's ``packages.yaml``."""
-    packages_with_externals = external_config_with_implicit_externals(configuration)
+    packages_with_externals = external_config_with_implicit_externals(configuration, repo=repo)
     completion_mode = configuration.get("concretizer:externals:completion")
     spec_filter = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(packages_with_externals, completion_mode),
+        external_parser=create_external_parser(
+            packages_with_externals, completion_mode, repo=repo
+        ),
         is_reusable=functools.partial(
             _is_reusable, packages_with_externals=packages_with_externals, local=True, repo=repo
         ),

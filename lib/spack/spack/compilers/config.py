@@ -290,7 +290,7 @@ class CompilerFactory:
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        external_parser = ExternalSpecsParser(init_external_dicts)
+        external_parser = ExternalSpecsParser(init_external_dicts, repo=repo)
         valid_compiler_specs = []
         for name, external_specs_and_config in external_parser.specs_by_name.items():
             if name not in compiler_package_names:
