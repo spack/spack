@@ -264,6 +264,13 @@ def install_from_buildcache(
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
 ) -> bool:
+    # Skip if no configured mirror accepts this spec (select/exclude filters)
+    if not any(
+        m.matches_binary(spec, direction="fetch")
+        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    ):
+        return False
+
     send_state("fetching from build cache", state_stream)
     try:
         tarball_stage = spack.binary_distribution.download_tarball(

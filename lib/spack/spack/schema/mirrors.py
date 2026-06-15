@@ -10,8 +10,8 @@
 
 from typing import Any, Dict
 
-#: Common properties for connection specification
-connection = {
+#: Properties that can be set at mirror-level and overridden for fetch/push directions
+overridable_per_direction = {
     "url": {
         "type": "string",
         "description": "URL pointing to the mirror directory, can be local filesystem "
@@ -54,6 +54,19 @@ connection = {
         "description": "Environment variable containing an access token for OCI registry "
         "authentication",
     },
+    "include_binary": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "List of spec patterns to include for this build cache. "
+        "If specified, only specs matching at least one pattern will be "
+        "pushed or pulled (default: all specs).",
+    },
+    "exclude_binary": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "List of spec patterns to exclude from this build cache "
+        "(default: exclude nothing).",
+    },
 }
 
 
@@ -71,7 +84,7 @@ fetch_and_push = {
             "description": "Detailed connection configuration with authentication and custom "
             "settings",
             "additionalProperties": False,
-            "properties": {**connection},
+            "properties": {**overridable_per_direction},
         },
     ],
 }
@@ -113,7 +126,7 @@ mirror_entry = {
             "description": "Automatically push packages to this build cache immediately after "
             "they are installed locally",
         },
-        **connection,
+        **overridable_per_direction,
     },
 }
 

@@ -487,6 +487,35 @@ def test_skip_no_redistribute(mock_packages, config):
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
 
+def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push excludes specs matching the mirror's exclude patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "exclude_binary": ["brillig"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
+def test_filter_specs_for_push_with_include(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push only includes specs matching the mirror's include
+    patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "include_binary": ["canfail"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
 def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):
     """When --fail-fast is passed, the push command should fail if it immediately finds an
     uninstalled dependency. Otherwise, failure to push one dependency shouldn't prevent the

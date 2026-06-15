@@ -308,6 +308,30 @@ Alternatively, you can edit the ``mirrors.yaml`` configuration file directly:
 
 See also :ref:`mirrors`.
 
+
+Including and Excluding Specs in Build Caches
+---------------------------------------------
+
+.. versionadded:: 1.2
+
+When pushing to or fetching from a build cache, you can specify include and exclude patterns in the mirror configuration to control which specs are included in or excluded from the build cache.
+If a spec satisfies an include and exclude filter then the exclusion wins.
+By default, all specs are included and none are excluded.
+
+The ``mirrors.yaml`` has to be edited directly to specify include and exclude patterns:
+
+.. code-block:: yaml
+
+   mirrors:
+     <name>:
+       url: <url>
+       include_binary:
+       - "%gcc"  # include only specs that depend on gcc
+       exclude_binary:
+       - "dev_path=*"  # except development specs
+       - "^mpich"  # and any spec that depends on mpich
+
+
 Relocation
 ----------
 

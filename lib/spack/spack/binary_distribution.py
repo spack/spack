@@ -1754,7 +1754,12 @@ def download_tarball(
                 return mirror, layout_version
         return spack.mirrors.mirror.Mirror(url), layout_version
 
-    mirrors = [fetch_url_to_mirror(mirror_metadata) for mirror_metadata in urls_and_versions]
+    mirrors = [
+        (mirror, layout_version)
+        for mirror_metadata in urls_and_versions
+        for mirror, layout_version in [fetch_url_to_mirror(mirror_metadata)]
+        if mirror.matches_binary(spec, direction="fetch")
+    ]
 
     for mirror, layout_version in mirrors:
         # Override mirror's default if

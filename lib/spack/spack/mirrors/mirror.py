@@ -4,7 +4,19 @@
 import operator
 import os
 import urllib.parse
-from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union, overload
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import spack.config
 import spack.llnl.util.tty as tty
@@ -14,12 +26,31 @@ import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
 
+if TYPE_CHECKING:
+    import spack.spec
+
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 #: The layout version spack can current install
 SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
 BINARY_MEDIA_TYPE_VERSION = 2
+
+
+def _spec_matches_filters(spec: "spack.spec.Spec", include: List[str], exclude: List[str]) -> bool:
+    """Check if a spec matches include/exclude filters.
+
+    A spec is included when:
+    - include is empty, or spec matches at least one include pattern
+    - spec does not match any exclude pattern
+    """
+    if include and not any(spec.satisfies(s) for s in include):
+        return False
+
+    if exclude and any(spec.satisfies(e) for e in exclude):
+        return False
+
+    return True
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -125,6 +156,18 @@ class Mirror:
             return False
         return self._data.get("autopush", False)
 
+    def include_binary(self, direction: str) -> List[str]:
+        return self._get_value("include_binary", direction) or []
+
+    def exclude_binary(self, direction: str) -> List[str]:
+        return self._get_value("exclude_binary", direction) or []
+
+    def matches_binary(self, spec: "spack.spec.Spec", direction: str) -> bool:
+        """Check if a spec passes this mirror's include/exclude buildcache filters."""
+        return _spec_matches_filters(
+            spec, self.include_binary(direction), self.exclude_binary(direction)
+        )
+
     @property
     def fetch_url(self) -> str:
         """Get the valid, canonicalized fetch URL"""
@@ -224,6 +267,8 @@ class Mirror:
             "access_token_variable",
             "profile",
             "endpoint_url",
+            "select",
+            "exclude",
         ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
