@@ -38,7 +38,7 @@ import spack.solver.compat
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
-import spack.spack_context
+import spack.context
 import spack.spec
 import spack.spec_filter
 import spack.store
@@ -3335,7 +3335,7 @@ def test_filtering_reused_specs(
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.spack_context.SpackContext(
+        context=spack.context.SpackContext(
             config=mutable_config,
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,
@@ -3382,7 +3382,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.spack_context.SpackContext(
+        context=spack.context.SpackContext(
             config=mutable_config,
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,
@@ -5455,7 +5455,7 @@ def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mo
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
 
-    context = spack.spack_context.SpackContext.from_config(mutable_config)
+    context = spack.context.SpackContext.from_config(mutable_config)
     result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a")])
 
     assert result.specs, "the solve produced no concrete spec"

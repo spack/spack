@@ -17,7 +17,7 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
-from spack.spack_context import SpackContext
+from spack.context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import lang, tty
 

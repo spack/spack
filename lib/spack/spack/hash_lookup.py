@@ -8,7 +8,7 @@ searching the active environment, the installed store, the binary cache, and
 configured externals (via spack.externals_config).
 
 The store, binary cache and externals it queries come from an injected
-:class:`~spack.spack_context.SpackContext`; callers that do not pass one fall back to
+:class:`~spack.context.SpackContext`; callers that do not pass one fall back to
 ``SpackContext.default()`` (the current process globals).
 """
 
@@ -21,7 +21,7 @@ import spack.error
 import spack.externals_config
 import spack.spec
 from spack.enums import InstallRecordStatus
-from spack.spack_context import SpackContext
+from spack.context import SpackContext
 
 
 def _matching_external_specs(

@@ -66,7 +66,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
-from spack.spack_context import SpackContext
+from spack.context import SpackContext
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list

@@ -48,7 +48,7 @@ import spack.tengine
 import spack.traverse
 import spack.util.tty.color
 from spack.solver.input_analysis import create_graph_analyzer
-from spack.spack_context import SpackContext
+from spack.context import SpackContext
 
 
 def find(seq, predicate):
