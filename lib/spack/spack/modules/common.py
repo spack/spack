@@ -54,7 +54,7 @@ import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.context import Context
+from spack.enums import Context
 from spack.llnl.util.lang import Singleton, dedupe, memoized
 
 #: Valid tokens for naming scheme and env variable names

@@ -81,7 +81,7 @@ import spack.subprocess_context
 import spack.util.executable
 import spack.util.module_cmd
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.llnl.string import plural

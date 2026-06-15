@@ -23,7 +23,7 @@ import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
-from spack.context import Context
+from spack.enums import Context
 from spack.installer import PackageInstaller
 from spack.llnl.path import Path, convert_to_platform_path
 from spack.llnl.util.filesystem import HeaderList, LibraryList

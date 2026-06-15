@@ -32,3 +32,25 @@ class PropagationPolicy(enum.Enum):
 
     NONE = enum.auto()
     PREFERENCE = enum.auto()
+
+
+class Context(enum.Enum):
+    """Enum used to indicate the context in which an environment has to be setup: build,
+    run or test."""
+
+    BUILD = 1
+    RUN = 2
+    TEST = 3
+
+    def __str__(self):
+        return ("build", "run", "test")[self.value - 1]
+
+    @classmethod
+    def from_string(cls, s: str):
+        if s == "build":
+            return Context.BUILD
+        elif s == "run":
+            return Context.RUN
+        elif s == "test":
+            return Context.TEST
+        raise ValueError(f"context should be one of 'build', 'run', 'test', got {s}")
