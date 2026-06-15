@@ -1150,11 +1150,13 @@ class BuildStatus:
         self.dirty = True
         self._update_terminal_title()
 
-    def update_state(self, build_id: str, state: str) -> None:
+    def update_state(self, build_id: str, state: str, log_summary: Optional[str] = None) -> None:
         """Update the state of a package and mark the display as dirty."""
         build_info = self.builds[build_id]
         build_info.state = state
         build_info.progress_percent = None
+        if log_summary is not None:
+            build_info.log_summary = log_summary
 
         if state in ("finished", "failed"):
             self.completed += 1
@@ -1179,18 +1181,6 @@ class BuildStatus:
             )
             self.stdout.write(line + "\n")
             self.stdout.flush()
-
-    def parse_log_summary(self, build_id: str) -> None:
-        """Parse the build log for errors/warnings and store the summary."""
-        build_info = self.builds[build_id]
-        if not build_info.log_path or not os.path.exists(build_info.log_path):
-            return
-        errors, warnings, tail_event = parse_log_events(build_info.log_path, tail=20)
-        events = [*errors, *warnings]
-        if tail_event is not None:
-            events.append(tail_event)
-        if events:
-            build_info.log_summary = make_log_context(events)
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -1443,6 +1433,19 @@ class BuildStatus:
             yield f" ({pretty_duration(elapsed)})"
             if self.color:
                 yield "\033[0m"
+
+
+def get_log_summary(log_path: Optional[str]) -> Optional[str]:
+    """Parse the build log for errors/warnings and return a summary string."""
+    if not log_path or not os.path.exists(log_path):
+        return None
+    errors, warnings, tail_event = parse_log_events(log_path, tail=20)
+    events = [*errors, *warnings]
+    if tail_event is not None:
+        events.append(tail_event)
+    if events:
+        return make_log_context(events)
+    return None
 
 
 Nodes = Dict[str, spack.spec.Spec]
@@ -2421,8 +2424,8 @@ class PackageInstaller:
             # Record a failure. In fail-fast mode, only record the first failure; subsequent
             # failures may be a consequence of us terminating other builds.
             failures.append(build.spec)
-            self.build_status.update_state(dag_hash, "failed")
-            self.build_status.parse_log_summary(dag_hash)
+            summary = get_log_summary(build.log_path)
+            self.build_status.update_state(dag_hash, "failed", summary)
 
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately

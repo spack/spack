@@ -210,39 +210,32 @@ class TestBasicStateManagement:
         assert status.tracked_build_id == ""
         assert status.overview_mode is True
 
-    def test_parse_log_summary(self, tmp_path):
-        """Test that parse_log_summary parses the build log and stores the summary."""
-        status, _, _ = create_build_status()
-        (spec,) = add_mock_builds(status, 1)
-        build_id = spec.dag_hash()
-
+    def test_get_log_summary(self, tmp_path):
+        """Test that get_log_summary parses the build log and returns the summary."""
         # Create a fake log file with an error
         log_file = tmp_path / "build.log"
         log_file.write_text("error: something went wrong\n")
 
-        status.builds[build_id].log_path = str(log_file)
-        status.parse_log_summary(build_id)
-        assert status.builds[build_id].log_summary is not None
-        assert "error" in status.builds[build_id].log_summary.lower()
+        summary = inst.get_log_summary(str(log_file))
+        assert summary is not None
+        assert "error" in summary.lower()
 
-    def test_parse_log_summary_no_log_path(self):
-        """Test that parse_log_summary is a no-op when log_path is not set."""
+    def test_get_log_summary_no_log_path(self):
+        """Test that get_log_summary returns None when log_path is not set."""
+        assert inst.get_log_summary(None) is None
+
+    def test_get_log_summary_missing_file(self, tmp_path):
+        """Test that get_log_summary returns None when the log file doesn't exist."""
+        assert inst.get_log_summary(str(tmp_path / "nonexistent.log")) is None
+
+    def test_update_state_stores_log_summary(self):
+        """Test that update_state stores a passed log_summary on the build."""
         status, _, _ = create_build_status()
         (spec,) = add_mock_builds(status, 1)
         build_id = spec.dag_hash()
 
-        status.parse_log_summary(build_id)
-        assert status.builds[build_id].log_summary is None
-
-    def test_parse_log_summary_missing_file(self, tmp_path):
-        """Test that parse_log_summary is a no-op when log file doesn't exist."""
-        status, _, _ = create_build_status()
-        (spec,) = add_mock_builds(status, 1)
-        build_id = spec.dag_hash()
-
-        status.builds[build_id].log_path = str(tmp_path / "nonexistent.log")
-        status.parse_log_summary(build_id)
-        assert status.builds[build_id].log_summary is None
+        status.update_state(build_id, "failed", "Error: boom\n")
+        assert status.builds[build_id].log_summary == "Error: boom\n"
 
     def test_update_progress(self):
         """Test that update_progress updates percentages"""
