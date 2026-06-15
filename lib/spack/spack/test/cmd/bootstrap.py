@@ -130,6 +130,19 @@ def test_list_sources_url(config, tmp_path):
     url = match.group(1).strip()
     assert url == absolute_url
 
+    # HTTP URL
+    metadata = {"type": "install", "description": "test", "info": {"url": "https://test.com"}}
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
+        syaml.dump(metadata, f)
+    with spack.config.override(
+        "bootstrap",
+        {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
+    ):
+        output = _bootstrap("list")
+    match = re.search(r"url:(.+)", output)
+    url = match.group(1).strip()
+    assert url == "https://test.com"
+
 
 def test_list_sources(config):
     # Get the merged list and ensure we get our defaults
