@@ -12,6 +12,7 @@ import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import spack.config
+import spack.context
 import spack.detection
 import spack.detection.path
 import spack.error
@@ -89,7 +90,9 @@ def select_new_compilers(
     """Given a list of compilers, remove those that are already defined in
     the configuration.
     """
-    compilers_in_config = all_compilers_from(configuration=spack.config.CONFIG, scope=scope)
+    compilers_in_config = all_compilers_from(
+        configuration=spack.config.CONFIG, scope=scope, repo=spack.repo.PATH
+    )
     return [c for c in candidates if c not in compilers_in_config]
 
 
@@ -108,27 +111,25 @@ def all_compilers(
     *,
     scope: Optional[str] = None,
     init_config: bool = True,
-    configuration: Optional[spack.config.Configuration] = None,
-    repo: Optional[spack.repo.RepoPath] = None,
+    context: Optional[spack.context.SpackContext] = None,
 ) -> List[spack.spec.Spec]:
-    """Returns all the compilers from the given configuration.
+    """Returns all the compilers from the given context.
 
     Args:
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
         init_config: if True, search for compilers if none is found in configuration.
-        configuration: configuration to be queried. If None, the global configuration is used.
-        repo: package repository used to enumerate compiler packages. If None, the global
-            ``spack.repo.PATH`` is used.
+        context: resources to query. If None, a context wrapping the process globals is used.
     """
-    if configuration is None:
-        configuration = spack.config.CONFIG
+    if context is None:
+        context = spack.context.SpackContext.default()
 
-    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
+    configuration = context.config
+    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=context.repo)
 
     if not compilers and init_config:
         _init_packages_yaml(configuration, scope=scope)
-        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=repo)
+        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=context.repo)
 
     return compilers
 
@@ -163,16 +164,15 @@ def all_compilers_from(
     configuration: spack.config.Configuration,
     scope: Optional[str] = None,
     *,
-    repo: Optional[spack.repo.RepoPath] = None,
+    repo: spack.repo.RepoPath,
 ) -> List[spack.spec.Spec]:
-    """Returns all the compilers from the current global configuration.
+    """Returns all the compilers from the given configuration.
 
     Args:
         configuration: configuration to be queried
         scope: configuration scope from which to extract the compilers. If None, the merged
             configuration is used.
-        repo: package repository used to enumerate compiler packages. If None, the global
-            ``spack.repo.PATH`` is used.
+        repo: package repository used to enumerate compiler packages.
     """
     compilers = CompilerFactory.from_packages_yaml(configuration, scope=scope, repo=repo)
     return compilers
@@ -248,7 +248,7 @@ def compilers_for_arch(
     arch_spec: spack.spec.ArchSpec, *, scope: Optional[str] = None
 ) -> List[spack.spec.Spec]:
     """Returns the compilers that can be used on the input architecture"""
-    compilers = all_compilers_from(spack.config.CONFIG, scope=scope)
+    compilers = all_compilers_from(spack.config.CONFIG, scope=scope, repo=spack.repo.PATH)
     query = f"platform={arch_spec.platform} target=:{arch_spec.target}"
     return [x for x in compilers if x.satisfies(query)]
 

@@ -10,6 +10,7 @@ import spack.cmd.compiler
 import spack.compilers.config
 import spack.config
 import spack.main
+import spack.repo
 import spack.util.pattern
 import spack.version
 
@@ -159,7 +160,9 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     assert "llvm@11.0.0" in output
     assert "gcc@8.4.0" in output
 
-    compilers = spack.compilers.config.all_compilers_from(no_packages_yaml, scope="site")
+    compilers = spack.compilers.config.all_compilers_from(
+        no_packages_yaml, scope="site", repo=spack.repo.PATH
+    )
     clang = [x for x in compilers if x.satisfies("llvm@11")]
 
     assert len(clang) == 1

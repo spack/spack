@@ -23,6 +23,7 @@ import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
 import spack.config
+import spack.context
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
@@ -38,7 +39,6 @@ import spack.solver.compat
 import spack.solver.core
 import spack.solver.input_analysis
 import spack.solver.reuse
-import spack.context
 import spack.spec
 import spack.spec_filter
 import spack.store

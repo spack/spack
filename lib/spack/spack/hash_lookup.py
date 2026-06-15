@@ -20,8 +20,8 @@ import spack.config
 import spack.error
 import spack.externals_config
 import spack.spec
-from spack.enums import InstallRecordStatus
 from spack.context import SpackContext
+from spack.enums import InstallRecordStatus
 
 
 def _matching_external_specs(

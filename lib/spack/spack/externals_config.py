@@ -61,6 +61,8 @@ def external_config_with_implicit_externals(
         configuration: configuration whose ``packages`` section is processed.
         repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
     """
+    if repo is None:
+        repo = spack.repo.PATH
     packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
     _normalize_packages_yaml(packages_yaml, repo=repo)
 

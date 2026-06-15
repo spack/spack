@@ -67,6 +67,7 @@ from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.context import SpackContext
+from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
@@ -4040,9 +4041,7 @@ class Solver:
         self.context = context or SpackContext.default()
 
         # Compute possible compilers first, so we see them as externals
-        _ = spack.compilers.config.all_compilers(
-            configuration=self.context.config, init_config=True, repo=self.context.repo
-        )
+        _ = spack.compilers.config.all_compilers(context=self.context, init_config=True)
 
         cache_root = self.context.config.get("concretizer:concretization_cache:url", None)
         if cache_root is None:

@@ -270,6 +270,8 @@ def all_libcs(
 ) -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
+    if repo is None:
+        repo = spack.repo.PATH
     libcs = set()
     for c in spack.compilers.config.all_compilers_from(configuration, repo=repo):
         candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()
