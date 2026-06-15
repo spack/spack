@@ -23,7 +23,7 @@ class SpackContext(NamedTuple):
     store: spack.store.Store
     #: Package repositories, derived from ``config``.
     repo: spack.repo.RepoPath
-    #: Buildcache index handle. Mutable: lazily fetches remote indices.
+    #: Buildcache index handle.
     binary_index: spack.binary_distribution.BinaryIndexCache
     #: Cache for small data (package indexes, ...), derived from ``config``.
     misc_cache: spack.util.file_cache.FileCache
