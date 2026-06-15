@@ -3,26 +3,26 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 function _spack_env_set -a name value
-    set -gx $name $value
+    set -gx $name "$value"
 end
 
 function _spack_env_unset -a name
-    set -e $name
+    set -e "$name"
 end
 
 function _spack_env_append -a name value sep
     if test -n "$$name"
-        set -gx $name $$name$sep$value
+        set -gx $name "$$name$sep$value"
     else
-        set -gx $name $value
+        set -gx $name "$value"
     end
 end
 
 function _spack_env_prepend -a name value sep
     if test -n "$$name"
-        set -gx $name $value$sep$$name
+        set -gx $name "$value$sep$$name"
     else
-        set -gx $name $value
+        set -gx $name "$value"
     end
 end
 

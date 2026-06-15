@@ -109,8 +109,13 @@ def load(parser, args):
 
             if not os.path.isfile(load_script_path):
                 try:
-                    repo_path = generate_script.make_repo_path(os.path.join(spec.prefix, ".spack"))
-                    cached_repo = repo_path if repo_path.repos else None
+                    spack_dir = os.path.join(spec.prefix, ".spack")
+
+                    # Try to get cached repo if it exists
+                    cached_repo = None
+                    if os.path.isdir(spack_dir):
+                        repo_path = generate_script.make_repo_path(spack_dir)
+                        cached_repo = repo_path if repo_path and repo_path.repos else None
 
                     mods, _ = generate_script.get_environment_modifications(
                         spec, shell, cached_repo
