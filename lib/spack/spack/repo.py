@@ -742,11 +742,24 @@ class RepoPath:
         return repo_path
 
     @staticmethod
-    def from_config(config: spack.config.Configuration) -> "RepoPath":
-        """Create a RepoPath from a configuration object."""
+    def from_config(
+        config: spack.config.Configuration,
+        *,
+        cache: Optional[spack.util.file_cache.FileCache] = None,
+    ) -> "RepoPath":
+        """Create a RepoPath from a configuration object.
+
+        Args:
+            config: configuration describing the repositories to load.
+            cache: file cache backing the package indexes. If None, the global
+                ``spack.caches.MISC_CACHE`` is used.
+        """
+        if cache is None:
+            cache = spack.caches.MISC_CACHE
+
         return RepoPath.from_descriptors(
             descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
-            cache=spack.caches.MISC_CACHE,
+            cache=cache,
             overrides=package_attributes_overrides(config),
         )
 
@@ -2111,9 +2124,11 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def create_and_enable(config: spack.config.Configuration) -> RepoPath:
+def create_and_enable(
+    config: spack.config.Configuration, *, cache: Optional[spack.util.file_cache.FileCache] = None
+) -> RepoPath:
     """Immediately call enable() on the created RepoPath instance."""
-    repo_path = RepoPath.from_config(config)
+    repo_path = RepoPath.from_config(config, cache=cache)
     repo_path.enable()
     return repo_path
 

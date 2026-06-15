@@ -17,6 +17,7 @@ import spack.vendor.jinja2
 
 import spack.archspec
 import spack.binary_distribution
+import spack.caches
 import spack.cmd
 import spack.compilers.config
 import spack.compilers.libraries
@@ -3338,6 +3339,7 @@ def test_filtering_reused_specs(
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,
             binary_index=spack.binary_distribution.BINARY_INDEX,
+            misc_cache=spack.caches.MISC_CACHE,
         ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
@@ -3384,6 +3386,7 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
             store=spack.store.create(mutable_config),
             repo=spack.repo.PATH,
             binary_index=spack.binary_distribution.BINARY_INDEX,
+            misc_cache=spack.caches.MISC_CACHE,
         ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
