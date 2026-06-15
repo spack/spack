@@ -14,7 +14,6 @@ if sys.platform == "win32":
 import functools
 import io
 import os
-from multiprocessing import Pipe
 from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
@@ -25,13 +24,6 @@ from spack.new_installer_base import StdinReader
 def _fd_reader(fd: int) -> StdinReader:
     """StdinReader reading from a raw fd, as PosixTerminalState.create_stdin_reader does."""
     return StdinReader(functools.partial(os.read, fd, 1024))
-
-
-class MockConnection:
-    """Mock multiprocessing.Connection for testing"""
-
-    def fileno(self):
-        return -1
 
 
 class MockSpec:
@@ -111,7 +103,7 @@ def add_mock_builds(status: BuildStatus, count: int) -> List[MockSpec]:
     """Helper function to add builds to a BuildStatus instance"""
     specs = [MockSpec(f"pkg{i}", f"{i}.0") for i in range(count)]
     for spec in specs:
-        status.add_build(spec, explicit=True, control_w_conn=MockConnection())  # type: ignore
+        status.add_build(spec, explicit=True)  # type: ignore
     return specs
 
 
@@ -145,14 +137,14 @@ class TestBasicStateManagement:
         spec1 = MockSpec("pkg1", "1.0")
         spec2 = MockSpec("pkg2", "2.0")
 
-        status.add_build(spec1, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec1, explicit=True)
         assert len(status.builds) == 1
         assert spec1.dag_hash() in status.builds
         assert status.builds[spec1.dag_hash()].name == "pkg1"
         assert status.builds[spec1.dag_hash()].explicit is True
         assert status.dirty is True
 
-        status.add_build(spec2, explicit=False, control_w_conn=MockConnection())
+        status.add_build(spec2, explicit=False)
         assert len(status.builds) == 2
         assert spec2.dag_hash() in status.builds
         assert status.builds[spec2.dag_hash()].explicit is False
@@ -283,7 +275,7 @@ class TestOutputRendering:
         status, _, fake_stdout = create_build_status(is_tty=False)
         spec = MockSpec("mypackage", "1.0")
 
-        status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec, explicit=True)
         build_id = spec.dag_hash()
 
         status.update_state(build_id, "finished")
@@ -375,8 +367,8 @@ class TestOutputRendering:
 
         spec4 = MockSpec("pkg3", "3.0")
         spec5 = MockSpec("pkg4", "4.0")
-        status.add_build(spec4, explicit=True, control_w_conn=MockConnection())
-        status.add_build(spec5, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec4, explicit=True)
+        status.add_build(spec5, explicit=True)
 
         # Second update: finished builds persist (newlines), active area updates (cursor moves)
         status.update()
@@ -514,9 +506,9 @@ class TestSearchAndFilter:
         spec2 = MockSpec("package-bar", "1.0")
         spec3 = MockSpec("other", "1.0")
 
-        status.add_build(spec1, explicit=True, control_w_conn=MockConnection())
-        status.add_build(spec2, explicit=True, control_w_conn=MockConnection())
-        status.add_build(spec3, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec1, explicit=True)
+        status.add_build(spec2, explicit=True)
+        status.add_build(spec3, explicit=True)
 
         build1 = status.builds[spec1.dag_hash()]
         build2 = status.builds[spec2.dag_hash()]
@@ -549,8 +541,8 @@ class TestSearchAndFilter:
         spec2 = MockSpec("pkg2", "1.0")
         spec2._hash = "def456"
 
-        status.add_build(spec1, explicit=True, control_w_conn=MockConnection())
-        status.add_build(spec2, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec1, explicit=True)
+        status.add_build(spec2, explicit=True)
 
         build1 = status.builds[spec1.dag_hash()]
         build2 = status.builds[spec2.dag_hash()]
@@ -620,7 +612,7 @@ class TestNavigation:
             MockSpec("package-d", "1.0"),
         ]
         for spec in specs:
-            status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+            status.add_build(spec, explicit=True)
 
         # Filter to only "package-*"
         status.search_term = "package"
@@ -675,7 +667,7 @@ class TestNavigation:
             MockSpec("other-c", "1.0"),
         ]
         for spec in specs:
-            status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+            status.add_build(spec, explicit=True)
 
         # Start tracking "other-c"
         status.tracked_build_id = specs[2].dag_hash()
@@ -744,7 +736,7 @@ class TestBuildInfo:
         """Test that BuildInfo is created correctly"""
         spec = MockSpec("mypackage", "1.0")
 
-        build_info = inst.BuildInfo(spec, explicit=True, control_w_conn=MockConnection())
+        build_info = inst.BuildInfo(spec, explicit=True)
 
         assert build_info.name == "mypackage"
         assert build_info.version == "1.0"
@@ -758,7 +750,7 @@ class TestBuildInfo:
         """Test BuildInfo for external package"""
         spec = MockSpec("external-pkg", "1.0", external=True)
 
-        build_info = inst.BuildInfo(spec, explicit=False, control_w_conn=MockConnection())
+        build_info = inst.BuildInfo(spec, explicit=False)
 
         assert build_info.external is True
 
@@ -924,6 +916,41 @@ class TestNavigationIntegration:
         status.next(-1)
         assert status.tracked_build_id == specs[1].dag_hash()
 
+    def test_next_returns_echo_intents(self):
+        """next() returns (stop_echoing, start_echoing) IDs for the controller to apply."""
+        status, _, _ = create_build_status(total=3)
+        specs = add_mock_builds(status, 3)
+
+        # From overview: nothing to stop, start echoing the first build.
+        stop_id, start_id = status.next(1)
+        assert stop_id is None
+        assert start_id == specs[0].dag_hash()
+
+        # Moving on: stop the previous, start the next.
+        stop_id, start_id = status.next(1)
+        assert stop_id == specs[0].dag_hash()
+        assert start_id == specs[1].dag_hash()
+
+    def test_next_to_failed_build_has_no_start_intent(self):
+        """Navigating to a failed build shows its summary but returns no start-echoing intent."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+
+        status.next(1)  # follow specs[0]
+        status.update_state(specs[1].dag_hash(), "failed")
+
+        stop_id, start_id = status.next(1)
+        assert stop_id == specs[0].dag_hash()
+        assert start_id is None  # failed build shows a summary, not live logs
+        assert status.tracked_build_id == specs[1].dag_hash()
+
+    def test_next_no_eligible_build_returns_none_none(self):
+        """next() returns (None, None) when there is no build to follow."""
+        status, _, _ = create_build_status(total=1)
+        (spec,) = add_mock_builds(status, 1)
+        status.update_state(spec.dag_hash(), "finished")
+        assert status.next(1) == (None, None)
+
     def test_next_does_nothing_when_no_builds(self):
         """Test that next() does nothing when no unfinished builds exist"""
         status, _, _ = create_build_status(total=1)
@@ -979,6 +1006,34 @@ class TestToggle:
         assert status.overview_mode is False
         assert status.tracked_build_id != ""
         assert "Following logs of" in fake_stdout.getvalue()
+
+    def test_toggle_returns_echo_intents(self):
+        """toggle() returns (stop_echoing, start_echoing) IDs for the controller to apply."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+
+        # From overview, toggle delegates to next(): start echoing the first build.
+        stop_id, start_id = status.toggle()
+        assert stop_id is None
+        assert start_id == specs[0].dag_hash()
+
+        # From log-following, toggle returns to overview and stops echoing the tracked build.
+        stop_id, start_id = status.toggle()
+        assert stop_id == specs[0].dag_hash()
+        assert start_id is None
+
+    def test_remove_build_returns_untracked_id(self):
+        """remove_build() returns the build ID to stop echoing when its tracked build is gone."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+
+        # Removing an untracked build returns nothing to untrack.
+        assert status.remove_build(specs[1].dag_hash()) is None
+
+        # Removing the tracked build returns its ID.
+        status.next(1)
+        tracked = status.tracked_build_id
+        assert status.remove_build(tracked) == tracked
 
     def test_toggle_from_logs_returns_to_overview(self):
         """Test that toggle() from log-following mode returns to overview"""
@@ -1076,7 +1131,7 @@ class TestToggle:
         padded_prefix = "/base/__spack_path_placeholder__/__spack_path_placeholder__/mypackage"
         status, _, fake_stdout = create_build_status(is_tty=False, filter_padding=filter_padding)
         spec = MockSpec("mypackage", "1.0", prefix=padded_prefix)
-        status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+        status.add_build(spec, explicit=True)
         build_id = spec.dag_hash()
         status.update_state(build_id, "finished")
         output = fake_stdout.getvalue()
@@ -1101,7 +1156,7 @@ class TestSearchFilteringIntegration:
             MockSpec("package-baz", "4.0"),
         ]
         for spec in specs:
-            status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+            status.add_build(spec, explicit=True)
 
         # Enter search mode and search for "package"
         status.enter_search()
@@ -1138,7 +1193,7 @@ class TestSearchFilteringIntegration:
             MockSpec("other-d", "4.0"),
         ]
         for spec in specs:
-            status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+            status.add_build(spec, explicit=True)
 
         # Set search term to filter for "package"
         status.search_term = "package"
@@ -1182,7 +1237,7 @@ class TestSearchFilteringIntegration:
             MockSpec("package-c", "3.0"),
         ]
         for spec in specs:
-            status.add_build(spec, explicit=True, control_w_conn=MockConnection())
+            status.add_build(spec, explicit=True)
 
         # Enter search and type something
         status.enter_search()
@@ -1273,68 +1328,69 @@ class TestEdgeCases:
 
 
 class TestBuildStatusVerbose:
-    """Tests for verbose non-TTY log tracking in BuildStatus."""
+    """Tests for verbose non-TTY log tracking in BuildStatus.
+
+    The display no longer touches IPC channels: add_build/toggle/next/update_state return the
+    build IDs to start/stop echoing, and the controller (PackageInstaller) performs the writes.
+    These tests therefore assert on the returned intents and tracking state directly, with no OS
+    pipes involved.
+    """
 
     def test_verbose_tracks_first_build(self):
-        """First add_build() in verbose non-TTY mode sets tracked_build_id and enables echoing."""
+        """First add_build() in verbose non-TTY mode tracks the build and asks to start echoing."""
         bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
         spec = MockSpec("trivial-install-test-package", "1.0")
 
-        r_conn, w_conn = Pipe(duplex=False)
-
-        with r_conn, w_conn:
-            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
-
-            assert bs.tracked_build_id == spec.dag_hash()
-            written = os.read(r_conn.fileno(), 1)
-            assert written == b"1"
+        assert bs.add_build(spec, explicit=True) is True
+        assert bs.tracked_build_id == spec.dag_hash()
 
     def test_verbose_does_not_track_when_already_tracking(self):
-        """Second add_build() while already tracking does not switch tracking."""
+        """Second add_build() while already tracking does not switch tracking or ask to echo."""
         bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
         spec1 = MockSpec("pkg1", "1.0")
         spec2 = MockSpec("pkg2", "1.0")
 
-        r1, w1 = Pipe(duplex=False)
-        r2, w2 = Pipe(duplex=False)
-        with r1, w1, r2, w2:
-            bs.add_build(spec1, explicit=True, control_w_conn=w1)
-            first_tracked = bs.tracked_build_id
+        assert bs.add_build(spec1, explicit=True) is True
+        first_tracked = bs.tracked_build_id
 
-            bs.add_build(spec2, explicit=False, control_w_conn=w2)
-            assert bs.tracked_build_id == first_tracked
-            assert bs.tracked_build_id == spec1.dag_hash()
-
-            # Second build should not have received b"1"
-            assert not r2.poll(), "Second build should not be enabled"
+        assert bs.add_build(spec2, explicit=False) is False
+        assert bs.tracked_build_id == first_tracked == spec1.dag_hash()
 
     def test_verbose_switches_on_finish(self):
-        """After the tracked build finishes, tracked_build_id is cleared."""
+        """When the tracked build finishes, tracking is cleared and its ID is returned."""
         bs, _, _ = create_build_status(is_tty=False, verbose=True, total=4)
         spec = MockSpec("trivial-install-test-package", "1.0")
 
-        r_conn, w_conn = Pipe(duplex=False)
+        bs.add_build(spec, explicit=True)
+        assert bs.tracked_build_id == spec.dag_hash()
 
-        with r_conn, w_conn:
-            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
-            assert bs.tracked_build_id == spec.dag_hash()
+        untracked = bs.update_state(spec.dag_hash(), "finished")
+        assert untracked == spec.dag_hash()
+        assert bs.tracked_build_id == ""
 
-            bs.update_state(spec.dag_hash(), "finished")
-            assert bs.tracked_build_id == ""
+    def test_verbose_externally_installed_spec_leaves_no_stale_tracking(self):
+        """An externally-installed spec (no live child) added in verbose mode is briefly tracked
+        but is immediately cleared by the following finished update_state, leaving no stale
+        tracking that could suppress a real build's logs."""
+        bs, _, _ = create_build_status(is_tty=False, verbose=True, total=2)
+        ext = MockSpec("external-pkg", "1.0", external=True)
+
+        bs.add_build(ext, explicit=True)
+        untracked = bs.update_state(ext.dag_hash(), "finished")
+
+        assert untracked == ext.dag_hash()
+        assert bs.tracked_build_id == ""
 
     def test_verbose_print_logs_tracked(self):
         """print_logs() for the tracked build writes to stdout."""
         bs, _, stdout = create_build_status(is_tty=False, verbose=True, total=1)
         spec = MockSpec("trivial-install-test-package", "1.0")
 
-        r_conn, w_conn = Pipe(duplex=False)
+        bs.add_build(spec, explicit=True)
+        bs.print_logs(spec.dag_hash(), b"hello log\n")
 
-        with r_conn, w_conn:
-            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
-            bs.print_logs(spec.dag_hash(), b"hello log\n")
-
-            stdout.flush()
-            assert stdout.buffer.getvalue() == b"hello log\n"
+        stdout.flush()
+        assert stdout.buffer.getvalue() == b"hello log\n"
 
     def test_verbose_print_logs_untracked(self):
         """print_logs() for an untracked build discards data."""
@@ -1342,28 +1398,22 @@ class TestBuildStatusVerbose:
         spec1 = MockSpec("pkg1", "1.0")
         spec2 = MockSpec("pkg2", "1.0")
 
-        r1, w1 = Pipe(duplex=False)
+        bs.add_build(spec1, explicit=True)
+        bs.add_build(spec2, explicit=False)
 
-        with r1, w1:
-            bs.add_build(spec1, explicit=True, control_w_conn=w1)
-            bs.add_build(spec2, explicit=False, control_w_conn=None)
+        # Only spec1 is tracked; spec2 logs should be discarded
+        bs.print_logs(spec2.dag_hash(), b"ignored\n")
 
-            # Only spec1 is tracked; spec2 logs should be discarded
-            bs.print_logs(spec2.dag_hash(), b"ignored\n")
-
-            stdout.flush()
-            assert stdout.buffer.getvalue() == b""
+        stdout.flush()
+        assert stdout.buffer.getvalue() == b""
 
     def test_verbose_tty_no_effect(self):
-        """In TTY mode, add_build() does not set tracked_build_id automatically."""
+        """In TTY mode, add_build() does not set tracked_build_id or ask to echo automatically."""
         bs, _, _ = create_build_status(is_tty=True, verbose=True, total=4)
         spec = MockSpec("trivial-install-test-package", "1.0")
 
-        r_conn, w_conn = Pipe(duplex=False)
-
-        with r_conn, w_conn:
-            bs.add_build(spec, explicit=True, control_w_conn=w_conn)
-            assert bs.tracked_build_id == ""
+        assert bs.add_build(spec, explicit=True) is False
+        assert bs.tracked_build_id == ""
 
 
 class TestBuildStatusColor:

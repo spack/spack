@@ -887,7 +887,6 @@ class BuildInfo:
         "start_time",
         "duration",
         "progress_percent",
-        "control_w_conn",
         "log_path",
         "log_summary",
     )
@@ -896,7 +895,6 @@ class BuildInfo:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[IpcChannel],
         log_path: Optional[str] = None,
         start_time: float = 0.0,
     ) -> None:
@@ -911,7 +909,6 @@ class BuildInfo:
         self.start_time: float = start_time
         self.duration: Optional[float] = None
         self.progress_percent: Optional[int] = None
-        self.control_w_conn = control_w_conn
         self.log_path = log_path
         self.log_summary: Optional[str] = None
 
@@ -977,38 +974,38 @@ class BuildStatus:
         self.dirty = True
 
     def add_build(
-        self,
-        spec: spack.spec.Spec,
-        explicit: bool,
-        control_w_conn: Optional[IpcChannel] = None,
-        log_path: Optional[str] = None,
-    ) -> None:
-        """Add a new build to the display and mark the display as dirty."""
-        build_info = BuildInfo(spec, explicit, control_w_conn, log_path, int(self.get_time()))
+        self, spec: spack.spec.Spec, explicit: bool, log_path: Optional[str] = None
+    ) -> bool:
+        """Add a new build to the display and mark the display as dirty. Returns True if the caller
+        should start echoing this build's logs."""
+        build_info = BuildInfo(spec, explicit, log_path, int(self.get_time()))
         self.builds[spec.dag_hash()] = build_info
         self.dirty = True
         # Track the new build's logs when we're not already following another build. This applies
         # only in non-TTY verbose mode.
-        if self.verbose and not self.tracked_build_id and control_w_conn is not None:
+        if self.verbose and not self.tracked_build_id:
             self.tracked_build_id = spec.dag_hash()
-            try:
-                write_connection(control_w_conn, b"1")
-            except OSError:
-                pass
+            return True
+        return False
 
-    def remove_build(self, build_id: str) -> None:
-        """Remove a build from the display (e.g. after a binary cache miss before retry)."""
+    def remove_build(self, build_id: str) -> Optional[str]:
+        """Remove a build from the display (e.g. after a binary cache miss before retry). Returns
+        the build ID to stop echoing if the removed build was being followed."""
         self.builds.pop(build_id, None)
+        untracked_id = None
         if self.tracked_build_id == build_id:
             self.tracked_build_id = ""
+            untracked_id = build_id
             if not self.overview_mode:
                 self.overview_mode = True
         self.dirty = True
+        return untracked_id
 
-    def toggle(self) -> None:
-        """Toggle between overview mode and following a specific build."""
+    def toggle(self) -> Tuple[Optional[str], Optional[str]]:
+        """Toggle between overview mode and following a specific build. Returns the
+        (stop_echoing, start_echoing) build IDs the caller should apply."""
         if self.overview_mode:
-            self.next()
+            return self.next()
         else:
             if not self.log_ends_with_newline:
                 self.stdout.buffer.write(b"\n")
@@ -1018,13 +1015,9 @@ class BuildStatus:
             self.search_mode = False
             self.overview_mode = True
             self.dirty = True
-            try:
-                conn = self.builds[self.tracked_build_id].control_w_conn
-                if conn is not None:
-                    write_connection(conn, b"0")
-            except (KeyError, OSError):
-                pass
+            old_id = self.tracked_build_id
             self.tracked_build_id = ""
+            return old_id or None, None
 
     def search_input(self, input: str) -> None:
         """Handle keyboard input when in search mode"""
@@ -1069,12 +1062,13 @@ class BuildStatus:
 
         return matching[(idx + direction) % len(matching)]
 
-    def next(self, direction: int = 1) -> None:
-        """Follow the logs of the next build in the list."""
+    def next(self, direction: int = 1) -> Tuple[Optional[str], Optional[str]]:
+        """Follow the logs of the next build in the list. Returns the (stop_echoing, start_echoing)
+        build IDs the caller should apply."""
         new_build_id = self._get_next(direction)
 
         if not new_build_id or self.tracked_build_id == new_build_id:
-            return
+            return None, None
 
         new_build = self.builds[new_build_id]
 
@@ -1082,14 +1076,7 @@ class BuildStatus:
             self.overview_mode = False
 
         # Stop following the previous and start following the new build.
-        if self.tracked_build_id:
-            try:
-                conn = self.builds[self.tracked_build_id].control_w_conn
-                if conn is not None:
-                    write_connection(conn, b"0")
-            except (KeyError, OSError):
-                pass
-
+        old_id = self.tracked_build_id or None
         self.tracked_build_id = new_build_id
 
         version_str = (
@@ -1110,17 +1097,14 @@ class BuildStatus:
                     self.stdout.write("Full log: ")
                 self.stdout.write(f"{new_build.log_path}\n")
             self.stdout.flush()
-        else:
-            # Tell the user we're following new logs, and instruct the child to start sending.
-            self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
-            self.log_ends_with_newline = True
-            self.stdout.flush()
-            try:
-                conn = new_build.control_w_conn
-                if conn is not None:
-                    write_connection(conn, b"1")
-            except (KeyError, OSError):
-                pass
+            # No live logs to follow for a failed build; only stop echoing the old one.
+            return old_id, None
+
+        # Tell the user we're following new logs, and instruct the caller to start echoing.
+        self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
+        self.log_ends_with_newline = True
+        self.stdout.flush()
+        return old_id, new_build_id
 
     def set_blocked(self, blocked: bool) -> None:
         """Set whether all pending builds are blocked by another Spack process."""
@@ -1150,14 +1134,18 @@ class BuildStatus:
         self.dirty = True
         self._update_terminal_title()
 
-    def update_state(self, build_id: str, state: str, log_summary: Optional[str] = None) -> None:
-        """Update the state of a package and mark the display as dirty."""
+    def update_state(
+        self, build_id: str, state: str, log_summary: Optional[str] = None
+    ) -> Optional[str]:
+        """Update the state of a package and mark the display as dirty. Returns the build ID to
+        stop echoing if a tracked build reached a terminal state."""
         build_info = self.builds[build_id]
         build_info.state = state
         build_info.progress_percent = None
         if log_summary is not None:
             build_info.log_summary = log_summary
 
+        untracked_id = None
         if state in ("finished", "failed"):
             self.completed += 1
             now = self.get_time()
@@ -1167,9 +1155,10 @@ class BuildStatus:
             # Stop tracking the finished build's logs.
             if build_id == self.tracked_build_id:
                 if not self.overview_mode:
-                    self.toggle()
-                if self.verbose:
+                    untracked_id, _ = self.toggle()
+                elif self.verbose:
                     self.tracked_build_id = ""
+                    untracked_id = build_id
 
         self.dirty = True
         self._update_terminal_title()
@@ -1181,6 +1170,8 @@ class BuildStatus:
             )
             self.stdout.write(line + "\n")
             self.stdout.flush()
+
+        return untracked_id
 
     def update_progress(self, build_id: str, current: int, total: int) -> None:
         """Update the progress of a package and mark the display as dirty."""
@@ -2124,6 +2115,23 @@ class PackageInstaller:
     def install(self) -> None:
         self._installer()
 
+    def _set_echo(self, dag_hash: Optional[str], enable: bool) -> None:
+        """Signal the child process handling a build to start or stop streaming live logs."""
+        if not dag_hash:
+            return
+        for child in self.running_builds.values():
+            if child.spec.dag_hash() == dag_hash:
+                try:
+                    write_connection(child.control_w_conn, b"1" if enable else b"0")
+                except OSError:
+                    pass
+                break
+
+    def _apply_echo(self, stop_id: Optional[str], start_id: Optional[str]) -> None:
+        """Stop echoing one build and start echoing another, as requested by the display."""
+        self._set_echo(stop_id, False)
+        self._set_echo(start_id, True)
+
     def _installer(self) -> None:
         spack.store.STORE.install_sbang()
         jobserver = JobServer(self.jobs)
@@ -2238,12 +2246,12 @@ class PackageInstaller:
                             self.build_status.search_input(char)
                         elif overview and char == "/":
                             self.build_status.enter_search()
-                        elif char == "v" or char in ("q", "\x1b") and not overview:
-                            self.build_status.toggle()
+                        elif char == "v" or (char in ("q", "\x1b") and not overview):
+                            self._apply_echo(*self.build_status.toggle())
                         elif char == "n":
-                            self.build_status.next(1)
+                            self._apply_echo(*self.build_status.next(1))
                         elif char == "p" or char == "N":
-                            self.build_status.next(-1)
+                            self._apply_echo(*self.build_status.next(-1))
                         elif char == "+":
                             jobserver.increase_parallelism()
                             self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
@@ -2586,12 +2594,10 @@ class PackageInstaller:
         assert type(pid) is int
         self.running_builds[pid] = child_info
         child_info.register_with_selector(selector, pid)
-        self.build_status.add_build(
-            child_info.spec,
-            explicit=explicit,
-            control_w_conn=child_info.control_w_conn,
-            log_path=child_info.log_path,
-        )
+        if self.build_status.add_build(
+            child_info.spec, explicit=explicit, log_path=child_info.log_path
+        ):
+            self._set_echo(dag_hash, True)
         self.report_data.start_record(spec)
 
     def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
