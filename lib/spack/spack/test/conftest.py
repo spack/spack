@@ -1436,11 +1436,14 @@ def mock_gnupghome(monkeypatch):
 ##########
 
 
-@pytest.fixture(scope="session", params=[(".tar.gz", "z")])
+@pytest.fixture(scope="session")
 def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
+    # Tests may override it via an indirect parametrization
+    ext, tar_flag = getattr(request, "param", (".tar.gz", "z"))
+
     try:
         tar = spack.util.executable.which("tar", required=True)
     except spack.util.executable.CommandNotFoundError:
@@ -1469,8 +1472,8 @@ def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
 
     # Archive it
     with working_dir(str(tmpdir)):
-        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, request.param[0])
-        tar("-c{0}f".format(request.param[1]), archive_name, spack.stage._source_path_subdir)
+        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, ext)
+        tar("-c{0}f".format(tar_flag), archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple(
         "Archive", ["url", "path", "archive_file", "expanded_archive_basedir"]
