@@ -1,17 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""A coherent bundle of the external resources an operation reads.
-
-Every member except ``config`` is derived from ``config``, so the members cannot drift apart.
-Build a context with :meth:`SpackContext.from_config` for an explicit configuration, or with
-:meth:`SpackContext.default` to wrap the current process globals.
-
-``default()`` is the migration shim used while Spack is being incrementally de-globalized:
-because it reads the same singletons that the not-yet-migrated code reads, migrated and
-unmigrated units observe identical data within a single operation (configuration does not mutate
-mid-operation).
-"""
+"""A coherent bundle of the external resources an operation reads."""
 
 from typing import NamedTuple
 

@@ -5429,22 +5429,7 @@ def test_concretization_cache_skips_automatic_splice(
 
 
 def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mock_packages_repo):
-    """A solve driven by an explicit SpackContext must not read the process globals.
-
-    We register the mock repository in the configuration, null exactly the four globals that
-    ``SpackContext`` wraps, and only then build the context with ``SpackContext.from_config`` --
-    so the production constructor itself runs with the globals already unavailable. If any part
-    of context construction or the solve reached for a global instead of the injected config, it
-    would raise ``AttributeError``.
-
-    The clingo bootstrap path (``solver/compat.py`` -> ``ensure_bootstrap_configuration``) reads
-    the process globals by design -- it swaps in an isolated bootstrap config/store/platform -- so
-    it is deliberately out of scope. We warm clingo up front (a one-time, process-global operation)
-    so that swap does not fire during the measured solve.
-
-    ``monkeypatch`` is listed after ``mutable_config`` so its undo runs first at teardown,
-    restoring ``spack.config.CONFIG`` before the ``mutable_config`` fixture tears down its scope.
-    """
+    """Tests that a solve driven by an explicit SpackContext must not read the process globals."""
     mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
 
     # Warm the out-of-scope clingo bootstrap path before nulling the globals it legitimately reads.

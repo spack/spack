@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Optional, Set, Tuple
+from typing import Set, Tuple
 
 import spack.compilers.config
 import spack.compilers.libraries
@@ -266,12 +266,10 @@ class RuntimePropertyRecorder:
 
 
 def all_libcs(
-    configuration: spack.config.Configuration, *, repo: Optional[spack.repo.RepoPath] = None
+    configuration: spack.config.Configuration, *, repo: spack.repo.RepoPath
 ) -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
-    if repo is None:
-        repo = spack.repo.PATH
     libcs = set()
     for c in spack.compilers.config.all_compilers_from(configuration, repo=repo):
         candidate = spack.compilers.libraries.CompilerPropertyDetector(c).default_libc()

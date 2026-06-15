@@ -31,8 +31,7 @@ class PossibleGraph(NamedTuple):
 class PossibleDependencyGraph:
     """Returns information needed to set up an ASP problem"""
 
-    #: Configuration and repository the analysis is performed against. Set by subclasses, and
-    #: read by the counters that consume the graph, so they don't reach for process globals.
+    # Configuration and repository the analysis is performed against.
     configuration: spack.config.Configuration
     repo: spack.repo.RepoPath
 

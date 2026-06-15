@@ -126,12 +126,13 @@ def all_compilers(
     if context is None:
         context = spack.context.SpackContext.default()
 
-    configuration = context.config
-    compilers = all_compilers_from(configuration=configuration, scope=scope, repo=context.repo)
+    compilers = all_compilers_from(configuration=context.config, scope=scope, repo=context.repo)
 
     if not compilers and init_config:
-        _init_packages_yaml(configuration, scope=scope)
-        compilers = all_compilers_from(configuration=configuration, scope=scope, repo=context.repo)
+        _init_packages_yaml(context.config, scope=scope)
+        compilers = all_compilers_from(
+            configuration=context.config, scope=scope, repo=context.repo
+        )
 
     return compilers
 

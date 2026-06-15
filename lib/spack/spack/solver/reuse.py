@@ -90,7 +90,6 @@ def _is_reusable(
         local: whether the spec comes from a local source (the store or an environment)
         repo: repository used to look up the virtuals a package provides
         external_db_hashes: dag hashes of locally installed specs imported from a cray manifest
-            (origin "external-db"). Pre-computed once by the caller so this check is O(1).
     """
     if "dev_path" in spec.variants:
         return False

@@ -6,10 +6,6 @@
 This module is free of spack.solver imports. It locates matching specs by
 searching the active environment, the installed store, the binary cache, and
 configured externals (via spack.externals_config).
-
-The store, binary cache and externals it queries come from an injected
-:class:`~spack.context.SpackContext`; callers that do not pass one fall back to
-``SpackContext.default()`` (the current process globals).
 """
 
 from typing import List, Optional
