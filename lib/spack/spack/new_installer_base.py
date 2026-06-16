@@ -200,6 +200,10 @@ class JobServerBase(abc.ABC):
 class NoopJobServer(JobServerBase):
     """Dummy jobserver for platforms lacking jobserver support."""
 
+    def __init__(self, num_jobs: int) -> None:
+        """Always initialize jobs to one, dummy jobserver cannot have multiple jobs"""
+        super(NoopJobServer, self).__init__(1)
+
     def makeflags_and_data(self, gmake: Optional[spack.spec.Spec]) -> Tuple[Optional[str], Any]:
         return (None, None)
 
