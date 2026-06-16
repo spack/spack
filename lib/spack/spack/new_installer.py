@@ -2095,7 +2095,7 @@ class PackageInstaller:
             filter_padding=spack.store.STORE.has_padding(),
             is_tty=TerminalState.stdout_is_interactive(),
         )
-        self.jobs = spack.config.determine_number_of_jobs(parallel=True)
+        self.jobs = spack.config.determine_number_of_jobs(parallel=sys.platform != "win32")
         self.build_status.actual_jobs = self.jobs
         self.build_status.target_jobs = self.jobs
         if concurrent_packages is None:
