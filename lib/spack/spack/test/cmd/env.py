@@ -3909,36 +3909,6 @@ def test_env_view_fail_if_symlink_points_elsewhere(
     assert os.path.isdir(non_view_dir)
 
 
-def test_env_view_backward_compat_old_symlink_format(
-    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
-):
-    """An old-style symlink view pointing to ._view/<hash>/ is recognized as up-to-date."""
-    view = str(tmp_path / "view")
-    env("create", "--with-view={0}".format(view), "test")
-    with ev.read("test") as e:
-        add("libelf")
-        install("--fake")
-        view_desc = e.default_view
-        specs = view_desc.specs_for_view(e.concrete_roots())
-        content_hash = view_desc.content_hash(specs)
-
-    # Simulate old format: remove the real view dir and replace with a symlink
-    root_name = os.path.basename(view)
-    root_dir = os.path.dirname(view)
-    old_hash_dir = os.path.join(root_dir, "._%s" % root_name, content_hash)
-    shutil.rmtree(view)
-    os.makedirs(old_hash_dir, exist_ok=True)
-    os.symlink(old_hash_dir, view)
-
-    # Regeneration should detect the old symlink is up-to-date and be a no-op
-    with ev.read("test"):
-        env("view", "regenerate")
-
-    # The symlink was not touched (still points to the old hash dir)
-    assert os.path.islink(view)
-    assert os.path.realpath(view) == old_hash_dir
-
-
 def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
     """Tests whether Spack cleans up after itself when a view fails to create"""
     view_dir = tmp_path / "view"
@@ -3946,7 +3916,10 @@ def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, ins
         add("libelf")
         install("--fake")
 
-    assert view_dir.is_dir() and not view_dir.is_symlink()
+    # Save the current view directory.
+    resolved_view = view_dir.resolve(strict=True)
+    all_views = resolved_view.parent
+    views_before = list(all_views.iterdir())
 
     # Add a spec that results in view clash when creating a view
     with ev.read("env"):
@@ -3954,39 +3927,48 @@ def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, ins
         with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
-    # The view is still a real directory; no .new or .old leftovers.
-    assert view_dir.is_dir() and not view_dir.is_symlink()
-    assert not list(tmp_path.glob("view.new.*"))
-    assert not list(tmp_path.glob("view.old.*"))
+    # Make sure there is no broken view in the views directory, and the current
+    # view is the original view from before the failed regenerate attempt.
+    views_after = list(all_views.iterdir())
+    assert views_before == views_after
+    assert view_dir.samefile(resolved_view), view_dir
 
 
 def test_environment_view_target_already_exists(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    """The view is a real directory; an orphaned ._view/<hash>/ from the old
-    symlink format does not prevent regeneration."""
+    """When creating a new view, Spack should check whether
+    the new view dir already exists. If so, it should not be
+    removed or modified."""
 
+    # Create a new environment
     view = str(tmp_path / "view")
     env("create", "--with-view={0}".format(view), "test")
     with ev.read("test"):
         add("libelf")
         install("--fake")
 
-    # view is a real directory in the new format
-    assert os.path.isdir(view) and not os.path.islink(view)
-    assert os.listdir(view)  # has some contents
+    # Empty the underlying view
+    real_view = os.path.realpath(view)
+    assert os.listdir(real_view)  # make sure it had *some* contents
+    shutil.rmtree(real_view)
 
-    # Simulate an orphaned old-format hash dir sitting next to the view
-    orphan_dir = os.path.join(str(tmp_path), "._view", "someoldhash")
-    os.makedirs(orphan_dir)
-    fs.touch(os.path.join(orphan_dir, "orphan_file"))
+    # Replace it with something new.
+    os.mkdir(real_view)
+    fs.touch(os.path.join(real_view, "file"))
 
-    # Regeneration should succeed; the orphaned dir is not touched
+    # Remove the symlink so Spack can't know about the "previous root"
+    os.unlink(view)
+
+    # Regenerate the view, which should realize it can't write into the same dir.
+    msg = "Failed to generate environment view"
     with ev.read("test"):
-        env("view", "regenerate")
+        with pytest.raises(ev.SpackEnvironmentViewError, match=msg):
+            env("view", "regenerate")
 
-    assert os.path.isdir(view) and not os.path.islink(view)
-    assert os.path.isfile(os.path.join(orphan_dir, "orphan_file"))
+    # Make sure the dir was left untouched.
+    assert not os.path.lexists(view)
+    assert os.listdir(real_view) == ["file"]
 
 
 def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
