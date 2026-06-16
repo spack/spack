@@ -14,6 +14,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.llnl.util.filesystem as fs
+import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
@@ -856,6 +857,42 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     env.install_all(fake=True)
     env.regenerate_views()
     assert list(view_dir.iterdir())  # view dir should not be empty after regeneration
+
+
+def test_view_projection_path_is_final_after_regenerate(
+    tmp_path: pathlib.Path, config, temporary_store, monkeypatch
+):
+    """Paths embedded into file *contents* by ``add_files_to_view`` (e.g. shebangs,
+    ``pyvenv.cfg``) must reference the final view directory, not the temporary directory
+    the view is built in. Regression test for views being built in a sibling staging dir
+    and renamed into place, which left dangling staging paths baked into files."""
+
+    original = spack.package_base.PackageBase.add_files_to_view
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        original(self, view, merge_map, skip_if_exists=skip_if_exists)
+        # Emulate packages like python that bake the projection into file contents.
+        projection = view.get_projection_for_spec(self.spec)
+        with open(os.path.join(projection, f"{self.name}.projection"), "w", encoding="utf-8") as f:
+            f.write(projection)
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "add_files_to_view", add_files_to_view)
+
+    view_dir = tmp_path / "view"
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    env.regenerate_views()
+
+    recorded = list(view_dir.glob("*.projection"))
+    assert recorded, "expected add_files_to_view to have written marker files"
+    for marker in recorded:
+        assert marker.read_text() == str(view_dir)
+
+    # No staging/backup siblings should be left behind after a successful regeneration.
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
 
 
 @pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
