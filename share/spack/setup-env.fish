@@ -183,11 +183,9 @@ function get_sp_flags -d "return leading flags"
     # array: `__sp_remaining_args` containing all unprocessed arguments.
     #
 
-    # initialize argument counter
-    set -l i 1
-
-    # iterate over elements (`elt`) in `argv` array
-    for elt in $argv
+    # enumerate over elements (`elt`) in `argv` array
+    for i in (seq 1 (count $argv))
+        set -l elt $argv[$i]
 
         # match element `elt` of `argv` array to check if it has a leading dash
         if echo $elt | string match -r -q "^-"
@@ -203,10 +201,6 @@ function get_sp_flags -d "return leading flags"
             set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
-
-        # increment argument counter: used in place of bash's `shift` command
-        set -l i (math $i+1)
-
     end
 
     # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
