@@ -1374,12 +1374,7 @@ _spack_install() {
 }
 
 _spack_isolate() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --overwrite"
-    else
-        SPACK_COMPREPLY=""
-    fi
+    SPACK_COMPREPLY="-h --help --path --undo --overwrite"
 }
 
 _spack_license() {
