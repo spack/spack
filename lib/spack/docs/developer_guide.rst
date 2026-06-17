@@ -443,8 +443,7 @@ You would add it as follows:
 
 You then need to decide what arguments your hook would expect.
 Since this is related to logging, let's say that you want a message and level.
-That means that when you add a Python file to the ``lib/spack/spack/hooks`` folder with one or more callbacks intended to be
-triggered by this hook, you might use your new hook as follows:
+That means that when you add a Python file to the ``lib/spack/spack/hooks`` folder with one or more callbacks intended to be triggered by this hook, you might use your new hook as follows:
 
 .. code-block:: python
 
@@ -466,9 +465,7 @@ In this example, we use it outside of a logger that is already defined:
     spack.hooks.post_log_write(message, logger.level)
 
 
-This is not to say that this would be the best way to implement an integration with the logger
-(you would probably want to write a custom logger, or you could have the hook defined within the logger),
-but it serves as an example of writing a hook.
+This is not to say that this would be the best way to implement an integration with the logger (you would probably want to write a custom logger, or you could have the hook defined within the logger), but it serves as an example of writing a hook.
 
 
 Unit tests
