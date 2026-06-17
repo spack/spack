@@ -1948,6 +1948,12 @@ error(10, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Targ
 attr("node_target", PackageNode, Target)
  :- attr("node", PackageNode), attr("node_target_set", PackageNode, Target).
 
+% each node has the weight of its assigned target
+target_weight(Target, 0)
+ :- attr("node", PackageNode),
+    attr("node_target", PackageNode, Target),
+    attr("node_target_set", PackageNode, Target).
+
 node_target_weight(PackageNode, MinWeight)
  :- attr("node", PackageNode),
     attr("node_target", PackageNode, Target),
