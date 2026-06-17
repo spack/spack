@@ -753,6 +753,85 @@ def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     )
 
 
+def _inject_ffile_prefix_map(
+    pkg: "spack.package_base.PackageBase", env: EnvironmentModifications
+) -> None:
+    """Append ``-ffile-prefix-map`` flags so DWARF symbols embed permanent paths.
+
+    The approach:
+        At compile time, tell the compiler to rewrite any DWARF path
+        reference that starts with the staging directory to start with the
+        permanent install directory instead.  The installed binary's DWARF
+        therefore contains the correct permanent path from the moment the
+        object file is created — no post-install binary patching needed.
+
+    Two path pairs are remapped:
+
+    1. ``staging_src``   ``<prefix>/.spack/src/``
+       Covers all source files that the compiler compiled from the
+       source tree.
+
+    2. ``build_dir``     ``<prefix>/.spack/build/``
+       Covers out-of-tree builds where object files reference
+       the build directory (e.g. generated ``config.h`` paths).
+       Resolved via ``builder.build_directory`` — the authoritative API —
+       not by heuristic directory name inspection.
+
+    """
+
+    try:
+        staging_src = pkg.stage.source_path
+    except Exception:
+        staging_src = str(pkg.stage.path)
+
+    permanent_src = os.path.join(str(pkg.spec.prefix), ".spack", "src")
+
+    # Collect all (old, new) path pairs we need to remap.
+    remap_pairs = [(staging_src, permanent_src)]
+
+    # Resolve the out-of-tree build directory via the builder API.
+    # Using the API ensures packages that override build_directory are handled correctly.
+    try:
+        builder = spack.builder.create(pkg)
+        build_dir = getattr(builder, "build_directory", None)
+        if build_dir and os.path.isabs(build_dir) and build_dir != staging_src:
+            permanent_build = os.path.join(str(pkg.spec.prefix), ".spack", "build")
+            remap_pairs.append((build_dir, permanent_build))
+    except Exception as e:
+        tty.debug(
+            f"Could not resolve build_directory for "
+            f"{pkg.name}: {e}. Only source tree paths will be remapped."
+        )
+
+    # It remaps both DWARF references AND __FILE__ / __BASE_FILE__ macros.
+    ffile_flags = [f"-ffile-prefix-map={old}={new}" for old, new in remap_pairs]
+
+    # Inject into Spack's compiler wrapper injection variables.
+
+    debug_flags = ["-g"] + ffile_flags
+
+    for spack_var in ("SPACK_CFLAGS", "SPACK_CXXFLAGS", "SPACK_FFLAGS", "SPACK_FCFLAGS"):
+        for flag in debug_flags:
+            env.append_flags(spack_var, flag)
+
+    for raw_var in ("CFLAGS", "CXXFLAGS", "FFLAGS", "FCFLAGS"):
+        for flag in debug_flags:
+            env.append_flags(raw_var, flag)
+
+    # NVCC and HIP use a wrapper syntax to forward flags to the host compiler.
+    # -Xcompiler passes flags through to the underlying gcc/clang invocation.
+    nvcc_hip_flags = ["-Xcompiler=-g"] + [f"-Xcompiler={f}" for f in ffile_flags]
+
+    for gpu_var in ("CUDA_FLAGS", "NVCCFLAGS", "HIPFLAGS"):
+        for flag in nvcc_hip_flags:
+            env.append_flags(gpu_var, flag)
+
+    # Log what we injected for debugging
+    tty.debug(f"Injected DWARF prefix remapping for {pkg.name}:")
+    for old, new in remap_pairs:
+        tty.debug(f"{old} -> {new}")
+
+
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
     """Execute all environment setup routines."""
     if context not in (Context.BUILD, Context.TEST):
@@ -768,12 +847,14 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
-    # setup compilers for build contexts
     need_compiler = context == Context.BUILD or (
         context == Context.TEST and pkg.test_requires_compiler
     )
     if need_compiler:
         set_wrapper_variables(pkg, env_mods)
+        # Inject -ffile-prefix-map flags if this is a debug mode build.
+        if spack.config.get("config:debug_info"):
+            _inject_ffile_prefix_map(pkg, env_mods)
 
     # Platform specific setup goes before package specific setup. This is for setting
     # defaults like MACOSX_DEPLOYMENT_TARGET on macOS.
@@ -1192,6 +1273,7 @@ def _setup_pkg_and_run(
             kwargs["env_modifications"] = setup_package(
                 pkg, dirty=kwargs.get("dirty", False), context=Context.from_string(context)
             )
+
         return_value = function(pkg, kwargs)
         write_pipe.send(return_value)
 
