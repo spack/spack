@@ -358,8 +358,8 @@ A ``post_uninstall`` hook runs after package uninstallation finishes.
 It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
 
 
-Adding a New Hook Type
-^^^^^^^^^^^^^^^^^^^^^^
+Adding a New Hook
+^^^^^^^^^^^^^^^^^
 
 To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with functions named after the hooks you want to implement:
 
@@ -421,6 +421,55 @@ Here's a complete example that sends notifications when builds start and finish:
             duration = time.time() - _build_starts[spec.name]
             tty.info(f"Build completed for {spec.name}@{spec.version} in {duration:.1f} seconds")
             del _build_starts[spec.name]
+
+
+Adding a New Hook Type
+^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new hook type is very simple!
+In ``lib/spack/spack/hooks/__init__.py``, you can simply create a new ``HookRunner`` that is named to match your new hook.
+For example, let's say you want to add a new hook called ``post_log_write`` to trigger after anything is written to a logger.
+You would add it as follows:
+
+.. code-block:: python
+
+    # pre/post install and run by the install subprocess
+    pre_install = HookRunner("pre_install")
+    post_install = HookRunner("post_install")
+
+    # hooks related to logging
+    post_log_write = HookRunner("post_log_write")  # <- here is my new hook!
+
+
+You then need to decide what arguments your hook would expect.
+Since this is related to logging, let's say that you want a message and level.
+That means that when you add a Python file to the ``lib/spack/spack/hooks`` folder with one or more callbacks intended to be
+triggered by this hook, you might use your new hook as follows:
+
+.. code-block:: python
+
+    def post_log_write(message, level):
+        """Do something custom with the message and level every time we write
+        to the log
+        """
+        print("running post_log_write!")
+
+
+To use the hook, we would call it as follows somewhere in the logic to do logging.
+In this example, we use it outside of a logger that is already defined:
+
+.. code-block:: python
+
+    import spack.hooks
+
+    # We do something here to generate a logger and message
+    spack.hooks.post_log_write(message, logger.level)
+
+
+This is not to say that this would be the best way to implement an integration with the logger
+(you would probably want to write a custom logger, or you could have the hook defined within the logger),
+but it serves as an example of writing a hook.
+
 
 Unit tests
 ----------
