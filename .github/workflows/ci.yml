@@ -1,0 +1,174 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - develop
+      - releases/**
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+  merge_group:
+
+concurrency:
+  group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changes:
+    if: ${{ github.repository == 'spack/spack' }}
+    runs-on: ubuntu-latest
+    outputs:
+      bootstrap: ${{ steps.filter.outputs.bootstrap }}
+      containers: ${{ steps.filter.outputs.containers }}
+      import-check: ${{ steps.filter.outputs.import-check }}
+      style: ${{ steps.filter.outputs.style }}
+      validate: ${{ steps.filter.outputs.validate }}
+      unit-tests: ${{ steps.filter.outputs.unit-tests }}
+    steps:
+      # For pull requests it's not necessary to checkout the code
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        if: ${{ github.event_name == 'push' || github.event_name == 'merge_group' }}
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4.0.1
+        id: filter
+        with:
+          base: ${{ github.event_name == 'merge_group' && '' || github.ref }}
+          filters: |
+            bootstrap:
+              - '.github/workflows/bootstrap.yml'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/bin/**'
+              - 'bin/**'
+              - 'etc/spack/**'
+              - 'lib/spack/**'
+              - 'share/spack/**'
+            containers:
+              - '.github/workflows/build-containers.yml'
+              - '.github/workflows/bin/generate_spack_yaml_containerize.sh'
+              - 'lib/spack/spack/cmd/containerize.py'
+              - 'lib/spack/spack/container/**'
+              - 'share/spack/docker/**'
+              - 'share/spack/setup-env.sh'
+              - 'share/spack/templates/container/**'
+            import-check:
+              - '.github/workflows/bin/**'
+              - '.github/workflows/import-check.yml'
+              - 'bin/**'
+              - 'lib/spack/llnl/**'
+              - 'lib/spack/spack/**'
+              - 'pyproject.toml'
+            style:
+              - '.github/workflows/bin/**'
+              - '.github/workflows/requirements/style/**'
+              - '.github/workflows/style.yml'
+              - 'bin/**'
+              - 'lib/spack/docs/**'
+              - 'lib/spack/llnl/**'
+              - 'lib/spack/spack/**'
+              - 'pyproject.toml'
+              - 'share/spack/**'
+              - 'var/spack/test_repos/**'
+            validate:
+              - '.github/workflows/bin/**'
+              - '.github/workflows/requirements/validate/**'
+              - '.github/workflows/validate.yml'
+              - 'bin/**'
+              - 'lib/spack/llnl/**'
+              - 'lib/spack/spack/**'
+              - 'pyproject.toml'
+              - 'share/spack/**'
+              - 'var/spack/test_repos/**'
+            unit-tests:
+              - '.github/workflows/bin/**'
+              - '.github/workflows/requirements/unit_tests/**'
+              - '.github/workflows/unit-tests.yml'
+              - 'bin/**'
+              - 'etc/spack/**'
+              - 'lib/spack/llnl/**'
+              - 'lib/spack/spack/**'
+              - 'lib/spack/spack/test/**'
+              - 'pyproject.toml'
+              - 'pytest.ini'
+              - 'share/spack/**'
+              - 'var/spack/test_repos/**'
+      # Some links for easier reference:
+      #
+      # "github" context: https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+      # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+      # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      #
+  validate:
+    if: ${{ needs.changes.outputs.validate == 'true' }}
+    needs: [ changes ]
+    uses: ./.github/workflows/validate.yml
+    with:
+      python_version: '3.13'
+      minimum_python_version: '3.6'
+
+  style:
+    if: ${{ needs.changes.outputs.style == 'true' }}
+    needs: [ changes ]
+    uses: ./.github/workflows/style.yml
+    with:
+      python_version: '3.13'
+
+  import-check:
+    needs: [ validate, style, changes ]
+    if: ${{ needs.changes.outputs.import-check == 'true' }}
+    uses: ./.github/workflows/import-check.yml
+
+  containers:
+    needs: [ changes ]
+    if: ${{ needs.changes.outputs.containers == 'true' }}
+    uses: ./.github/workflows/build-containers.yml
+    permissions:
+      contents: read
+      packages: write
+    secrets: inherit
+
+  bootstrap:
+    if: ${{ needs.changes.outputs.bootstrap == 'true' }}
+    needs: [ validate, style, changes, import-check ]
+    uses: ./.github/workflows/bootstrap.yml
+    secrets: inherit
+
+  unit-tests:
+    if: ${{ needs.changes.outputs.unit-tests == 'true' }}
+    needs: [ validate, style, changes, import-check ]
+    uses: ./.github/workflows/unit-tests.yml
+    secrets: inherit
+
+  coverage:
+    needs: [ unit-tests, validate, style, import-check ]
+    if: ${{ needs.changes.outputs.unit-tests == 'true' }}
+    uses: ./.github/workflows/coverage.yml
+    secrets: inherit
+
+  all:
+    needs:
+    - changes
+    - validate
+    - style
+    - containers
+    - bootstrap
+    - unit-tests
+    - import-check
+    - coverage
+    if: ${{ github.repository == 'spack/spack' && always() }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Status summary
+      run: |
+        if ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}; then
+          echo "One or more required jobs failed or were cancelled"
+          exit 1
+        else
+          echo "All jobs completed successfully"
+        fi

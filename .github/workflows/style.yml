@@ -1,0 +1,46 @@
+name: style
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+
+concurrency:
+  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: spack/setup-spack@16b756799ede8b28951287f89bcd3fdb32ec1ca3  # v3.0.0
+      with:
+        spack_ref: ${{ github.sha }}
+        spack_path: ${{ github.workspace }}
+
+    # Temporarily use checkout to unshallow Spack repository
+    # TODO: upstream this into spack/setup-spack
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        fetch-depth: 2
+
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install Python packages
+      run: |
+        pip install -r .github/workflows/requirements/style/requirements.txt
+
+    - name: Run style tests (code)
+      run: |
+        spack style --base HEAD^1
+        spack license verify
+        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
+
+    - name: Run style tests (docs)
+      run: |
+        export PYTHONPATH="${{ github.workspace }}/lib/spack"
+        .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')
