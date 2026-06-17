@@ -17,7 +17,9 @@ sp_config = spack.main.SpackCommand("config")
 
 @pytest.fixture(scope="function")
 def mutable_config_with_dir(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
-    """Like config, but tests can modify the configuration."""
+    """Like config, but tests can modify the configuration. This fixture also
+    yields the configuration directory, unlike conf_test.mutable_config
+    """
     mutable_dir = tmp_path_factory.mktemp("mutable_config") / "tmp"
     shutil.copytree(configuration_dir, mutable_dir)
 
@@ -62,21 +64,27 @@ def test_isolate_added_config(mock_pre_isolate_config):
         sp_config("add", "config:build_jobs:42")
         assert (isolated_path / "config.yaml").exists()
         with open(isolated_path / "config.yaml", "r", encoding="utf-8") as f:
-            text = f.read()
+            text = f.read().strip()
         expected_text = """\
 config:
-  build_jobs: 42
-"""
+  build_jobs: 42"""
         assert text == expected_text
 
 
 def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
-    _, iso_root = mock_pre_isolate_config
-    isolated_path = iso_root / "test-isolation"
-    sp_isolate("--path", str(isolated_path))
+    cfg_dir, iso_root = mock_pre_isolate_config
+    isolated_path1 = iso_root / "test-isolation"
+    isolated_path2 = iso_root / "test-isolation"
+    sp_isolate("--path", str(isolated_path1))
     with pytest.raises(Exception):
-        sp_isolate("--path", str(isolated_path))
-    sp_isolate("--overwrite", "--path", str(isolated_path))
+        sp_isolate("--path", str(isolated_path1))
+    sp_isolate("--overwrite", "--path", str(isolated_path2))
+    with open(cfg_dir / "isolate" / "bootstrap.yaml", "r", encoding="utf-8") as f:
+        text = f.read().strip()
+    expected_text = f"""\
+bootstrap:
+  root: {isolated_path2}/bootstrap"""
+    assert text == expected_text
 
 
 def test_isolate_overwrite_different_dir(mock_pre_isolate_config):

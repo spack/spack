@@ -139,13 +139,13 @@ def _do_isolate(args):
     user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
     isolate_scope = _setup_isolate_scope(destination, args.overwrite)
     # insert the isolate scope above the below user and site but above system
-    if old_isolate_index is not None:
+    if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
         include_config.insert(old_isolate_index, isolate_scope)
-    elif site_index is not None:
+    elif site_index is not None:  # otherwise put it below the site scope
         include_config.insert(site_index + 1, isolate_scope)
-    elif system_index is not None:
+    elif system_index is not None:  # if there is no site scope, put it above the system scope
         include_config.insert(system_index - 1, isolate_scope)
-    elif user_index is not None:
+    elif user_index is not None:  # if there is no system scope, put it below the user scope
         include_config.insert(user_index + 1, isolate_scope)
     else:  # Strange changes have been made if there is no site, system, or user scope
         include_config.append(isolate_scope)
