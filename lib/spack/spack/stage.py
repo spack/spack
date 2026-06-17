@@ -65,11 +65,13 @@ def compute_stage_name(spec):
     spec_stage_structure = stage_prefix
     if spec.concrete:
         spec_stage_structure += "{name}-{version}-{hash}"
+        # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
+        # config:stage_name. This is a fix for how to handle staging an abstract spec (see #51305)
+        # only do this for concrete specs since these are going to be actual stages
+        stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     else:
         spec_stage_structure += "{name}-{version}"
-    # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
-    # config:stage_name. This is a fix for how to handle staging an abstract spec (see #51305)
-    stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
+    
     return spec.format_path(format_string=stage_name_structure)
 
 
