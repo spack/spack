@@ -847,6 +847,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     env_base = EnvironmentModifications() if dirty else clean_environment()
     env_mods = EnvironmentModifications()
 
+    # setup compilers for build contexts
     need_compiler = context == Context.BUILD or (
         context == Context.TEST and pkg.test_requires_compiler
     )
