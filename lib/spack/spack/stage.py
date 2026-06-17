@@ -71,7 +71,7 @@ def compute_stage_name(spec):
         stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     else:
         stage_name_structure = spec_stage_structure + "{name}-{version}"
-        return spec.format_path(format_string=stage_name_structure)
+    return spec.format_path(format_string=stage_name_structure)
 
 
 def create_stage_root(path: str) -> None:
