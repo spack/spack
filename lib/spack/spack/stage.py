@@ -72,7 +72,6 @@ def compute_stage_name(spec):
     else:
         spec_stage_structure += "{name}-{version}"
         stage_name_structure = spec_stage_structure
-    
     return spec.format_path(format_string=stage_name_structure)
 
 
