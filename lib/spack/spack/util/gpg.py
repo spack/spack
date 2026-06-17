@@ -862,7 +862,7 @@ def _parse_gpg_output(output: str) -> List[GpgKey]:
     current_key: Optional[GpgKey] = None
     current_subkey: Optional[GpgKey] = None
     keys = []
-    for line in output.split("\n"):
+    for line in output.splitlines():
         # Only parse lines with colons
         if ":" not in line:
             continue
