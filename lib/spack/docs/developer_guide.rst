@@ -348,7 +348,7 @@ It receives the spec and an optional boolean indicating whether this spec is an 
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
 
-A ``pre_uninstall`` hook runs directly before installation starts.
+A ``pre_uninstall`` hook runs directly before removing an installed spec.
 It receives the spec as its only argument.
 
 ``post_uninstall(spec)``
