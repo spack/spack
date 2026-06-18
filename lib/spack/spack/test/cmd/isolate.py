@@ -72,6 +72,15 @@ config:
 
 
 def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
+    _, iso_root = mock_pre_isolate_config
+    isolated_path1 = iso_root / "test-isolation1"
+    sp_isolate("--path", str(isolated_path1))
+    with pytest.raises(Exception):
+        sp_isolate("--path", str(isolated_path1))
+    sp_isolate("--overwrite", "--path", str(isolated_path1))
+
+
+def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
     isolated_path1 = iso_root / "test-isolation"
     isolated_path2 = iso_root / "test-isolation"
@@ -85,16 +94,6 @@ def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
 bootstrap:
   root: {isolated_path2 / "bootstrap"}"""
     assert text == expected_text
-
-
-def test_isolate_overwrite_different_dir(mock_pre_isolate_config):
-    _, iso_root = mock_pre_isolate_config
-    isolated_path1 = iso_root / "test-isolation1"
-    isolated_path2 = iso_root / "test-isolation2"
-    sp_isolate("--path", str(isolated_path1))
-    with pytest.raises(Exception):
-        sp_isolate("--path", str(isolated_path2))
-    sp_isolate("--overwrite", "--path", str(isolated_path2))
 
 
 def test_isolate_undo(mock_pre_isolate_config):

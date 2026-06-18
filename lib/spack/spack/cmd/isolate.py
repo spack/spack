@@ -161,8 +161,10 @@ def _do_isolate(args):
 
 
 def _undo_isolate():
-    assert os.path.exists(ISOLATE_SCOPE_PATH), "Cannot find isolation to undo"
-    assert os.path.exists(PRESERVED_INCLUDE_PATH), "Cannot find pre-isolate include.yaml"
+    if not os.path.exists(ISOLATE_SCOPE_PATH):
+        raise RuntimeError("Cannot find isolation to undo")
+    if not os.path.exists(PRESERVED_INCLUDE_PATH):
+        raise RuntimeError("Cannot find pre-isolate include.yaml")
     shutil.rmtree(ISOLATE_SCOPE_PATH)
     shutil.copy(PRESERVED_INCLUDE_PATH, INCLUDE_PATH)
 
