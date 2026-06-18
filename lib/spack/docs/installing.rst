@@ -19,9 +19,8 @@ This page covers the ``spack install`` experience in detail, including the inter
 Before diving in, ensure you are familiar with :doc:`package_fundamentals` for basic usage and spec syntax.
 
 .. versionadded:: 1.2
-   The TUI and POSIX jobserver are new in Spack 1.2.
-   The POSIX jobserver support in Spack requires a unix-like platform, Windows is currently unsupported.
-
+   The TUI and GNU Make jobserver support are new in Spack 1.2.
+   Spack supports the POSIX jobserver, Windows jobserver support will be added in a future release.
 
 Interactive terminal UI
 -----------------------
