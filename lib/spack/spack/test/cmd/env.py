@@ -801,6 +801,30 @@ def test_remove_command_all():
             assert name not in find()
 
 
+def test_remove_with_definitions_reference(environment_from_manifest):
+    """Removing a spec must not fail when the specs list references a definition
+    (e.g. ``$profilers``). See https://github.com/spack/spack/issues/52361."""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - profilers: [callpath, mpileaks]
+  specs:
+  - $profilers
+  - libelf
+  concretizer:
+    unify: true
+"""
+    )
+    with e:
+        e.remove("libelf")
+
+    assert Spec("libelf") not in e.user_specs
+    # The reference to the definition must be left untouched
+    assert "$profilers" in e.manifest.configuration["specs"]
+    assert any(s.name == "callpath" for s in e.user_specs)
+
+
 def test_bad_remove_included_env():
     env("create", "test")
     test = ev.read("test")
