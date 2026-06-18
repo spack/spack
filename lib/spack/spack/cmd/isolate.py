@@ -21,7 +21,7 @@ level = "long"
 
 INCLUDE_PATH = os.path.join(spack.paths.etc_path, "include.yaml")
 PRESERVED_INCLUDE_PATH = os.path.join(spack.paths.etc_path, ".isolate.include.yaml")
-ISOLATE_PATH = os.path.join(spack.paths.etc_path, "isolate")
+ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 
 
 def _get_scope_indices(included_scopes):
@@ -43,7 +43,7 @@ def _get_scope_indices(included_scopes):
 
 def _isolate_bootstrap_config(new_user_path):
     bootstrap_yaml = {"bootstrap": {"root": os.path.join(new_user_path, "bootstrap")}}
-    with open(os.path.join(ISOLATE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ISOLATE_SCOPE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
         syaml.dump(bootstrap_yaml, f)
 
 
@@ -58,7 +58,7 @@ def _isolate_config_config(new_user_path):
             "misc_cache:": misc_cache_dir,
         }
     }
-    with open(os.path.join(ISOLATE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ISOLATE_SCOPE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
         syaml.dump(config_yaml, f)
 
 
@@ -73,20 +73,20 @@ def _isolate_repos_config(new_user_path):
                 value["destination"] = os.path.join(new_user_path, "repos", key)
                 new_repos_config[key] = value
 
-    with open(os.path.join(ISOLATE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ISOLATE_SCOPE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
         syaml.dump({"repos": new_repos_config}, f)
 
 
 def _setup_isolate_scope(new_user_path, overwrite: bool):
-    if os.path.exists(ISOLATE_PATH):
+    if os.path.exists(ISOLATE_SCOPE_PATH):
         if overwrite:
-            shutil.rmtree(ISOLATE_PATH)
+            shutil.rmtree(ISOLATE_SCOPE_PATH)
         else:
             raise Exception("An isolation already exists for this Spack instance")
-    os.mkdir(ISOLATE_PATH)
+    os.mkdir(ISOLATE_SCOPE_PATH)
     isolate_dict = {}
     isolate_dict["name"] = "isolate"
-    isolate_dict["path"] = ISOLATE_PATH
+    isolate_dict["path"] = ISOLATE_SCOPE_PATH
     _isolate_bootstrap_config(new_user_path)
     _isolate_config_config(new_user_path)
     _isolate_repos_config(new_user_path)
@@ -140,11 +140,11 @@ def _do_isolate(args):
     isolate_scope = _setup_isolate_scope(destination, args.overwrite)
     # insert the isolate scope above the below user and site but above system
     if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
-        include_config.insert(old_isolate_index, isolate_scope)
+        include_config[old_isolate_index] = isolate_scope
     elif site_index is not None:  # otherwise put it below the site scope
         include_config.insert(site_index + 1, isolate_scope)
     elif system_index is not None:  # if there is no site scope, put it above the system scope
-        include_config.insert(system_index - 1, isolate_scope)
+        include_config.insert(system_index, isolate_scope)
     elif user_index is not None:  # if there is no system scope, put it below the user scope
         include_config.insert(user_index + 1, isolate_scope)
     else:  # Strange changes have been made if there is no site, system, or user scope
@@ -161,9 +161,9 @@ def _do_isolate(args):
 
 
 def _undo_isolate():
-    assert os.path.exists(ISOLATE_PATH), "Cannot find isolation to undo"
+    assert os.path.exists(ISOLATE_SCOPE_PATH), "Cannot find isolation to undo"
     assert os.path.exists(PRESERVED_INCLUDE_PATH), "Cannot find pre-isolate include.yaml"
-    shutil.rmtree(ISOLATE_PATH)
+    shutil.rmtree(ISOLATE_SCOPE_PATH)
     shutil.copy(PRESERVED_INCLUDE_PATH, INCLUDE_PATH)
 
 

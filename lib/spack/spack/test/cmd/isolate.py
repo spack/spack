@@ -36,7 +36,7 @@ def mock_pre_isolate_config(mutable_config_with_dir, monkeypatch, tmp_path):
     preserved_include_path = cfg_dir / "spack" / ".isolate.include.yaml"
     # These paths usually live in spack/etc/spack
     monkeypatch.setattr(spack.cmd.isolate, "INCLUDE_PATH", str(include_path))
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_PATH", str(isolate_path))
+    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_path))
     monkeypatch.setattr(spack.cmd.isolate, "PRESERVED_INCLUDE_PATH", str(preserved_include_path))
 
     yield cfg_dir, tmp_path
@@ -46,11 +46,11 @@ def test_isolate_smoke_test(mock_pre_isolate_config):
     cfg_dir, iso_root = mock_pre_isolate_config
     isolated_path = iso_root / "test-isolation"
     sp_isolate("--path", str(isolated_path))
-    assert os.path.exists(spack.cmd.isolate.ISOLATE_PATH)
+    assert os.path.exists(spack.cmd.isolate.ISOLATE_SCOPE_PATH)
     assert os.path.exists(spack.cmd.isolate.PRESERVED_INCLUDE_PATH)
     assert isolated_path.exists()
-    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_PATH, "bootstrap.yaml"))
-    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_PATH, "config.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "bootstrap.yaml"))
+    assert os.path.exists(os.path.join(spack.cmd.isolate.ISOLATE_SCOPE_PATH, "config.yaml"))
     # we reload the config after isolation
     with spack.config.use_configuration(cfg_dir / "spack"):
         assert "isolate" in sp_config("scopes")
