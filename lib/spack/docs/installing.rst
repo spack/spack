@@ -20,7 +20,7 @@ Before diving in, ensure you are familiar with :doc:`package_fundamentals` for b
 
 .. versionadded:: 1.2
    The TUI and POSIX jobserver are new in Spack 1.2.
-   The POSIX jobserver requires a unix-like platform.
+   The POSIX jobserver support in Spack requires a unix-like platform, Windows is currently unsupported.
 
 
 Interactive terminal UI
