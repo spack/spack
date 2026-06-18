@@ -1,0 +1,51 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
+
+import spack.cmd
+import spack.config
+import spack.environment as ev
+import spack.llnl.util.tty as tty
+import spack.package_base
+import spack.traverse
+from spack.cmd.common import arguments
+
+description = "patch expanded sources in preparation for install"
+section = "build"
+level = "long"
+
+
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    arguments.add_common_arguments(subparser, ["no_checksum", "specs"])
+    arguments.add_concretizer_args(subparser)
+
+
+def patch(parser, args):
+    if not args.specs:
+        env = ev.active_environment()
+        if not env:
+            args.subparser.error("requires a spec or an active environment")
+        return _patch_env(env)
+
+    if args.no_checksum:
+        spack.config.set("config:checksum", False, scope="command_line")
+
+    specs = spack.cmd.parse_specs(args.specs, concretize=False)
+    specs = spack.cmd.matching_specs_from_env(specs)
+    for spec in specs:
+        _patch(spec.package)
+
+
+def _patch_env(env: ev.Environment):
+    tty.msg(f"Patching specs from environment {env.name}")
+    for spec in spack.traverse.traverse_nodes(env.concrete_roots()):
+        _patch(spec.package)
+
+
+def _patch(pkg: spack.package_base.PackageBase):
+    pkg.stage.keep = True
+    with pkg.stage:
+        pkg.do_patch()
+    tty.msg(f"Patched {pkg.name} in {pkg.stage.path}")

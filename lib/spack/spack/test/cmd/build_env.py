@@ -1,0 +1,66 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pathlib
+import pickle
+import sys
+
+import pytest
+
+import spack.error
+from spack.llnl.util.filesystem import working_dir
+from spack.main import SpackCommand
+
+build_env = SpackCommand("build-env")
+
+
+@pytest.mark.parametrize("pkg", [("pkg-c",), ("pkg-c", "--")])
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_it_just_runs(pkg):
+    build_env(*pkg)
+
+
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_error_when_multiple_specs_are_given():
+    output = build_env("libelf libdwarf", fail_on_error=False)
+    assert "only takes one spec" in output
+
+
+@pytest.mark.parametrize("args", [("--", "/bin/sh", "-c", "echo test"), ("--",), ()])
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_build_env_requires_a_spec(args):
+    output = build_env(*args, fail_on_error=False)
+    assert "requires a spec" in output
+
+
+_out_file = "env.out"
+
+
+@pytest.mark.parametrize("shell", ["pwsh", "bat"] if sys.platform == "win32" else ["sh"])
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_dump(shell_as, shell, tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path)):
+        build_env("--dump", _out_file, "pkg-c")
+        with open(_out_file, encoding="utf-8") as f:
+            if shell == "pwsh":
+                assert any(line.startswith("$Env:PATH") for line in f.readlines())
+            elif shell == "bat":
+                assert any(line.startswith('set "PATH=') for line in f.readlines())
+            else:
+                assert any(line.startswith("PATH=") for line in f.readlines())
+
+
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_pickle(tmp_path: pathlib.Path):
+    with working_dir(str(tmp_path)):
+        build_env("--pickle", _out_file, "pkg-c")
+        environment = pickle.load(open(_out_file, "rb"))
+        assert isinstance(environment, dict)
+        assert "PATH" in environment
+
+
+def test_failure_when_uninstalled_deps(config, mock_packages):
+    with pytest.raises(
+        spack.error.SpackError, match="Not all dependencies of dttop are installed"
+    ):
+        build_env("dttop")

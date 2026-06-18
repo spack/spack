@@ -1,0 +1,467 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
+import copy
+import sys
+from typing import List, Optional, Tuple
+
+import spack.binary_distribution
+import spack.cmd as cmd
+import spack.config
+import spack.environment as ev
+import spack.llnl.util.lang
+import spack.llnl.util.tty as tty
+import spack.llnl.util.tty.color as color
+import spack.repo
+import spack.solver.reuse
+import spack.spec
+import spack.store
+from spack.cmd.common import arguments
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.llnl.util.tty.color import colorize
+
+from ..enums import InstallRecordStatus
+
+description = "list and search installed packages"
+section = "query"
+level = "short"
+
+
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
+        "--format",
+        action="store",
+        default=None,
+        help="output specs with the specified format string",
+    )
+    format_group.add_argument(
+        "-H",
+        "--hashes",
+        action="store_const",
+        dest="format",
+        const="{/hash}",
+        help="same as ``--format {/hash}``; use with ``xargs`` or ``$()``",
+    )
+    format_group.add_argument(
+        "--json",
+        action="store_true",
+        default=False,
+        help="output specs as machine-readable json records",
+    )
+
+    subparser.add_argument(
+        "-I", "--install-status", action="store_true", help="show install status of packages"
+    )
+
+    subparser.add_argument(
+        "--specfile-format",
+        action="store_true",
+        help="show the specfile format for installed deps ",
+    )
+
+    subparser.add_argument(
+        "-d", "--deps", action="store_true", help="output dependencies along with found specs"
+    )
+
+    subparser.add_argument(
+        "-p", "--paths", action="store_true", help="show paths to package install directories"
+    )
+    subparser.add_argument(
+        "--groups",
+        action="store_true",
+        default=None,
+        dest="groups",
+        help="display specs in arch/compiler groups (default on)",
+    )
+    subparser.add_argument(
+        "--no-groups",
+        action="store_false",
+        default=None,
+        dest="groups",
+        help="do not group specs by arch/compiler",
+    )
+
+    arguments.add_common_arguments(subparser, ["long", "very_long", "tags", "namespaces"])
+
+    subparser.add_argument(
+        "-r",
+        "--only-roots",
+        action="store_true",
+        help="don't show full list of installed specs in an environment",
+    )
+    concretized_vs_packages = subparser.add_mutually_exclusive_group()
+    concretized_vs_packages.add_argument(
+        "-c",
+        "--show-concretized",
+        action="store_true",
+        help="show concretized specs in an environment",
+    )
+    concretized_vs_packages.add_argument(
+        "--show-configured-externals",
+        action="store_true",
+        help="show externals defined in the 'packages' section of the configuration",
+    )
+    subparser.add_argument(
+        "-f",
+        "--show-flags",
+        action="store_true",
+        dest="show_flags",
+        help="show spec compiler flags",
+    )
+    subparser.add_argument(
+        "--show-full-compiler",
+        action="store_true",
+        dest="show_full_compiler",
+        help="(DEPRECATED) show full compiler specs. Currently it's a no-op",
+    )
+    implicit_explicit = subparser.add_mutually_exclusive_group()
+    implicit_explicit.add_argument(
+        "-x",
+        "--explicit",
+        action="store_true",
+        help="show only specs that were installed explicitly",
+    )
+    implicit_explicit.add_argument(
+        "-X",
+        "--implicit",
+        action="store_true",
+        help="show only specs that were installed as dependencies",
+    )
+    subparser.add_argument(
+        "-e",
+        "--external",
+        action="store_true",
+        help="show only specs that are marked as externals",
+    )
+    subparser.add_argument(
+        "-u",
+        "--unknown",
+        action="store_true",
+        dest="unknown",
+        help="show only specs Spack does not have a package for",
+    )
+    subparser.add_argument(
+        "-m",
+        "--missing",
+        action="store_true",
+        dest="missing",
+        help="show missing dependencies as well as installed specs",
+    )
+    subparser.add_argument(
+        "-v",
+        "--variants",
+        action="store_true",
+        dest="variants",
+        help="show variants in output (can be long)",
+    )
+    subparser.add_argument(
+        "--loaded", action="store_true", help="show only packages loaded in the user environment"
+    )
+    only_missing_or_deprecated = subparser.add_mutually_exclusive_group()
+    only_missing_or_deprecated.add_argument(
+        "-M",
+        "--only-missing",
+        action="store_true",
+        dest="only_missing",
+        help="show only missing dependencies",
+    )
+    only_missing_or_deprecated.add_argument(
+        "--only-deprecated", action="store_true", help="show only deprecated packages"
+    )
+    subparser.add_argument(
+        "--deprecated",
+        action="store_true",
+        help="show deprecated packages as well as installed specs",
+    )
+    subparser.add_argument(
+        "--install-tree",
+        action="store",
+        default="all",
+        help="Install trees to query: 'all' (default), 'local', 'upstream', upstream name or path",
+    )
+
+    subparser.add_argument("--start-date", help="earliest date of installation [YYYY-MM-DD]")
+    subparser.add_argument("--end-date", help="latest date of installation [YYYY-MM-DD]")
+    arguments.add_common_arguments(subparser, ["constraint"])
+
+
+def query_arguments(args):
+    if args.only_missing and (args.deprecated or args.missing):
+        args.subparser.error("cannot use --only-missing with --deprecated, or --missing")
+
+    if args.only_deprecated and (args.deprecated or args.missing):
+        args.subparser.error("cannot use --only-deprecated with --deprecated, or --missing")
+
+    installed = InstallRecordStatus.INSTALLED
+    if args.only_missing:
+        installed = InstallRecordStatus.MISSING
+    elif args.only_deprecated:
+        installed = InstallRecordStatus.DEPRECATED
+
+    if args.missing:
+        installed |= InstallRecordStatus.MISSING
+
+    if args.deprecated:
+        installed |= InstallRecordStatus.DEPRECATED
+
+    predicate_fn = None
+    if args.unknown:
+        predicate_fn = lambda x: not spack.repo.PATH.exists(x.spec.name)
+
+    explicit = None
+    if args.explicit:
+        explicit = True
+    if args.implicit:
+        explicit = False
+
+    q_args = {"installed": installed, "predicate_fn": predicate_fn, "explicit": explicit}
+
+    install_tree = args.install_tree
+    upstreams = spack.config.get("upstreams", {})
+    if install_tree in upstreams.keys():
+        install_tree = upstreams[install_tree]["install_tree"]
+    q_args["install_tree"] = install_tree
+
+    # Time window of installation
+    for attribute in ("start_date", "end_date"):
+        date = getattr(args, attribute)
+        if date:
+            q_args[attribute] = spack.llnl.util.lang.pretty_string_to_date(date)
+
+    return q_args
+
+
+def make_env_decorator(env):
+    """Create a function for decorating specs when in an environment."""
+
+    roots = set(env.roots())
+    removed = set(env.removed_specs())
+
+    def decorator(spec, fmt):
+        # add +/-/* to show added/removed/root specs
+        if any(spec.dag_hash() == r.dag_hash() for r in roots):
+            return color.colorize(f"@*{{{fmt}}}")
+        elif spec in removed:
+            return color.colorize(f"@K{{{fmt}}}")
+        else:
+            return fmt
+
+    return decorator
+
+
+def display_env(env, args, decorator, results, status_fn=None):
+    """Display extra find output when running in an environment.
+
+    In an environment, ``spack find`` outputs a preliminary section
+    showing the root specs of the environment (this is in addition
+    to the section listing out specs matching the query parameters).
+    """
+    total_roots = sum(len(env.user_specs_by(group=g)) for g in env.manifest.groups())
+    root_spec_str = f"{total_roots or 'no'} root {'spec' if total_roots == 1 else 'specs'}"
+    tty.msg(f"In environment {env.name} ({root_spec_str})")
+
+    concrete_specs = {x.root: env.specs_by_hash[x.hash] for x in env.concretized_roots}
+    _status_fn = status_fn if status_fn is not None else spack.spec.Spec.install_status
+
+    def root_decorator(spec, string):
+        """Decorate root specs with their install status if needed"""
+        concrete = concrete_specs.get(spec)
+        if concrete:
+            status = color.colorize(_status_fn(concrete).value)
+            hash = concrete.dag_hash()
+        else:
+            status = color.colorize(spack.spec.InstallStatus.absent.value)
+            hash = "-" * 32
+
+        # TODO: status has two extra spaces on the end of it, but fixing this and other spec
+        # TODO: space format idiosyncrasies is complicated. Fix this eventually
+        status = status[:-2]
+
+        if args.long or args.very_long:
+            hash = color.colorize(f"@K{{{hash[: 7 if args.long else None]}}}")
+            return f"{status} {hash} {string}"
+        else:
+            return f"{status} {string}"
+
+    with spack.store.STORE.db.read_transaction():
+        for group in env.manifest.groups():
+            group_specs = env.user_specs_by(group=group)
+            if not group_specs:
+                continue
+
+            if env.has_groups():
+                header = (
+                    f"{spack.spec.ARCHITECTURE_COLOR}{{root specs}} / "
+                    f"{spack.spec.COMPILER_COLOR}{{{group}}}"
+                )
+                tty.hline(colorize(header), char="-")
+
+            cmd.display_specs(
+                group_specs,
+                args,
+                # these are overrides of CLI args
+                paths=False,
+                long=False,
+                very_long=False,
+                # these enforce details in the root specs to show what the user asked for
+                groups=False,
+                namespaces=True,
+                show_flags=True,
+                decorator=root_decorator,
+                variants=True,
+                specfile_format=args.specfile_format,
+            )
+            print()
+
+    if env.included_concrete_env_root_dirs:
+        tty.msg("Included specs")
+
+        # Root specs cannot be displayed with prefixes, since those are not
+        # set for abstract specs. Same for hashes
+        root_args = copy.copy(args)
+        root_args.paths = False
+
+        # Roots are displayed with variants, etc. so that we can see
+        # specifically what the user asked for.
+        cmd.display_specs(
+            env.included_user_specs,
+            root_args,
+            decorator=lambda s, f: color.colorize("@*{%s}" % f),
+            namespace=True,
+            show_flags=True,
+            variants=True,
+            specfile_format=args.specfile_format,
+        )
+        print()
+
+
+def _find_query(
+    args: argparse.Namespace, env: Optional[ev.Environment]
+) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
+    q_args = query_arguments(args)
+    concretized_but_not_installed = []
+    if args.show_configured_externals:
+        packages_with_externals = external_config_with_implicit_externals(spack.config.CONFIG)
+        completion_mode = spack.config.CONFIG.get("concretizer:externals:completion")
+        results = spack.solver.reuse.spec_filter_from_packages_yaml(
+            external_parser=create_external_parser(packages_with_externals, completion_mode),
+            packages_with_externals=packages_with_externals,
+            include=[],
+            exclude=[],
+        ).selected_specs()
+    elif env:
+        all_env_specs = env.all_specs()
+        if args.constraint:
+            init_specs = cmd.parse_specs(args.constraint)
+            env_specs = env.all_matching_specs(*init_specs)
+        else:
+            env_specs = all_env_specs
+
+        spec_hashes = {x.dag_hash() for x in env_specs}
+        specs_meeting_q_args = set(spack.store.STORE.db.query(hashes=list(spec_hashes), **q_args))
+
+        results = list()
+        with spack.store.STORE.db.read_transaction():
+            for spec in env_specs:
+                if not spec.installed:
+                    concretized_but_not_installed.append(spec)
+                if spec in specs_meeting_q_args:
+                    results.append(spec)
+    else:
+        results = args.specs(**q_args)
+
+    if args.external:
+        results = [s for s in results if s.external]
+
+    # use groups by default except with format.
+    if args.groups is None:
+        args.groups = not args.format
+
+    # Exit early with an error code if no package matches the constraint
+    if concretized_but_not_installed and args.show_concretized:
+        pass
+    elif results:
+        pass
+    elif args.constraint:
+        raise cmd.NoSpecMatches()
+
+    # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.PATH.packages_with_tags(*args.tags)
+        results = [x for x in results if x.name in packages_with_tags]
+        concretized_but_not_installed = [
+            x for x in concretized_but_not_installed if x.name in packages_with_tags
+        ]
+
+    if args.loaded:
+        results = cmd.filter_loaded_specs(results)
+
+    return results, concretized_but_not_installed
+
+
+def find(parser, args):
+    env = ev.active_environment()
+
+    if not env and args.only_roots:
+        args.subparser.error("-r / --only-roots requires an active environment")
+    if not env and args.show_concretized:
+        args.subparser.error("-c / --show-concretized requires an active environment")
+
+    try:
+        results, concretized_but_not_installed = _find_query(args, env)
+    except cmd.NoSpecMatches:
+        # Note: this uses args.constraint vs. args.constraint_specs because
+        # the latter only exists if you call args.specs()
+        tty.die(f"No package matches the query: {' '.join(args.constraint)}")
+
+    if args.install_status or args.show_concretized:
+        spack.binary_distribution.load_buildcache_index()
+        status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+    else:
+        status_fn = None
+
+    # Display the result
+    if args.json:
+        cmd.display_specs_as_json(results, deps=args.deps)
+    else:
+        decorator = make_env_decorator(env) if env else lambda s, f: f
+
+        if not args.format:
+            if env:
+                display_env(env, args, decorator, results, status_fn=status_fn)
+
+        if not args.only_roots:
+            display_results = list(results)
+            if args.show_concretized:
+                display_results += concretized_but_not_installed
+            cmd.display_specs(
+                display_results,
+                args,
+                decorator=decorator,
+                all_headers=True,
+                status_fn=status_fn,
+                specfile_format=args.specfile_format,
+            )
+
+        # print number of installed packages last (as the list may be long)
+        if sys.stdout.isatty() and args.groups:
+            installed_suffix = ""
+            concretized_suffix = " to be installed"
+
+            if args.only_roots:
+                installed_suffix += " (not shown)"
+                concretized_suffix += " (not shown)"
+            else:
+                if env and not args.show_concretized:
+                    concretized_suffix += " (show with `spack find -c`)"
+
+            pkg_type = "loaded" if args.loaded else "installed"
+            cmd.print_how_many_pkgs(results, pkg_type, suffix=installed_suffix)
+
+            if env:
+                cmd.print_how_many_pkgs(
+                    concretized_but_not_installed, "concretized", suffix=concretized_suffix
+                )

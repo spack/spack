@@ -1,0 +1,3 @@
+This is synthetic data to test parsing cases for which I could not find compiler output
+ld -LIBPATH:/first/path /LIBPATH:/second/path -libpath:/third/path
+collect2 version ld -LIBPATH:/skip/path -L/skip/this/too

@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# This script acts like bash but runs kcov on the input script. We use it
+# to get coverage for Spack's bash scripts.
+#
+
+if [ -z "$SPACK_ROOT" ]; then
+    echo "ERROR: SPACK_ROOT was not set!"
+    exit 1
+fi
+
+# Using a -- to separate the script to be tested from kcov is not documented
+# as of v38, but seems to work. The same is true for the "--debug-force-bash-stderr"
+# option, see https://github.com/SimonKagstrom/kcov/issues/61
+kcov --debug-force-bash-stderr "$SPACK_ROOT/coverage" -- "$@"

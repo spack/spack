@@ -1,0 +1,49 @@
+#!/bin/sh
+# -*- python -*-
+#
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# This file is bilingual. The following shell code finds our preferred python.
+# Following line is a shell no-op, and starts a multi-line Python comment.
+# See https://stackoverflow.com/a/47886254
+""":"
+# prefer SPACK_PYTHON environment variable, python3, python, then python2
+SPACK_PREFERRED_PYTHONS="python3 python python2 /usr/libexec/platform-python"
+for cmd in "${SPACK_PYTHON:-}" ${SPACK_PREFERRED_PYTHONS}; do
+    if command -v > /dev/null "$cmd"; then
+        export SPACK_PYTHON="$(command -v "$cmd")"
+        exec "${SPACK_PYTHON}" "$0" "$@"
+    fi
+done
+
+echo "==> Error: spack could not find a python interpreter!" >&2
+exit 1
+":"""
+# Line above is a shell no-op, and ends a python multi-line comment.
+# The code above runs this file with our preferred python interpreter.
+
+import os
+import sys
+
+min_python3 = (3, 6)
+
+if sys.version_info[:2] < min_python3:
+    v_info = sys.version_info[:3]
+    msg = "Spack requires Python %d.%d or higher " % min_python3
+    msg += "You are running spack with Python %d.%d.%d." % v_info
+    sys.exit(msg)
+
+# Find spack's location and its prefix.
+spack_file = os.path.realpath(os.path.expanduser(__file__))
+spack_prefix = os.path.dirname(os.path.dirname(spack_file))
+
+# Allow spack libs to be imported in our scripts
+sys.path.insert(0, os.path.join(spack_prefix, "lib", "spack"))
+
+from spack.main import main  # noqa: E402
+
+# Once we've set up the system path, run the spack main method
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pip"
+    directories:
+     - "/.github/workflows/requirements/coverage"
+     - "/.github/workflows/requirements/style"
+     - "/.github/workflows/requirements/unit_tests"
+     - "/lib/spack/docs"
+    schedule:
+      interval: "daily"

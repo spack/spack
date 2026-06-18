@@ -1,0 +1,65 @@
+name: prechecks
+
+on:
+  workflow_call:
+    inputs:
+      with_coverage:
+        required: true
+        type: string
+      with_packages:
+        required: true
+        type: string
+
+concurrency:
+  group: style-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: '3.13'
+    - name: Install Python Packages
+      run: |
+        pip install -r .github/workflows/requirements/style/requirements.txt
+    # Validate that the code can be run on all the Python versions supported by Spack
+    - name: vermin
+      run: |
+        vermin --backport importlib \
+               --backport argparse \
+               --violations \
+               --backport typing \
+               -t=3.6- \
+               -vvv \
+               --exclude-regex lib/spack/spack/vendor \
+               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+    # Check that __slots__ are used properly
+    - name: slotscheck
+      run: |
+        ./bin/spack python -m slotscheck --exclude-modules="spack.test|spack.vendor|spack.new_installer_windows" lib/spack/spack/
+
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      with:
+        fetch-depth: 2
+    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      with:
+        python-version: '3.13'
+    - name: Install Python packages
+      run: |
+        pip install -r .github/workflows/requirements/style/requirements.txt
+        echo "PYTHONPATH=$PWD/lib/spack" >> $GITHUB_ENV
+    - name: Run style tests (code)
+      run: |
+        bin/spack style --base HEAD^1
+        bin/spack license verify
+        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/spack/vendor lib
+    - name: Run style tests (docs)
+      run: .github/workflows/bin/format-rst.py $(git ls-files 'lib/spack/docs/*.rst')

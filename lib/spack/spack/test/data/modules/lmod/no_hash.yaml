@@ -1,0 +1,12 @@
+enable:
+  - lmod
+lmod:
+  all:
+    autoload: none
+  hash_length: 0
+
+  core_compilers:
+    - 'clang@3.3'
+
+  hierarchy:
+    - mpi

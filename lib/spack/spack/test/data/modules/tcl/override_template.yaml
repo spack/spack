@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+    template: 'override_from_modules.txt'

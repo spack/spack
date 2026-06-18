@@ -1,0 +1,12 @@
+enable:
+  - lmod
+lmod:
+  core_compilers:
+    - 'clang@3.3'
+  hierarchy:
+    - mpi
+  exclude:
+    - callpath
+
+  all:
+    autoload: direct

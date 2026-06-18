@@ -1,0 +1,6 @@
+modules:
+  default:
+    enable: []
+    lmod:
+      core_compilers:
+      - gcc

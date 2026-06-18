@@ -1,0 +1,10 @@
+sphinx==9.1.0
+sphinxcontrib-programoutput==0.19
+sphinxcontrib-svg2pdfconverter==2.1.0
+sphinx-copybutton==0.5.2
+sphinx-last-updated-by-git==0.3.8
+sphinx-sitemap==2.9.0
+furo==2025.12.19
+docutils==0.22.4
+pygments==2.20.0
+pytest==9.0.3

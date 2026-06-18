@@ -1,0 +1,56 @@
+# -*- conf -*-
+# flake8 settings for Spack.
+#
+# These exceptions are for Spack core files. We're slightly more lenient
+# with packages.  See .flake8_packages for that.
+#
+# This is the only flake8 rule Spack violates somewhat flagrantly
+# - E731: do not assign a lambda expression, use a def
+#
+# This is the only flake8 exception needed when using Black.
+# - E203: white space around slice operators can be required, ignore : warn
+#
+# We still allow these in packages (Would like to get rid of them or rely on mypy
+# in the future)
+# - F403: from/import * used; unable to detect undefined names
+# - F405: undefined name or from *
+# - F821: undefined name (needed with from/import *)
+#
+[flake8]
+#ignore = E129,,W503,W504,F999,N801,N813,N814,F403,F405,E203
+extend-ignore = E731,E203
+max-line-length = 99
+
+# F4: Import
+# - F405: `name` may be undefined, or undefined from star imports: `module`
+#
+# F8: Name
+# - F821: undefined name `name`
+#
+per-file-ignores =
+  var/spack/*/package.py:F403,F405,F821
+  *-ci-package.py:F403,F405,F821
+
+# exclude things we usually do not want linting for.
+# These still get linted when passed explicitly, as when spack flake8 passes
+# them on the command line.
+exclude =
+  .git
+  etc/
+  opt/
+  share/
+  var/spack/cache/
+  var/spack/gpg*/
+  var/spack/junit-report/
+  var/spack/mock-configs/
+  lib/spack/spack/vendor/
+  __pycache__
+  var
+
+format = spack
+
+[flake8:local-plugins]
+report =
+  spack = flake8_formatter:SpackFormatter
+paths =
+  ./share/spack/qa/

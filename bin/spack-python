@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
+# spack-python
+#
+# If you want to write your own executable Python script that uses Spack
+# modules, on Mac OS or maybe some others, you may be able to do it like
+# this:
+#
+#   #!/usr/bin/env spack python
+#
+# Mac OS supports the above syntax, but it's not standard and most Linuxes
+# don't support more than one argument after the shebang command.  This
+# script is a workaround. Do this in your Python script instead:
+#
+#   #!/usr/bin/env spack-python
+#
+# This is compatible across platforms.
+#
+exec spack python "$@"

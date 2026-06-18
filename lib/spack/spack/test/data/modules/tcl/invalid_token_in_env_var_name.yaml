@@ -1,0 +1,22 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+    filter:
+      exclude_env_vars:
+        - CMAKE_PREFIX_PATH
+    environment:
+      set:
+        '{name}_ROOT_{prefix}': '{prefix}'
+
+  'platform=test target=x86_64':
+    environment:
+      set:
+        FOO_{variants}: 'foo'
+      unset:
+        - BAR
+
+  'platform=test target=x86':
+    load:
+      - 'foo/bar'

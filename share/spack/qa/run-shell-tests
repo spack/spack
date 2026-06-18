@@ -1,0 +1,57 @@
+#!/bin/bash -e
+#
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
+# Description:
+#     Runs Spack shell tests.
+#
+# Usage:
+#     run-shell-tests
+
+#-----------------------------------------------------------
+# Run a few initial commands and set up test environment
+#-----------------------------------------------------------
+ORIGINAL_PATH="$PATH"
+
+. "$(dirname $0)/setup.sh"
+if [ "$COVERAGE" = true ]; then
+  check_dependencies $coverage kcov git hg svn
+else
+  echo "COVERAGE not set to 'true' [skipping coverage]"
+fi
+
+# Clean the environment by removing Spack from the path and getting rid of
+# the spack shell function
+export PATH="$ORIGINAL_PATH"
+unset spack
+
+# Convert QA_DIR to absolute path before changing directory
+export QA_DIR=$(realpath $QA_DIR)
+
+# Start in the spack root directory
+cd "$SPACK_ROOT"
+
+# Run bash tests with coverage enabled, but pipe output to /dev/null
+# because it seems that kcov undoes the script's redirection
+if [ "$COVERAGE" = true ]; then
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
+    kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
+else
+    bash "$QA_DIR/setup-env-test.sh"
+    bash "$QA_DIR/completion-test.sh"
+fi
+
+# Run the test scripts for their output (these will print nicely)
+zsh  "$QA_DIR/setup-env-test.sh"
+zsh "$QA_DIR/completion-test.sh"
+dash "$QA_DIR/setup-env-test.sh"
+
+# Run fish tests
+fish "$QA_DIR/setup-env-test.fish"
+
+# run csh and tcsh tests
+csh  "$QA_DIR/setup-env-test.csh"
+tcsh "$QA_DIR/setup-env-test.csh"

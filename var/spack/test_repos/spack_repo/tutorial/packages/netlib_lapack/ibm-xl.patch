@@ -1,0 +1,42 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -62,7 +62,7 @@
+     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fp-model strict")
+   endif()
+   if("${CMAKE_Fortran_COMPILER}" MATCHES "xlf")
+-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qnosave -qstrict=none")
++    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qnosave -qstrict")
+   endif()
+ # Delete libmtsk in linking sequence for Sun/Oracle Fortran Compiler.
+ # This library is not present in the Sun package SolarisStudio12.3-linux-x86-bin
+
+--- a/CMAKE/CheckLAPACKCompilerFlags.cmake
++++ b/CMAKE/CheckLAPACKCompilerFlags.cmake
+@@ -43,12 +43,6 @@
+   if( "${CMAKE_Fortran_FLAGS}" MATCHES "-qflttrap=[a-zA-Z:]:enable" )
+     set( FPE_EXIT TRUE )
+   endif()
+-
+-  if( NOT ("${CMAKE_Fortran_FLAGS}" MATCHES "-qfixed") )
+-    message( STATUS "Enabling fixed format F90/F95 with -qfixed" )
+-    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qfixed"
+-         CACHE STRING "Flags for Fortran compiler." FORCE )
+-  endif()
+ 
+ # HP Fortran
+ elseif( CMAKE_Fortran_COMPILER_ID STREQUAL "HP" )
+
+--- a/CBLAS/CMakeLists.txt
++++ b/CBLAS/CMakeLists.txt
+@@ -12,8 +12,8 @@
+                          SYMBOL_NAMESPACE "F77_")
+ if(NOT FortranCInterface_GLOBAL_FOUND OR NOT FortranCInterface_MODULE_FOUND)
+   message(WARNING "Reverting to pre-defined include/lapacke_mangling.h")
+-  configure_file(include/lapacke_mangling_with_flags.h.in
+-                 ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h)
++  configure_file(include/cblas_mangling_with_flags.h.in
++                 ${LAPACK_BINARY_DIR}/include/cblas_mangling.h)
+ endif()
+ 
+ include_directories(include ${LAPACK_BINARY_DIR}/include)
+

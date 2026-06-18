@@ -1,0 +1,71 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
+import errno
+import gzip
+import io
+import os
+import shutil
+import sys
+
+import spack.cmd
+import spack.spec
+import spack.util.compression as compression
+from spack.cmd.common import arguments
+from spack.error import SpackError
+
+description = "print out logs for packages"
+section = "query"
+level = "long"
+
+
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    arguments.add_common_arguments(subparser, ["spec"])
+
+
+def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
+    # Reopen stdout in binary mode so we don't have to worry about encoding
+    outstream = os.fdopen(sys.stdout.fileno(), "wb", closefd=False)
+    shutil.copyfileobj(instream, outstream)
+
+
+def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
+    if concrete_spec.installed:
+        log_path = concrete_spec.package.install_log_path
+    elif os.path.exists(concrete_spec.package.stage.path):
+        # TODO: `spack logs` can currently not show the logs while a package is being built, as the
+        # combined log file is only written after the build is finished.
+        log_path = concrete_spec.package.log_path
+    else:
+        raise SpackError(f"{cmdline_spec} is not installed or staged")
+
+    try:
+        stream = open(log_path, "rb")
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            raise SpackError(f"No logs are available for {cmdline_spec}") from e
+        raise SpackError(f"Error reading logs for {cmdline_spec}: {e}") from e
+
+    with stream as f:
+        ext = compression.extension_from_magic_numbers_by_stream(f, decompress=False)
+        if ext and ext != "gz":
+            raise SpackError(f"Unsupported storage format for {log_path}: {ext}")
+
+        # If the log file is gzip compressed, wrap it with a decompressor
+        _dump_byte_stream_to_stdout(gzip.GzipFile(fileobj=f) if ext == "gz" else f)
+
+
+def logs(parser, args):
+    specs = spack.cmd.parse_specs(args.spec)
+
+    if not specs:
+        args.subparser.error("requires a spec")
+
+    if len(specs) != 1:
+        args.subparser.error("too many specs, supply only one")
+
+    concrete_spec = spack.cmd.matching_spec_from_env(specs[0])
+
+    _logs(specs[0], concrete_spec)

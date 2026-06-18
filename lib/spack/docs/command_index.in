@@ -1,0 +1,9 @@
+=================
+Command Reference
+=================
+
+This is a reference for all commands in the Spack command line interface.
+The same information is available through :ref:`spack-help`.
+
+Commands that also have sections in the main documentation have a link to
+"More documentation".
