@@ -61,7 +61,9 @@ import spack.spec
 import spack.util.crypto
 import spack.util.spack_yaml as syaml
 import spack.variant
+import spack.version
 from spack.llnl.string import plural
+from spack.version import ClosedOpenRange
 
 #: Map an audit tag to a list of callables implementing checks
 CALLBACKS = {}
@@ -1006,6 +1008,7 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
         filename = spack.repo.PATH.filename_for_package_name(pkg_name)
 
+        bounded_deps = {}
         for when, deps_by_name in pkg_cls.dependencies.items():
             for dep_name, dep in deps_by_name.items():
 
@@ -1080,6 +1083,42 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         errors.append(
                             error_cls(summary=summary, details=[error_msg, f"in {filename}"])
                         )
+
+                # Check we don't have unbounded version ranges in the "when" condition, and bounded
+                # version ranges in the depends on spec
+                max_infinity = spack.version.StandardVersion.typemax()
+                min_infinity = spack.version.StandardVersion.typemin()
+                bounded_dependency = all(max_infinity not in v for v in dep.spec.versions)
+                unbounded_condition = all(
+                    max_infinity in v and min_infinity not in v for v in when.versions
+                )
+                if bounded_dependency and unbounded_condition:
+                    bounded_deps.setdefault(dep.spec.name, []).append((dep.spec, when))
+
+        for dep_name, cases in bounded_deps.items():
+            # One case is usually fine
+            if len(cases) == 1:
+                continue
+
+            # Multiple directives, but imposing the same upper bound, are also fine
+            try:
+                upper_bounds = {
+                    max(v.hi for v in d.versions if isinstance(v, ClosedOpenRange))
+                    for d, _ in cases
+                }
+                if len(upper_bounds) <= 1:
+                    continue
+            except (AttributeError, ValueError) as e:
+                warnings.warn(f"{pkg_name}: {e}")
+                continue
+
+            for dependency, when in cases:
+                summary = (
+                    f"{pkg_name}: {dependency} has an upper bound for all versions of {pkg_name}"
+                )
+                errors.append(
+                    error_cls(summary=summary, details=[f"when={when}", f"in {filename}"])
+                )
 
     return errors
 
