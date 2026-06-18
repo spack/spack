@@ -6,14 +6,19 @@
 Utility functions for parsing, formatting, and manipulating URLs.
 """
 
+import os
+import pathlib
 import posixpath
 import re
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from spack.util.path import sanitize_filename
+from llnl.util import tty
+
+import spack.util.spack_yaml as syaml
+from spack.util.path import sanitize_filename, substitute_path_variables
 
 
 def validate_scheme(scheme):
@@ -151,3 +156,106 @@ def parse_link_rel_next(link_value: str) -> Optional[str]:
         data = data[1:]
 
     return None
+
+
+def handle_windows_file_urls(url: str) -> str:
+    """Handles file urls with Windows style paths.
+    Colons are present in both network paths as well as
+    Windows drive separators.
+    A proper Windows file url will have any drive
+    delineators prefixed with a forward slash to prevent
+    the file path component of the url from being interpreted
+    a network location.
+
+    Many file urls with Windows style paths are naively and inccorectly
+    composed as 'file://' + path, which results in incorrect parsing
+
+    This method contains some heuristics to detect a Windows file url,
+    and marshall it so it's properly formed and thus can be reasoned about
+
+    Arguments:
+        url: url being evalulated as a potential Windows file url
+
+    Returns: url if url is not a Windows file url, a properly formated
+    Windows file url if it is.
+    """
+    processed_url = urllib.parse.urlparse(url)
+    if not processed_url.scheme:
+        # definitely not a url, file or otherwise
+        return url
+    is_file_url = processed_url.scheme == "file"
+    if not is_file_url:
+        # not a file url, no need to process
+        return url
+    if processed_url.path and pathlib.PureWindowsPath(processed_url.path.lstrip("/")).drive:
+        # url was actually properly formed
+        return url
+    if processed_url.netloc and pathlib.PureWindowsPath(processed_url.netloc):
+        # A file url shouldn't have a netloc, but a poorly formed Windows url will
+        return "file:///" + processed_url.netloc
+
+    # if the above didn't catch this, this is likely a relative path, and requires no
+    # special handling w.r.t. Windows
+    return url
+
+
+def make_file_url(path: Union[str, pathlib.Path]) -> str:
+    """Create properly formatted file url"""
+    check_path = pathlib.PureWindowsPath(str(path))
+    url_path = str(path)
+    if check_path.drive:
+        url_path = "/" + url_path
+    return urllib.parse.urlunparse(("file", "", url_path, "", "", ""))
+
+
+def canonicalize_url(url: str, default_wd: Optional[pathlib.Path] = None) -> str:
+    """Same as substitute_path_variables, but for urls.
+
+    If the url is a file url:
+        If represented by a yaml object with file annotations,
+        make absolute paths relative to that file's directory.
+        Otherwise, use ``default_wd`` if specified, otherwise
+        ``os.getcwd()``
+
+    Arguments:
+        url: url being converted as needed
+        default_wd: optional working directory/root for non-yaml file urls
+
+    Returns: A canonicalized url. File urls are returned as absolute file urls.
+    """
+    c_url = substitute_path_variables(url)
+
+    # Now process linux-like paths and remote URLs
+    p_url = urllib.parse.urlparse(c_url)
+    path = pathlib.PurePath(urllib.request.url2pathname(p_url.path))
+
+    if not p_url.scheme:
+        # url argument is not a valid url
+        raise RuntimeError("Attempting to canonicalize a non url object from url canonicalization")
+
+    if p_url.scheme != "file":
+        # Have a remote URL so simply return it with substitutions
+        return c_url
+
+    # Get file in which path was written in case we need to make it absolute
+    # relative to that path.
+
+    filename = None
+    if isinstance(url, syaml.syaml_str):
+        filename = pathlib.Path(
+            os.path.dirname(url._start_mark.name)  # type: ignore[attr-defined]
+        )
+        assert url._start_mark.name == url._end_mark.name  # type: ignore[attr-defined]
+
+    if path.is_absolute():
+        return urllib.parse.urlunparse(("file", "", os.path.normpath(path), "", "", ""))
+
+    # Have a relative path so prepend the appropriate dir to make it absolute
+    if filename:
+        # Prepend the directory of the syaml path
+        return urllib.parse.urlunparse(("file", "", os.path.normpath(filename / path), "", "", ""))
+
+    # Prepend the default, if provided, or current working directory.
+    base = default_wd or pathlib.Path.cwd()
+    tty.debug(f"Using working directory {base} as base for abspath")
+    return urllib.parse.urlunparse(("file", "", os.path.normpath(base / path), "", "", ""))
