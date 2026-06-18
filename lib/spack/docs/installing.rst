@@ -19,8 +19,8 @@ This page covers the ``spack install`` experience in detail, including the inter
 Before diving in, ensure you are familiar with :doc:`package_fundamentals` for basic usage and spec syntax.
 
 .. versionadded:: 1.2
-   The TUI and POSIX jobserver are new in Spack 1.2 and require a Unix-like platform.
-
+   The TUI and GNU Make jobserver support are new in Spack 1.2.
+   Spack supports the POSIX jobserver, Windows jobserver support will be added in a future release.
 
 Interactive terminal UI
 -----------------------
@@ -113,6 +113,11 @@ When a process encounters a prefix that was already installed, it simply skips i
 
 For best results on a cluster, it's recommended to limit per-process package-level parallelism (e.g., ``spack install -p2``) for better load balancing.
 
+
+.. admonition:: Windows Support
+
+   On Windows, due to a lack of file lock support, concurrent Spack processes are not guaranteed to function.
+   On Windows, due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported.
 
 Non-interactive mode
 --------------------
