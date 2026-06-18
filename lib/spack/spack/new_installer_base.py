@@ -210,7 +210,7 @@ class NoopJobServer(JobServerBase):
     def decrease_parallelism(self) -> None: ...
 
     def acquire(self, jobs: int) -> int:
-        return 0
+        return jobs
 
     def release(self) -> None: ...
 
