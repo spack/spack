@@ -83,7 +83,7 @@ def test_isolate_overwrite_same_dir(mock_pre_isolate_config):
         text = f.read().strip()
     expected_text = f"""\
 bootstrap:
-  root: {isolated_path2 / 'bootstrap'}"""
+  root: {isolated_path2 / "bootstrap"}"""
     assert text == expected_text
 
 
