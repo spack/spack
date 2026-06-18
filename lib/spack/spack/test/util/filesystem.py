@@ -1424,11 +1424,7 @@ def test_ace_flags_enum_values():
 
 
 def test_access_rights_enum_values():
-    from spack.llnl.util.win_acl import (
-        FileAccessRights,
-        GenericAccessRights,
-        StandardAccessRights,
-    )
+    from spack.llnl.util.win_acl import FileAccessRights, GenericAccessRights, StandardAccessRights
 
     assert GenericAccessRights.SDDL_GENERIC_READ.value == "GR"
     assert GenericAccessRights.SDDL_GENERIC_ALL.value == "GA"
@@ -1504,7 +1500,11 @@ def test_get_file_sddl_missing_path():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_add_remove_ace():
-    from spack.llnl.util.win_acl import GenericAccessRights, SecurityDescriptor, WindowsSecurityHelper
+    from spack.llnl.util.win_acl import (
+        GenericAccessRights,
+        SecurityDescriptor,
+        WindowsSecurityHelper,
+    )
 
     sd = SecurityDescriptor()
     sid = WindowsSecurityHelper.get_sid_for_user()
@@ -1518,7 +1518,11 @@ def test_security_descriptor_add_remove_ace():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_dacl_is_copy():
-    from spack.llnl.util.win_acl import GenericAccessRights, SecurityDescriptor, WindowsSecurityHelper
+    from spack.llnl.util.win_acl import (
+        GenericAccessRights,
+        SecurityDescriptor,
+        WindowsSecurityHelper,
+    )
 
     sd = SecurityDescriptor()
     sid = WindowsSecurityHelper.get_sid_for_user()

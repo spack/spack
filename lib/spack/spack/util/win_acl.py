@@ -237,11 +237,7 @@ if sys.platform == "win32":
     _kernel32 = ctypes.windll.kernel32
 
     _OpenProcessToken = _advapi32.OpenProcessToken
-    _OpenProcessToken.argtypes = [
-        wintypes.HANDLE,
-        wintypes.DWORD,
-        ctypes.POINTER(wintypes.HANDLE),
-    ]
+    _OpenProcessToken.argtypes = [wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE)]
     _OpenProcessToken.restype = wintypes.BOOL
 
     _GetTokenInformation = _advapi32.GetTokenInformation
@@ -315,9 +311,7 @@ if sys.platform == "win32":
                 process_handle = _GetCurrentProcess()
                 token_handle = wintypes.HANDLE()
 
-                if not _OpenProcessToken(
-                    process_handle, TOKEN_QUERY, ctypes.byref(token_handle)
-                ):
+                if not _OpenProcessToken(process_handle, TOKEN_QUERY, ctypes.byref(token_handle)):
                     raise ctypes.WinError()
 
                 return_length = wintypes.DWORD()
@@ -674,14 +668,7 @@ if sys.platform == "win32":
 
         pp_sd = wintypes.LPVOID()
         res = _GetNamedSecurityInfoW(
-            path,
-            SE_FILE_OBJECT,
-            security_info,
-            None,
-            None,
-            None,
-            None,
-            ctypes.byref(pp_sd),
+            path, SE_FILE_OBJECT, security_info, None, None, None, None, ctypes.byref(pp_sd)
         )
         if res != 0:
             raise ctypes.WinError(res)
@@ -689,11 +676,7 @@ if sys.platform == "win32":
         try:
             string_ptr = wintypes.LPWSTR()
             if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
-                pp_sd,
-                SDDL_REVISION_1,
-                security_info,
-                ctypes.byref(string_ptr),
-                None,
+                pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
             ):
                 raise ctypes.WinError()
             try:
