@@ -17,14 +17,14 @@ jobs:
     # PR: use the base of the PR as the old commit
     - name: Checkout PR base commit
       if: github.event_name == 'pull_request'
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         ref: ${{ github.event.pull_request.base.sha }}
         path: old
     # not a PR: use the previous commit as the old commit
     - name: Checkout previous commit
       if: github.event_name != 'pull_request'
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         fetch-depth: 2
         path: old
@@ -33,11 +33,11 @@ jobs:
       run: git -C old reset --hard HEAD^
 
     - name: Checkout new commit
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         path: new
     - name: Install circular import checker
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
         repository: haampie/circular-import-fighter
         ref: f1c56367833f3c82f6a85dc58595b2cd7995ad48
