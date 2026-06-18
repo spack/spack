@@ -114,10 +114,10 @@ When a process encounters a prefix that was already installed, it simply skips i
 For best results on a cluster, it's recommended to limit per-process package-level parallelism (e.g., ``spack install -p2``) for better load balancing.
 
 
-.. note::
+.. admonition:: Windows Support
 
-   Due to a lack of file lock support, concurrent Spack processes are not guaranteed to function on Windows.
-   Due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported on Windows.
+   On Windows, due to a lack of file lock support, concurrent Spack processes are not guaranteed to function.
+   On Windows, due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported.
 
 Non-interactive mode
 --------------------
