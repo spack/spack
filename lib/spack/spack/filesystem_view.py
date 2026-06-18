@@ -93,10 +93,16 @@ def view_copy(
         prefix_to_projection[spack.store.STORE.layout.root] = view._root
         spack.relocate.relocate_text(files=[dst], prefix_to_prefix=prefix_to_projection)
 
-    # The os module on Windows does not have a chown function.
     if sys.platform != "win32":
         try:
             os.chown(dst, src_stat.st_uid, src_stat.st_gid)
+        except OSError:
+            tty.debug(f"Can't change the permissions for {dst}")
+    else:
+        try:
+            from spack.llnl.util.win_acl import copy_file_permissions
+
+            copy_file_permissions(src, dst)
         except OSError:
             tty.debug(f"Can't change the permissions for {dst}")
 

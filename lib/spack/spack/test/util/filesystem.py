@@ -1569,3 +1569,27 @@ def test_security_descriptor_from_file_sddl(tmp_path):
     # Owner and DACL must be populated from a real file
     assert sd.owner is not None
     assert isinstance(sd.dacl, list)
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_copy_file_permissions_preserves_dacl(tmp_path):
+    from spack.llnl.util.win_acl import copy_file_permissions, get_file_sddl
+
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
+    src.write_text("source")
+    dst.write_text("dest")
+
+    copy_file_permissions(str(src), str(dst))
+
+    src_sddl = get_file_sddl(str(src))
+    dst_sddl = get_file_sddl(str(dst))
+
+    # Extract only the DACL ACEs (strip the leading D:/D:AI header)
+    def dacl_aces(sddl):
+        dacl_part = sddl.split("D:")[1] if "D:" in sddl else ""
+        # Strip optional DACL flags (e.g. "AI") before the first "("
+        paren = dacl_part.find("(")
+        return dacl_part[paren:] if paren != -1 else dacl_part
+
+    assert dacl_aces(src_sddl) == dacl_aces(dst_sddl)

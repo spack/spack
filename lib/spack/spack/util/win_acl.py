@@ -298,6 +298,65 @@ if sys.platform == "win32":
     _GetCurrentProcess = _kernel32.GetCurrentProcess
     _GetCurrentProcess.restype = wintypes.HANDLE
 
+    _SetNamedSecurityInfoW = _advapi32.SetNamedSecurityInfoW
+    _SetNamedSecurityInfoW.argtypes = [
+        wintypes.LPWSTR,  # pObjectName (mutable, not LPCWSTR)
+        ctypes.c_int,  # ObjectType
+        wintypes.DWORD,  # SecurityInfo
+        wintypes.LPVOID,  # psidOwner
+        wintypes.LPVOID,  # psidGroup
+        wintypes.LPVOID,  # pDacl
+        wintypes.LPVOID,  # pSacl
+    ]
+    _SetNamedSecurityInfoW.restype = wintypes.DWORD
+
+    def copy_file_permissions(src: str, dst: str) -> None:  # type: ignore[no-redef]
+        """Copy the DACL from *src* to *dst*.
+
+        This is the Windows equivalent of ``os.chown`` for preserving access
+        control when copying files into a view.
+
+        Args:
+            src: path whose DACL to read.
+            dst: path to which the DACL is applied.
+
+        Raises:
+            OSError: on any Windows API failure.
+        """
+        SE_FILE_OBJECT = 1
+        DACL_SECURITY_INFORMATION = 0x00000004
+
+        p_dacl = wintypes.LPVOID()
+        pp_sd = wintypes.LPVOID()
+
+        res = _GetNamedSecurityInfoW(
+            src,
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            ctypes.byref(p_dacl),
+            None,
+            ctypes.byref(pp_sd),
+        )
+        if res != 0:
+            raise ctypes.WinError(res)
+
+        try:
+            res = _SetNamedSecurityInfoW(
+                dst,
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                None,
+                None,
+                p_dacl,
+                None,
+            )
+            if res != 0:
+                raise ctypes.WinError(res)
+        finally:
+            _LocalFree(pp_sd)
+
     class WindowsSecurityHelper:  # type: ignore[no-redef]
         """Static helpers for working with Windows SIDs and SDDL strings."""
 
