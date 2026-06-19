@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 
 import pytest
 
@@ -182,3 +183,20 @@ def test_missing_config_scopes_not_valid_read_scope(mock_missing_dir_include_sco
     )
     with pytest.raises(SystemExit):
         a.parse_args(["--scope", "sub_base"])
+
+
+@pytest.mark.parametrize(
+    "no_prompt,yes_to_all",
+    (("yes", True), ("no", False), ("FAlSe", False), ("asdf", True), ("", False), (None, False)),
+)
+def test_yes_to_all(no_prompt, yes_to_all):
+    if no_prompt is None:
+        os.environ.pop("SPACK_YES_TO_ALL")
+    else:
+        os.environ["SPACK_YES_TO_ALL"] = no_prompt
+
+    p = argparse.ArgumentParser()
+    arguments.add_common_arguments(p, ["yes_to_all"])
+    args = p.parse_args([])
+
+    assert args.yes_to_all == yes_to_all

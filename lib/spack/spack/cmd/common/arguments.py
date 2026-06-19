@@ -320,11 +320,14 @@ def installed_specs():
 
 @arg
 def yes_to_all():
+    no_prompt = os.environ.get("SPACK_YES_TO_ALL")
+    no_prompt = bool(no_prompt and no_prompt.lower() not in ("false", "no", "0"))
     return Args(
         "-y",
         "--yes-to-all",
         action="store_true",
         dest="yes_to_all",
+        default=no_prompt,
         help='assume "yes" is the answer to every confirmation request',
     )
 
