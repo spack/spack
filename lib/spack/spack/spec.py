@@ -2219,8 +2219,8 @@ class Spec:
         if self._prefix is None:
             from spack.store import STORE
 
-            upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-            if record and record.path and (not upstream or record.installed):
+            _, record = STORE.db.query_by_spec_hash(self.dag_hash())
+            if record and record.path:
                 self.set_prefix(record.path)
             else:
                 self.set_prefix(STORE.layout.path_for_spec(self))
