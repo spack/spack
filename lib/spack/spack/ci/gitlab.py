@@ -354,10 +354,27 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
         job_id += 1
 
     if job_id > 0:
-        if (
+        schedule_signing_job = (
             "script" in spack_ci_ir["jobs"]["signing"]["attributes"]
             and options.pipeline_type == PipelineType.PROTECTED_BRANCH
-        ):
+        )
+        wait_job_name = "wait-for-build-jobs"
+        if schedule_signing_job or options.rebuild_index:
+            # Create a dummy job that runs as the stage before reindex.
+            # This job will be used to ensure reindex doesn't run until
+            # the other build jobs complete.
+            stage_names.append("stage-wait")
+            wait_job = spack_ci_ir["jobs"]["noop"]["attributes"]
+            wait_job["stage"] = "stage-wait"
+            wait_job["retry"] = 0
+            wait_job["interruptible"] = True
+            wait_job["when"] = "always"
+            wait_job["script"] = ["echo 'Open the pod bay doors HAL'"]
+            wait_job["dependencies"] = []
+
+            output_object[wait_job_name] = wait_job
+
+        if schedule_signing_job:
             # External signing: generate a job to check and sign binary pkgs
             stage_names.append("stage-sign-pkgs")
             signing_job = spack_ci_ir["jobs"]["signing"]["attributes"]
@@ -382,19 +399,6 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             output_object["sign-pkgs"] = signing_job
 
         if options.rebuild_index:
-            # Create a dummy job that runs as the stage before reindex.
-            # This job will be used to ensure reindex doesn't run until
-            # the other build jobs complete.
-            stage_names.append("stage-wait")
-            wait_job = spack_ci_ir["jobs"]["noop"]["attributes"]
-            wait_job["stage"] = "stage-wait"
-            wait_job["retry"] = 0
-            wait_job["when"] = "always"
-            wait_job["script"] = ["echo 'Open the pod bay doors HAL'"]
-            wait_job["dependencies"] = []
-
-            output_object["wait-for-build-jobs"] = wait_job
-
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
             final_job = spack_ci_ir["jobs"]["reindex"]["attributes"]
@@ -409,7 +413,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             # it also needs to wait until all of the other stages complete.
             final_job["needs"] = [
                 {"job": generate_job_name, "pipeline": f"{generate_pipeline_id}"},
-                "wait-for-build-jobs",
+                wait_job_name,
             ]
 
             output_object["rebuild-index"] = final_job
