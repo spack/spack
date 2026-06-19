@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 import pytest
 
 import spack.build_environment as be
@@ -18,6 +19,11 @@ def _collect_mods_by_name(env_mods):
         value = getattr(mod, "value", "")
         by_name.setdefault(name, []).append(value)
     return by_name
+
+
+def _normalize(values):
+    """Normalize path separators to forward slashes for cross-platform compatibility."""
+    return [v.replace("\\", "/") for v in values]
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_fetch")
@@ -62,9 +68,10 @@ class TestInjectFfilePrefixMap:
         by_name = _collect_mods_by_name(env)
 
         for var in ("SPACK_CFLAGS", "SPACK_CXXFLAGS", "CFLAGS", "CXXFLAGS"):
-            values = by_name.get(var, [])
+            values = _normalize(by_name.get(var, []))
             assert any("-ffile-prefix-map" in v and ".spack/src" in v for v in values), (
-                f"-ffile-prefix-map with .spack/src not found in {var}. Got: {values}"
+                f"-ffile-prefix-map with .spack/src not found in {var}. "
+                f"Got: {by_name.get(var, [])}"
             )
 
     def test_permanent_path_contains_prefix(self):
@@ -75,11 +82,11 @@ class TestInjectFfilePrefixMap:
         be._inject_ffile_prefix_map(pkg, env)
 
         by_name = _collect_mods_by_name(env)
-        prefix = str(pkg.spec.prefix)
+        prefix = str(pkg.spec.prefix).replace("\\", "/")
 
         all_flag_values = []
         for var in ("SPACK_CFLAGS", "CFLAGS"):
-            all_flag_values.extend(by_name.get(var, []))
+            all_flag_values.extend(_normalize(by_name.get(var, [])))
 
         prefix_map_flags = [v for v in all_flag_values if "-ffile-prefix-map" in v]
 
@@ -104,8 +111,10 @@ class TestInjectFfilePrefixMap:
         except Exception:
             staging_src = str(pkg.stage.path)
 
+        staging_src = staging_src.replace("\\", "/")
+
         for var in ("SPACK_CFLAGS", "CFLAGS"):
-            for v in by_name.get(var, []):
+            for v in _normalize(by_name.get(var, [])):
                 if "-ffile-prefix-map" in v:
                     # Format is: -ffile-prefix-map=OLD=NEW
                     # Strip the flag name, then split OLD=NEW on first '='
@@ -128,12 +137,13 @@ class TestInjectFfilePrefixMap:
         by_name = _collect_mods_by_name(env)
 
         for var in ("SPACK_FFLAGS", "SPACK_FCFLAGS", "FFLAGS", "FCFLAGS"):
-            values = by_name.get(var, [])
+            values = _normalize(by_name.get(var, []))
             assert any("-g" in v for v in values), (
-                f"-g not found in Fortran variable {var}. Got: {values}"
+                f"-g not found in Fortran variable {var}. Got: {by_name.get(var, [])}"
             )
             assert any("-ffile-prefix-map" in v for v in values), (
-                f"-ffile-prefix-map not found in Fortran variable {var}. Got: {values}"
+                f"-ffile-prefix-map not found in Fortran variable {var}. "
+                f"Got: {by_name.get(var, [])}"
             )
 
     def test_nvcc_hip_flags_use_xcompiler_syntax(self):
@@ -195,9 +205,10 @@ class TestInjectFfilePrefixMap:
         by_name = _collect_mods_by_name(env)
 
         for var in ("SPACK_CFLAGS", "CFLAGS"):
-            values = by_name.get(var, [])
+            values = _normalize(by_name.get(var, []))
             assert any("-ffile-prefix-map" in v and ".spack/build" in v for v in values), (
-                f"-ffile-prefix-map with .spack/build not found in {var}. Got: {values}"
+                f"-ffile-prefix-map with .spack/build not found in {var}. "
+                f"Got: {by_name.get(var, [])}"
             )
 
     def test_build_dir_remap_absent_for_non_cmake_package(self):
@@ -210,7 +221,8 @@ class TestInjectFfilePrefixMap:
         by_name = _collect_mods_by_name(env)
 
         for var in ("SPACK_CFLAGS", "CFLAGS"):
-            values = by_name.get(var, [])
+            values = _normalize(by_name.get(var, []))
             assert not any("-ffile-prefix-map" in v and ".spack/build" in v for v in values), (
-                f"Unexpected .spack/build remap found in {var} for non-CMake pkg. Got: {values}"
+                f"Unexpected .spack/build remap found in {var} for non-CMake pkg. "
+                f"Got: {by_name.get(var, [])}"
             )
