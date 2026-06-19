@@ -1497,8 +1497,15 @@ class BuildGraph:
         with database.read_transaction():
             # Set the install prefix for each spec based on the db record or store layout
             for s in spack.traverse.traverse_nodes(specs):
-                _, record = database.query_by_spec_hash(s.dag_hash())
-                if record and record.path:
+                upstream, record = database.query_by_spec_hash(s.dag_hash())
+                # Missing upstream build deps may be rebuilt locally
+                rebuild_locally = (
+                    upstream
+                    and record
+                    and not record.installed
+                    and not s.dependents(deptype=dt.LINK | dt.RUN)
+                )
+                if record and record.path and not rebuild_locally:
                     s.set_prefix(record.path)
                 else:
                     s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
