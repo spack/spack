@@ -124,12 +124,21 @@ def _preserve_and_extract_include():
 
 def setup_parser(subparser: ArgumentParser):
     isolate_group = subparser.add_mutually_exclusive_group()
-    isolate_group.add_argument("--path", type=str, help="Path to data isolation directory")
     isolate_group.add_argument(
-        "--undo", action="store_true", help="Undo the result of calling isolate"
+        "--path", dest="path", type=str, help="path to data isolation directory"
+    )
+    isolate_group.add_argument(
+        "--self",
+        dest="path",
+        action="store_const",
+        const=spack.paths.prefix,
+        help="use spack's own prefix as isolation directory",
+    )
+    isolate_group.add_argument(
+        "--undo", action="store_true", help="undo the result of calling isolate"
     )
     subparser.add_argument(
-        "--overwrite", action="store_true", help="Overwrite existing isolation if necessary"
+        "--overwrite", action="store_true", help="overwrite existing isolation if necessary"
     )
 
 
