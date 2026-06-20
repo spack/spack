@@ -389,6 +389,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a graph -d 'generat
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a help -d 'get help on spack and its commands'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a info -d 'get detailed information on a particular package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a install -d 'build and install packages'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a isolate -d 'isolate the current spack instance from the home directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list and check license headers on files in spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and search available packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
@@ -2210,6 +2211,19 @@ complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reus
 complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
+
+# spack isolate
+set -g __fish_spack_optspecs_spack_isolate h/help path= self undo overwrite
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command isolate' -l path -r -f -a path
+complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'path to data isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a path
+complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'use spack'"'"'s own prefix as isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
+complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'overwrite existing isolation if necessary'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
