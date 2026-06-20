@@ -699,6 +699,8 @@ It modifies the current Spack instance by setting the ``user`` scope to use ``IS
 This facilitates working with many independent Spack instances without worrying about overlapping configuration.
 ``spack isolate --undo`` reverts the changes to Spack made by ``spack isolate``.
 
+``spack isolate --self`` is a shortcut that isolates Spack to its own prefix.
+
 Currently, ``spack isolate`` is a best-effort approach to isolation of a Spack instance.
 The default location Spack uses for cloning Git based package repositories can only be configured by the ``SPACK_USER_CACHE_PATH`` environment variable (see :ref:`automatic-repo-cloning`).
 ``spack isolate --path ISO_PATH`` will explicitly set the destination of repositories that it knows about when invoked to a subdirectory of ``ISO_PATH``; however, newly added repositories without an explicit destination will be cloned to ``~/.spack``.
@@ -707,4 +709,3 @@ To avoid this, either explicitly set ``SPACK_USER_CACHE_PATH`` or explicitly set
   .. warning::
 
     This is an experimental feature that will be overhauled in v1.3, which will have big changes to how Spack is configured to store data and permit a more robust implementation.
-
