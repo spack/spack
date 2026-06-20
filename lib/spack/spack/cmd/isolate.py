@@ -181,8 +181,9 @@ def _undo_isolate():
 def isolate(parser, args):
     if args.undo:
         _undo_isolate()
+    elif args.path is None:
+        tty.die("Must provide one of --path, --self, or --undo")
     else:
-        assert args.path is not None, "Must provide an isolation destination"
         _do_isolate(args)
         tty.warn(
             "\n".join(
