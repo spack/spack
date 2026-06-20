@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+from typing import Dict
 
 import spack.llnl.util.tty as tty
 import spack.repo
@@ -34,7 +35,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["package", "jobs"])
 
 
-def versions(parser, args):
+def versions(parser: argparse.ArgumentParser, args: Dict):
     spec = spack.spec.Spec(args.package)
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)

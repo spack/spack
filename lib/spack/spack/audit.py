@@ -47,7 +47,7 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Set, Tuple
+from typing import Iterable, List, Sequence, Set, Tuple, Type
 from urllib.request import urlopen
 
 import spack.builder
@@ -593,15 +593,20 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
 
 
 @package_properties
-def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
+def _ensure_all_versions_can_produce_a_fetcher(
+    pkgs: Sequence[str], error_cls: Type[Error]
+) -> List[Error]:
     """Ensure all versions in a package can produce a fetcher"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+
+        versions = pkg_cls.all_versions()
+        spec = spack.spec.Spec(pkg_name)
         try:
-            spack.fetch_strategy.check_pkg_attributes(pkg)
-            for version in pkg.versions:
+            spack.fetch_strategy.check_pkg_attributes(pkg_cls)
+            # TODO: needs to be modified for fetch_strategy.for_spec()
+            for version in versions:
                 assert spack.fetch_strategy.for_package_version(pkg, version)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"

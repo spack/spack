@@ -114,7 +114,7 @@ class GitRefLookup(AbstractRefLookup):
 
         return self.data[ref]
 
-    def lookup_ref(self, ref) -> Tuple[Optional[str], int]:
+    def lookup_ref(self, ref: str) -> Tuple[Optional[str], int]:
         """Lookup the previous version and distance for a given commit.
 
         We use git to compare the known versions from package to the git tags,

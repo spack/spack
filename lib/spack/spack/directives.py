@@ -62,6 +62,7 @@ from spack.directives_meta import DirectiveError, directive, get_spec
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
+from spack.version_def import VersionDefinition
 
 __all__ = [
     "DirectiveError",
@@ -154,7 +155,7 @@ def _make_when_spec(value: Union[WhenType, Tuple[str, ...]]) -> Optional[spack.s
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive("versions", supports_when=False)
+@directive(("versions", "when_versions"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -193,6 +194,8 @@ def version(
     cvs: Optional[str] = None,
     revision: Optional[str] = None,
     date: Optional[str] = None,
+    # condition defining when this version exists
+    when: WhenType = None,
 ):
     """Declare a version for a package with optional metadata for fetching its code.
 
@@ -238,10 +241,16 @@ def version(
         )
         if value is not None
     }
-    return partial(_execute_version, ver=ver, kwargs=kwargs)
+    return partial(_execute_version, ver=ver, when=when, kwargs=kwargs)
 
 
-def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
+def _execute_version(
+    pkg: Type[spack.package_base.PackageBase], ver: Union[str, int], when: WhenType, kwargs: dict
+):
+    when_spec = _make_when_spec(when)
+    if not when_spec:  # ignore if when was False
+        return
+
     if (
         (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
         and hasattr(pkg, "has_code")
@@ -258,8 +267,16 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
 
     version = StandardVersion.from_string(str(ver))
 
-    # Store kwargs for the package to later with a fetch_strategy.
+    # Add version to deprecated versions dictionary on the package (for backward compatibility)
+    # TODO: we should likely have a convention for *which* of the conditional versions to add,
+    # TODO: e.g., we probably want to choose the one for the current platform if we can.
     pkg.versions[version] = kwargs
+
+    # Store a version definition for this directive invocation
+    when_versions = pkg.when_versions.setdefault(when_spec, {})
+    when_versions[version] = VersionDefinition(
+        version, precedence=pkg.num_version_definitions(), kwargs=kwargs
+    )
 
 
 @directive("conflicts")
