@@ -2213,15 +2213,17 @@ complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a co
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack isolate
-set -g __fish_spack_optspecs_spack_isolate h/help path= undo overwrite
+set -g __fish_spack_optspecs_spack_isolate h/help path= self undo overwrite
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command isolate' -l path -r -f -a path
-complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'Path to data isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'path to data isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a path
+complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'use spack'"'"'s own prefix as isolation directory'
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
-complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'Undo the result of calling isolate'
+complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
-complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'Overwrite existing isolation if necessary'
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'overwrite existing isolation if necessary'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=

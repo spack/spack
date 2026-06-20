@@ -1374,7 +1374,7 @@ _spack_install() {
 }
 
 _spack_isolate() {
-    SPACK_COMPREPLY="-h --help --path --undo --overwrite"
+    SPACK_COMPREPLY="-h --help --path --self --undo --overwrite"
 }
 
 _spack_license() {
