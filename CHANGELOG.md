@@ -181,7 +181,7 @@ See #52334 for more details.
 ## Other notable changes
 
 ### Core development
-* Spack Style: Ruff (#52156)
+* Spack Style: use `ruff` instead of `flake8`, `isort`, and `black` (#52156)
 * bootstrap: provide python 3.14 binaries (#51580)
 
 ### Improved error messages
