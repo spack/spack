@@ -11,9 +11,9 @@ also usability features like **concretization groups**, and security features li
 
    Spack `v1.2.0` defaults to the new installer, which is a completely rewritten package
    installer designed for better performance and improved user experience. This was an
-   experimental feature in `v1.1.0`, and now it's feature-complete. The new installer
-   takes advantage of much more build parallelism by scheduling multiple package builds
-   concurrently and sharing their work dynamically using a jobserver.
+   experimental feature in `v1.1.0`. The new installer takes advantage of much more
+   build parallelism by scheduling multiple package builds concurrently and sharing
+   their work dynamically using a jobserver.
 
    The most visible change is the new interactive Terminal User Interface (TUI). It
    shows an overview of all active, concurrently running builds, and lets you follow
@@ -28,9 +28,9 @@ also usability features like **concretization groups**, and security features li
    builds can claim the idle jobs. The new installer also optimizes database writes,
    which is noticeable when installing many packages from a binary cache.
 
-   See [the docs](https://spack.readthedocs.io/en/latest/installing.html) and
-   [this talk from HPSFCon2026](https://youtu.be/zJ3S9CFJ5ZM?si=UdsPTlGOJ9YxPyZP) for
-   more details.
+   See [the docs](https://spack.readthedocs.io/en/latest/installing.html) and this
+   [talk from HPSFCon2026](https://youtu.be/zJ3S9CFJ5ZM?si=UdsPTlGOJ9YxPyZP) for more
+   details.
 
 2. **Concretization Groups**
 
@@ -159,18 +159,18 @@ See #52334 for more details.
 
 * Refactor the GPG module to better support signing/verification workflows (#52430)
   `--yes-to-all`
+* deprecate `spack gpg verify` and `spack gpg sign` as unnecessary (#52431)
 * spack install: deprecate `--dont-restage` (#51604)
 * `main.py`: deprecate --pdb, drop SIGINT handler (#52281)
 * `main.py`: deprecate --profile flags (#52301)
 * `spack compiler`: remove deprecated `--mixed-toolchain` option (#51726)
-* deprecate `spack gpg verify` and `spack gpg sign` as unnecessary (#52431)
-* Deprecate `include_concrete:` in favor of `include:`
+* `include_concrete:` is now deprecated in favor of `include: [spack.lock]` (#51900)
 
 ## Other notable changes
 
 ### Core development
-* Spack Style: use `ruff` instead of `flake8`, `isort`, and `black` (#52156)
-* bootstrap: provide python 3.14 binaries (#51580)
+* `spack style` now uses `ruff` instead of `flake8`, `isort`, and `black` (#52156)
+* we now provide python 3.14 binaries for bootstrapping (#51580)
 
 ### Improved error messages
 * solver: error out early for non-existing and deprecated versions (#51555)
@@ -178,7 +178,6 @@ See #52334 for more details.
 * solver: remove internal errors in the solver (#51642)
 
 ### Performance Improvements
-
 * views: collapse unique subtrees in symlink case (#52135)
 * solver: simplify encoding of versions (#51591)
 * solver: manually optimize trigger_node projections (#51605)
