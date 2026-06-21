@@ -28,21 +28,9 @@ also usability features like **concretization groups**, and security features li
    builds can claim the idle jobs. The new installer also optimizes database writes,
    which is noticeable when installing many packages from a binary cache.
 
-   See [the docs](https://spack.readthedocs.io/en/latest/installing.html),
-   [this talk from HPSFCon2026]()
-
-   and these pull
-   requests
-
-   #51530, #51557, #51558, #51568, #51570, #51593, #51622, #51623, #51641, #51769,
-   #51776, #51788, #51865, #51951, #51954, #51960, #51967, #51968, #51985, #51986,
-   #51997, #51998, #51999, #52000, #52005, #52011, #52012, #52013, #52047, #52048,
-   #52049, #52053, #52055, #52058, #52059, #52071, #52072, #52073, #52080, #52082,
-   #52083, #52084, #52085, #52086, #52087, #52089, #52093, #52096, #52098, #52101,
-   #52102, #52103, #52120, #52122, #52123, #52146, #52163, #52164, #52173, #52183,
-   #52188, #52192, #52193, #52221, #52222, #52231, #52232, #52234, #52241, #52268,
-   #52280, #52321, #52334, #52338, #52342, #52356, #52378, #52383, #52401, #52460,
-   #52470, #52482, #52517, #52529, #52530, #52531, #52532, #52533, #52534, #52535.
+   See [the docs](https://spack.readthedocs.io/en/latest/installing.html) and
+   [this talk from HPSFCon2026](https://youtu.be/zJ3S9CFJ5ZM?si=UdsPTlGOJ9YxPyZP) for
+   more details.
 
 2. **Concretization Groups**
 
