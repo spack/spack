@@ -620,6 +620,8 @@ def _ensure_package_builders(pkgs, error_cls):
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
             b = spack.builder.buildsystem_name(pkg)
+            if not isinstance(b, str):
+                raise TypeError("invalid builder type {!s}".format(type(b)))
         except Exception as e:
             error_msg = "The package '{}' does not have a build system"
             details = [str(e)]
