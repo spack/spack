@@ -611,6 +611,23 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
 
 
 @package_properties
+def _ensure_package_builders(pkgs, error_cls):
+    """Ensure all packages can produce a builder"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        print(f"Checking {pkg_name}")
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            b = spack.builder.buildsystem_name(pkg)
+        except Exception as e:
+            error_msg = "The package '{}' does not have a build system"
+            details = [str(e)]
+            errors.append(error_cls(error_msg.format(pkg_name), details))
+    return errors
+
+
+@package_properties
 def _ensure_docstring_and_no_fixme(pkgs, error_cls):
     """Ensure the package has a docstring and no fixmes"""
     errors = []
