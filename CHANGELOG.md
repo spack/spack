@@ -175,7 +175,7 @@ See #52334 for more details.
 * `main.py`: deprecate --pdb, drop SIGINT handler (#52281)
 * `main.py`: deprecate --profile flags (#52301)
 * `spack compiler`: remove deprecated `--mixed-toolchain` option (#51726)
-* Remove GPG commands that no longer apply (#52431)
+* deprecate `spack gpg verify` and `spack gpg sign` as unnecessary (#52431)
 * Deprecate `include_concrete:` in favor of `include:`
 
 ## Other notable changes
