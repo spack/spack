@@ -368,7 +368,7 @@ def clean_environment():
         "CUDACXX",
         "CUDAHOSTCXX",
         "CUDAARCHS",
-        "CUDA_NVCC_EXECUTABLE", # CUDA variables
+        "CUDA_NVCC_EXECUTABLE",  # CUDA variables
     ]
     for v in build_system_vars:
         env.unset(v)
