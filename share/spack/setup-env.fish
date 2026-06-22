@@ -112,11 +112,12 @@ end
 function stream_args -d "echos args as a stream"
     # return the elements of `$argv` as an array
     #  -> since we want to be able to call it as part of `set x (shift_args
-    #     $x)`, we return these one-at-a-time using echo... this means that the
+    #     $x)`, we return these one-at-a-time, newline-separated, so that the
     #     sub-command stream will correctly concatenate the output into an array
-    for elt in $argv
-        echo $elt
-    end
+    #  -> use `printf` (not `echo`): `echo` would interpret an argument like
+    #     `-e`, `-n`, or `-E` as one of its own flags and drop it (this is why
+    #     e.g. `spack cd -e default` used to fail in fish)
+    printf '%s\n' $argv
 end
 
 
@@ -133,12 +134,12 @@ function shift_args -d "simulates bash shift"
     else
         # return the next elements `$argv[2..-1]` as an array
         #  -> since we want to be able to call it as part of `set x (shift_args
-        #     $x)`, we return these one-at-a-time using echo... this means that
-        #     the sub-command stream will correctly concatenate the output into
-        #     an array
-        for elt in $argv[2..-1]
-            echo $elt
-        end
+        #     $x)`, we return these one-at-a-time, newline-separated, so that the
+        #     sub-command stream will correctly concatenate the output into an
+        #     array
+        #  -> use `printf` (not `echo`): `echo` would interpret an argument like
+        #     `-e`, `-n`, or `-E` as one of its own flags and drop it
+        printf '%s\n' $argv[2..-1]
     end
 
 end
