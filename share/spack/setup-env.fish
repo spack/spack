@@ -750,6 +750,9 @@ if test -z "$SPACK_SKIP_MODULES"; and begin; type -q module; or type -q use; end
     sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 end
 
+# Add 'spacktivate' abbreviation
+abbr spacktivate "spack env activate"
+
 # Add programmable tab completion for fish
 #
 set -l fish_version (string split '.' $FISH_VERSION)
