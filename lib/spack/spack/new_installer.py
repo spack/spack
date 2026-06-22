@@ -936,6 +936,7 @@ class BuildStatus:
         color: Optional[bool] = None,
         verbose: bool = False,
         filter_padding: bool = False,
+        show_install_path: bool = True,
     ) -> None:
         if stdout is None:
             stdout = cast(io.TextIOWrapper, sys.stdout)
@@ -973,7 +974,7 @@ class BuildStatus:
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
-        self.show_install_path = spack.config.get("config:installer_show_prefix", True)
+        self.show_install_path = show_install_path
         #: When True, suppress all terminal output (process is in background).
         #: Controlling code is responsible for modifying this variable based on process state
         self.headless = False
@@ -2103,6 +2104,7 @@ class PackageInstaller:
             verbose=verbose,
             filter_padding=spack.store.STORE.has_padding(),
             is_tty=TerminalState.stdout_is_interactive(),
+            show_install_path=spack.config.get("config:installer_show_prefix", True),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.build_status.actual_jobs = self.jobs
