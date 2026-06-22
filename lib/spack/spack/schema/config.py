@@ -235,7 +235,7 @@ properties: Dict[str, Any] = {
             },
             "installer_show_prefix": {
                 "type": "boolean",
-                "description": "Whether the new installer prints the installation prefix for completed builds.",
+                "description": "Whether the new installer prints the installation prefix.",
             },
             "sandbox": {
                 "type": "object",
