@@ -99,7 +99,7 @@ def _stage_base_images(images_config):
         image_name, tag = build_info(operating_system, spack_version)
         build_stage = "bootstrap"
         if image_name:
-            build_stage = ":".join([image_name, tag])
+            build_stage = f"{image_name}:{tag}"
 
     # Retrieve the bootstrap stage
     bootstrap_stage = None

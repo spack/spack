@@ -266,8 +266,7 @@ def possible_library_filenames(library_names):
     """
     lib_extensions = library_extensions
     return set(
-        ".".join((lib, extension))
-        for lib, extension in itertools.product(library_names, lib_extensions)
+        f"{lib}.{extension}" for lib, extension in itertools.product(library_names, lib_extensions)
     )
 
 

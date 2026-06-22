@@ -1099,7 +1099,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
             "--name",
             f"spack_reproducer{container_suffix}",
             "-v",
-            ":".join([work_dir, mounted_workdir, "Z"]),
+            f"{work_dir}:{mounted_workdir}:Z",
             "-v",
             ":".join(
                 [

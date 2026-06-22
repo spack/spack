@@ -1189,8 +1189,8 @@ def environment_after_sourcing_files(
         dump_environment_cmd = sys.executable + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
-        source_file_arguments = " ".join(
-            [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
+        source_file_arguments = (
+            f"{source_file} {suppress_output} {concatenate_on_success} {dump_environment_cmd}"
         )
 
         # Popens argument processing can break command invocations

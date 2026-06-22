@@ -173,7 +173,7 @@ class TestPatches:
                 module_patches.append((module_name, name, new_val))
             elif isinstance(target, type):
                 new_val = getattr(target, name)
-                class_fqn = ".".join([target.__module__, target.__name__])
+                class_fqn = f"{target.__module__}.{target.__name__}"
                 class_patches.append((class_fqn, name, new_val))
 
         return TestPatches(module_patches, class_patches)

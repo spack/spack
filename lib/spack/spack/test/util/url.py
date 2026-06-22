@@ -12,7 +12,7 @@ import spack.util.url
 
 @pytest.fixture(params=spack.util.url.ALLOWED_ARCHIVE_TYPES)
 def archive_and_expected(request):
-    archive_name = ".".join(["Foo", request.param])
+    archive_name = f"Foo.{request.param}"
     return archive_name, request.param
 
 

@@ -843,7 +843,7 @@ def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
 def colorize_root(root):
     colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())
     pre, post = map(colorize, "@M[@. @M]@.".split())
-    return "".join([pre, root, post])
+    return f"{pre}{root}{post}"
 
 
 def colorize_spec(spec):
