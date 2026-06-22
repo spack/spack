@@ -271,18 +271,18 @@ class TestPackageInstallerConstructor:
         spec._mark_concrete()
         assert PackageInstaller([spec.package]).capacity == 1
 
-    @pytest.mark.parametrize("show_install_path", [True, False])
-    def test_show_install_path_from_config(
-        self, temporary_store, mock_packages, mutable_config, show_install_path
+    @pytest.mark.parametrize("show_install_prefix", [True, False])
+    def test_show_install_prefix_from_config(
+        self, temporary_store, mock_packages, mutable_config, show_install_prefix
     ):
-        """Test that BuildStatus show_install_path is initialized from config."""
-        mutable_config.set("config:installer_show_prefix", show_install_path)
+        """Test that BuildStatus show_install_prefix is initialized from config."""
+        mutable_config.set("config:installer_show_prefix", show_install_prefix)
         spec = spack.spec.Spec("trivial-install-test-package")
         spec._mark_concrete()
 
         installer = PackageInstaller([spec.package])
 
-        assert installer.build_status.show_install_path is show_install_path
+        assert installer.build_status.show_install_prefix is show_install_prefix
 
     def test_no_binary_mirrors_forces_source_only(
         self, temporary_store, mock_packages, mutable_config
