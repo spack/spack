@@ -393,7 +393,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a isolate -d 'isola
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list and check license headers on files in spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and search available packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a location -d 'print out locations of packages and spack directories'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a location -d 'print package/dir locations (deprecated; use spack path)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a log-parse -d 'filter errors and warnings from build logs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a logs -d 'print out logs for packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a maintainers -d 'get information about package maintainers'
@@ -402,6 +402,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark pac
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mirror -d 'manage mirrors (source and binary)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a module -d 'generate/manage module files'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded sources in preparation for install'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a path -d 'print paths of packages and spack directories'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a pkg -d 'query packages associated with particular git revisions'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a providers -d 'list packages that provide a particular virtual package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a pydoc -d 'run pydoc from within spack'
@@ -2725,6 +2726,36 @@ complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-
 complete -c spack -n '__fish_spack_using_command patch' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command patch' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command patch' -l deprecated -d 'allow concretizer to select deprecated versions'
+
+# spack path
+set -g __fish_spack_optspecs_spack_path h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 path' -f -k -a '(__fish_spack_specs)'
+complete -c spack -n '__fish_spack_using_command path' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command path' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command path' -s m -l module-dir -f -a module_dir
+complete -c spack -n '__fish_spack_using_command path' -s m -l module-dir -d 'spack python module directory'
+complete -c spack -n '__fish_spack_using_command path' -s r -l spack-root -f -a spack_root
+complete -c spack -n '__fish_spack_using_command path' -s r -l spack-root -d 'spack installation root'
+complete -c spack -n '__fish_spack_using_command path' -s i -l install-dir -f -a install_dir
+complete -c spack -n '__fish_spack_using_command path' -s i -l install-dir -d 'install prefix for spec (spec need not be installed)'
+complete -c spack -n '__fish_spack_using_command path' -s p -l package-dir -f -a package_dir
+complete -c spack -n '__fish_spack_using_command path' -s p -l package-dir -d 'directory enclosing a spec'"'"'s package.py file'
+complete -c spack -n '__fish_spack_using_command path' -l repo -l packages -s P -r -f -a repo
+complete -c spack -n '__fish_spack_using_command path' -l repo -l packages -s P -r -d 'package repository root (defaults to first configured repository)'
+complete -c spack -n '__fish_spack_using_command path' -s s -l stage-dir -f -a stage_dir
+complete -c spack -n '__fish_spack_using_command path' -s s -l stage-dir -d 'stage directory for a spec'
+complete -c spack -n '__fish_spack_using_command path' -s S -l stages -f -a stages
+complete -c spack -n '__fish_spack_using_command path' -s S -l stages -d 'top level stage directory'
+complete -c spack -n '__fish_spack_using_command path' -s c -l source-dir -f -a source_dir
+complete -c spack -n '__fish_spack_using_command path' -s c -l source-dir -d 'source directory for a spec (requires it to be staged first)'
+complete -c spack -n '__fish_spack_using_command path' -s b -l build-dir -f -a build_dir
+complete -c spack -n '__fish_spack_using_command path' -s b -l build-dir -d 'build directory for a spec (requires it to be staged first)'
+complete -c spack -n '__fish_spack_using_command path' -s e -l env -r -f -a location_env
+complete -c spack -n '__fish_spack_using_command path' -s e -l env -r -d 'location of the named or current environment'
+complete -c spack -n '__fish_spack_using_command path' -s v -l view -r -f -a location_view
+complete -c spack -n '__fish_spack_using_command path' -s v -l view -r -d 'location of the named or active environment view'
+complete -c spack -n '__fish_spack_using_command path' -l first -f -a find_first
+complete -c spack -n '__fish_spack_using_command path' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack pkg
 set -g __fish_spack_optspecs_spack_pkg h/help

@@ -43,7 +43,7 @@ To locate the package prefix, run:
 
 .. code-block:: console
 
-   $ spack location -i <package>
+   $ spack path <package>
 
 This feature adds a new field in the package template: ``supplier``.
 The supplier field refers to organization, project, or individual responsible for distributing the software.

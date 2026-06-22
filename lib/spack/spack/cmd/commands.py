@@ -366,7 +366,7 @@ _dest_to_fish_complete = {
     ("", "extendable"): "-f -a '(__fish_spack_extensions)'",
     ("", "installed_specs?"): "-f -a '(__fish_spack_installed_specs)'",
     ("", "job_url"): "-f",
-    ("", "location_env"): "-f -a '(__fish_complete_directories)'",
+    ("", "path_env"): "-f -a '(__fish_complete_directories)'",
     ("", "pytest_args"): "-f -a '(__fish_spack_unit_tests)'",
     ("", "package_or_file"): "$__fish_spack_force_files -a '(__fish_spack_packages)'",
     ("", "package_or_user"): "-f -a '(__fish_spack_packages)'",
