@@ -431,10 +431,12 @@ class BaseConfiguration:
         spec = self.spec
         conf = self.configuration(self.name)
 
-        # Compute the list of matching include / exclude rules, and whether excluded as implicit
+        # Compute the list of matching include / exclude rules,
+        # and whether excluded as implicit or external
         include_matches = [x for x in conf.get("include", []) if spec.satisfies(x)]
         exclude_matches = [x for x in conf.get("exclude", []) if spec.satisfies(x)]
         excluded_as_implicit = not self.explicit and conf.get("exclude_implicits", False)
+        excluded_as_external = spec.external and conf.get("exclude_externals", False)
 
         def debug_info(line_header, match_list):
             if match_list:
@@ -448,7 +450,12 @@ class BaseConfiguration:
         if excluded_as_implicit:
             tty.debug(f"\tEXCLUDED_AS_IMPLICIT : {spec.cshort_spec}")
 
-        return not include_matches and (exclude_matches or excluded_as_implicit)
+        if excluded_as_external:
+            tty.debug(f"\tEXCLUDED_AS_EXTERNAL : {spec.cshort_spec}")
+
+        return not include_matches and (
+            exclude_matches or excluded_as_implicit or excluded_as_external
+        )
 
     @property
     def hidden(self):

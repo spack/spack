@@ -104,6 +104,12 @@ common_props = {
         "description": "Exclude implicit dependencies from module file generation while still "
         "allowing autoloading",
     },
+    "exclude_externals": {
+        "type": "boolean",
+        "default": False,
+        "description": "Exclude external dependencies from module file generation while still "
+        "allowing autoloading",
+    },
     "defaults": {
         **array_of_strings,
         "description": "List of specs for which to create default module symlinks when multiple "
