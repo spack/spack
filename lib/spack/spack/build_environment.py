@@ -363,6 +363,12 @@ def clean_environment():
         "FCLIBS",  # Fortran variables
         "LDFLAGS",
         "LIBS",  # linker variables
+        "CUDAFLAGS",
+        "CUDA_PATH",
+        "CUDACXX",
+        "CUDAHOSTCXX",
+        "CUDAARCHS",
+        "CUDA_NVCC_EXECUTABLE", # CUDA variables
     ]
     for v in build_system_vars:
         env.unset(v)
