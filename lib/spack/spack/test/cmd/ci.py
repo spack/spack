@@ -1621,6 +1621,7 @@ spack:
   - path: {rel_configs_path}
   - {configs_path}
   - when: 'False'
+    sha256: "theactualvaluedoesnotmatterhere"
     path: https://dummy.io
   view: false
   specs:

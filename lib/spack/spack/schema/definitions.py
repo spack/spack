@@ -10,7 +10,36 @@
 
 from typing import Any, Dict
 
-from .spec_list import spec_list_schema
+matrix_properties = {
+    "matrix": {
+        "type": "array",
+        "description": "List of spec constraint lists whose cross product generate multiple specs",
+        "items": {
+            "type": "array",
+            "description": "List of spec constraints for this matrix dimension",
+            "items": {"type": "string"},
+        },
+    },
+    "exclude": {
+        "type": "array",
+        "description": "List of specific spec combinations to exclude from the matrix",
+        "items": {"type": "string"},
+    },
+}
+
+
+definition_list_options = [
+    {
+        "type": "object",
+        "description": "Matrix configuration for generating multiple specs from "
+        "combinations of constraints",
+        "additionalProperties": False,
+        "properties": {**matrix_properties},
+    },
+    {"type": "string", "description": "Simple spec string"},
+    {"type": "null"},
+]
+
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {
@@ -31,7 +60,13 @@ properties: Dict[str, Any] = {
                     "variables: platform, os, target, arch, arch_str, re, env, hostname",
                 }
             },
-            "additionalProperties": spec_list_schema,
+            "additionalProperties": {
+                "type": "array",
+                "description": "List of specs in a definition, supporting both simple specs and "
+                "matrix configurations",
+                "default": [],
+                "items": {"anyOf": definition_list_options},
+            },
         },
     }
 }

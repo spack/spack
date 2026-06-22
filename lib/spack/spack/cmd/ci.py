@@ -16,7 +16,6 @@ import spack.cmd
 import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
-import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
@@ -264,12 +263,12 @@ def ci_reindex(args):
     mirror
     """
     env = spack.cmd.require_active_env(args.subparser)
-    yaml_root = env.manifest[ev.TOP_LEVEL_KEY]
+    with env:
+        ci_mirrors = cfg.CONFIG.get("mirrors", default={}, scope=env.scope_name)
 
-    if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
+    if not ci_mirrors:
         tty.die("spack ci rebuild-index requires an env containing a mirror")
 
-    ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
     mirror = spack.mirrors.mirror.Mirror(remote_mirror_url)

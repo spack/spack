@@ -62,6 +62,20 @@ The contents of the downloaded file are read and included in Spack's configurati
 
    You can check the destination of the downloaded file by running: ``spack config scopes -p``.
 
+You can override the default download directory by including a ``destination``.
+For example::
+
+   include:
+   - path: https://github.com/path/to/raw/config/config.yaml
+     sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
+     destination: $HOME/my/custom/remote/cache/directory  # optional
+
+will download the file under ``$HOME/my/custom/remote/cache/directory``.
+
+.. versionadded:: 1.2
+   optional ``destination:`` attribute.
+
+
 .. warning::
 
    Remote file URLs must link to the **raw** form of the file's contents (e.g., `GitHub <https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_ or `GitLab <https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_).
@@ -75,52 +89,65 @@ The contents of the downloaded file are read and included in Spack's configurati
 You can also include configuration files from a ``git`` repository.
 The ``branch``, ``commit``, or ``tag`` to be checked out is required.
 A list of relative paths in which to find the configuration files is also required.
+
+We recommend a ``commit`` be specified when using a ``tag``.
 Inclusion of the repository (and its paths) can be optional or conditional.
+You can also add a ``destination`` to specify the local root directory.
 If you want to control the :ref:`name of the configuration scope <named-config-scopes>`, you can provide a ``name``.
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
-And we want the configuration scope name to start ``common``.
-We could then configure the include in, for example, the user scope include file (i.e., ``$HOME/.spack/include.yaml`` by default), as follows::
+In this example, we name the include ``USC``, resulting in scopes named ``USC/config/config.yaml`` and ``USC/config/packages.yaml`` (combining the include name with the relative path).
+In this example, we also specify the files to be cached in ``$HOME/my_usc_includes``.
+
+.. code-block:: yaml
 
    include:
-   - name: common
+   - name: USC  # optional
      git: https://github.com/spack/spack-configs.git
      branch: main
      when: os == "centos7"
      paths:
      - USC/config/config.yaml
      - USC/config/packages.yaml
+     destination: $HOME/my_usc_includes  # optional
 
 .. note::
 
-   The git URL could be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
+   The git URL could also be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
 
-If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$HOME/.spack/includes`` -- when configuration scopes are initially created.
-Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
-In this example, the new scopes and their paths can be seen by running::
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
+The resulting repository can be found under ``$HOME/my_usc_includes``.
+
+Once cloned, the settings for the two files under the ``$HOME/my_usc_includes/USC/config`` subdirectory will be integrated into Spack's configuration.
+
+In this example, the new scopes can be seen by running::
 
    $ spack config scopes -p
-   Scope               Path
+   Scope                     Path
    command_line
-   spack                           /Users/username/spack/etc/spack/
-   user                            /Users/username/.spack/
-   common:USC/config/config.yaml   /Users/username/.spack/includes/common/USC/config/config.yaml
-   common:USC/config/packages.yaml /Users/username/.spack/includes/common/USC/config/packages.yaml
-   site                            /Users/username/spack/etc/spack/site/
-   system                          /etc/spack/
-   defaults                        /Users/username/spack/etc/spack/defaults/
-   defaults:darwin                 /Users/username/spack/etc/spack/defaults/darwin/
-   defaults:base                   /Users/username/spack/etc/spack/defaults/base/
+   spack                     /Users/username/spack/etc/spack/
+   user                      /Users/username/.spack/
+   USC/config/config.yaml    /Users/username/my_usc_includes/USC/config/config.yaml
+   USC/config/packages.yaml  /Users/username/my_usc_includes/USC/config/packages.yaml
+   site                      /Users/username/spack/etc/spack/site/
+   system                    /etc/spack/
+   defaults                  /Users/username/spack/etc/spack/defaults/
+   defaults:darwin           /Users/username/spack/etc/spack/defaults/darwin/
+   defaults:base             /Users/username/spack/etc/spack/defaults/base/
    _builtin
 
 Since there are two unique paths, each results in a separate configuration scope.
 If only the ``USC/config`` directory was listed under ``paths``, then there would be only one configuration scope, named ``USC``, and the configuration settings from all of the configuration files within that directory would be integrated.
 
+Had a list of relative paths to the configuration files not been provided, the root directory of the repository is checked for suitable files.
+The default behavior is to select the environment manifest (``spack.yaml``) file, if present.
+Otherwise, all known ``<configuration-section>.yaml`` files (see :ref:`configuration`) at the root directory will be used.
+
 .. versionadded:: 1.1
    ``git:``, ``branch:``, ``commit:``, and ``tag:`` attributes.
 
 .. versionadded:: 1.2
-   ``name:`` attribute and git environment variable support.
+   ``name:`` and ``destination:`` attributes, git environment variable support, and support for including ``spack.yaml`` files.
 
 Precedence
 ~~~~~~~~~~

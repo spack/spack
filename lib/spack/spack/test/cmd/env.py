@@ -814,7 +814,7 @@ def test_bad_remove_included_env():
     env("create", "--include-concrete", "test", "combined_env")
 
     with pytest.raises(SpackCommandError):
-        env("remove", "test")
+        env("remove", "-y", "test")
 
 
 def test_force_remove_included_env():
@@ -1083,12 +1083,7 @@ def test_init_from_env_no_spackfile(tmp_path):
 
 
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
-    files = [
-        "relative_copied/packages.yaml",
-        "./relative_copied/compilers.yaml",
-        "repos.yaml",
-        "./config.yaml",
-    ]
+    files = ["relative/packages.yaml", "./relative/compilers.yaml", "repos.yaml", "./config.yaml"]
 
     manifest = f"""
 spack:
@@ -1106,14 +1101,15 @@ spack:
         (e1_path / f).parent.mkdir(parents=True, exist_ok=True)
         (e1_path / f).touch()
 
-    e2 = _env_create("test2", init_file=str(e1_manifest))
+    e2 = ev.create("test2", init_file=str(e1_manifest))
 
-    for f in files:
-        assert os.path.exists(os.path.join(e2.path, f))
+    # Check new environment's (manifest) includes, all of which are simple
+    # file includes.
+    new_env_includes = e2.manifest.configuration.get("include", [])
+    for orig, new in zip(files, new_env_includes):
+        assert new.endswith(orig.strip("./"))
 
 
-# TODO: Should we be supporting relative path rewrites when creating new env from existing?
-# TODO: If so, then this should confirm that the absolute include paths in the new env exist.
 def test_init_from_yaml_relative_includes_outside_env(tmp_path: pathlib.Path):
     """Ensure relative includes to files outside the environment fail."""
     files = ["../outside_env/repos.yaml"]
@@ -1344,13 +1340,13 @@ packages:
 def mpileaks_env_config(include_path):
     """Return the contents of an environment that includes the provided
     path and lists mpileaks as the sole spec."""
-    return """\
+    return f"""\
 spack:
   include:
-  - {0}
+  - {include_path}
   specs:
   - mpileaks
-""".format(include_path)
+"""
 
 
 def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
@@ -1509,7 +1505,7 @@ def test_env_with_included_config_file_url(
 
     spack_yaml = tmp_path / "spack.yaml"
     with spack_yaml.open("w") as f:
-        f.write("spack:\n  include:\n    - {0}\n".format(packages_file.as_uri()))
+        f.write(f"spack:\n  include:\n    - {packages_file.as_uri()}\n")
 
     env = ev.Environment(str(tmp_path))
     ev.activate(env)
@@ -2069,8 +2065,8 @@ def test_env_include_concrete_env_yaml(env_name):
     combined = ev.read("combined_env")
     combined_yaml = combined.manifest["spack"]
 
-    assert ev.lockfile_include_key in combined_yaml
-    assert test.path in combined_yaml[ev.lockfile_include_key]
+    assert ev.manifest_include_name in combined_yaml
+    assert test.lock_path in combined_yaml[ev.manifest_include_name]
 
 
 @pytest.mark.regression("45766")
@@ -2105,8 +2101,8 @@ def test_env_multiple_include_concrete_envs():
 
     combined_yaml = combined.manifest["spack"]
 
-    assert test1.path in combined_yaml[ev.lockfile_include_key][0]
-    assert test2.path in combined_yaml[ev.lockfile_include_key][1]
+    assert test1.path in combined_yaml[ev.manifest_include_name][0]
+    assert test2.path in combined_yaml[ev.manifest_include_name][1]
 
     # No local specs in the combined env
     assert not combined_yaml["specs"]
@@ -2117,8 +2113,8 @@ def test_env_include_concrete_envs_lockfile():
 
     combined_yaml = combined.manifest["spack"]
 
-    assert ev.lockfile_include_key in combined_yaml
-    assert test1.path in combined_yaml[ev.lockfile_include_key]
+    assert ev.manifest_include_name in combined_yaml
+    assert test1.lock_path in combined_yaml[ev.manifest_include_name]
 
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
@@ -2221,9 +2217,12 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
     # include concrete spec vs reuse due to the reuse configuration
     _config["concretizer"].update({"unify": False})
 
-    combined_env.manifest.configuration.update(_config)
-    combined_env.manifest.changed = True
-    combined_env.write()
+    with combined_env.manifest.use_config():
+        spack.config.CONFIG.set(
+            "concretizer",
+            _config["concretizer"],
+            scope=combined_env.manifest.env_config_scope.name,
+        )
 
     return override_env
 
@@ -4803,6 +4802,131 @@ spack:
             # Assertions are based on the behavior of the "--fake" install
             bin_file = pathlib.Path(test.default_view.view()._root) / "bin" / item.root.name
             assert not bin_file.exists() if item.group == "apps2" else bin_file.exists()
+
+
+def test_env_include_envs(tmp_path, mock_packages, mutable_config, environment_from_manifest):
+    """Confirm that an environment that includes two other environments
+    picks up the specs from both."""
+    specs_template = """\
+spack:
+  specs:
+  - {0}
+"""
+
+    specs = ["libdwarf", "mpileaks"]
+    paths = []
+    includes_dir = tmp_path / "includes"
+    for pkg in specs:
+        include = includes_dir / pkg / ev.manifest_name
+        fs.mkdirp(include.parent)
+        include.write_text(specs_template.format(pkg))
+        paths.append(str(include))
+
+    include_condition = 'platform == "test"'
+
+    e = environment_from_manifest(
+        f"""\
+spack:
+  include:
+  - path: {paths[0]}
+    when: {include_condition}
+  - path: {paths[1]}
+    when: {include_condition}
+"""
+    )
+
+    expected = [Spec(s) for s in specs]
+    with e:
+        config_specs = spack.config.CONFIG.get("specs", [])
+        assert config_specs == specs
+        assert e.user_specs.specs == expected
+
+
+def test_env_include_env_pkgs_def(
+    tmp_path, mock_packages, mutable_config, environment_from_manifest
+):
+    """Confirm that an environment that lists specs and includes an environment
+    with a definition for an additional spec includes that extra spec."""
+    spack_yaml = """\
+spack:
+  definitions:
+  - packages: ["libdwarf"]
+  specs:
+  - $packages
+"""
+
+    includes_dir = tmp_path / "includes"
+    fs.mkdirp(includes_dir)
+    include = includes_dir / ev.manifest_name
+    include.write_text(spack_yaml)
+
+    env_yaml = f"""\
+spack:
+  specs:
+  - libelf@0.8.10
+  - mpileaks
+  include:
+  - {include}
+"""
+    e = environment_from_manifest(env_yaml)
+
+    specs = ["libelf@0.8.10", "mpileaks", "libdwarf"]
+    expected = [Spec(s) for s in specs]
+
+    with e:
+        assert e.user_specs.specs == expected
+
+    # Confirm manifest contents include explicit and not included specs
+    e.write()
+    with open(e.manifest.manifest_file, "r", encoding="utf-8") as f:
+        contents = f.read()
+
+    assert "libelf@0.8.10" in contents
+    assert "mpileaks" in contents
+    assert "libdwarf" not in contents
+
+
+def test_env_include_env_pkgs_dup_defs(
+    tmp_path, mock_packages, mutable_config, environment_from_manifest
+):
+    """Confirm that an environment that uses a definition with spec(s) and
+    includes another environment with the same definition but different spec(s),
+    results in user specs from both files."""
+    spack_yaml = """\
+spack:
+  definitions:
+  - packages: ["libelf"]
+  specs:
+  - $packages
+"""
+
+    includes_dir = tmp_path / "includes"
+    fs.mkdirp(includes_dir)
+    include = includes_dir / ev.manifest_name
+    include.write_text(spack_yaml)
+
+    env_yaml = f"""\
+spack:
+  definitions:
+  - packages: ["libdwarf"]
+  specs:
+  - $packages
+  include:
+  - {include}
+"""
+    e = environment_from_manifest(env_yaml)
+
+    user_specs = e.user_specs
+    for spec in ["libelf", "libdwarf"]:
+        assert Spec(spec) in user_specs
+
+    # Confirm manifest only includes the expected (not included) spec
+    e.write()
+    with open(e.manifest.manifest_file, "r", encoding="utf-8") as f:
+        contents = f.read()
+
+    assert "libdwarf" in contents
+    assert "libelf" not in contents
 
 
 def test_env_include_concrete_only(tmp_path, mock_packages, mutable_config):

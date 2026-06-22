@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
+import spack.error
 import spack.package_base
 import spack.spec
 import spack.store
@@ -165,7 +166,16 @@ def dependent_environments(
 
     # Mapping from Environment -> non-zero list of specs contained in it.
     other_envs_to_specs: Dict[ev.Environment, List[spack.spec.Spec]] = {}
-    for other_env in (ev.Environment(ev.root(name)) for name in env_names):
+
+    for env_name in env_names:
+        # Skip any environment we cannot instantiate
+        try:
+            other_env = ev.Environment(ev.root(env_name))
+        except (spack.error.ConfigError, ev.SpackEnvironmentError) as e:
+            msg = f"Skipping invalid environment {env_name}. {e}"
+            tty.warn(msg)
+            continue
+
         specs_in_other_env = all_specs_in_env(other_env, specs)
         if specs_in_other_env:
             other_envs_to_specs[other_env] = specs_in_other_env

@@ -292,7 +292,6 @@ def test_include_recurse_limit(tmp_path: pathlib.Path, mutable_config):
         spack.main.add_command_line_scopes(mutable_config, [os.path.dirname(include_path)])
 
 
-# TODO: Fix this once recursive includes are processed in the expected order.
 @pytest.mark.parametrize("child,expected", [("b", True), ("c", False)])
 def test_include_recurse_diamond(tmp_path: pathlib.Path, mutable_config, child, expected):
     """Demonstrate include parent's value overrides that of child in diamond include.
@@ -314,7 +313,8 @@ def test_include_recurse_diamond(tmp_path: pathlib.Path, mutable_config, child, 
         values = indent.join([str(p) for p in paths])
         return f"include:{indent}{values}"
 
-    a_yaml = tmp_path / "a.yaml"
+    # DirectoryConfigScopes are required to contain file(s) named after the section
+    a_yaml = tmp_path / "include.yaml"
     b_yaml = configs_root / "b.yaml"
     c_yaml = configs_root / "c.yaml"
     d_yaml = configs_root / "d.yaml"
@@ -335,7 +335,4 @@ include:
 
     spack.main.add_command_line_scopes(mutable_config, [str(tmp_path)])
 
-    try:
-        assert mutable_config.get("config:debug") is expected
-    except AssertionError:
-        pytest.xfail("recursive includes are not processed in the expected order")
+    assert mutable_config.get("config:debug") is expected

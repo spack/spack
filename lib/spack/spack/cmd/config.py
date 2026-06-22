@@ -239,6 +239,7 @@ def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     """
     env = ev.active_environment()
     if env is not None:
+        # Preserves deprecated env fields that are not config
         pristine = env.manifest.yaml_content
         flattened = pristine.copy()
         flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
