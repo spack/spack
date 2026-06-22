@@ -929,6 +929,11 @@ class Configuration:
         parts = process_config_path(path)
         section = parts.pop(0)
 
+        # Handle setting an entire section's value (e.g., "upstreams:{}" or "upstreams::{}").
+        if len(parts) == 0:
+            self.update_config(section, value, scope=scope)
+            return
+
         section_data = self.get_config(section, scope=scope)
 
         data = section_data
