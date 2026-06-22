@@ -57,7 +57,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def _process_result(result, show, required_format, kwargs):
     opt, _, _ = min(result.answers)
     if ("opt" in show) and (not required_format):
-        tty.msg("Best of %d considered solutions." % result.nmodels)
+        tty.msg(f"Best of {result.nmodels} considered solutions.")
 
         print()
         maxlen = max(len(s.name) for s in result.criteria)
@@ -142,8 +142,9 @@ def solve(parser, args):
     for d in show:
         if d not in show_options:
             raise ValueError(
-                "Invalid option for '--show': '%s'\nchoose from: (%s)"
-                % (d, ", ".join(show_options + ("all",)))
+                "Invalid option for '--show': '{}'\nchoose from: ({})".format(
+                    d, ", ".join(show_options + ("all",))
+                )
             )
 
     # Format required for the output (JSON, YAML or None)
@@ -174,10 +175,10 @@ def solve(parser, args):
             )
         ):
             if "solutions" in show:
-                tty.msg("ROUND {0}".format(idx))
+                tty.msg(f"ROUND {idx}")
                 tty.msg("")
             else:
-                print("% END ROUND {0}\n".format(idx))
+                print(f"% END ROUND {idx}\n")
             if not setup_only:
                 _process_result(result, show, required_format, kwargs)
     elif unify:

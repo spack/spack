@@ -19,9 +19,9 @@ def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:
     try:
         return open(path, "r", encoding="utf-8")
     except IsADirectoryError:
-        raise CacheError("Cache file is not a file: %s" % path)
+        raise CacheError(f"Cache file is not a file: {path}")
     except PermissionError:
-        raise CacheError("Cannot access cache file: %s" % path)
+        raise CacheError(f"Cannot access cache file: {path}")
     except FileNotFoundError:
         return None
 

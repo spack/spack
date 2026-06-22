@@ -91,7 +91,7 @@ spack_instance_id = hash.b32_hash(spack_root)[:7]
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
+    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or f"~{os.sep}.spack")
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
@@ -128,7 +128,7 @@ default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cach
 
 # User configuration and caches in $HOME/.spack
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or "~%s.spack" % os.sep)
+    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or f"~{os.sep}.spack")
 
 
 # Configuration in /etc/spack on the system

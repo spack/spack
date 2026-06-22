@@ -71,7 +71,7 @@ def find_matching_specs(
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
-            tty.error("{0} matches multiple packages:".format(spec))
+            tty.error(f"{spec} matches multiple packages:")
             sys.stderr.write("\n")
             spack.cmd.display_specs(matching, output=sys.stderr, **display_args)
             sys.stderr.write("\n")

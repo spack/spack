@@ -48,9 +48,9 @@ import spack.url
         ),
         # No separator between the name and version of the package
         (
-            "file://{0}/turbolinux702.tar.gz".format(os.getcwd()),
+            f"file://{os.getcwd()}/turbolinux702.tar.gz",
             "703",
-            "file://{0}/turbolinux703.tar.gz".format(os.getcwd()),
+            f"file://{os.getcwd()}/turbolinux703.tar.gz",
         ),
         (
             "https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true",

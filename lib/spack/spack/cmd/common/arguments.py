@@ -368,7 +368,9 @@ def deptype():
         "--deptype",
         action=DeptypeAction,
         default=dt.ALL,
-        help="comma-separated list of deptypes to traverse (default=%s)" % ",".join(dt.ALL_TYPES),
+        help="comma-separated list of deptypes to traverse (default={})".format(
+            ",".join(dt.ALL_TYPES)
+        ),
     )
 
 

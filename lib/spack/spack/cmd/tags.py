@@ -23,8 +23,8 @@ def report_tags(category, tags):
 
     if isatty:
         num = len(tags)
-        fmt = "{0} package tag".format(category)
-        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
+        fmt = f"{category} package tag"
+        buffer.write(f"{spack.util.string.plural(num, fmt)}:\n")
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)
@@ -97,12 +97,12 @@ def tags(parser, args):
         # TODO: tag cache since it can accumulate duplicates.
         packages = sorted(list(set(tag_pkgs[tag])))
         if isatty:
-            buffer.write("{0}:\n".format(tag))
+            buffer.write(f"{tag}:\n")
 
         if packages:
             colify.colify(packages, output=buffer, tty=isatty, indent=4)
         else:
-            buffer.write("    {0}\n".format(missing))
+            buffer.write(f"    {missing}\n")
         buffer.write("\n")
     print(buffer.getvalue())
 

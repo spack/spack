@@ -128,7 +128,7 @@ def parse_string_components(string: str) -> Tuple[VersionTuple, SeparatorTuple]:
     string = string.strip()
 
     if string and not VALID_VERSION.match(string):
-        raise ValueError("Bad characters in version string: %s" % string)
+        raise ValueError(f"Bad characters in version string: {string}")
 
     segments = SEGMENT_REGEX.findall(string)
     separators: Tuple[str] = tuple([m[2] for m in segments])
@@ -1004,7 +1004,7 @@ class VersionList(VersionType):
                 self.versions.insert(i, item)
 
         else:
-            raise TypeError("Can't add %s to VersionList" % type(item))
+            raise TypeError(f"Can't add {type(item)} to VersionList")
 
     @property
     def concrete(self) -> Optional[ConcreteVersion]:
@@ -1354,7 +1354,7 @@ def ver(obj: Union[VersionType, str, list, tuple, int, float]) -> VersionType:
     elif isinstance(obj, (int, float)):
         return from_string(str(obj))
     else:
-        raise TypeError("ver() can't convert %s to version!" % type(obj))
+        raise TypeError(f"ver() can't convert {type(obj)} to version!")
 
 
 _STANDARD_VERSION_TYPEMIN = StandardVersion("", ((), (ALPHA,)), ("",))

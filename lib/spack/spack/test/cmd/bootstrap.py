@@ -22,7 +22,7 @@ _bootstrap = spack.main.SpackCommand("bootstrap")
 def test_enable_and_disable(mutable_config, scope):
     scope_args = []
     if scope:
-        scope_args = ["--scope={0}".format(scope)]
+        scope_args = [f"--scope={scope}"]
 
     _bootstrap("enable", *scope_args)
     assert spack.config.get("bootstrap:enable", scope=scope) is True
@@ -35,7 +35,7 @@ def test_enable_and_disable(mutable_config, scope):
 def test_root_get_and_set(mutable_config, tmp_path, scope):
     scope_args, path = [], str(tmp_path)
     if scope:
-        scope_args = ["--scope={0}".format(scope)]
+        scope_args = [f"--scope={scope}"]
 
     _bootstrap("root", path, *scope_args)
     out = _bootstrap("root", *scope_args)
@@ -47,7 +47,7 @@ def test_reset_in_file_scopes(mutable_config, scopes):
     # Assert files are created in the right scopes
     bootstrap_yaml_files = []
     for s in scopes:
-        _bootstrap("disable", "--scope={0}".format(s))
+        _bootstrap("disable", f"--scope={s}")
         scope_path = spack.config.CONFIG.scopes[s].path
         bootstrap_yaml = os.path.join(scope_path, "bootstrap.yaml")
         assert os.path.exists(bootstrap_yaml)
@@ -187,7 +187,7 @@ def test_bootstrap_mirror_metadata(mutable_config, linux_os, monkeypatch, tmp_pa
         {
             "compiler": {
                 "spec": "gcc@12.0.1",
-                "operating_system": "{0.name}{0.version}".format(linux_os),
+                "operating_system": f"{linux_os.name}{linux_os.version}",
                 "modules": [],
                 "paths": {
                     "cc": "/usr/bin",

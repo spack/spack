@@ -57,7 +57,7 @@ class PackageNotInstalledError(RewireError):
 
     def __init__(self, spliced_spec, build_spec, dep):
         super().__init__(
-            """Rewire of {0}
-            failed due to missing install of build spec {1}
-            for spec {2}""".format(spliced_spec, build_spec, dep)
+            f"""Rewire of {spliced_spec}
+            failed due to missing install of build spec {build_spec}
+            for spec {dep}"""
         )

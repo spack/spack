@@ -198,8 +198,8 @@ class FilePatch(Patch):
                 break
 
         if abs_path is None:
-            msg = "FilePatch: Patch file %s for " % relative_path
-            msg += "package %s.%s does not exist." % (pkg.namespace, pkg.name)
+            msg = f"FilePatch: Patch file {relative_path} for "
+            msg += f"package {pkg.namespace}.{pkg.name} does not exist."
             raise ValueError(msg)
 
         super().__init__(pkg, abs_path, level, working_dir, reverse, ordering_key)
@@ -272,7 +272,7 @@ class UrlPatch(Patch):
         if allowed_archive(self.url) and not archive_sha256:
             raise spack.error.PatchDirectiveError(
                 "Compressed patches require 'archive_sha256' "
-                "and patch 'sha256' attributes: %s" % self.url
+                f"and patch 'sha256' attributes: {self.url}"
             )
         self.archive_sha256 = archive_sha256
 
@@ -353,13 +353,13 @@ def from_dict(dictionary: Dict[str, Any], repository: "spack.repo.RepoPath") -> 
         checker = Checker(sha256)
         if patch.path and not checker.check(patch.path):
             raise spack.fetch_strategy.ChecksumError(
-                "sha256 checksum failed for %s" % patch.path,
-                "Expected %s but got %s " % (sha256, checker.sum)
-                + "Patch may have changed since concretization.",
+                f"sha256 checksum failed for {patch.path}",
+                f"Expected {sha256} but got {checker.sum} "
+                "Patch may have changed since concretization.",
             )
         return patch
     else:
-        raise ValueError("Invalid patch dictionary: %s" % dictionary)
+        raise ValueError(f"Invalid patch dictionary: {dictionary}")
 
 
 class PatchCache:

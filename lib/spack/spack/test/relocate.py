@@ -133,7 +133,7 @@ def test_relocate_text_bin(binary_with_rpaths, prefix_like):
     spack.relocate.relocate_text_bin([str(executable)], {prefix_bytes: new_prefix_bytes})
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
+    assert f"{new_prefix}/lib:{new_prefix}/lib64" in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables("patchelf", "gcc")

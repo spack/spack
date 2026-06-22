@@ -63,7 +63,7 @@ def sbang_shebang_line():
     This should be the only place in Spack that knows about what
     interpreter we use for ``sbang``.
     """
-    return "#!/bin/sh %s" % sbang_install_path()
+    return f"#!/bin/sh {sbang_install_path()}"
 
 
 def get_interpreter(binary_string):
@@ -175,7 +175,7 @@ def filter_shebangs_in_directory(directory, filenames=None):
 
         # test the file for a long shebang, and filter
         if filter_shebang(path):
-            tty.debug("Patched overlong shebang in %s" % path)
+            tty.debug(f"Patched overlong shebang in {path}")
 
 
 def post_install(spec, explicit=None):

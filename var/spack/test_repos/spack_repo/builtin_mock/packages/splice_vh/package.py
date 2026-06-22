@@ -26,5 +26,5 @@ class SpliceVh(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-vh"), "w", encoding="utf-8") as f:
-            f.write("splice-vh: {0}".format(prefix))
+            f.write(f"splice-vh: {prefix}")
             f.write("splice-z: {0}".format(spec["splice-z"].prefix))

@@ -487,7 +487,7 @@ HDF5 version {version} {version}
 
     def _test_check_versions(self):
         """Perform version checks on selected installed package binaries."""
-        spec_vers_str = "Version {0}".format(self.spec.version)
+        spec_vers_str = f"Version {self.spec.version}"
 
         exes = [
             "h5copy",
@@ -502,7 +502,7 @@ HDF5 version {version} {version}
         ]
         use_short_opt = ["h52gif", "h5repart", "h5unjam"]
         for exe in exes:
-            reason = "test: ensuring version of {0} is {1}".format(exe, spec_vers_str)
+            reason = f"test: ensuring version of {exe} is {spec_vers_str}"
             option = "-V" if exe in use_short_opt else "--version"
             self.run_test(
                 exe, option, spec_vers_str, installed=True, purpose=reason, skip_missing=True

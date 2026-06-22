@@ -36,8 +36,8 @@ class DeprecatedHash:
     def __call__(self, disable_alert=False):
         if not disable_alert:
             self.alert_fn(
-                "Deprecation warning: {0} checksums will not be"
-                " supported in future Spack releases.".format(self.hash_alg)
+                f"Deprecation warning: {self.hash_alg} checksums will not be"
+                " supported in future Spack releases."
             )
         if self.disable_security_check:
             return hashlib.new(self.hash_alg, usedforsecurity=False)  # novermin

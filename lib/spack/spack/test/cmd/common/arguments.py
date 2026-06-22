@@ -68,7 +68,7 @@ def test_parse_spec_flags_with_spaces(specs, cflags, propagation, negated_varian
     assert flag_propagation == propagation
     assert list(s.variants.keys()) == negated_variants
     for v in negated_variants:
-        assert "~{0}".format(v) in s
+        assert f"~{v}" in s
 
 
 def test_match_spec_env(mock_packages, mutable_mock_env_path):

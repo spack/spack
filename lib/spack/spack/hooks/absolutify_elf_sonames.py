@@ -113,7 +113,7 @@ def patch_sonames(patchelf, root, rel_paths):
             fixed.append(rel_path)
         else:
             # Note: treat as warning to avoid (long) builds to fail post-install.
-            tty.warn("patchelf: failed to set soname of {}: {}".format(normalized, output.strip()))
+            tty.warn(f"patchelf: failed to set soname of {normalized}: {output.strip()}")
     return fixed
 
 

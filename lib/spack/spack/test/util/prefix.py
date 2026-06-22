@@ -22,9 +22,9 @@ def test_prefix_join():
     """Test prefix join  ``prefix.join(...)``"""
     prefix = Prefix(os.sep + "usr")
 
-    a1 = prefix.join("a_{0}".format(1)).lib64
-    a2 = prefix.join("a-{0}".format(1)).lib64
-    a3 = prefix.join("a.{0}".format(1)).lib64
+    a1 = prefix.join(f"a_{1}").lib64
+    a2 = prefix.join(f"a-{1}").lib64
+    a3 = prefix.join(f"a.{1}").lib64
 
     assert a1 == os.sep + os.path.join("usr", "a_1", "lib64")
     assert a2 == os.sep + os.path.join("usr", "a-1", "lib64")
@@ -69,8 +69,8 @@ def test_string_like_behavior():
     assert isinstance(prefix, str)
 
     assert prefix + "/bin" == "/usr/bin"
-    assert "--prefix=%s" % prefix == "--prefix=/usr"
-    assert "--prefix={0}".format(prefix) == "--prefix=/usr"
+    assert f"--prefix={prefix}" == "--prefix=/usr"
+    assert f"--prefix={prefix}" == "--prefix=/usr"
 
     assert prefix.find("u", 1)
     assert prefix.upper() == "/USR"

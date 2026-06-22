@@ -19,7 +19,7 @@ def test_get_timestamp(monkeypatch):
     # Debug disabled but force the timestamp should return a string
     assert tty.get_timestamp(True), "Expected a timestamp/non-empty string"
 
-    pid_str = " {0}".format(os.getpid())
+    pid_str = f" {os.getpid()}"
 
     # Level 1 debugging should return a timestamp WITHOUT the pid
     monkeypatch.setattr(tty, "_debug", 1)
@@ -51,7 +51,7 @@ def test_msg(capfd, monkeypatch, enabled, msg, trace, newline):
 
     expected = [msg if isinstance(msg, str) else "Exception: "]
     if newline:
-        expected[0] = "{0}\n".format(expected[0])
+        expected[0] = f"{expected[0]}\n"
     if trace:
         expected.insert(0, ".py")
 

@@ -24,7 +24,7 @@ class ColumnConfig:
 
     def __repr__(self) -> str:
         attrs = [(a, getattr(self, a)) for a in dir(self) if not a.startswith("__")]
-        return f"<Config: {', '.join('%s: %r' % a for a in attrs)}>"
+        return f"<Config: {', '.join('{}: {!r}'.format(*a) for a in attrs)}>"
 
 
 def config_variable_cols(
@@ -192,8 +192,7 @@ def colify(
             elt = col * rows + row
             width = config.widths[col] + cextra(elts[elt])
             if col < cols - 1:
-                fmt = "%%-%ds" % width
-                output.write(fmt % elts[elt])
+                output.write(f"{elts[elt]:<{width}}")
             else:
                 # Don't pad the rightmost column (spaces can wrap on
                 # small teriminals if one line is overlong)

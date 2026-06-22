@@ -237,7 +237,7 @@ def check_ast_roundtrip(code1, filename="internal", mode="exec"):
 
     ast2 = compile(code2, filename, mode, ast.PyCF_ONLY_AST)
 
-    error_msg = "Failed to roundtrip {} [mode={}]".format(filename, mode)
+    error_msg = f"Failed to roundtrip {filename} [mode={mode}]"
     assert ast.dump(ast1) == ast.dump(ast2), error_msg
 
 
@@ -245,7 +245,9 @@ def test_core_lib_files():
     """Roundtrip source files from the Python core libs."""
     test_directories = [
         os.path.join(
-            getattr(sys, "real_prefix", sys.prefix), "lib", "python%s.%s" % sys.version_info[:2]
+            getattr(sys, "real_prefix", sys.prefix),
+            "lib",
+            "python{}.{}".format(*sys.version_info[:2]),
         )
     ]
 

@@ -73,12 +73,12 @@ class TestLibraryList:
         s1 = library_list.joined()
         expected = " ".join(
             [
-                "/dir1/liblapack.%s" % plat_static_ext,
+                f"/dir1/liblapack.{plat_static_ext}",
                 "/dir2/libpython3.6.%s"
                 % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
-                "/dir1/libblas.%s" % plat_static_ext,
-                "/dir3/libz.%s" % plat_shared_ext,
-                "libmpi.%s.20.10.1" % plat_shared_ext,
+                f"/dir1/libblas.{plat_static_ext}",
+                f"/dir3/libz.{plat_shared_ext}",
+                f"libmpi.{plat_shared_ext}.20.10.1",
             ]
         )
         assert s1 == expected
@@ -89,12 +89,12 @@ class TestLibraryList:
         s3 = library_list.joined(";")
         expected = ";".join(
             [
-                "/dir1/liblapack.%s" % plat_static_ext,
+                f"/dir1/liblapack.{plat_static_ext}",
                 "/dir2/libpython3.6.%s"
                 % (plat_apple_shared_ext if sys.platform != "win32" else "dll"),
-                "/dir1/libblas.%s" % plat_static_ext,
-                "/dir3/libz.%s" % plat_shared_ext,
-                "libmpi.%s.20.10.1" % plat_shared_ext,
+                f"/dir1/libblas.{plat_static_ext}",
+                f"/dir3/libz.{plat_shared_ext}",
+                f"libmpi.{plat_shared_ext}.20.10.1",
             ]
         )
         assert s3 == expected
@@ -129,7 +129,7 @@ class TestLibraryList:
 
     def test_get_item(self, library_list):
         a = library_list[0]
-        assert a == "/dir1/liblapack.%s" % plat_static_ext
+        assert a == f"/dir1/liblapack.{plat_static_ext}"
 
         b = library_list[:]
         assert type(b) is type(library_list)
@@ -138,9 +138,9 @@ class TestLibraryList:
 
     def test_add(self, library_list):
         pylist = [
-            "/dir1/liblapack.%s" % plat_static_ext,  # removed from the final list
-            "/dir2/libmpi.%s" % plat_shared_ext,
-            "/dir4/libnew.%s" % plat_static_ext,
+            f"/dir1/liblapack.{plat_static_ext}",  # removed from the final list
+            f"/dir2/libmpi.{plat_shared_ext}",
+            f"/dir4/libnew.{plat_static_ext}",
         ]
         another = LibraryList(pylist)
         both = library_list + another

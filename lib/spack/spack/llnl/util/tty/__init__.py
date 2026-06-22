@@ -199,8 +199,7 @@ def info(
     if _stacktrace:
         st_text = process_stacktrace(countback)
     cprint(
-        "@%s{%s==>} %s%s"
-        % (format, st_text, get_timestamp(), cescape(_output_filter(str(message)))),
+        f"@{format}{{{st_text}==>}} {get_timestamp()}{cescape(_output_filter(str(message)))}",
         stream=stream,
     )
     for arg in args:

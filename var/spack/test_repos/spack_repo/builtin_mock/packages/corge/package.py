@@ -102,24 +102,24 @@ main(int argc, char* argv[])
     return 0;
 }
 """
-        mkdirp("%s/corge" % prefix.include)
-        mkdirp("%s/corge" % self.stage.source_path)
-        with open("%s/corge_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        mkdirp(f"{prefix.include}/corge")
+        mkdirp(f"{self.stage.source_path}/corge")
+        with open(f"{self.stage.source_path}/corge_version.h", "w", encoding="utf-8") as f:
             f.write(corge_version_h % (self.version[0], self.version[1:]))
-        with open("%s/corge/corge.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/corge/corge.cc", "w", encoding="utf-8") as f:
             f.write(corge_cc % prefix.config)
-        with open("%s/corge/corge.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/corge/corge.h", "w", encoding="utf-8") as f:
             f.write(corge_h)
-        with open("%s/corge/corgegator.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/corge/corgegator.cc", "w", encoding="utf-8") as f:
             f.write(corgegator_cc)
         gpp = which("g++")
         if sys.platform == "darwin":
             gpp = which("clang++")
         gpp(
             "-Dcorge_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["quux"].prefix.include,
-            "-I%s" % spec["garply"].prefix.include,
+            f"-I{self.stage.source_path}",
+            "-I{}".format(spec["quux"].prefix.include),
+            "-I{}".format(spec["garply"].prefix.include),
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -131,9 +131,9 @@ main(int argc, char* argv[])
         )
         gpp(
             "-Dcorge_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["quux"].prefix.include,
-            "-I%s" % spec["garply"].prefix.include,
+            f"-I{self.stage.source_path}",
+            "-I{}".format(spec["quux"].prefix.include),
+            "-I{}".format(spec["garply"].prefix.include),
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -155,10 +155,10 @@ main(int argc, char* argv[])
                 "-o",
                 "libcorge.dylib",
                 "corge.cc.o",
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "%s/libquux.dylib" % spec["quux"].prefix.lib64,
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
+                "-Wl,-rpath,{}".format(spec["quux"].prefix.lib64),
+                "-Wl,-rpath,{}".format(spec["garply"].prefix.lib64),
+                "{}/libquux.dylib".format(spec["quux"].prefix.lib64),
+                "{}/libgarply.dylib".format(spec["garply"].prefix.lib64),
             )
             gpp(
                 "-O2",
@@ -168,16 +168,16 @@ main(int argc, char* argv[])
                 "corgegator.cc.o",
                 "-o",
                 "corgegator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
+                "-Wl,-rpath,{}".format(spec["quux"].prefix.lib64),
+                "-Wl,-rpath,{}".format(spec["garply"].prefix.lib64),
                 "libcorge.dylib",
-                "%s/libquux.dylib.3.0" % spec["quux"].prefix.lib64,
-                "%s/libgarply.dylib.3.0" % spec["garply"].prefix.lib64,
+                "{}/libquux.dylib.3.0".format(spec["quux"].prefix.lib64),
+                "{}/libgarply.dylib.3.0".format(spec["garply"].prefix.lib64),
             )
             mkdirp(prefix.lib64)
-            copy("libcorge.dylib", "%s/libcorge.dylib" % prefix.lib64)
-            os.link("%s/libcorge.dylib" % prefix.lib64, "%s/libcorge.dylib.3.0" % prefix.lib64)
+            copy("libcorge.dylib", f"{prefix.lib64}/libcorge.dylib")
+            os.link(f"{prefix.lib64}/libcorge.dylib", f"{prefix.lib64}/libcorge.dylib.3.0")
         else:
             gpp(
                 "-fPIC",
@@ -189,9 +189,11 @@ main(int argc, char* argv[])
                 "-o",
                 "libcorge.so",
                 "corge.cc.o",
-                "-Wl,-rpath,%s:%s::::" % (spec["quux"].prefix.lib64, spec["garply"].prefix.lib64),
-                "%s/libquux.so" % spec["quux"].prefix.lib64,
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
+                "-Wl,-rpath,{}:{}::::".format(
+                    spec["quux"].prefix.lib64, spec["garply"].prefix.lib64
+                ),
+                "{}/libquux.so".format(spec["quux"].prefix.lib64),
+                "{}/libgarply.so".format(spec["garply"].prefix.lib64),
             )
             gpp(
                 "-O2",
@@ -201,20 +203,22 @@ main(int argc, char* argv[])
                 "corgegator.cc.o",
                 "-o",
                 "corgegator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
+                "-Wl,-rpath,{}".format(spec["quux"].prefix.lib64),
+                "-Wl,-rpath,{}".format(spec["garply"].prefix.lib64),
                 "libcorge.so",
-                "%s/libquux.so.3.0" % spec["quux"].prefix.lib64,
-                "%s/libgarply.so.3.0" % spec["garply"].prefix.lib64,
+                "{}/libquux.so.3.0".format(spec["quux"].prefix.lib64),
+                "{}/libgarply.so.3.0".format(spec["garply"].prefix.lib64),
             )
             mkdirp(prefix.lib64)
-            copy("libcorge.so", "%s/libcorge.so" % prefix.lib64)
-            os.link("%s/libcorge.so" % prefix.lib64, "%s/libcorge.so.3.0" % prefix.lib64)
-        copy("corgegator", "%s/corgegator" % prefix.lib64)
-        copy("%s/corge/corge.h" % self.stage.source_path, "%s/corge/corge.h" % prefix.include)
+            copy("libcorge.so", f"{prefix.lib64}/libcorge.so")
+            os.link(f"{prefix.lib64}/libcorge.so", f"{prefix.lib64}/libcorge.so.3.0")
+        copy("corgegator", f"{prefix.lib64}/corgegator")
+        copy(f"{self.stage.source_path}/corge/corge.h", f"{prefix.include}/corge/corge.h")
         mkdirp(prefix.bin)
-        copy("corge_version.h", "%s/corge_version.h" % prefix.bin)
-        os.symlink("%s/corgegator" % prefix.lib64, "%s/corgegator" % prefix.bin)
-        os.symlink("%s/quuxifier" % spec["quux"].prefix.lib64, "%s/quuxifier" % prefix.bin)
-        os.symlink("%s/garplinator" % spec["garply"].prefix.lib64, "%s/garplinator" % prefix.bin)
+        copy("corge_version.h", f"{prefix.bin}/corge_version.h")
+        os.symlink(f"{prefix.lib64}/corgegator", f"{prefix.bin}/corgegator")
+        os.symlink("{}/quuxifier".format(spec["quux"].prefix.lib64), f"{prefix.bin}/quuxifier")
+        os.symlink(
+            "{}/garplinator".format(spec["garply"].prefix.lib64), f"{prefix.bin}/garplinator"
+        )

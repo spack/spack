@@ -95,7 +95,7 @@ def list(parser, args):
             print("  " + audit_obj.description)
             if args.verbose:
                 for idx, fn in enumerate(audit_obj.callbacks):
-                    print("    {0}. ".format(idx + 1) + fn.__doc__)
+                    print(f"    {idx + 1}. " + fn.__doc__)
                 print()
         print()
 

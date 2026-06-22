@@ -163,7 +163,7 @@ class ReposFinder:
     def find_spec(self, fullname, python_path, target=None):
         # "target" is not None only when calling importlib.reload()
         if target is not None:
-            raise RuntimeError('cannot reload module "{0}"'.format(fullname))
+            raise RuntimeError(f'cannot reload module "{fullname}"')
 
         # Preferred API from https://peps.python.org/pep-0451/
         if not fullname.startswith(PKG_MODULE_PREFIX_V1) and fullname != "spack.pkg":
@@ -635,7 +635,7 @@ class RepoIndex:
         of allow_stale."""
         indexer = self.indexers.get(name)
         if not indexer:
-            raise KeyError("no such index: %s" % name)
+            raise KeyError(f"no such index: {name}")
         if name not in self.indexes or (not allow_stale and not self.is_fresh):
             self._build_all_indexes(allow_stale=allow_stale)
         return self.indexes[name]
@@ -1671,7 +1671,7 @@ def create_repo(
             shutil.rmtree(root, ignore_errors=True)
 
         raise BadRepoError(
-            "Failed to create new repository in %s." % root, "Caused by %s: %s" % (type(e), e)
+            f"Failed to create new repository in {root}.", f"Caused by {type(e)}: {e}"
         ) from e
 
     return repo_yaml_dir, namespace
@@ -2243,9 +2243,8 @@ class FailedConstructorError(RepoError):
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):
         super().__init__(
-            "Class constructor failed for package '%s'." % name,
+            f"Class constructor failed for package '{name}'.",
             "\nCaused by:\n"
-            + ("%s: %s\n" % (exc_type.__name__, exc_obj))
-            + "".join(traceback.format_tb(exc_tb)),
+            f"{exc_type.__name__}: {exc_obj}\n" + "".join(traceback.format_tb(exc_tb)),
         )
         self.name = name

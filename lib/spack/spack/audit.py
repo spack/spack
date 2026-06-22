@@ -248,7 +248,7 @@ def _search_duplicate_specs_in_externals(error_cls):
             continue
 
         # Otherwise wwe need to report an error
-        error_msg = "Multiple externals share the same spec: {0}".format(spec)
+        error_msg = f"Multiple externals share the same spec: {spec}"
         try:
             lines = [str(x._start_mark).strip() for x in entries]
             details = (
@@ -476,8 +476,8 @@ def _check_patch_urls(pkgs, error_cls):
                     errors.append(
                         error_cls(
                             f"patch URL in package {pkg_cls.name} "
-                            + "must not be a pull request commit; "
-                            + f"instead use {url}",
+                            "must not be a pull request commit; "
+                            f"instead use {url}",
                             [patch.url],
                         )
                     )
@@ -487,7 +487,7 @@ def _check_patch_urls(pkgs, error_cls):
                         errors.append(
                             error_cls(
                                 f"patch URL in package {pkg_cls.name} "
-                                + f"must end with {full_index_arg}",
+                                f"must end with {full_index_arg}",
                                 [patch.url],
                             )
                         )
@@ -527,9 +527,7 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
                 "Package '{}' overrides the '{}' attribute or method, "
                 "which is reserved for Spack internal use"
             )
-            definitions = [
-                "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
-            ]
+            definitions = [f"defined in '{x[0].__module__}'" for x in name_definitions[name]]
             errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
 
     return errors
@@ -561,8 +559,8 @@ def _ensure_packages_are_pickeleable(pkgs, error_cls):
         try:
             pickle.dumps(pkg)
         except Exception as e:
-            error_msg = "Package '{}' failed to pickle".format(pkg_name)
-            details = ["{}".format(str(e))]
+            error_msg = f"Package '{pkg_name}' failed to pickle"
+            details = [f"{str(e)}"]
             errors.append(error_cls(error_msg, details))
     return errors
 
@@ -577,16 +575,16 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
         try:
             source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
         except Exception as e:
-            error_msg = "Package '{}' failed to unparse".format(pkg_name)
-            details = ["{}".format(str(e))]
+            error_msg = f"Package '{pkg_name}' failed to unparse"
+            details = [f"{str(e)}"]
             errors.append(error_cls(error_msg, details))
             continue
 
         try:
             compile(source, "internal", "exec", ast.PyCF_ONLY_AST)
         except Exception as e:
-            error_msg = "The unparsed package '{}' failed to compile".format(pkg_name)
-            details = ["{}".format(str(e))]
+            error_msg = f"The unparsed package '{pkg_name}' failed to compile"
+            details = [f"{str(e)}"]
             errors.append(error_cls(error_msg, details))
 
     return errors
@@ -605,7 +603,7 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
                 assert spack.fetch_strategy.for_package_version(pkg, version)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
-            details = ["{}".format(str(e))]
+            details = [f"{str(e)}"]
             errors.append(error_cls(error_msg.format(pkg_name), details))
     return errors
 
@@ -628,7 +626,7 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
                 pattern = next((r for r in fixme_regexes if r.search(line)), None)
                 if pattern:
                     details.append(
-                        "%s:%d: boilerplate needs to be removed: %s" % (filename, i, line.strip())
+                        f"{filename}:{i}: boilerplate needs to be removed: {line.strip()}"
                     )
         if details:
             error_msg = "Package '{}' contains boilerplate that need to be removed"
@@ -703,8 +701,8 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         for method_name in ("setup_build_environment", "setup_dependent_build_environment"):
             if hasattr(pkg_cls, method_name):
                 msg = (
-                    "Package '{}' need to move the '{}' method from the package class to the"
-                    " appropriate builder class".format(pkg_name, method_name)
+                    f"Package '{pkg_name}' need to move the '{method_name}' method "
+                    "from the package class to the appropriate builder class"
                 )
                 errors.append(error_cls(msg, []))
 
@@ -1174,8 +1172,9 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
                 )
             except Exception:
                 summary = (
-                    "{0}: dependency on {1} cannot be satisfied by known versions of {1.name}"
-                ).format(pkg_name, s)
+                    f"{pkg_name}: dependency on {s} cannot be satisfied "
+                    f"by known versions of {s.name}"
+                )
                 details = ["happening in " + filename]
                 if dependency_pkg_cls is not None:
                     details.append(

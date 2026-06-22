@@ -550,7 +550,7 @@ class BaseFileLayout:
         if self.extension:
             filename = f"{self.use_name}.{self.extension}"
         # Architecture sub-folder
-        arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
+        arch_folder_conf = spack.config.get(f"modules:{self.conf.name}:arch_folder", True)
         if arch_folder_conf:
             # include an arch specific folder between root and filename
             arch_folder = str(self.spec.architecture)

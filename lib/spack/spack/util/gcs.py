@@ -28,8 +28,8 @@ def gcs_client():
         from google.cloud import storage
     except ImportError as ex:
         tty.error(
-            "{0}, google-cloud-storage python module is missing.".format(ex)
-            + " Please install to use the gs:// backend."
+            f"{ex}, google-cloud-storage python module is missing."
+            " Please install to use the gs:// backend."
         )
         sys.exit(1)
 
@@ -53,11 +53,7 @@ class GCSBucket:
                  client that will be used to access the GCS bucket.
         """
         if url.scheme != "gs":
-            raise ValueError(
-                "Can not create GCS bucket connection with scheme {SCHEME}".format(
-                    SCHEME=url.scheme
-                )
-            )
+            raise ValueError(f"Can not create GCS bucket connection with scheme {url.scheme}")
         self.url = url
         self.name = self.url.netloc
         if self.url.path[0] == "/":
@@ -69,8 +65,8 @@ class GCSBucket:
 
         self.bucket = None
         tty.debug("New GCS bucket:")
-        tty.debug("    name: {0}".format(self.name))
-        tty.debug("    prefix: {0}".format(self.prefix))
+        tty.debug(f"    name: {self.name}")
+        tty.debug(f"    prefix: {self.prefix}")
 
     def exists(self):
         from google.cloud.exceptions import NotFound
@@ -79,7 +75,7 @@ class GCSBucket:
             try:
                 self.bucket = self.client.bucket(self.name)
             except NotFound as ex:
-                tty.error("{0}, Failed check for bucket existence".format(ex))
+                tty.error(f"{ex}, Failed check for bucket existence")
                 sys.exit(1)
         return self.bucket is not None
 
@@ -106,7 +102,7 @@ class GCSBucket:
             relative: If true (default), print blob paths relative to 'build_cache' directory.
                 If false, print absolute blob paths (useful for destruction of bucket)
         """
-        tty.debug("Getting GCS blobs... Recurse {0} -- Rel: {1}".format(recursive, relative))
+        tty.debug(f"Getting GCS blobs... Recurse {recursive} -- Rel: {relative}")
 
         converter = self._relative_blob_name if relative else str
 
@@ -139,7 +135,7 @@ class GCSBucket:
         """
         from google.cloud.exceptions import NotFound
 
-        tty.debug("Bucket.destroy(recursive={0})".format(recursive))
+        tty.debug(f"Bucket.destroy(recursive={recursive})")
         try:
             bucket_blobs = self.get_all_blobs(recursive=recursive, relative=False)
             batch_size = 1000
@@ -151,7 +147,7 @@ class GCSBucket:
                         blob = self.blob(bucket_blobs[j])
                         blob.delete()
         except NotFound as ex:
-            tty.error("{0}, Could not delete a blob in bucket {1}.".format(ex, self.name))
+            tty.error(f"{ex}, Could not delete a blob in bucket {self.name}.")
             sys.exit(1)
 
 
@@ -164,11 +160,7 @@ class GCSBlob:
     def __init__(self, url, client=None):
         self.url = url
         if url.scheme != "gs":
-            raise ValueError(
-                "Can not create GCS blob connection with scheme: {SCHEME}".format(
-                    SCHEME=url.scheme
-                )
-            )
+            raise ValueError(f"Can not create GCS blob connection with scheme: {url.scheme}")
 
         self.client = client or gcs_client()
 
@@ -177,10 +169,10 @@ class GCSBlob:
         self.blob_path = self.url.path.lstrip("/")
 
         tty.debug("New GCSBlob")
-        tty.debug("  blob_path = {0}".format(self.blob_path))
+        tty.debug(f"  blob_path = {self.blob_path}")
 
         if not self.bucket.exists():
-            tty.warn("The bucket {0} does not exist, it will be created".format(self.bucket.name))
+            tty.warn(f"The bucket {self.bucket.name} does not exist, it will be created")
             self.bucket.create()
 
     def get(self):
@@ -204,7 +196,7 @@ class GCSBlob:
             blob = self.bucket.blob(self.blob_path)
             blob.delete()
         except NotFound as ex:
-            tty.error("{0}, Could not delete gcs blob {1}".format(ex, self.blob_path))
+            tty.error(f"{ex}, Could not delete gcs blob {self.blob_path}")
 
     def upload_to_blob(self, local_file_path):
         blob = self.bucket.blob(self.blob_path)
@@ -232,7 +224,7 @@ def gcs_open(req, *args, **kwargs):
     gcsblob = GCSBlob(url)
 
     if not gcsblob.exists():
-        raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
+        raise URLError(f"GCS blob {gcsblob.blob_path} does not exist")
     stream = gcsblob.get_blob_byte_stream()
     headers = gcsblob.get_blob_headers()
 

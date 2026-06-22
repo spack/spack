@@ -274,7 +274,7 @@ def test_test_results_status(mock_packages, mock_test_stage, status):
             assert str(status) not in results
         else:
             assert str(status) in results
-        assert "1 {0}".format(status.lower()) in results
+        assert f"1 {status.lower()}" in results
 
 
 @pytest.mark.regression("35337")

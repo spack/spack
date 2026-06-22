@@ -646,7 +646,7 @@ def list_fn(args):
         specs = [s for s in specs if any(s.intersects(c) for c in constraints)]
     if sys.stdout.isatty():
         builds = len(specs)
-        tty.msg("%s." % plural(builds, "cached build"))
+        tty.msg("{}.".format(plural(builds, "cached build")))
         if not builds and not args.allarch:
             tty.msg(
                 "You can query all available architectures with:",
@@ -846,11 +846,7 @@ def sync_fn(args):
     # Get the active environment
     env = spack.cmd.require_active_env(args.subparser)
 
-    tty.msg(
-        "Syncing environment buildcache files from {0} to {1}".format(
-            src_mirror_url, dest_mirror_url
-        )
-    )
+    tty.msg(f"Syncing environment buildcache files from {src_mirror_url} to {dest_mirror_url}")
 
     tty.debug("Syncing the following specs:")
     specs_to_sync = [s for s in env.all_specs() if not s.external]

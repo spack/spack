@@ -147,10 +147,10 @@ def _enable_or_disable(args):
         # Set to True if we called "enable", otherwise set to false
         old_value = spack.config.get("bootstrap:enable", scope=args.scope)
         if old_value == value:
-            spack.llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
+            spack.llnl.util.tty.msg(f"Bootstrapping is already {args.subcommand}d")
         else:
             spack.config.set("bootstrap:enable", value, scope=args.scope)
-            spack.llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
+            spack.llnl.util.tty.msg(f"Bootstrapping has been {args.subcommand}d")
         return
 
     if value is True:
@@ -232,7 +232,7 @@ def _list(args):
 
             info_lines = ["\n"]
             for key, value in source.get("info", {}).items():
-                info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
+                info_lines.append(" " * 4 + f"@*{{{key}}}: {value}\n")
             if len(info_lines) > 1:
                 fmt("  Info", "".join(info_lines))
 
@@ -277,16 +277,16 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
 
     if len(matches) > 1:
         msg = (
-            'there is more than one bootstrapping method named "{0}". '
+            f'there is more than one bootstrapping method named "{name}". '
             "Please delete all methods but one from bootstrap.yaml "
             "before proceeding"
-        ).format(name)
+        )
         raise RuntimeError(msg)
 
     # Setting the scope explicitly is needed to not copy over to a new scope
     # the entire default configuration for bootstrap.yaml
     scope = scope or spack.config.default_modify_scope("bootstrap")
-    spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(enabled)), scope=scope)
+    spack.config.add(f"bootstrap:trusted:{name}:{str(enabled)}", scope=scope)
 
 
 def _enable_source(args):
@@ -308,8 +308,8 @@ def _status(args):
     if args.dev:
         sections.append("develop")
 
-    header = "@*b{{Spack v{0} - {1}}}".format(
-        spack.spack_version, spack.bootstrap.config.spec_for_current_python()
+    header = (
+        f"@*b{{Spack v{spack.spack_version} - {spack.bootstrap.config.spec_for_current_python()}}}"
     )
     print(spack.llnl.util.tty.color.colorize(header))
     print()
@@ -346,11 +346,11 @@ def _add(args):
     # Check that the metadata file exists
     metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
     if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
-        raise RuntimeError('the directory "{0}" does not exist'.format(args.metadata_dir))
+        raise RuntimeError(f'the directory "{args.metadata_dir}" does not exist')
 
     file = os.path.join(metadata_dir, "metadata.yaml")
     if not os.path.exists(file):
-        raise RuntimeError('the file "{0}" does not exist'.format(file))
+        raise RuntimeError(f'the file "{file}" does not exist')
 
     # Insert the new source as the highest priority one
     write_scope = args.scope or spack.config.default_modify_scope(section="bootstrap")
@@ -436,9 +436,9 @@ def _mirror(args):
 
     instructions = (
         "\nTo register the mirror on the platform where it's supposed "
-        'to be used, move "{0}" to its final location and run the '
+        f'to be used, move "{args.root_dir}" to its final location and run the '
         "following command(s):\n\n"
-    ).format(args.root_dir)
+    )
     cmd = "  % spack bootstrap add --trust {0} <final-path>/{1}\n"
     _, rel_directory = write_metadata(subdir="sources", metadata=SOURCE_METADATA)
     instructions += cmd.format("local-sources", rel_directory)

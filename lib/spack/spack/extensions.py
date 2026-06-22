@@ -59,9 +59,9 @@ def load_command_extension(command, path):
     extension = _python_name(extension_name(path))
 
     # Compute the name of the module we search, exit early if already imported
-    cmd_package = "{0}.{1}.cmd".format(__name__, extension)
+    cmd_package = f"{__name__}.{extension}.cmd"
     python_name = _python_name(command)
-    module_name = "{0}.{1}".format(cmd_package, python_name)
+    module_name = f"{cmd_package}.{python_name}"
     if module_name in sys.modules:
         return sys.modules[module_name]
 
@@ -83,7 +83,7 @@ def load_command_extension(command, path):
 
 def ensure_extension_loaded(extension, *, path):
     def ensure_package_creation(name):
-        package_name = "{0}.{1}".format(__name__, name)
+        package_name = f"{__name__}.{name}"
         if package_name in sys.modules:
             return
 
@@ -190,7 +190,7 @@ def path_for_extension(target_name: str, *, paths: List[str]) -> str:
         if name == target_name:
             return path
     else:
-        raise OSError('extension "{0}" not found'.format(target_name))
+        raise OSError(f'extension "{target_name}" not found')
 
 
 def get_module(cmd_name):
@@ -226,4 +226,4 @@ class ExtensionNamingError(spack.error.SpackError):
     """
 
     def __init__(self, path):
-        super().__init__("{0} does not match the format for a Spack extension path.".format(path))
+        super().__init__(f"{path} does not match the format for a Spack extension path.")

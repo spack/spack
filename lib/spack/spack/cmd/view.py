@@ -222,7 +222,7 @@ def view(parser, args):
     if getattr(args, "all", False):
         specs = view.get_all_specs()
         if len(specs) == 0:
-            tty.warn("Found no specs in %s" % path)
+            tty.warn(f"Found no specs in {path}")
 
     elif args.action in actions_link:
         # only link commands need to disambiguate specs
@@ -266,4 +266,4 @@ def view(parser, args):
         view.print_status(*specs, with_dependencies=with_dependencies)
 
     else:
-        tty.error('Unknown action: "%s"' % args.action)
+        tty.error(f'Unknown action: "{args.action}"')

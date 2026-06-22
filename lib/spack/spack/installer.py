@@ -188,7 +188,7 @@ class TermStatusLine:
 
         self.pkg_set.add(pkg_id)
         self.pkg_list.append(pkg_id)
-        tty.msg(colorize("@*{Waiting for} @*g{%s}" % pkg_id))
+        tty.msg(colorize(f"@*{{Waiting for}} @*g{{{pkg_id}}}"))
         sys.stdout.flush()
 
     def clear(self):
@@ -314,9 +314,9 @@ def _hms(seconds: int) -> str:
 
     parts = []
     if h:
-        parts.append("%dh" % h)
+        parts.append(f"{int(h)}h")
     if m:
-        parts.append("%dm" % m)
+        parts.append(f"{int(m)}m")
     if s:
         parts.append(f"{s:.2f}s")
     return " ".join(parts)
@@ -613,11 +613,11 @@ def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
     """
     pre = f"{pid}: " if tty.show_pid() else ""
     post = (
-        " @*{%s}" % install_status.get_progress()
+        f" @*{{{install_status.get_progress()}}}"
         if install_status and spack.config.get("config:install_status", True)
         else ""
     )
-    return pre + colorize("@*{Installing} @*g{%s}%s" % (name, post))
+    return pre + colorize(f"@*{{Installing}} @*g{{{name}}}{post}")
 
 
 def archive_install_logs(pkg: "spack.package_base.PackageBase", phase_log_dir: str) -> None:
@@ -1028,8 +1028,9 @@ class Task:
     def __str__(self) -> str:
         """Returns a printable version of the task."""
         dependencies = f"#dependencies={len(self.dependencies)}"
-        return "priority={0}, status={1}, start_time={2}, {3}".format(
-            self.priority, self.status, self.start_time, dependencies
+        return (
+            f"priority={self.priority}, status={self.status}, "
+            f"start_time={self.start_time}, {dependencies}"
         )
 
     def _update(self) -> None:
@@ -2739,7 +2740,7 @@ class BuildProcessInstaller:
             for i, phase_fn in enumerate(builder):
                 # Keep a log file for each phase
                 log_dir = os.path.dirname(pkg.log_path)
-                log_file = "spack-build-%02d-%s-out.txt" % (i + 1, phase_fn.name.lower())
+                log_file = f"spack-build-{i + 1:02d}-{phase_fn.name.lower()}-out.txt"
                 log_file = os.path.join(log_dir, log_file)
 
                 try:

@@ -29,7 +29,7 @@ from spack.util.path import canonicalize_path
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
-_archive_fn = "%s.tar.gz" % _archive_base
+_archive_fn = f"{_archive_base}.tar.gz"
 _extra_fn = "extra.sh"
 _hidden_fn = ".hidden"
 _readme_fn = "README.txt"

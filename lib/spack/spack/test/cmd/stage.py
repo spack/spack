@@ -51,7 +51,7 @@ def check_stage_path(monkeypatch, tmp_path: pathlib.Path):
 
 def test_stage_path(check_stage_path):
     """Verify that --path only works with single specs."""
-    stage("--path={0}".format(check_stage_path), "trivial-install-test-package")
+    stage(f"--path={check_stage_path}", "trivial-install-test-package")
 
 
 def test_stage_path_errors_multiple_specs(check_stage_path):

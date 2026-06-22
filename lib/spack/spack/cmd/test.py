@@ -156,7 +156,7 @@ def test_run(args):
     if args.alias:
         suites = spack.install_test.get_named_test_suites(args.alias)
         if suites:
-            tty.die('Test suite "{0}" already exists. Try another alias.'.format(args.alias))
+            tty.die(f'Test suite "{args.alias}" already exists. Try another alias.')
 
     # cdash help option
     if args.help_cdash:
@@ -216,7 +216,7 @@ def test_run(args):
 
 
 def report_filename(args, test_suite):
-    return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
+    return os.path.abspath(args.log_file or f"test-{test_suite.name}")
 
 
 def test_list(args):
@@ -236,7 +236,7 @@ def test_list(args):
 
         if sys.stdout.isatty():
             filtered = " tagged" if args.tag else ""
-            tty.msg("{0}{1} packages with tests.".format(len(report_packages), filtered))
+            tty.msg(f"{len(report_packages)}{filtered} packages with tests.")
         colify.colify(report_packages)
         return
 
@@ -284,7 +284,7 @@ def test_find(args):  # TODO: merge with status (noargs)
     if names:
         # TODO: Make these specify results vs active
         msg = "Spack test results available for the following tests:\n"
-        msg += "        %s\n" % " ".join(names)
+        msg += "        {}\n".format(" ".join(names))
         msg += "    Run `spack test remove` to remove all tests"
         tty.msg(msg)
     else:
@@ -302,7 +302,7 @@ def test_status(args):
             if test_suite:
                 test_suites.append(test_suite)
             else:
-                tty.msg("No test suite %s found in test stage" % name)
+                tty.msg(f"No test suite {name} found in test stage")
     else:
         test_suites = spack.install_test.get_all_test_suites()
         if not test_suites:
@@ -311,7 +311,7 @@ def test_status(args):
     for test_suite in test_suites:
         # TODO: Make this handle capability tests too
         # TODO: Make this handle tests running in another process
-        tty.msg("Test suite %s completed" % test_suite.name)
+        tty.msg(f"Test suite {test_suite.name} completed")
 
 
 def _report_suite_results(test_suite, args, constraints):
@@ -338,7 +338,7 @@ def _report_suite_results(test_suite, args, constraints):
     if os.path.exists(test_suite.results_file):
         results_desc = "Failing results" if args.failed else "Results"
         matching = ", spec matching '{0}'".format(" ".join(constraints)) if constraints else ""
-        tty.msg("{0} for test suite '{1}'{2}:".format(results_desc, test_suite.name, matching))
+        tty.msg(f"{results_desc} for test suite '{test_suite.name}'{matching}:")
 
         results = {}
         with open(test_suite.results_file, "r", encoding="utf-8") as f:
@@ -361,7 +361,7 @@ def _report_suite_results(test_suite, args, constraints):
                 if args.failed and status != spack.install_test.TestStatus.FAILED:
                     continue
 
-                msg = "  {0} {1}".format(pkg_id, status)
+                msg = f"  {pkg_id} {status}"
                 if args.logs:
                     spec = test_specs[pkg_id]
                     log_file = test_suite.log_file_for_spec(spec)
@@ -372,9 +372,9 @@ def _report_suite_results(test_suite, args, constraints):
 
         spack.install_test.write_test_summary(counts)
     else:
-        msg = "Test %s has no results.\n" % test_suite.name
+        msg = f"Test {test_suite.name} has no results.\n"
         msg += "        Check if it is running with "
-        msg += "`spack test status %s`" % test_suite.name
+        msg += f"`spack test status {test_suite.name}`"
         tty.msg(msg)
 
 
@@ -421,7 +421,7 @@ def test_remove(args):
             if test_suite:
                 test_suites.append(test_suite)
             else:
-                tty.msg("No test suite %s found in test stage" % name)
+                tty.msg(f"No test suite {name} found in test stage")
     else:
         test_suites = spack.install_test.get_all_test_suites()
 
@@ -443,4 +443,4 @@ def test_remove(args):
 
 
 def test(parser, args):
-    globals()["test_%s" % args.test_command](args)
+    globals()[f"test_{args.test_command}"](args)

@@ -446,7 +446,7 @@ def set_wrapper_environment_variables_for_flags(pkg, env):
         # Concreteness guarantees key safety here
         if inject_flags[flag]:
             # variables SPACK_<FLAG> inject flags through wrapper
-            var_name = "SPACK_{0}".format(flag.upper())
+            var_name = f"SPACK_{flag.upper()}"
             env.set(var_name, " ".join(f for f in inject_flags[flag]))
         if env_flags[flag]:
             # implicit variables
@@ -645,7 +645,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     compat_version = kwargs.get("compat_version", version)
 
     if not shared_lib:
-        shared_lib = "{0}.{1}".format(os.path.splitext(static_lib)[0], dso_suffix)
+        shared_lib = f"{os.path.splitext(static_lib)[0]}.{dso_suffix}"
 
     compiler_args = []
 
@@ -655,11 +655,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
         soname = os.path.basename(shared_lib)
 
         if compat_version:
-            soname += ".{0}".format(compat_version)
+            soname += f".{compat_version}"
 
         compiler_args = [
             "-shared",
-            "-Wl,-soname,{0}".format(soname),
+            f"-Wl,-soname,{soname}",
             "-Wl,--whole-archive",
             static_lib,
             "-Wl,--no-whole-archive",
@@ -668,20 +668,20 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
         install_name = shared_lib
 
         if compat_version:
-            install_name += ".{0}".format(compat_version)
+            install_name += f".{compat_version}"
 
         compiler_args = [
             "-dynamiclib",
             "-install_name",
-            "{0}".format(install_name),
-            "-Wl,-force_load,{0}".format(static_lib),
+            f"{install_name}",
+            f"-Wl,-force_load,{static_lib}",
         ]
 
         if compat_version:
-            compiler_args.extend(["-compatibility_version", "{0}".format(compat_version)])
+            compiler_args.extend(["-compatibility_version", f"{compat_version}"])
 
         if version:
-            compiler_args.extend(["-current_version", "{0}".format(version)])
+            compiler_args.extend(["-current_version", f"{version}"])
 
     if len(arguments) > 0:
         compiler_args.extend(arguments)
@@ -689,9 +689,9 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
     shared_lib_base = shared_lib
 
     if version:
-        shared_lib += ".{0}".format(version)
+        shared_lib += f".{version}"
     elif compat_version:
-        shared_lib += ".{0}".format(compat_version)
+        shared_lib += f".{compat_version}"
 
     compiler_args.extend(["-o", shared_lib])
 
@@ -702,7 +702,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
         symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        symlink(shared_lib_link, "{0}.{1}".format(shared_lib_base, compat_version))
+        symlink(shared_lib_link, f"{shared_lib_base}.{compat_version}")
 
     return compiler(*compiler_args, output=compiler_output)
 
@@ -1230,15 +1230,15 @@ def _setup_pkg_and_run(
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
             process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to {}. You can fix this "
-                "by updating the {} recipe, and you can also report the issue as a build-error or "
-                "a bug at https://github.com/spack/spack/issues"
-            ).format(pkg.name, process, context)
-            error_msg = colorize("@*R{{{}}}".format(error_msg))
-            error_msg = "{}\n\n{}".format(str(e), error_msg)
+                f"The '{pkg.name}' package cannot find an attribute while trying to {process}. "
+                f"You can fix this by updating the {context} recipe, and you can also report the "
+                "issue as a build-error or a bug at https://github.com/spack/spack/issues"
+            )
+            error_msg = colorize(f"@*R{{{error_msg}}}")
+            error_msg = f"{str(e)}\n\n{error_msg}"
 
         # make a pickleable exception to send to parent.
-        msg = "%s: %s" % (exc_type.__name__, error_msg)
+        msg = f"{exc_type.__name__}: {error_msg}"
 
         ce = ChildError(
             msg,
@@ -1538,7 +1538,7 @@ def get_package_context(traceback, context=3):
         # Add start to get lineno relative to start of file, not function.
         marked = f"  {'>> ' if is_error else '   '}{start + start_ctx + i:-6d}{line.rstrip()}"
         if is_error:
-            marked = colorize("@R{%s}" % cescape(marked))
+            marked = colorize(f"@R{{{cescape(marked)}}}")
         lines.append(marked)
 
     return lines
@@ -1616,15 +1616,15 @@ class ChildError(InstallError):
             out.write("\n")
 
         if have_log:
-            out.write("See {0} log for details:\n".format(self.log_type))
-            out.write("  {0}\n".format(self.log_name))
+            out.write(f"See {self.log_type} log for details:\n")
+            out.write(f"  {self.log_name}\n")
 
         # Also output the test log path IF it exists
         if self.context != "test" and have_log:
             test_log = join_path(os.path.dirname(self.log_name), spack_install_test_log)
             if os.path.isfile(test_log):
                 out.write("\nSee test log for details:\n")
-                out.write("  {0}\n".format(test_log))
+                out.write(f"  {test_log}\n")
 
         return out.getvalue()
 
@@ -1664,7 +1664,7 @@ def write_log_summary(out, log_type, log, last=None):
             nerr = last
 
         # If errors are found, only display errors
-        out.write("\n%s found in %s log:\n" % (plural(nerr, "error"), log_type))
+        out.write("\n{} found in {} log:\n".format(plural(nerr, "error"), log_type))
         out.write(make_log_context(errors))
     elif nwar > 0:
         if last and nwar > last:
@@ -1672,7 +1672,7 @@ def write_log_summary(out, log_type, log, last=None):
             nwar = last
 
         # If no errors are found but warnings are, display warnings
-        out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
+        out.write("\n{} found in {} log:\n".format(plural(nwar, "warning"), log_type))
         out.write(make_log_context(warnings))
 
 

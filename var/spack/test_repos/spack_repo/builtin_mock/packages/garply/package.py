@@ -74,15 +74,15 @@ main()
         garply_version_h = """const int garply_version_major = %s;
 const int garply_version_minor = %s;
 """
-        mkdirp("%s/garply" % prefix.include)
-        mkdirp("%s/garply" % self.stage.source_path)
-        with open("%s/garply_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        mkdirp(f"{prefix.include}/garply")
+        mkdirp(f"{self.stage.source_path}/garply")
+        with open(f"{self.stage.source_path}/garply_version.h", "w", encoding="utf-8") as f:
             f.write(garply_version_h % (self.version[0], self.version[1:]))
-        with open("%s/garply/garply.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/garply/garply.h", "w", encoding="utf-8") as f:
             f.write(garply_h)
-        with open("%s/garply/garply.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/garply/garply.cc", "w", encoding="utf-8") as f:
             f.write(garply_cc % prefix.config)
-        with open("%s/garply/garplinator.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/garply/garplinator.cc", "w", encoding="utf-8") as f:
             f.write(garplinator_cc)
         gpp = which(
             "g++",
@@ -94,7 +94,7 @@ const int garply_version_minor = %s;
             gpp = which("/usr/bin/clang++")
         gpp(
             "-Dgarply_EXPORTS",
-            "-I%s" % self.stage.source_path,
+            f"-I{self.stage.source_path}",
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -102,11 +102,11 @@ const int garply_version_minor = %s;
             "-o",
             "garply.cc.o",
             "-c",
-            "%s/garply/garply.cc" % self.stage.source_path,
+            f"{self.stage.source_path}/garply/garply.cc",
         )
         gpp(
             "-Dgarply_EXPORTS",
-            "-I%s" % self.stage.source_path,
+            f"-I{self.stage.source_path}",
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -114,7 +114,7 @@ const int garply_version_minor = %s;
             "-o",
             "garplinator.cc.o",
             "-c",
-            "%s/garply/garplinator.cc" % self.stage.source_path,
+            f"{self.stage.source_path}/garply/garplinator.cc",
         )
         if sys.platform == "darwin":
             gpp(
@@ -139,12 +139,12 @@ const int garply_version_minor = %s;
                 "garplinator.cc.o",
                 "-o",
                 "garplinator",
-                "-Wl,-rpath,%s" % prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
                 "libgarply.dylib",
             )
             mkdirp(prefix.lib64)
-            copy("libgarply.dylib", "%s/libgarply.dylib" % prefix.lib64)
-            os.link("%s/libgarply.dylib" % prefix.lib64, "%s/libgarply.dylib.3.0" % prefix.lib64)
+            copy("libgarply.dylib", f"{prefix.lib64}/libgarply.dylib")
+            os.link(f"{prefix.lib64}/libgarply.dylib", f"{prefix.lib64}/libgarply.dylib.3.0")
         else:
             gpp(
                 "-fPIC",
@@ -165,14 +165,14 @@ const int garply_version_minor = %s;
                 "garplinator.cc.o",
                 "-o",
                 "garplinator",
-                "-Wl,-rpath,%s" % prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
                 "libgarply.so",
             )
             mkdirp(prefix.lib64)
-            copy("libgarply.so", "%s/libgarply.so" % prefix.lib64)
-            os.link("%s/libgarply.so" % prefix.lib64, "%s/libgarply.so.3.0" % prefix.lib64)
-        copy("garplinator", "%s/garplinator" % prefix.lib64)
-        copy("%s/garply/garply.h" % self.stage.source_path, "%s/garply/garply.h" % prefix.include)
+            copy("libgarply.so", f"{prefix.lib64}/libgarply.so")
+            os.link(f"{prefix.lib64}/libgarply.so", f"{prefix.lib64}/libgarply.so.3.0")
+        copy("garplinator", f"{prefix.lib64}/garplinator")
+        copy(f"{self.stage.source_path}/garply/garply.h", f"{prefix.include}/garply/garply.h")
         mkdirp(prefix.bin)
-        copy("garply_version.h", "%s/garply_version.h" % prefix.bin)
-        os.symlink("%s/garplinator" % prefix.lib64, "%s/garplinator" % prefix.bin)
+        copy("garply_version.h", f"{prefix.bin}/garply_version.h")
+        os.symlink(f"{prefix.lib64}/garplinator", f"{prefix.bin}/garplinator")

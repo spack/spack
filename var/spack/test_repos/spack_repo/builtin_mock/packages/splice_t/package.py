@@ -20,6 +20,6 @@ class SpliceT(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-t"), "w", encoding="utf-8") as f:
-            f.write("splice-t: {0}".format(prefix))
+            f.write(f"splice-t: {prefix}")
             f.write("splice-h: {0}".format(spec["splice-h"].prefix))
             f.write("splice-z: {0}".format(spec["splice-z"].prefix))

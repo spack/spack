@@ -276,8 +276,9 @@ def _system_7zip(archive_file):
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
-            "7z unavailable, unable to extract %s files. 7z can be installed via Spack"
-            % spack.util.url.extension_from_path(archive_file)
+            f"7z unavailable, unable to extract "
+            f"{spack.util.url.extension_from_path(archive_file)} files. "
+            "7z can be installed via Spack"
         )
     _7z.add_default_arg("e")
     _7z(archive_file)

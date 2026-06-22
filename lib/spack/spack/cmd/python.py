@@ -71,7 +71,7 @@ def python(parser, args, unknown_args):
         return
 
     if unknown_args:
-        args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
+        args.subparser.error("unrecognized arguments: {}".format(" ".join(unknown_args)))
 
     # Unexpected behavior from supplying both
     if args.python_command and args.python_args:
@@ -107,11 +107,9 @@ def ipython_interpreter(args):
     elif args.python_command:
         IPython.start_ipython(argv=["-c", args.python_command])
     else:
-        header = "Spack version %s\nPython %s, %s %s" % (
-            spack.spack_version,
-            platform.python_version(),
-            platform.system(),
-            platform.machine(),
+        header = (
+            f"Spack version {spack.spack_version}\n"
+            f"Python {platform.python_version()}, {platform.system()} {platform.machine()}"
         )
 
         __name__ = "__main__"  # noqa: F841
@@ -146,13 +144,8 @@ def python_interpreter(args):
                 console.push('readline.parse_and_bind("tab: complete")')
 
             console.interact(
-                "Spack version %s\nPython %s, %s %s"
-                % (
-                    spack.spack_version,
-                    platform.python_version(),
-                    platform.system(),
-                    platform.machine(),
-                )
+                f"Spack version {spack.spack_version}\n"
+                f"Python {platform.python_version()}, {platform.system()} {platform.machine()}"
             )
 
 

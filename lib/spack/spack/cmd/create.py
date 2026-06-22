@@ -248,8 +248,8 @@ class LuaPackageTemplate(PackageTemplate):
         # If the user provided `--name lua-lpeg`, don't rename it lua-lua-lpeg
         if not name.startswith("lua-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to lua-{0}".format(name))
-            name = "lua-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to lua-{name}")
+            name = f"lua-{name}"
         super().__init__(name, url, versions, languages)
 
 
@@ -363,8 +363,8 @@ class RacketPackageTemplate(PackageTemplate):
         # If the user provided `--name rkt-scribble`, don't rename it rkt-rkt-scribble
         if not name.startswith("rkt-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to rkt-{0}".format(name))
-            name = "rkt-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to rkt-{name}")
+            name = f"rkt-{name}"
         self.body_def = self.body_def.format(name[4:])
         super().__init__(name, url, versions, languages)
 
@@ -406,8 +406,8 @@ class PythonPackageTemplate(PackageTemplate):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith("py-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to py-{0}".format(name))
-            name = "py-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to py-{name}")
+            name = f"py-{name}"
 
         # Simple PyPI URLs:
         # https://<hostname>/packages/<type>/<first character of project>/<project>/<download file>
@@ -481,8 +481,8 @@ class RPackageTemplate(PackageTemplate):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
         if not name.startswith("r-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to r-{0}".format(name))
-            name = "r-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to r-{name}")
+            name = f"r-{name}"
 
         r_name = parse_name(url)
 
@@ -495,7 +495,7 @@ class RPackageTemplate(PackageTemplate):
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url = "{0}"\n    bioc = "{1}"'.format(url, r_name)
+            self.url_line = f'    url = "{url}"\n    bioc = "{r_name}"'
 
         super().__init__(name, url, versions, languages)
 
@@ -523,8 +523,8 @@ class PerlmakePackageTemplate(PackageTemplate):
         # If the user provided `--name perl-cpp`, don't rename it perl-perl-cpp
         if not name.startswith("perl-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to perl-{0}".format(name))
-            name = "perl-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to perl-{name}")
+            name = f"perl-{name}"
 
         super().__init__(name, url, versions, languages)
 
@@ -559,8 +559,8 @@ class OctavePackageTemplate(PackageTemplate):
         # octave-octave-splines
         if not name.startswith("octave-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to octave-{0}".format(name))
-            name = "octave-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to octave-{name}")
+            name = f"octave-{name}"
 
         super().__init__(name, url, versions, languages)
 
@@ -589,8 +589,8 @@ class RubyPackageTemplate(PackageTemplate):
         # ruby-ruby-numpy
         if not name.startswith("ruby-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to ruby-{0}".format(name))
-            name = "ruby-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to ruby-{name}")
+            name = f"ruby-{name}"
 
         super().__init__(name, url, versions, languages)
 
@@ -637,8 +637,8 @@ class SIPPackageTemplate(PackageTemplate):
         # If the user provided `--name py-pyqt4`, don't rename it py-py-pyqt4
         if not name.startswith("py-"):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to py-{0}".format(name))
-            name = "py-{0}".format(name)
+            tty.msg(f"Changing package name from {name} to py-{name}")
+            name = f"py-{name}"
 
         super().__init__(name, url, versions, languages)
 
@@ -896,7 +896,7 @@ def get_name(name, url):
         # Use a user-supplied name if one is present
         result = name
         if len(name.strip()) > 0:
-            tty.msg("Using specified package name: '{0}'".format(result))
+            tty.msg(f"Using specified package name: '{result}'")
         else:
             tty.die("A package name must be provided when using the option.")
     elif url is not None:
@@ -907,7 +907,7 @@ def get_name(name, url):
                 desc = "URL"
             else:
                 desc = "package name"
-            tty.msg("This looks like a {0} for {1}".format(desc, result))
+            tty.msg(f"This looks like a {desc} for {result}")
         except UndetectableNameError:
             tty.die(
                 "Couldn't guess a name for this package.",
@@ -984,7 +984,7 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
                 url_dict = url_dict_filtered
         except UndetectableVersionError:
             # Use fake versions
-            tty.warn("Couldn't detect version in: {0}".format(args.url))
+            tty.warn(f"Couldn't detect version in: {args.url}")
             return hashed_versions, guesser
 
         if not url_dict:
@@ -1027,7 +1027,7 @@ def get_build_system(
     if template is not None:
         selected_template = template
         # Use a user-supplied template if one is present
-        tty.msg("Using specified package template: '{0}'".format(selected_template))
+        tty.msg(f"Using specified package template: '{selected_template}'")
     elif url is not None:
         # Use whatever build system the guesser detected
         selected_template = guesser.build_system
@@ -1054,7 +1054,7 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
     spec = Spec(name)
     # Figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
-        tty.die("Namespaces '{0}' and '{1}' do not match.".format(spec.namespace, args.namespace))
+        tty.die(f"Namespaces '{spec.namespace}' and '{args.namespace}' do not match.")
 
     if not spec.namespace and args.namespace:
         spec.namespace = args.namespace
@@ -1065,9 +1065,8 @@ def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
         repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
-                "Can't create package with namespace {0} in repo with namespace {1}".format(
-                    spec.namespace, repo.namespace
-                )
+                f"Can't create package with namespace {spec.namespace} "
+                f"in repo with namespace {repo.namespace}"
             )
     else:
         if spec.namespace:
@@ -1097,22 +1096,21 @@ def create(parser, args):
     if package_class != BundlePackageTemplate:
         constr_args["url"] = url
     package = package_class(**constr_args)
-    tty.msg("Created template for {0} package".format(package.name))
+    tty.msg(f"Created template for {package.name} package")
 
     # Create a directory for the new package
     repo = get_repository(args, name)
     pkg_path = repo.filename_for_package_name(package.name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die(
-            "{0} already exists.".format(pkg_path),
-            "  Try running `spack create --force` to overwrite it.",
+            f"{pkg_path} already exists.", "  Try running `spack create --force` to overwrite it."
         )
     else:
         mkdirp(os.path.dirname(pkg_path))
 
     # Write the new package file
     package.write(pkg_path)
-    tty.msg("Created package file: {0}".format(pkg_path))
+    tty.msg(f"Created package file: {pkg_path}")
 
     # Optionally open up the new package file in your $EDITOR
     if not args.skip_editor:

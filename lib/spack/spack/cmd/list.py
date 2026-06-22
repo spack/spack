@@ -140,7 +140,7 @@ def name_only(pkgs, out):
     indent = 0
     colify(pkgs, indent=indent, output=out)
     if out.isatty():
-        tty.msg("%d packages" % len(pkgs))
+        tty.msg(f"{len(pkgs)} packages")
 
 
 def github_url(pkg: Type[spack.package_base.PackageBase]) -> Optional[str]:
@@ -229,22 +229,14 @@ def version_json(pkg_names, out):
     # output name and latest version for each package
     pkg_latest = ",\n".join(
         [
-            '  {{"name": "{0}",\n'
-            '   "latest_version": "{1}",\n'
-            '   "versions": {2},\n'
-            '   "homepage": "{3}",\n'
-            '   "file": "{4}",\n'
-            '   "maintainers": {5},\n'
-            '   "dependencies": {6}'
-            "}}".format(
-                pkg_cls.name,
-                VersionList(pkg_cls.versions).preferred(),
-                json.dumps([str(v) for v in reversed(sorted(pkg_cls.versions))]),
-                pkg_cls.homepage,
-                github_url(pkg_cls),
-                json.dumps(pkg_cls.maintainers),
-                json.dumps(get_dependencies(pkg_cls)),
-            )
+            f'  {{"name": "{pkg_cls.name}",\n'
+            f'   "latest_version": "{VersionList(pkg_cls.versions).preferred()}",\n'
+            f'   "versions": {json.dumps([str(v) for v in reversed(sorted(pkg_cls.versions))])},\n'
+            f'   "homepage": "{pkg_cls.homepage}",\n'
+            f'   "file": "{github_url(pkg_cls)}",\n'
+            f'   "maintainers": {json.dumps(pkg_cls.maintainers)},\n'
+            f'   "dependencies": {json.dumps(get_dependencies(pkg_cls))}'
+            "}"
             for pkg_cls in pkg_classes
         ]
     )
@@ -274,19 +266,16 @@ def html(pkg_names, out):
         if anchor is None:
             anchor = title
         out.write(
-            (
-                '<span id="id%d"></span>'
-                '<h1>%s<a class="headerlink" href="#%s" '
-                'title="Permalink to this headline">&para;</a>'
-                "</h1>\n"
-            )
-            % (span_id, title, anchor)
+            f'<span id="id{span_id}"></span>'
+            f'<h1>{title}<a class="headerlink" href="#{anchor}" '
+            'title="Permalink to this headline">&para;</a>'
+            "</h1>\n"
         )
 
     # Start with the number of packages, skipping the title and intro
     # blurb, which we maintain in the RST file.
     out.write("<p>\n")
-    out.write("Spack currently has %d mainline packages:\n" % len(pkg_classes))
+    out.write(f"Spack currently has {len(pkg_classes)} mainline packages:\n")
     out.write("</p>\n")
 
     # Table of links to all packages
@@ -296,7 +285,7 @@ def html(pkg_names, out):
         out.write('<tr class="row-odd">\n' if i % 2 == 0 else '<tr class="row-even">\n')
         for name in row:
             out.write("<td>\n")
-            out.write('<a class="reference internal" href="#%s">%s</a></td>\n' % (name, name))
+            out.write(f'<a class="reference internal" href="#{name}">{name}</a></td>\n')
             out.write("</td>\n")
         out.write("</tr>\n")
     out.write("</tbody>\n")
@@ -305,7 +294,7 @@ def html(pkg_names, out):
 
     # Output some text for each package.
     for pkg_cls in pkg_classes:
-        out.write('<div class="section" id="%s">\n' % pkg_cls.name)
+        out.write(f'<div class="section" id="{pkg_cls.name}">\n')
         head(2, span_id, pkg_cls.name)
         span_id += 1
 
@@ -316,8 +305,8 @@ def html(pkg_names, out):
 
         if pkg_cls.homepage:
             out.write(
-                ('<li><a class="reference external" href="%s">%s</a></li>\n')
-                % (pkg_cls.homepage, escape(pkg_cls.homepage, True))
+                f'<li><a class="reference external" href="{pkg_cls.homepage}">'
+                f"{escape(pkg_cls.homepage, True)}</a></li>\n"
             )
         else:
             out.write("No homepage\n")
@@ -326,8 +315,8 @@ def html(pkg_names, out):
         out.write("<dt>Spack package:</dt>\n")
         out.write('<dd><ul class="first last simple">\n')
         out.write(
-            ('<li><a class="reference external" href="%s">%s/package.py</a></li>\n')
-            % (github_url(pkg_cls), pkg_cls.name)
+            f'<li><a class="reference external" href="{github_url(pkg_cls)}">'
+            f"{pkg_cls.name}/package.py</a></li>\n"
         )
         out.write("</ul></dd>\n")
 
@@ -341,14 +330,14 @@ def html(pkg_names, out):
         for deptype in dt.ALL_TYPES:
             deps = pkg_cls.dependencies_of_type(dt.flag_from_string(deptype))
             if deps:
-                out.write("<dt>%s Dependencies:</dt>\n" % deptype.capitalize())
+                out.write(f"<dt>{deptype.capitalize()} Dependencies:</dt>\n")
                 out.write("<dd>\n")
                 out.write(
                     ", ".join(
                         (
                             d
                             if d not in pkg_names
-                            else '<a class="reference internal" href="#%s">%s</a>' % (d, d)
+                            else f'<a class="reference internal" href="#{d}">{d}</a>'
                         )
                         for d in deps
                     )
@@ -390,10 +379,10 @@ def list(parser, args):
         # change output stream if user asked for update
         if os.path.exists(args.update):
             if os.path.getmtime(args.update) > spack.repo.PATH.last_mtime():
-                tty.msg("File is up to date: %s" % args.update)
+                tty.msg(f"File is up to date: {args.update}")
                 return
 
-        tty.msg("Updating file: %s" % args.update)
+        tty.msg(f"Updating file: {args.update}")
         with open(args.update, "w", encoding="utf-8") as f:
             formatter(sorted_packages, f)
 

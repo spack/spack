@@ -20,21 +20,21 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
-        cmds += "setenv SPACK_ENV %s;\n" % env.path
+        cmds += f"setenv SPACK_ENV {env.path};\n"
         if view:
-            cmds += "setenv SPACK_ENV_VIEW %s;\n" % view
+            cmds += f"setenv SPACK_ENV_VIEW {view};\n"
         cmds += 'alias despacktivate "spack env deactivate";\n'
         if prompt:
             cmds += "if (! $?SPACK_OLD_PROMPT ) "
             cmds += 'setenv SPACK_OLD_PROMPT "${prompt}";\n'
-            cmds += 'set prompt="%s ${prompt}";\n' % prompt
+            cmds += f'set prompt="{prompt} ${{prompt}}";\n'
     elif shell == "fish":
         if "color" in os.getenv("TERM", "") and prompt:
-            prompt = colorize("@G{%s} " % prompt, color=True)
+            prompt = colorize(f"@G{{{prompt}}} ", color=True)
 
-        cmds += "set -gx SPACK_ENV %s;\n" % env.path
+        cmds += f"set -gx SPACK_ENV {env.path};\n"
         if view:
-            cmds += "set -gx SPACK_ENV_VIEW %s;\n" % view
+            cmds += f"set -gx SPACK_ENV_VIEW {view};\n"
         cmds += "function despacktivate;\n"
         cmds += "   spack env deactivate;\n"
         cmds += "end;\n"
@@ -45,9 +45,9 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
         #
     elif shell == "bat":
         # TODO: Color
-        cmds += 'set "SPACK_ENV=%s"\n' % env.path
+        cmds += f'set "SPACK_ENV={env.path}"\n'
         if view:
-            cmds += 'set "SPACK_ENV_VIEW=%s"\n' % view
+            cmds += f'set "SPACK_ENV_VIEW={view}"\n'
         if prompt:
             old_prompt = os.environ.get("SPACK_OLD_PROMPT")
             if not old_prompt:
@@ -55,23 +55,23 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
             cmds += f'set "SPACK_OLD_PROMPT={old_prompt}"\n'
             cmds += f'set "PROMPT={prompt} $P$G"\n'
     elif shell == "pwsh":
-        cmds += "$Env:SPACK_ENV='%s'\n" % env.path
+        cmds += f"$Env:SPACK_ENV='{env.path}'\n"
         if view:
-            cmds += "$Env:SPACK_ENV_VIEW='%s'\n" % view
+            cmds += f"$Env:SPACK_ENV_VIEW='{view}'\n"
         if prompt:
             cmds += (
                 "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
                 ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
                 '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
-                '"%s PS $pth>"}\n' % prompt
+                f'"{prompt} PS $pth>"}}\n'
             )
     else:
         bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
         zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
 
-        cmds += "export SPACK_ENV=%s;\n" % env.path
+        cmds += f"export SPACK_ENV={env.path};\n"
         if view:
-            cmds += "export SPACK_ENV_VIEW=%s;\n" % view
+            cmds += f"export SPACK_ENV_VIEW={view};\n"
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
             cmds += textwrap.dedent(
@@ -193,9 +193,9 @@ def activate(
         tty.die(
             "Environment view is broken due to a missing package or repo.\n",
             "  To activate without views enabled, activate with:\n",
-            "    spack env activate -V {0}\n".format(env.name),
+            f"    spack env activate -V {env.name}\n",
             "  To remove it and resolve the issue, force concretize with the command:\n",
-            "    spack -e {0} concretize --force".format(env.name),
+            f"    spack -e {env.name} concretize --force",
         )
 
     return env_mods

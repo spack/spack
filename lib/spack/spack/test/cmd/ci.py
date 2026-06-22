@@ -1277,7 +1277,7 @@ def test_ci_generate_read_broken_specs_url(
     broken_specs_url = tmp_path.as_uri()
 
     # Mark 'a' as broken (but not 'dependent-install')
-    broken_spec_a_url = "{0}/{1}".format(broken_specs_url, a_dag_hash)
+    broken_spec_a_url = f"{broken_specs_url}/{a_dag_hash}"
     job_stack = "job_stack"
     a_job_url = "a_job_url"
     ci.write_broken_spec(

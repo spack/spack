@@ -114,7 +114,7 @@ def external_find(args):
                 # print a warning and keep going
                 tty.warn("Unable to read manifest due to insufficient permissions.", skip_msg)
             else:
-                tty.warn("Unable to read manifest, unexpected error: {0}".format(str(e)), skip_msg)
+                tty.warn(f"Unable to read manifest, unexpected error: {str(e)}", skip_msg)
 
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
@@ -207,30 +207,24 @@ def _collect_and_consume_cray_manifest_files(
 
     if not ignore_default_dir and os.path.isdir(cray_manifest.default_path):
         tty.debug(
-            "Cray manifest path {0} exists: collecting all files to read.".format(
-                cray_manifest.default_path
-            )
+            f"Cray manifest path {cray_manifest.default_path} exists: "
+            "collecting all files to read."
         )
         manifest_dirs.append(cray_manifest.default_path)
     else:
-        tty.debug(
-            "Default Cray manifest directory {0} does not exist.".format(
-                cray_manifest.default_path
-            )
-        )
+        tty.debug(f"Default Cray manifest directory {cray_manifest.default_path} does not exist.")
 
     for directory in manifest_dirs:
         for fname in os.listdir(directory):
             if fname.endswith(".json"):
                 fpath = os.path.join(directory, fname)
-                tty.debug("Adding manifest file: {0}".format(fpath))
+                tty.debug(f"Adding manifest file: {fpath}")
                 manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
         raise NoManifestFileError(
-            "--file/--directory not specified, and no manifest found at {0}".format(
-                cray_manifest.default_path
-            )
+            f"--file/--directory not specified, "
+            f"and no manifest found at {cray_manifest.default_path}"
         )
 
     for path in manifest_files:
@@ -241,7 +235,7 @@ def _collect_and_consume_cray_manifest_files(
             if fail_on_error:
                 raise
             else:
-                tty.warn("Failure reading manifest file: {0}\n\t{1}".format(path, str(e)))
+                tty.warn(f"Failure reading manifest file: {path}\n\t{str(e)}")
 
 
 def external_list(args):

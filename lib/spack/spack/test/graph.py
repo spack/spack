@@ -33,7 +33,7 @@ def test_dynamic_dot_graph_mpileaks(default_mock_concretization):
         ("dyninst", "libelf"),
     ]
     for parent, child in dependencies_to_check:
-        assert '  "{0}" -> "{1}"\n'.format(hashes[parent], hashes[child]) in dot
+        assert f'  "{hashes[parent]}" -> "{hashes[child]}"\n' in dot
 
 
 def test_ascii_graph_mpileaks(config, mock_packages, monkeypatch):

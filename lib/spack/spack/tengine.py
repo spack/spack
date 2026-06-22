@@ -104,12 +104,12 @@ def prepend_to_line(text, token):
 
 def quote(text):
     """Quotes each line in text"""
-    return ['"{0}"'.format(line) for line in text]
+    return [f'"{line}"' for line in text]
 
 
 def curly_quote(text):
     """Encloses each line of text in curly braces"""
-    return ["{{{0}}}".format(line) for line in text]
+    return [f"{{{line}}}" for line in text]
 
 
 def _set_filters(env):

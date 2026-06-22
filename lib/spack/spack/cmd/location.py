@@ -119,7 +119,7 @@ def location(parser, args):
         else:
             # Get path of requested environment
             if not ev.exists(args.location_env):
-                tty.die("no such environment: '%s'" % args.location_env)
+                tty.die(f"no such environment: '{args.location_env}'")
             path = ev.root(args.location_env)
         print(path)
         return
@@ -137,7 +137,7 @@ def location(parser, args):
         if env.has_view(view_name):
             print(f"{env.views[view_name].root}\n")
         else:
-            tty.die("no such view in the current environment: '%s'" % view_name)
+            tty.die(f"no such view in the current environment: '{view_name}'")
         return
 
     if args.repo is not False:

@@ -26,4 +26,4 @@ class SpliceZ(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-z"), "w", encoding="utf-8") as f:
-            f.write("splice-z: {0}".format(prefix))
+            f.write(f"splice-z: {prefix}")

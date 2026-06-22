@@ -402,13 +402,13 @@ class InstallationPhase:
         # If a phase has a matching stop_before_phase attribute,
         # stop the installation process raising a StopPhase
         if getattr(instance, "stop_before_phase", None) == self.name:
-            raise spack.error.StopPhase("Stopping before '{0}' phase".format(self.name))
+            raise spack.error.StopPhase(f"Stopping before '{self.name}' phase")
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
         # stop the installation process raising a StopPhase
         if getattr(instance, "last_phase", None) == self.name:
-            raise spack.error.StopPhase("Stopping at '{0}' phase".format(self.name))
+            raise spack.error.StopPhase(f"Stopping at '{self.name}' phase")
 
     def copy(self):
         return copy.deepcopy(self)

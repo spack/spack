@@ -31,7 +31,7 @@ def get_all_versions(specs):
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         # Skip any package that has no known versions.
         if not pkg_cls.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg_cls.name)
+            tty.msg(f"No safe (checksummed) versions for package {pkg_cls.name}")
             continue
 
         for version in pkg_cls.versions:
@@ -54,7 +54,7 @@ def get_matching_versions(specs, num_versions=1):
 
         # Skip any package that has no known versions.
         if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+            tty.msg(f"No safe (checksummed) versions for package {pkg.name}")
             continue
 
         pkg_versions = num_versions
@@ -84,7 +84,7 @@ def get_matching_versions(specs, num_versions=1):
                 pkg_versions -= 1
 
         if not matching_spec:
-            tty.warn("No known version matches spec: %s" % spec)
+            tty.warn(f"No known version matches spec: {spec}")
         matching.extend(matching_spec)
 
     return matching
@@ -107,7 +107,7 @@ def get_mirror_cache(path, skip_unstable_versions=False):
         try:
             mkdirp(path)
         except OSError as e:
-            raise MirrorError("Cannot create directory '%s':" % path, str(e))
+            raise MirrorError(f"Cannot create directory '{path}':", str(e))
     mirror_cache = spack.caches.MirrorCache(path, skip_unstable_versions=skip_unstable_versions)
     return mirror_cache
 
@@ -119,7 +119,7 @@ def add(mirror: Mirror, scope=None):
         mirrors = syaml.syaml_dict()
 
     if mirror.name in mirrors:
-        tty.die("Mirror with name {} already exists.".format(mirror.name))
+        tty.die(f"Mirror with name {mirror.name} already exists.")
 
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, (mirror.name, mirror.to_dict()))
@@ -229,7 +229,8 @@ def create_mirror_from_package_object(
                     traceback.print_exc()
                 else:
                     tty.warn(
-                        "Error while fetching %s" % pkg_obj.spec.format("{name}{@version}"), str(e)
+                        "Error while fetching {}".format(pkg_obj.spec.format("{name}{@version}")),
+                        str(e),
                     )
                 mirror_stats.error()
                 return False

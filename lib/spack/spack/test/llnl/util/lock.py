@@ -153,7 +153,7 @@ def lock_dir(lock_test_directory):
     )
     if not parent:
         # Skip filesystems that don't exist or aren't writable
-        pytest.skip("requires filesystem: '%s'" % lock_test_directory)
+        pytest.skip(f"requires filesystem: '{lock_test_directory}'")
     elif mpi and parent == tempfile.gettempdir():
         # Skip local tmp test for MPI runs
         pytest.skip("skipping local tmp directory for MPI test.")
@@ -186,7 +186,7 @@ def private_lock_path(lock_dir):
     """
     lock_file = os.path.join(lock_dir, "lockfile")
     if mpi:
-        lock_file += ".%s" % comm.rank
+        lock_file += f".{comm.rank}"
 
     yield lock_file
 
@@ -242,7 +242,7 @@ def mpi_multiproc_test(*functions):
     """
     procs = len(functions)
     if procs > comm.size:
-        pytest.skip("requires at least %d MPI processes" % procs)
+        pytest.skip(f"requires at least {procs} MPI processes")
 
     comm.Barrier()  # barrier before each MPI test
 
@@ -897,12 +897,12 @@ def test_transaction(lock_path, transaction, type):
 
     def enter_fn():
         # assert enter_fn is called while lock is held
-        assert vals["acquired_%s" % type]
+        assert vals[f"acquired_{type}"]
         vals["entered_fn"] = True
 
     def exit_fn(t, v, tb):
         # assert exit_fn is called while lock is held
-        assert not vals["released_%s" % type]
+        assert not vals[f"released_{type}"]
         vals["exited_fn"] = True
         vals["exception"] = t or v or tb
 
@@ -910,13 +910,13 @@ def test_transaction(lock_path, transaction, type):
     lock = MockLock(lock_path, vals)
 
     with transaction(lock, acquire=enter_fn, release=exit_fn):
-        assert vals["acquired_%s" % type]
-        assert not vals["released_%s" % type]
+        assert vals[f"acquired_{type}"]
+        assert not vals[f"released_{type}"]
 
     assert vals["entered_fn"]
     assert vals["exited_fn"]
-    assert vals["acquired_%s" % type]
-    assert vals["released_%s" % type]
+    assert vals[f"acquired_{type}"]
+    assert vals[f"released_{type}"]
     assert not vals["exception"]
 
 
@@ -942,11 +942,11 @@ def test_transaction_with_exception(lock_path, transaction, type):
             assert not vals["exited_fn"]
 
     def enter_fn():
-        assert vals["acquired_%s" % type]
+        assert vals[f"acquired_{type}"]
         vals["entered_fn"] = True
 
     def exit_fn(t, v, tb):
-        assert not vals["released_%s" % type]
+        assert not vals[f"released_{type}"]
         vals["exited_fn"] = True
         vals["exception"] = t or v or tb
         return exit_result
@@ -1102,10 +1102,10 @@ def test_try_transaction(lock_path, transaction, type):
     with transaction(lock, acquire=enter_fn, release=exit_fn) as acquired:
         assert acquired
         assert vals["entered_fn"]
-        assert not vals["released_%s" % type]
+        assert not vals[f"released_{type}"]
 
     assert vals["exited_fn"]
-    assert vals["released_%s" % type]
+    assert vals[f"released_{type}"]
     assert not vals["exception"]
 
 

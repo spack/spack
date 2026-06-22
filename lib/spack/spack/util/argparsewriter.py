@@ -285,12 +285,12 @@ class ArgparseRstWriter(ArgparseWriter):
         Returns:
             Usage of a command.
         """
-        return """\
+        return f"""\
 .. code-block:: console
 
-    {0}
+    {usage}
 
-""".format(usage)
+"""
 
     def begin_positionals(self) -> str:
         """Text to print before positional arguments.
@@ -310,11 +310,11 @@ class ArgparseRstWriter(ArgparseWriter):
         Returns:
             Positional argument description.
         """
-        return """\
-``{0}``
-  {1}
+        return f"""\
+``{name}``
+  {help}
 
-""".format(name, help)
+"""
 
     def end_positionals(self) -> str:
         """Text to print after positional arguments.
@@ -342,11 +342,11 @@ class ArgparseRstWriter(ArgparseWriter):
         Returns:
             Optional argument description.
         """
-        return """\
-``{0}``
-  {1}
+        return f"""\
+``{opts}``
+  {help}
 
-""".format(opts, help)
+"""
 
     def end_optionals(self) -> str:
         """Text to print after optional arguments.

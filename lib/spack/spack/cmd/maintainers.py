@@ -111,13 +111,13 @@ def maintainers(parser, args):
         if args.by_user:
             maintainers = maintainers_to_packages(args.package_or_user)
             for user, packages in sorted(maintainers.items()):
-                color.cprint("@c{%s}: %s" % (user, ", ".join(sorted(packages))))
+                color.cprint("@c{{{}}}: {}".format(user, ", ".join(sorted(packages))))
             return 0 if maintainers else 1
 
         else:
             packages = packages_to_maintainers(args.package_or_user)
             for pkg, maintainers in sorted(packages.items()):
-                color.cprint("@c{%s}: %s" % (pkg, ", ".join(sorted(maintainers))))
+                color.cprint("@c{{{}}}: {}".format(pkg, ", ".join(sorted(maintainers))))
             return 0 if packages else 1
 
     if args.by_user:

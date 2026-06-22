@@ -1128,8 +1128,8 @@ class Database:
             found = rec.ref_count
             if not expected == found:
                 raise AssertionError(
-                    "Invalid ref_count: %s: %d (expected %d), in DB %s"
-                    % (key, found, expected, self._index_path)
+                    f"Invalid ref_count: {key}: {found} (expected {expected}), "
+                    f"in DB {self._index_path}"
                 )
 
     def _write(self, type=None, value=None, traceback=None):
@@ -1153,7 +1153,7 @@ class Database:
             self._state_is_inconsistent = True
             return
 
-        temp_file = str(self._index_path) + (".%s.%s.temp" % (_gethostname(), os.getpid()))
+        temp_file = str(self._index_path) + (f".{_gethostname()}.{os.getpid()}.temp")
 
         # Write a temporary database file them move it into place
         try:
@@ -1468,7 +1468,7 @@ class Database:
     ) -> Set["spack.spec.Spec"]:
         """Return installed specs related to this one."""
         if direction not in ("parents", "children"):
-            raise ValueError("Invalid direction: %s" % direction)
+            raise ValueError(f"Invalid direction: {direction}")
 
         relatives: Set[spack.spec.Spec] = set()
         for spec in self.query(spec):

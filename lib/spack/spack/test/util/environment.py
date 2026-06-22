@@ -122,11 +122,11 @@ def test_dump_environment(prepare_environment_for_tests, shell_as, shell, tmp_pa
     envutil.dump_environment(dumpfile_path)
     with open(dumpfile_path, "r", encoding="utf-8") as dumpfile:
         if shell == "pwsh":
-            assert "$Env:TEST_ENV_VAR={}\n".format(test_paths) in list(dumpfile)
+            assert f"$Env:TEST_ENV_VAR={test_paths}\n" in list(dumpfile)
         elif shell == "bat":
-            assert 'set "TEST_ENV_VAR={}"\n'.format(test_paths) in list(dumpfile)
+            assert f'set "TEST_ENV_VAR={test_paths}"\n' in list(dumpfile)
         else:
-            assert "TEST_ENV_VAR={0}; export TEST_ENV_VAR\n".format(test_paths) in list(dumpfile)
+            assert f"TEST_ENV_VAR={test_paths}; export TEST_ENV_VAR\n" in list(dumpfile)
 
 
 def test_reverse_environment_modifications(working_env):

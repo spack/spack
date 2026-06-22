@@ -317,6 +317,7 @@ class NoSuchMethodError(spack.error.SpackError):
 
     def __init__(self, cls, method_name, spec, possible_specs):
         super().__init__(
-            "Package %s does not support %s called with %s.  Options are: %s"
-            % (cls.__name__, method_name, spec, ", ".join(str(s) for s in possible_specs))
+            "Package {} does not support {} called with {}.  Options are: {}".format(
+                cls.__name__, method_name, spec, ", ".join(str(s) for s in possible_specs)
+            )
         )

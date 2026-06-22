@@ -47,7 +47,7 @@ class Zlib(Package):
         config_args = []
         if "~shared" in spec:
             config_args.append("--static")
-        configure("--prefix={0}".format(prefix), *config_args)
+        configure(f"--prefix={prefix}", *config_args)
 
         make()
         if self.run_tests:

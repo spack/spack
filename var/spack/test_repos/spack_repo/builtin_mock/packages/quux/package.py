@@ -88,15 +88,15 @@ main()
         quux_version_h = """const int quux_version_major = %s;
 const int quux_version_minor = %s;
 """
-        mkdirp("%s/quux" % prefix.include)
-        mkdirp("%s/quux" % self.stage.source_path)
-        with open("%s/quux_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        mkdirp(f"{prefix.include}/quux")
+        mkdirp(f"{self.stage.source_path}/quux")
+        with open(f"{self.stage.source_path}/quux_version.h", "w", encoding="utf-8") as f:
             f.write(quux_version_h % (self.version[0], self.version[1:]))
-        with open("%s/quux/quux.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/quux/quux.cc", "w", encoding="utf-8") as f:
             f.write(quux_cc % (prefix.config))
-        with open("%s/quux/quux.h" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/quux/quux.h", "w", encoding="utf-8") as f:
             f.write(quux_h)
-        with open("%s/quux/quuxifier.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
+        with open(f"{self.stage.source_path}/quux/quuxifier.cc", "w", encoding="utf-8") as f:
             f.write(quuxifier_cc)
         gpp = which(
             "g++",
@@ -108,8 +108,8 @@ const int quux_version_minor = %s;
             gpp = which("/usr/bin/clang++")
         gpp(
             "-Dquux_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["garply"].prefix.include,
+            f"-I{self.stage.source_path}",
+            "-I{}".format(spec["garply"].prefix.include),
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -121,8 +121,8 @@ const int quux_version_minor = %s;
         )
         gpp(
             "-Dquux_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["garply"].prefix.include,
+            f"-I{self.stage.source_path}",
+            "-I{}".format(spec["garply"].prefix.include),
             "-O2",
             "-g",
             "-DNDEBUG",
@@ -145,9 +145,9 @@ const int quux_version_minor = %s;
                 "-install_name",
                 "@rpath/libquux.dylib",
                 "quux.cc.o",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
+                "-Wl,-rpath,{}".format(spec["garply"].prefix.lib64),
+                "{}/libgarply.dylib".format(spec["garply"].prefix.lib64),
             )
             gpp(
                 "-O2",
@@ -156,14 +156,14 @@ const int quux_version_minor = %s;
                 "quuxifier.cc.o",
                 "-o",
                 "quuxifier",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
+                f"-Wl,-rpath,{prefix.lib64}",
+                "-Wl,-rpath,{}".format(spec["garply"].prefix.lib64),
                 "libquux.dylib",
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
+                "{}/libgarply.dylib".format(spec["garply"].prefix.lib64),
             )
             mkdirp(prefix.lib64)
-            copy("libquux.dylib", "%s/libquux.dylib" % prefix.lib64)
-            os.link("%s/libquux.dylib" % prefix.lib64, "%s/libquux.dylib.3.0" % prefix.lib64)
+            copy("libquux.dylib", f"{prefix.lib64}/libquux.dylib")
+            os.link(f"{prefix.lib64}/libquux.dylib", f"{prefix.lib64}/libquux.dylib.3.0")
         else:
             gpp(
                 "-fPIC",
@@ -175,8 +175,8 @@ const int quux_version_minor = %s;
                 "-o",
                 "libquux.so",
                 "quux.cc.o",
-                "-Wl,-rpath,%s:%s::::" % (prefix.lib64, spec["garply"].prefix.lib64),
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
+                "-Wl,-rpath,{}:{}::::".format(prefix.lib64, spec["garply"].prefix.lib64),
+                "{}/libgarply.so".format(spec["garply"].prefix.lib64),
             )
             gpp(
                 "-O2",
@@ -186,16 +186,18 @@ const int quux_version_minor = %s;
                 "quuxifier.cc.o",
                 "-o",
                 "quuxifier",
-                "-Wl,-rpath,%s:%s::::" % (prefix.lib64, spec["garply"].prefix.lib64),
+                "-Wl,-rpath,{}:{}::::".format(prefix.lib64, spec["garply"].prefix.lib64),
                 "libquux.so",
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
+                "{}/libgarply.so".format(spec["garply"].prefix.lib64),
             )
             mkdirp(prefix.lib64)
-            copy("libquux.so", "%s/libquux.so" % prefix.lib64)
-            os.link("%s/libquux.so" % prefix.lib64, "%s/libquux.so.3.0" % prefix.lib64)
-        copy("quuxifier", "%s/quuxifier" % prefix.lib64)
-        copy("%s/quux/quux.h" % self.stage.source_path, "%s/quux/quux.h" % prefix.include)
+            copy("libquux.so", f"{prefix.lib64}/libquux.so")
+            os.link(f"{prefix.lib64}/libquux.so", f"{prefix.lib64}/libquux.so.3.0")
+        copy("quuxifier", f"{prefix.lib64}/quuxifier")
+        copy(f"{self.stage.source_path}/quux/quux.h", f"{prefix.include}/quux/quux.h")
         mkdirp(prefix.bin)
-        copy("quux_version.h", "%s/quux_version.h" % prefix.bin)
-        os.symlink("%s/quuxifier" % prefix.lib64, "%s/quuxifier" % prefix.bin)
-        os.symlink("%s/garplinator" % spec["garply"].prefix.lib64, "%s/garplinator" % prefix.bin)
+        copy("quux_version.h", f"{prefix.bin}/quux_version.h")
+        os.symlink(f"{prefix.lib64}/quuxifier", f"{prefix.bin}/quuxifier")
+        os.symlink(
+            "{}/garplinator".format(spec["garply"].prefix.lib64), f"{prefix.bin}/garplinator"
+        )

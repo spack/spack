@@ -58,7 +58,7 @@ last_line = "last!\n"
 
 @pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
-    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.layout.root
+    yield f"#!/bin/sh {spack.store.STORE.layout.root}/bin/sbang\n"
 
 
 class ScriptDirectory:
@@ -275,13 +275,13 @@ def configure_group_perms():
     group_name = grp.getgrgid(gid).gr_name
 
     conf = syaml.load_config(
-        """\
+        f"""\
 all:
   permissions:
     read: world
     write: group
-    group: {0}
-""".format(group_name)
+    group: {group_name}
+"""
     )
     spack.config.set("packages", conf, scope="user")
 
@@ -314,16 +314,16 @@ def check_sbang_installation(group=False):
     status = os.stat(sbang_bin_dir)
     mode = status.st_mode & 0o777
     if group:
-        assert mode == 0o775, "Unexpected {0}".format(oct(mode))
+        assert mode == 0o775, f"Unexpected {oct(mode)}"
     else:
-        assert mode == 0o755, "Unexpected {0}".format(oct(mode))
+        assert mode == 0o755, f"Unexpected {oct(mode)}"
 
     status = os.stat(sbang_path)
     mode = status.st_mode & 0o777
     if group:
-        assert mode == 0o775, "Unexpected {0}".format(oct(mode))
+        assert mode == 0o775, f"Unexpected {oct(mode)}"
     else:
-        assert mode == 0o755, "Unexpected {0}".format(oct(mode))
+        assert mode == 0o755, f"Unexpected {oct(mode)}"
 
 
 def run_test_install_sbang(group):

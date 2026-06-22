@@ -1228,7 +1228,7 @@ def get_entries_from_cache(url: str, tmpspecsdir: str, component_type: Buildcach
         if file_to_mtime_mapping:
             return file_to_mtime_mapping, read_fn
 
-    raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
+    raise ListMirrorSpecsError(f"Failed to get list of entries from {url}")
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:

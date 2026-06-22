@@ -124,7 +124,7 @@ def get_module(cmd_name):
         # Try to import the command from the built-in directory
         module_name = f"{__name__}.{pname}"
         module = importlib.import_module(module_name)
-        tty.debug("Imported {0} from built-in commands".format(pname))
+        tty.debug(f"Imported {pname} from built-in commands")
     except ImportError:
         module = spack.extensions.get_module(cmd_name)
         if not module:
@@ -135,8 +135,7 @@ def get_module(cmd_name):
 
     if not hasattr(module, pname):
         tty.die(
-            "Command module %s (%s) must define function '%s'."
-            % (module.__name__, module.__file__, pname)
+            f"Command module {module.__name__} ({module.__file__}) must define function '{pname}'."
         )
 
     return module
@@ -339,9 +338,9 @@ def ensure_single_spec_or_die(spec, matching_specs):
         "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
         "{compilers}"
     )
-    args = ["%s matches multiple packages." % spec, "Matching packages:"]
+    args = [f"{spec} matches multiple packages.", "Matching packages:"]
     args += [
-        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+        colorize(f"  @K{{{s.dag_hash(7)}}} ") + s.cformat(format_string) for s in matching_specs
     ]
     args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
     tty.die(*args)
@@ -352,7 +351,7 @@ def gray_hash(spec, length):
         # default to maximum hash length
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
-    return colorize("@K{%s}" % h)
+    return colorize(f"@K{{{h}}}")
 
 
 def buildcache_status_fn(
@@ -417,7 +416,7 @@ def iter_groups(specs, indent, all_headers):
 
         # Drop the leading space from compilers to clean up output and aid checks.
         compilers_info = compilers.strip() or "no compilers"
-        header = "%s{%s} / %s{%s}" % (
+        header = "{}{{{}}} / {}{{{}}}".format(
             spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
             spack.spec.COMPILER_COLOR,
@@ -551,7 +550,7 @@ def display_specs(specs, args=None, **kwargs):
 
         # otherwise, we'll print specs one by one
         max_width = max(len(f[0]) for f in formatted)
-        path_fmt = "%%-%ds%%s" % (max_width + 2)
+        path_width = max_width + 2
 
         out = ""
         # getting lots of prefixes requires DB lookups. Ensure
@@ -564,7 +563,7 @@ def display_specs(specs, args=None, **kwargs):
                     continue
 
                 if paths:
-                    out += path_fmt % (string, spec.prefix) + "\n"
+                    out += f"{string:<{path_width}}{spec.prefix}\n"
                 else:
                     out += string + "\n"
 
@@ -599,7 +598,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("{}".format(spack.util.string.plural(len(specs), pkg_type + " package")) + suffix)
 
 
 def spack_is_git_repo():
@@ -628,7 +627,7 @@ class PythonNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super().__init__("{0} is not a permissible Python name.".format(name))
+        super().__init__(f"{name} is not a permissible Python name.")
 
 
 class CommandNameError(spack.error.SpackError):
@@ -636,7 +635,7 @@ class CommandNameError(spack.error.SpackError):
 
     def __init__(self, name):
         self.name = name
-        super().__init__("{0} is not a permissible Spack command name.".format(name))
+        super().__init__(f"{name} is not a permissible Spack command name.")
 
 
 class MultipleSpecsMatch(Exception):
@@ -659,7 +658,7 @@ def extant_file(f):
     Argparse type for files that exist.
     """
     if not os.path.isfile(f):
-        raise argparse.ArgumentTypeError("%s does not exist" % f)
+        raise argparse.ArgumentTypeError(f"{f} does not exist")
     return f
 
 
@@ -682,7 +681,7 @@ def require_active_env(parser):
         "  activate an environment first:\n"
         "      spack env activate ENV\n"
         "  or use:\n"
-        "      spack -e ENV %s ..." % parser.prog.partition(" ")[2]
+        "      spack -e ENV {} ...".format(parser.prog.partition(" ")[2])
     )
 
 
@@ -726,7 +725,7 @@ def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     if ev.is_env_dir(env):
         return ev.Environment(env)
 
-    raise ev.SpackEnvironmentError("no environment in %s" % env)
+    raise ev.SpackEnvironmentError(f"no environment in {env}")
 
 
 def doc_first_line(function: object) -> Optional[str]:

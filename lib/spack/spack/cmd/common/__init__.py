@@ -20,24 +20,24 @@ def shell_init_instructions(cmd, equivalent):
     shell_specific = "{sh_arg}" in equivalent
 
     msg = [
-        "`%s` requires Spack's shell support." % cmd,
+        f"`{cmd}` requires Spack's shell support.",
         "",
         "To set up shell support, run the command below for your shell.",
         "",
         color.colorize("@*c{For bash/zsh/sh:}"),
-        "  . %s/setup-env.sh" % spack.paths.share_path,
+        f"  . {spack.paths.share_path}/setup-env.sh",
         "",
         color.colorize("@*c{For csh/tcsh:}"),
-        "  source %s/setup-env.csh" % spack.paths.share_path,
+        f"  source {spack.paths.share_path}/setup-env.csh",
         "",
         color.colorize("@*c{For fish:}"),
-        "  source %s/setup-env.fish" % spack.paths.share_path,
+        f"  source {spack.paths.share_path}/setup-env.fish",
         "",
         color.colorize("@*c{For Windows batch:}"),
-        "  %s\\spack_cmd.bat" % spack.paths.bin_path,
+        f"  {spack.paths.bin_path}\\spack_cmd.bat",
         "",
         color.colorize("@*c{For PowerShell:}"),
-        "  %s\\setup-env.ps1" % spack.paths.share_path,
+        f"  {spack.paths.share_path}\\setup-env.ps1",
         "",
         "Or, if you do not want to use shell support, run "
         + ("one of these" if shell_specific else "this")

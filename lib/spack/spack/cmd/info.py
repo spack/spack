@@ -270,7 +270,7 @@ def print_phases(pkg: PackageBase, args: Namespace) -> None:
         color.cprint(section_title("Installation Phases:"))
         phase_str = ""
         for phase in builder.phases:
-            phase_str += "    {0}".format(phase)
+            phase_str += f"    {phase}"
         color.cprint(phase_str)
 
 
@@ -301,7 +301,7 @@ def print_tests(pkg: PackageBase, args: Namespace) -> None:
         (getattr(pkg, "install_time_test_callbacks", None), "Install"),
     ]:
         color.cprint("")
-        color.cprint(section_title("Available {0} Phase Test Methods:".format(phase)))
+        color.cprint(section_title(f"Available {phase} Phase Test Methods:"))
         names = []
         if callbacks:
             for name in callbacks:
@@ -595,7 +595,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
                 return "No URL"
 
         url = get_url(preferred) if pkg.has_code else ""
-        line = version("    {0}".format(pad(preferred))) + color.cescape(str(url))
+        line = version(f"    {pad(preferred)}") + color.cescape(str(url))
         color.cwrite(line)
 
         print()
@@ -612,13 +612,13 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         for title, vers in [("Safe", safe), ("Deprecated", deprecated)]:
             color.cprint("")
-            color.cprint(section_title("{0} versions:  ".format(title)))
+            color.cprint(section_title(f"{title} versions:  "))
             if not vers:
                 color.cprint(version("    None"))
                 continue
 
             for v, url in vers:
-                line = version("    {0}".format(pad(v))) + color.cescape(str(url))
+                line = version(f"    {pad(v)}") + color.cescape(str(url))
                 color.cprint(line)
 
 
@@ -629,7 +629,9 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
     color.cprint(section_title("Virtual Packages: "))
     if pkg.provided:
         for when, specs in reversed(sorted(pkg.provided.items())):
-            line = "    %s provides %s" % (when.cformat(), ", ".join(s.cformat() for s in specs))
+            line = "    {} provides {}".format(
+                when.cformat(), ", ".join(s.cformat() for s in specs)
+            )
             print(line)
 
     else:

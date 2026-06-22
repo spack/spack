@@ -330,8 +330,8 @@ def ci_rebuild(args):
     concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
 
     # Debug print some of the key environment variables we should have received
-    tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))
-    tty.debug("job_spec_pkg_name = {0}".format(job_spec_pkg_name))
+    tty.debug(f"pipeline_artifacts_dir = {pipeline_artifacts_dir}")
+    tty.debug(f"job_spec_pkg_name = {job_spec_pkg_name}")
 
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
@@ -340,24 +340,20 @@ def ci_rebuild(args):
     cdash_handler = None
     if "build-group" in cdash_config:
         cdash_handler = spack_ci.CDashHandler(cdash_config)
-        tty.debug("cdash url = {0}".format(cdash_handler.url))
-        tty.debug("cdash project = {0}".format(cdash_handler.project))
-        tty.debug("cdash project_enc = {0}".format(cdash_handler.project_enc))
-        tty.debug("cdash build_name = {0}".format(cdash_handler.build_name))
-        tty.debug("cdash build_stamp = {0}".format(cdash_handler.build_stamp))
-        tty.debug("cdash site = {0}".format(cdash_handler.site))
-        tty.debug("cdash build_group = {0}".format(cdash_handler.build_group))
+        tty.debug(f"cdash url = {cdash_handler.url}")
+        tty.debug(f"cdash project = {cdash_handler.project}")
+        tty.debug(f"cdash project_enc = {cdash_handler.project_enc}")
+        tty.debug(f"cdash build_name = {cdash_handler.build_name}")
+        tty.debug(f"cdash build_stamp = {cdash_handler.build_stamp}")
+        tty.debug(f"cdash site = {cdash_handler.site}")
+        tty.debug(f"cdash build_group = {cdash_handler.build_group}")
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
     # be neither, e.g. a pipeline run on some environment repository.
     spack_is_pr_pipeline = spack_pipeline_type == "spack_pull_request"
     spack_is_develop_pipeline = spack_pipeline_type == "spack_protected_branch"
 
-    tty.debug(
-        "Pipeline type - PR: {0}, develop: {1}".format(
-            spack_is_pr_pipeline, spack_is_develop_pipeline
-        )
-    )
+    tty.debug(f"Pipeline type - PR: {spack_is_pr_pipeline}, develop: {spack_is_develop_pipeline}")
 
     full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
@@ -372,9 +368,9 @@ def ci_rebuild(args):
     try:
         job_spec = env.get_one_by_hash(job_spec_dag_hash)
     except AssertionError:
-        tty.die("Could not find environment spec with hash {0}".format(job_spec_dag_hash))
+        tty.die(f"Could not find environment spec with hash {job_spec_dag_hash}")
 
-    job_spec_json_file = "{0}.json".format(job_spec_pkg_name)
+    job_spec_json_file = f"{job_spec_pkg_name}.json"
     job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
 
     # To provide logs, cdash reports, etc for developer download/perusal,
@@ -419,7 +415,7 @@ def ci_rebuild(args):
 
     # Write this job's spec json into the reproduction directory, and it will
     # also be used in the generated "spack install" command to install the spec
-    tty.debug("job concrete spec path: {0}".format(job_spec_json_path))
+    tty.debug(f"job concrete spec path: {job_spec_json_path}")
     with open(job_spec_json_path, "w", encoding="utf-8") as fd:
         fd.write(job_spec.to_json(hash=ht.dag_hash))
 
@@ -454,9 +450,9 @@ def ci_rebuild(args):
         # of the matches and download the buildcache files from there to
         # the artifacts, so they're available to be used by dependent
         # jobs in subsequent stages.
-        tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
+        tty.msg(f"No need to rebuild {job_spec_pkg_name}, found hash match at: ")
         for match in matches:
-            tty.msg("    {0}".format(match.url))
+            tty.msg(f"    {match.url}")
 
         # Now we are done and successful
         return 0
@@ -502,11 +498,11 @@ def ci_rebuild(args):
         spack_cmd + deps_install_args + [slash_hash],
         spack_cmd + root_install_args + [slash_hash],
     ]
-    tty.debug("Installing {0} from source".format(job_spec.name))
+    tty.debug(f"Installing {job_spec.name} from source")
     install_exit_code = spack_ci.process_command("install", commands, repro_dir)
 
     # Now do the post-install tasks
-    tty.debug("spack install exited {0}".format(install_exit_code))
+    tty.debug(f"spack install exited {install_exit_code}")
 
     # If a spec fails to build in a spack develop pipeline, we add it to a
     # list of known broken hashes.  This allows spack PR pipelines to
@@ -517,7 +513,7 @@ def ci_rebuild(args):
             broken_specs_url = ci_config["broken-specs-url"]
             dev_fail_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
-            tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
+            tty.msg(f"Reporting broken develop build as: {broken_spec_path}")
             spack_ci.write_broken_spec(
                 broken_spec_path,
                 job_spec_pkg_name,
@@ -553,8 +549,8 @@ def ci_rebuild(args):
                 # First ensure we will use a reasonable test stage directory
                 stage_root = os.path.dirname(str(job_spec.package.stage.path))
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
-                tty.debug("Configuring test_stage to {0}".format(test_stage))
-                config_test_path = "config:test_stage:{0}".format(test_stage)
+                tty.debug(f"Configuring test_stage to {test_stage}")
+                config_test_path = f"config:test_stage:{test_stage}"
                 cfg.add(config_test_path, scope=cfg.default_modify_scope())
 
                 # Run the tests, resorting to junit results if not using cdash
@@ -572,7 +568,7 @@ def ci_rebuild(args):
 
             except Exception as err:
                 # If there is any error, just print a warning.
-                msg = "Error processing stand-alone tests: {0}".format(str(err))
+                msg = f"Error processing stand-alone tests: {str(err)}"
                 tty.warn(msg)
 
             finally:
@@ -615,7 +611,7 @@ def ci_rebuild(args):
             just_built_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
             if web_util.url_exists(broken_spec_path):
-                tty.msg("Removing {0} from the list of broken specs".format(broken_spec_path))
+                tty.msg(f"Removing {broken_spec_path} from the list of broken specs")
                 try:
                     web_util.remove_url(broken_spec_path)
                 except Exception as err:

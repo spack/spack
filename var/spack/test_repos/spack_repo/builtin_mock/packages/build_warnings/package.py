@@ -33,7 +33,7 @@ class BuildWarnings(Package):
                   """
                 )
 
-            Executable("configure.bat")("--prefix=%s" % self.prefix)
+            Executable("configure.bat")(f"--prefix={self.prefix}")
         else:
             with open("configure", "w", encoding="utf-8") as f:
                 f.write(

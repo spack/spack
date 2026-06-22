@@ -863,7 +863,7 @@ def test_nested_override():
         ]
 
         for i in range(num_expected):
-            name = "{0}{1}".format(base_name, i)
+            name = f"{base_name}{i}"
             assert name in scope_names
 
             data = spack.config.CONFIG.get_config("config", name)
@@ -882,13 +882,13 @@ def test_alternate_override(monkeypatch):
     base_name = spack.config._OVERRIDES_BASE_NAME
 
     def _matching_scopes(regexpr):
-        return [spack.config.InternalConfigScope("{0}1".format(base_name))]
+        return [spack.config.InternalConfigScope(f"{base_name}1")]
 
     # Check that the alternate naming works
     monkeypatch.setattr(spack.config.CONFIG, "matching_scopes", _matching_scopes)
 
     with spack.config.override("config:debug", False):
-        name = "{0}2".format(base_name)
+        name = f"{base_name}2"
 
         scope_names = [
             s.name for s in spack.config.CONFIG.scopes.values() if s.name.startswith(base_name)
@@ -1241,7 +1241,7 @@ def test_user_config_path_is_overridable(working_env):
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
+    assert os.path.expanduser(f"~{os.sep}.spack") == spack.paths._get_user_config_path()
 
 
 def test_default_install_tree(monkeypatch, default_config):
@@ -1522,7 +1522,7 @@ def test_user_cache_path_is_overridable(working_env):
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+    assert os.path.expanduser(f"~{os.sep}.spack") == spack.paths._get_user_cache_path()
 
 
 def test_config_file_dir_failure(tmp_path: pathlib.Path, mutable_empty_config):

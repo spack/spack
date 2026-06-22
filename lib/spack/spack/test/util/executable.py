@@ -21,18 +21,18 @@ def test_read_unicode(tmp_path: pathlib.Path, working_env):
         script_args: List[str] = []
         # read the unicode back in and see whether things work
         if sys.platform == "win32":
-            script = ex.Executable("%s" % (sys.executable))
+            script = ex.Executable(f"{sys.executable}")
             script_args.append(script_name)
         else:
-            script = ex.Executable("./%s" % script_name)
+            script = ex.Executable(f"./{script_name}")
 
         os.environ["LD_LIBRARY_PATH"] = spack.main.spack_ld_library_path
         # make a script that prints some unicode
         with open(script_name, "w", encoding="utf-8") as f:
             f.write(
-                """#!{0}
+                f"""#!{sys.executable}
 print(u'\\xc3')
-""".format(sys.executable)
+"""
             )
 
         # make it executable
@@ -49,7 +49,7 @@ def test_which_relative_path_with_slash(tmp_path: pathlib.Path, working_env):
     os.environ["PATH"] = ""
 
     with fs.working_dir(str(tmp_path)):
-        no_exe = ex.which(".{0}exe".format(os.path.sep))
+        no_exe = ex.which(f".{os.path.sep}exe")
         assert no_exe is None
         if sys.platform == "win32":
             # These checks are for 'executable' files, Windows
@@ -59,7 +59,7 @@ def test_which_relative_path_with_slash(tmp_path: pathlib.Path, working_env):
         else:
             fs.set_executable(path)
 
-        exe = ex.which(".{0}exe".format(os.path.sep), required=True)
+        exe = ex.which(f".{os.path.sep}exe", required=True)
         assert exe.path == path
 
 
@@ -83,7 +83,7 @@ def test_which_with_slash_ignores_path(tmp_path: pathlib.Path, working_env):
             fs.set_executable(path)
             fs.set_executable(wrong_path)
 
-        exe = ex.which(".{0}exe".format(os.path.sep), required=True)
+        exe = ex.which(f".{os.path.sep}exe", required=True)
         assert exe.path == path
 
 

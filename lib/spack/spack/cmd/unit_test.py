@@ -114,8 +114,8 @@ def do_list(args, extra_args):
 
     def colorize(c, prefix):
         if isinstance(prefix, tuple):
-            return "::".join(color.colorize("@%s{%s}" % (c, p)) for p in prefix if p != "()")
-        return color.colorize("@%s{%s}" % (c, prefix))
+            return "::".join(color.colorize(f"@{c}{{{p}}}") for p in prefix if p != "()")
+        return color.colorize(f"@{c}{{{prefix}}}")
 
     # To list the files we just need to inspect the filesystem,
     # which doesn't need to wait for pytest collection and doesn't

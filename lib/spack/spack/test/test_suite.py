@@ -104,7 +104,7 @@ def test_test_external(
 ):
     name = "trivial-smoke-test"
     spec = spack.concretize.concretize_one(name)
-    spec.external_path = "/path/to/external/{0}".format(name)
+    spec.external_path = f"/path/to/external/{name}"
 
     monkeypatch.setattr(spack.spec.Spec, "installed", _true)
 
@@ -238,7 +238,7 @@ def test_test_virtuals():
     # This check assumes the method will not provide a unique set of compilers
     v_names = spack.install_test.virtuals(pkg)
     for name, number in [("c", 2), ("cxx", 2), ("fortran", 1), ("llvm", 1)]:
-        assert v_names.count(name) == number, "Expected {0} of '{1}'".format(number, name)
+        assert v_names.count(name) == number, f"Expected {number} of '{name}'"
 
 
 def test_package_copy_test_files_fails(mock_packages):

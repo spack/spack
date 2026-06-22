@@ -248,7 +248,7 @@ class LmodFileLayout(BaseFileLayout):
     def arch_dirname(self):
         """Returns the root folder for THIS architecture"""
         # Architecture sub-folder
-        arch_folder_conf = spack.config.get("modules:%s:arch_folder" % self.conf.name, True)
+        arch_folder_conf = spack.config.get(f"modules:{self.conf.name}:arch_folder", True)
         if arch_folder_conf:
             # include an arch specific folder between root and filename
             arch_folder = "-".join(
@@ -458,7 +458,7 @@ class LmodContext(BaseContext):
 
                 def manipulate_path(token):
                     if token in self.conf.hierarchy_tokens:
-                        return "{0}_name, {0}_version".format(token)
+                        return f"{token}_name, {token}_version"
                     return '"' + token + '"'
 
                 path = ", ".join([manipulate_path(x) for x in parts])

@@ -27,5 +27,5 @@ class SpliceA(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-a"), "w", encoding="utf-8") as f:
-            f.write("splice-a: {0}".format(prefix))
+            f.write(f"splice-a: {prefix}")
             f.write("splice-z: {0}".format(spec["splice-z"].prefix))

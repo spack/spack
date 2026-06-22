@@ -111,7 +111,7 @@ def index_commands():
         for p in required_command_properties:
             prop = getattr(cmd_module, p, None)
             if not prop:
-                tty.die("Command doesn't define a property '%s': %s" % (p, command))
+                tty.die(f"Command doesn't define a property '{p}': {command}")
 
         # add commands to lists for their level and higher levels
         for level in reversed(levels):
@@ -137,7 +137,7 @@ class SpackHelpFormatter(argparse.RawTextHelpFormatter):
         chars = "".join(re.findall(r"\[-(.)\]", usage))
         usage = re.sub(r"\[-.\] ?", "", usage)
         if chars:
-            usage = "[-%s] %s" % (chars, usage)
+            usage = f"[-{chars}] {usage}"
         return usage.strip()
 
     def start_section(self, heading):
@@ -201,7 +201,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
             level (str): ``"short"`` or ``"long"`` (more commands shown for long)
         """
         if level not in levels:
-            raise ValueError("level must be one of: %s" % levels)
+            raise ValueError(f"level must be one of: {levels}")
 
         # lazily add all commands to the parser when needed.
         add_all_commands(self)
@@ -388,7 +388,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
             cols = spack.llnl.util.tty.colify.colified(sorted(action.choices), indent=4, tty=True)
-            msg = "invalid choice: %r choose from:\n%s" % (value, cols)
+            msg = f"invalid choice: {value!r} choose from:\n{cols}"
             raise argparse.ArgumentError(action, msg)
 
 
@@ -629,7 +629,7 @@ def _invoke_command(command, parser, args, unknown_args):
         return_val = command(parser, args, unknown_args)
     else:
         if unknown_args:
-            args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
+            args.subparser.error("unrecognized arguments: {}".format(" ".join(unknown_args)))
         return_val = command(parser, args)
 
     # Allow commands to return and error code if they want
@@ -738,7 +738,7 @@ def _profile_wrapper(command, main_args, parser, args, unknown_args):
         nlines = int(main_args.lines)
     except ValueError:
         if main_args.lines != "all":
-            tty.die("Invalid number for --lines: %s" % main_args.lines)
+            tty.die(f"Invalid number for --lines: {main_args.lines}")
         nlines = -1
 
     # allow comma-separated list of fields
@@ -747,7 +747,7 @@ def _profile_wrapper(command, main_args, parser, args, unknown_args):
         sortby = main_args.sorted_profile.split(",")
         for stat in sortby:
             if stat not in stat_names:
-                tty.die("Invalid sort field: %s" % stat)
+                tty.die(f"Invalid sort field: {stat}")
 
     try:
         # make a profiler and run the code.
@@ -800,9 +800,9 @@ def print_setup_info(*info):
 
     def shell_set(var, value):
         if shell == "sh":
-            print("%s='%s'" % (var, value))
+            print(f"{var}='{value}'")
         elif shell == "csh":
-            print("set %s = '%s'" % (var, value))
+            print(f"set {var} = '{value}'")
         else:
             tty.die("shell must be sh or csh")
 
@@ -829,7 +829,7 @@ def print_setup_info(*info):
         # preserve the intended priority: the modules of the local Spack
         # instance are the highest-precedence.
         roots_val = ":".join(reversed(paths))
-        shell_set("_sp_%s_roots" % name, roots_val)
+        shell_set(f"_sp_{name}_roots", roots_val)
 
 
 def restore_macos_dyld_vars():

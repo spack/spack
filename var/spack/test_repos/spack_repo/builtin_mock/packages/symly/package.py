@@ -27,8 +27,8 @@ int main() {
     return 0;
 }
 """
-        mkdirp("%s/symly" % self.stage.source_path)
-        with open("%s/symly/symly.c" % self.stage.source_path, "w", encoding="utf-8") as f:
+        mkdirp(f"{self.stage.source_path}/symly")
+        with open(f"{self.stage.source_path}/symly/symly.c", "w", encoding="utf-8") as f:
             f.write(symly_c)
         gcc = which("/usr/bin/gcc")
         if sys.platform == "darwin":
@@ -37,8 +37,8 @@ int main() {
         mkdirp(prefix.lib64)
         gcc("-o", "symly.bin", "symly/symly.c")
         print("prefix.bin", prefix.bin)
-        copy("symly.bin", "%s/symly" % prefix.bin)
+        copy("symly.bin", f"{prefix.bin}/symly")
         # create a symlinked file.
-        os.symlink("%s/symly" % prefix.bin, "%s/symly" % prefix.lib64)
+        os.symlink(f"{prefix.bin}/symly", f"{prefix.lib64}/symly")
         # Create a symlinked directory.
         os.symlink(prefix.bin, prefix.include)

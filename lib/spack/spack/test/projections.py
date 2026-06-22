@@ -15,4 +15,7 @@ def test_projection_expansion(mock_packages, monkeypatch):
     projections = {"all": "{name}-{version}/$FOO_ENV_VAR/$date"}
     spec = spack.spec.Spec("fake@1.0")
     projection = spack.projections.get_projection(projections, spec)
-    assert "{name}-{version}/test-string/%s" % date.today().strftime("%Y-%m-%d") == projection
+    assert (
+        "{{name}}-{{version}}/test-string/{}".format(date.today().strftime("%Y-%m-%d"))
+        == projection
+    )

@@ -20,9 +20,9 @@ log_regexp = re.compile(r"^==> \[([0-9:.\-]*)(?:, [0-9]*)?\] (.*)")
 returns_regexp = re.compile(r"\[([0-9 ,]*)\]")
 
 skip_msgs = ["Testing package", "Results for", "Detected the following", "Warning:"]
-skip_regexps = [re.compile(r"{0}".format(msg)) for msg in skip_msgs]
+skip_regexps = [re.compile(rf"{msg}") for msg in skip_msgs]
 
-status_regexps = [re.compile(r"^({0})".format(str(stat))) for stat in TestStatus]
+status_regexps = [re.compile(rf"^({str(stat)})") for stat in TestStatus]
 
 
 def add_part_output(part, line):
@@ -35,7 +35,7 @@ def elapsed(current, previous):
         return 0
 
     diff = current - previous
-    tty.debug("elapsed = %s - %s = %s" % (current, previous, diff))
+    tty.debug(f"elapsed = {current} - {previous} = {diff}")
     return diff.total_seconds()
 
 
@@ -167,7 +167,7 @@ def extract_test_parts(default_name, outputs):
                     process_part_end(part, curr_time, last_time)
 
             else:
-                tty.debug("Did not recognize test output '{0}'".format(line))
+                tty.debug(f"Did not recognize test output '{line}'")
 
             # Each log message potentially represents a new test part so
             # save off the last timestamp
@@ -181,7 +181,7 @@ def extract_test_parts(default_name, outputs):
                 part["status"] = stat
                 add_part_output(part, line)
             else:
-                tty.warn("No part to add status from '{0}'".format(line))
+                tty.warn(f"No part to add status from '{line}'")
             continue
 
         add_part_output(part, line)

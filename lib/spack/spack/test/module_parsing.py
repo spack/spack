@@ -88,7 +88,7 @@ def test_module_function_no_change(tmp_path: pathlib.Path):
         f.write("echo TEST_MODULE_FUNCTION_PRINT")
 
     old_env = os.environ.copy()
-    text = module("show", src_file, module_template=". {0} 2>&1".format(src_file))
+    text = module("show", src_file, module_template=f". {src_file} 2>&1")
 
     assert text == "TEST_MODULE_FUNCTION_PRINT\n"
     assert os.environ == old_env

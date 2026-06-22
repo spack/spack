@@ -92,7 +92,7 @@ def bootstrap_template_for(image):
 
 def _verify_ref(url, ref, enforce_sha):
     # Do a checkout in a temporary directory
-    msg = 'Cloning "{0}" to verify ref "{1}"'.format(url, ref)
+    msg = f'Cloning "{url}" to verify ref "{ref}"'
     tty.info(msg, stream=sys.stderr)
     git = spack.util.git.git(required=True)
     with fs.temporary_dir():

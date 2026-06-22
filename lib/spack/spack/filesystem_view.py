@@ -484,15 +484,17 @@ class YamlFilesystemView(FilesystemView):
             if len(dependents) > 0:
                 tty.warn(
                     self._croot
-                    + "The following dependents will be removed: %s"
-                    % ", ".join((s.name for s in dependents))
+                    + "The following dependents will be removed: {}".format(
+                        ", ".join((s.name for s in dependents))
+                    )
                 )
                 to_deactivate.update(dependents)
         elif len(dependents) > 0:
             tty.warn(
                 self._croot
-                + "The following packages will be unusable: %s"
-                % ", ".join((s.name for s in dependents))
+                + "The following packages will be unusable: {}".format(
+                    ", ".join((s.name for s in dependents))
+                )
             )
 
         # Determine the order that packages should be removed from the view;
@@ -653,13 +655,12 @@ class YamlFilesystemView(FilesystemView):
                 # Print one spec per line along with prefix path
                 width = max(len(s) for s in abbreviated)
                 width += 2
-                format = "    %%-%ds%%s" % width
 
                 for abbrv, s in zip(abbreviated, specs):
                     prefix = ""
                     if self.verbose:
-                        prefix = colorize("@K{%s}" % s.dag_hash(7))
-                    print(prefix + (format % (abbrv, self.get_projection_for_spec(s))))
+                        prefix = colorize(f"@K{{{s.dag_hash(7)}}}")
+                    print(prefix + f"    {abbrv:<{width}}{self.get_projection_for_spec(s)}")
         else:
             tty.warn(self._croot + "No packages found.")
 

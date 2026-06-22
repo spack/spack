@@ -155,7 +155,7 @@ class FetchCacheError(Exception):
             )
         else:
             err = errors[0]
-            self.message = "{0}: {1}".format(err.__class__.__name__, str(err))
+            self.message = f"{err.__class__.__name__}: {str(err)}"
         super().__init__(self.message)
 
 
@@ -495,7 +495,7 @@ class BinaryIndexCache:
 
         # Persist new index.json
         url_hash = compute_hash(str(mirror_metadata))
-        cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
+        cache_key = f"{url_hash[:10]}_{result.hash[:10]}.json"
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             new.write(result.data)
 
@@ -1997,7 +1997,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     )
     if not os.path.exists(install_manifest):
         spec_id = spec.format("{name}/{hash:7}")
-        tty.warn("No manifest file in tarball for spec %s" % spec_id)
+        tty.warn(f"No manifest file in tarball for spec {spec_id}")
 
     # overwrite old metadata with new
     if spec.spliced:
@@ -2152,10 +2152,10 @@ def install_root_node(
     """
     # Early termination
     if spec.external or not spec.concrete:
-        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
+        warnings.warn(f"Skipping external or abstract spec {spec.format()}")
         return
     elif spec.installed and not force:
-        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
+        warnings.warn(f"Package for spec {spec.format()} already installed.")
         return
 
     tarball_stage = download_tarball(spec.build_spec, unsigned)
@@ -2165,7 +2165,7 @@ def install_root_node(
 
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
-        tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
+        tty.msg(f'Installing "{spec.format()}" from a buildcache')
         extract_tarball(spec, tarball_stage, force)
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
@@ -2311,7 +2311,7 @@ def _get_keys(
 ) -> Optional[List[str]]:
     cache_class = get_url_buildcache_class(layout_version=layout_version)
 
-    tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
+    tty.debug(f"Finding public keys in {url_util.format(mirror_url)}")
 
     keys_prefix = url_util.join(
         mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEY)
@@ -2343,7 +2343,7 @@ def _get_keys(
             key_entry.destroy()
             continue
 
-        tty.debug("Found key {0}".format(fingerprint))
+        tty.debug(f"Found key {fingerprint}")
         if install:
             if trust:
                 spack.util.gpg.trust(key_blob_path, yes_to_all=yes_to_all)
@@ -2368,7 +2368,7 @@ def _get_keys_v2(
     )
     keys_index = url_util.join(keys_url, "index.json")
 
-    tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
+    tty.debug(f"Finding public keys in {url_util.format(mirror_url)}")
 
     try:
         json_index = web_util.read_json(keys_index)
@@ -2395,7 +2395,7 @@ def _get_keys_v2(
                 except spack.error.FetchError:
                     continue
 
-        tty.debug("Found key {0}".format(fingerprint))
+        tty.debug(f"Found key {fingerprint}")
         if install:
             if trust:
                 spack.util.gpg.trust(stage.save_filename, yes_to_all=yes_to_all)
@@ -2454,7 +2454,7 @@ def needs_rebuild(spec, mirror_url):
     pkg_version = spec.version
     pkg_hash = spec.dag_hash()
 
-    tty.debug("Checking {0}-{1}, dag_hash = {2}".format(pkg_name, pkg_version, pkg_hash))
+    tty.debug(f"Checking {pkg_name}-{pkg_version}, dag_hash = {pkg_hash}")
     tty.debug(spec.tree())
 
     # Try to retrieve the specfile directly, based on the known
@@ -2483,7 +2483,7 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None):
     """
     rebuilds = {}
     for mirror in spack.mirrors.mirror.MirrorCollection(mirrors, binary=True).values():
-        tty.debug("Checking for built specs at {0}".format(mirror.fetch_url))
+        tty.debug(f"Checking for built specs at {mirror.fetch_url}")
 
         rebuild_list = []
 
@@ -2585,7 +2585,7 @@ class FetchIndexError(Exception):
         if len(self.args) == 1:
             return str(self.args[0])
         else:
-            return "{}, due to: {}".format(self.args[0], self.args[1])
+            return f"{self.args[0]}, due to: {self.args[1]}"
 
 
 class BuildcacheIndexError(spack.error.SpackError):
@@ -2973,7 +2973,7 @@ class PickKeyException(spack.error.SpackError):
     """
 
     def __init__(self, keys):
-        err_msg = "Multiple keys available for signing\n%s\n" % keys
+        err_msg = f"Multiple keys available for signing\n{keys}\n"
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
         super().__init__(err_msg)
 

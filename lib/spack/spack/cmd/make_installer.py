@@ -75,7 +75,7 @@ def make_installer(parser, args):
 
         if spack_source:
             if not os.path.exists(spack_source):
-                print("%s does not exist" % spack_source)
+                print(f"{spack_source} does not exist")
                 return
             else:
                 if not os.path.isabs(spack_source):
@@ -103,11 +103,11 @@ def make_installer(parser, args):
                 source_dir,
                 "-B",
                 output_dir,
-                "-DSPACK_VERSION=%s" % spack_version,
-                "-DSPACK_SOURCE=%s" % spack_source,
-                "-DSPACK_LICENSE=%s" % spack_license,
-                "-DSPACK_LOGO=%s" % spack_logo,
-                "-DSPACK_GIT_VERBOSITY=%s" % git_verbosity,
+                f"-DSPACK_VERSION={spack_version}",
+                f"-DSPACK_SOURCE={spack_source}",
+                f"-DSPACK_LICENSE={spack_license}",
+                f"-DSPACK_LOGO={spack_logo}",
+                f"-DSPACK_GIT_VERBOSITY={git_verbosity}",
             )
         except spack.util.executable.ProcessError:
             print("Failed to generate installer")
@@ -115,7 +115,7 @@ def make_installer(parser, args):
 
         try:
             spack.util.executable.Executable(cpack_path)(
-                "--config", "%s/CPackConfig.cmake" % output_dir, "-B", "%s/" % output_dir
+                "--config", f"{output_dir}/CPackConfig.cmake", "-B", f"{output_dir}/"
             )
         except spack.util.executable.ProcessError:
             print("Failed to generate installer")
@@ -124,9 +124,9 @@ def make_installer(parser, args):
             spack.util.executable.Executable(os.environ.get("WIX") + "/bin/candle.exe")(
                 "-ext",
                 "WixBalExtension",
-                "%s/bundle.wxs" % output_dir,
+                f"{output_dir}/bundle.wxs",
                 "-out",
-                "%s/bundle.wixobj" % output_dir,
+                f"{output_dir}/bundle.wixobj",
             )
         except spack.util.executable.ProcessError:
             print("Failed to generate installer chain")
@@ -136,13 +136,13 @@ def make_installer(parser, args):
                 "-sw1134",
                 "-ext",
                 "WixBalExtension",
-                "%s/bundle.wixobj" % output_dir,
+                f"{output_dir}/bundle.wixobj",
                 "-out",
-                "%s/Spack.exe" % output_dir,
+                f"{output_dir}/Spack.exe",
             )
         except spack.util.executable.ProcessError:
             print("Failed to generate installer chain")
             return spack.util.executable.ProcessError.returncode
-        print("Successfully generated Spack.exe in %s" % (output_dir))
+        print(f"Successfully generated Spack.exe in {output_dir}")
     else:
         print("The make-installer command is currently only supported on Windows.")

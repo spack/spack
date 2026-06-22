@@ -216,9 +216,7 @@ class HasManyDirectives:
         pass
 
 {directives}
-""".format(
-    directives="\n".join("    %s()" % name for name in spack.directives_meta.directive_names)
-)
+""".format(directives="\n".join(f"    {name}()" for name in spack.directives_meta.directive_names))
 
 
 def test_remove_all_directives():
@@ -369,7 +367,7 @@ def test_package_hash_consistency(package_spec, expected_hash):
 
     """
     spec = Spec(package_spec)
-    filename = os.path.join(datadir, "%s.txt" % spec.name)
+    filename = os.path.join(datadir, f"{spec.name}.txt")
     with open(filename, "rb") as f:
         source = f.read()
     h = ph.package_hash(spec, source=source)

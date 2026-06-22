@@ -127,10 +127,10 @@ _cmd-spack-install:
 
     out = commands("--format=rst", str(filename))
     for name in ["fetch", "stage", "patch"]:
-        assert (":ref:`More documentation <cmd-spack-%s>`" % name) in out
+        assert (f":ref:`More documentation <cmd-spack-{name}>`") in out
 
     for name in ["list", "install"]:
-        assert (":ref:`More documentation <cmd-spack-%s>`" % name) not in out
+        assert (f":ref:`More documentation <cmd-spack-{name}>`") not in out
 
 
 def test_rst_with_header(tmp_path: pathlib.Path):

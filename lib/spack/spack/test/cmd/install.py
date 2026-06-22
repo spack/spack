@@ -392,8 +392,8 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, exc_typename, msg, i
             "--log-format=junit",
             "--log-file=test.xml",
             "raiser",
-            "exc_type={0}".format(exc_typename),
-            'msg="{0}"'.format(msg),
+            f"exc_type={exc_typename}",
+            f'msg="{msg}"',
             fail_on_error=False,
         )
 
@@ -1054,13 +1054,13 @@ def test_install_use_buildcache(
 
     def validate(mode, out, pkg):
         def assert_auto(pkg, out):
-            assert "==> Extracting {0}".format(pkg) in out
+            assert f"==> Extracting {pkg}" in out
 
         def assert_only(pkg, out):
-            assert "==> Extracting {0}".format(pkg) in out
+            assert f"==> Extracting {pkg}" in out
 
         def assert_never(pkg, out):
-            assert "==> {0}: Executing phase: 'install'".format(pkg) in out
+            assert f"==> {pkg}: Executing phase: 'install'" in out
 
         if mode == "auto":
             assert_auto(pkg, out)
@@ -1098,13 +1098,9 @@ def test_install_use_buildcache(
 
     # Install using the matrix of possible combinations with --use-buildcache
     for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
-        tty.debug(
-            "Testing `spack install --use-buildcache package:{0},dependencies:{1}`".format(
-                pkg, deps
-            )
-        )
-        install_use_buildcache("package:{0},dependencies:{1}".format(pkg, deps))
-        install_use_buildcache("dependencies:{0},package:{1}".format(deps, pkg))
+        tty.debug(f"Testing `spack install --use-buildcache package:{pkg},dependencies:{deps}`")
+        install_use_buildcache(f"package:{pkg},dependencies:{deps}")
+        install_use_buildcache(f"dependencies:{deps},package:{pkg}")
 
     # Install using a default override option
     # Alternative to --cache-only (always) or --no-cache (never)

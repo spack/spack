@@ -84,7 +84,7 @@ def unload(parser, args):
         specs_str = " ".join(args.specs) or "SPECS"
 
         spack.cmd.common.shell_init_instructions(
-            "spack unload", "    eval `spack unload {sh_arg}` %s" % specs_str
+            "spack unload", f"    eval `spack unload {{sh_arg}}` {specs_str}"
         )
         return 1
 

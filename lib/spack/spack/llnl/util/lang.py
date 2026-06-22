@@ -655,7 +655,7 @@ def pretty_seconds_formatter(seconds):
         multiplier, unit = 1e6, "us"
     else:
         multiplier, unit = 1e9, "ns"
-    return lambda s: "%.3f%s" % (multiplier * s, unit)
+    return lambda s: f"{multiplier * s:.3f}{unit}"
 
 
 def pretty_seconds(seconds):

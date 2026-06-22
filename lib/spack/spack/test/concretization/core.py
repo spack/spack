@@ -1019,7 +1019,7 @@ spack:
         # registered as an external
         ext = Spec(spec_str)
         data = {"externals": [{"spec": spec_str, "prefix": "/fake/path"}]}
-        spack.config.set("packages::{0}".format(ext.name), data)
+        spack.config.set(f"packages::{ext.name}", data)
         ext = spack.concretize.concretize_one(ext)  # failure raises exception
 
     def test_regression_issue_4492(self):
@@ -1218,9 +1218,9 @@ spack:
         s = spack.concretize.concretize_one(spec_str)
 
         for var in expected:
-            assert s.satisfies("%s=*" % var)
+            assert s.satisfies(f"{var}=*")
         for var in unexpected:
-            assert not s.satisfies("%s=*" % var)
+            assert not s.satisfies(f"{var}=*")
 
     @pytest.mark.parametrize(
         "bad_spec",
@@ -1338,7 +1338,7 @@ spack:
     def test_dependency_conditional_on_another_dependency_state(self):
         root_str = "variant-on-dependency-condition-root"
         dep_str = "variant-on-dependency-condition-a"
-        spec_str = "{0} ^{1}".format(root_str, dep_str)
+        spec_str = f"{root_str} ^{dep_str}"
 
         s = spack.concretize.concretize_one(spec_str)
         assert s.concrete
@@ -1535,7 +1535,7 @@ spack:
 
         # Try to concretize with the spec installed previously
         new_root_with_reuse = spack.concretize.concretize_one(
-            Spec("root ^/{0}".format(dependency.dag_hash()))
+            Spec(f"root ^/{dependency.dag_hash()}")
         )
 
         new_root_without_reuse = spack.concretize.concretize_one("root")
@@ -1816,9 +1816,9 @@ spack:
         default_target = spack.platforms.test.Test.default
         generic_target = spack.vendor.archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
-        assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
+        assert spack.concretize.concretize_one(s).satisfies(f"target={default_target}")
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
-            assert spack.concretize.concretize_one(s).satisfies("target=%s" % generic_target)
+            assert spack.concretize.concretize_one(s).satisfies(f"target={generic_target}")
 
     def test_host_compatible_concretization(self):
         # Check that after setting "host_compatible" to false we cannot concretize.
@@ -2255,9 +2255,7 @@ spack:
         s = spack.concretize.concretize_one(root_spec)
         other_os = s.copy()
         mock_os = "ubuntu2204"
-        other_os.architecture = spack.spec.ArchSpec(
-            "test-{os}-{target}".format(os=mock_os, target=str(s.architecture.target))
-        )
+        other_os.architecture = spack.spec.ArchSpec(f"test-{mock_os}-{str(s.architecture.target)}")
         reusable_specs = [other_os]
         overrides = {"concretizer": {"reuse": True, "os_compatible": {s.os: [mock_os]}}}
         custom_scope = spack.config.InternalConfigScope("concretize_override", overrides)
@@ -2266,17 +2264,17 @@ spack:
             setup = spack.solver.asp.SpackSolverSetup()
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies("os={}".format(other_os.architecture.os))
+        assert concrete_spec.satisfies(f"os={other_os.architecture.os}")
 
     def test_git_hash_assigned_version_is_preferred(self):
         hash = "a" * 40
-        s = Spec("develop-branch-version@%s=develop" % hash)
+        s = Spec(f"develop-branch-version@{hash}=develop")
         c = spack.concretize.concretize_one(s)
         assert hash in str(c)
 
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "main"))
     def test_git_ref_version_is_equivalent_to_specified_version(self, git_ref):
-        s = Spec("develop-branch-version@git.%s=develop" % git_ref)
+        s = Spec(f"develop-branch-version@git.{git_ref}=develop")
         c = spack.concretize.concretize_one(s)
         assert git_ref in str(c)
         assert s.satisfies("@develop")
@@ -2285,7 +2283,7 @@ spack:
     @pytest.mark.parametrize("git_ref", ("a" * 40, "0.2.15", "fbranch"))
     def test_git_ref_version_succeeds_with_unknown_version(self, git_ref):
         # main is not defined in the package.py for this file
-        s = Spec("develop-branch-version@git.%s=main" % git_ref)
+        s = Spec(f"develop-branch-version@git.{git_ref}=main")
         s = spack.concretize.concretize_one(s)
         assert s.satisfies("develop-branch-version@main")
 

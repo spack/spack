@@ -397,11 +397,11 @@ def _print_ref_counts():
         cspecs = spack.store.STORE.db.query(spec, installed=InstallRecordStatus.ANY)
 
         if not cspecs:
-            recs.append("[ %-7s ] %-20s-" % ("", spec))
+            recs.append(f"[ {'':<7} ] {spec:<20}-")
         else:
             key = cspecs[0].dag_hash()
             rec = spack.store.STORE.db.get_record(cspecs[0])
-            recs.append("[ %-7s ] %-20s%d" % (key[:7], spec, rec.ref_count))
+            recs.append(f"[ {key[:7]:<7} ] {spec:<20}{rec.ref_count}")
 
     with spack.store.STORE.db.read_transaction():
         add_rec("mpileaks ^mpich")

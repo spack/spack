@@ -356,9 +356,9 @@ def env_activate(args):
         return
 
     else:
-        tty.die("No such environment: '%s'" % args.env_name)
+        tty.die(f"No such environment: '{args.env_name}'")
 
-    env_prompt = "[%s]" % short_name
+    env_prompt = f"[{short_name}]"
 
     # We only support one active environment at a time, so deactivate the current one.
     if ev.active_environment() is None:
@@ -758,7 +758,7 @@ def env_list(args):
     color_names = []
     for name in names:
         if ev.active(name):
-            name = colorize("@*g{%s}" % name)
+            name = colorize(f"@*g{{{name}}}")
         color_names.append(name)
 
     # say how many there are if writing to a tty
@@ -766,7 +766,7 @@ def env_list(args):
         if not names:
             tty.msg("No environments")
         else:
-            tty.msg("%d environments" % len(names))
+            tty.msg(f"{len(names)} environments")
 
     colify(color_names, indent=4)
 
@@ -828,9 +828,9 @@ def env_status(args):
     env = ev.active_environment()
     if env:
         if env.path == os.getcwd():
-            tty.msg("Using %s in current directory: %s" % (ev.manifest_name, env.path))
+            tty.msg(f"Using {ev.manifest_name} in current directory: {env.path}")
         else:
-            tty.msg("In environment %s" % env.name)
+            tty.msg(f"In environment {env.name}")
 
         # Check if environment views can be safely activated
         env.check_views()
@@ -879,7 +879,7 @@ def env_loads(args):
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")
-    print("   source %s" % loads_file)
+    print(f"   source {loads_file}")
 
 
 def env_update_setup_parser(subparser):
@@ -905,7 +905,7 @@ def env_update(args):
 
     needs_update = not ev.is_latest_format(manifest_file)
     if not needs_update:
-        tty.msg('No update needed for the environment "{0}"'.format(args.update_env))
+        tty.msg(f'No update needed for the environment "{args.update_env}"')
         return
 
     proceed = True

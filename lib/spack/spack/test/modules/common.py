@@ -111,12 +111,12 @@ def test_upstream_module_index():
     s3 = MockSpec("spec-3")
     s4 = MockSpec("spec-4")
 
-    tcl_module_index = """\
+    tcl_module_index = f"""\
 module_index:
-  {0}:
+  {s1.dag_hash()}:
     path: /path/to/a
     use_name: a
-""".format(s1.dag_hash())
+"""
 
     module_indices = [{"tcl": spack.modules.common._read_module_index(tcl_module_index)}, {}]
 
@@ -147,12 +147,12 @@ module_index:
 def test_get_module_upstream():
     s1 = MockSpec("spec-1")
 
-    tcl_module_index = """\
+    tcl_module_index = f"""\
 module_index:
-  {0}:
+  {s1.dag_hash()}:
     path: /path/to/a
     use_name: a
-""".format(s1.dag_hash())
+"""
 
     module_indices = [{}, {"tcl": spack.modules.common._read_module_index(tcl_module_index)}]
 

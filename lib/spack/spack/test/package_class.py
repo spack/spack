@@ -206,7 +206,7 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     emsg_dir = "Expected {0} to be a directory"
     emsg_file = "Expected {0} to be a file"
     for src in srcs:
-        assert os.path.exists(src), "Expected {0} to exist".format(src)
+        assert os.path.exists(src), f"Expected {src} to exist"
         if os.path.splitext(src)[1]:
             assert os.path.isfile(src), emsg_file.format(src)
         else:

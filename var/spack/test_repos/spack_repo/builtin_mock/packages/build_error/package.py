@@ -35,7 +35,7 @@ class BuildError(Package):
                   """
                 )
 
-            Executable("configure.bat")("--prefix=%s" % self.prefix)
+            Executable("configure.bat")(f"--prefix={self.prefix}")
             configure()
         else:
             with open("configure", "w", encoding="utf-8") as f:

@@ -1042,7 +1042,7 @@ class TestSuite:
         Args:
             spec: instance of the spec under test
         """
-        return "%s-tested.txt" % cls.test_pkg_id(spec)
+        return f"{cls.test_pkg_id(spec)}-tested.txt"
 
     def tested_file_for_spec(self, spec: Spec) -> str:
         """The test status file path for the spec.
@@ -1182,8 +1182,8 @@ class TestFailure(spack.error.SpackError):
         num = len(failures)
         msg = "{} failed.\n".format(plural(num, "test"))
         for failure, message in failures:
-            msg += "\n\n%s\n" % str(failure)
-            msg += "\n%s\n" % message
+            msg += f"\n\n{str(failure)}\n"
+            msg += f"\n{message}\n"
 
         super().__init__(msg)
 
@@ -1196,7 +1196,7 @@ class TestSuiteFailure(spack.error.SpackError):
     """Raised when one or more tests in a suite have failed."""
 
     def __init__(self, num_failures):
-        msg = "%d test(s) in the suite failed.\n" % num_failures
+        msg = f"{num_failures} test(s) in the suite failed.\n"
 
         super().__init__(msg)
 

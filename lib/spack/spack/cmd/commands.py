@@ -221,7 +221,7 @@ class BashCompletionWriter(ArgparseWriter):
             Function definition beginning.
         """
         name = prog.replace("-", "_").replace(" ", "_")
-        return "\n_{0}() {{".format(name)
+        return f"\n_{name}() {{"
 
     def end_function(self, prog: str) -> str:
         """Return the syntax needed to end a function definition.
@@ -715,11 +715,10 @@ def rst_index(out: IO) -> None:
     dmax = max(len(section_descriptions.get(s, s)) for s in sections) + 2
     cmax = max(len(c) for _, c in sections.items()) + 60
 
-    row = "%s  %s\n" % ("=" * dmax, "=" * cmax)
-    line = "%%-%ds  %%s\n" % dmax
+    row = "{}  {}\n".format("=" * dmax, "=" * cmax)
 
     out.write(row)
-    out.write(line % (" Category ", " Commands "))
+    out.write(f"{' Category ':<{dmax}}  {' Commands '}\n")
     out.write(row)
     for section, commands in sorted(sections.items()):
         description = section_descriptions.get(section, section)
@@ -729,7 +728,7 @@ def rst_index(out: IO) -> None:
             ref = f":ref:`{cmd} <spack-{cmd}>`"
             comma = "," if i != len(commands) - 1 else ""
             bar = "| " if i % 8 == 0 else "  "
-            out.write(line % (description, bar + ref + comma))
+            out.write(f"{description:<{dmax}}  {bar + ref + comma}\n")
     out.write(row)
 
 

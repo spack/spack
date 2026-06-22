@@ -104,7 +104,7 @@ class DirectoryLayout:
                         "install_tree projections"
                     )
                 self.projections[when_spec] = projection.replace(
-                    "{hash}", "{hash:%d}" % self.hash_length
+                    "{hash}", f"{{hash:{self.hash_length}}}"
                 )
 
         # If any of these paths change, downstream databases may not be able to
@@ -120,7 +120,7 @@ class DirectoryLayout:
 
     @property
     def hidden_file_regexes(self) -> Tuple[str]:
-        return ("^{0}$".format(re.escape(self.metadata_dir)),)
+        return (f"^{re.escape(self.metadata_dir)}$",)
 
     def relative_path_for_spec(self, spec: "spack.spec.Spec") -> str:
         _check_concrete(spec)
@@ -252,9 +252,7 @@ class DirectoryLayout:
         spec_file_path = self.spec_file_path(spec)
 
         if not os.path.isdir(path):
-            raise InconsistentInstallDirectoryError(
-                "Install prefix {0} does not exist.".format(path)
-            )
+            raise InconsistentInstallDirectoryError(f"Install prefix {path} does not exist.")
 
         if not os.path.isfile(spec_file_path):
             raise InconsistentInstallDirectoryError(
@@ -264,7 +262,7 @@ class DirectoryLayout:
         installed_spec = self.read_spec(spec_file_path)
         if installed_spec.dag_hash() != spec.dag_hash():
             raise InconsistentInstallDirectoryError(
-                "Spec file in %s does not match hash!" % spec_file_path
+                f"Spec file in {spec_file_path} does not match hash!"
             )
 
     def path_for_spec(self, spec: "spack.spec.Spec") -> str:
@@ -368,7 +366,7 @@ class RemoveFailedError(DirectoryLayoutError):
 
     def __init__(self, installed_spec, prefix, error):
         super().__init__(
-            "Could not remove prefix %s for %s : %s" % (prefix, installed_spec.short_spec, error)
+            f"Could not remove prefix {prefix} for {installed_spec.short_spec} : {error}"
         )
         self.cause = error
 
@@ -399,7 +397,7 @@ class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
 
     def __init__(self, spec, ext_spec):
-        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
+        super().__init__(f"{ext_spec.short_spec} is already installed in {spec.short_spec}")
 
 
 class ExtensionConflictError(DirectoryLayoutError):
@@ -407,6 +405,6 @@ class ExtensionConflictError(DirectoryLayoutError):
 
     def __init__(self, spec, ext_spec, conflict):
         super().__init__(
-            "%s cannot be installed in %s because it conflicts with %s"
-            % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
+            f"{ext_spec.short_spec} cannot be installed in {spec.short_spec} "
+            f"because it conflicts with {conflict.short_spec}"
         )

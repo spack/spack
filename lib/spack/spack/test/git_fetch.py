@@ -195,7 +195,7 @@ def test_adhoc_version_submodules(
     monkeypatch.setattr(pkg_class, "git", mock_git_repository.url, raising=False)
 
     spec = spack.concretize.concretize_one(
-        Spec("git-test@{0}".format(mock_git_repository.unversioned_commit))
+        Spec(f"git-test@{mock_git_repository.unversioned_commit}")
     )
     spec.package.do_stage()
     collected_fnames = set()
@@ -258,7 +258,7 @@ def test_get_full_repo(
     """Ensure that we can clone a full repository."""
 
     if git_version < Version(min_opt_string):
-        pytest.skip("Not testing get_full_repo for older git {0}".format(git_version))
+        pytest.skip(f"Not testing get_full_repo for older git {git_version}")
 
     # newer git allows for direct commit fetching
     can_use_direct_commit = git_version >= Version(min_direct_commit)
@@ -350,7 +350,7 @@ def test_gitsubmodule(
         for submodule_count in range(2):
             file_path = os.path.join(
                 s.package.stage.source_path,
-                "third_party/submodule{0}/r0_file_{0}".format(submodule_count),
+                f"third_party/submodule{submodule_count}/r0_file_{submodule_count}",
             )
             if submodules:
                 assert os.path.isfile(file_path)

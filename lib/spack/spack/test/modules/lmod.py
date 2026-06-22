@@ -302,14 +302,12 @@ class TestLmod:
         path = module.layout.filename
         mpi_spec = spec["mpi"]
 
-        mpi_element = "{0}/{1}-{2}/".format(
-            mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
-        )
+        mpi_element = f"{mpi_spec.name}/{mpi_spec.version}-{mpi_spec.dag_hash(length=7)}/"
 
         assert mpi_element in path
 
         mpileaks_spec = spec
-        mpileaks_element = "{0}/{1}.lua".format(mpileaks_spec.name, mpileaks_spec.version)
+        mpileaks_element = f"{mpileaks_spec.name}/{mpileaks_spec.version}.lua"
 
         assert path.endswith(mpileaks_element)
 

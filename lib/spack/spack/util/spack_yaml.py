@@ -353,7 +353,7 @@ class LineAnnotationEmitter(emitter.Emitter):
                 color = self.colors[len(self.filename_colors) % ncolors]
                 self.filename_colors[mark.name] = color
 
-            fmt = "@%s{%%s}" % color
+            fmt = f"@{color}{{%s}}"
             ann = fmt % mark.name
             if mark.line is not None:
                 ann += ":@c{%s}" % (mark.line + 1)
@@ -488,10 +488,10 @@ def _dump_annotated(handler, data, stream=None):
 
     # write out annotations and lines, accounting for color
     width = max(clen(a) for a in _ANNOTATIONS)
-    formats = ["%%-%ds  %%s\n" % (width + cextra(a)) for a in _ANNOTATIONS]
 
-    for fmt, annotation, line in zip(formats, _ANNOTATIONS, lines):
-        stream.write(fmt % (annotation, line))
+    for annotation, line in zip(_ANNOTATIONS, lines):
+        annotation_width = width + cextra(annotation)
+        stream.write(f"{annotation:<{annotation_width}}  {line}\n")
 
     if getvalue:
         return getvalue()

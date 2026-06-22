@@ -38,7 +38,7 @@ def _update_config(specs_to_remove):
         modified = False
         for spec in specs_to_remove:
             if spec.name in dev_config:
-                tty.msg("Undevelop: removing {0}".format(spec.name))
+                tty.msg(f"Undevelop: removing {spec.name}")
                 del dev_config[spec.name]
                 modified = True
         return modified

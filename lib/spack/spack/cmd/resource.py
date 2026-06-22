@@ -34,27 +34,27 @@ def _show_patch(sha256):
     if not data:
         candidates = [k for k in patches if k.startswith(sha256)]
         if not candidates:
-            tty.die("no such resource: %s" % sha256)
+            tty.die(f"no such resource: {sha256}")
         elif len(candidates) > 1:
             tty.die("%s: ambiguous hash prefix. Options are:", *candidates)
 
         sha256 = candidates[0]
         data = patches.get(sha256)
 
-    color.cprint("@c{%s}" % sha256)
+    color.cprint(f"@c{{{sha256}}}")
     for package, rec in data.items():
         owner = rec["owner"]
 
         if "relative_path" in rec:
             pkg_dir = spack.repo.PATH.get_pkg_class(owner).package_dir
             path = os.path.join(pkg_dir, rec["relative_path"])
-            print("    path:       %s" % path)
+            print(f"    path:       {path}")
         else:
-            print("    url:        %s" % rec["url"])
+            print("    url:        {}".format(rec["url"]))
 
-        print("    applies to: %s" % package)
+        print(f"    applies to: {package}")
         if owner != package:
-            print("    patched by: %s" % owner)
+            print(f"    patched by: {owner}")
 
 
 def resource_list(args):

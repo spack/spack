@@ -55,6 +55,6 @@ def providers(parser, args):
     # Display providers
     for spec in specs:
         if sys.stdout.isatty():
-            print("{0}:".format(spec))
+            print(f"{spec}:")
         spack.cmd.display_specs(sorted(spack.repo.PATH.providers_for(spec)))
         print("")

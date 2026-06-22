@@ -581,7 +581,7 @@ def test_v2_etag_fetching_304():
                 hdrs={},  # type: ignore[arg-type]
                 fp=None,  # type: ignore[arg-type]
             )
-        assert False, "Should not fetch {}".format(url)
+        assert False, f"Should not fetch {url}"
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -606,7 +606,7 @@ def test_v2_etag_fetching_200():
                 url=url,
                 code=200,
             )
-        assert False, "Should not fetch {}".format(url)
+        assert False, f"Should not fetch {url}"
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -665,7 +665,7 @@ def test_v2_default_index_fetch_200():
                 code=200,
             )
 
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -698,7 +698,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
                 code=200,
             )
 
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -730,7 +730,7 @@ def test_v2_default_index_not_modified():
             )
 
         # No request to index.json should be made.
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -787,7 +787,7 @@ def test_v2_default_index_json_404():
                 fp=None,
             )
 
-        assert False, "Unexpected fetch {}".format(url)
+        assert False, f"Unexpected fetch {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
         spack.binary_distribution.MirrorMetadata("https://www.example.com", 2),
@@ -1278,7 +1278,7 @@ def test_etag_fetching_304():
                 hdrs={},  # type: ignore[arg-type]
                 fp=None,  # type: ignore[arg-type]
             )
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.EtagIndexHandler(
         spack.binary_distribution.MirrorMetadata(
@@ -1305,7 +1305,7 @@ def test_etag_fetching_200(mock_index):
                 url=url,
                 code=200,
             )
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.EtagIndexHandler(
         spack.binary_distribution.MirrorMetadata(
@@ -1359,7 +1359,7 @@ def test_default_index_fetch_200(mock_index):
                 code=200,
             )
 
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(
@@ -1415,7 +1415,7 @@ def test_default_index_not_modified(mock_index):
             )
 
         # No other request should be made.
-        assert False, "Unexpected request {}".format(url)
+        assert False, f"Unexpected request {url}"
 
     fetcher = spack.binary_distribution.DefaultIndexHandler(
         spack.binary_distribution.MirrorMetadata(

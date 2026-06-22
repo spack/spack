@@ -226,7 +226,7 @@ def verify_manifest(args):
             if args.json:
                 print(results.json_string())
             else:
-                tty.msg("In package %s" % spec.format("{name}/{hash:7}"))
+                tty.msg("In package {}".format(spec.format("{name}/{hash:7}")))
                 print(results)
             return 1
         else:

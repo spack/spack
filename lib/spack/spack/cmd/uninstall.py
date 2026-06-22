@@ -107,7 +107,7 @@ def find_matching_specs(
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
-            tty.error("{0} matches multiple packages:".format(spec))
+            tty.error(f"{spec} matches multiple packages:")
             sys.stderr.write("\n")
             spack.cmd.display_specs(matching, output=sys.stderr, **display_args)
             sys.stderr.write("\n")
@@ -117,10 +117,10 @@ def find_matching_specs(
         # No installed package matches the query
         if len(matching) == 0 and spec is not None:
             if env:
-                pkg_type = "packages in environment '%s'" % env.name
+                pkg_type = f"packages in environment '{env.name}'"
             else:
                 pkg_type = "installed packages"
-            tty.die("{0} does not match any {1}.".format(spec, pkg_type))
+            tty.die(f"{spec} does not match any {pkg_type}.")
 
         specs_from_cli.extend(matching)
 

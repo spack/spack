@@ -234,7 +234,7 @@ def activate(env, use_env_repo=False):
 
         # Fail early to avoid ending in an invalid state
         if not isinstance(env, Environment):
-            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+            raise TypeError(f"`env` should be of type {Environment.__name__}")
 
         # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
         # config changes.
@@ -329,7 +329,7 @@ def as_env_dir(name_or_dir):
     else:
         validate_env_name(name_or_dir)
         if not exists(name_or_dir):
-            raise SpackEnvironmentError("no such environment '%s'" % name_or_dir)
+            raise SpackEnvironmentError(f"no such environment '{name_or_dir}'")
         return _root(name_or_dir)
 
 
@@ -342,7 +342,7 @@ def read(name):
     """Get an environment with the supplied name."""
     validate_env_name(name)
     if not exists(name):
-        raise SpackEnvironmentError("no such environment '%s'" % name)
+        raise SpackEnvironmentError(f"no such environment '{name}'")
     return Environment(root(name))
 
 
@@ -474,7 +474,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
             if copied_env and expanded_path.startswith(init_file_dir):
                 continue
 
-            tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
+            tty.debug(f"Expanding develop path for {name} to {expanded_path}")
 
             dev_specs[name]["path"] = expanded_path
 
@@ -509,7 +509,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
             if copied_env and expanded_path.startswith(init_file_dir):
                 continue
 
-            tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
+            tty.debug(f"Expanding repo path for {entry} to {expanded_path}")
 
             repos_specs[name] = expanded_path
 
@@ -961,7 +961,7 @@ class ViewDescriptor:
         if os.path.islink(old_root):
             # Old format: only remove symlink target if it lives inside ._<name>/
             target = os.path.realpath(old_root)
-            old_view_container = os.path.join(root_parent, "._%s" % root_basename)
+            old_view_container = os.path.join(root_parent, f"._{root_basename}")
             if target.startswith(old_view_container + os.sep):
                 try:
                     shutil.rmtree(target)
@@ -1499,9 +1499,7 @@ class Environment:
 
         matches = list((idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec))
         if len(matches) == 0:
-            raise ValueError(
-                "There are no specs named {0} in {1}".format(match_spec.name, list_name)
-            )
+            raise ValueError(f"There are no specs named {match_spec.name} in {list_name}")
         elif len(matches) > 1 and not allow_changing_multiple_specs:
             raise ValueError(f"{str(match_spec)} matches multiple specs")
 
@@ -1887,8 +1885,8 @@ class Environment:
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
             tty.warn(
-                "Environment %s includes out of date packages or repos. "
-                "Loading the environment view will require reconcretization." % self.name
+                f"Environment {self.name} includes out of date packages or repos. "
+                "Loading the environment view will require reconcretization."
             )
 
     def _env_modifications_for_view(
@@ -2968,7 +2966,7 @@ def manifest_file(env_name_or_dir):
     elif exists(env_name_or_dir):
         env_dir = os.path.abspath(root(env_name_or_dir))
 
-    assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
+    assert env_dir, f"environment not found [env={env_name_or_dir}]"
     return os.path.join(env_dir, manifest_name)
 
 
@@ -2992,7 +2990,7 @@ def update_yaml(manifest, backup_file):
     top_level_key = _top_level_key(data)
     needs_update = spack.schema.env.update(data[top_level_key])
     if not needs_update:
-        msg = "No update needed [manifest={0}]".format(manifest)
+        msg = f"No update needed [manifest={manifest}]"
         tty.debug(msg)
         return False
 

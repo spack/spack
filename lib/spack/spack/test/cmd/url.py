@@ -117,7 +117,7 @@ def test_url_summary(mock_packages):
 
 def test_url_stats(mock_packages):
     output = url("stats")
-    npkgs = "%d packages" % len(spack.repo.all_package_names())
+    npkgs = f"{len(spack.repo.all_package_names())} packages"
     assert npkgs in output
     assert "url" in output
     assert "git" in output
@@ -126,7 +126,7 @@ def test_url_stats(mock_packages):
     assert "resources" in output
 
     output = url("stats", "--show-issues")
-    npkgs = "%d packages" % len(spack.repo.all_package_names())
+    npkgs = f"{len(spack.repo.all_package_names())} packages"
     assert npkgs in output
     assert "url" in output
     assert "git" in output

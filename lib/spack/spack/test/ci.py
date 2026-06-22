@@ -307,14 +307,14 @@ def test_setup_spack_repro_version(
     _, err = capfd.readouterr()
 
     assert not ret
-    assert "Missing commit: {0}".format(c2) in err
+    assert f"Missing commit: {c2}" in err
 
     git_cmd.check = lambda *a, **k: 1 if len(a) > 2 and a[2] == c1 else 0
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
     _, err = capfd.readouterr()
 
     assert not ret
-    assert "Missing commit: {0}".format(c1) in err
+    assert f"Missing commit: {c1}" in err
 
     git_cmd.check = lambda *a, **k: 1 if a[0] == "clone" else 0
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
@@ -335,7 +335,7 @@ def test_setup_spack_repro_version(
     _, err = capfd.readouterr()
 
     assert not ret
-    assert "Unable to merge {0}".format(c1) in err
+    assert f"Unable to merge {c1}" in err
 
 
 def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):

@@ -72,12 +72,12 @@ def remove_python_cache():
             for f in files:
                 if f.endswith(".pyc") or f.endswith(".pyo"):
                     fname = os.path.join(root, f)
-                    tty.debug("Removing {0}".format(fname))
+                    tty.debug(f"Removing {fname}")
                     os.remove(fname)
             for d in dirs:
                 if d == "__pycache__":
                     dname = os.path.join(root, d)
-                    tty.debug("Removing {0}".format(dname))
+                    tty.debug(f"Removing {dname}")
                     shutil.rmtree(dname)
 
 

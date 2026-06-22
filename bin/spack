@@ -31,8 +31,8 @@ min_python3 = (3, 6)
 
 if sys.version_info[:2] < min_python3:
     v_info = sys.version_info[:3]
-    msg = "Spack requires Python %d.%d or higher " % min_python3
-    msg += "You are running spack with Python %d.%d.%d." % v_info
+    msg = "Spack requires Python {}.{} or higher ".format(*min_python3)
+    msg += "You are running spack with Python {}.{}.{}.".format(*v_info)
     sys.exit(msg)
 
 # Find spack's location and its prefix.

@@ -310,7 +310,7 @@ def test_find_very_long(database, config):
     ]
 
     assert set(output.strip().split("\n")) == set(
-        [("%s mpileaks@2.3" % s.dag_hash()) for s in specs]
+        [(f"{s.dag_hash()} mpileaks@2.3") for s in specs]
     )
 
 

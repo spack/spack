@@ -103,8 +103,8 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
 
             # Show variable we were trying to use, if it's from one
             if var:
-                exe = "$%s (%s)" % (var, exe)
-            tty.warn("Could not execute %s due to error:" % exe, str(e))
+                exe = f"${var} ({exe})"
+            tty.warn(f"Could not execute {exe} due to error:", str(e))
             return False
 
     def try_env_var(var):
@@ -118,7 +118,7 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
 
         exe, editor_args = _find_exe_from_env_var(var)
         if not exe:
-            tty.warn("$%s is not an executable:" % var, os.environ[var])
+            tty.warn(f"${var} is not an executable:", os.environ[var])
             return False
 
         full_args = editor_args + list(args)

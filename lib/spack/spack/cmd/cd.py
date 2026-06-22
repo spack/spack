@@ -22,5 +22,5 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def cd(parser, args):
     spec = " ".join(args.spec) if args.spec else "SPEC"
     spack.cmd.common.shell_init_instructions(
-        "spack cd", "cd `spack location --install-dir %s`" % spec
+        "spack cd", f"cd `spack location --install-dir {spec}`"
     )

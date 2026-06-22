@@ -135,15 +135,15 @@ def _macholib_get_paths(cur_path):
     except ValueError:
         pass
     if not headers:
-        tty.warn("Failed to read Mach-O headers: {0}".format(cur_path))
+        tty.warn(f"Failed to read Mach-O headers: {cur_path}")
         commands = []
     else:
         if len(headers) > 1:
             # Reproduce original behavior of only returning the last mach-O
             # header section
-            tty.warn("Encountered fat binary: {0}".format(cur_path))
+            tty.warn(f"Encountered fat binary: {cur_path}")
         if headers[-1].filetype == "dylib_stub":
-            tty.warn("File is a stub, not a full library: {0}".format(cur_path))
+            tty.warn(f"File is a stub, not a full library: {cur_path}")
         commands = headers[-1].commands
 
     LC_ID_DYLIB = spack.vendor.macholib.mach_o.LC_ID_DYLIB
@@ -352,7 +352,7 @@ def fixup_macos_rpath(root, filename):
     spack_root = spack.store.STORE.layout.root
     for name in deps:
         if name.startswith(spack_root):
-            tty.debug("Spack-installed dependency for {0}: {1}".format(abspath, name))
+            tty.debug(f"Spack-installed dependency for {abspath}: {name}")
             (dirname, basename) = os.path.split(name)
             if dirname != root or dirname in rpaths:
                 # Only change the rpath if it's a dependency *or* if the root
@@ -369,14 +369,14 @@ def fixup_macos_rpath(root, filename):
             # Allowable relative paths
             pass
         elif not _exists_dir(rpath):
-            tty.debug("Nonexistent rpath in {0}: {1}".format(abspath, rpath))
+            tty.debug(f"Nonexistent rpath in {abspath}: {rpath}")
             del_rpaths.add(rpath)
         elif count > 1:
             # Rpath should only be there once, but it can sometimes be
             # duplicated between Spack's compiler and libtool. If there are
             # more copies of the same one, something is very odd....
             tty_debug = tty.debug if count == 2 else tty.warn
-            tty_debug("Rpath appears {0} times in {1}: {2}".format(count, abspath, rpath))
+            tty_debug(f"Rpath appears {count} times in {abspath}: {rpath}")
             del_rpaths.add(rpath)
 
     # Delete bad rpaths
@@ -406,7 +406,7 @@ def fixup_macos_rpaths(spec):
     -delete_rpath``.
     """
     if spec.external or not spec.concrete:
-        tty.warn("external/abstract spec cannot be fixed up: {0!s}".format(spec))
+        tty.warn(f"external/abstract spec cannot be fixed up: {spec!s}")
         return False
 
     if "platform=darwin" not in spec:
@@ -419,9 +419,8 @@ def fixup_macos_rpaths(spec):
 
     if not os.path.exists(prefix):
         raise RuntimeError(
-            "Could not fix up install prefix spec {0} because it does not exist: {1!s}".format(
-                prefix, spec.name
-            )
+            f"Could not fix up install prefix spec {prefix} "
+            f"because it does not exist: {spec.name!s}"
         )
 
     # Explore the installation prefix of the spec
@@ -431,7 +430,7 @@ def fixup_macos_rpaths(spec):
             try:
                 needed_fix = fixup_macos_rpath(root, name)
             except Exception as e:
-                tty.warn("Failed to apply library fixups to: {0}/{1}: {2!s}".format(root, name, e))
+                tty.warn(f"Failed to apply library fixups to: {root}/{name}: {e!s}")
                 needed_fix = False
             if needed_fix:
                 applied += 1

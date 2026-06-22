@@ -65,7 +65,7 @@ def make_log_context(log_events: List[LogEvent]) -> str:
 
     def flush_block():
         block_end = block_start + len(block_lines) - 1
-        out.write(colorize("@c{-- lines %d to %d --}\n" % (block_start, block_end)))
+        out.write(colorize(f"@c{{-- lines {block_start} to {block_end} --}}\n"))
         out.writelines(block_lines)
         block_lines.clear()
 
@@ -83,9 +83,9 @@ def make_log_context(log_events: List[LogEvent]) -> str:
         for i in range(start, event.end):
             if i in event_colors:
                 color = event_colors[i]
-                block_lines.append(colorize("@%s{> %s}\n" % (color, cescape(event[i]))))
+                block_lines.append(colorize(f"@{color}{{> {cescape(event[i])}}}\n"))
             else:
-                block_lines.append("  %s\n" % event[i])
+                block_lines.append(f"  {event[i]}\n")
 
         next_line = event.end
 

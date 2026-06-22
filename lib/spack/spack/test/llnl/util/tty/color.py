@@ -55,14 +55,14 @@ def test_color_wrap(cols, text, indent):
 def test_cescape_at_sign_roundtrip():
     """cescape followed by colorize should not double-escape '@' inside color blocks."""
     raw = 'if spec.satisfies("@:25.1"):'
-    colorized = colorize("@R{%s}" % cescape(raw), color=True)
+    colorized = colorize(f"@R{{{cescape(raw)}}}", color=True)
     assert csub(colorized) == raw
 
 
 def test_cescape_multiple_at_signs_roundtrip():
     """Multiple consecutive '@' characters should survive a cescape/colorize roundtrip."""
     raw = "foo @@@@@bar"
-    colorized = colorize("@R{%s}" % cescape(raw), color=True)
+    colorized = colorize(f"@R{{{cescape(raw)}}}", color=True)
     assert csub(colorized) == raw
 
 

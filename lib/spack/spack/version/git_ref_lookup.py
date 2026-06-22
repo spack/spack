@@ -146,10 +146,10 @@ class GitRefLookup(AbstractRefLookup):
             # Note the brackets are literals, the ref replaces the format string
             try:
                 self.fetcher.git(
-                    "cat-file", "-e", "%s^{commit}" % ref, output=os.devnull, error=os.devnull
+                    "cat-file", "-e", f"{ref}^{{commit}}", output=os.devnull, error=os.devnull
                 )
             except spack.util.executable.ProcessError:
-                raise VersionLookupError("%s is not a valid git ref for %s" % (ref, self.pkg_name))
+                raise VersionLookupError(f"{ref} is not a valid git ref for {self.pkg_name}")
 
             # List tags (refs) by date, so last reference of a tag is newest
             tag_info = self.fetcher.git(
@@ -186,7 +186,7 @@ class GitRefLookup(AbstractRefLookup):
                 self.fetcher.git("merge-base", "--is-ancestor", tag_commit, ref, ignore_errors=[1])
                 if self.fetcher.git.returncode == 0:
                     distance = self.fetcher.git(
-                        "rev-list", "%s..%s" % (tag_commit, ref), "--count", output=str, error=str
+                        "rev-list", f"{tag_commit}..{ref}", "--count", output=str, error=str
                     ).strip()
                     ancestor_commits.append((tag_commit, int(distance)))
 
@@ -204,7 +204,7 @@ class GitRefLookup(AbstractRefLookup):
                 prev_version = None
                 distance = int(
                     self.fetcher.git(
-                        "rev-list", "%s..%s" % (commits[-1], ref), "--count", output=str, error=str
+                        "rev-list", f"{commits[-1]}..{ref}", "--count", output=str, error=str
                     ).strip()
                 )
 

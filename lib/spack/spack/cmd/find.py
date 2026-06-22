@@ -329,7 +329,7 @@ def display_env(env, args, decorator, results, status_fn=None):
         cmd.display_specs(
             env.included_user_specs,
             root_args,
-            decorator=lambda s, f: color.colorize("@*{%s}" % f),
+            decorator=lambda s, f: color.colorize(f"@*{{{f}}}"),
             namespace=True,
             show_flags=True,
             variants=True,

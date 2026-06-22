@@ -104,7 +104,7 @@ class NoLibrariesError(SpackError):
         super().__init__(
             message_or_name
             if prefix is None
-            else "Unable to locate {0} libraries in {1}".format(message_or_name, prefix)
+            else f"Unable to locate {message_or_name} libraries in {prefix}"
         )
 
 
@@ -130,7 +130,7 @@ class UnsatisfiableSpecError(SpecError):
 
     def __init__(self, provided, required, constraint_type):
         # This is only the entrypoint for old concretizer errors
-        super().__init__("%s does not satisfy %s" % (provided, required))
+        super().__init__(f"{provided} does not satisfy {required}")
 
         self.provided = provided
         self.required = required
@@ -168,7 +168,7 @@ class NoURLError(PackageError):
     """Raised when someone tries to build a URL for a package with no URLs."""
 
     def __init__(self, cls):
-        super().__init__("Package %s has no version with a URL." % cls.__name__)
+        super().__init__(f"Package {cls.__name__} has no version with a URL.")
 
 
 class InstallError(SpackError):

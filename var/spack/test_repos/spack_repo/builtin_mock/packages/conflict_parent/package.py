@@ -21,7 +21,7 @@ class ConflictParent(Package):
     conflicts("^conflict~foo", when="@0.9")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure(f"--prefix={prefix}")
         make()
         make("install")
 

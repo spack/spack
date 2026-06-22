@@ -198,9 +198,9 @@ class VerificationResults:
     def __str__(self):
         res = ""
         for path, fields in self.errors.items():
-            res += "%s verification failed with error(s):\n" % path
+            res += f"{path} verification failed with error(s):\n"
             for error in fields:
-                res += "    %s\n" % error
+                res += f"    {error}\n"
 
         if not res:
             res += "No Errors"

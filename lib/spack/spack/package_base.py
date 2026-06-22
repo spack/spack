@@ -174,7 +174,7 @@ class DetectablePackageMeta(type):
             def platform_executables(cls):
                 def to_windows_exe(exe):
                     if exe.endswith("$"):
-                        exe = exe.replace("$", "%s$" % spack.util.path.win_exe_ext())
+                        exe = exe.replace("$", f"{spack.util.path.win_exe_ext()}$")
                     else:
                         exe += spack.util.path.win_exe_ext()
                     return exe
@@ -820,7 +820,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def fullname(cls):
         """Name of this package, including the namespace"""
-        return "%s.%s" % (cls.namespace, cls.name)
+        return f"{cls.namespace}.{cls.name}"
 
     @classproperty
     def fullnames(cls):
@@ -1597,7 +1597,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Working directory will be set to the stage directory.
         """
         if not self.has_code or self.spec.external:
-            tty.debug("No fetch required for {0}".format(self.name))
+            tty.debug(f"No fetch required for {self.name}")
             return
 
         checksum = spack.config.get("config:checksum")
@@ -1608,8 +1608,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             and ("dev_path" not in self.spec.variants)
         ):
             tty.warn(
-                "There is no checksum on file to fetch %s safely."
-                % self.spec.cformat("{name}{@version}")
+                "There is no checksum on file to fetch {} safely.".format(
+                    self.spec.cformat("{name}{@version}")
+                )
             )
 
             # Ask the user whether to skip the checksum if we're
@@ -1619,11 +1620,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if sys.stdout.isatty():
                 ignore_checksum = tty.get_yes_or_no("  Fetch anyway?", default=False)
                 if ignore_checksum:
-                    tty.debug("Fetching with no checksum. {0}".format(ck_msg))
+                    tty.debug(f"Fetching with no checksum. {ck_msg}")
 
             if not ignore_checksum:
                 raise spack.error.FetchError(
-                    "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
+                    "Will not fetch {}".format(self.spec.format("{name}{@version}")), ck_msg
                 )
 
         deprecated = spack.config.get("config:deprecated")
@@ -1646,7 +1647,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?", default=False)
 
                 if ignore_deprecation:
-                    tty.debug("Fetching deprecated version. {0}".format(dp_msg))
+                    tty.debug(f"Fetching deprecated version. {dp_msg}")
 
             if not ignore_deprecation:
                 raise spack.error.FetchError(
@@ -1698,7 +1699,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.msg("No patches needed for {0}".format(self.name))
+            tty.msg(f"No patches needed for {self.name}")
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1724,10 +1725,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.msg("Already patched {0}".format(self.name))
+            tty.msg(f"Already patched {self.name}")
             return
         elif os.path.isfile(no_patches_file):
-            tty.msg("No patches needed for {0}".format(self.name))
+            tty.msg(f"No patches needed for {self.name}")
             return
 
         errors = []
@@ -1772,7 +1773,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.msg("Ran patch() for {0}".format(self.name))
+                tty.msg(f"Ran patch() for {self.name}")
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1782,7 +1783,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.msg("No patches needed for {0}".format(self.name))
+                    tty.msg(f"No patches needed for {self.name}")
             except spack.error.SpackError as e:
                 # Touch bad file if anything goes wrong.
                 fsys.touch(bad_file)
@@ -1951,7 +1952,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         for missing_target_msg in missing_target_msgs:
             if missing_target_msg.format(target) in stderr:
-                tty.debug("Target '{0}' not found in {1}".format(target, makefile))
+                tty.debug(f"Target '{target}' not found in {makefile}")
                 return False
 
         return True
@@ -1990,7 +1991,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         matches = [line for line in all_targets if line.startswith(target + ":")]
 
         if not matches:
-            tty.debug("Target '{0}' not found in build.ninja".format(target))
+            tty.debug(f"Target '{target}' not found in build.ninja")
             return False
 
         return True
@@ -2158,7 +2159,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def flags_to_build_system_args(self, flags: Dict[str, List[str]]) -> None:
         # Takes flags as a dict name: list of values
         if any(v for v in flags.values()):
-            msg = "The {0} build system".format(self.__class__.__name__)
+            msg = f"The {self.__class__.__name__} build system"
             msg += " cannot take command line arguments for compiler flags"
             raise NotImplementedError(msg)
 
@@ -2171,10 +2172,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if specs:
                 if deprecator:
                     spack.store.STORE.db.deprecate(specs[0], deprecator)
-                    tty.debug("Deprecating stale DB entry for {0}".format(spec.short_spec))
+                    tty.debug(f"Deprecating stale DB entry for {spec.short_spec}")
                 else:
                     spack.store.STORE.db.remove(specs[0])
-                    tty.debug("Removed stale DB entry for {0}".format(spec.short_spec))
+                    tty.debug(f"Removed stale DB entry for {spec.short_spec}")
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -2201,11 +2202,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     if force:
                         error_msg = (
                             "One or more pre_uninstall hooks have failed"
-                            " for {0}, but Spack is continuing with the"
-                            " uninstall".format(str(spec))
+                            f" for {str(spec)}, but Spack is continuing with the"
+                            " uninstall"
                         )
                         if isinstance(error, spack.error.SpackError):
-                            error_msg += "\n\nError message: {0}".format(str(error))
+                            error_msg += f"\n\nError message: {str(error)}"
                         tty.warn(error_msg)
                         # Note that if the uninstall succeeds then we won't be
                         # seeing this error again and won't have another chance
@@ -2241,14 +2242,14 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 # will not have another chance to run.
                 error_msg = (
                     "One or more post-uninstallation hooks failed for"
-                    " {0}, but the prefix has been removed (if it is not"
-                    " external).".format(str(spec))
+                    f" {str(spec)}, but the prefix has been removed (if it is not"
+                    " external)."
                 )
                 tb_msg = traceback.format_exc()
-                error_msg += "\n\nThe error:\n\n{0}".format(tb_msg)
+                error_msg += f"\n\nThe error:\n\n{tb_msg}"
                 tty.warn(error_msg)
 
-        tty.msg("Successfully uninstalled {0}".format(spec.short_spec))
+        tty.msg(f"Successfully uninstalled {spec.short_spec}")
 
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
@@ -2356,7 +2357,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         Get the rpath args as a string, with -Wl,-rpath, for each element
         """
-        return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
+        return " ".join(f"-Wl,-rpath,{p}" for p in self.rpath)
 
 
 class WindowsSimulatedRPath:
@@ -2500,11 +2501,12 @@ class WindowsSimulatedRPath:
             # either way, we don't want to overwrite existing libraries
             already_linked = islink(str(dest_file))
             tty.debug(
-                "Linking library %s to %s failed, " % (str(path), str(dest_file))
-                + "already linked."
+                f"Linking library {str(path)} to {str(dest_file)} failed, already linked."
                 if already_linked
-                else "library with name %s already exists at location %s."
-                % (str(file_name), str(dest_dir))
+                else (
+                    f"library with name {str(file_name)} already exists "
+                    f"at location {str(dest_dir)}."
+                )
             )
 
         file_name = path.name
@@ -2691,7 +2693,7 @@ class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
 
     def __init__(self, conflict):
-        super().__init__("%s conflicts with another file in the flattened directory." % (conflict))
+        super().__init__(f"{conflict} conflicts with another file in the flattened directory.")
 
 
 class ManualDownloadRequiredError(InvalidPackageOpError):

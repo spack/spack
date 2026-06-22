@@ -501,11 +501,11 @@ class Gpg:
             os.chmod(gnupghome, 0o700)
 
         if not os.path.isdir(gnupghome):
-            msg = 'gnupghome "{0}" exists and is not a directory'.format(gnupghome)
+            msg = f'gnupghome "{gnupghome}" exists and is not a directory'
             raise SpackGPGError(msg)
 
         if not os.access(gnupghome, os.R_OK | os.W_OK | os.X_OK):
-            msg = 'gnupghome "{0}" exists but is not accessible'.format(gnupghome)
+            msg = f'gnupghome "{gnupghome}" exists but is not accessible'
             raise SpackGPGError(msg)
 
         return pathlib.Path(gnupghome)
@@ -930,14 +930,13 @@ def create(**kwargs):
 Key-Type: rsa
 Key-Length: 4096
 Key-Usage: sign
-Name-Real: %(name)s
-Name-Email: %(email)s
-Name-Comment: %(comment)s
-Expire-Date: %(expires)s
-%%no-protection
-%%commit
-"""
-                % kwargs
+Name-Real: {name}
+Name-Email: {email}
+Name-Comment: {comment}
+Expire-Date: {expires}
+%no-protection
+%commit
+""".format(**kwargs)
             )
         GPG("--gen-key", "--batch", input=r)
 
@@ -1080,7 +1079,7 @@ def _verify_exe_or_raise(exe) -> spack.version.VersionType:
     output = exe("--version", output=str)
     match = re.search(r"^gpg(conf)? \(GnuPG(?:/MacGPG2)?\) (.*)$", output, re.M)
     if not match:
-        raise SpackGPGError('Could not determine "{0}" version'.format(exe.name))
+        raise SpackGPGError(f'Could not determine "{exe.name}" version')
 
     gpg_version = spack.version.Version(match.group(2))
     if gpg_version < spack.version.Version("2"):

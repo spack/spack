@@ -90,12 +90,12 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None) ->
     )
     if git.returncode != 0:
         tty.die(
-            "This repository does not have a '%s' revision." % base,
+            f"This repository does not have a '{base}' revision.",
             "spack style needs this branch to determine which files changed.",
-            "Ensure that '%s' exists, or specify files to check explicitly." % base,
+            f"Ensure that '{base}' exists, or specify files to check explicitly.",
         )
 
-    range = "{0}...".format(base_sha.strip())
+    range = f"{base_sha.strip()}..."
 
     git_args = [
         # Add changed files committed since branching off of develop
@@ -179,14 +179,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-t",
         "--tool",
         action="append",
-        help="specify which tools to run (default: %s)" % ", ".join(tool_names),
+        help="specify which tools to run (default: {})".format(", ".join(tool_names)),
     )
     tool_group.add_argument(
         "-s",
         "--skip",
         metavar="TOOL",
         action="append",
-        help="specify tools to skip (choose from %s)" % ", ".join(tool_names),
+        help="specify tools to skip (choose from {})".format(", ".join(tool_names)),
     )
     subparser.add_argument(
         "--spec-strings",
@@ -236,9 +236,9 @@ def rewrite_and_print_output(
 
 def print_tool_result(tool, returncode):
     if returncode == 0:
-        color.cprint("  @g{%s checks were clean}" % tool)
+        color.cprint(f"  @g{{{tool} checks were clean}}")
     else:
-        color.cprint("  @r{%s found errors}" % tool)
+        color.cprint(f"  @r{{{tool} found errors}}")
 
 
 @tool("ruff-check", cmd="ruff")
@@ -489,7 +489,7 @@ def validate_toolset(arg_value):
     tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
     for tool in tools:
         if tool not in tool_names:
-            tty.die("Invalid tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
+            tty.die(f"Invalid tool: '{tool}'", "Choose from: {}".format(", ".join(tool_names)))
     return tools
 
 
@@ -522,7 +522,7 @@ def style(parser, args):
     args.root = Path(args.root).resolve() if args.root else Path(spack.paths.prefix)
     spack_script = args.root / "bin" / "spack"
     if not spack_script.exists():
-        tty.die("This does not look like a valid spack root.", "No such file: '%s'" % spack_script)
+        tty.die("This does not look like a valid spack root.", f"No such file: '{spack_script}'")
 
     def prefix_relative(path: Union[Path, str]) -> Path:
         return Path(os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root))

@@ -686,7 +686,7 @@ def test_versions_from_git(git, mock_git_version_info, monkeypatch, mock_package
     )
 
     for commit in commits:
-        spec = spack.spec.Spec("git-test-commit@%s" % commit)
+        spec = spack.spec.Spec(f"git-test-commit@{commit}")
         version: GitVersion = spec.version
         comparator = [str(v) if not isinstance(v, int) else v for v in version.ref_version]
 
@@ -1073,7 +1073,7 @@ def test_git_version_repo_attached_after_serialization(
     """
     repo_path, _, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
     spec = spack.concretize.concretize_one(f"git-test-commit@{commits[-2]}")
 
@@ -1092,7 +1092,7 @@ def test_resolved_git_version_is_shown_in_str(
     as <hash>=<version>, and not just <hash>."""
     repo_path, _, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
     commit = commits[-3]
     spec = spack.concretize.concretize_one(f"git-test-commit@{commit}")

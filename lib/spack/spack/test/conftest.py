@@ -197,7 +197,7 @@ def mock_git_version_info(git, tmp_path: Path, override_git_repos_cache_path):
             "commit",
             "--no-gpg-sign",
             "--date",
-            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            f"2020-01-{commit_counter:02d} 12:0:00 +0300",
             "-am",
             message,
         )
@@ -300,7 +300,7 @@ def mock_git_package_changes(git, tmp_path: Path, override_git_repos_cache_path,
             "commit",
             "--no-gpg-sign",
             "--date",
-            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            f"2020-01-{commit_counter:02d} 12:0:00 +0300",
             "-am",
             message,
         )
@@ -1472,8 +1472,8 @@ def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
 
     # Archive it
     with working_dir(str(tmpdir)):
-        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, ext)
-        tar("-c{0}f".format(tar_flag), archive_name, spack.stage._source_path_subdir)
+        archive_name = f"{spack.stage._source_path_subdir}{ext}"
+        tar(f"-c{tar_flag}f", archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple(
         "Archive", ["url", "path", "archive_file", "expanded_archive_basedir"]
@@ -1666,7 +1666,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
     # Create two git repositories which will be used as submodules in the
     # main repository
     for submodule_count in range(2):
-        tmpdir = tmp_path_factory.mktemp("mock-git-repo-submodule-dir-{0}".format(submodule_count))
+        tmpdir = tmp_path_factory.mktemp(f"mock-git-repo-submodule-dir-{submodule_count}")
         source_dir = tmpdir / spack.stage._source_path_subdir
         source_dir.mkdir()
         repodir = source_dir
@@ -1678,15 +1678,11 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
             git("config", "user.email", "spack@spack.io")
 
             # r0 is just the first commit
-            submodule_file = "r0_file_{0}".format(submodule_count)
+            submodule_file = f"r0_file_{submodule_count}"
             (repodir / submodule_file).touch()
             git("add", submodule_file)
             git(
-                "-c",
-                "commit.gpgsign=false",
-                "commit",
-                "-m",
-                "mock-git-repo r0 {0}".format(submodule_count),
+                "-c", "commit.gpgsign=false", "commit", "-m", f"mock-git-repo r0 {submodule_count}"
             )
 
     tmpdir = tmp_path_factory.mktemp("mock-git-repo-dir")
@@ -1702,7 +1698,7 @@ def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
         git("checkout", "-b", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
-            git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
+            git("submodule", "add", suburl, f"third_party/submodule{number}")
 
         # r0 is the first commit: it consists of one file and two submodules
         r0_file = "r0_file"
@@ -2256,12 +2252,12 @@ def binary_with_rpaths(prefix_tmpdir: Path):
     def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
         source = prefix_tmpdir / "main.c"
         source.write_text(
-            """
+            f"""
         #include <stdio.h>
         int main(){{
-            printf("{0}");
+            printf("{message}");
         }}
-        """.format(message)
+        """
         )
         gcc = spack.util.executable.which("gcc", required=True)
         executable = source.parent / "main.x"

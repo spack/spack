@@ -38,10 +38,10 @@ class ViewNotIgnored(Package):
     def assert_installed(cls, prefix):
         for test_file in cls.install_test_files:
             path = os.path.join(prefix, test_file)
-            assert os.path.exists(path), "Missing installed file: {}".format(path)
+            assert os.path.exists(path), f"Missing installed file: {path}"
 
     @classmethod
     def assert_not_installed(cls, prefix):
         for test_file in cls.install_test_files:
             path = os.path.join(prefix, test_file)
-            assert not os.path.exists(path), "File was not uninstalled: {}".format(path)
+            assert not os.path.exists(path), f"File was not uninstalled: {path}"

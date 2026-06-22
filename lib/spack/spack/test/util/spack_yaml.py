@@ -35,7 +35,7 @@ def check_blame(element, file_name, line=None):
 
     annotation = file_name
     if line is not None:
-        annotation += ":%d" % line
+        annotation += f":{line}"
 
     assert file_name in element_line
 

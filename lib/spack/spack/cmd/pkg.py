@@ -109,13 +109,13 @@ def pkg_diff(args):
     u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
 
     if u1:
-        print("%s:" % args.rev1)
+        print(f"{args.rev1}:")
         colify(sorted(u1), indent=4)
         if u1:
             print()
 
     if u2:
-        print("%s:" % args.rev2)
+        print(f"{args.rev2}:")
         colify(sorted(u2), indent=4)
 
 
@@ -154,10 +154,10 @@ def pkg_source(args):
 
     # regular source dump -- just get the package and print its contents
     if args.canonical:
-        message = "Canonical source for %s:" % filename
+        message = f"Canonical source for {filename}:"
         content = ph.canonical_source(spec)
     else:
-        message = "Source for %s:" % filename
+        message = f"Source for {filename}:"
         with open(filename, encoding="utf-8") as f:
             content = f.read()
 
@@ -261,6 +261,6 @@ def pkg(parser, args, unknown_args):
     if args.pkg_command == "grep":
         return pkg_grep(args, unknown_args)
     elif unknown_args:
-        args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
+        args.subparser.error("unrecognized arguments: {}".format(" ".join(unknown_args)))
     else:
         return action[args.pkg_command](args)

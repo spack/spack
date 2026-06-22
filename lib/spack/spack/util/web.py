@@ -268,7 +268,7 @@ def _urlopen():
 urlopen = lang.Singleton(_urlopen)
 
 #: User-Agent used in Request objects
-SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
+SPACK_USER_AGENT = f"Spackbot/{spack.spack_version}"
 
 
 # Also, HTMLParseError is deprecated and never raised.
@@ -346,9 +346,9 @@ def read_from_url(url, accept_content_type=None):
             reject_content_type = True
 
         if reject_content_type:
-            msg = "ignoring page {}".format(url.geturl())
+            msg = f"ignoring page {url.geturl()}"
             if content_type:
-                msg += " with content type {}".format(content_type)
+                msg += f" with content type {content_type}"
             tty.debug(msg)
             return None, None, None
 
@@ -539,13 +539,13 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     if not url:
         raise spack.error.FetchError("A URL is required to fetch its text")
 
-    tty.debug("Fetching text at {0}".format(url))
+    tty.debug(f"Fetching text at {url}")
 
     filename = os.path.basename(url)
     path = os.path.join(dest_dir, filename)
 
     fetch_method = spack.config.get("config:url_fetch_method")
-    tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
+    tty.debug(f"Using '{fetch_method}' to fetch {url} into {path}")
     if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
         curl_args = fetch_method.split()[1:] + ["-O"]
@@ -599,7 +599,7 @@ def url_exists(url, curl=None):
 
     Returns (bool): True if it exists; False otherwise.
     """
-    tty.debug("Checking existence of {0}".format(url))
+    tty.debug(f"Checking existence of {url}")
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so

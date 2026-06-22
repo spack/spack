@@ -149,9 +149,7 @@ def get_system_path_max():
             proc_output = str(path_max_proc.communicate()[0].decode())
             sys_max_path_length = int(proc_output)
         except (ValueError, subprocess.CalledProcessError, OSError):
-            tty.msg(
-                "Unable to find system max path length, using: {0}".format(sys_max_path_length)
-            )
+            tty.msg(f"Unable to find system max path length, using: {sys_max_path_length}")
 
     return sys_max_path_length
 
@@ -315,10 +313,8 @@ def longest_prefix_re(string, capture=True):
     if len(string) < 2:
         return string
 
-    return "(%s%s%s?)" % (
-        "" if capture else "?:",
-        string[0],
-        longest_prefix_re(string[1:], capture=False),
+    return "({}{}{}?)".format(
+        "" if capture else "?:", string[0], longest_prefix_re(string[1:], capture=False)
     )
 
 

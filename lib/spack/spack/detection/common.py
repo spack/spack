@@ -101,7 +101,7 @@ def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     except spack.error.SpackError:
         tty.warn(
             "Constructed spec has a string representation but the string"
-            " representation does not evaluate to a valid spec: {0}".format(str(spec))
+            f" representation does not evaluate to a valid spec: {str(spec)}"
         )
         return False
 
@@ -402,7 +402,7 @@ def find_win32_additional_install_paths() -> List[str]:
     # to interact with Windows
     # Add search path for default Chocolatey (https://github.com/chocolatey/choco)
     # install directory
-    windows_search_ext.append("%s\\ProgramData\\chocolatey\\bin" % drive_letter)
+    windows_search_ext.append(f"{drive_letter}\\ProgramData\\chocolatey\\bin")
     # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
     windows_search_ext.extend(

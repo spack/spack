@@ -2101,8 +2101,7 @@ class SpackSolverSetup:
 
         if not self.target_specs_cache:
             self.target_specs_cache = [
-                spack.spec.Spec("target={0}".format(target_name))
-                for _, target_name in self.default_targets
+                spack.spec.Spec(f"target={target_name}") for _, target_name in self.default_targets
             ]
 
         package_targets = self.target_specs_cache[:]
@@ -2982,8 +2981,9 @@ class SpackSolverSetup:
         if env:
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
-                    'dev_path="%s"'
-                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                    'dev_path="{}"'.format(
+                        spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                    )
                 )
                 for name, info in env.dev_specs.items()
             )

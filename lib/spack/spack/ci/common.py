@@ -53,10 +53,10 @@ def copy_gzipped(glob_or_path: str, dest: str) -> None:
 
     files = glob.glob(glob_or_path)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
+        raise OSError(f"No such file or directory: '{glob_or_path}'", errno.ENOENT)
     if len(files) > 1 and not os.path.isdir(dest):
         raise ValueError(
-            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+            f"'{glob_or_path}' matches multiple files but '{dest}' is not a directory"
         )
 
     def is_gzipped(path):
@@ -618,7 +618,7 @@ class SpackCIConfig:
                     "script:": [
                         "spack env activate --without-view {env_dir}",
                         "spack -v buildcache update-index --keys "
-                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                        f"{' '.join(update_index_extra_args)} buildcache-destination",
                     ]
                 }
             },

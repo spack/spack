@@ -179,12 +179,10 @@ def loads(module_type, specs, args, out=None):
     load_template = "{comment}{exclude}{command}{prefix}{name}"
     for spec, mod in modules:
         if not mod:
-            module_output_for_spec = "## excluded or missing from upstream: {0}".format(
-                spec.format()
-            )
+            module_output_for_spec = f"## excluded or missing from upstream: {spec.format()}"
         else:
             d["exclude"] = "## " if spec.name in exclude_set else ""
-            d["comment"] = "" if not args.shell else "# {0}\n".format(spec.format())
+            d["comment"] = "" if not args.shell else f"# {spec.format()}\n"
             d["name"] = mod
             module_output_for_spec = load_template.format(**d)
         out.write(module_output_for_spec)
@@ -313,9 +311,9 @@ def refresh(module_type, specs, args):
         message = "Name clashes detected in module files:\n"
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
-                message += "\nfile: {0}\n".format(filename)
+                message += f"\nfile: {filename}\n"
                 for x in writer_list:
-                    message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+                    message += f"spec: {x.spec.format(spec_fmt_str)}\n"
         tty.error(message)
         tty.error("Operation aborted")
         raise SystemExit(1)
@@ -328,7 +326,7 @@ def refresh(module_type, specs, args):
     module_type_root = writers[0].layout.dirname()
 
     # Proceed regenerating module files
-    tty.msg("Regenerating {name} module files".format(name=module_type))
+    tty.msg(f"Regenerating {module_type} module files")
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)

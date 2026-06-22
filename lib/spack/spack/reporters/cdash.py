@@ -67,7 +67,7 @@ CDashConfiguration = collections.namedtuple(
 
 
 def build_stamp(track, timestamp):
-    buildstamp_format = "%Y%m%d-%H%M-{0}".format(track)
+    buildstamp_format = f"%Y%m%d-%H%M-{track}"
     return time.strftime(buildstamp_format, time.localtime(timestamp))
 
 
@@ -119,12 +119,12 @@ class CDash(Reporter):
         git = spack.util.git.git(required=True)
         with working_dir(spack.paths.spack_root):
             self.revision = git("rev-parse", "HEAD", output=str).strip()
-        self.generator = "spack-{0}".format(spack.get_version())
+        self.generator = f"spack-{spack.get_version()}"
         self.multiple_packages = False
 
     def report_build_name(self, pkg_name):
         buildname = (
-            "{0} - {1}".format(self.base_buildname, pkg_name)
+            f"{self.base_buildname} - {pkg_name}"
             if self.multiple_packages
             else self.base_buildname
         )
@@ -333,7 +333,7 @@ class CDash(Reporter):
                 t = env.get_template(phase_template)
                 f.write(t.render(report_data))
 
-            tty.debug("Preparing to upload {0}".format(phase_report))
+            tty.debug(f"Preparing to upload {phase_report}")
             self.upload(phase_report)
 
     def test_report_for_package(self, report_dir, package, duration):
@@ -384,9 +384,9 @@ class CDash(Reporter):
             spec: spec being tested
             reason: optional reason the test is being skipped
         """
-        output = "Skipped {0} package".format(spec.name)
+        output = f"Skipped {spec.name} package"
         if reason:
-            output += "\n{0}".format(reason)
+            output += f"\n{reason}"
 
         package = {"name": spec.name, "id": spec.dag_hash(), "result": "skipped", "stdout": output}
         self.test_report_for_package(report_dir, package, duration=0.0)
@@ -429,7 +429,7 @@ class CDash(Reporter):
 
     def upload(self, filename):
         if not self.cdash_upload_url:
-            print("Cannot upload {0} due to missing upload url".format(filename))
+            print(f"Cannot upload {filename} due to missing upload url")
             return
 
         # Compute md5 checksum for the contents of this file.
@@ -443,12 +443,12 @@ class CDash(Reporter):
                 "MD5": md5sum,
             }
             encoded_params = urlencode(params_dict)
-            url = "{0}&{1}".format(self.cdash_upload_url, encoded_params)
+            url = f"{self.cdash_upload_url}&{encoded_params}"
             request = Request(url, data=f, method="PUT")
             request.add_header("Content-Type", "text/xml")
             request.add_header("Content-Length", os.path.getsize(filename))
             if self.authtoken:
-                request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
+                request.add_header("Authorization", f"Bearer {self.authtoken}")
             try:
                 with web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
                     if self.current_package_name not in self.buildIds:
@@ -468,7 +468,7 @@ class CDash(Reporter):
                 # a buildId.
                 build_url = self.cdash_upload_url
                 build_url = build_url[0 : build_url.find("submit.php")]
-                build_url += "buildSummary.php?buildid={0}".format(buildid)
-                tty.msg("{0}: {1}".format(package_name, build_url))
+                build_url += f"buildSummary.php?buildid={buildid}"
+                tty.msg(f"{package_name}: {build_url}")
         if not self.success:
             raise SpackError("Errors encountered, see above for more details")

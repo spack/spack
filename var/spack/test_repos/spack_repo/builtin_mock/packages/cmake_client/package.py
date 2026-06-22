@@ -113,7 +113,7 @@ class CmakeClient(CMakePackage):
         print(cmake.exe)
         check(
             cmake.path.startswith(spec["cmake"].prefix.bin),
-            "Wrong cmake was in environment: %s" % cmake,
+            f"Wrong cmake was in environment: {cmake}",
         )
 
         check(from_cmake == "from_cmake", "Couldn't read global set by cmake.")

@@ -138,7 +138,7 @@ def test_static_to_shared_library(build_environment):
             ).strip()
 
             if not shared_lib:
-                shared_lib = "{0}.{1}".format(os.path.splitext(static_lib)[0], dso_suffix)
+                shared_lib = f"{os.path.splitext(static_lib)[0]}.{dso_suffix}"
 
             assert set(output.split()) == set(
                 expected[arch].format(static_lib, shared_lib, os.path.basename(shared_lib)).split()

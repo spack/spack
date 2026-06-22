@@ -123,8 +123,8 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     if padded_length:
         root = spack.util.path.add_padding(unpadded_root, padded_length)
         if len(root) != padded_length:
-            msg = "Cannot pad %s to %s characters." % (root, padded_length)
-            msg += " It is already %s characters long" % len(root)
+            msg = f"Cannot pad {root} to {padded_length} characters."
+            msg += f" It is already {len(root)} characters long"
             tty.warn(msg)
     else:
         root = unpadded_root
@@ -183,7 +183,7 @@ class Store:
         timeout_format_str = (
             f"{str(lock_cfg.package_timeout)}s" if lock_cfg.package_timeout else "No timeout"
         )
-        tty.debug("PACKAGE LOCK TIMEOUT: {0}".format(str(timeout_format_str)))
+        tty.debug(f"PACKAGE LOCK TIMEOUT: {str(timeout_format_str)}")
 
         self.prefix_locker = spack.database.SpecLocker(
             spack.database.prefix_lock_path(root), default_timeout=lock_cfg.package_timeout
@@ -421,7 +421,7 @@ def use_store(
     global STORE
 
     assert not isinstance(path, Store), "cannot pass a store anymore"
-    scope_name = "use-store-{}".format(uuid.uuid4())
+    scope_name = f"use-store-{uuid.uuid4()}"
     data = {"root": str(path)}
     if extra_data:
         data.update(extra_data)

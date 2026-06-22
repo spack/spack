@@ -95,16 +95,12 @@ def create_stage_root(path: str) -> None:
             p_stat = os.stat(p)
             if par_stat.st_gid != p_stat.st_gid:
                 tty.warn(
-                    "Expected {0} to have group {1}, but it is {2}".format(
-                        p, par_stat.st_gid, p_stat.st_gid
-                    )
+                    f"Expected {p} to have group {par_stat.st_gid}, but it is {p_stat.st_gid}"
                 )
 
             if par_stat.st_mode & p_stat.st_mode != par_stat.st_mode:
                 tty.warn(
-                    "Expected {0} to support mode {1}, but it is {2}".format(
-                        p, par_stat.st_mode, p_stat.st_mode
-                    )
+                    f"Expected {p} to support mode {par_stat.st_mode}, but it is {p_stat.st_mode}"
                 )
 
             if not can_access(p):
@@ -120,11 +116,7 @@ def create_stage_root(path: str) -> None:
         # restricted to the user.
         owner_uid = get_owner_uid(p)
         if user_uid != owner_uid:
-            tty.warn(
-                "Expected user {0} to own {1}, but it is owned by {2}".format(
-                    user_uid, p, owner_uid
-                )
-            )
+            tty.warn(f"Expected user {user_uid} to own {p}, but it is owned by {owner_uid}")
 
     spack_src_subdir = os.path.join(path, _source_path_subdir)
     # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
@@ -150,7 +142,7 @@ def _first_accessible_path(paths):
                 return path
 
         except OSError as e:
-            tty.debug("OSError while checking stage path %s: %s" % (path, str(e)))
+            tty.debug(f"OSError while checking stage path {path}: {str(e)}")
 
     return None
 
@@ -832,9 +824,7 @@ class ResourceStage(Stage):
             if not os.path.exists(destination_path):
                 tty.info(
                     "Moving resource stage\n\tsource: "
-                    "{stage}\n\tdestination: {destination}".format(
-                        stage=source_path, destination=destination_path
-                    )
+                    f"{source_path}\n\tdestination: {destination_path}"
                 )
 
                 src = os.path.realpath(source_path)
@@ -1052,7 +1042,7 @@ class DevelopStage(AbstractStage):
 def ensure_access(file):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
-        tty.die("Insufficient permissions for %s" % file)
+        tty.die(f"Insufficient permissions for {file}")
 
 
 def purge():

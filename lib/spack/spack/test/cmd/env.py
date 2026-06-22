@@ -1159,14 +1159,14 @@ spack:
     )
 
     external_config = io.StringIO(
-        """\
+        f"""\
 packages:
   pkg-a:
     externals:
     - spec: pkg-a@2.0
-      prefix: {a_prefix}
+      prefix: {str(fake_prefix)}
     buildable: false
-""".format(a_prefix=str(fake_prefix))
+"""
     )
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
@@ -1344,13 +1344,13 @@ packages:
 def mpileaks_env_config(include_path):
     """Return the contents of an environment that includes the provided
     path and lists mpileaks as the sole spec."""
-    return """\
+    return f"""\
 spack:
   include:
-  - {0}
+  - {include_path}
   specs:
   - mpileaks
-""".format(include_path)
+"""
 
 
 def test_env_with_included_config_file(mutable_mock_env_path, packages_file):
@@ -1509,7 +1509,7 @@ def test_env_with_included_config_file_url(
 
     spack_yaml = tmp_path / "spack.yaml"
     with spack_yaml.open("w") as f:
-        f.write("spack:\n  include:\n    - {0}\n".format(packages_file.as_uri()))
+        f.write(f"spack:\n  include:\n    - {packages_file.as_uri()}\n")
 
     env = ev.Environment(str(tmp_path))
     ev.activate(env)
@@ -1973,7 +1973,7 @@ def test_store_different_build_deps(repo_builder: RepoBuilder):
 
 def test_env_updates_view_install(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         add("mpileaks")
         install("--fake")
@@ -1990,7 +1990,7 @@ def test_env_view_fails(
     # It also throws on file-file conflicts. That's what we're checking here
     # by adding the same package twice to a view.
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         add("libelf")
         add("libelf cflags=-g")
@@ -2006,7 +2006,7 @@ def test_env_view_fails_dir_file(
     # This environment view fails to be created because a file
     # and a dir are in the same path. Test that it mentions the problematic path.
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         add("view-file")
         add("view-dir")
@@ -2021,7 +2021,7 @@ def test_env_view_succeeds_symlinked_dir_file(
 ):
     # A symlinked dir and an ordinary dir merge happily
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         add("view-symlinked-dir")
         add("view-dir")
@@ -2470,7 +2470,7 @@ def test_env_updates_view_install_package(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         install("--fake", "--add", "mpileaks")
 
@@ -2481,7 +2481,7 @@ def test_env_updates_view_add_concretize(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
         add("mpileaks")
@@ -2494,7 +2494,7 @@ def test_env_updates_view_uninstall(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         install("--fake", "--add", "mpileaks")
 
@@ -2510,7 +2510,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
         add("mpileaks")
@@ -2528,7 +2528,7 @@ def test_env_updates_view_remove_concretize(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     install("--fake", "mpileaks")
     with ev.read("test"):
         add("mpileaks")
@@ -2547,7 +2547,7 @@ def test_env_updates_view_force_remove(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
     view_dir = tmp_path / "view"
-    env("create", "--with-view=%s" % view_dir, "test")
+    env("create", f"--with-view={view_dir}", "test")
     with ev.read("test"):
         install("--add", "--fake", "mpileaks")
 
@@ -3080,18 +3080,17 @@ def test_view_link_run(
     envdir = str(tmp_path)
     with open(yaml, "w", encoding="utf-8") as f:
         f.write(
-            """
+            f"""
 spack:
   specs:
   - dttop
 
   view:
     combinatorial:
-      root: %s
+      root: {viewdir}
       link: run
       projections:
-        all: '{name}'"""
-            % viewdir
+        all: '{{name}}'"""
         )
 
     with ev.Environment(envdir):
@@ -3337,9 +3336,9 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     viewdir_bin = os.path.join(viewdir, "bin")
 
     assert (
-        "export PATH={0}".format(viewdir_bin) in out
-        or "export PATH='{0}".format(viewdir_bin) in out
-        or 'export PATH="{0}'.format(viewdir_bin) in out
+        f"export PATH={viewdir_bin}" in out
+        or f"export PATH='{viewdir_bin}" in out
+        or f'export PATH="{viewdir_bin}' in out
     )
 
 
@@ -3639,7 +3638,7 @@ spack:
         user_spec_hash = e.concretized_roots[0].hash
         spec = e.specs_by_hash[user_spec_hash]
         view_prefix = e.default_view.get_projection_for_spec(spec)
-        modules_glob = "%s/modules/**/*/*" % e.path
+        modules_glob = f"{e.path}/modules/**/*/*"
         modules = glob.glob(modules_glob)
         assert len(modules) == 1
         module = modules[0]
@@ -3821,14 +3820,14 @@ def test_custom_store_in_environment(mutable_config, tmp_path: pathlib.Path):
     spack_yaml = tmp_path / "spack.yaml"
     install_root = tmp_path / "store"
     spack_yaml.write_text(
-        """
+        f"""
 spack:
   specs:
   - libelf
   config:
     install_tree:
-      root: {0}
-""".format(install_root)
+      root: {install_root}
+"""
     )
     current_store_root = str(spack.store.STORE.root)
     assert str(current_store_root) != str(install_root)
@@ -3914,7 +3913,7 @@ def test_env_view_backward_compat_old_symlink_format(
 ):
     """An old-style symlink view pointing to ._view/<hash>/ is recognized as up-to-date."""
     view = str(tmp_path / "view")
-    env("create", "--with-view={0}".format(view), "test")
+    env("create", f"--with-view={view}", "test")
     with ev.read("test") as e:
         add("libelf")
         install("--fake")
@@ -3925,7 +3924,7 @@ def test_env_view_backward_compat_old_symlink_format(
     # Simulate old format: remove the real view dir and replace with a symlink
     root_name = os.path.basename(view)
     root_dir = os.path.dirname(view)
-    old_hash_dir = os.path.join(root_dir, "._%s" % root_name, content_hash)
+    old_hash_dir = os.path.join(root_dir, f"._{root_name}", content_hash)
     shutil.rmtree(view)
     os.makedirs(old_hash_dir, exist_ok=True)
     os.symlink(old_hash_dir, view)
@@ -3967,7 +3966,7 @@ def test_environment_view_target_already_exists(
     symlink format does not prevent regeneration."""
 
     view = str(tmp_path / "view")
-    env("create", "--with-view={0}".format(view), "test")
+    env("create", f"--with-view={view}", "test")
     with ev.read("test"):
         add("libelf")
         install("--fake")
@@ -4022,7 +4021,7 @@ def test_read_old_lock_and_write_new(tmp_path: pathlib.Path, lockfile):
     # the environment, anyway.
     #
     # This test ensures the behavior described above.
-    lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", "%s.lock" % lockfile)
+    lockfile_path = os.path.join(spack.paths.test_path, "data", "legacy_env", f"{lockfile}.lock")
 
     # read in the JSON from a legacy lockfile
     with open(lockfile_path, encoding="utf-8") as f:
@@ -4412,7 +4411,7 @@ post-install: $(addprefix example/post-install/,$(example/SPACK_PACKAGE_IDS))
     # post-install: <hash> should've been executed
     with ev.read("test") as test:
         for s in test.all_specs():
-            assert "post-install: {}".format(s.dag_hash()) in out
+            assert f"post-install: {s.dag_hash()}" in out
 
 
 def test_depfile_empty_does_not_error(tmp_path: pathlib.Path):

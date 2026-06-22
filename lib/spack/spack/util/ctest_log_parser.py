@@ -257,9 +257,9 @@ class LogEvent:
         out = io.StringIO()
         for i in range(self.start, self.end):
             if i == self.line_no:
-                out.write("  >> %-6d%s" % (i, self[i]))
+                out.write(f"  >> {i:<6d}{self[i]}")
             else:
-                out.write("     %-6d%s" % (i, self[i]))
+                out.write(f"     {i:<6d}{self[i]}")
         return out.getvalue()
 
 
@@ -342,11 +342,11 @@ class _ProfileMatcher(_Matcher):
         print()
         print(f"{kind}_matches")
         for pattern, t in zip(self.matches, self.match_times):
-            print("%16.2f        %s" % (t * 1e6, pattern.pattern))
+            print(f"{t * 1e6:16.2f}        {pattern.pattern}")
         print()
         print(f"{kind}_exceptions")
         for pattern, t in zip(self.exceptions, self.exc_times):
-            print("%16.2f        %s" % (t * 1e6, pattern.pattern))
+            print(f"{t * 1e6:16.2f}        {pattern.pattern}")
 
 
 def _parse(

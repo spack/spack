@@ -76,7 +76,7 @@ def test_spack_entry_point_config(tmp_path: pathlib.Path, mock_get_entry_points)
     config_path = config_paths.get("plugin-mypackage_config")
     my_config_path = tmp_path / "spack/etc"
     if config_path is None:
-        raise ValueError("Did not find entry point config in %s" % str(config_paths))
+        raise ValueError(f"Did not find entry point config in {str(config_paths)}")
     else:
         assert os.path.samefile(config_path, my_config_path)
     config = spack.config.create()
@@ -89,11 +89,11 @@ def test_spack_entry_point_extension(tmp_path: pathlib.Path, mock_get_entry_poin
     extensions = spack.extensions.get_extension_paths()
     found = bool([ext for ext in extensions if os.path.samefile(ext, my_ext)])
     if not found:
-        raise ValueError("Did not find extension in %s" % ", ".join(extensions))
+        raise ValueError("Did not find extension in {}".format(", ".join(extensions)))
     extensions = spack.extensions.extension_paths_from_entry_points()
     found = bool([ext for ext in extensions if os.path.samefile(ext, my_ext)])
     if not found:
-        raise ValueError("Did not find extension in %s" % ", ".join(extensions))
+        raise ValueError("Did not find extension in {}".format(", ".join(extensions)))
     root = spack.extensions.load_extension("myext")
     assert os.path.samefile(root, my_ext)
     module = spack.extensions.get_module("spam")

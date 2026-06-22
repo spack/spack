@@ -435,7 +435,7 @@ def _configure_mirror(args):
         mirrors[args.name] = entry.to_dict()
         spack.config.set("mirrors", mirrors, scope=args.scope)
     else:
-        tty.msg("No changes made to mirror %s." % args.name)
+        tty.msg(f"No changes made to mirror {args.name}.")
 
 
 def mirror_set(args):
@@ -524,7 +524,7 @@ def concrete_specs_from_cli_or_file(args):
     if args.file:
         specs = specs_from_text_file(args.file, concretize=False)
         if not specs:
-            raise SpackError("unable to parse specs from file '{}'".format(args.file))
+            raise SpackError(f"unable to parse specs from file '{args.file}'")
 
     concrete_specs = spack.cmd.matching_specs_from_env(specs)
     return concrete_specs
@@ -551,9 +551,9 @@ class IncludeFilter:
             return True
         else:
             tty.debug(
-                "Skip adding {0} to mirror: the package.py file"
+                f"Skip adding {x.name} to mirror: the package.py file"
                 " indicates that a public mirror should not contain"
-                " it.".format(x.name)
+                " it."
             )
             return False
 
@@ -588,9 +588,7 @@ def versions_per_spec(args):
             num_versions = int(args.versions_per_spec)
         except ValueError:
             args.subparser.error(
-                "'--versions-per-spec' must be a number or 'all', got '{0}'".format(
-                    args.versions_per_spec
-                )
+                f"'--versions-per-spec' must be a number or 'all', got '{args.versions_per_spec}'"
             )
     return num_versions
 
@@ -599,9 +597,9 @@ def process_mirror_stats(present, mirrored, error):
     p, m, e = len(present), len(mirrored), len(error)
     tty.msg(
         "Archive stats:",
-        "  %-4d already present" % p,
-        "  %-4d added" % m,
-        "  %-4d failed to fetch." % e,
+        f"  {p:<4} already present",
+        f"  {m:<4} added",
+        f"  {e:<4} failed to fetch.",
     )
     if error:
         tty.error("Failed downloads:")

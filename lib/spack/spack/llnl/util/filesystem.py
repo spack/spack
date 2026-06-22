@@ -467,8 +467,8 @@ def change_sed_delimiter(old_delim: str, new_delim: str, *filenames: str) -> Non
     filenames = path_to_os_path(*filenames)
     for f in filenames:
         filter_file(whole_lines, repl, f)
-        filter_file(single_quoted, "'%s'" % repl, f)
-        filter_file(double_quoted, '"%s"' % repl, f)
+        filter_file(single_quoted, f"'{repl}'", f)
+        filter_file(double_quoted, f'"{repl}"', f)
 
 
 @contextmanager
@@ -669,9 +669,7 @@ def get_owner_uid(path, err_msg=None) -> Union[str, int]:
         p_stat = os.stat(path)
         if p_stat.st_mode & stat.S_IRWXU != stat.S_IRWXU:
             tty.error(
-                "Expected {0} to support mode {1}, but it is {2}".format(
-                    path, stat.S_IRWXU, p_stat.st_mode
-                )
+                f"Expected {path} to support mode {stat.S_IRWXU}, but it is {p_stat.st_mode}"
             )
 
             raise OSError(errno.EACCES, err_msg.format(path, path) if err_msg else "")
@@ -876,9 +874,9 @@ def copy_tree(
         ValueError: if ``src`` is a parent directory of ``dest``
     """
     if _permissions:
-        tty.debug("Installing {0} to {1}".format(src, dest))
+        tty.debug(f"Installing {src} to {dest}")
     else:
-        tty.debug("Copying {0} to {1}".format(src, dest))
+        tty.debug(f"Copying {src} to {dest}")
 
     abs_dest = os.path.abspath(dest)
     if not abs_dest.endswith(os.path.sep):
@@ -886,7 +884,7 @@ def copy_tree(
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src), errno.ENOENT)
+        raise OSError(f"No such file or directory: '{src}'", errno.ENOENT)
 
     # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
     # all symlinks to this list while traversing the tree, then when finished, make all
@@ -901,9 +899,7 @@ def copy_tree(
         # Stop early to avoid unnecessary recursion if being asked to copy
         # from a parent directory.
         if abs_dest.startswith(abs_src):
-            raise ValueError(
-                "Cannot copy ancestor directory {0} into {1}".format(abs_src, abs_dest)
-            )
+            raise ValueError(f"Cannot copy ancestor directory {abs_src} into {abs_dest}")
 
         mkdirp(abs_dest)
 
@@ -926,7 +922,7 @@ def copy_tree(
 
                         new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
                         if new_target != target:
-                            tty.debug("Redirecting link {0} to {1}".format(target, new_target))
+                            tty.debug(f"Redirecting link {target} to {new_target}")
                             target = new_target
 
                     links.append((target, d, s))
@@ -1069,7 +1065,7 @@ def mkdirp(
                     intermediate_mode = stat_info.st_mode
                     intermediate_group = stat_info.st_gid
                 else:
-                    msg = "Invalid value: '%s'. " % default_perms
+                    msg = f"Invalid value: '{default_perms}'. "
                     msg += "Choose from 'args' or 'parents'."
                     raise ValueError(msg)
 
@@ -1181,7 +1177,7 @@ def replace_directory_transaction(directory_name):
     # os.rename(directory_name, tmpdir) errors there.
     backup_dir = os.path.join(tmpdir, "backup")
     os.rename(directory_name, backup_dir)
-    tty.debug("Directory moved [src={0}, dest={1}]".format(directory_name, backup_dir))
+    tty.debug(f"Directory moved [src={directory_name}, dest={backup_dir}]")
 
     try:
         yield backup_dir
@@ -1196,12 +1192,12 @@ def replace_directory_transaction(directory_name):
         except Exception as outer_exception:
             raise CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
-        tty.debug("Directory recovered [{0}]".format(directory_name))
+        tty.debug(f"Directory recovered [{directory_name}]")
         raise
     else:
         # Otherwise delete the temporary directory
         shutil.rmtree(tmpdir, ignore_errors=True)
-        tty.debug("Temporary directory deleted [{0}]".format(tmpdir))
+        tty.debug(f"Temporary directory deleted [{tmpdir}]")
 
 
 @system_path_filter
@@ -1238,7 +1234,7 @@ def write_tmp_and_move(filename: str, *, encoding: Optional[str] = None):
     """Write to a temporary file, then move into place."""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
-    tmp = os.path.join(dirname, ".%s.tmp" % basename)
+    tmp = os.path.join(dirname, f".{basename}.tmp")
     with open(tmp, "w", encoding=encoding) as f:
         yield f
     shutil.move(tmp, filename)
@@ -1299,7 +1295,7 @@ def ancestor(dir, n=1):
 def get_single_file(directory):
     fnames = os.listdir(directory)
     if len(fnames) != 1:
-        raise ValueError("Expected exactly 1 file, got {0}".format(str(len(fnames))))
+        raise ValueError(f"Expected exactly 1 file, got {str(len(fnames))}")
     return fnames[0]
 
 
@@ -1785,7 +1781,7 @@ def safe_remove(*files_or_dirs):
                 continue
             # The monotonic ID is a simple way to make the filename
             # or directory name unique in the temporary folder
-            basename = os.path.basename(file_or_dir) + "-{0}".format(id)
+            basename = os.path.basename(file_or_dir) + f"-{id}"
             temporary_path = os.path.join(dst_root, basename)
             shutil.move(file_or_dir, temporary_path)
             removed[file_or_dir] = temporary_path
@@ -2294,7 +2290,7 @@ def find_headers(headers: Union[str, List[str]], root: str, recursive: bool = Fa
     ]
 
     # List of headers we are searching with suffixes
-    headers = ["{0}.{1}".format(header, suffix) for header in headers for suffix in suffixes]
+    headers = [f"{header}.{suffix}" for header in headers for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
 
@@ -2530,7 +2526,7 @@ def find_libraries(
         suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
-    libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
+    libraries = [f"{lib}.{suffix}" for lib in libraries for suffix in suffixes]
 
     if not recursive:
         if max_depth:

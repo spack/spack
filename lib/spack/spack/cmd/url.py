@@ -111,14 +111,14 @@ def url(parser, args):
 def url_parse(args):
     url = args.url
 
-    tty.msg("Parsing URL: {0}".format(url))
+    tty.msg(f"Parsing URL: {url}")
     print()
 
     ver, vs, vl, vi, vregex = parse_version_offset(url)
-    tty.msg("Matched version regex {0:>2}: r{1!r}".format(vi, vregex))
+    tty.msg(f"Matched version regex {vi:>2}: r{vregex!r}")
 
     name, ns, nl, ni, nregex = parse_name_offset(url, ver)
-    tty.msg("Matched  name   regex {0:>2}: r{1!r}".format(ni, nregex))
+    tty.msg(f"Matched  name   regex {ni:>2}: r{nregex!r}")
 
     print()
     tty.msg("Detected:")
@@ -127,8 +127,8 @@ def url_parse(args):
     except UrlParseError as e:
         tty.error(str(e))
 
-    print("    name:    {0}".format(name))
-    print("    version: {0}".format(ver))
+    print(f"    name:    {name}")
+    print(f"    version: {ver}")
     print()
 
     tty.msg("Substituting version 9.9.9b:")
@@ -141,7 +141,7 @@ def url_parse(args):
         versions = spack.url.find_versions_of_archive(url)
 
         if not versions:
-            print("  Found no versions for {0}".format(name))
+            print(f"  Found no versions for {name}")
             return
 
         max_len = max(len(str(v)) for v in versions)
@@ -234,16 +234,14 @@ def url_summary(args):
                 pass
 
     print()
-    print("    Total URLs found:          {0}".format(total_urls))
+    print(f"    Total URLs found:          {total_urls}")
     print(
-        "    Names correctly parsed:    {0:>4}/{1:>4} ({2:>6.2%})".format(
-            correct_names, total_urls, correct_names / total_urls
-        )
+        f"    Names correctly parsed:    {correct_names:>4}/{total_urls:>4} "
+        f"({correct_names / total_urls:>6.2%})"
     )
     print(
-        "    Versions correctly parsed: {0:>4}/{1:>4} ({2:>6.2%})".format(
-            correct_versions, total_urls, correct_versions / total_urls
-        )
+        f"    Versions correctly parsed: {correct_versions:>4}/{total_urls:>4} "
+        f"({correct_versions / total_urls:>6.2%})"
     )
     print()
 
@@ -253,13 +251,8 @@ def url_summary(args):
     print("    Index   Right   Wrong   Total   Regular Expression")
     for ni in sorted(name_regex_dict.keys()):
         print(
-            "    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}".format(
-                ni,
-                right_name_count[ni],
-                wrong_name_count[ni],
-                right_name_count[ni] + wrong_name_count[ni],
-                name_regex_dict[ni],
-            )
+            f"    {ni:>5}   {right_name_count[ni]:>5}   {wrong_name_count[ni]:>5}   "
+            f"{right_name_count[ni] + wrong_name_count[ni]:>5}   r{name_regex_dict[ni]!r}"
         )
     print()
 
@@ -269,13 +262,8 @@ def url_summary(args):
     print("    Index   Right   Wrong   Total   Regular Expression")
     for vi in sorted(version_regex_dict.keys()):
         print(
-            "    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}".format(
-                vi,
-                right_version_count[vi],
-                wrong_version_count[vi],
-                right_version_count[vi] + wrong_version_count[vi],
-                version_regex_dict[vi],
-            )
+            f"    {vi:>5}   {right_version_count[vi]:>5}   {wrong_version_count[vi]:>5}   "
+            f"{right_version_count[vi] + wrong_version_count[vi]:>5}   r{version_regex_dict[vi]!r}"
         )
     print()
 
@@ -351,27 +339,25 @@ def url_stats(args):
                 resource_stats.add(pkg_cls.name, resource.fetcher)
 
     # print a nice summary table
-    tty.msg("URL stats for %d packages:" % npkgs)
+    tty.msg(f"URL stats for {npkgs} packages:")
 
     def print_line():
         print("-" * 62)
 
     def print_stat(indent, name, stat_name=None):
         width = 20 - indent
-        fmt = " " * indent
-        fmt += "%%-%ds" % width
+        prefix = " " * indent
         if stat_name is None:
-            print(fmt % name)
+            print(f"{prefix}{name:<{width}}")
         else:
-            fmt += "%12d%8.1f%%%12d%8.1f%%"
             v = getattr(version_stats, stat_name).get(name, 0)
             r = getattr(resource_stats, stat_name).get(name, 0)
-            print(
-                fmt % (name, v, v / version_stats.total * 100, r, r / resource_stats.total * 100)
-            )
+            vp = v / version_stats.total * 100
+            rp = r / resource_stats.total * 100
+            print(f"{prefix}{name:<{width}}{v:12d}{vp:8.1f}%{r:12d}{rp:8.1f}%")
 
     print_line()
-    print("%-20s%12s%9s%12s%9s" % ("stat", "versions", "%", "resources", "%"))
+    print(f"{'stat':<20}{'versions':>12}{'%':>9}{'resources':>12}{'%':>9}")
     print_line()
     print_stat(0, "url", "url_type")
 
@@ -403,13 +389,13 @@ def url_stats(args):
             len(issues) for _, pkg_issues in issues.items() for _, issues in pkg_issues.items()
         )
         print()
-        tty.msg("Found %d issues." % total_issues)
+        tty.msg(f"Found {total_issues} issues.")
         for issue_type, pkgs in issues.items():
-            tty.msg("Package URLs with %s" % issue_type)
+            tty.msg(f"Package URLs with {issue_type}")
             for pkg_cls, pkg_issues in pkgs.items():
-                color.cprint("    @*C{%s}" % pkg_cls)
+                color.cprint(f"    @*C{{{pkg_cls}}}")
                 for issue in pkg_issues:
-                    print("      %s" % issue)
+                    print(f"      {issue}")
 
 
 def print_name_and_version(url):
@@ -426,7 +412,7 @@ def print_name_and_version(url):
     for i in range(vs, vs + vl):
         underlines[i] = "~"
 
-    print("    {0}".format(url))
+    print(f"    {url}")
     print("    {0}".format("".join(underlines)))
 
 

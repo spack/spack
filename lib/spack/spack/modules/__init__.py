@@ -71,15 +71,12 @@ def get_module(
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
                 raise common.ModuleNotFoundError(
-                    "The module for package {} should be at {}, but it does not exist".format(
-                        spec.format(fmt_str), writer.layout.filename
-                    )
+                    f"The module for package {spec.format(fmt_str)} should be at "
+                    f"{writer.layout.filename}, but it does not exist"
                 )
             elif required:
                 tty.debug(
-                    "The module configuration has excluded {}: omitting it".format(
-                        spec.format(fmt_str)
-                    )
+                    f"The module configuration has excluded {spec.format(fmt_str)}: omitting it"
                 )
             else:
                 return None

@@ -70,6 +70,6 @@ class Cmake(Package):
             "Couldn't read env var set in compile envieonmnt",
         )
         cmake_exe_ext = ".exe" if sys.platform == "win32" else ""
-        cmake_exe = join_path(prefix.bin, "cmake{}".format(cmake_exe_ext))
+        cmake_exe = join_path(prefix.bin, f"cmake{cmake_exe_ext}")
         touch(cmake_exe)
         set_executable(cmake_exe)

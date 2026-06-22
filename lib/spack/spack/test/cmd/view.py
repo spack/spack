@@ -60,8 +60,8 @@ def test_view_link_type_remove(
     tmp_path: pathlib.Path, mock_packages, mock_archive, mock_fetch, install_mockery, add_cmd
 ):
     install("needs-relocation")
-    viewpath = str(tmp_path / "view_{0}".format(add_cmd))
-    (tmp_path / "view_{0}".format(add_cmd)).mkdir()
+    viewpath = str(tmp_path / f"view_{add_cmd}")
+    (tmp_path / f"view_{add_cmd}").mkdir()
     view(add_cmd, viewpath, "needs-relocation")
     bindir = os.path.join(viewpath, "bin")
     assert os.path.exists(bindir)
@@ -223,8 +223,8 @@ def test_view_files_not_ignored(
 
     install("view-file")  # Arbitrary package to add noise
 
-    viewpath = str(tmp_path / "view_{0}".format(cmd))
-    (tmp_path / "view_{0}".format(cmd)).mkdir()
+    viewpath = str(tmp_path / f"view_{cmd}")
+    (tmp_path / f"view_{cmd}").mkdir()
 
     if with_projection:
         proj = str(tmp_path / "proj.yaml")

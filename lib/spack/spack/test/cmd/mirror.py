@@ -59,7 +59,7 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path: pathlib.Path, mock_pac
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
     for spec in e.specs_by_hash.values():
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
-        expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+        expected = ["{}.tar.gz".format(spec.format("{name}-{version}"))]
         assert mirror_res == expected
 
 
@@ -110,7 +110,7 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
     for spec in e.specs_by_hash.values():
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
-        expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+        expected = ["{}.tar.gz".format(spec.format("{name}-{version}"))]
         assert mirror_res == expected
 
 
@@ -182,7 +182,7 @@ def test_mirror_spec_from_env(
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
     spec = e.concrete_roots()[0]
     mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
-    expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+    expected = ["{}.tar.gz".format(spec.format("{name}-{version}"))]
     assert mirror_res == expected
 
 

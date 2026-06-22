@@ -82,18 +82,18 @@ def test_single_spec_verify_cmd(mock_packages, mock_archive, mock_fetch, install
     prefix = s.prefix
     hash = s.dag_hash()
 
-    results = verify("manifest", "/%s" % hash, fail_on_error=False)
+    results = verify("manifest", f"/{hash}", fail_on_error=False)
     assert not results
 
     new_file = os.path.join(prefix, "new_file_for_verify_test")
     with open(new_file, "w", encoding="utf-8") as f:
         f.write("New file")
 
-    results = verify("manifest", "/%s" % hash, fail_on_error=False)
+    results = verify("manifest", f"/{hash}", fail_on_error=False)
     assert new_file in results
     assert "added" in results
 
-    results = verify("manifest", "-j", "/%s" % hash, fail_on_error=False)
+    results = verify("manifest", "-j", f"/{hash}", fail_on_error=False)
     res = sjson.load(results)
     assert len(res) == 1
     assert res[new_file] == ["added"]

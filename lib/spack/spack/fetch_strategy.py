@@ -546,9 +546,7 @@ class URLFetchStrategy(FetchStrategy):
     def expand(self):
         if not self.expand_archive:
             tty.debug(
-                "Staging unexpanded archive {0} in {1}".format(
-                    self.archive_file, self.stage.source_path
-                )
+                f"Staging unexpanded archive {self.archive_file} in {self.stage.source_path}"
             )
             if not self.stage.expanded:
                 mkdirp(self.stage.source_path)
@@ -556,11 +554,11 @@ class URLFetchStrategy(FetchStrategy):
             shutil.move(self.archive_file, dest)
             return
 
-        tty.debug("Staging archive: {0}".format(self.archive_file))
+        tty.debug(f"Staging archive: {self.archive_file}")
 
         if not self.archive_file:
             raise NoArchiveFileError(
-                "Couldn't find archive file", "Failed on expand() for URL %s" % self.url
+                "Couldn't find archive file", f"Failed on expand() for URL {self.url}"
             )
 
         # TODO: replace this by mime check.
@@ -568,7 +566,7 @@ class URLFetchStrategy(FetchStrategy):
             self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
-            tty.debug("Source already staged to %s" % self.stage.source_path)
+            tty.debug(f"Source already staged to {self.stage.source_path}")
             return
 
         decompress = decompressor_for(self.archive_file, self.extension)
@@ -777,7 +775,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        tty.debug("Getting go resource: {0}".format(self.url))
+        tty.debug(f"Getting go resource: {self.url}")
 
         with working_dir(self.stage.path):
             try:
@@ -793,7 +791,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     @_needs_stage
     def expand(self):
-        tty.debug("Source fetched with %s is already expanded." % self.url_attr)
+        tty.debug(f"Source fetched with {self.url_attr} is already expanded.")
 
         # Move the directory to the well-known stage source path
         repo_root = _ensure_one_stage_entry(self.stage.path)
@@ -805,7 +803,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             self.go("clean")
 
     def __str__(self):
-        return "[go] %s" % self.url
+        return f"[go] {self.url}"
 
 
 @fetcher
@@ -1123,10 +1121,10 @@ class CvsFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+            tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        tty.debug("Checking out CVS repository: {0}".format(self.url))
+        tty.debug(f"Checking out CVS repository: {self.url}")
 
         with temp_cwd():
             url, module = self.url.split("%module=")
@@ -1163,7 +1161,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
             self.cvs("update", "-C", ".")
 
     def __str__(self):
-        return "[cvs] %s" % self.url
+        return f"[cvs] {self.url}"
 
 
 @fetcher
@@ -1216,10 +1214,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+            tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
-        tty.debug("Checking out subversion repository: {0}".format(self.url))
+        tty.debug(f"Checking out subversion repository: {self.url}")
 
         args = ["checkout", "--force", "--quiet"]
         if self.revision:
@@ -1256,7 +1254,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
             self.svn("revert", ".", "-R")
 
     def __str__(self):
-        return "[svn] %s" % self.url
+        return f"[svn] {self.url}"
 
 
 @fetcher
@@ -1325,13 +1323,13 @@ class HgFetchStrategy(VCSFetchStrategy):
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
-            tty.debug("Already fetched {0}".format(self.stage.source_path))
+            tty.debug(f"Already fetched {self.stage.source_path}")
             return
 
         args = []
         if self.revision:
-            args.append("at revision %s" % self.revision)
-        tty.debug("Cloning mercurial repository: {0} {1}".format(self.url, args))
+            args.append(f"at revision {self.revision}")
+        tty.debug(f"Cloning mercurial repository: {self.url} {args}")
 
         args = ["clone"]
 
@@ -1515,8 +1513,8 @@ def check_pkg_attributes(pkg):
 
     if len(conflicts) > 1:
         raise FetcherConflict(
-            "Package %s cannot specify %s together. Pick at most one."
-            % (pkg.name, comma_and(quote(conflicts)))
+            f"Package {pkg.name} cannot specify {comma_and(quote(conflicts))} together. "
+            "Pick at most one."
         )
 
 
@@ -1535,10 +1533,9 @@ def _check_version_attributes(fetcher, pkg, version):
     if extra:
         legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
         raise FetcherConflict(
-            "%s version '%s' has extra arguments: %s"
-            % (pkg.name, version, comma_and(quote(extra))),
-            "Valid arguments for a %s fetcher are: \n    %s"
-            % (fetcher.url_attr, comma_and(quote(legal_attrs))),
+            f"{pkg.name} version '{version}' has extra arguments: {comma_and(quote(extra))}",
+            f"Valid arguments for a {fetcher.url_attr} fetcher are: \n    "
+            f"{comma_and(quote(legal_attrs))}",
         )
 
 
@@ -1753,7 +1750,7 @@ def from_list_url(pkg):
                 )
             except KeyError as e:
                 tty.debug(e)
-                tty.msg("Cannot find version %s in url_list" % pkg.version)
+                tty.msg(f"Cannot find version {pkg.version} in url_list")
 
         except BaseException as e:
             # TODO: Don't catch BaseException here! Be more specific.
@@ -1838,10 +1835,10 @@ class InvalidArgsError(spack.error.FetchError):
     def __init__(self, pkg=None, version=None, **args):
         msg = "Could not guess a fetch strategy"
         if pkg:
-            msg += " for {pkg}".format(pkg=pkg)
+            msg += f" for {pkg}"
             if version:
-                msg += "@{version}".format(version=version)
-        long_msg = "with arguments: {args}".format(args=args)
+                msg += f"@{version}"
+        long_msg = f"with arguments: {args}"
         super().__init__(msg, long_msg)
 
 
@@ -1853,4 +1850,4 @@ class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):
-        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
+        super().__init__(f"Must call FetchStrategy.set_stage() before calling {method.__name__}")

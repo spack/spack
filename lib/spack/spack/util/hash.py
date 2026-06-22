@@ -19,7 +19,7 @@ def b32_hash(content):
 def base32_prefix_bits(hash_string, bits):
     """Return the first <bits> bits of a base32 string as an integer."""
     if bits > len(hash_string) * 5:
-        raise ValueError("Too many bits! Requested %d bit prefix of '%s'." % (bits, hash_string))
+        raise ValueError(f"Too many bits! Requested {bits} bit prefix of '{hash_string}'.")
 
     hash_bytes = base64.b32decode(hash_string, casefold=True)
     return spack.util.crypto.prefix_bits(hash_bytes, bits)

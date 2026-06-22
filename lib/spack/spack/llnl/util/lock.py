@@ -148,7 +148,7 @@ def _attempts_str(wait_time, nattempts):
         return ""
 
     attempts = plural(nattempts, "attempt")
-    return " after {} and {}".format(lang.pretty_seconds(wait_time), attempts)
+    return f" after {lang.pretty_seconds(wait_time)} and {attempts}"
 
 
 class LockType:
@@ -272,9 +272,8 @@ class PosixBackend:
                 # All locks read the owner PID and host
                 self._read_log_debug_data()
                 tty.debug(
-                    "{0} locked {1} [{2}:{3}] (owner={4})".format(
-                        LockType.to_str(op), self.path, self._start, self._length, self.pid
-                    ),
+                    f"{LockType.to_str(op)} locked {self.path} "
+                    f"[{self._start}:{self._length}] (owner={self.pid})",
                     level=2,
                 )
 
@@ -487,15 +486,14 @@ class Lock:
         assert LockType.is_valid(op)
         op_str = LockType.to_str(op)
 
-        self._log_acquiring("{0} LOCK".format(op_str))
+        self._log_acquiring(f"{op_str} LOCK")
         timeout = timeout or self.default_timeout
 
         self.backend.prepare(op)
 
         self._log_debug(
-            "{} locking [{}:{}]: timeout {}".format(
-                op_str.lower(), self._start, self._length, lang.pretty_seconds(timeout or 0)
-            )
+            f"{op_str.lower()} locking [{self._start}:{self._length}]: "
+            f"timeout {lang.pretty_seconds(timeout or 0)}"
         )
 
         start_time = time.monotonic()
@@ -741,15 +739,13 @@ class Lock:
             raise LockError("Attempting to cleanup active lock.")
 
     def _get_counts_desc(self) -> str:
-        return (
-            "(reads {0}, writes {1})".format(self._reads, self._writes) if tty.is_verbose() else ""
-        )
+        return f"(reads {self._reads}, writes {self._writes})" if tty.is_verbose() else ""
 
     def _log_acquired(self, locktype, wait_time, nattempts) -> None:
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
-        desc = "Acquired at %s" % now.strftime("%H:%M:%S.%f")
-        self._log_debug(self._status_msg(locktype, "{0}{1}".format(desc, attempts_part)))
+        desc = "Acquired at {}".format(now.strftime("%H:%M:%S.%f"))
+        self._log_debug(self._status_msg(locktype, f"{desc}{attempts_part}"))
 
     def _log_acquiring(self, locktype) -> None:
         self._log_debug(self._status_msg(locktype, "Acquiring"), level=3)
@@ -762,15 +758,15 @@ class Lock:
     def _log_downgraded(self, wait_time, nattempts) -> None:
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
-        desc = "Downgraded at %s" % now.strftime("%H:%M:%S.%f")
-        self._log_debug(self._status_msg("READ LOCK", "{0}{1}".format(desc, attempts_part)))
+        desc = "Downgraded at {}".format(now.strftime("%H:%M:%S.%f"))
+        self._log_debug(self._status_msg("READ LOCK", f"{desc}{attempts_part}"))
 
     def _log_downgrading(self) -> None:
         self._log_debug(self._status_msg("WRITE LOCK", "Downgrading"), level=3)
 
     def _log_released(self, locktype) -> None:
         now = datetime.now()
-        desc = "Released at %s" % now.strftime("%H:%M:%S.%f")
+        desc = "Released at {}".format(now.strftime("%H:%M:%S.%f"))
         self._log_debug(self._status_msg(locktype, desc))
 
     def _log_releasing(self, locktype) -> None:
@@ -779,17 +775,15 @@ class Lock:
     def _log_upgraded(self, wait_time, nattempts) -> None:
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
-        desc = "Upgraded at %s" % now.strftime("%H:%M:%S.%f")
-        self._log_debug(self._status_msg("WRITE LOCK", "{0}{1}".format(desc, attempts_part)))
+        desc = "Upgraded at {}".format(now.strftime("%H:%M:%S.%f"))
+        self._log_debug(self._status_msg("WRITE LOCK", f"{desc}{attempts_part}"))
 
     def _log_upgrading(self) -> None:
         self._log_debug(self._status_msg("READ LOCK", "Upgrading"), level=3)
 
     def _status_msg(self, locktype: str, status: str) -> str:
-        status_desc = "[{0}] {1}".format(status, self._get_counts_desc())
-        return "{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}".format(
-            locktype, self, status_desc
-        )
+        status_desc = f"[{status}] {self._get_counts_desc()}"
+        return f"{locktype}{self.desc}: {self.path}[{self._start}:{self._length}] {status_desc}"
 
 
 class LockTransaction:
@@ -948,7 +942,7 @@ class LockDowngradeError(LockError):
     """Raised when unable to downgrade from a write to a read lock."""
 
     def __init__(self, path: str) -> None:
-        msg = "Cannot downgrade lock from write to read on file: %s" % path
+        msg = f"Cannot downgrade lock from write to read on file: {path}"
         super().__init__(msg)
 
 
@@ -973,7 +967,7 @@ class LockUpgradeError(LockError):
     """Raised when unable to upgrade from a read to a write lock."""
 
     def __init__(self, path: str) -> None:
-        msg = "Cannot upgrade lock from read to write on file: %s" % path
+        msg = f"Cannot upgrade lock from read to write on file: {path}"
         super().__init__(msg)
 
 
@@ -985,7 +979,7 @@ class LockROFileError(LockPermissionError):
     """Tried to take an exclusive lock on a read-only file."""
 
     def __init__(self, path: str) -> None:
-        msg = "Can't take write lock on read-only file: %s" % path
+        msg = f"Can't take write lock on read-only file: {path}"
         super().__init__(msg)
 
 
@@ -993,6 +987,6 @@ class CantCreateLockError(LockPermissionError):
     """Attempt to create a lock in an unwritable location."""
 
     def __init__(self, path: str) -> None:
-        msg = "cannot create lock '%s': " % path
+        msg = f"cannot create lock '{path}': "
         msg += "file does not exist and location is not writable"
         super().__init__(msg)

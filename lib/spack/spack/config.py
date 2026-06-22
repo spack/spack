@@ -1540,7 +1540,7 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
         if callable(hook):
             config_path = hook()
             if config_path and os.path.exists(config_path):
-                config_paths.append(("plugin-%s" % entry_point.name, str(config_path)))
+                config_paths.append((f"plugin-{entry_point.name}", str(config_path)))
     return config_paths
 
 
@@ -2059,7 +2059,7 @@ class ConfigPath:
             if element.endswith("::") or (element.endswith(":") and i == last_element_idx):
                 if seen_override_in_path:
                     raise syaml.SpackYAMLError(
-                        "Meaningless second override indicator `::' in path `{0}'".format(path), ""
+                        f"Meaningless second override indicator `::' in path `{path}'", ""
                     )
                 override = True
                 seen_override_in_path = True

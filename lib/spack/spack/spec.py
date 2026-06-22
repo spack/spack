@@ -343,9 +343,8 @@ class ArchSpec:
 
             if self.platform != curr_platform:
                 raise ValueError(
-                    "Can't set arch spec OS to reserved value '%s' when the "
-                    "arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
+                    f"Can't set arch spec OS to reserved value '{value}' when the "
+                    f"arch platform ({self.platform}) isn't the current platform ({curr_platform})"
                 )
 
             spec_platform = spack.platforms.by_name(self.platform)
@@ -381,9 +380,9 @@ class ArchSpec:
 
             if self.platform != curr_platform:
                 raise ValueError(
-                    "Can't set arch spec target to reserved value '%s' when "
-                    "the arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
+                    f"Can't set arch spec target to reserved value '{value}' when "
+                    f"the arch platform ({self.platform}) isn't the current "
+                    f"platform ({curr_platform})"
                 )
 
             spec_platform = spack.platforms.by_name(self.platform)
@@ -624,7 +623,7 @@ class ArchSpec:
         return ArchSpec((arch["platform"], arch["platform_os"], target))
 
     def __str__(self):
-        return "%s-%s-%s" % (self.platform, self.os, self.target)
+        return f"{self.platform}-{self.os}-{self.target}"
 
     def __repr__(self):
         fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))"
@@ -1241,7 +1240,7 @@ class ForwardQueryToPackage:
         callbacks_chain = []
         # First in the chain : specialized attribute for virtual packages
         if query.isvirtual:
-            specialized_name = "{0}_{1}".format(query.name, self.attribute_name)
+            specialized_name = f"{query.name}_{self.attribute_name}"
             callbacks_chain.append(lambda: getattr(pkg, specialized_name))
         # Try to get the generic method from Package
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
@@ -1376,7 +1375,7 @@ def tree(
         out += " " * indent
 
         if depth:
-            out += "%-4d" % d
+            out += f"{d:<4d}"
 
         if status_fn:
             status = status_fn(node)
@@ -1399,7 +1398,7 @@ def tree(
                 depflag = dep_spec.depflag
 
             type_chars = dt.flag_to_chars(depflag)
-            out += "[%s]  " % type_chars
+            out += f"[{type_chars}]  "
 
         out += "    " * d
         if d > 0:
@@ -2041,9 +2040,7 @@ class Spec:
 
     @property
     def package(self):
-        assert self.concrete, "{0}: Spec.package can only be called on concrete specs".format(
-            self.name
-        )
+        assert self.concrete, f"{self.name}: Spec.package can only be called on concrete specs"
         if not self._package:
             self._package = spack.repo.PATH.get(self)
         return self._package
@@ -2590,7 +2587,7 @@ class Spec:
                 else:
                     new_spec.variants[vname] = value
             else:
-                raise ValueError("{0} is not a variant of {1}".format(vname, new_spec.name))
+                raise ValueError(f"{vname} is not a variant of {new_spec.name}")
 
         if change_spec.compiler_flags:
             for flagname, flagvals in change_spec.compiler_flags.items():
@@ -2860,7 +2857,7 @@ class Spec:
             msg = "\n    The following specs have been deprecated"
             msg += " in favor of specs with the hashes shown:\n"
             for rec in deprecated:
-                msg += "        %s  --> %s\n" % (rec.spec, rec.deprecated_for)
+                msg += f"        {rec.spec}  --> {rec.deprecated_for}\n"
             msg += "\n"
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
@@ -5093,7 +5090,7 @@ class VariantMap(lang.HashableMap[str, vt.VariantValue]):
 
         # Raise an error if the variant was already in this map
         if name in self.dict:
-            msg = 'Cannot specify variant "{0}" twice'.format(name)
+            msg = f'Cannot specify variant "{name}" twice'
             raise vt.DuplicateVariantError(msg)
 
         # Raise an error if name and vspec.name don't match
@@ -5879,9 +5876,7 @@ class InvalidDependencyError(spack.error.SpecError):
 
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
-        super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
-        )
+        super().__init__(f"Package {pkg} does not depend on {spack.util.string.comma_or(deps)}")
 
 
 class UnsatisfiableSpecNameError(spack.error.UnsatisfiableSpecError):
@@ -5918,7 +5913,7 @@ class UnconstrainableDependencySpecError(spack.error.SpecError):
     """Raised when attempting to constrain by an anonymous dependency spec"""
 
     def __init__(self, spec):
-        msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
+        msg = f"Cannot constrain by spec '{spec}'. Cannot constrain by a"
         msg += " spec containing anonymous dependencies"
         super().__init__(msg)
 
@@ -5953,14 +5948,14 @@ class SpecFormatSigilError(SpecFormatStringError):
     """Called for mismatched sigils and attributes in format strings"""
 
     def __init__(self, sigil, requirement, used):
-        msg = "The sigil %s may only be used for %s." % (sigil, requirement)
-        msg += " It was used with the attribute %s." % used
+        msg = f"The sigil {sigil} may only be used for {requirement}."
+        msg += f" It was used with the attribute {used}."
         super().__init__(msg)
 
 
 class ConflictsInSpecError(spack.error.SpecError, RuntimeError):
     def __init__(self, spec, matches):
-        message = 'Conflicts in concretized spec "{0}"\n'.format(spec.short_spec)
+        message = f'Conflicts in concretized spec "{spec.short_spec}"\n'
 
         visited = set()
 

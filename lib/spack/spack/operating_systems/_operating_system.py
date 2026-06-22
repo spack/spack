@@ -30,7 +30,7 @@ class OperatingSystem:
         self.version = str(version).replace("-", "_")
 
     def __str__(self):
-        return "%s%s" % (self.name, self.version)
+        return f"{self.name}{self.version}"
 
     def __repr__(self):
         return self.__str__()

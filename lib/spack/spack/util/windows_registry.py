@@ -237,7 +237,7 @@ class WindowsRegistryView:
             yield
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
-                tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
+                tty.debug(f"Key {self.key} at position {str(self.root)} does not exist")
             else:
                 raise e
 
@@ -250,7 +250,7 @@ class WindowsRegistryView:
         except FileNotFoundError as e:
             if sys.platform == "win32" and e.winerror == 2:
                 self._reg = -1
-                tty.debug("Key %s at position %s does not exist" % (self.key, str(self.root)))
+                tty.debug(f"Key {self.key} at position {str(self.root)} does not exist")
             else:
                 raise e
 

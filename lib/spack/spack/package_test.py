@@ -18,7 +18,7 @@ def compile_c_and_execute(
     flags.extend([source_file])
     cc("-c", *flags)
     name = os.path.splitext(os.path.basename(source_file))[0]
-    cc("-o", "check", "%s.o" % name, *link_flags)
+    cc("-o", "check", f"{name}.o", *link_flags)
 
     check = Executable("./check")
     return check(output=str)

@@ -77,15 +77,15 @@ def log_parse(parser, args):
     types = [s.strip() for s in args.show.split(",")]
     for e in types:
         if e not in event_types:
-            args.subparser.error("invalid event type: %s" % e)
+            args.subparser.error(f"invalid event type: {e}")
 
     events = []
     if "errors" in types:
         events.extend(log_errors)
-        print("%d errors" % len(log_errors))
+        print(f"{len(log_errors)} errors")
     if "warnings" in types:
         events.extend(log_warnings)
-        print("%d warnings" % len(log_warnings))
+        print(f"{len(log_warnings)} warnings")
 
     if tail:
         events.append(tail)

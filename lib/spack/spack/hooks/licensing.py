@@ -39,26 +39,25 @@ def set_up_license(pkg):
             ed.editor(license_path, exec_fn=ed.executable)
         else:
             # Use already existing license file
-            tty.msg("Found already existing license %s" % license_path)
+            tty.msg(f"Found already existing license {license_path}")
 
     # If not a file, what about an environment variable?
     elif pkg.license_vars:
         tty.warn(
-            "A license is required to use %s. Please set %s to the "
+            "A license is required to use {}. Please set {} to the "
             "full pathname to the license file, or port@host if you"
-            " store your license keys on a dedicated license server"
-            % (pkg.name, " or ".join(pkg.license_vars))
+            " store your license keys on a dedicated license server".format(
+                pkg.name, " or ".join(pkg.license_vars)
+            )
         )
 
     # If not a file or variable, suggest a website for further info
     elif pkg.license_url:
-        tty.warn(
-            "A license is required to use %s. See %s for details" % (pkg.name, pkg.license_url)
-        )
+        tty.warn(f"A license is required to use {pkg.name}. See {pkg.license_url} for details")
 
     # If all else fails, you're on your own
     else:
-        tty.warn("A license is required to use %s" % pkg.name)
+        tty.warn(f"A license is required to use {pkg.name}")
 
 
 def write_license_file(pkg, license_path):
@@ -70,38 +69,38 @@ def write_license_file(pkg, license_path):
     # License files
     linktargets = ""
     for f in pkg.license_files:
-        linktargets += "\t%s\n" % f
+        linktargets += f"\t{f}\n"
 
     # Environment variables
     envvars = ""
     if pkg.license_vars:
         for varname in pkg.license_vars:
-            envvars += "\t%s\n" % varname
+            envvars += f"\t{varname}\n"
 
     # Documentation
     url = ""
     if pkg.license_url:
-        url += "\t%s\n" % pkg.license_url
+        url += f"\t{pkg.license_url}\n"
 
     # Assemble. NB: pkg.license_comment will be prepended upon output.
-    txt = """
- A license is required to use package '{0}'.
+    txt = f"""
+ A license is required to use package '{pkg.name}'.
 
  * If your system is already properly configured for such a license, save this
    file UNCHANGED. The system may be configured if:
 
     - A license file is installed in a default location.
-""".format(pkg.name)
+"""
 
     if envvars:
-        txt += """\
+        txt += f"""\
     - One of the following environment variable(s) is set for you, possibly via
       a module file:
 
-{0}
-""".format(envvars)
+{envvars}
+"""
 
-    txt += """\
+    txt += f"""\
  * Otherwise, depending on the license you have, enter AT THE BEGINNING of
    this file:
 
@@ -111,15 +110,15 @@ def write_license_file(pkg, license_path):
    After installation, the following symlink(s) will be added to point to
    this Spack-global file (relative to the installation prefix).
 
-{0}
-""".format(linktargets)
+{linktargets}
+"""
 
     if url:
-        txt += """\
+        txt += f"""\
  * For further information on licensing, see:
 
-{0}
-""".format(url)
+{url}
+"""
 
     txt += """\
  Recap:
@@ -133,7 +132,7 @@ def write_license_file(pkg, license_path):
     # Output
     with open(license_path, "w", encoding="utf-8") as f:
         for line in txt.splitlines():
-            f.write("{0}{1}\n".format(pkg.license_comment, line))
+            f.write(f"{pkg.license_comment}{line}\n")
         f.close()
 
 
@@ -162,4 +161,4 @@ def symlink_license(pkg):
 
         if os.path.exists(target):
             symlink(target, link_name)
-            tty.msg("Added local symlink %s to global license file" % link_name)
+            tty.msg(f"Added local symlink {link_name} to global license file")

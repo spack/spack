@@ -50,7 +50,7 @@ class TestDevelop:
         if build_dir is not None:
             scope = env.scope_name
             assert build_dir == spack.config.get(
-                "packages:{}:package_attributes:build_directory".format(spec.name), scope
+                f"packages:{spec.name}:package_attributes:build_directory", scope
             )
 
     def test_develop_no_path_no_clone(self):
@@ -223,7 +223,7 @@ class TestDevelop:
 
             # Check modifications actually worked
             spec = next(e.roots())
-            assert spec.satisfies("dev_path=%s" % abspath)
+            assert spec.satisfies(f"dev_path={abspath}")
 
     def test_develop_canonicalize_path_no_args(self, monkeypatch):
         env("create", "test")
@@ -256,7 +256,7 @@ class TestDevelop:
 
             # Check modifications actually worked
             spec = next(e.roots())
-            assert spec.satisfies("dev_path=%s" % abspath)
+            assert spec.satisfies(f"dev_path={abspath}")
 
 
 def _git_commit_list(git_repo_dir):
@@ -277,7 +277,7 @@ def test_develop_full_git_repo(
 ):
     repo_path, filename, commits = mock_git_version_info
     monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", "file://%s" % repo_path, raising=False
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
 
     spec = spack.concretize.concretize_one("git-test-commit@1.2")

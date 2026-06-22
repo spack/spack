@@ -75,7 +75,7 @@ class AreDepsInstalledVisitor:
 
 def emulate_env_utility(cmd_name, context: Context, args):
     if not args.spec:
-        tty.die("spack %s requires a spec." % cmd_name)
+        tty.die(f"spack {cmd_name} requires a spec.")
 
     # Specs may have spaces in them, so if they do, require that the
     # caller put a '--' between the spec and the command to be
@@ -91,11 +91,11 @@ def emulate_env_utility(cmd_name, context: Context, args):
         cmd = args.spec[1:]
 
     if not spec:
-        tty.die("spack %s requires a spec." % cmd_name)
+        tty.die(f"spack {cmd_name} requires a spec.")
 
     specs = spack.cmd.parse_specs(spec, concretize=False)
     if len(specs) > 1:
-        tty.die("spack %s only takes one spec." % cmd_name)
+        tty.die(f"spack {cmd_name} only takes one spec.")
     spec = specs[0]
 
     spec = spack.cmd.matching_spec_from_env(spec)
@@ -125,12 +125,12 @@ def emulate_env_utility(cmd_name, context: Context, args):
 
     if args.dump:
         # Dump a source-able environment to a text file.
-        tty.msg("Dumping a source-able environment to {0}".format(args.dump))
+        tty.msg(f"Dumping a source-able environment to {args.dump}")
         dump_environment(args.dump)
 
     if args.pickle:
         # Dump a source-able environment to a pickle file.
-        tty.msg("Pickling a source-able environment to {0}".format(args.pickle))
+        tty.msg(f"Pickling a source-able environment to {args.pickle}")
         pickle_environment(args.pickle)
 
     if cmd:
@@ -141,4 +141,4 @@ def emulate_env_utility(cmd_name, context: Context, args):
         # If no command or dump/pickle option then act like the "env" command
         # and print out env vars.
         for key, val in os.environ.items():
-            print("%s=%s" % (key, val))
+            print(f"{key}={val}")

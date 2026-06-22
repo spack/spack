@@ -85,36 +85,36 @@ class TestPathPadding:
 def test_output_filtering(capfd, install_mockery, mutable_config):
     """Test filtering padding out of tty messages."""
     long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
-    padding_string = "[padded-to-%d-chars]" % len(long_path)
+    padding_string = f"[padded-to-{len(long_path)}-chars]"
 
     # test filtering when padding is enabled
     with spack.config.override("config:install_tree", {"padded_length": 256}):
         # tty.msg with filtering on the first argument
         with sup.filter_padding():
-            tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+            tty.msg(f"here is a long path: {long_path}/with/a/suffix")
         out, err = capfd.readouterr()
         assert padding_string in out
 
         # tty.msg with filtering on a laterargument
         with sup.filter_padding():
-            tty.msg("here is a long path:", "%s/with/a/suffix" % long_path)
+            tty.msg("here is a long path:", f"{long_path}/with/a/suffix")
         out, err = capfd.readouterr()
         assert padding_string in out
 
         # tty.error with filtering on the first argument
         with sup.filter_padding():
-            tty.error("here is a long path: %s/with/a/suffix" % long_path)
+            tty.error(f"here is a long path: {long_path}/with/a/suffix")
         out, err = capfd.readouterr()
         assert padding_string in err
 
         # tty.error with filtering on a later argument
         with sup.filter_padding():
-            tty.error("here is a long path:", "%s/with/a/suffix" % long_path)
+            tty.error("here is a long path:", f"{long_path}/with/a/suffix")
         out, err = capfd.readouterr()
         assert padding_string in err
 
     # test no filtering
-    tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+    tty.msg(f"here is a long path: {long_path}/with/a/suffix")
     out, err = capfd.readouterr()
     assert padding_string not in out
 
@@ -134,11 +134,11 @@ def test_pad_on_path_sep_boundary():
 def test_path_debug_padded_filter(debug, monkeypatch):
     """Ensure padded filter works as expected with different debug levels."""
     fmt = "{0}{1}{2}{1}{3}"
-    prefix = "[+] {0}home{0}user{0}install".format(os.sep)
+    prefix = f"[+] {os.sep}home{os.sep}user{os.sep}install"
     suffix = "mypackage"
     string = fmt.format(prefix, os.sep, os.sep.join([sup.SPACK_PATH_PADDING_CHARS] * 2), suffix)
     expected = (
-        fmt.format(prefix, os.sep, "[padded-to-{0}-chars]".format(72), suffix)
+        fmt.format(prefix, os.sep, f"[padded-to-{72}-chars]", suffix)
         if debug <= 1 and sys.platform != "win32"
         else string
     )

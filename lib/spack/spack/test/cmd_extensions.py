@@ -113,9 +113,9 @@ def hello_world_with_module_in_root(extension_creator):
             # fixture.
             extension.add_command(
                 "hello",
-                """
+                f"""
 # Test an absolute import
-from spack.extensions.{ext_pname}.implementation import hello_world
+from spack.extensions.{extension.pname}.implementation import hello_world
 
 # Test a relative import
 from ..implementation import hello_folks
@@ -143,7 +143,7 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(ext_pname=extension.pname),
+""",
             )
 
             init_file = extension.main / "__init__.py"

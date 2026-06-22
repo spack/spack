@@ -149,8 +149,8 @@ def print_difference(c, attributes="all", out=None):
     A = c["b_not_a"]
     B = c["a_not_b"]
 
-    cprint("@R{--- %s}" % c["a_name"])  # bright red
-    cprint("@G{+++ %s}" % c["b_name"])  # bright green
+    cprint("@R{{--- {}}}".format(c["a_name"]))  # bright red
+    cprint("@G{{+++ {}}}".format(c["b_name"]))  # bright green
 
     # Cut out early if we don't have any differences!
     if not A and not B:
@@ -193,17 +193,17 @@ def print_difference(c, attributes="all", out=None):
             category = key
 
             # print category in bold, colorized
-            cprint("@*b{@@ %s @@}" % category)  # bold blue
+            cprint(f"@*b{{@@ {category} @@}}")  # bold blue
 
         # Print subtractions first
         while subtraction:
-            cprint("@R{-  %s}" % subtraction.pop(0))  # bright red
+            cprint(f"@R{{-  {subtraction.pop(0)}}}")  # bright red
             if addition:
-                cprint("@G{+  %s}" % addition.pop(0))  # bright green
+                cprint(f"@G{{+  {addition.pop(0)}}}")  # bright green
 
         # Any additions left?
         while addition:
-            cprint("@G{+  %s}" % addition.pop(0))
+            cprint(f"@G{{+  {addition.pop(0)}}}")
 
 
 def diff(parser, args):

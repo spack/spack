@@ -603,7 +603,7 @@ def _execute_patch(
 
     if hasattr(pkg, "has_code") and not pkg.has_code:
         raise UnsupportedPackageDirective(
-            "Patches are not allowed in {0}: package has no code.".format(pkg.name)
+            f"Patches are not allowed in {pkg.name}: package has no code."
         )
 
     when_spec = _make_when_spec(when)

@@ -220,8 +220,8 @@ def setup_parser(subparser: argparse.ArgumentParser):
 def repo_create(args):
     """create a new package repository"""
     full_path, namespace = spack.repo.create_repo(args.directory, args.namespace, args.subdir)
-    tty.msg("Created repo with namespace '%s'." % namespace)
-    tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
+    tty.msg(f"Created repo with namespace '{namespace}'.")
+    tty.msg("To register it with spack, run this command:", f"spack repo add {full_path}")
 
 
 def _add_repo(

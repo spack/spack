@@ -72,19 +72,19 @@ def extensions(parser, args):
     spec = cmd.disambiguate_spec(spec[0], env)
 
     if not spec.package.extendable:
-        tty.die("%s is not an extendable package." % spec.name)
+        tty.die(f"{spec.name} is not an extendable package.")
 
     if not spec.package.extendable:
-        tty.die("%s does not have extensions." % spec.short_spec)
+        tty.die(f"{spec.short_spec} does not have extensions.")
 
     if args.show in ("packages", "all"):
         # List package names of extensions
         extensions = spack.repo.PATH.extensions_for(spec)
         if not extensions:
-            tty.msg("%s has no extensions." % spec.cshort_spec)
+            tty.msg(f"{spec.cshort_spec} has no extensions.")
         else:
             tty.msg(spec.cshort_spec)
-            tty.msg("%d extensions:" % len(extensions))
+            tty.msg(f"{len(extensions)} extensions:")
             colify(ext.name for ext in extensions)
 
     if args.show in ("installed", "all"):
@@ -96,5 +96,5 @@ def extensions(parser, args):
         if not installed:
             tty.msg("None installed.")
         else:
-            tty.msg("%d installed:" % len(installed))
+            tty.msg(f"{len(installed)} installed:")
             cmd.display_specs(installed, args)

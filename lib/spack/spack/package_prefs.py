@@ -111,7 +111,7 @@ class PackagePrefs:
             if order:
                 ret = [str(s).strip() for s in order]
                 if component == "target":
-                    ret = ["target=%s" % tname for tname in ret]
+                    ret = [f"target={tname}" for tname in ret]
                 return ret
 
         return []
@@ -191,9 +191,9 @@ def get_package_dir_permissions(spec):
         perms |= stat.S_ISGID
         if spec.concrete and "/afs/" in spec.prefix:
             warnings.warn(
-                "Directory {0} seems to be located on AFS. If you"
+                f"Directory {spec.prefix} seems to be located on AFS. If you"
                 " encounter errors, try disabling the allow_sgid option"
-                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix)
+                " using: spack config add 'config:allow_sgid:false'"
             )
     return perms
 
@@ -206,7 +206,7 @@ def get_package_permissions(spec):
     # Get read permissions level
     for name in (spec.name, "all"):
         try:
-            readable = spack.config.get("packages:%s:permissions:read" % name, "")
+            readable = spack.config.get(f"packages:{name}:permissions:read", "")
             if readable:
                 break
         except AttributeError:
@@ -215,7 +215,7 @@ def get_package_permissions(spec):
     # Get write permissions level
     for name in (spec.name, "all"):
         try:
-            writable = spack.config.get("packages:%s:permissions:write" % name, "")
+            writable = spack.config.get(f"packages:{name}:permissions:write", "")
             if writable:
                 break
         except AttributeError:
@@ -231,16 +231,16 @@ def get_package_permissions(spec):
         if readable == "user":
             raise ConfigError(
                 "Writable permissions may not be more"
-                + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                " permissive than readable permissions.\n"
+                f"      Violating package is {spec.name}"
             )
         perms |= stat.S_IWGRP
     if writable == "world":
         if readable != "world":
             raise ConfigError(
                 "Writable permissions may not be more"
-                + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                " permissive than readable permissions.\n"
+                f"      Violating package is {spec.name}"
             )
         perms |= stat.S_IWOTH
 
@@ -253,7 +253,7 @@ def get_package_group(spec):
     Package-specific settings take precedence over settings for ``all``"""
     for name in (spec.name, "all"):
         try:
-            group = spack.config.get("packages:%s:permissions:group" % name, "")
+            group = spack.config.get(f"packages:{name}:permissions:group", "")
             if group:
                 break
         except AttributeError:

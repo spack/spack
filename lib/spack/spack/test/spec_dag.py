@@ -164,7 +164,7 @@ def test_conditional_dep_with_user_constraints(
     with spack.repo.use_repositories(repo_builder.root):
         spec = spack.concretize.concretize_one(spec_str)
         result = expr_str in spec
-        assert result is expected, "{0} in {1}".format(expr_str, spec)
+        assert result is expected, f"{expr_str} in {spec}"
 
 
 @pytest.mark.usefixtures("mutable_mock_repo", "config")

@@ -93,7 +93,7 @@ def load_module(mod):
     Raises:
         ModuleLoadError: if the module could not be loaded
     """
-    tty.debug("module_cmd.load_module: {0}".format(mod))
+    tty.debug(f"module_cmd.load_module: {mod}")
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
@@ -225,11 +225,11 @@ def get_path_from_module_contents(text, module_name):
         match_pattern_and_strip(line, pattern, lib_endings)
 
         # Check {name}_DIR entries
-        pattern = r"\W{0}_DIR".format(pkg_var_prefix)
+        pattern = rf"\W{pkg_var_prefix}_DIR"
         match_pattern_and_strip(line, pattern)
 
         # Check {name}_ROOT entries
-        pattern = r"\W{0}_ROOT".format(pkg_var_prefix)
+        pattern = rf"\W{pkg_var_prefix}_ROOT"
         match_pattern_and_strip(line, pattern)
 
         # Check entries that update the PATH variable

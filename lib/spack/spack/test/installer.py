@@ -63,7 +63,7 @@ def _none(*args, **kwargs):
 
 def _not_locked(installer, lock_type, pkg):
     """Generic monkeypatch function for _ensure_locked to return no lock"""
-    tty.msg("{0} locked {1}".format(lock_type, pkg.spec.name))
+    tty.msg(f"{lock_type} locked {pkg.spec.name}")
     return lock_type, None
 
 
@@ -115,13 +115,13 @@ def test_install_msg(monkeypatch):
     """Test results of call to install_msg based on debug level."""
     name = "some-package"
     pid = 123456
-    install_msg = "Installing {0}".format(name)
+    install_msg = f"Installing {name}"
 
     monkeypatch.setattr(tty, "_debug", 0)
     assert inst.install_msg(name, pid, None) == install_msg
 
     install_status = inst.InstallStatus(1)
-    expected = "{0} [0/1]".format(install_msg)
+    expected = f"{install_msg} [0/1]"
     assert inst.install_msg(name, pid, install_status) == expected
 
     monkeypatch.setattr(tty, "_debug", 1)
@@ -129,7 +129,7 @@ def test_install_msg(monkeypatch):
 
     # Expect the PID to be added at debug level 2
     monkeypatch.setattr(tty, "_debug", 2)
-    expected = "{0}: {1}".format(pid, install_msg)
+    expected = f"{pid}: {install_msg}"
     assert inst.install_msg(name, pid, None) == expected
 
 
@@ -174,7 +174,7 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     inst._process_external_package(spec.package, False)
 
     out = capfd.readouterr()[0]
-    assert "has external module in {0}".format(spec.external_modules) in out
+    assert f"has external module in {spec.external_modules}" in out
 
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
@@ -543,7 +543,7 @@ def test_combine_phase_logs(tmp_path: pathlib.Path):
     for log_file in log_files:
         phase_log_file = tmp_path / log_file
         with open(phase_log_file, "w", encoding="utf-8") as plf:
-            plf.write("Output from %s\n" % log_file)
+            plf.write(f"Output from {log_file}\n")
         phase_log_files.append(str(phase_log_file))
 
     # This is the output log we will combine them into
@@ -554,7 +554,7 @@ def test_combine_phase_logs(tmp_path: pathlib.Path):
 
     # Ensure each phase log file is represented
     for log_file in log_files:
-        assert "Output from %s\n" % log_file in out
+        assert f"Output from {log_file}\n" in out
 
 
 def test_combine_phase_logs_does_not_care_about_encoding(tmp_path: pathlib.Path):
@@ -815,7 +815,7 @@ def test_release_lock_write_n_exception(install_mockery, tmp_path: pathlib.Path,
 
         installer._release_lock(pkg_id)
         out = str(capfd.readouterr()[1])
-        msg = "exception when releasing write lock for {0}".format(pkg_id)
+        msg = f"exception when releasing write lock for {pkg_id}"
         assert msg in out
 
 
@@ -1011,7 +1011,7 @@ def _interrupt(installer, task, install_status, **kwargs):
 def test_install_fail_on_interrupt(install_mockery, mock_fetch, monkeypatch):
     """Test ctrl-c interrupted install."""
     spec_name = "pkg-a"
-    err_msg = "mock keyboard interrupt for {0}".format(spec_name)
+    err_msg = f"mock keyboard interrupt for {spec_name}"
     installer = create_installer([spec_name], {"fake": True})
     setattr(inst.PackageInstaller, "_real_install_task", inst.PackageInstaller._complete_task)
     # Raise a KeyboardInterrupt error to trigger early termination
@@ -1135,7 +1135,7 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
 
     # Note: this test relies on installing a package with no dependencies
     def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     installer = create_installer(["pkg-c"], {})
 
@@ -1193,15 +1193,15 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     orig_fn = inst.PackageInstaller._ensure_locked
 
     def _read(installer, lock_type, pkg):
-        tty.msg("{0}->read locked {1}".format(lock_type, pkg.spec.name))
+        tty.msg(f"{lock_type}->read locked {pkg.spec.name}")
         return orig_fn(installer, "read", pkg)
 
     def _prep(installer, task):
-        tty.msg("preparing {0}".format(task.pkg.spec.name))
+        tty.msg(f"preparing {task.pkg.spec.name}")
         assert task.pkg.spec.name not in installer.installed
 
     def _requeued(installer, task, install_status):
-        tty.msg("requeued {0}".format(task.pkg.spec.name))
+        tty.msg(f"requeued {task.pkg.spec.name}")
 
     # Force a read lock
     monkeypatch.setattr(inst.PackageInstaller, "_ensure_locked", _read)

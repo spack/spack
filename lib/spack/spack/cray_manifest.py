@@ -152,7 +152,7 @@ def spec_from_entry(entry):
 
             # Value could be a list (of strings), boolean, or string
             if isinstance(value, str):
-                variant_strs.append("{0}={1}".format(name, value))
+                variant_strs.append(f"{name}={value}")
             else:
                 try:
                     iter(value)
@@ -164,12 +164,10 @@ def spec_from_entry(entry):
                 # At this point not a string or collection, check for boolean
                 if value in [True, False]:
                     bool_symbol = "+" if value else "~"
-                    variant_strs.append("{0}{1}".format(bool_symbol, name))
+                    variant_strs.append(f"{bool_symbol}{name}")
                 else:
                     raise ValueError(
-                        "Unexpected value for {0} ({1}): {2}".format(
-                            name, str(type(value)), str(value)
-                        )
+                        f"Unexpected value for {name} ({str(type(value))}): {str(value)}"
                     )
         spec_str += " " + " ".join(variant_strs)
 
@@ -231,7 +229,7 @@ def read(path, apply_updates):
         raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])
-    tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
+    tty.debug(f"{path}: {str(len(specs))} specs read from manifest")
     compilers = []
     if "compilers" in json_data:
         for x in json_data["compilers"]:

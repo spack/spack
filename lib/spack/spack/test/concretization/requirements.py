@@ -155,11 +155,11 @@ def test_requirement_adds_new_version(
     )
 
     a_commit_hash = commits[0]
-    conf_str = """\
+    conf_str = f"""\
 packages:
   v:
-    require: "@{0}=2.2"
-""".format(a_commit_hash)
+    require: "@{a_commit_hash}=2.2"
+"""
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("v")
@@ -186,11 +186,11 @@ def test_requirement_adds_version_satisfies(
     s0 = spack.concretize.concretize_one("t@2.0")
     assert "u" not in s0
 
-    conf_str = """\
+    conf_str = f"""\
 packages:
   t:
-    require: "@{0}=2.2"
-""".format(commits[0])
+    require: "@{commits[0]}=2.2"
+"""
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("t")

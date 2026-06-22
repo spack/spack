@@ -562,7 +562,7 @@ def config_update(args):
     if cannot_overwrite:
         msg = "Detected permission issues with the following scopes:\n\n"
         for scope, cfg_file in cannot_overwrite:
-            msg += "\t[scope={0}, cfg={1}]\n".format(scope.name, cfg_file)
+            msg += f"\t[scope={scope.name}, cfg={cfg_file}]\n"
         msg += (
             "\nEither ensure that you have sufficient permissions to "
             "modify these files or do not include these scopes in the "
@@ -587,7 +587,7 @@ def config_update(args):
         )
         for scope in updates:
             cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
-            msg += "\t[scope={0}, file={1}]\n".format(scope.name, cfg_file)
+            msg += f"\t[scope={scope.name}, file={cfg_file}]\n"
         msg += (
             "\nIf the configuration files are updated, versions of Spack "
             "that are older than this version may not be able to read "
@@ -653,7 +653,7 @@ def config_revert(args):
     if cannot_overwrite:
         msg = "Detected permission issues with the following scopes:\n\n"
         for e in cannot_overwrite:
-            msg += "\t[scope={0.scope}, cfg={0.cfg}, bkp={0.bkp}]\n".format(e)
+            msg += f"\t[scope={e.scope}, cfg={e.cfg}, bkp={e.bkp}]\n"
         msg += (
             "\nEither ensure to have the right permissions before retrying"
             " or be more specific on the scope to revert."
@@ -664,7 +664,7 @@ def config_revert(args):
     if not args.yes_to_all:
         msg = "The following scopes will be restored from the corresponding backup files:\n"
         for entry in to_be_restored:
-            msg += "\t[scope={0.scope}, bkp={0.bkp}]\n".format(entry)
+            msg += f"\t[scope={entry.scope}, bkp={entry.bkp}]\n"
         msg += "This operation cannot be undone."
         tty.msg(msg)
         proceed = tty.get_yes_or_no("Do you want to proceed?", default=False)
@@ -743,7 +743,7 @@ def config_prefer_upstream(args):
     spack.config.set("packages", new, scope)
     config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
-    tty.msg("Updated config at {0}".format(config_file))
+    tty.msg(f"Updated config at {config_file}")
 
 
 def config(parser, args):

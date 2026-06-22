@@ -63,8 +63,9 @@ def test_location_source_dir_missing():
     spec = "mpileaks"
     prefix = "==> Error: "
     expected = (
-        "%sSource directory does not exist yet. Run this to create it:"
-        "%s  spack stage %s" % (prefix, "\n", spec)
+        "{}Source directory does not exist yet. Run this to create it:{}  spack stage {}".format(
+            prefix, "\n", spec
+        )
     )
     out = location("--source-dir", spec, fail_on_error=False).strip()
     assert out == expected
@@ -104,7 +105,7 @@ def test_location_with_active_env(mutable_mock_env_path):
 def test_location_env_missing():
     """Tests spack location --env."""
     missing_env_name = "missing-env"
-    error = "==> Error: no such environment: '%s'" % missing_env_name
+    error = f"==> Error: no such environment: '{missing_env_name}'"
     out = location("--env", missing_env_name, fail_on_error=False).strip()
     assert out == error
 
@@ -177,7 +178,7 @@ def test_location_view_missing(mutable_mock_env_path):
     e = ev.create("example", with_view=True)
     e.write()
     missing_view_name = "missing-view"
-    error = "==> Error: no such view in the current environment: '%s'" % missing_view_name
+    error = f"==> Error: no such view in the current environment: '{missing_view_name}'"
     with e:
         out = location("--view", missing_view_name, fail_on_error=False).strip()
         assert out == error

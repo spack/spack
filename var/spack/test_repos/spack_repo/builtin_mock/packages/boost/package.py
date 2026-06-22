@@ -50,7 +50,7 @@ class Boost(Package):
         variant(
             lib,
             default=(lib not in default_noinstall_libs),
-            description="Compile with {0} library".format(lib),
+            description=f"Compile with {lib} library",
         )
 
     variant("debug", default=False, description="Switch to the debug version of Boost")

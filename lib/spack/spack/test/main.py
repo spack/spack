@@ -65,14 +65,14 @@ def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
     sha = "26552533be04e83e66be2c28e0eb5011cb54e8fa"
     with open(git, "w", encoding="utf-8") as f:
         f.write(
-            """#!/bin/sh
-echo {0}
-""".format(sha)
+            f"""#!/bin/sh
+echo {sha}
+"""
         )
     fs.set_executable(str(git))
 
     monkeypatch.setattr(spack.util.git, "git", lambda: exe.which(str(git)))
-    expected = "{0} ({1})".format(spack.spack_version, sha)
+    expected = f"{spack.spack_version} ({sha})"
     assert expected == spack.get_version()
 
 

@@ -34,5 +34,5 @@ class SpliceH(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-h"), "w", encoding="utf-8") as f:
-            f.write("splice-h: {0}".format(prefix))
+            f.write(f"splice-h: {prefix}")
             f.write("splice-z: {0}".format(spec["splice-z"].prefix))

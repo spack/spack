@@ -36,18 +36,18 @@ def test_reporters_extract_basics():
     name = "test_no_status"
     desc = "basic description"
     status = TestStatus.PASSED
-    outputs = """
+    outputs = f"""
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-15-18:44:21.250165] test: {0}: {1}
-==> [2022-02-15-18:44:21.250200] '{2}'
-{3}: {0}
-""".format(name, desc, fake_bin, status).splitlines()
+==> [2022-02-15-18:44:21.250165] test: {name}: {desc}
+==> [2022-02-15-18:44:21.250200] '{fake_bin}'
+{status}: {name}
+""".splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     assert len(parts) == 1
-    assert parts[0]["command"] == "{0}".format(fake_bin)
+    assert parts[0]["command"] == f"{fake_bin}"
     assert parts[0]["desc"] == desc
-    assert parts[0]["loglines"] == ["{0}: {1}".format(status, name)]
+    assert parts[0]["loglines"] == [f"{status}: {name}"]
     assert parts[0]["status"] == status.lower()
 
 
@@ -57,11 +57,11 @@ def test_reporters_extract_no_parts(capfd):
     #  2) does not define any test parts;
     #  3) has a status value without a part so generates a warning
     status = TestStatus.NO_TESTS
-    outputs = """
+    outputs = f"""
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-11-17:14:38.875259] Installing {0} to {1}
-{2}
-""".format(fake_install_test_root, fake_test_cache, status).splitlines()
+==> [2022-02-11-17:14:38.875259] Installing {fake_install_test_root} to {fake_test_cache}
+{status}
+""".splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     err = capfd.readouterr()[1]
@@ -80,30 +80,19 @@ def test_reporters_extract_missing_desc():
     failed = TestStatus.FAILED
     passed = TestStatus.PASSED
     results = [passed, failed, passed]
-    outputs = """
+    outputs = f"""
 ==> Testing package fake-1.0-abcdefg
-==> [2022-02-15-18:44:21.250165] test: {0}: {1}
-==> [2022-02-15-18:44:21.250170] '{5}' '-c' 'import fake.bin'
-{2}: {0}
-==> [2022-02-15-18:44:21.250185] test: {3}: {4}
-==> [2022-02-15-18:44:21.250200] '{5}' '-c' 'import fake.util'
-{6}: {3}
-==> [2022-02-15-18:44:21.250205] test: {7}: {8}
+==> [2022-02-15-18:44:21.250165] test: {names[0]}: {descs[0]}
+==> [2022-02-15-18:44:21.250170] '{fake_bin}' '-c' 'import fake.bin'
+{results[0]}: {names[0]}
+==> [2022-02-15-18:44:21.250185] test: {names[1]}: {descs[1]}
+==> [2022-02-15-18:44:21.250200] '{fake_bin}' '-c' 'import fake.util'
+{results[1]}: {names[1]}
+==> [2022-02-15-18:44:21.250205] test: {names[2]}: {descs[2]}
 ==> [2022-02-15-18:44:21.250210] 'exe1 1'
 ==> [2022-02-15-18:44:21.250250] 'exe2 2'
-{9}: {7}
-""".format(
-        names[0],
-        descs[0],
-        results[0],
-        names[1],
-        descs[1],
-        fake_bin,
-        results[1],
-        names[2],
-        descs[2],
-        results[2],
-    ).splitlines()
+{results[2]}: {names[2]}
+""".splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
@@ -117,11 +106,11 @@ def test_reporters_extract_missing_desc():
 
 @pytest.mark.parametrize("state", [("not installed"), ("external")])
 def test_reporters_extract_skipped(state):
-    expected = "Skipped {0} package".format(state)
-    outputs = """
+    expected = f"Skipped {state} package"
+    outputs = f"""
 ==> Testing package fake-1.0-abcdefg
-{0}
-""".format(expected).splitlines()
+{expected}
+""".splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 

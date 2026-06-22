@@ -19,5 +19,5 @@ class SpliceDependsOnT(Package):
 
     def install(self, spec, prefix):
         with open(prefix.join("splice-depends-on-t"), "w", encoding="utf-8") as f:
-            f.write("splice-depends-on-t: {0}".format(prefix))
+            f.write(f"splice-depends-on-t: {prefix}")
             f.write("splice-t: {0}".format(spec["splice-t"].prefix))

@@ -125,7 +125,7 @@ def test_dev_build_drop_in(
 
 def test_dev_build_fails_already_installed(tmp_path: pathlib.Path, install_mockery):
     spec = spack.concretize.concretize_one(
-        spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % str(tmp_path))
+        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={str(tmp_path)}")
     )
 
     with fs.working_dir(str(tmp_path)):
@@ -134,7 +134,7 @@ def test_dev_build_fails_already_installed(tmp_path: pathlib.Path, install_mocke
 
         dev_build("dev-build-test-install@0.0.0")
         output = dev_build("dev-build-test-install@0.0.0", fail_on_error=False)
-        assert "Already installed in %s" % spec.prefix in output
+        assert f"Already installed in {spec.prefix}" in output
 
 
 def test_dev_build_fails_no_spec():
@@ -187,7 +187,7 @@ def test_dev_build_env(
     build_dir = tmp_path / "build"
     build_dir.mkdir()
     spec = spack.concretize.concretize_one(
-        spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % str(build_dir))
+        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={str(build_dir)}")
     )
 
     with fs.working_dir(str(build_dir)):
@@ -271,7 +271,7 @@ def test_dev_build_env_version_mismatch(
     build_dir = tmp_path / "build"
     build_dir.mkdir()
     spec = spack.concretize.concretize_one(
-        spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % str(tmp_path))
+        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={str(tmp_path)}")
     )
 
     with fs.working_dir(str(build_dir)):
@@ -420,7 +420,7 @@ spack:
 
     # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec["dev-build-test-install"]):
-        assert dep.satisfies("dev_path=%s" % str(build_dir))
+        assert dep.satisfies(f"dev_path={str(build_dir)}")
     assert spec.satisfies("^dev_path=*")
 
 
@@ -437,7 +437,7 @@ def test_dev_build_rebuild_on_source_changes(
     build_dir = tmp_path / "build"
     build_dir.mkdir()
     spec = spack.concretize.concretize_one(
-        spack.spec.Spec("dev-build-test-install@0.0.0 dev_path=%s" % str(build_dir))
+        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={str(build_dir)}")
     )
 
     def reset_string():

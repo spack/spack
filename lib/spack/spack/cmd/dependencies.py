@@ -57,7 +57,7 @@ def dependencies(parser, args):
 
         format_string = "{name}{@version}{/hash:7}{%compiler}"
         if sys.stdout.isatty():
-            tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
+            tty.msg(f"Dependencies of {spec.format(format_string, color=True)}")
         deps = spack.store.STORE.db.installed_relatives(
             spec, "children", args.transitive, deptype=args.deptype
         )
