@@ -126,7 +126,7 @@ def location(parser, args):
 
     # no -v corresponds to False, -v without arg to None, -v name to the string name.
     if args.location_view is not False:
-        env = spack.cmd.require_active_env("location -v")
+        env = spack.cmd.require_active_env(args.subparser)
         view_name = args.location_view
         if view_name is None:
             # get active view name
