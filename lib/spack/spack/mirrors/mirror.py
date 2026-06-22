@@ -30,7 +30,19 @@ if TYPE_CHECKING:
     import spack.spec
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
+supported_url_schemes = {
+    "file",
+    "http",
+    "https",
+    "sftp",
+    "ftp",
+    "s3",
+    "gs",
+    "oci",
+    "oci+http",
+    "ssh",
+    "scp",
+}
 
 #: The layout version spack can current install
 SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
@@ -93,7 +105,7 @@ class Mirror:
         if urllib.parse.urlparse(url).scheme not in supported_url_schemes:
             raise ValueError(
                 f'"{url}" is not a valid mirror URL. '
-                f"Scheme must be one of {supported_url_schemes}."
+                f"Scheme must be one of {sorted(supported_url_schemes)}."
             )
         return Mirror(url)
 

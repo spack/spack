@@ -41,6 +41,7 @@ from spack.llnl.util.filesystem import mkdirp, working_dir
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+from .ssh import SSHConnection
 
 
 class Retry:
@@ -329,6 +330,10 @@ def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
+    if url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url)
+        return url.geturl(), {}, ssh.read(url.path)
+
     # Timeout in seconds for web requests
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
@@ -427,6 +432,10 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
             os.remove(local_file_path)
+
+    elif remote_url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(remote_url)
+        ssh.push(local_file_path, remote_url.path, keep_original=keep_original)
 
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
@@ -602,6 +611,10 @@ def url_exists(url, curl=None):
     tty.debug("Checking existence of {0}".format(url))
     url_result = urllib.parse.urlparse(url)
 
+    if url_result.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url_result)
+        return ssh.exists(url_result.path)
+
     # Use curl if configured to do so
     fetch_method = spack.config.get("config:url_fetch_method", "urllib")
     use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
@@ -768,6 +781,10 @@ def list_url(url, recursive=False):
         gcs = GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
 
+    elif url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url)
+        return ssh.list_path(url.path, recursive=recursive)
+
 
 def stat_url(url: str) -> Optional[Tuple[int, float]]:
     """Get stat result for a URL.
@@ -804,6 +821,10 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
         mtime = head_request["LastModified"].timestamp()
         size = head_request["ContentLength"]
         return size, mtime
+
+    elif parsed_url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(parsed_url)
+        return ssh.stat_path(parsed_url.path)
 
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")

@@ -33,14 +33,6 @@ ALLOWED_ARCHIVE_TYPES = (
 CONTRACTION_MAP = {"tgz": "tar.gz", "txz": "tar.xz", "tbz": "tar.bz2", "tbz2": "tar.bz2"}
 
 
-def validate_scheme(scheme):
-    """Returns true if the URL scheme is generally known to Spack. This function
-    helps mostly in validation of paths vs urls, as Windows paths such as
-    C:/x/y/z (with backward not forward slash) may parse as a URL with scheme
-    C and path /x/y/z."""
-    return scheme in ("file", "http", "https", "ftp", "s3", "gs", "ssh", "git", "oci")
-
-
 def local_file_path(url):
     """Get a local file path from a url.
 
@@ -68,7 +60,10 @@ def is_path_instead_of_url(path_or_url):
     """Historically some config files and spack commands used paths
     where urls should be used. This utility can be used to validate
     and promote paths to urls."""
-    return not validate_scheme(urllib.parse.urlparse(path_or_url).scheme)
+    return (
+        bool(re.match(r"^[a-zA-Z]:[\\/]", path_or_url))  # for Windows paths
+        or not urllib.parse.urlparse(path_or_url).scheme
+    )
 
 
 def format(parsed_url):
@@ -89,7 +84,8 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
        For example ``https://example.com/a/b + c/d = https://example.com/a/b/c/d``. If
        ``resolve_href=True``, the behavior is how a browser would resolve the URL:
        ``https://example.com/a/c/d``.
-    2. ``s3://``, ``gs://``, ``oci://`` URLs are joined like ``http://`` URLs.
+    2. ``s3://``, ``gs://``, ``oci://``, ``ssh://`` and ``scp://`` URLs are joined like
+       ``http://`` URLs.
     3. It accepts multiple components for convenience. Note that ``components[1:]`` are treated as
        literal path components and appended to ``components[0]`` separated by slashes."""
     # Ensure a trailing slash in the path component of the base URL to get os.path.join-like
@@ -103,8 +99,24 @@ def join(base: str, *components: str, resolve_href: bool = False, **kwargs) -> s
     try:
         # NOTE: we temporarily modify urllib internals so s3 and gs schemes are treated like http.
         # This is non-portable, and may be forward incompatible with future cpython versions.
-        urllib.parse.uses_netloc = [*old_netloc, "s3", "gs", "oci", "oci+http"]  # type: ignore
-        urllib.parse.uses_relative = [*old_relative, "s3", "gs", "oci", "oci+http"]  # type: ignore
+        urllib.parse.uses_netloc = [  # type: ignore
+            *old_netloc,
+            "s3",
+            "gs",
+            "oci",
+            "oci+http",
+            "ssh",
+            "scp",
+        ]
+        urllib.parse.uses_relative = [  # type: ignore
+            *old_relative,
+            "s3",
+            "gs",
+            "oci",
+            "oci+http",
+            "ssh",
+            "scp",
+        ]
         return urllib.parse.urljoin(base, "/".join(components), **kwargs)
     finally:
         urllib.parse.uses_netloc = old_netloc  # type: ignore
