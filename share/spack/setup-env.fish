@@ -751,7 +751,7 @@ if test -z "$SPACK_SKIP_MODULES"; and begin; type -q module; or type -q use; end
 end
 
 # Add 'spacktivate' abbreviation
-abbr spacktivate "spack env activate"
+alias spacktivate "spack env activate"
 
 # Add programmable tab completion for fish
 #
