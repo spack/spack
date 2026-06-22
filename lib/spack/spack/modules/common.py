@@ -848,13 +848,15 @@ class BaseModuleFileWriter:
         # ... and return the first match
         return choices.pop(0)
 
-    def write(self, overwrite=False):
+    def write(self, overwrite=False, target_filename=None):
         """Writes the module file.
 
         Args:
             overwrite (bool): if True it is fine to overwrite an already
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
+            target_filename (str): if set, write to this path instead of the
+                layout-derived filename.
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
@@ -862,20 +864,22 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
+        filename = target_filename or self.layout.filename
+
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
-            message = "Module file {0.filename} exists and will not be overwritten"
-            tty.warn(message.format(self.layout))
+        if not overwrite and os.path.exists(filename):
+            message = "Module file {0} exists and will not be overwritten"
+            tty.warn(message.format(filename))
             return
 
         # If we are here it means it's ok to write the module file
         msg = "\tWRITE: {0} [{1}]"
-        tty.debug(msg.format(self.spec.cshort_spec, self.layout.filename))
+        tty.debug(msg.format(self.spec.cshort_spec, filename))
 
         # If the directory where the module should reside does not exist
         # create it
-        module_dir = os.path.dirname(self.layout.filename)
+        module_dir = os.path.dirname(filename)
         if not os.path.exists(module_dir):
             spack.llnl.util.filesystem.mkdirp(module_dir)
 
@@ -912,38 +916,46 @@ class BaseModuleFileWriter:
         # Render the template
         text = template.render(context)
         # Write it to file
-        with open(self.layout.filename, "w", encoding="utf-8") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
-        if os.path.exists(self.layout.filename):
-            fp.set_permissions_by_spec(self.layout.filename, self.spec)
+        if os.path.exists(filename):
+            fp.set_permissions_by_spec(filename, self.spec)
 
         # Symlink defaults if needed
-        self.update_module_defaults()
+        self.update_module_defaults(target_filename=target_filename)
 
         # record module hiddenness if implicit
-        self.update_module_hiddenness()
+        self.update_module_hiddenness(target_filename=target_filename)
 
-    def update_module_defaults(self):
+    def update_module_defaults(self, target_filename=None):
         if any(self.spec.satisfies(default) for default in self.conf.defaults):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
+            module_dir = os.path.dirname(target_filename or self.layout.filename)
+            default_path = os.path.join(module_dir, "default")
+            default_tmp = os.path.join(module_dir, ".tmp_spack_default")
             os.symlink(self.layout.filename, default_tmp)
             os.rename(default_tmp, default_path)
 
-    def update_module_hiddenness(self, remove=False):
+    def update_module_hiddenness(self, remove=False, target_filename=None):
         """Update modulerc file corresponding to module to add or remove
         command that hides module depending on its hidden state.
 
         Args:
             remove (bool): if True, hiddenness information for module is
                 removed from modulerc.
+            target_filename (str): if set, derive modulerc path from this
+                instead of self.layout.filename.
         """
-        modulerc_path = self.layout.modulerc
+        if target_filename:
+            modulerc_path = os.path.join(
+                os.path.dirname(target_filename), os.path.basename(self.layout.modulerc)
+            )
+        else:
+            modulerc_path = self.layout.modulerc
         hide_module_cmd = self.hide_cmd_format % self.layout.use_name
         hidden = self.conf.hidden and not remove
         modulerc_exists = os.path.exists(modulerc_path)

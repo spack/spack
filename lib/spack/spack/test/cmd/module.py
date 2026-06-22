@@ -221,3 +221,32 @@ def test_setdefault_command(mutable_database, mutable_config):
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
     assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)
+
+
+@pytest.mark.db
+def test_refresh_with_delete_tree(mutable_database, mutable_config, tmp_path):
+    """Test that refresh --delete-tree regenerates via swap."""
+    import glob
+
+    module_root = str(tmp_path / "test_modules")
+    spack.config.set("modules", {"default": {"enable": ["tcl"], "roots": {"tcl": module_root}}})
+
+    for spec_str in ("libelf", "libdwarf"):
+        spec = spack.concretize.concretize_one(spec_str)
+        PackageInstaller([spec.package], explicit=True, fake=True).install()
+
+    module("tcl", "refresh", "-y", "libelf", "libdwarf")
+    initial_files = [
+        f for f in glob.glob(f"{module_root}/**/*", recursive=True) if os.path.isfile(f)
+    ]
+    assert initial_files
+
+    module("tcl", "refresh", "-y", "--delete-tree", "libelf", "libdwarf")
+    final_files = [
+        f for f in glob.glob(f"{module_root}/**/*", recursive=True) if os.path.isfile(f)
+    ]
+    assert final_files
+
+    parent = os.path.dirname(module_root)
+    assert not glob.glob(os.path.join(parent, "*.bak"))
+    assert not glob.glob(os.path.join(parent, "*.tmp"))
