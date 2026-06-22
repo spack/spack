@@ -973,6 +973,7 @@ class BuildStatus:
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
+        self.show_install_path = spack.config.get("config:installer_show_prefix", True)
         #: When True, suppress all terminal output (process is in background).
         #: Controlling code is responsible for modifying this variable based on process state
         self.headless = False
@@ -1429,8 +1430,9 @@ class BuildStatus:
             yield " fetching"
             yield f": {build_info.progress_percent}%"
         elif build_info.state == "finished":
-            prefix = build_info.prefix
-            yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
+            if self.show_install_path:
+                prefix = build_info.prefix
+                yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
         elif build_info.state == "failed":
             yield " failed"
             if build_info.log_path:

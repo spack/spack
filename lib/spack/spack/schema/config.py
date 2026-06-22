@@ -233,6 +233,10 @@ properties: Dict[str, Any] = {
                 "enum": ["old", "new"],
                 "description": "Which installer to use. The new installer is experimental.",
             },
+            "installer_show_prefix": {
+                "type": "boolean",
+                "description": "Whether the new installer prints the installation prefix for completed builds.",
+            },
             "sandbox": {
                 "type": "object",
                 "description": "Restrict filesystem and network access during builds.",
