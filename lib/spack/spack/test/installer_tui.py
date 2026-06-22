@@ -303,6 +303,26 @@ class TestOutputRendering:
         # Non-TTY output should not contain ANSI escape codes
         assert "\033[" not in output
 
+    @pytest.mark.parametrize("show_install_prefix", [True, False])
+    def test_show_install_prefix_from_config(self, mutable_config, show_install_prefix):
+        """Test that BuildStatus output includes the prefix only when configured to do so."""
+        mutable_config.set("config:installer_show_prefix", show_install_prefix)
+        spec = MockSpec("mypackage", "1.0", prefix="/custom/prefix/mypackage")
+        status = BuildStatus(
+            total=1, is_tty=False, color=False, show_install_prefix=show_install_prefix
+        )
+
+        status.add_build(spec, explicit=True)
+        build_info = status.builds[spec.dag_hash()]
+        build_info.state = "finished"
+        build_info.duration = 1.0
+
+        output = "".join(
+            status._generate_line_components(build_info, static=True, now=status.get_time())
+        )
+
+        assert (spec.prefix in output) is show_install_prefix
+
     def test_tty_output_contains_ansi(self):
         """Test that TTY mode produces ANSI codes"""
         status, _, fake_stdout = create_build_status()
