@@ -20,9 +20,9 @@ import spack.patch
 import spack.stage
 import spack.util.url as url_util
 from spack.cmd.common.arguments import mirror_name_or_url
-from spack.llnl.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
 from spack.spec import Spec
 from spack.util.executable import which
+from spack.util.filesystem import resolve_link_target_relative_to_the_link, working_dir
 from spack.util.spack_yaml import SpackYAMLError
 
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_mock_repo")]

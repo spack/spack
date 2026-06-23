@@ -12,10 +12,10 @@ from itertools import product
 import pytest
 
 import spack.util.url
-from spack.llnl.util.filesystem import working_dir
 from spack.paths import spack_root
 from spack.util import compression
 from spack.util.executable import CommandNotFoundError
+from spack.util.filesystem import working_dir
 
 datadir = os.path.join(spack_root, "lib", "spack", "spack", "test", "data", "compression")
 

@@ -11,8 +11,8 @@ import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
-from spack.llnl.util.filesystem import readlink
 from spack.package_base import spack_times_log
+from spack.util.filesystem import readlink
 
 
 def compute_hash(path: str, block_size: int = 1048576) -> str:

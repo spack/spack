@@ -14,7 +14,7 @@ import spack.paths
 import spack.util.git
 import spack.util.gpg
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
 
 description = "set up spack for our tutorial (WARNING: modifies config!)"

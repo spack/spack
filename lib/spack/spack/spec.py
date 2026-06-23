@@ -86,7 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
@@ -97,6 +96,7 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
 import spack.util.path

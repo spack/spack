@@ -13,11 +13,11 @@ import spack
 import spack.caches
 import spack.ci
 import spack.config
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml

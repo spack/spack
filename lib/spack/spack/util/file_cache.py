@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from typing import IO, Dict, Iterator, Optional, Tuple, Union
 
 from spack.error import SpackError
-from spack.llnl.util.filesystem import rename
+from spack.util.filesystem import rename
 from spack.util.lock import Lock
 
 

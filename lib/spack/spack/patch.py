@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, Type, Union
 import spack
 import spack.error
 import spack.fetch_strategy
-import spack.llnl.util.filesystem
+import spack.util.filesystem
 import spack.util.spack_json as sjson
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
@@ -61,7 +61,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with spack.llnl.util.filesystem.working_dir(source_path):
+    with spack.util.filesystem.working_dir(source_path):
         patch(*args)
 
 

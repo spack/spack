@@ -21,7 +21,7 @@ import spack.url
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 from spack.version import Version
 
 

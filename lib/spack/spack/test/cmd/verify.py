@@ -13,9 +13,9 @@ import pytest
 import spack.cmd.verify
 import spack.concretize
 import spack.installer
-import spack.llnl.util.filesystem as fs
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
 from spack.main import SpackCommand, SpackCommandError

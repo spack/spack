@@ -50,7 +50,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lock as lk
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
@@ -60,6 +59,7 @@ import spack.repo
 import spack.report
 import spack.rewiring
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.path
 import spack.util.timer as timer
 from spack.llnl.util.lang import pretty_seconds
@@ -1301,7 +1301,7 @@ class BuildTask(Task):
         self.record.succeed()
 
         # delete the temporary backup for an overwrite
-        # see spack.llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
@@ -1312,7 +1312,7 @@ class BuildTask(Task):
             raise inner_exception
 
         # restore the overwrite directory from backup
-        # see spack.llnl.util.filesystem.restore_directory_transaction
+        # see spack.util.filesystem.restore_directory_transaction
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)

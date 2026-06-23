@@ -14,11 +14,11 @@ import spack.cmd
 import spack.concretize
 import spack.error
 import spack.hash_lookup
-import spack.llnl.util.filesystem as fs
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
 import spack.spec
+import spack.util.filesystem as fs
 from spack.externals import (
     ExternalSpecsParser,
     complete_variants_and_architecture,

@@ -24,15 +24,15 @@ import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
 from spack.llnl.util import tty
-from spack.llnl.util.filesystem import (
+from spack.llnl.util.lang import index_by, match_predicate
+from spack.llnl.util.tty.color import colorize
+from spack.util.filesystem import (
     mkdirp,
     remove_dead_links,
     remove_empty_directories,
     symlink,
     visit_directory_tree,
 )
-from spack.llnl.util.lang import index_by, match_predicate
-from spack.llnl.util.tty.color import colorize
 from spack.util.link_tree import (
     ConflictingSpecsError,
     DestinationMergeVisitor,
@@ -170,7 +170,7 @@ class FilesystemView:
         Initialize a filesystem view under the given ``root`` directory with
         corresponding directory ``layout``.
 
-        Files are linked by method ``link`` (spack.llnl.util.filesystem.symlink by default).
+        Files are linked by method ``link`` (spack.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout

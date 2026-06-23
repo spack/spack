@@ -13,10 +13,10 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy

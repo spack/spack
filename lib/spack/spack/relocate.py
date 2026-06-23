@@ -11,14 +11,14 @@ from typing import Dict, Iterable, List, Optional
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable
-from spack.llnl.util.filesystem import readlink, symlink
+import spack.util.filesystem as fs
 from spack.llnl.util.lang import memoized
+from spack.util.filesystem import readlink, symlink
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
 

@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional,
 
 import spack.config
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.log
 import spack.paths
@@ -24,6 +23,7 @@ import spack.repo
 import spack.report
 import spack.spec
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack.error import InstallError
 from spack.llnl.util.lang import nullcontext

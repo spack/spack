@@ -15,10 +15,10 @@ import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
-import spack.llnl.util.filesystem
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.stage
+import spack.util.filesystem
 import spack.util.spack_yaml
 from spack.cmd.common import arguments
 
@@ -428,7 +428,7 @@ def _mirror(args):
     def write_metadata(subdir, metadata):
         metadata_rel_dir = os.path.join("metadata", subdir)
         metadata_yaml = os.path.join(args.root_dir, metadata_rel_dir, "metadata.yaml")
-        spack.llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        spack.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
         with open(metadata_yaml, mode="w", encoding="utf-8") as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
         return os.path.dirname(metadata_yaml), metadata_rel_dir

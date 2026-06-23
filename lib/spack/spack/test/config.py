@@ -18,7 +18,6 @@ import spack.config
 import spack.directory_layout
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -32,11 +31,12 @@ import spack.schema.repos
 import spack.spec
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 from spack.enums import ConfigScopePriority
-from spack.llnl.util.filesystem import getuid, join_path, touch
+from spack.util.filesystem import getuid, join_path, touch
 from spack.util.spack_yaml import DictWithLineInfo
 
 # sample config data

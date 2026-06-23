@@ -10,7 +10,7 @@ import tempfile
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
+import spack.util.filesystem as fs
 
 
 def test_symlink_file(tmp_path: pathlib.Path):

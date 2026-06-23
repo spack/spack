@@ -35,7 +35,7 @@ import spack.util.parallel
 import spack.util.url
 import spack.util.url as url_util
 from spack.llnl.util import lang, tty
-from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler

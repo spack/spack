@@ -22,9 +22,9 @@ import spack.stage
 import spack.util.executable
 import spack.util.url as url_util
 from spack.config import canonicalize_path
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
+from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"

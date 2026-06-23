@@ -23,12 +23,12 @@ import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util

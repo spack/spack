@@ -35,7 +35,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.package_base
@@ -47,6 +46,7 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.hash
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
@@ -55,11 +55,11 @@ import spack.variant as vt
 from spack import traverse
 from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
-from spack.llnl.util.filesystem import copy_tree, islink, readlink
 from spack.llnl.util.lang import stable_partition
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_filter import SpecFilter
+from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.link_tree import ConflictingSpecsError
 
 from .list import SpecList, SpecListError, SpecListParser

@@ -20,16 +20,16 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
+import spack.util.filesystem as fs
 import spack.util.string as string
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.traverse import traverse_nodes
 from spack.util.environment import EnvironmentModifications
+from spack.util.filesystem import islink, symlink
 
 description = "manage environments"
 section = "environments"

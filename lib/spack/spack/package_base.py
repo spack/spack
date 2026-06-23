@@ -30,7 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
@@ -45,6 +44,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +53,9 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
 from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version

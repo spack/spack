@@ -11,7 +11,7 @@ import pytest
 
 import spack.error
 import spack.util.lock as lk
-from spack.llnl.util.filesystem import getuid, group_ids
+from spack.util.filesystem import getuid, group_ids
 
 
 def test_disable_locking(tmp_path: pathlib.Path):

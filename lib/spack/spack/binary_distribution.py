@@ -50,7 +50,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.hooks
 import spack.hooks.sbang
-import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
@@ -67,6 +66,7 @@ import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
 import spack.util.file_cache as file_cache
+import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.parallel
 import spack.util.path
@@ -76,7 +76,6 @@ import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
-from spack.llnl.util.filesystem import mkdirp
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -95,6 +94,7 @@ from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (

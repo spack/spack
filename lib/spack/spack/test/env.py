@@ -13,12 +13,12 @@ import pytest
 
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.spec_parser
+import spack.util.filesystem as fs
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import EnvironmentManifestFile

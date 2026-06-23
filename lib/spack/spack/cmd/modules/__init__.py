@@ -17,8 +17,9 @@ import spack.modules.common
 import spack.repo
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
-from spack.llnl.util import filesystem, tty
+from spack.llnl.util import tty
 from spack.llnl.util.tty import color
+from spack.util import filesystem
 
 description = "manipulate module files"
 section = "environment"

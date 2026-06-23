@@ -9,7 +9,7 @@ import spack.oci.image
 import spack.repo
 import spack.util.url
 from spack.error import MirrorError
-from spack.llnl.util.filesystem import mkdirp, symlink
+from spack.util.filesystem import mkdirp, symlink
 
 if TYPE_CHECKING:
     import spack.spec

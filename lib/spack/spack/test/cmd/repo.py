@@ -16,8 +16,8 @@ import spack.main
 import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 repo = spack.main.SpackCommand("repo")
 env = spack.main.SpackCommand("env")

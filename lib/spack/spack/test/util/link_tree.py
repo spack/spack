@@ -8,18 +8,8 @@ import sys
 
 import pytest
 
-import spack.llnl.util.filesystem
-from spack.llnl.util.filesystem import (
-    _windows_can_symlink,
-    islink,
-    mkdirp,
-    readlink,
-    symlink,
-    touchp,
-    visit_directory_tree,
-    working_dir,
-)
-from spack.test.conftest import FsTree
+import spack.util.filesystem
+from spack.util.filesystem import islink, touchp
 from spack.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
 
 
@@ -38,7 +28,7 @@ def stage(tmp_path: pathlib.Path):
 def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
     assert islink(filename)
-    if sys.platform != "win32" or spack.llnl.util.filesystem._windows_can_symlink():
+    if sys.platform != "win32" or spack.util.filesystem._windows_can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
@@ -48,9 +38,7 @@ def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
         if run_as_root and not _windows_can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(
-            spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
-        )
+        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 
@@ -82,9 +70,7 @@ def test_merge_to_new_directory_relative(stage: str, monkeypatch, run_as_root: b
         if run_as_root and not _windows_can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(
-            spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
-        )
+        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
     with working_dir(stage):
@@ -117,9 +103,7 @@ def test_merge_to_existing_directory(stage: str, monkeypatch, run_as_root):
         if run_as_root and not _windows_can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(
-            spack.llnl.util.filesystem, "_windows_can_symlink", lambda: run_as_root
-        )
+        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 

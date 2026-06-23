@@ -61,7 +61,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
@@ -73,6 +72,7 @@ import spack.store
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.llnl.util.lang import pretty_duration

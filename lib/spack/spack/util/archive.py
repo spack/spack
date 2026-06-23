@@ -12,7 +12,7 @@ from gzip import GzipFile
 from typing import Callable, Dict, Generator, List, Tuple
 
 from spack.llnl.util import tty
-from spack.llnl.util.filesystem import readlink
+from spack.util.filesystem import readlink
 from spack.util.git import is_git_commit_sha
 
 

@@ -9,8 +9,8 @@ from types import ModuleType
 from typing import Optional
 
 import spack.llnl.util.tty.log as log
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 termios: Optional[ModuleType] = None
 try:

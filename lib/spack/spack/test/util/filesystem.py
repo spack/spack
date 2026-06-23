@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for ``llnl/util/filesystem.py``"""
+"""Tests for ``util/filesystem.py``"""
 
 import filecmp
 import os
@@ -14,8 +14,8 @@ from contextlib import contextmanager
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.paths
+import spack.util.filesystem as fs
 
 
 @pytest.fixture()

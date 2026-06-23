@@ -29,7 +29,11 @@ import spack.util.path as sup
 import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
-from spack.llnl.util.filesystem import (
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
+from spack.util.crypto import bit_length, prefix_bits
+from spack.util.editor import editor, executable
+from spack.util.filesystem import (
     AlreadyExistsError,
     can_access,
     get_owner_uid,
@@ -41,10 +45,6 @@ from spack.llnl.util.filesystem import (
     remove_linked_tree,
     symlink,
 )
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
-from spack.util.crypto import bit_length, prefix_bits
-from spack.util.editor import editor, executable
 from spack.version import StandardVersion, VersionList
 
 if TYPE_CHECKING:

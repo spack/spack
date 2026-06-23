@@ -70,7 +70,8 @@ import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import (
+from spack.main import SpackCommand
+from spack.util.filesystem import (
     copy,
     copy_tree,
     join_path,
@@ -78,7 +79,6 @@ from spack.llnl.util.filesystem import (
     remove_linked_tree,
     working_dir,
 )
-from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 

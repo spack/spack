@@ -10,10 +10,10 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.stage
+import spack.util.filesystem as fs
 import spack.util.git
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy

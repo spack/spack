@@ -11,9 +11,9 @@ from typing import List, Optional, overload
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.lang
 import spack.util.executable as exe
+import spack.util.filesystem as fs
 from spack.util.environment import EnvironmentModifications
 
 # regex for a commit version

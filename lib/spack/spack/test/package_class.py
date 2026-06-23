@@ -19,11 +19,11 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
+import spack.util.filesystem as fs
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis

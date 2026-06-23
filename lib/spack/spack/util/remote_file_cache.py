@@ -13,7 +13,7 @@ from typing import Optional
 
 import spack.llnl.util.tty as tty
 import spack.util.crypto
-from spack.llnl.util.filesystem import copy, join_path, mkdirp
+from spack.util.filesystem import copy, join_path, mkdirp
 from spack.util.url import validate_scheme
 
 

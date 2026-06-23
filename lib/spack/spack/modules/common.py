@@ -45,7 +45,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
@@ -57,6 +56,7 @@ import spack.tengine as tengine
 import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
+import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
@@ -210,7 +210,7 @@ def generate_module_index(
     for m in modules:
         entries[m.spec.dag_hash()] = {"path": m.layout.filename, "use_name": m.layout.use_name}
 
-    fs.mkdirp(root)
+    spack.util.filesystem.mkdirp(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump({"module_index": entries}, default_flow_style=False, stream=index_file)
 
@@ -778,7 +778,7 @@ class BaseFileLayout:
 
         # General format for the path part
         def path_part_fmt(token: spack.spec.Spec) -> str:
-            return fs.polite_path([f"{token.name}", f"{token.version}"])
+            return spack.util.filesystem.polite_path([f"{token.name}", f"{token.version}"])
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers
@@ -1298,7 +1298,7 @@ class BaseModuleFileWriter:
         # create it
         module_dir = os.path.dirname(self.layout.filename)
         if not os.path.exists(module_dir):
-            fs.mkdirp(module_dir)
+            spack.util.filesystem.mkdirp(module_dir)
 
         # Get the template for the module
         template_name = self._get_template()

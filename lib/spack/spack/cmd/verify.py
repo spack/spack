@@ -13,7 +13,7 @@ import spack.store
 import spack.verify
 import spack.verify_libraries
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import visit_directory_tree
+from spack.util.filesystem import visit_directory_tree
 from spack.util.string import plural
 
 description = "verify spack installations on disk"
