@@ -1349,9 +1349,9 @@ class GitIncludePaths(OptionalInclude):
         super().__init__(entry)
         self.git = spack.util.path.substitute_path_variables(entry.get("git", ""))
 
-        self.branch = entry.get("branch", "")
+        self.branch = spack.util.path.substitute_path_variables(entry.get("branch", ""))
         self.commit = entry.get("commit", "")
-        self.tag = entry.get("tag", "")
+        self.tag = spack.util.path.substitute_path_variables(entry.get("tag", ""))
         self._paths = [
             spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
         ]
