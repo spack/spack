@@ -616,16 +616,15 @@ def _ensure_package_builders(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        print(f"Checking {pkg_name}")
         pkg = pkg_cls(spack.spec.Spec(pkg_name))
         try:
             b = spack.builder.buildsystem_name(pkg)
             if not isinstance(b, str):
                 raise TypeError("invalid builder type {!s}".format(type(b)))
         except Exception as e:
-            error_msg = "The package '{}' does not have a build system"
-            details = [str(e)]
-            errors.append(error_cls(error_msg.format(pkg_name), details))
+            errors.append(
+                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
+            )
     return errors
 
 
