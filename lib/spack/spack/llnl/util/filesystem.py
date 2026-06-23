@@ -2466,7 +2466,7 @@ def find_libraries(
     root: str,
     shared: bool = True,
     recursive: bool = False,
-    runtime: bool = True,
+    runtime: bool = False,
     max_depth: Optional[int] = None,
 ) -> LibraryList:
     """Returns an iterable of full paths to libraries found in a root dir.

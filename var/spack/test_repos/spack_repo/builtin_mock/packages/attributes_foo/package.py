@@ -17,7 +17,7 @@ class AttributesFoo(BundlePackage):
     def install(self, spec, prefix):
         lib_suffix = ".so"
         if sys.platform == "win32":
-            lib_suffix = ".dll"
+            lib_suffix = ".lib"
         elif sys.platform == "darwin":
             lib_suffix = ".dylib"
         mkdirp(prefix.include)
