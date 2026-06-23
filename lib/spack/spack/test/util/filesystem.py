@@ -741,6 +741,75 @@ def test_keep_modification_time(tmp_path: pathlib.Path):
     assert int(mtime1) == int(file1.stat().st_mtime)
 
 
+@pytest.mark.parametrize(
+    "platform,ignore_cleanup_errors,expected_ignore_errors",
+    [
+        ("linux", False, False),
+        ("linux", True, True),
+        ("win32", False, False),
+        ("win32", True, False),
+    ],
+)
+def test_temp_cwd_cleanup_arguments(
+    monkeypatch, platform, ignore_cleanup_errors, expected_ignore_errors
+):
+    tmp_dir = "/fake/tmpdir"
+    rmtree_calls = []
+    readonly_calls = []
+
+    @contextmanager
+    def fake_working_dir(path):
+        assert path == tmp_dir
+        yield
+
+    def fake_readonly_file_handler(ignore_errors):
+        readonly_calls.append(ignore_errors)
+        return "fake-onerror-handler"
+
+    def fake_rmtree(path, **kwargs):
+        rmtree_calls.append((path, kwargs))
+
+    monkeypatch.setattr(fs.tempfile, "mkdtemp", lambda: tmp_dir)
+    monkeypatch.setattr(fs.sys, "platform", platform)
+    monkeypatch.setattr(fs, "working_dir", fake_working_dir)
+    monkeypatch.setattr(fs, "readonly_file_handler", fake_readonly_file_handler)
+    monkeypatch.setattr(fs.shutil, "rmtree", fake_rmtree)
+    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors) as path:
+        assert path == tmp_dir
+    assert len(rmtree_calls) == 1
+    path, kwargs = rmtree_calls[0]
+    assert path == tmp_dir
+    assert kwargs["ignore_errors"] == expected_ignore_errors
+    if platform == "win32":
+        assert readonly_calls == [ignore_cleanup_errors]
+        assert kwargs["onerror"] == "fake-onerror-handler"
+    else:
+        assert readonly_calls == []
+        assert "onerror" not in kwargs
+
+
+def test_temp_cwd_cleans_up_when_body_raises(monkeypatch):
+    tmp_dir = "/fake/tmpdir"
+    rmtree_calls = []
+
+    @contextmanager
+    def fake_working_dir(path):
+        yield
+
+    def fake_rmtree(path, **kwargs):
+        rmtree_calls.append((path, kwargs))
+
+    monkeypatch.setattr(fs.tempfile, "mkdtemp", lambda: tmp_dir)
+    monkeypatch.setattr(fs.sys, "platform", "linux")
+    monkeypatch.setattr(fs, "working_dir", fake_working_dir)
+    monkeypatch.setattr(fs.shutil, "rmtree", fake_rmtree)
+    with pytest.raises(RuntimeError, match="boom"):
+        with fs.temp_cwd():
+            raise RuntimeError("boom")
+
+    assert rmtree_calls == [(tmp_dir, {"ignore_errors": False})]
+
+
 def test_temporary_dir_context_manager():
     previous_dir = os.path.realpath(os.getcwd())
     with fs.temporary_dir() as tmp_dir:
