@@ -38,10 +38,10 @@ from typing import (
     Union,
 )
 
-from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 from spack.llnl.util import lang, tty
 from spack.llnl.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.executable import Executable
+from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
 if sys.platform == "win32":
     from ctypes import wintypes

@@ -32,6 +32,7 @@ import spack.solver.asp
 import spack.stage
 import spack.store
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
@@ -45,7 +46,6 @@ from spack.stage import stage_prefix
 from spack.test.conftest import RepoBuilder
 from spack.traverse import traverse_nodes
 from spack.util.executable import Executable
-import spack.util.filesystem as fs
 from spack.util.filesystem import readlink
 from spack.version import Version
 

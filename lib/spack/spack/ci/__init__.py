@@ -29,10 +29,10 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.path
-import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util

@@ -27,8 +27,8 @@ from spack.enums import Context
 from spack.installer import PackageInstaller
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
-from spack.util.path import Path, convert_to_platform_path
 from spack.util.filesystem import HeaderList, LibraryList
+from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):
