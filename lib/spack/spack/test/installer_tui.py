@@ -304,9 +304,8 @@ class TestOutputRendering:
         assert "\033[" not in output
 
     @pytest.mark.parametrize("show_install_prefix", [True, False])
-    def test_show_install_prefix_from_config(self, mutable_config, show_install_prefix):
+    def test_show_install_prefix_from_config(self, show_install_prefix):
         """Test that BuildStatus output includes the prefix only when configured to do so."""
-        mutable_config.set("config:installer_show_prefix", show_install_prefix)
         spec = MockSpec("mypackage", "1.0", prefix="/custom/prefix/mypackage")
         status = BuildStatus(
             total=1, is_tty=False, color=False, show_install_prefix=show_install_prefix
