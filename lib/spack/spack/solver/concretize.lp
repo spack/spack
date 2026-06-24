@@ -139,15 +139,19 @@ unification_set(("build", ID), node(X, Child))
      needs_build_unification_set(ParentNode).
 
 % A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
+% (provider projected out, as for the build edge case below).
+virtual_nonbuild_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, Type), Type != "build".
 unification_set(SetID, VirtualNode) :-
-  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, Type), Type != "build",
+  virtual_nonbuild_edge(ParentNode, VirtualNode),
   unification_set(SetID, ParentNode).
 
-% A virtual that is on a build edge, goes in the build set id of the parent of the provider
+% A virtual that is on a build edge, goes in the build set id of the parent of the provider.
+% The provider is projected out first: the head does not depend on it, so without
+% the projection the rule would re-fire once per candidate provider of the virtual.
+virtual_build_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, "build").
 unification_set(("build", ID), VirtualNode) :-
-  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, "build"),
-  build_set_id(ParentNode, ID),
-  needs_build_unification_set(ParentNode).
+  virtual_build_edge(ParentNode, VirtualNode),
+  build_set_id(ParentNode, ID).
 
 % Needed for reused dependencies. A reused dependency has its build edges trimmed, so we
 % only care about the non-build edges.
