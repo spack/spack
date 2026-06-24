@@ -137,7 +137,6 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
 
 def test_instantiate_non_default_macos(mock_packages):
     darwin = spack.platforms.Darwin()
-    default_macos = darwin.operating_system("default_os")
 
     for name, macos in darwin.operating_sys.items():
         if name != darwin.default_os:
