@@ -150,7 +150,9 @@ def test_instantiate_non_default_macos(mock_packages):
     with spack.platforms.use_platform(darwin):
         # zlib isn't important but we need a spec with no compiler because our test environment
         # has no macos compilers
-        spec = spack.concretize.concretize_one(f"zlib platform=darwin os={non_default_macos_name} target=aarch64")
+        spec = spack.concretize.concretize_one(
+            f"zlib platform=darwin os={non_default_macos_name} target=aarch64"
+        )
 
     # Primarily testing that these lines doesn't throw
     os = spec.os
