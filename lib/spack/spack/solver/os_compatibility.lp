@@ -19,12 +19,22 @@ os_compatible("ventura", "monterey").
 os_compatible("monterey", "bigsur").
 os_compatible("bigsur", "catalina").
 
-% can't have dependencies on incompatible OS's
-error(100, "{0} and dependency {1} have incompatible operating systems 'os={2}' and 'os={3}'", Package, Dependency, PackageNodeOS, DependencyOS)
+% every OS is compatible with itself. We can use `os_compatible` to declare
+os_compatible(OS, OS) :- os(OS).
+
+% Transitive compatibility among operating systems
+os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
+
+% Dependency operating systems compatible with a node's own OS. This is O(N * OS^2)
+dep_os_compatible(PackageNode, DependencyOS)
+  :- attr("node_os", PackageNode, PackageNodeOS),
+     os_compatible(PackageNodeOS, DependencyOS).
+
+% can't have dependencies on incompatible OS's.  This is O(E * OS)
+error(100, "{0} cannot use dependency {1} built for 'os={2}' (incompatible operating system)", Package, Dependency, DependencyOS)
   :- depends_on(node(X, Package), node(Y, Dependency)),
-     attr("node_os", node(X, Package), PackageNodeOS),
      attr("node_os", node(Y, Dependency), DependencyOS),
-     not os_compatible(PackageNodeOS, DependencyOS),
+     not dep_os_compatible(node(X, Package), DependencyOS),
      build(node(X, Package)).
 
 % We can select only operating systems compatible with the ones
