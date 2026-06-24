@@ -132,11 +132,11 @@ unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, T
 % A separate unification set can be created if any of the build dependencies can be duplicated
 needs_build_unification_set(ParentNode) :- attr("depends_on", ParentNode, _, "build").
 
-% If any of the build dependencies can be duplicated, they can go into any ("build", ID) set
+% If any of the build dependencies can be duplicated, they can go into any ("build", ID) set.
+% build_set_id is derived only from needs_build_unification_set, so it implies it here.
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     build_set_id(ParentNode, ID),
-     needs_build_unification_set(ParentNode).
+     build_set_id(ParentNode, ID).
 
 % A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
 % (provider projected out, as for the build edge case below).
