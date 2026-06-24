@@ -1975,7 +1975,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # Text files containing the prefix text
     textfiles = [os.path.join(spec_prefix, f) for f in buildinfo["relocate_textfiles"]]
     binaries = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_binaries")]
-    static_libraries = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_static_libraries", [])]
+    static_libraries = [
+        os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_static_libraries", [])
+    ]
     links = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_links", [])]
 
     platform = spack.platforms.by_name(spec.platform)
