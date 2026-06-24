@@ -27,7 +27,7 @@ class Darwin(Platform):
             self.add_operating_system(str(mac_os_version), mac_os_version)
 
     def buildable_oses(self):
-        return set(self.default_os)
+        return {self.default_os}
 
     @classmethod
     def detect(cls):
