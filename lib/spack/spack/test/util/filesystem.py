@@ -1462,6 +1462,67 @@ def test_access_control_entry_add_right():
     assert ace.rights == GenericAccessRights.SDDL_GENERIC_READ
 
 
+def test_access_control_entry_add_right_chained():
+    """Three successive add_right calls exercise the str.__ror__ path on the third."""
+    from spack.llnl.util.win_acl import AccessControlEntry, AceType, GenericAccessRights
+
+    ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
+    ace.add_right(GenericAccessRights.SDDL_GENERIC_READ)
+    ace.add_right(GenericAccessRights.SDDL_GENERIC_WRITE)
+    ace.add_right(GenericAccessRights.SDDL_GENERIC_EXECUTE)
+    assert str(ace) == "(A;;GRGWGX;;;BA)"
+
+
+def test_access_control_entry_add_right_file_access_rights():
+    """FileAccessRights now inherits AccessRightsEnum so | chaining must work."""
+    from spack.llnl.util.win_acl import AccessControlEntry, AceType, FileAccessRights
+
+    ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
+    ace.add_right(FileAccessRights.SDDL_FILE_READ)
+    ace.add_right(FileAccessRights.SDDL_FILE_WRITE)
+    assert str(ace) == "(A;;FRFW;;;BA)"
+
+
+def test_access_control_entry_repr():
+    from spack.llnl.util.win_acl import AccessControlEntry, AceType
+
+    ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
+    assert repr(ace) == "AccessControlEntry('(A;;;;;BA)')"
+
+
+def test_ace_string_enum_or_with_non_enum_raises_type_error():
+    from spack.llnl.util.win_acl import GenericAccessRights
+
+    with pytest.raises(TypeError, match="unsupported operand"):
+        GenericAccessRights.SDDL_GENERIC_READ | "0x001F01FF"  # type: ignore[operator]
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_sacl_property(tmp_path):
+    from spack.llnl.util.win_acl import AccessControlEntry, SecurityDescriptor
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    sd = SecurityDescriptor.from_file(str(f))
+    assert isinstance(sd.sacl, list)
+    assert all(isinstance(e, AccessControlEntry) for e in sd.sacl)
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_remove_ace_does_not_match_none_sid_with_string():
+    """_compare_val must not equate ace.sid=None with the filter string 'None'."""
+    from spack.llnl.util.win_acl import SecurityDescriptor
+
+    # Empty last SDDL field → sid=None on the parsed ACE
+    sd = SecurityDescriptor("D:(A;;GR;;;)")
+    assert len(sd.dacl) == 1
+    assert sd.dacl[0].sid is None
+
+    removed = sd.remove_ace(sid="None")
+    assert removed == 0
+    assert len(sd.dacl) == 1
+
+
 @pytest.mark.only_windows("Windows security API required")
 def test_get_sid_for_current_user():
     from spack.llnl.util.win_acl import WindowsSecurityHelper
@@ -1510,7 +1571,7 @@ def test_security_descriptor_add_remove_ace():
     sid = WindowsSecurityHelper.get_sid_for_user()
     sd.add_ace(sid, GenericAccessRights.SDDL_GENERIC_READ)
     assert len(sd.dacl) == 1
-    assert sd.dacl[0]["Account"] == sid
+    assert sd.dacl[0].sid == sid
     removed = sd.remove_ace(sid=sid)
     assert removed == 1
     assert len(sd.dacl) == 0
@@ -1559,6 +1620,18 @@ def test_parse_sddl_roundtrip():
 
 
 @pytest.mark.only_windows("Windows security API required")
+def test_parse_sddl_roundtrip_with_dacl_control_flags():
+    """DACL control flags (e.g. AI = auto-inherited) must survive a parse/create roundtrip."""
+    from spack.llnl.util.win_acl import WindowsSecurityHelper
+
+    raw = "O:BAG:SYD:AI(A;ID;GR;;;BU)"
+    parsed = WindowsSecurityHelper.parse_sddl(raw)
+    assert parsed["DACL_CONTROL"] == "AI"
+    assert len(parsed["DACL"]) == 1
+    assert WindowsSecurityHelper.create_sddl(parsed) == raw
+
+
+@pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_from_file_sddl(tmp_path):
     from spack.llnl.util.win_acl import SecurityDescriptor, get_file_sddl
 
@@ -1569,6 +1642,25 @@ def test_security_descriptor_from_file_sddl(tmp_path):
     # Owner and DACL must be populated from a real file
     assert sd.owner is not None
     assert isinstance(sd.dacl, list)
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_get_file_owner_returns_string(tmp_path):
+    from spack.llnl.util.win_acl import get_file_owner
+
+    f = tmp_path / "owner_test.txt"
+    f.write_text("hello")
+    owner = get_file_owner(str(f))
+    assert isinstance(owner, str)
+    assert len(owner) > 0
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_get_file_owner_missing_path(tmp_path):
+    from spack.llnl.util.win_acl import get_file_owner
+
+    with pytest.raises(FileNotFoundError):
+        get_file_owner(str(tmp_path / "nonexistent.txt"))
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1593,3 +1685,216 @@ def test_copy_file_permissions_preserves_dacl(tmp_path):
         return dacl_part[paren:] if paren != -1 else dacl_part
 
     assert dacl_aces(src_sddl) == dacl_aces(dst_sddl)
+
+
+# ── SecurityDescriptor mutation tests ──────────────────────────────────────────
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_modify_ace():
+    from spack.llnl.util.win_acl import (
+        FileAccessRights,
+        GenericAccessRights,
+        SecurityDescriptor,
+        WindowsSecurityHelper,
+    )
+
+    sd = SecurityDescriptor()
+    sid = WindowsSecurityHelper.get_sid_for_user()
+    sd.add_ace(sid, GenericAccessRights.SDDL_GENERIC_READ)
+    assert sd.dacl[0].rights == GenericAccessRights.SDDL_GENERIC_READ
+
+    sd.modify_ace(0, rights=FileAccessRights.SDDL_FILE_ALL)
+    assert sd.dacl[0].rights == FileAccessRights.SDDL_FILE_ALL
+    assert sd.dacl[0].sid == sid  # unchanged field
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_remove_ace_all_matches():
+    from spack.llnl.util.win_acl import (
+        FileAccessRights,
+        GenericAccessRights,
+        SecurityDescriptor,
+        WindowsSecurityHelper,
+    )
+
+    sd = SecurityDescriptor()
+    sid = WindowsSecurityHelper.get_sid_for_user()
+    sd.add_ace(sid, GenericAccessRights.SDDL_GENERIC_READ)
+    sd.add_ace(sid, GenericAccessRights.SDDL_GENERIC_WRITE)
+    sd.add_ace("BA", FileAccessRights.SDDL_FILE_ALL)
+    assert len(sd.dacl) == 3
+
+    removed = sd.remove_ace(sid=sid, remove_all_matches=True)
+    assert removed == 2
+    assert len(sd.dacl) == 1
+    assert sd.dacl[0].sid == "BA"
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_add_ace_out_of_range_raises():
+    from spack.llnl.util.win_acl import GenericAccessRights, SecurityDescriptor
+
+    sd = SecurityDescriptor()
+    sd.add_ace("BA", GenericAccessRights.SDDL_GENERIC_READ)
+
+    with pytest.raises(IndexError):
+        sd.add_ace("SY", GenericAccessRights.SDDL_GENERIC_ALL, index=99)
+
+    with pytest.raises(IndexError):
+        sd.add_ace("SY", GenericAccessRights.SDDL_GENERIC_ALL, index=-1)
+
+    # index == len(dacl) is allowed (equivalent to append)
+    sd.add_ace("SY", GenericAccessRights.SDDL_GENERIC_ALL, index=len(sd.dacl))
+    assert len(sd.dacl) == 2
+
+
+# ── AccessControlEntry as the canonical ACE type ──────────────────────────────
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_dacl_entries_are_access_control_entries():
+    """DACL entries returned by SecurityDescriptor must be AccessControlEntry objects."""
+    from spack.llnl.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        GenericAccessRights,
+        SecurityDescriptor,
+    )
+
+    sd = SecurityDescriptor()
+    sd.add_ace("BA", GenericAccessRights.SDDL_GENERIC_READ)
+    ace = sd.dacl[0]
+    assert isinstance(ace, AccessControlEntry)
+    assert ace.sid == "BA"
+    assert ace.rights == GenericAccessRights.SDDL_GENERIC_READ
+    assert ace.ace_type == AceType.SDDL_ACCESS_ALLOWED
+    assert ace.flags == []
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_dacl_entries_from_parsed_sddl_are_access_control_entries(tmp_path):
+    """ACEs from a real file's SDDL string must also be AccessControlEntry objects."""
+    from spack.llnl.util.win_acl import AccessControlEntry, SecurityDescriptor
+
+    f = tmp_path / "ace_type_test.txt"
+    f.write_text("hello")
+    sd = SecurityDescriptor.from_file(str(f))
+    assert all(isinstance(ace, AccessControlEntry) for ace in sd.dacl)
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_from_file(tmp_path):
+    from spack.llnl.util.win_acl import SecurityDescriptor
+
+    f = tmp_path / "from_file.txt"
+    f.write_text("hello")
+    sd = SecurityDescriptor.from_file(str(f))
+    assert sd.owner is not None
+    assert isinstance(sd.dacl, list)
+    assert len(sd.dacl) > 0
+
+
+# ── set_file_sddl / SecurityDescriptor.apply ──────────────────────────────────
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_set_file_sddl_roundtrip(tmp_path):
+    from spack.llnl.util.win_acl import get_file_sddl, set_file_sddl
+
+    f = tmp_path / "sddl_rw.txt"
+    f.write_text("hello")
+
+    original = get_file_sddl(str(f))
+    set_file_sddl(str(f), original)
+    after = get_file_sddl(str(f))
+
+    # DACL ACEs must be identical after the write-back
+    def dacl_aces(sddl):
+        dacl_part = sddl.split("D:")[1] if "D:" in sddl else ""
+        paren = dacl_part.find("(")
+        return dacl_part[paren:] if paren != -1 else dacl_part
+
+    assert dacl_aces(after) == dacl_aces(original)
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_apply(tmp_path):
+    from spack.llnl.util.win_acl import SecurityDescriptor, get_file_sddl
+
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
+    src.write_text("source")
+    dst.write_text("dest")
+
+    sd = SecurityDescriptor(get_file_sddl(str(src)))
+    sd.apply(str(dst))
+
+    def dacl_aces(sddl):
+        dacl_part = sddl.split("D:")[1] if "D:" in sddl else ""
+        paren = dacl_part.find("(")
+        return dacl_part[paren:] if paren != -1 else dacl_part
+
+    assert dacl_aces(get_file_sddl(str(dst))) == dacl_aces(get_file_sddl(str(src)))
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_apply_empty_is_noop(tmp_path):
+    from spack.llnl.util.win_acl import SecurityDescriptor, get_file_sddl
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    before = get_file_sddl(str(f))
+
+    SecurityDescriptor().apply(str(f))  # must not raise or alter the file
+
+    assert get_file_sddl(str(f)) == before
+
+
+# ── Windows early-return guards in filesystem.py ──────────────────────────────
+
+
+@pytest.mark.only_windows("Windows early-return path")
+def test_set_install_permissions_noop_on_windows(tmp_path):
+    import spack.llnl.util.filesystem as fs
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    before = os.stat(f).st_mode
+    fs.set_install_permissions(str(f))
+    assert os.stat(f).st_mode == before
+
+
+@pytest.mark.only_windows("Windows early-return path")
+def test_copy_mode_noop_on_windows(tmp_path):
+    import spack.llnl.util.filesystem as fs
+
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
+    src.write_text("source")
+    dst.write_text("dest")
+    before = os.stat(dst).st_mode
+    fs.copy_mode(str(src), str(dst))
+    assert os.stat(dst).st_mode == before
+
+
+@pytest.mark.only_windows("Windows early-return path")
+def test_unset_executable_mode_noop_on_windows(tmp_path):
+    import spack.llnl.util.filesystem as fs
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    before = os.stat(f).st_mode
+    fs.unset_executable_mode(str(f))
+    assert os.stat(f).st_mode == before
+
+
+@pytest.mark.only_windows("Windows early-return path")
+def test_set_executable_noop_on_windows(tmp_path):
+    import spack.llnl.util.filesystem as fs
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    before = os.stat(f).st_mode
+    fs.set_executable(str(f))
+    assert os.stat(f).st_mode == before
