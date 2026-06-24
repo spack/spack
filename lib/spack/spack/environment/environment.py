@@ -61,8 +61,6 @@ from spack.spec_filter import SpecFilter
 from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import stable_partition
 from spack.util.link_tree import ConflictingSpecsError
-from spack.util.lang import stable_partition
-from spack.util.path import substitute_path_variables
 
 from .list import SpecList, SpecListError, SpecListParser
 
