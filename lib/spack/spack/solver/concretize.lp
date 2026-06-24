@@ -132,22 +132,20 @@ unification_set(SetID, ChildNode) :- attr("depends_on", ParentNode, ChildNode, T
 % A separate unification set can be created if any of the build dependencies can be duplicated
 needs_build_unification_set(ParentNode) :- attr("depends_on", ParentNode, _, "build").
 
-% If any of the build dependencies can be duplicated, they can go into any ("build", ID) set.
-% build_set_id is derived only from needs_build_unification_set, so it implies it here.
+% If any of the build dependencies can be duplicated, they can go into any ("build", ID) set
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
      build_set_id(ParentNode, ID).
 
-% A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
-% (provider projected out, as for the build edge case below).
+% A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider.
+% The provider is projected out into virtual_nonbuild_edge so the unification_set rule does not ground once per provider.
 virtual_nonbuild_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, Type), Type != "build".
 unification_set(SetID, VirtualNode) :-
   virtual_nonbuild_edge(ParentNode, VirtualNode),
   unification_set(SetID, ParentNode).
 
 % A virtual that is on a build edge, goes in the build set id of the parent of the provider.
-% The provider is projected out first: the head does not depend on it, so without
-% the projection the rule would re-fire once per candidate provider of the virtual.
+% The provider is projected out into virtual_build_edge so the unification_set rule does not ground once per provider.
 virtual_build_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, "build").
 unification_set(("build", ID), VirtualNode) :-
   virtual_build_edge(ParentNode, VirtualNode),
@@ -408,8 +406,6 @@ error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not version_constraint_satisfied(node(ID,Package), Constraint).
 
-% Same join as version_constraint_satisfied above; derive via a copy instead of
-% repeating the 4-way version/range join.
 attr("node_version_satisfies", node(ID, Package), Constraint)
   :- version_constraint_satisfied(node(ID, Package), Constraint).
 
@@ -450,10 +446,9 @@ condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
 condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
 condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
-% A virtual inherits its provider's condition set only if the virtual can
-% originate a condition (has trigger ids). Otherwise condition_set keyed by the
-% virtual is never consumed (it is only read where the first argument is a
-% condition requestor, which requires a trigger id), so we avoid the fan-out.
+% A virtual inherits its provider's condition set, but only when the virtual can originate a
+% condition. condition_set keyed by a node is only consumed when that node has a trigger id, so
+% the entry is useless for a virtual without one.
 virtual_has_trigger(Virtual) :- pkg_fact(Virtual, trigger_id(_)).
 condition_set(node(VID, Virtual), X) :-
   provider(PackageNode, node(VID, Virtual)),
@@ -1346,8 +1341,8 @@ requirement_penalty(node(ID, Package), Group, W) :-
   requirement_weight(node(ID, Package), Group, W),
   not language(Package).
 
-% Project the provider out first: requirement_penalty's head does not depend on
-% it, so factoring avoids multiplying the requirement_weight join by providers.
+% A language virtual on an edge of PackageNode. The provider is projected out so the
+% requirement_penalty rule below does not ground once per provider.
 language_on_edge(PackageNode, node(ID, Language)) :-
   provider(ProviderNode, node(ID, Language)),
   attr("virtual_on_edge", PackageNode, ProviderNode, Language),
