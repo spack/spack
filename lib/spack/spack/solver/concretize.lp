@@ -1876,12 +1876,6 @@ node_os_weight(PackageNode, Weight)
     attr("node_os", PackageNode, OS),
     os(OS, Weight).
 
-% every OS is compatible with itself. We can use `os_compatible` to declare
-os_compatible(OS, OS) :- os(OS).
-
-% Transitive compatibility among operating systems
-os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
-
 % If an OS is set explicitly respect the value
 attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("node", PackageNode).
 
