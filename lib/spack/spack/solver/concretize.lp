@@ -404,11 +404,10 @@ error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      not version_constraint_satisfied(node(ID,Package), Constraint).
 
+% Same join as version_constraint_satisfied above; derive via a copy instead of
+% repeating the 4-way version/range join.
 attr("node_version_satisfies", node(ID, Package), Constraint)
-  :- attr("version", node(ID, Package), Version),
-     pkg_fact(Package, version_order(Version, VersionIdx)),
-     pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
-     VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
+  :- version_constraint_satisfied(node(ID, Package), Constraint).
 
 
 % if a version needs a commit or has one it can use the commit variant
