@@ -1356,7 +1356,7 @@ def temp_cwd(ignore_cleanup_errors=False):
         kwargs = {"ignore_errors": ignore_cleanup_errors}
         if sys.platform == "win32":
             kwargs["ignore_errors"] = False
-            kwargs["onerror"] = readonly_file_handler(ignore_errors=ignore_cleanup_errors)
+            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
         shutil.rmtree(tmp_dir, **kwargs)
 
 
