@@ -446,7 +446,15 @@ condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
 condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
 condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
-condition_set(VirtualNode, X) :- provider(PackageNode, VirtualNode), condition_set(PackageNode, X).
+% A virtual inherits its provider's condition set only if the virtual can
+% originate a condition (has trigger ids). Otherwise condition_set keyed by the
+% virtual is never consumed (it is only read where the first argument is a
+% condition requestor, which requires a trigger id), so we avoid the fan-out.
+virtual_has_trigger(Virtual) :- pkg_fact(Virtual, trigger_id(_)).
+condition_set(node(VID, Virtual), X) :-
+  provider(PackageNode, node(VID, Virtual)),
+  condition_set(PackageNode, X),
+  virtual_has_trigger(Virtual).
 
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1).
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _).
