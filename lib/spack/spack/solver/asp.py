@@ -2517,7 +2517,7 @@ class SpackSolverSetup:
         platform = spack.platforms.host()
 
         # create set of OS's to consider
-        buildable = set(platform.operating_sys.keys())
+        buildable = platform.buildable_oses()
 
         # Consider any OS's mentioned on the command line. We need this to
         # cross-concretize in CI, and for some tests.
