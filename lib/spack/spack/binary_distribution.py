@@ -822,6 +822,7 @@ class FileTypes:
     BINARY = 0
     TEXT = 1
     UNKNOWN = 2
+    STATIC_LIBRARY = 3
 
 
 NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
@@ -835,6 +836,8 @@ def file_type(f: IO[bytes]) -> int:
             return FileTypes.UNKNOWN
         elif relocate.is_elf_magic(magic) or relocate.is_macho_magic(magic):
             return FileTypes.BINARY
+        elif relocate.is_static_library_magic(magic):
+            return FileTypes.STATIC_LIBRARY
 
         f.seek(0)
 
@@ -887,6 +890,7 @@ def tarfile_of_spec_prefix(
     relocate_binaries = []
     relocate_links = []
     relocate_textfiles = []
+    relocate_static_libraries = []
 
     # use callbacks to add files and symlinks, so we can register which files need relocation upon
     # extraction.
@@ -902,6 +906,8 @@ def tarfile_of_spec_prefix(
                 relocate_binaries.append(os.path.relpath(path, prefix))
             elif f_type == FileTypes.TEXT and file_matches(f, binary_regex):
                 relocate_textfiles.append(os.path.relpath(path, prefix))
+            elif f_type == FileTypes.STATIC_LIBRARY and file_matches(f, binary_regex):
+                relocate_static_libraries.append(os.path.relpath(path, prefix))
             tar.addfile(info, f)
 
     def add_symlink(tar: tarfile.TarFile, info: tarfile.TarInfo, path: str):
@@ -924,6 +930,7 @@ def tarfile_of_spec_prefix(
         "relocate_binaries": relocate_binaries,
         "relocate_links": relocate_links,
         "relocate_textfiles": relocate_textfiles,
+        "relocate_static_libraries": relocate_static_libraries,
     }
 
 
@@ -1968,6 +1975,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # Text files containing the prefix text
     textfiles = [os.path.join(spec_prefix, f) for f in buildinfo["relocate_textfiles"]]
     binaries = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_binaries")]
+    static_libraries = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_static_libraries", [])]
     links = [os.path.join(spec_prefix, f) for f in buildinfo.get("relocate_links", [])]
 
     platform = spack.platforms.by_name(spec.platform)
@@ -1978,6 +1986,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
+    relocate.relocate_text_bin(static_libraries, prefix_to_prefix)
     changed_files = relocate.relocate_text_bin(binaries, prefix_to_prefix)
 
     # Add ad-hoc signatures to patched macho files when on macOS.

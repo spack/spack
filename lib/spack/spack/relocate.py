@@ -295,6 +295,10 @@ def is_macho_magic(magic: bytes) -> bool:
     )
 
 
+def is_static_library_magic(magic: bytes) -> bool:
+    return magic.startswith(b"!<arch>\n")
+
+
 def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
 
