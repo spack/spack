@@ -333,7 +333,7 @@ Using the ``conflict`` key under a spec pattern, you can prevent two incompatibl
            - "intel/14.0.1"
 
 This prevents loading any other version of the same package (via ``{name}``) or ``intel/14.0.1``.
-For Environment Modules versions prior to 4.2, the conflict must be expressed on both module files conflicting with each other.
+For Lmod, and for Environment Modules versions prior to 4.2, the conflict must be expressed on both module files conflicting with each other.
 
 .. _customize-env-modifications:
 
