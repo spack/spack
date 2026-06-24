@@ -1346,11 +1346,16 @@ requirement_penalty(node(ID, Package), Group, W) :-
   requirement_weight(node(ID, Package), Group, W),
   not language(Package).
 
+% Project the provider out first: requirement_penalty's head does not depend on
+% it, so factoring avoids multiplying the requirement_weight join by providers.
+language_on_edge(PackageNode, node(ID, Language)) :-
+  provider(ProviderNode, node(ID, Language)),
+  attr("virtual_on_edge", PackageNode, ProviderNode, Language),
+  language(Language).
+
 requirement_penalty(PackageNode, Language, Group, W) :-
   requirement_weight(node(ID, Language), Group, W),
-  language(Language),
-  provider(ProviderNode, node(ID, Language)),
-  attr("virtual_on_edge", PackageNode, ProviderNode, Language).
+  language_on_edge(PackageNode, node(ID, Language)).
 
 requirement_penalty(PackageNode, Language, Group, W) :-
   requirement_weight(node(CompilerHash, Language), Group, W),
