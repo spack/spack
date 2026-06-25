@@ -43,6 +43,7 @@ import spack.caches
 import spack.compilers.config
 import spack.compilers.flags
 import spack.concretize
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
@@ -67,7 +68,6 @@ from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.context import SpackContext
-from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list

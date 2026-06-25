@@ -11,7 +11,7 @@ import spack.config
 import spack.repo
 import spack.store
 import spack.util.file_cache
-from spack.llnl.util.lang import ensure_unwrapped
+from spack.util.lang import ensure_unwrapped
 
 
 class SpackContext(NamedTuple):
