@@ -29,6 +29,7 @@ from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.traverse import traverse_nodes
+from spack.util.filesystem import islink, symlink
 
 description = "manage environments"
 section = "environments"
