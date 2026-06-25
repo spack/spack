@@ -535,10 +535,10 @@ def test_static_lib_relocate_if_needed(
     )
 
     relocated_prefix_path = tmp_path / "relocated-install"
-    spec.set_prefix(f"{relocated_prefix_path}")
+    spec.set_prefix(str(relocated_prefix_path))
 
     relocated_prefix_path.mkdir(parents=True)
-    spack.binary_distribution.extract_buildcache_tarball(tgz_path, relocated_prefix_path)
+    spack.binary_distribution.extract_buildcache_tarball(str(tgz_path), str(relocated_prefix_path))
     spack.binary_distribution.relocate_package(spec)
 
     relocated_static_lib_path = spec.prefix.lib.join("static_lib_with_prefix.a")
