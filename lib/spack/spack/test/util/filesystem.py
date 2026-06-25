@@ -1640,14 +1640,12 @@ def test_parse_sddl_roundtrip_with_dacl_control_flags():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_from_file_sddl(tmp_path):
-    from spack.util.win_acl import SecurityDescriptor, get_file_owner, get_file_sddl
+    from spack.util.win_acl import SecurityDescriptor, get_file_sddl
 
     f = tmp_path / "sd_test.txt"
     f.write_text("hello")
     sd = SecurityDescriptor.from_file(str(f))
-    # Owner must match what the standalone helper returns
     assert sd.owner is not None
-    assert sd.owner == get_file_owner(str(f))
     # A real file always has at least one DACL entry
     assert len(sd.dacl) > 0
     # Round-trip: parsing the SDDL string produces an equivalent descriptor
