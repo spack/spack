@@ -1319,7 +1319,11 @@ def make_uploader(
         )
     else:
         return URLUploader(
-            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key, upload_key=upload_key
+            mirror=mirror,
+            force=force,
+            update_index=update_index,
+            signing_key=signing_key,
+            upload_key=upload_key,
         )
 
 
