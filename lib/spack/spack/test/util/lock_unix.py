@@ -43,8 +43,9 @@ from contextlib import contextmanager
 from multiprocessing import Barrier, Process, Queue
 
 import pytest
-from spack.util.filesystem import getuid, touch, working_dir
+
 import spack.util.lock as lk
+from spack.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":
     import fcntl
