@@ -1092,10 +1092,12 @@ class URLUploader(Uploader):
         force: bool,
         update_index: bool,
         signing_key: Optional[str],
+        upload_key: bool = True,
     ) -> None:
         super().__init__(mirror, force, update_index)
         self.url = mirror.push_url
         self.signing_key = signing_key
+        self.upload_key = upload_key
 
     def push(
         self, specs: List[spack.spec.Spec]
@@ -1106,6 +1108,7 @@ class URLUploader(Uploader):
             force=self.force,
             update_index=self.update_index,
             signing_key=self.signing_key,
+            upload_key=self.upload_key,
             tmpdir=self.tmpdir,
             executor=self.executor,
         )
@@ -1116,6 +1119,7 @@ def make_uploader(
     force: bool = False,
     update_index: bool = False,
     signing_key: Optional[str] = None,
+    upload_key: bool = True,
     base_image: Optional[str] = None,
 ) -> Uploader:
     """Builder for the appropriate uploader based on the mirror type"""
@@ -1125,7 +1129,7 @@ def make_uploader(
         )
     else:
         return URLUploader(
-            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key
+            mirror=mirror, force=force, update_index=update_index, signing_key=signing_key, upload_key=upload_key
         )
 
 
@@ -1174,6 +1178,7 @@ def _url_push(
     specs: List[spack.spec.Spec],
     out_url: str,
     signing_key: Optional[str],
+    upload_key: bool,
     force: bool,
     update_index: bool,
     tmpdir: str,
@@ -1249,7 +1254,7 @@ def _url_push(
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_class.maybe_push_layout_json(out_url)
 
-    if signing_key:
+    if upload_key and signing_key:
         keys_tmpdir = os.path.join(tmpdir, "keys")
         os.mkdir(keys_tmpdir)
         _url_push_keys(out_url, keys=[signing_key], update_index=update_index, tmpdir=keys_tmpdir)
