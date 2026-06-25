@@ -513,6 +513,43 @@ def test_text_relocate_if_needed(
     assert join_path("bin", "secretexe") not in manifest["relocate_textfiles"]
 
 
+def test_static_lib_relocate_if_needed(
+    install_mockery, temporary_store, mock_fetch, tmp_path: pathlib.Path
+):
+    install_cmd("needs-relocation")
+    spec = temporary_store.db.query_one("needs-relocation")
+    orig_prefix = spec.prefix
+    tgz_path = tmp_path / "relocatable.tar.gz"
+    spack.binary_distribution.create_tarball(spec, str(tgz_path))
+
+    # extract the .spack/binary_distribution file
+    with tarfile.open(tgz_path) as tar:
+        entry_name = next(x for x in tar.getnames() if x.endswith(".spack/binary_distribution"))
+        bd_file = tar.extractfile(entry_name)
+        manifest = syaml.load(bd_file)
+
+    assert join_path("lib", "static_lib_with_prefix.a") in manifest["relocate_static_libraries"]
+    assert (
+        join_path("lib", "static_lib_without_prefix.a")
+        not in manifest["relocate_static_libraries"]
+    )
+
+    relocated_prefix_path = tmp_path / "relocated-install"
+    spec.set_prefix(f"{relocated_prefix_path}")
+
+    relocated_prefix_path.mkdir(parents=True)
+    spack.binary_distribution.extract_buildcache_tarball(tgz_path, relocated_prefix_path)
+    spack.binary_distribution.relocate_package(spec)
+
+    relocated_static_lib_path = spec.prefix.lib.join("static_lib_with_prefix.a")
+    with open(str(relocated_static_lib_path), "rb") as f:
+        binary_content = f.read()
+
+    assert binary_content.startswith(b"!<arch>\n")
+    assert spec.prefix.encode("utf-8") in binary_content
+    assert orig_prefix.encode("utf-8") not in binary_content
+
+
 def test_compression_writer(tmp_path: pathlib.Path):
     text = "This is some text. We might or might not like to compress it as we write."
     checksum_algo = "sha256"
@@ -831,6 +868,7 @@ def test_tarball_doesnt_include_buildinfo_twice(tmp_path: Path):
             "relocate_binaries": [],
             "relocate_textfiles": [],
             "relocate_links": [],
+            "relocate_static_libraries": [],
         }
         assert tar.getnames() == [
             *_all_parents(expected_prefix),
