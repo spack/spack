@@ -35,6 +35,8 @@ __all__ = [
     "LockUpgradeError",
     "PosixBackend",
     "ReadTransaction",
+    "TryReadTransaction",
+    "TryWriteTransaction",
     "WriteTransaction",
 ]
 
