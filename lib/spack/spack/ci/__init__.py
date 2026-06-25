@@ -618,7 +618,7 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
         sign_binaries: If True, spack will attempt to sign binary package before pushing.
     """
     upload_key = os.environ.get("SPACK_CI_BUILDCACHE_UPLOAD_KEY", True)
-    upload_key= str(upload_key).lower() in ("false", "no", "n", "0")
+    upload_key = str(upload_key).lower() not in ("false", "no", "n", "0")
 
     tty.debug(f"Pushing to build cache ({'signed' if sign_binaries else 'unsigned'})")
     signing_key = spack.binary_distribution.select_signing_key() if sign_binaries else None
