@@ -29,7 +29,6 @@ import spack.spec
 import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
-import spack.util.lock as ulk
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
 
@@ -331,7 +330,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path,
     installer = create_installer(["trivial-install-test-package"])
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(ulk.Lock, "acquire_read", _raise)
+    monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
@@ -358,7 +357,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
         # Test "upgrade" of a read lock without read count to a write
         lock_type = "write"
         err = "Cannot upgrade lock"
-        with pytest.raises(ulk.LockUpgradeError, match=err):
+        with pytest.raises(lk.LockUpgradeError, match=err):
             installer._ensure_locked(lock_type, spec.package)
 
         out = str(capfd.readouterr()[1])
