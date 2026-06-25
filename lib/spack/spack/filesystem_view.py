@@ -100,7 +100,7 @@ def view_copy(
             tty.debug(f"Can't change the permissions for {dst}")
     else:
         try:
-            from spack.llnl.util.win_acl import copy_file_permissions
+            from spack.util.win_acl import copy_file_permissions
 
             copy_file_permissions(src, dst)
         except OSError:
