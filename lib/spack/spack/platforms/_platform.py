@@ -80,6 +80,9 @@ class Platform:
 
         return self.operating_sys.get(name, None)
 
+    def buildable_oses(self):
+        return set(self.operating_sys.keys())
+
     def setup_platform_environment(self, pkg, env):
         """Platform-specific build environment modifications.
 
