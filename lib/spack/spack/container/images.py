@@ -8,7 +8,6 @@ import os
 import shlex
 import sys
 
-import spack.llnl.util.tty as tty
 import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.tty as tty

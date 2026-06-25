@@ -73,10 +73,7 @@ import spack.util.hash
 import spack.util.remote_file_cache as rfc_util
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util import tty
-from spack.util import filesystem, lang
-from spack.llnl.util import filesystem, lang
-from spack.util import tty
+from spack.util import filesystem, lang, tty
 from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
@@ -2410,7 +2407,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     # Prepend the default, if provided, or current working directory.
     base = default_wd or os.getcwd()
-    import spack.llnl.util.tty as tty
+    import spack.util.tty as tty
 
     tty.debug(f"Using working directory {base} as base for abspath")
     return os.path.normpath(os.path.join(base, path))
