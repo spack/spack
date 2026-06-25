@@ -313,6 +313,8 @@ TOKEN_QUERY = 0x0008
 
 _advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # type: ignore[attr-defined]
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+_WinError = ctypes.WinError  # type: ignore[attr-defined]
+_get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
 
 
 def _bind(dll: Any, name: str, argtypes: list, restype: Any) -> Any:
@@ -572,14 +574,14 @@ def _get_file_sddl_raw(path: str) -> str:
         path, SE_FILE_OBJECT, security_info, None, None, None, None, ctypes.byref(pp_sd)
     )
     if res != 0:
-        raise ctypes.WinError(res)
+        raise _WinError(res)
 
     try:
         string_ptr = wintypes.LPWSTR()
         if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
             pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
         ):
-            raise ctypes.WinError()
+            raise _WinError()
         try:
             return string_ptr.value or ""
         finally:
@@ -609,7 +611,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
     if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
         sddl, SDDL_REVISION_1, ctypes.byref(pp_sd), None
     ):
-        raise ctypes.WinError()
+        raise _WinError()
 
     try:
         owner = wintypes.LPVOID()
@@ -617,14 +619,14 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         if not _GetSecurityDescriptorOwner(
             pp_sd, ctypes.byref(owner), ctypes.byref(owner_defaulted)
         ):
-            raise ctypes.WinError()
+            raise _WinError()
 
         group = wintypes.LPVOID()
         group_defaulted = wintypes.BOOL()
         if not _GetSecurityDescriptorGroup(
             pp_sd, ctypes.byref(group), ctypes.byref(group_defaulted)
         ):
-            raise ctypes.WinError()
+            raise _WinError()
 
         dacl_present = wintypes.BOOL()
         dacl = wintypes.LPVOID()
@@ -632,7 +634,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         if not _GetSecurityDescriptorDacl(
             pp_sd, ctypes.byref(dacl_present), ctypes.byref(dacl), ctypes.byref(dacl_defaulted)
         ):
-            raise ctypes.WinError()
+            raise _WinError()
 
         # c_void_p.value is None for NULL; use that to distinguish a real pointer from an unset
         # one.  A NULL DACL (dacl_present=True but pointer=NULL) grants everyone full access
@@ -656,7 +658,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
             path, SE_FILE_OBJECT, security_info, owner_ptr, group_ptr, dacl_ptr, None
         )
         if res != 0:
-            raise ctypes.WinError(res)
+            raise _WinError(res)
     finally:
         _LocalFree(pp_sd)
 
@@ -715,7 +717,7 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            OSError: on any Windows API failure.
+            OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         return cls(_get_file_sddl_raw(path))
 
@@ -853,7 +855,7 @@ class SecurityDescriptor:
         """Write this security descriptor to *path*.
 
         Raises:
-            OSError: on any Windows API failure.
+            OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         sddl = self.to_sddl()
         if not sddl:
@@ -874,7 +876,7 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            OSError: on any Windows API failure.
+            OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         if not os.path.exists(path):
             raise FileNotFoundError(f"No such file or directory: '{path}'")
@@ -896,7 +898,7 @@ class SecurityDescriptor:
             ctypes.byref(pp_sd),
         )
         if res != 0:
-            raise ctypes.WinError(res, f"Failed to get security info for {path}")
+            raise _WinError(res, f"Failed to get security info for {path}")
 
         try:
             dw_name = wintypes.DWORD(0)
@@ -913,9 +915,9 @@ class SecurityDescriptor:
                 ctypes.byref(dw_domain),
                 ctypes.byref(e_use),
             ):
-                err = ctypes.get_last_error()
+                err = _get_last_error()
                 if err != 122:  # ERROR_INSUFFICIENT_BUFFER
-                    raise ctypes.WinError(err, f"Cannot determine owner buffer size for: {path}")
+                    raise _WinError(err, f"Cannot determine owner buffer size for: {path}")
 
             acct_name_buf = ctypes.create_unicode_buffer(dw_name.value)
             domain_name_buf = ctypes.create_unicode_buffer(dw_domain.value)
@@ -929,9 +931,7 @@ class SecurityDescriptor:
                 ctypes.byref(dw_domain),
                 ctypes.byref(e_use),
             ):
-                raise ctypes.WinError(
-                    ctypes.get_last_error(), f"Could not determine owner for: {path}"
-                )
+                raise _WinError(_get_last_error(), f"Could not determine owner for: {path}")
         finally:
             _LocalFree(pp_sd)
 
@@ -942,11 +942,11 @@ class SecurityDescriptor:
         """Copy the DACL from *src* to *dst*.
 
         This is the Windows equivalent of ``os.chown`` for preserving access control when
-        copying files into a view.  Copies the binary DACL pointer directly without
+        copying installed files.  Copies the binary DACL pointer directly without
         parsing, making it more efficient than :meth:`apply` for pure-copy operations.
 
         Raises:
-            OSError: on any Windows API failure.
+            OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         SE_FILE_OBJECT = 1
         DACL_SECURITY_INFORMATION = 0x00000004
@@ -965,14 +965,14 @@ class SecurityDescriptor:
             ctypes.byref(pp_sd),
         )
         if res != 0:
-            raise ctypes.WinError(res)
+            raise _WinError(res)
 
         try:
             res = _SetNamedSecurityInfoW(
                 dst, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, None, None, p_dacl, None
             )
             if res != 0:
-                raise ctypes.WinError(res)
+                raise _WinError(res)
         finally:
             _LocalFree(pp_sd)
 
@@ -987,7 +987,7 @@ class SecurityDescriptor:
             token_handle = wintypes.HANDLE()
 
             if not _OpenProcessToken(process_handle, TOKEN_QUERY, ctypes.byref(token_handle)):
-                raise ctypes.WinError()
+                raise _WinError()
 
             try:
                 return_length = wintypes.DWORD()
@@ -999,7 +999,7 @@ class SecurityDescriptor:
                 if not _GetTokenInformation(
                     token_handle, 1, buffer, return_length, ctypes.byref(return_length)
                 ):
-                    raise ctypes.WinError()
+                    raise _WinError()
 
                 token_user = ctypes.cast(buffer, ctypes.POINTER(TOKEN_USER)).contents
                 sid_ptr = token_user.User.Sid
@@ -1022,7 +1022,7 @@ class SecurityDescriptor:
             )
 
             if sid_size.value == 0:
-                raise ctypes.WinError()
+                raise _WinError()
 
             sid_buffer = ctypes.create_string_buffer(sid_size.value)
             domain_buffer = ctypes.create_unicode_buffer(domain_size.value)
@@ -1036,13 +1036,13 @@ class SecurityDescriptor:
                 ctypes.byref(domain_size),
                 ctypes.byref(pe_use),
             ):
-                raise ctypes.WinError()
+                raise _WinError()
 
             sid_ptr = sid_buffer
 
         string_sid_ptr = wintypes.LPWSTR()
         if not _ConvertSidToStringSidW(sid_ptr, ctypes.byref(string_sid_ptr)):
-            raise ctypes.WinError()
+            raise _WinError()
 
         try:
             return string_sid_ptr.value or ""

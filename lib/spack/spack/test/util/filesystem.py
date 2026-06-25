@@ -1468,7 +1468,7 @@ def test_access_control_entry_add_right_chained():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_access_control_entry_add_right_file_access_rights():
-    """FileAccessRights now inherits AccessRightsEnum so | chaining must work."""
+    """add_right accumulates file-specific rights into a valid SDDL rights string."""
     from spack.util.win_acl import AccessControlEntry, AceType, FileAccessRights
 
     ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
@@ -1497,15 +1497,16 @@ def test_security_descriptor_sacl_property(tmp_path):
 
 
 @pytest.mark.only_windows("Windows security API required")
-def test_remove_ace_does_not_match_none_sid_with_string():
-    """_compare_val must not equate ace.sid=None with the filter string 'None'."""
+def test_remove_ace_string_filter_does_not_match_absent_sid():
+    """Filtering by a SID string must not remove ACEs whose SID field is absent."""
     from spack.util.win_acl import SecurityDescriptor
 
-    # Empty last SDDL field → sid=None on the parsed ACE
+    # An ACE with an empty SID field parses to sid=None
     sd = SecurityDescriptor("D:(A;;GR;;;)")
     assert len(sd.dacl) == 1
     assert sd.dacl[0].sid is None
 
+    # The string "None" must not match the Python None stored on the ACE
     removed = sd.remove_ace(sid="None")
     assert removed == 0
     assert len(sd.dacl) == 1
@@ -1639,15 +1640,20 @@ def test_parse_sddl_roundtrip_with_dacl_control_flags():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_from_file_sddl(tmp_path):
-    from spack.util.win_acl import SecurityDescriptor, get_file_sddl
+    from spack.util.win_acl import SecurityDescriptor, get_file_owner, get_file_sddl
 
     f = tmp_path / "sd_test.txt"
     f.write_text("hello")
-    sddl = get_file_sddl(str(f))
-    sd = SecurityDescriptor(sddl)
-    # Owner and DACL must be populated from a real file
+    sd = SecurityDescriptor.from_file(str(f))
+    # Owner must match what the standalone helper returns
     assert sd.owner is not None
-    assert isinstance(sd.dacl, list)
+    assert sd.owner == get_file_owner(str(f))
+    # A real file always has at least one DACL entry
+    assert len(sd.dacl) > 0
+    # Round-trip: parsing the SDDL string produces an equivalent descriptor
+    sd2 = SecurityDescriptor(get_file_sddl(str(f)))
+    assert sd2.owner == sd.owner
+    assert len(sd2.dacl) == len(sd.dacl)
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1881,6 +1887,27 @@ def test_security_descriptor_apply_empty_is_noop(tmp_path):
     before = get_file_sddl(str(f))
 
     SecurityDescriptor().apply(str(f))  # must not raise or alter the file
+
+    assert get_file_sddl(str(f)) == before
+
+
+@pytest.mark.only_windows("Windows security API required")
+def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
+    """A NULL DACL (present flag but no pointer) must never be written to a file.
+
+    Applying a NULL DACL would silently grant everyone full access; the implementation
+    must detect this and skip the DACL component rather than writing it.
+    """
+    from spack.util.win_acl import SecurityDescriptor, get_file_sddl
+
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    before = get_file_sddl(str(f))
+
+    # "D:" with no ACEs and no control flags parses to a present-but-empty DACL;
+    # the implementation guards against writing a NULL DACL to the file.
+    sd = SecurityDescriptor("D:")
+    sd.apply(str(f))
 
     assert get_file_sddl(str(f)) == before
 
