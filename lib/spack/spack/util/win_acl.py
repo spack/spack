@@ -26,7 +26,7 @@ import copy
 import ctypes
 import os
 import re
-from ctypes import wintypes
+from ctypes import wintypes  # type: ignore[attr-defined]
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
@@ -311,8 +311,8 @@ TOKEN_QUERY = 0x0008
 
 # ── DLL handles, _bind helper, and pointer-type aliases ───────────────────────
 
-_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # type: ignore[attr-defined]
+_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
 
 
 def _bind(dll: Any, name: str, argtypes: list, restype: Any) -> Any:
