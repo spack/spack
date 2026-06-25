@@ -26,6 +26,7 @@ import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
 import spack.util.string
+import spack.util.tty as tty
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
 from spack.util.crypto import bit_length, prefix_bits
@@ -42,7 +43,6 @@ from spack.util.filesystem import (
     remove_linked_tree,
     symlink,
 )
-import spack.util.tty as tty
 from spack.util.tty.colify import colify
 from spack.util.tty.color import colorize
 from spack.version import StandardVersion, VersionList

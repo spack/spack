@@ -20,10 +20,10 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
-import spack.util.tty as tty
 import spack.tengine
 import spack.util.filesystem as fs
 import spack.util.string as string
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.traverse import traverse_nodes
 from spack.util.environment import EnvironmentModifications

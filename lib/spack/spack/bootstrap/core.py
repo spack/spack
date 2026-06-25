@@ -44,8 +44,8 @@ import spack.util.executable
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
-from spack.util.lang import GroupedExceptionHandler
 from spack.util import tty
+from spack.util.lang import GroupedExceptionHandler
 
 from ._common import (
     QueryInfo,

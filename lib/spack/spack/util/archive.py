@@ -11,8 +11,8 @@ from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, Generator, List, Tuple
 
-from spack.util.filesystem import readlink
 from spack.util import tty
+from spack.util.filesystem import readlink
 from spack.util.git import is_git_commit_sha
 
 

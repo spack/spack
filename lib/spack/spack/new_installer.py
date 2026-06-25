@@ -24,6 +24,7 @@ import glob
 import io
 import json
 import os
+import re
 import selectors
 import shlex
 import shutil
@@ -965,16 +966,6 @@ def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
         return read_fd, write_fd
     except OSError:
         return None
-
-
-class FdInfo:
-    """Information about a file descriptor mapping."""
-
-    __slots__ = ("pid", "name")
-
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
-        self.name = name
 
 
 class BuildInfo:

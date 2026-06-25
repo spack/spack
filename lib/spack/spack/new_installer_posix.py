@@ -25,8 +25,8 @@ from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
-import spack.util.tty
 import spack.spec
+import spack.util.tty
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     TEE_STOP,

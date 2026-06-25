@@ -10,6 +10,7 @@ from typing import Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
+
 import spack.store
 import spack.util.elf as elf
 import spack.util.executable as executable

@@ -83,6 +83,7 @@ def configuration(module_set_name):
     config_path = f"modules:{module_set_name}"
     return spack.config.get(config_path, {})
 
+
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     "name",

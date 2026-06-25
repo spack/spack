@@ -5,8 +5,6 @@ import argparse
 import warnings
 
 import spack.cmd.spec
-import spack.util.tty as tty
-import spack.util.tty.color as color
 
 description = "concretize a specs using an ASP solver"
 section = "developer"

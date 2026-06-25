@@ -31,11 +31,11 @@ from spack import traverse
 from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
-from spack.util import tty
-from spack.util.tty import colify
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util import tty
 from spack.util.lang import elide_list, stable_partition
 from spack.util.string import plural
+from spack.util.tty import colify
 
 from ..buildcache_migrate import migrate
 from ..buildcache_prune import prune_buildcache

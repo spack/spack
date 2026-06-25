@@ -49,8 +49,8 @@ import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.url
 import spack.util.tty as tty
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version

@@ -15,6 +15,7 @@ raising an OSError if we are unable to find one.
 import os
 import shlex
 from typing import Callable, List
+
 import spack.util.executable
 import spack.util.tty as tty
 

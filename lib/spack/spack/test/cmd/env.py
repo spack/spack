@@ -35,6 +35,7 @@ import spack.util.filesystem as fs
 import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+import spack.util.tty as tty
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
 from spack.installer import PackageInstaller
@@ -46,7 +47,6 @@ from spack.traverse import traverse_nodes
 from spack.util.executable import Executable
 from spack.util.filesystem import readlink
 from spack.util.lang import dedupe
-import spack.util.tty as tty
 from spack.version import Version
 
 # TODO-27021

@@ -16,10 +16,10 @@ try:
 except ImportError:
     pytest = None  # type: ignore
 
-import spack.util.tty as tty
-import spack.util.tty.color as color
 import spack.paths
 import spack.util.filesystem
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.util.tty.colify import colify
 
 description = "run spack's unit tests (wrapper around pytest)"
