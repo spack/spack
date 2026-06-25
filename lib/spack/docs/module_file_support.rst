@@ -596,7 +596,7 @@ To have Spack's shell support available at every login, add the appropriate line
 This is useful in scripts where calling ``spack load`` directly would be too slow.
 
 The ``--dependencies`` flag includes load statements for all dependencies.
-This is usually not needed since Spack packages embed RPATHs, but some packages — in particular Python extensions — do not.
+This is usually not needed since Spack packages embed RPATHs, but some packages, in particular Python extensions, do not.
 
 .. code-block:: console
 
