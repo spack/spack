@@ -589,6 +589,33 @@ def set_install_permissions(path):
     # Spack-maintained prefix, the permissions should not be modified.
     if islink(path):
         return
+    if sys.platform == "win32":
+        from spack.util.win_acl import (
+            AccessControlEntry,
+            AceType,
+            FileAccessRights,
+            SecurityDescriptor,
+        )
+
+        sd = SecurityDescriptor.from_file(path)
+        owner_sid = sd.owner
+        sd.clear_dacl()
+        owner_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid=owner_sid)
+        everyone_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="WD")
+        if os.path.isdir(path):
+            # 755: owner full access, everyone read + traverse
+            owner_ace.add_right(FileAccessRights.SDDL_FILE_ALL)
+            everyone_ace.add_right(FileAccessRights.SDDL_FILE_READ)
+            everyone_ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+        else:
+            # 644: owner read + write, everyone read
+            owner_ace.add_right(FileAccessRights.SDDL_FILE_READ)
+            owner_ace.add_right(FileAccessRights.SDDL_FILE_WRITE)
+            everyone_ace.add_right(FileAccessRights.SDDL_FILE_READ)
+        sd.add_ace(owner_ace)
+        sd.add_ace(everyone_ace)
+        sd.apply(path)
+        return
     if os.path.isdir(path):
         os.chmod(path, 0o755)
     else:
@@ -657,6 +684,8 @@ def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
     if islink(dest):
         return
+    if sys.platform == "win32":
+        return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
     if src_mode & stat.S_IXUSR:
@@ -670,6 +699,8 @@ def copy_mode(src, dest):
 
 @system_path_filter
 def unset_executable_mode(path):
+    if sys.platform == "win32":
+        return
     mode = os.stat(path).st_mode
     mode &= ~stat.S_IXUSR
     mode &= ~stat.S_IXGRP
@@ -1524,6 +1555,8 @@ def visit_directory_tree(
 @system_path_filter
 def set_executable(path):
     """Set the executable bit on a file or directory."""
+    if sys.platform == "win32":
+        return
     mode = os.stat(path).st_mode
     if mode & stat.S_IRUSR:
         mode |= stat.S_IXUSR

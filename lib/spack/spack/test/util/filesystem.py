@@ -1888,20 +1888,23 @@ def test_security_descriptor_apply_empty_is_noop(tmp_path):
 # ── Windows early-return guards in filesystem.py ──────────────────────────────
 
 
-@pytest.mark.only_windows("Windows early-return path")
-def test_set_install_permissions_noop_on_windows(tmp_path):
-    import spack.llnl.util.filesystem as fs
+@pytest.mark.only_windows("Windows ACL path")
+def test_set_install_permissions_sets_acl_on_windows(tmp_path):
+    import spack.util.filesystem as fs
+    from spack.util.win_acl import get_file_sddl
 
     f = tmp_path / "test.txt"
     f.write_text("hello")
-    before = os.stat(f).st_mode
     fs.set_install_permissions(str(f))
-    assert os.stat(f).st_mode == before
+    sddl = get_file_sddl(str(f))
+    # DACL section must contain an Allow ACE for Everyone (WD) granting read
+    dacl = sddl.split("D:")[1] if "D:" in sddl else sddl
+    assert "A;;" in dacl and "WD)" in dacl
 
 
 @pytest.mark.only_windows("Windows early-return path")
 def test_copy_mode_noop_on_windows(tmp_path):
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     src = tmp_path / "src.txt"
     dst = tmp_path / "dst.txt"
@@ -1914,7 +1917,7 @@ def test_copy_mode_noop_on_windows(tmp_path):
 
 @pytest.mark.only_windows("Windows early-return path")
 def test_unset_executable_mode_noop_on_windows(tmp_path):
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     f = tmp_path / "test.txt"
     f.write_text("hello")
@@ -1925,7 +1928,7 @@ def test_unset_executable_mode_noop_on_windows(tmp_path):
 
 @pytest.mark.only_windows("Windows early-return path")
 def test_set_executable_noop_on_windows(tmp_path):
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     f = tmp_path / "test.txt"
     f.write_text("hello")
