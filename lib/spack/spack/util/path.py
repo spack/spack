@@ -17,7 +17,7 @@ from typing import List, Optional, Union
 from urllib.parse import urlparse
 
 import spack.llnl.util.tty as tty
-from spack.llnl.util.lang import memoized
+from spack.util.lang import memoized
 
 __all__ = []
 

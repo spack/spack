@@ -16,13 +16,13 @@ import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
-import spack.llnl.util.lang
 import spack.llnl.util.tty
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
 import spack.util.environment as environment
 import spack.util.filesystem
+import spack.util.lang
 import spack.util.ld_so_conf
 import spack.util.parallel
 
@@ -271,7 +271,7 @@ class Finder:
         result = []
         resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> prefix of first detection
         for candidate_path, items_in_prefix in _group_by_prefix(
-            spack.llnl.util.lang.dedupe(paths)
+            spack.util.lang.dedupe(paths)
         ).items():
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
@@ -435,7 +435,7 @@ def by_path(
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    repository = spack.llnl.util.lang.ensure_unwrapped(PATH)
+    repository = spack.util.lang.ensure_unwrapped(PATH)
 
     executor: concurrent.futures.Executor
     if max_workers == 1:

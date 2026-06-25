@@ -75,7 +75,6 @@ import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
-from spack.llnl.util.lang import pretty_duration
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
@@ -87,6 +86,7 @@ from spack.new_installer_base import (
 )
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
+from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 

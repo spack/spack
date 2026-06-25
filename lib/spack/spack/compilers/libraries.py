@@ -13,10 +13,10 @@ import tempfile
 from typing import Dict, List, Optional, Set, Tuple, cast
 
 import spack.caches
-import spack.llnl.util.lang
 import spack.schema.environment
 import spack.spec
 import spack.util.executable
+import spack.util.lang
 import spack.util.libc
 import spack.util.module_cmd
 import spack.util.path
@@ -443,4 +443,4 @@ def _make_compiler_cache():
     return FileCompilerCache(spack.caches.MISC_CACHE)
 
 
-COMPILER_CACHE = cast(CompilerCache, spack.llnl.util.lang.Singleton(_make_compiler_cache))
+COMPILER_CACHE = cast(CompilerCache, spack.util.lang.Singleton(_make_compiler_cache))

@@ -8,9 +8,9 @@ from typing import cast
 
 import spack.config
 import spack.fetch_strategy
-import spack.llnl.util.lang
 import spack.paths
 import spack.util.file_cache
+import spack.util.lang
 
 
 def misc_cache_location():
@@ -29,7 +29,7 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.llnl.util.lang.Singleton(_misc_cache))
+MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.util.lang.Singleton(_misc_cache))
 
 
 def fetch_cache_location():
@@ -64,4 +64,4 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.llnl.util.lang.Singleton(_fetch_cache))
+FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))

@@ -35,7 +35,6 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify
 import spack.llnl.util.tty.color as color
@@ -44,6 +43,7 @@ import spack.platforms
 import spack.solver.asp
 import spack.spec
 import spack.util.environment
+import spack.util.lang
 import spack.util.lock
 
 from .enums import ConfigScopePriority
@@ -767,7 +767,7 @@ def _profile_wrapper(command, main_args, parser, args, unknown_args):
         stats.print_stats(nlines)
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _compatible_sys_types():
     """Return a list of all the platform-os-target tuples compatible
     with the current host.
@@ -1037,7 +1037,7 @@ def _main(argv=None):
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
-    bootstrap_context = spack.llnl.util.lang.nullcontext()
+    bootstrap_context = spack.util.lang.nullcontext()
     if args.bootstrap:
         import spack.bootstrap as bootstrap  # avoid circular imports
 

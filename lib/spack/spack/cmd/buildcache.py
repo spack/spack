@@ -31,9 +31,9 @@ from spack.binary_distribution import BINARY_INDEX
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.llnl.util import tty
-from spack.llnl.util.lang import elide_list, stable_partition
 from spack.llnl.util.tty import colify
 from spack.spec import Spec, save_dependency_specfiles
+from spack.util.lang import elide_list, stable_partition
 from spack.util.string import plural
 
 from ..buildcache_migrate import migrate

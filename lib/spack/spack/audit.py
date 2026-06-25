@@ -54,11 +54,11 @@ import spack.builder
 import spack.config
 import spack.enums
 import spack.fetch_strategy
-import spack.llnl.util.lang
 import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
+import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
 from spack.util.string import plural
@@ -611,6 +611,24 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
 
 
 @package_properties
+def _ensure_package_builders(pkgs, error_cls):
+    """Ensure all packages can produce a builder"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            b = spack.builder.buildsystem_name(pkg)
+            if not isinstance(b, str):
+                raise TypeError("invalid builder type {!s}".format(type(b)))
+        except Exception as e:
+            errors.append(
+                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
+            )
+    return errors
+
+
+@package_properties
 def _ensure_docstring_and_no_fixme(pkgs, error_cls):
     """Ensure the package has a docstring and no fixmes"""
     errors = []
@@ -899,7 +917,7 @@ def _linting_package_file(pkgs, error_cls):
                 errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -991,7 +1009,7 @@ def _variant_issues_in_directives(pkgs, error_cls):
                 )
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 @package_directives
@@ -1332,7 +1350,7 @@ def _named_specs_in_when_arguments(pkgs, error_cls):
                 error_cls(f"{pkg_name}: wrong 'when=' condition in 'resource' directives", details)
             )
 
-    return spack.llnl.util.lang.dedupe(errors)
+    return spack.util.lang.dedupe(errors)
 
 
 #: Sanity checks on package directives

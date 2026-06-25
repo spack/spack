@@ -8,9 +8,9 @@ import spack.bootstrap
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.relocate
-from spack.llnl.util.lang import elide_list
 from spack.util.elf import ElfParsingError, parse_elf
 from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
+from spack.util.lang import elide_list
 
 
 def is_shared_library_elf(filepath):

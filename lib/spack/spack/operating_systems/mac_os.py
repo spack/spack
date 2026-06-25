@@ -6,14 +6,14 @@ import os
 import platform as py_platform
 import re
 
-import spack.llnl.util.lang
+import spack.util.lang
 from spack.util.executable import Executable
 from spack.version import StandardVersion, Version
 
 from ._operating_system import OperatingSystem
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_version() -> StandardVersion:
     """Get the current macOS version as a version object.
 
@@ -60,7 +60,7 @@ def macos_version() -> StandardVersion:
     return StandardVersion.from_string(py_platform.mac_ver()[0])
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_cltools_version():
     """Find the last installed version of the CommandLineTools.
 
@@ -84,7 +84,7 @@ def macos_cltools_version():
     return None
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def macos_sdk_path():
     """Return path to the active macOS SDK."""
     xcrun = Executable("xcrun")

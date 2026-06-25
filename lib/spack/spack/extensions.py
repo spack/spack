@@ -16,7 +16,7 @@ from typing import List
 
 import spack.config
 import spack.error
-import spack.llnl.util.lang
+import spack.util.lang
 
 _extension_regexp = re.compile(r"spack-(\w[-\w]*)$")
 
@@ -89,7 +89,7 @@ def ensure_extension_loaded(extension, *, path):
         parts = [path] + name.split(".") + ["__init__.py"]
         init_file = os.path.join(*parts)
         if os.path.exists(init_file):
-            m = spack.llnl.util.lang.load_module_from_file(package_name, init_file)
+            m = spack.util.lang.load_module_from_file(package_name, init_file)
         else:
             m = types.ModuleType(package_name)
 
@@ -132,7 +132,7 @@ def get_extension_paths():
     return paths
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def extension_paths_from_entry_points() -> List[str]:
     """Load extensions from a Python package's entry points.
 
@@ -151,7 +151,7 @@ def extension_paths_from_entry_points() -> List[str]:
     called. E.g., it doesn't support any new installation of packages between two calls.
     """
     extension_paths: List[str] = []
-    for entry_point in spack.llnl.util.lang.get_entry_points(group="spack.extensions"):
+    for entry_point in spack.util.lang.get_entry_points(group="spack.extensions"):
         hook = entry_point.load()
         if callable(hook):
             paths = hook() or []

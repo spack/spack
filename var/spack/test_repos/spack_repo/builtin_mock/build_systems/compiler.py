@@ -12,8 +12,8 @@ import spack
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.util.executable
-from spack.llnl.util.lang import classproperty, memoized
 from spack.package import CompilerError
+from spack.util.lang import classproperty, memoized
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]

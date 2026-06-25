@@ -20,7 +20,6 @@ import spack.error
 import spack.hooks
 import spack.installer as inst
 import spack.installer_dispatch
-import spack.llnl.util.lock as ulk
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs as prefs
@@ -331,7 +330,7 @@ def test_ensure_locked_err(install_mockery, monkeypatch, tmp_path: pathlib.Path,
     installer = create_installer(["trivial-install-test-package"])
     spec = installer.build_requests[0].pkg.spec
 
-    monkeypatch.setattr(ulk.Lock, "acquire_read", _raise)
+    monkeypatch.setattr(lk.Lock, "acquire_read", _raise)
     with fs.working_dir(str(tmp_path)):
         with pytest.raises(RuntimeError):
             installer._ensure_locked("read", spec.package)
@@ -358,7 +357,7 @@ def test_ensure_locked_have(install_mockery, tmp_path: pathlib.Path, capfd):
         # Test "upgrade" of a read lock without read count to a write
         lock_type = "write"
         err = "Cannot upgrade lock"
-        with pytest.raises(ulk.LockUpgradeError, match=err):
+        with pytest.raises(lk.LockUpgradeError, match=err):
             installer._ensure_locked(lock_type, spec.package)
 
         out = str(capfd.readouterr()[1])

@@ -18,7 +18,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def solve(parser, args):
     msg = (
         "The `spack solve` command is deprecated in favor of options added to the "
-        "`spack spec` command and will be removed in Spack v1.3"
+        "`spack spec` command and will be removed in Spack v1.4"
     )
     warnings.warn(msg)
 

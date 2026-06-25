@@ -6,7 +6,7 @@
 
 Run with pytest::
 
-    pytest lib/spack/spack/test/llnl/util/lock.py
+    pytest lib/spack/spack/test/util/lock.py
 
 You can use this to test whether your shared filesystem properly supports
 POSIX reader-writer locking with byte ranges through fcntl.
@@ -44,7 +44,7 @@ from multiprocessing import Barrier, Process, Queue
 
 import pytest
 
-import spack.llnl.util.lock as lk
+import spack.util.lock as lk
 from spack.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":

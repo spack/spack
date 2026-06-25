@@ -26,7 +26,6 @@ import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
-from spack.llnl.util.lang import nullcontext
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -36,6 +35,7 @@ from spack.url_buildcache import (
     get_url_buildcache_class,
 )
 from spack.util.filesystem import copy_tree, find, getuid
+from spack.util.lang import nullcontext
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")

@@ -28,7 +28,6 @@ import spack.environment as ev
 import spack.error
 import spack.externals_config
 import spack.hash_types as ht
-import spack.llnl.util.lang
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -43,6 +42,7 @@ import spack.spec_filter
 import spack.traverse
 import spack.util.file_cache
 import spack.util.hash
+import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack.externals import ExternalDependencyError
@@ -1049,15 +1049,15 @@ spack:
         s = Spec("mpileaks")
         s = spack.concretize.concretize_one(s)
 
-        assert spack.llnl.util.lang.ObjectWrapper not in s.__class__.__mro__
+        assert spack.util.lang.ObjectWrapper not in s.__class__.__mro__
 
         # Spec wrapped in a build interface
         build_interface = s["mpileaks"]
-        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
         # Mimics asking the build interface from a build interface
         build_interface = s["mpileaks"]["mpileaks"]
-        assert spack.llnl.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -1766,7 +1766,7 @@ spack:
         config = {"externals": [{"spec": spec, "prefix": "/fake/path"}], "buildable": False}
         spack.config.set("packages:sticky-variant", config)
 
-        maybe = spack.llnl.util.lang.nullcontext if allow_gcc else pytest.raises
+        maybe = spack.util.lang.nullcontext if allow_gcc else pytest.raises
         with maybe(spack.error.SpackError):
             s = spack.concretize.concretize_one("sticky-variant-dependent%gcc")
 
@@ -1799,7 +1799,7 @@ spack:
     def test_conditional_values_in_variants(self, spec_str, valid):
         s = Spec(spec_str)
         raises = pytest.raises((RuntimeError, spack.error.UnsatisfiableSpecError))
-        with spack.llnl.util.lang.nullcontext() if valid else raises:
+        with spack.util.lang.nullcontext() if valid else raises:
             s = spack.concretize.concretize_one(s)
 
     def test_conditional_values_in_conditional_variant(self):
@@ -3430,7 +3430,7 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     b_concrete_unrestricted = [s for s in unrestricted if s.name == "pkg-b"][0]
     assert (a_concrete_unrestricted["pkg-b"] == b_concrete_unrestricted) == (unify is not False)
 
-    maybe_fails = pytest.raises if unify is True else spack.llnl.util.lang.nullcontext
+    maybe_fails = pytest.raises if unify is True else spack.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
