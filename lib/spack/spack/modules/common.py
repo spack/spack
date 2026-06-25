@@ -77,7 +77,6 @@ EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
 
-
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     "name",
