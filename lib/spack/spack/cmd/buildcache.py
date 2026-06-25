@@ -25,7 +25,6 @@ import spack.stage
 import spack.store
 import spack.util.parallel
 import spack.util.timer as timer_mod
-import spack.util.tty as tty
 import spack.util.web as web_util
 from spack import traverse
 from spack.binary_distribution import BINARY_INDEX

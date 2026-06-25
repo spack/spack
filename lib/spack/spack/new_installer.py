@@ -24,7 +24,6 @@ import glob
 import io
 import json
 import os
-import re
 import selectors
 import shlex
 import shutil
@@ -901,71 +900,6 @@ def start_build(
     return ChildInfo(
         proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
     )
-
-
-def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
-
-    Args:
-        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
-    """
-    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
-    if not makeflags:
-        return None
-    # We can have the following flags:
-    # --jobserver-fds=R,W (before GNU make 4.2)
-    # --jobserver-auth=fifo:PATH or --jobserver-auth=R,W (after GNU make 4.2)
-    # In case of multiple, the last one wins.
-    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
-    if not matches:
-        return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
-    if last_match.startswith("fifo:"):
-        return last_match[5:]
-    parts = last_match.split(",", 1)
-    if len(parts) != 2:
-        return None
-    try:
-        return int(parts[0]), int(parts[1])
-    except ValueError:
-        return None
-
-
-def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
-    """Create a new jobserver FIFO with the specified number of job tokens."""
-    tmpdir = tempfile.mkdtemp()
-    fifo_path = os.path.join(tmpdir, "jobserver_fifo")
-
-    try:
-        os.mkfifo(fifo_path, 0o600)
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        # write num_jobs - 1 tokens, because the first job is implicit
-        os.write(write_fd, b"+" * (num_jobs - 1))
-        return read_fd, write_fd, fifo_path
-    except Exception:
-        try:
-            os.unlink(fifo_path)
-        except OSError as e:
-            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
-            pass
-        try:
-            os.rmdir(tmpdir)
-        except OSError as e:
-            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
-            pass
-        raise
-
-
-def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
-    """Open an existing jobserver FIFO for reading and writing."""
-    try:
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        return read_fd, write_fd
-    except OSError:
-        return None
 
 
 class BuildInfo:
