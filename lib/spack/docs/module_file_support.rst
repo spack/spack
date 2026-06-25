@@ -30,7 +30,7 @@ If you're using the default configuration values, you can start by generating Tc
 
 To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``.
 
-Once module files are in place, add the Spack module directory to your module path:
+Once module files are in place, add the Tcl module directory generated above to your module path:
 
 .. code-block:: console
 
@@ -232,7 +232,7 @@ Three keys control the shape of the hierarchy:
 * ``core_specs`` lists any additional packages that should also go in ``Core``, bypassing the normal hierarchy.
 * ``hierarchy`` lists the virtual packages that define the additional layers beyond ``Core`` and ``Compiler``.
 
-The configuration below generates a hierarchy in which the ``python``, ``lapack``, and ``mpi`` layers can be switched independently, letting the module tool safely switch between coherent software stacks:
+The configuration below generates a hierarchy in which the ``python``, ``lapack``, and ``mpi`` layers can be switched independently:
 
 .. code-block:: yaml
 
@@ -248,7 +248,7 @@ The configuration below generates a hierarchy in which the ``python``, ``lapack`
          - "lapack"
          - "python"
 
-For ``tcl``, add ``hierarchical: true`` to the same configuration since a flat naming scheme is the default (this requires either Environment Modules >= 5.6 or Lmod >= 8.7.31).
+For ``tcl``, whose default layout is flat, add ``hierarchical: true`` to the same configuration (this requires either Environment Modules >= 5.6 or Lmod >= 8.7.31).
 
 Note that ``core_specs`` bypasses the hierarchy that allows the module tool to safely switch between coherent software stacks, so the user is responsible for maintaining consistency among those packages.
 
@@ -277,7 +277,7 @@ Spack populates module files from three sources:
 
 * Prefix inspections derived automatically from the installation layout
 * Rules in ``modules.yaml`` applied to matching packages
-* callbacks defined in ``package.py`` for package-specific logic
+* Callbacks defined in ``package.py`` for package-specific logic
 
 The options in this section let you control which dependencies are autoloaded, what environment variables are set and for which packages, and which module files are generated at all.
 
@@ -537,7 +537,7 @@ The available subcommands are:
 
 The ``refresh`` subcommand regenerates module files.
 Use the optional ``constraint`` argument to regenerate only packages matching a spec pattern.
-The entire module tree can be deleted before regenerating to handle a radical layout change.
+Pass ``--delete-tree`` to delete the entire module tree before regenerating, which is useful to handle a radical layout change.
 
 .. command-output:: spack module tcl refresh --help
 
