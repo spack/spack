@@ -717,3 +717,11 @@ The default option is ``append`` because that is what is used by the Spack build
 
    Using the ``append`` option with build cache index views is a non-atomic operation.
    It is up to the CI maintainer to ensure that concurrent writes to the build cache are handled appropriately.
+
+``SPACK_CI_BUILDCACHE_UPLOAD_KEY``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.
+Configure the key push behavior for pipelines that sign binaries.
+If set to ``NO``/``N``/``FALSE``/``0`` (case insensitive) the signing key used by the build job will not be uploaded to the build cache.
+Any other values, including unset, will push the key used for signing to the build cache along with the built binary for the build job.
