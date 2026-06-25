@@ -283,131 +283,133 @@ if sys.platform == "win32":
     _advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)
     _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
-    _OpenProcessToken = _advapi32.OpenProcessToken
-    _OpenProcessToken.argtypes = [wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE)]
-    _OpenProcessToken.restype = wintypes.BOOL
+    def _bind(dll: Any, name: str, argtypes: list, restype: Any) -> Any:
+        """Set argtypes/restype on a DLL function and return it."""
+        fn = getattr(dll, name)
+        fn.argtypes = argtypes
+        fn.restype = restype
+        return fn
 
-    _GetTokenInformation = _advapi32.GetTokenInformation
-    _GetTokenInformation.argtypes = [
-        wintypes.HANDLE,
-        ctypes.c_int,  # TOKEN_INFORMATION_CLASS enum
-        wintypes.LPVOID,
-        wintypes.DWORD,
-        ctypes.POINTER(wintypes.DWORD),
-    ]
-    _GetTokenInformation.restype = wintypes.BOOL
+    # Pointer-type aliases for patterns that repeat across the bindings below.
+    _PPVOID = ctypes.POINTER(wintypes.LPVOID)  # out void**
+    _PBOOL = ctypes.POINTER(wintypes.BOOL)  # out BOOL*
+    _PDWORD = ctypes.POINTER(wintypes.DWORD)  # out DWORD*
+    _PULONG = ctypes.POINTER(wintypes.ULONG)  # out ULONG*
+    _PPWSTR = ctypes.POINTER(wintypes.LPWSTR)  # out LPWSTR* (LocalAlloc'd strings)
+    _PINT = ctypes.POINTER(ctypes.c_int)  # out int* (enums)
+    _PHANDLE = ctypes.POINTER(wintypes.HANDLE)  # out HANDLE*
 
-    _LookupAccountNameW = _advapi32.LookupAccountNameW
-    _LookupAccountNameW.argtypes = [
-        wintypes.LPCWSTR,
-        wintypes.LPCWSTR,
-        wintypes.LPVOID,
-        ctypes.POINTER(wintypes.DWORD),
-        wintypes.LPWSTR,
-        ctypes.POINTER(wintypes.DWORD),
-        ctypes.POINTER(ctypes.c_int),
-    ]
-    _LookupAccountNameW.restype = wintypes.BOOL
-
-    _ConvertSidToStringSidW = _advapi32.ConvertSidToStringSidW
-    _ConvertSidToStringSidW.argtypes = [wintypes.LPVOID, ctypes.POINTER(wintypes.LPWSTR)]
-    _ConvertSidToStringSidW.restype = wintypes.BOOL
-
-    _GetNamedSecurityInfoW = _advapi32.GetNamedSecurityInfoW
-    _GetNamedSecurityInfoW.argtypes = [
-        wintypes.LPCWSTR,
-        ctypes.c_int,  # SE_OBJECT_TYPE
-        wintypes.DWORD,  # SECURITY_INFORMATION
-        ctypes.POINTER(wintypes.LPVOID),  # ppsidOwner
-        ctypes.POINTER(wintypes.LPVOID),  # ppsidGroup
-        ctypes.POINTER(wintypes.LPVOID),  # ppDacl
-        ctypes.POINTER(wintypes.LPVOID),  # ppSacl
-        ctypes.POINTER(wintypes.LPVOID),  # ppSecurityDescriptor
-    ]
-    _GetNamedSecurityInfoW.restype = wintypes.DWORD
-
-    _ConvertSecurityDescriptorToStringSecurityDescriptorW = (
-        _advapi32.ConvertSecurityDescriptorToStringSecurityDescriptorW
+    _OpenProcessToken = _bind(
+        _advapi32, "OpenProcessToken", [wintypes.HANDLE, wintypes.DWORD, _PHANDLE], wintypes.BOOL
     )
-    _ConvertSecurityDescriptorToStringSecurityDescriptorW.argtypes = [
-        wintypes.LPVOID,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        ctypes.POINTER(wintypes.LPWSTR),
-        ctypes.POINTER(wintypes.ULONG),
-    ]
-    _ConvertSecurityDescriptorToStringSecurityDescriptorW.restype = wintypes.BOOL
 
-    _LocalFree = _kernel32.LocalFree
-    _LocalFree.argtypes = [wintypes.HLOCAL]
-    _LocalFree.restype = wintypes.HLOCAL
-
-    _GetCurrentProcess = _kernel32.GetCurrentProcess
-    _GetCurrentProcess.restype = wintypes.HANDLE
-
-    _CloseHandle = _kernel32.CloseHandle
-    _CloseHandle.argtypes = [wintypes.HANDLE]
-    _CloseHandle.restype = wintypes.BOOL
-
-    _SetNamedSecurityInfoW = _advapi32.SetNamedSecurityInfoW
-    _SetNamedSecurityInfoW.argtypes = [
-        wintypes.LPWSTR,  # pObjectName (mutable, not LPCWSTR)
-        ctypes.c_int,  # ObjectType
-        wintypes.DWORD,  # SecurityInfo
-        wintypes.LPVOID,  # psidOwner
-        wintypes.LPVOID,  # psidGroup
-        wintypes.LPVOID,  # pDacl
-        wintypes.LPVOID,  # pSacl
-    ]
-    _SetNamedSecurityInfoW.restype = wintypes.DWORD
-
-    _LookupAccountSidW = _advapi32.LookupAccountSidW
-    _LookupAccountSidW.argtypes = [
-        wintypes.LPCWSTR,  # lpSystemName
-        wintypes.LPVOID,  # Sid
-        wintypes.LPWSTR,  # Name
-        wintypes.LPDWORD,  # cchName
-        wintypes.LPWSTR,  # ReferencedDomainName
-        wintypes.LPDWORD,  # cchReferencedDomainName
-        ctypes.POINTER(ctypes.c_int),  # peUse
-    ]
-    _LookupAccountSidW.restype = wintypes.BOOL
-
-    _ConvertStringSecurityDescriptorToSecurityDescriptorW = (
-        _advapi32.ConvertStringSecurityDescriptorToSecurityDescriptorW
+    _GetTokenInformation = _bind(
+        _advapi32,
+        "GetTokenInformation",
+        [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD, _PDWORD],
+        wintypes.BOOL,
     )
-    _ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = [
-        wintypes.LPCWSTR,  # StringSecurityDescriptor
-        wintypes.DWORD,  # StringSDRevision
-        ctypes.POINTER(wintypes.LPVOID),  # SecurityDescriptor (out)
-        ctypes.POINTER(wintypes.ULONG),  # SecurityDescriptorSize (optional out)
-    ]
-    _ConvertStringSecurityDescriptorToSecurityDescriptorW.restype = wintypes.BOOL
 
-    _GetSecurityDescriptorOwner = _advapi32.GetSecurityDescriptorOwner
-    _GetSecurityDescriptorOwner.argtypes = [
-        wintypes.LPVOID,  # pSecurityDescriptor
-        ctypes.POINTER(wintypes.LPVOID),  # pOwner (out)
-        ctypes.POINTER(wintypes.BOOL),  # lpbOwnerDefaulted (out)
-    ]
-    _GetSecurityDescriptorOwner.restype = wintypes.BOOL
+    _LookupAccountNameW = _bind(
+        _advapi32,
+        "LookupAccountNameW",
+        [
+            wintypes.LPCWSTR,
+            wintypes.LPCWSTR,
+            wintypes.LPVOID,
+            _PDWORD,
+            wintypes.LPWSTR,
+            _PDWORD,
+            _PINT,
+        ],
+        wintypes.BOOL,
+    )
 
-    _GetSecurityDescriptorGroup = _advapi32.GetSecurityDescriptorGroup
-    _GetSecurityDescriptorGroup.argtypes = [
-        wintypes.LPVOID,  # pSecurityDescriptor
-        ctypes.POINTER(wintypes.LPVOID),  # pGroup (out)
-        ctypes.POINTER(wintypes.BOOL),  # lpbGroupDefaulted (out)
-    ]
-    _GetSecurityDescriptorGroup.restype = wintypes.BOOL
+    _ConvertSidToStringSidW = _bind(
+        _advapi32, "ConvertSidToStringSidW", [wintypes.LPVOID, _PPWSTR], wintypes.BOOL
+    )
 
-    _GetSecurityDescriptorDacl = _advapi32.GetSecurityDescriptorDacl
-    _GetSecurityDescriptorDacl.argtypes = [
-        wintypes.LPVOID,  # pSecurityDescriptor
-        ctypes.POINTER(wintypes.BOOL),  # lpbDaclPresent (out)
-        ctypes.POINTER(wintypes.LPVOID),  # pDacl (out)
-        ctypes.POINTER(wintypes.BOOL),  # lpbDaclDefaulted (out)
-    ]
-    _GetSecurityDescriptorDacl.restype = wintypes.BOOL
+    _GetNamedSecurityInfoW = _bind(
+        _advapi32,
+        "GetNamedSecurityInfoW",
+        [
+            wintypes.LPCWSTR,
+            ctypes.c_int,
+            wintypes.DWORD,
+            _PPVOID,
+            _PPVOID,
+            _PPVOID,
+            _PPVOID,
+            _PPVOID,
+        ],
+        wintypes.DWORD,
+    )
+
+    _ConvertSecurityDescriptorToStringSecurityDescriptorW = _bind(
+        _advapi32,
+        "ConvertSecurityDescriptorToStringSecurityDescriptorW",
+        [wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, _PPWSTR, _PULONG],
+        wintypes.BOOL,
+    )
+
+    _LocalFree = _bind(_kernel32, "LocalFree", [wintypes.HLOCAL], wintypes.HLOCAL)
+
+    _GetCurrentProcess = _bind(_kernel32, "GetCurrentProcess", [], wintypes.HANDLE)
+
+    _CloseHandle = _bind(_kernel32, "CloseHandle", [wintypes.HANDLE], wintypes.BOOL)
+
+    # pObjectName is LPWSTR (mutable) per the Windows SDK header, not LPCWSTR.
+    _SetNamedSecurityInfoW = _bind(
+        _advapi32,
+        "SetNamedSecurityInfoW",
+        [
+            wintypes.LPWSTR,
+            ctypes.c_int,
+            wintypes.DWORD,
+            wintypes.LPVOID,
+            wintypes.LPVOID,
+            wintypes.LPVOID,
+            wintypes.LPVOID,
+        ],
+        wintypes.DWORD,
+    )
+
+    _LookupAccountSidW = _bind(
+        _advapi32,
+        "LookupAccountSidW",
+        [
+            wintypes.LPCWSTR,
+            wintypes.LPVOID,
+            wintypes.LPWSTR,
+            _PDWORD,
+            wintypes.LPWSTR,
+            _PDWORD,
+            _PINT,
+        ],
+        wintypes.BOOL,
+    )
+
+    _ConvertStringSecurityDescriptorToSecurityDescriptorW = _bind(
+        _advapi32,
+        "ConvertStringSecurityDescriptorToSecurityDescriptorW",
+        [wintypes.LPCWSTR, wintypes.DWORD, _PPVOID, _PULONG],
+        wintypes.BOOL,
+    )
+
+    _GetSecurityDescriptorOwner = _bind(
+        _advapi32, "GetSecurityDescriptorOwner", [wintypes.LPVOID, _PPVOID, _PBOOL], wintypes.BOOL
+    )
+
+    _GetSecurityDescriptorGroup = _bind(
+        _advapi32, "GetSecurityDescriptorGroup", [wintypes.LPVOID, _PPVOID, _PBOOL], wintypes.BOOL
+    )
+
+    _GetSecurityDescriptorDacl = _bind(
+        _advapi32,
+        "GetSecurityDescriptorDacl",
+        [wintypes.LPVOID, _PBOOL, _PPVOID, _PBOOL],
+        wintypes.BOOL,
+    )
 
     def get_file_owner(path: str) -> str:  # type: ignore[no-redef]
         """Return the account name of the owner of *path*.
