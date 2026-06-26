@@ -4,22 +4,9 @@
 
 """Windows Access Control List (ACL) utilities.
 
-This module is Windows-only — it imports ``ctypes.wintypes`` at the top level and will fail to
-import on non-Windows platforms.  Callers must guard the import with
-``if sys.platform == "win32":``.
 
-Public API
-----------
-Semantic types (build ACEs):
-    ``AceType``, ``AceFlags``, ``GenericAccessRights``, ``StandardAccessRights``,
-    ``FileAccessRights``, ``RegistryKeyAccessRights``, ``MandatoryLabelRights``,
-    ``DirectoryServiceObjectAccessRights``, ``AccessControlEntry``
-
-High-level descriptor:
-    ``SecurityDescriptor``  — read, modify, and write Windows security descriptors.
-
-Convenience helpers (thin delegates to ``SecurityDescriptor``):
-    ``get_file_owner``, ``copy_file_permissions``, ``get_file_sddl``, ``set_file_sddl``
+Provides utilities to define, add, remove, or otherwise inspect
+or manipulate Windows ACLs
 """
 
 import copy
@@ -577,7 +564,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
     """Apply the security descriptor described by *sddl* to *path*.
 
     Only components present in *sddl* (owner, group, DACL) are written.  A NULL DACL
-    (``D:`` with no ACEs and no present flag) is never applied silently — it would grant
+    (``D:`` with no ACEs and no present flag) is never applied silently as it would grant
     everyone full access.
 
     Setting owner (``O:``) or group (``G:``) requires ``SE_TAKE_OWNERSHIP_PRIVILEGE`` or
@@ -621,7 +608,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
 
         # c_void_p.value is None for NULL; use that to distinguish a real pointer from an unset
         # one.  A NULL DACL (dacl_present=True but pointer=NULL) grants everyone full access
-        # — never apply it silently.
+        # never apply it silently.
         security_info = 0
         owner_ptr = owner if owner.value is not None else None
         group_ptr = group if group.value is not None else None

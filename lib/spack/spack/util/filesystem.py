@@ -685,6 +685,26 @@ def copy_mode(src, dest):
     if islink(dest):
         return
     if sys.platform == "win32":
+        from spack.util.win_acl import AceType, FileAccessRights, SecurityDescriptor
+
+        _execute_codes = frozenset(("FX", "FA", "GX", "GA"))
+
+        def _grants_execute(ace) -> bool:
+            if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or ace.rights is None:
+                return False
+            r = ace.rights.value if hasattr(ace.rights, "value") else str(ace.rights)
+            # Skip hex masks; check 2-char SDDL codes that include execute
+            return not r.startswith("0x") and any(
+                r[i : i + 2] in _execute_codes for i in range(0, len(r), 2)
+            )
+
+        src_sd = SecurityDescriptor.from_file(src)
+        if any(_grants_execute(ace) for ace in src_sd.dacl):
+            dst_sd = SecurityDescriptor.from_file(dest)
+            for ace in dst_sd.dacl:
+                if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED:
+                    ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+            dst_sd.apply(dest)
         return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode

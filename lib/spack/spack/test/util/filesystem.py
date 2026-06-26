@@ -1930,3 +1930,57 @@ def test_set_install_permissions_sets_acl_on_windows(tmp_path):
     # DACL section must contain an Allow ACE for Everyone (WD) granting read
     dacl = sddl.split("D:")[1] if "D:" in sddl else sddl
     assert "A;;" in dacl and "WD)" in dacl
+
+
+@pytest.mark.only_windows("Windows ACL path")
+def test_copy_mode_propagates_execute_on_windows(tmp_path):
+    """copy_mode propagates FILE_EXECUTE from src to dst Allow ACEs on Windows."""
+    import spack.util.filesystem as fs
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+    )
+
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
+    src.write_text("source")
+    dst.write_text("dest")
+
+    # Give src an explicit execute ACE for Everyone
+    src_sd = SecurityDescriptor.from_file(str(src))
+    src_sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_ALLOWED, rights=FileAccessRights.SDDL_FILE_EXECUTE, sid="WD"
+        )
+    )
+    src_sd.apply(str(src))
+
+    fs.copy_mode(str(src), str(dst))
+
+    # dst DACL should now contain an Allow ACE granting execute to some principal
+    dst_sddl = SecurityDescriptor.from_file(str(dst)).to_sddl()
+    assert "FX" in dst_sddl or "FA" in dst_sddl
+
+
+@pytest.mark.only_windows("Windows ACL path")
+def test_copy_mode_no_execute_leaves_dst_unchanged_on_windows(tmp_path):
+    """copy_mode leaves dst DACL unchanged when src grants no execute rights."""
+    import spack.util.filesystem as fs
+    from spack.util.win_acl import SecurityDescriptor, get_file_sddl
+
+    src = tmp_path / "src.txt"
+    dst = tmp_path / "dst.txt"
+    src.write_text("source")
+    dst.write_text("dest")
+
+    # Strip src's DACL so it grants nothing (including no execute)
+    src_sd = SecurityDescriptor.from_file(str(src))
+    src_sd.clear_dacl()
+    src_sd.apply(str(src))
+
+    before = get_file_sddl(str(dst))
+    fs.copy_mode(str(src), str(dst))
+    assert get_file_sddl(str(dst)) == before
+
