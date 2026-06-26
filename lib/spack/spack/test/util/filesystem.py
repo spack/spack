@@ -1983,4 +1983,3 @@ def test_copy_mode_no_execute_leaves_dst_unchanged_on_windows(tmp_path):
     before = get_file_sddl(str(dst))
     fs.copy_mode(str(src), str(dst))
     assert get_file_sddl(str(dst)) == before
-
