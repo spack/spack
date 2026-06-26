@@ -981,8 +981,15 @@ class VersionList(VersionType):
         elif vlist in (_STANDARD_VERSION_TYPEMIN, _STANDARD_VERSION_TYPEMAX, _UNBOUNDED_RANGE):
             self.versions = [vlist]  # type: ignore[list-item]
 
-        elif ty is self.__class__ or ty is list:
+        elif ty is self.__class__:
             self.versions = vlist[:]  # type: ignore[index,assignment]
+
+        elif ty is list or issubclass(ty, Iterable):
+            # NB: Attempt to avoid the very expensive Iterable subclass check until we can hold off
+            #     no longer. Also note that str is Iterable, and must therefore be checked first.
+            self.versions = []
+            for el in vlist:    # type: ignore[union-attr]
+                self.add(ver(el))
 
         else:
             raise TypeError(f"Cannot construct VersionList from {vlist}")
