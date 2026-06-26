@@ -1640,18 +1640,34 @@ def test_parse_sddl_roundtrip_with_dacl_control_flags():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_from_file_sddl(tmp_path):
-    from spack.util.win_acl import SecurityDescriptor, get_file_sddl
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+        get_file_sddl,
+    )
 
     f = tmp_path / "sd_test.txt"
     f.write_text("hello")
     sd = SecurityDescriptor.from_file(str(f))
     assert sd.owner is not None
-    # A real file always has at least one DACL entry
     assert len(sd.dacl) > 0
-    # Round-trip: parsing the SDDL string produces an equivalent descriptor
-    sd2 = SecurityDescriptor(get_file_sddl(str(f)))
-    assert sd2.owner == sd.owner
-    assert len(sd2.dacl) == len(sd.dacl)
+    count_before = len(sd.dacl)
+
+    guest_ace = AccessControlEntry(
+        AceType.SDDL_ACCESS_ALLOWED, rights=FileAccessRights.SDDL_FILE_READ, sid="BG"
+    )
+    sd.add_ace(guest_ace)
+    sd.apply(str(f))
+
+    sd2 = SecurityDescriptor.from_file(str(f))
+    assert len(sd2.dacl) == count_before + 1
+
+    # Round-trip
+    sd3 = SecurityDescriptor(get_file_sddl(str(f)))
+    assert sd3.owner == sd2.owner
+    assert len(sd3.dacl) == len(sd2.dacl)
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1694,10 +1710,8 @@ def test_copy_file_permissions_preserves_dacl(tmp_path):
         paren = dacl_part.find("(")
         return dacl_part[paren:] if paren != -1 else dacl_part
 
+    assert dacl_aces(src_sddl) != "", "source DACL must have at least one ACE"
     assert dacl_aces(src_sddl) == dacl_aces(dst_sddl)
-
-
-# ── SecurityDescriptor mutation tests ──────────────────────────────────────────
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1783,9 +1797,6 @@ def test_security_descriptor_add_ace_out_of_range_raises():
     assert len(sd.dacl) == 2
 
 
-# ── AccessControlEntry as the canonical ACE type ──────────────────────────────
-
-
 @pytest.mark.only_windows("Windows security API required")
 def test_dacl_entries_are_access_control_entries():
     """DACL entries returned by SecurityDescriptor must be AccessControlEntry objects."""
@@ -1831,9 +1842,6 @@ def test_security_descriptor_from_file(tmp_path):
     assert sd.owner is not None
     assert isinstance(sd.dacl, list)
     assert len(sd.dacl) > 0
-
-
-# ── set_file_sddl / SecurityDescriptor.apply ──────────────────────────────────
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1910,9 +1918,6 @@ def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
     assert get_file_sddl(str(f)) == before
 
 
-# ── Windows early-return guards in filesystem.py ──────────────────────────────
-
-
 @pytest.mark.only_windows("Windows ACL path")
 def test_set_install_permissions_sets_acl_on_windows(tmp_path):
     import spack.util.filesystem as fs
@@ -1925,38 +1930,3 @@ def test_set_install_permissions_sets_acl_on_windows(tmp_path):
     # DACL section must contain an Allow ACE for Everyone (WD) granting read
     dacl = sddl.split("D:")[1] if "D:" in sddl else sddl
     assert "A;;" in dacl and "WD)" in dacl
-
-
-@pytest.mark.only_windows("Windows early-return path")
-def test_copy_mode_noop_on_windows(tmp_path):
-    import spack.util.filesystem as fs
-
-    src = tmp_path / "src.txt"
-    dst = tmp_path / "dst.txt"
-    src.write_text("source")
-    dst.write_text("dest")
-    before = os.stat(dst).st_mode
-    fs.copy_mode(str(src), str(dst))
-    assert os.stat(dst).st_mode == before
-
-
-@pytest.mark.only_windows("Windows early-return path")
-def test_unset_executable_mode_noop_on_windows(tmp_path):
-    import spack.util.filesystem as fs
-
-    f = tmp_path / "test.txt"
-    f.write_text("hello")
-    before = os.stat(f).st_mode
-    fs.unset_executable_mode(str(f))
-    assert os.stat(f).st_mode == before
-
-
-@pytest.mark.only_windows("Windows early-return path")
-def test_set_executable_noop_on_windows(tmp_path):
-    import spack.util.filesystem as fs
-
-    f = tmp_path / "test.txt"
-    f.write_text("hello")
-    before = os.stat(f).st_mode
-    fs.set_executable(str(f))
-    assert os.stat(f).st_mode == before

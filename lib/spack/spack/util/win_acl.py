@@ -30,8 +30,6 @@ from ctypes import wintypes  # type: ignore[attr-defined]
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-# ── Semantic enum types ────────────────────────────────────────────────────────
-
 
 class AceStringEnum(Enum):
     """Base enum whose members can be combined with ``|`` to build SDDL strings."""
@@ -160,9 +158,6 @@ class ResourceAttributeAceDataType(Enum):
     SDDL_SID = "TD"
     SDDL_BLOB = "TX"
     SDDL_BOOLEAN = "TB"
-
-
-# ── AccessControlEntry ────────────────────────────────────────────────────────
 
 
 class AccessControlEntry:
@@ -295,9 +290,6 @@ class AccessControlEntry:
         return self._to_ace_string()
 
 
-# ── Windows ctypes structures ──────────────────────────────────────────────────
-
-
 class SID_AND_ATTRIBUTES(ctypes.Structure):
     _fields_ = [("Sid", wintypes.LPVOID), ("Attributes", wintypes.DWORD)]
 
@@ -308,8 +300,6 @@ class TOKEN_USER(ctypes.Structure):
 
 TOKEN_QUERY = 0x0008
 
-
-# ── DLL handles, _bind helper, and pointer-type aliases ───────────────────────
 
 _advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # type: ignore[attr-defined]
 _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
@@ -427,9 +417,6 @@ _GetSecurityDescriptorDacl = _bind(
     [wintypes.LPVOID, _PBOOL, _PPVOID, _PBOOL],
     wintypes.BOOL,
 )
-
-
-# ── Private SDDL parse/create helper ─────────────────────────────────────────
 
 
 class _SddlHelper:
@@ -552,9 +539,6 @@ class _SddlHelper:
         return "".join(parts)
 
 
-# ── Private ctypes file-level SD operations ───────────────────────────────────
-
-
 def _get_file_sddl_raw(path: str) -> str:
     """Read the security descriptor of *path* and return it as an SDDL string."""
     if not os.path.exists(path):
@@ -570,13 +554,12 @@ def _get_file_sddl_raw(path: str) -> str:
     SDDL_REVISION_1 = 1
 
     pp_sd = wintypes.LPVOID()
-    res = _GetNamedSecurityInfoW(
-        path, SE_FILE_OBJECT, security_info, None, None, None, None, ctypes.byref(pp_sd)
-    )
-    if res != 0:
-        raise _WinError(res)
-
     try:
+        res = _GetNamedSecurityInfoW(
+            path, SE_FILE_OBJECT, security_info, None, None, None, None, ctypes.byref(pp_sd)
+        )
+        if res != 0:
+            raise _WinError(res)
         string_ptr = wintypes.LPWSTR()
         if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
             pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
@@ -608,12 +591,12 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
     DACL_SECURITY_INFORMATION = 0x00000004
 
     pp_sd = wintypes.LPVOID()
-    if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
-        sddl, SDDL_REVISION_1, ctypes.byref(pp_sd), None
-    ):
-        raise _WinError()
-
     try:
+        if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            sddl, SDDL_REVISION_1, ctypes.byref(pp_sd), None
+        ):
+            raise _WinError()
+
         owner = wintypes.LPVOID()
         owner_defaulted = wintypes.BOOL()
         if not _GetSecurityDescriptorOwner(
@@ -663,9 +646,6 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         _LocalFree(pp_sd)
 
 
-# ── Comparison helper used by SecurityDescriptor.remove_ace ──────────────────
-
-
 def _compare_val(val_a: Any, val_b: Any) -> bool:
     """Compare two ACE field values for equality, handling ``None`` correctly."""
     if val_a is None or val_b is None:
@@ -673,9 +653,6 @@ def _compare_val(val_a: Any, val_b: Any) -> bool:
     a = val_a.value if hasattr(val_a, "value") else str(val_a)
     b = val_b.value if hasattr(val_b, "value") else str(val_b)
     return a == b
-
-
-# ── SecurityDescriptor — the high-level public API ───────────────────────────
 
 
 class SecurityDescriptor:
@@ -709,8 +686,6 @@ class SecurityDescriptor:
                 "SACL_CONTROL": "",
             }
 
-    # ── Factory ──────────────────────────────────────────────────────────────
-
     @classmethod
     def from_file(cls, path: str) -> "SecurityDescriptor":
         """Create a ``SecurityDescriptor`` from the security descriptor of *path*.
@@ -720,8 +695,6 @@ class SecurityDescriptor:
             OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         return cls(_get_file_sddl_raw(path))
-
-    # ── Properties ───────────────────────────────────────────────────────────
 
     @property
     def owner(self) -> Any:
@@ -757,8 +730,6 @@ class SecurityDescriptor:
             ``SetNamedSecurityInfoW``.
         """
         return copy.deepcopy(self._parsed["SACL"])
-
-    # ── DACL mutation ────────────────────────────────────────────────────────
 
     def add_ace(self, ace: AccessControlEntry, index: Optional[int] = None) -> None:
         """Add an ``AccessControlEntry`` to the DACL.
@@ -845,8 +816,6 @@ class SecurityDescriptor:
         """Remove all ACEs from the DACL."""
         self._parsed["DACL"] = []
 
-    # ── Serialisation and write-back ─────────────────────────────────────────
-
     def to_sddl(self) -> str:
         """Compile the current state back into an SDDL string."""
         return _SddlHelper.create_sddl(self._parsed)
@@ -864,8 +833,6 @@ class SecurityDescriptor:
 
     def __str__(self) -> str:
         return self.to_sddl()
-
-    # ── Windows-specific static helpers ──────────────────────────────────────
 
     @staticmethod
     def get_owner(path: str) -> str:
@@ -1048,9 +1015,6 @@ class SecurityDescriptor:
             return string_sid_ptr.value or ""
         finally:
             _LocalFree(string_sid_ptr)
-
-
-# ── Public module-level helpers ───────────────────────────────────────────────
 
 
 def get_file_owner(path: str) -> str:
