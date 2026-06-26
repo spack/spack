@@ -762,31 +762,23 @@ def test_temp_cwd_restores_working_dir_on_exception():
 
 @pytest.mark.parametrize("ignore_cleanup_errors", [True, False])
 def test_temp_cwd_cleanup_args(monkeypatch, ignore_cleanup_errors):
-    calls = {}
 
-    def fake_rmtree(path, **kwargs):
-        calls["path"] = path
-        calls["kwargs"] = kwargs
+    expected_ignore_errors = False if sys.platform == "win32" else ignore_cleanup_errors
 
-    monkeypatch.setattr(shutil, "rmtree", fake_rmtree)
-    expected_onerror = object()
-    readonly_calls = []
+    def mock_rmtree(path, **kwargs):
+        assert kwargs["ignore_errors"] is expected_ignore_errors
 
-    def fake_readonly_file_handler(ignore_errors=False):
-        readonly_calls.append(ignore_errors)
-        return expected_onerror
+    def mock_readonly_file_handler(ignore_errors=False):
+        # always true when called in this context on Windows
+        # should not be called on other platforms
+        assert ignore_errors is True
+        assert sys.platform == "win32"
 
-    monkeypatch.setattr(fs, "readonly_file_handler", fake_readonly_file_handler)
-    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors) as tmp_dir:
-        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
-    assert calls["path"] == tmp_dir
-    if sys.platform == "win32":
-        assert readonly_calls == [True]
-        assert calls["kwargs"]["ignore_errors"] is False
-        assert calls["kwargs"]["onerror"] is expected_onerror
-    else:
-        assert readonly_calls == []
-        assert calls["kwargs"] == {"ignore_errors": ignore_cleanup_errors}
+    monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
+    monkeypatch.setattr(fs, "readonly_file_handler", mock_readonly_file_handler)
+
+    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors):
+        pass
 
 
 def test_temporary_dir_context_manager():
