@@ -228,6 +228,12 @@ properties: Dict[str, Any] = {
                         "constraint-satisfaction signature to a single representative "
                         "(the min-weight member of the equivalence class).",
                     },
+                    "unreachable_targets": {
+                        "type": "boolean",
+                        "description": "Keep only microarchitecture targets a node could "
+                        "actually be driven to (host/family-best, per-constraint "
+                        "feasible-best, compiler fallbacks, pinned/reused).",
+                    },
                 },
             },
             "timeout": {

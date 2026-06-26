@@ -101,6 +101,8 @@ concretizer:
   pruning:
     # Collapse versions with identical constraint-satisfaction signatures to a min-weight rep.
     dominated_versions: true
+    # Keep only microarchitecture targets a node could actually be driven to.
+    unreachable_targets: true
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.

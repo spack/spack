@@ -1400,11 +1400,15 @@ class SpackSolverSetup:
         # number of versions removed from the solve by equivalence-class pruning
         self.pruned_version_count = 0
         self.total_version_count = 0
+        # number of candidate targets removed by reachability pruning
+        self.pruned_target_count = 0
+        self.total_target_count = 0
 
         # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
         # init so each prune site reads a bool instead of hitting the config layer.
         pruning_cfg = spack.config.get("concretizer:pruning", {}) or {}
         self._prune_dominated_versions: bool = pruning_cfg.get("dominated_versions", True)
+        self._prune_unreachable_targets: bool = pruning_cfg.get("unreachable_targets", True)
 
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
@@ -2674,10 +2678,13 @@ class SpackSolverSetup:
         platform = spack.platforms.host()
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
+        # name -> set of targets supported by each compiler, used by target-reachability pruning
+        supported_by_compiler: List[Set[str]] = []
         for compiler in self.possible_compilers:
             supported, unsupported = self._supported_targets(
                 compiler.name, compiler.version, candidate_targets
             )
+            supported_by_compiler.append({t.name for t in supported})
 
             for target in supported:
                 best_targets.add(target.name)
@@ -2695,19 +2702,25 @@ class SpackSolverSetup:
 
             self.gen.newline()
 
+        kept_targets = self._reachable_targets(specs, candidate_targets, supported_by_compiler)
+        self.pruned_target_count += len(candidate_targets) - len(kept_targets)
+        self.total_target_count += len(candidate_targets)
+
         i = 0
         for target in candidate_targets:
-            self.gen.fact(fn.target(target.name))
-            self.gen.fact(fn.target_family(target.name, target.family.name))
-            self.gen.fact(fn.target_compatible(target.name, target.name))
-            # Code for ancestor can run on target
-            for ancestor in target.ancestors:
-                self.gen.fact(fn.target_compatible(target.name, ancestor.name))
+            if target.name in kept_targets:
+                self.gen.fact(fn.target(target.name))
+                self.gen.fact(fn.target_family(target.name, target.family.name))
+                self.gen.fact(fn.target_compatible(target.name, target.name))
+                # Code for ancestor can run on target
+                for ancestor in target.ancestors:
+                    self.gen.fact(fn.target_compatible(target.name, ancestor.name))
 
             # prefer best possible targets; weight others poorly so
             # they're not used unless set explicitly
             # these are stored to be generated as facts later offset by the
-            # number of preferred targets
+            # number of preferred targets. Weights are computed over ALL candidates so
+            # that pruning never changes a surviving target's weight.
             if target.name in best_targets:
                 self.default_targets.append((i, target.name))
                 i += 1
@@ -2717,6 +2730,12 @@ class SpackSolverSetup:
 
         self.default_targets = list(sorted(set(self.default_targets)))
         self.target_preferences()
+
+        if self._prune_unreachable_targets and self.pruned_target_count:
+            tty.debug(
+                f"target-reachability pruning removed {self.pruned_target_count} of "
+                f"{self.total_target_count} candidate targets from the solve"
+            )
 
     def _version_class_representatives(self, pkg_name, sorted_versions):
         """Return the subset of ``sorted_versions`` that must be kept in the solve.
@@ -2765,6 +2784,109 @@ class SpackSolverSetup:
         if group:
             representatives.add(min(group, key=lambda x: weights[x]))
         return representatives
+
+    def _reachable_targets(self, specs, candidate_targets, supported_by_compiler):
+        """Names of candidate targets that can actually be selected by some node.
+
+        Targets are *not* amenable to the version-style equivalence prune: ``target_compatible``
+        is the directional ancestor relation, so every target in a host's ancestor set has a
+        unique compatibility profile and nothing collapses. Instead we prune by *reachability*:
+        in any optimal model a node's target is the min-weight target that (a) satisfies the
+        node's target constraints and (b) is supported by the node's compiler; cross-edge
+        compatibility then resolves onto those same targets (a dependency forced below a parent
+        target just shares the parent's kept target or a kept ancestor). So the only targets that
+        can ever appear are:
+
+          * the overall best target and the best in each family (always-feasible baseline),
+          * the min-weight candidate satisfying each target constraint, under each compiler's
+            support set (the feasible-best for a constrained node),
+          * the best target each compiler supports (compiler fallback),
+          * any target pinned/explicitly requested in an input spec, and
+          * any target used by a reusable/concrete spec (else reuse would be blocked).
+
+        Everything else is statically unselectable and removed. Controlled by
+        ``concretizer:pruning:unreachable_targets`` (default true).
+        """
+        names = [t.name for t in candidate_targets]
+        if not self._prune_unreachable_targets:
+            return set(names)
+
+        archspec = spack.vendor.archspec.cpu
+        # weight order: mirror target_preferences (lower index == more preferred)
+        prefs_key = spack.package_prefs.PackagePrefs("all", "target")
+        ordered = sorted(
+            (spack.spec.Spec(f"target={n}") for n in names),
+            key=prefs_key,
+        )
+        weight = {s.architecture.target.name: i for i, s in enumerate(ordered)}
+        by_weight = sorted(names, key=lambda n: weight.get(n, len(names)))
+
+        def satisfies(tname, constraint):
+            target = archspec.TARGETS.get(tname)
+            if target is None:
+                return False
+            for single in str(constraint).split(","):
+                if ":" not in single:
+                    if single == tname:
+                        return True
+                    continue
+                t_min, _, t_max = single.partition(":")
+                if t_min and not t_min <= target:
+                    continue
+                if t_max and not t_max >= target:
+                    continue
+                return True
+            return False
+
+        kept: Set[str] = set()
+        # always-feasible baseline: overall best, and best per family
+        best_per_family: Dict[str, str] = {}
+        for n in by_weight:
+            fam = archspec.TARGETS[n].family.name
+            best_per_family.setdefault(fam, n)
+        kept.update(best_per_family.values())
+        if by_weight:
+            kept.add(by_weight[0])
+
+        # per target constraint, per compiler support set: the min-weight feasible target
+        constraints = list(self.target_constraints)
+        support_sets = supported_by_compiler or [set(names)]
+        for constraint in constraints:
+            for supp in support_sets:
+                for n in by_weight:  # by_weight is best-first
+                    if satisfies(n, constraint) and (not supp or n in supp):
+                        kept.add(n)
+                        break
+        # compiler fallback: best supported target for each compiler
+        for supp in support_sets:
+            for n in by_weight:
+                if not supp or n in supp:
+                    kept.add(n)
+                    break
+
+        # preserve explicitly-requested targets and targets of reusable/concrete specs,
+        # so pruning never blocks a pin or a reuse
+        candidate_names = set(names)
+
+        def keep_spec_targets(spec):
+            for node in spec.traverse():
+                tgt = getattr(getattr(node, "architecture", None), "target", None)
+                tname = getattr(tgt, "name", None) or (str(tgt) if tgt else None)
+                if tname in candidate_names:
+                    kept.add(tname)
+
+        for spec in specs:
+            try:
+                keep_spec_targets(spec)
+            except Exception:
+                return candidate_names  # bail out safely: keep everything
+        try:
+            for _h, spec in self.reusable_and_possible.explicit_items():
+                keep_spec_targets(spec)
+        except Exception:
+            return candidate_names
+
+        return kept
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
