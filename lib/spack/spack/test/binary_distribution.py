@@ -204,6 +204,10 @@ def test_download_tarball_reports_signature_verification_failure(
         signed = True
         supported_layout_versions = [3]
 
+        def matches_binary(self, spec, direction):
+            assert direction == "fetch"
+            return True
+
     class MockCacheEntry:
         def __init__(self, url, spec, allow_unsigned=False):
             self.url = url
