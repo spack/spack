@@ -18,7 +18,7 @@ import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError
 
-description = "add a spec to an environment's dev-build information"
+description = "add a spec to an environment's develop: section"
 section = "environments"
 level = "long"
 
