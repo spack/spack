@@ -741,6 +741,49 @@ def test_keep_modification_time(tmp_path: pathlib.Path):
     assert int(mtime1) == int(file1.stat().st_mtime)
 
 
+def test_temp_cwd_changes_restores_and_removes_dir():
+    previous_dir = os.path.realpath(os.getcwd())
+    with fs.temp_cwd() as tmp_dir:
+        assert previous_dir != os.path.realpath(os.getcwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+        assert os.path.isdir(tmp_dir)
+    assert os.path.realpath(os.getcwd()) == previous_dir
+    assert not os.path.exists(tmp_dir)
+
+
+def test_temp_cwd_restores_working_dir_on_exception():
+    previous_dir = os.path.realpath(os.getcwd())
+    with pytest.raises(RuntimeError, match="mock failure"):
+        with fs.temp_cwd() as tmp_dir:
+            assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+            raise RuntimeError("mock failure")
+    assert os.path.realpath(os.getcwd()) == previous_dir
+
+
+@pytest.mark.parametrize("ignore_cleanup_errors", [True, False])
+def test_temp_cwd_cleanup_args(monkeypatch, ignore_cleanup_errors):
+
+    expected_ignore_errors = False if sys.platform == "win32" else ignore_cleanup_errors
+
+    def mock_rmtree(path, **kwargs):
+        assert kwargs["ignore_errors"] is expected_ignore_errors
+
+    def mock_readonly_file_handler(ignore_errors=False):
+        # always true when called in this context on Windows
+        # should not be called on other platforms
+        assert ignore_errors is True
+        assert sys.platform == "win32"
+
+    real_rmtree = shutil.rmtree
+    monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
+    monkeypatch.setattr(fs, "readonly_file_handler", mock_readonly_file_handler)
+
+    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors):
+        pass
+    # need to restore rmtree to avoid breaking teardown
+    monkeypatch.setattr(shutil, "rmtree", real_rmtree)
+
+
 def test_temporary_dir_context_manager():
     previous_dir = os.path.realpath(os.getcwd())
     with fs.temporary_dir() as tmp_dir:
