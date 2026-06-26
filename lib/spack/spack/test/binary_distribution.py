@@ -192,6 +192,45 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
         assert results[0].url == url_util.path_to_file_url(str(tmp_path))
 
 
+def test_download_tarball_reports_signature_verification_failure(
+    monkeypatch, mock_packages, capfd
+):
+    spec = spack.concretize.concretize_one("corge")
+    mirror_url = "file:///test-mirror"
+
+    class MockMirror:
+        fetch_url = mirror_url
+        fetch_view = None
+        signed = True
+        supported_layout_versions = [3]
+
+    class MockCacheEntry:
+        def __init__(self, url, spec, allow_unsigned=False):
+            self.url = url
+            assert allow_unsigned is False
+
+        def fetch_archive(self):
+            raise spack.url_buildcache.NoVerifyException("Signature could not be verified")
+
+        def destroy(self):
+            pass
+
+    monkeypatch.setattr(
+        spack.mirrors.mirror, "MirrorCollection", lambda binary=True: {"test": MockMirror()}
+    )
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "get_url_buildcache_class",
+        lambda layout_version: MockCacheEntry,
+    )
+
+    assert spack.binary_distribution.download_tarball(spec, unsigned=None) is None
+
+    output = capfd.readouterr().err
+    assert "Failed to verify signature for binary package corge/" in output
+    assert "Signature could not be verified" in output
+
+
 def fake_dag_hash(spec, length=None):
     # Generate an arbitrary hash that is intended to be different than
     # whatever a Spec reported before (to test actions that trigger when

@@ -106,6 +106,7 @@ from .url_buildcache import (
     InvalidMetadataFile,
     ListMirrorSpecsError,
     MirrorMetadata,
+    NoVerifyException,
     URLBuildcacheEntry,
     get_entries_from_cache,
     get_url_buildcache_class,
@@ -1833,6 +1834,14 @@ def download_tarball(
 
             try:
                 cache_entry.fetch_archive()
+            except NoVerifyException as e:
+                tty.error(
+                    f"Failed to verify signature for binary package "
+                    f"{spec.name}/{spec.dag_hash()[:7]} from {fetch_url} "
+                    f"(v{layout_version}): {e}"
+                )
+                cache_entry.destroy()
+                continue
             except Exception as e:
                 tty.debug(
                     f"Encountered error attempting to fetch archive for "
