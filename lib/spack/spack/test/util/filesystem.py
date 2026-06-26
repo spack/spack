@@ -773,13 +773,14 @@ def test_temp_cwd_cleanup_args(monkeypatch, ignore_cleanup_errors):
         # should not be called on other platforms
         assert ignore_errors is True
         assert sys.platform == "win32"
-
+    real_rmtree = shutil.rmtree
     monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
     monkeypatch.setattr(fs, "readonly_file_handler", mock_readonly_file_handler)
 
     with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors):
         pass
-
+    # need to restore rmtree to avoid breaking teardown
+    monkeypatch.setattr(shutil, "rmtree", real_rmtree)
 
 def test_temporary_dir_context_manager():
     previous_dir = os.path.realpath(os.getcwd())
