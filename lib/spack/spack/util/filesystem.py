@@ -3467,7 +3467,10 @@ def relocate_win_rpath(package):
         # extract it
         stage_pe_loc = extract_spack_id(pe)
         if stage_pe_loc:
+            print(f"Discovered stage pe location {stage_pe_loc} for pe {pe}")
             pe_stage_to_prefix[stage_pe_loc] = pe
+        else:
+            print(f"unable to determine stage pe location for {pe}")
 
     ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
     ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
