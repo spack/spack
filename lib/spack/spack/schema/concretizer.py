@@ -215,6 +215,21 @@ properties: Dict[str, Any] = {
                 "description": "Enable static analysis to reduce concretization time by "
                 "generating smaller ASP problems",
             },
+            "pruning": {
+                "type": "object",
+                "description": "Toggles for static prunes applied before grounding to shrink "
+                "the ASP problem. Each prune is sound: it never changes concretization, only "
+                "removes facts/rules that provably cannot fire. Defaults are on; disable "
+                "individually for A/B benchmarking or if a bug is suspected.",
+                "properties": {
+                    "dominated_versions": {
+                        "type": "boolean",
+                        "description": "Collapse versions that share an identical "
+                        "constraint-satisfaction signature to a single representative "
+                        "(the min-weight member of the equivalence class).",
+                    },
+                },
+            },
             "timeout": {
                 "type": "integer",
                 "minimum": 0,

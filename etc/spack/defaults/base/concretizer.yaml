@@ -95,6 +95,13 @@ concretizer:
   # cases where there are requirements that prevent part of the search space to be explored.
   static_analysis: false
 
+  # Static prunes applied before grounding to shrink the ASP problem. Each prune is sound:
+  # it never changes concretization, only removes facts/rules that provably cannot fire.
+  # Defaults are on; disable individually for A/B benchmarking or if a bug is suspected.
+  pruning:
+    # Collapse versions with identical constraint-satisfaction signatures to a min-weight rep.
+    dominated_versions: true
+
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
   concretization_cache:

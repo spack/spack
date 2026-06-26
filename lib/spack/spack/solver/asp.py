@@ -1392,6 +1392,19 @@ class SpackSolverSetup:
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
+        # pkg_name -> version -> preference weight (lower == better), used to pick the
+        # min-weight representative of each version equivalence class.
+        self.version_weights: Dict[str, Dict[GitOrStandardVersion, int]] = collections.defaultdict(
+            dict
+        )
+        # number of versions removed from the solve by equivalence-class pruning
+        self.pruned_version_count = 0
+        self.total_version_count = 0
+
+        # Static-prune toggles from ``concretizer:pruning:*`` config, cached at setup
+        # init so each prune site reads a bool instead of hitting the config layer.
+        pruning_cfg = spack.config.get("concretizer:pruning", {}) or {}
+        self._prune_dominated_versions: bool = pruning_cfg.get("dominated_versions", True)
 
         self.possible_compilers: List[spack.spec.Spec] = []
         self.rejected_compilers: Set[spack.spec.Spec] = set()
@@ -1447,6 +1460,7 @@ class SpackSolverSetup:
             )
 
         for weight, declared_version in enumerate(ordered_versions):
+            self.version_weights[pkg.name][declared_version] = weight
             self.gen.fact(fn.pkg_fact(pkg.name, fn.version_declared(declared_version, weight)))
             for origin in version_provenance[declared_version]:
                 self.gen.fact(
@@ -2704,15 +2718,69 @@ class SpackSolverSetup:
         self.default_targets = list(sorted(set(self.default_targets)))
         self.target_preferences()
 
+    def _version_class_representatives(self, pkg_name, sorted_versions):
+        """Return the subset of ``sorted_versions`` that must be kept in the solve.
+
+        Versions are grouped into maximal contiguous runs that are indistinguishable to
+        the solver -- they satisfy exactly the same version constraints and share the same
+        per-version attributes (deprecation, origin, git commit). Every member of such a
+        run is statically dominated by the lowest-weight (best) member, since version
+        weight is the only thing that distinguishes them in the objective. We keep that one
+        representative and prune the rest. Indices are left untouched, so the gaps are
+        harmless: ``version_range`` facts compare numerically against the original order.
+        """
+        # Controlled by ``concretizer:pruning:dominated_versions`` (default true).
+        if not self._prune_dominated_versions:
+            return set(sorted_versions)
+
+        weights = self.version_weights.get(pkg_name)
+        # If we don't have a weight for every version (e.g. synthetic virtual versions),
+        # don't prune this package -- keep everything to stay safe.
+        if not weights or any(v not in weights for v in sorted_versions):
+            return set(sorted_versions)
+
+        constraints = sorted(self.version_constraints.get(pkg_name, ()))
+        origins = self.possible_versions[pkg_name]
+        deprecated = self.deprecated_versions[pkg_name]
+        git_versions = self.git_commit_versions[pkg_name]
+
+        def signature(v):
+            return (
+                tuple(v.satisfies(c) for c in constraints),
+                v in deprecated,
+                tuple(sorted(str(o) for o in set(origins[v]))),
+                git_versions.get(v) if v in git_versions else None,
+            )
+
+        representatives = set()
+        group: List = []
+        group_sig = None
+        for v in sorted_versions:
+            sig = signature(v)
+            if group and sig != group_sig:
+                representatives.add(min(group, key=lambda x: weights[x]))
+                group = []
+            group.append(v)
+            group_sig = sig
+        if group:
+            representatives.add(min(group, key=lambda x: weights[x]))
+        return representatives
+
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
-
         sorted_versions = {}
         for pkg_name in self.possible_versions:
             possible_versions = list(self.possible_versions[pkg_name])
             possible_versions.sort()
             sorted_versions[pkg_name] = possible_versions
+
+            representatives = self._version_class_representatives(pkg_name, possible_versions)
+            self.pruned_version_count += len(possible_versions) - len(representatives)
+            self.total_version_count += len(possible_versions)
+
             for idx, v in enumerate(possible_versions):
+                if v not in representatives:
+                    continue
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_order(v, idx)))
                 if v in self.git_commit_versions[pkg_name]:
                     sha = self.git_commit_versions[pkg_name].get(v)
@@ -2722,6 +2790,12 @@ class SpackSolverSetup:
                         self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
             self.gen.newline()
         self.gen.newline()
+
+        if self.pruned_version_count:
+            tty.debug(
+                f"version-class pruning removed {self.pruned_version_count} of "
+                f"{self.total_version_count} versions from the solve"
+            )
 
         for pkg_name, set_of_versions in sorted(self.version_constraints.items()):
             possible_versions = sorted_versions.get(pkg_name)
