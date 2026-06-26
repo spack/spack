@@ -2071,7 +2071,7 @@ complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -f -a cl
 complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -d 'if specified, create a clearsign signature'
 
 # spack graph
-set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype=
+set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype= l/long L/very-long
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 graph' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command graph' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command graph' -s h -l help -d 'show this help message and exit'
@@ -2087,6 +2087,10 @@ complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a 
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph specs from the DB'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
+complete -c spack -n '__fish_spack_using_command graph' -s l -l long -f -a long
+complete -c spack -n '__fish_spack_using_command graph' -s l -l long -d 'show dependency hashes as well as versions'
+complete -c spack -n '__fish_spack_using_command graph' -s L -l very-long -f -a very_long
+complete -c spack -n '__fish_spack_using_command graph' -s L -l very-long -d 'show full dependency hashes as well as versions'
 
 # spack help
 set -g __fish_spack_optspecs_spack_help h/help a/all spec

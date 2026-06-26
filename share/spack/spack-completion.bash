@@ -1340,7 +1340,7 @@ _spack_gpg_sign() {
 _spack_graph() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -c --color -i --installed --deptype"
+        SPACK_COMPREPLY="-h --help -a --ascii -d --dot -s --static -c --color -i --installed --deptype -l --long -L --very-long"
     else
         _all_packages
     fi
