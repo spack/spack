@@ -33,7 +33,7 @@ from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
 from spack.util import compression, tty
-from spack.util.lang import memoized
+from spack.util.lang import cached_method
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -234,9 +234,9 @@ class CDashHandler:
         tty.debug(f"Generated new build stamp ({build_stamp})")
         return build_stamp
 
-    @property  # type: ignore
-    @memoized
-    def project_enc(self):
+    @property
+    @cached_method
+    def project_enc(self) -> str:
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")
         encode = urlencode({"project": self.project})
         index = encode.find("=") + 1

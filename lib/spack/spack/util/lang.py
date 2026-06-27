@@ -121,6 +121,31 @@ def memoized(func):
     return functools.lru_cache(maxsize=None)(func)
 
 
+CachedMethod = TypeVar("CachedMethod", bound=Callable[..., Any])
+
+
+def cached_method(method: CachedMethod) -> CachedMethod:
+    """Decorator that caches the result of an instance method, per instance, keyed on the
+    call arguments.
+    """
+    cache_attr = f"_cached_{method.__name__}"
+
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        try:
+            cache = self.__dict__[cache_attr]
+        except KeyError:
+            cache = self.__dict__[cache_attr] = {}
+        key = args if not kwargs else (args, tuple(sorted(kwargs.items())))
+        try:
+            return cache[key]
+        except KeyError:
+            cache[key] = result = method(self, *args, **kwargs)
+            return result
+
+    return typing.cast(CachedMethod, wrapper)
+
+
 def list_modules(directory, **kwargs):
     """Lists all of the modules, excluding ``__init__.py``, in a
     particular directory.  Listed packages have no particular
