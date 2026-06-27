@@ -234,6 +234,16 @@ class CompilerWrapper(Package):
             extra_rpaths = lang.dedupe(extra_rpaths)
             env.set("SPACK_COMPILER_EXTRA_RPATHS", ":".join(extra_rpaths))
 
+        # Set SPACK_DEBUG_PREFIX_MAP to the staging path
+        # Develop packages are excluded
+        if not dependent_spec.variants.get("dev_path"):
+            try:
+                staging_src = dependent_spec.package.stage.source_path
+                env.set("SPACK_DEBUG_PREFIX_MAP", staging_src)
+            except Exception:
+                # Stage not yet set up
+                pass
+
         env.set("SPACK_ENABLE_NEW_DTAGS", self.enable_new_dtags)
         env.set("SPACK_DISABLE_NEW_DTAGS", self.disable_new_dtags)
 
