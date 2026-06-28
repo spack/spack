@@ -527,9 +527,13 @@ satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3, A4)) :-
   generic_condition_requirement(Name, A1, A2, A3, A4),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement("depends_on", A1, A2, A3)) :-
+% depends_on edges that match a condition requirement, joined with condition_nodes below.
+attr_depends_on_for_requirement(node(X, A1), node(Y, A2), A3) :-
   attr("depends_on", node(X, A1), node(Y, A2), A3),
-  generic_condition_requirement("depends_on", A1, A2, A3),
+  generic_condition_requirement("depends_on", A1, A2, A3).
+
+satisfied(trigger(PackageNode), condition_requirement("depends_on", A1, A2, A3)) :-
+  attr_depends_on_for_requirement(node(X, A1), node(Y, A2), A3),
   condition_nodes(PackageNode, node(X, A1)),
   condition_nodes(PackageNode, node(Y, A2)).
 
@@ -542,9 +546,13 @@ satisfied(trigger(PackageNode), condition_requirement("closure", A1, A2, A3)) :-
   generic_condition_requirement("closure", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+% virtual_on_edge edges that match a condition requirement, joined with condition_nodes below.
+attr_virtual_on_edge_for_requirement(node(X, A1), node(Y, A2), A3) :-
   attr("virtual_on_edge", node(X, A1), node(Y, A2), A3),
-  generic_condition_requirement("virtual_on_edge", A1, A2, A3),
+  generic_condition_requirement("virtual_on_edge", A1, A2, A3).
+
+satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+  attr_virtual_on_edge_for_requirement(node(X, A1), node(Y, A2), A3),
   condition_nodes(PackageNode, node(X, A1)),
   condition_nodes(PackageNode, node(Y, A2)).
 
