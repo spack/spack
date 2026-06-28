@@ -641,8 +641,15 @@ subcondition_effect_at(EffectID, ConditionID, node(X, Package))
      trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
      subcondition(SubconditionID, ConditionID).
 
+% subcondition_effect_at projected on its node and on its condition id; both empty when the
+% package has no subconditions. Used as guards on the impose rule below.
+subcondition_effect_at_node(node(X, Package)) :- subcondition_effect_at(_, _, node(X, Package)).
+subcondition_effect_at_cond(ConditionID)      :- subcondition_effect_at(_, ConditionID, _).
+
 impose(EffectID, node(X, Package))
   :- subcondition_effect_at(EffectID, ConditionID, node(X, Package)),
+     subcondition_effect_at_node(node(X, Package)),
+     subcondition_effect_at_cond(ConditionID),
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
