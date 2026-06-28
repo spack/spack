@@ -669,11 +669,19 @@ imposed_nodes(PackageNode, node(X, A1))
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not has_condition_set_node(PackageNode, A1).
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not has_imposed_node(PackageNode, A1).
 
+% A1-keyed existence projections of imposed_constraint by arity. Lets gringo prune the
+% attr-imposing rules below by package before the impose() fan-out (the full
+% imposed_constraint tuple is only retrievable after ID is bound by impose).
+imposed_constraint_pkg0(A1) :- imposed_constraint(_, _, A1).
+imposed_constraint_pkg1(A1) :- imposed_constraint(_, _, A1, _).
+imposed_constraint_pkg2(A1) :- imposed_constraint(_, _, A1, _, _).
+imposed_constraint_pkg3(A1) :- imposed_constraint(_, _, A1, _, _, _).
+
 % Conditions that hold impose may impose constraints on other specs
-attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(PackageNode, node(X, A1)).
+attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)), imposed_constraint_pkg0(A1).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name), imposed_constraint_pkg1(A1).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name), imposed_constraint_pkg2(A1).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(PackageNode, node(X, A1)), imposed_constraint_pkg3(A1).
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
@@ -695,13 +703,18 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
+% A1-keyed existence projection for the concrete_variant_set constraint specifically
+% (the generic 5-arg projection is non-empty, so it would not prune this rule).
+concrete_variant_set_imposed_pkg(A1) :- imposed_constraint(_, "concrete_variant_set", A1, _, _).
+
 % For := we must keep track of the origin of the fact, since we need to check
 % each condition separately, i.e. foo:=a,b in one place and foo:=c in another
 % should not make foo:=a,b,c possible
 attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
   :- impose(ID, PackageNode),
      imposed_nodes(PackageNode, node(X, A1)),
-     imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value).
+     imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value),
+     concrete_variant_set_imposed_pkg(A1).
 
 
 % The rule below accounts for expressions like:
