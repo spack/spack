@@ -624,15 +624,19 @@ impose(EffectID, node(X, Package))
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
-% Effects of subconditions hold if the trigger holds and the
-% primary condition holds
+% Effects of subconditions hold if the trigger holds and the primary condition holds.
+% subcondition_effect_at binds EffectID and the primary ConditionID from the trigger side
+% alone; it is empty when there are no subconditions.
+subcondition_effect_at(EffectID, ConditionID, node(X, Package))
+  :- trigger_condition_holds(TriggerID, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
+     trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
+     subcondition(SubconditionID, ConditionID).
+
 impose(EffectID, node(X, Package))
-  :- subcondition(SubconditionID, ConditionID),
+  :- subcondition_effect_at(EffectID, ConditionID, node(X, Package)),
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
-     trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
-     trigger_requestor_node(TriggerID, node(X, Package)),
-     trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
