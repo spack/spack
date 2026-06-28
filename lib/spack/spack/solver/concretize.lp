@@ -724,6 +724,11 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
      concrete_variant_set_imposed_pkg(A1).
 
 
+% depends_on imposed constraints projected on the condition id and on the parent package
+% A1. Used as guards on the cross-edge depends_on rule below.
+imposed_constraint_depends_on_id(ID)  :- imposed_constraint(ID, "depends_on", _, _, _).
+imposed_constraint_depends_on_pkg(A1) :- imposed_constraint(_, "depends_on", A1, _, _).
+
 % The rule below accounts for expressions like:
 %
 % root ^dep %compiler
@@ -731,8 +736,10 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 % where "compiler" is a dependency of "dep", but is enforced by a condition imposed by "root"
 1 { attr("depends_on", node(A1_DUPE_ID, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, RootNode),
+     imposed_constraint_depends_on_id(ID),
      unification_set("root", RootNode),
      condition_set(RootNode, node(A1_DUPE_ID, A1)),
+     imposed_constraint_depends_on_pkg(A1),
      not self_build_requirement(RootNode, node(A1_DUPE_ID, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
