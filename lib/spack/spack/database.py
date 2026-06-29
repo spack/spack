@@ -1202,6 +1202,7 @@ class Database:
         explicit: bool = False,
         installation_time: Optional[float] = None,
         allow_missing: bool = False,
+        _visited: Optional[Set[str]] = None,
     ):
         """Add an install record for this spec to the database.
 
@@ -1220,6 +1221,8 @@ class Database:
                 Date and time of installation
             allow_missing: if True, don't warn when installation is not found on on disk
                 This is useful when installing specs without build/test deps.
+            _visited: internal parameter to track visited specs and avoid infinite
+                recursion with circular run dependencies
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1232,8 +1235,19 @@ class Database:
 
         installation_time = installation_time or _now()
 
+        # Track visited specs to avoid infinite recursion with circular run dependencies
+        if _visited is None:
+            _visited = set()
+
+        # Mark this spec as being processed to avoid circular recursion
+        _visited.add(key)
+
         for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
-            if edge.spec.dag_hash() in self._data:
+            dep_hash = edge.spec.dag_hash()
+            if dep_hash in self._data:
+                continue
+            # Skip if we're already processing this dependency (circular dependency)
+            if dep_hash in _visited:
                 continue
             self._add(
                 edge.spec,
@@ -1241,6 +1255,7 @@ class Database:
                 installation_time=installation_time,
                 # allow missing build / test only deps
                 allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
+                _visited=_visited,
             )
 
         if spec.spliced:
@@ -1286,7 +1301,16 @@ class Database:
             for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                assert record, f"Missing dependency {dep.spec.short_spec} in DB"
+                # For circular dependencies, the dependency might not be in DB yet if we're
+                # still in the middle of adding it (it's in _visited but not yet in _data).
+                # In that case, skip connecting it now - it will be connected when both specs
+                # are fully added.
+                if not record:
+                    if dkey not in _visited:
+                        # Dependency should have been added but wasn't - this is an error
+                        raise AssertionError(f"Missing dependency {dep.spec.short_spec} in DB")
+                    # else: circular dependency being processed, skip for now
+                    continue
                 new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
                     record.ref_count += 1
