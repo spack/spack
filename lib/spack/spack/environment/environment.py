@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import contextlib
+import errno
 import glob
 import os
 import pathlib
@@ -806,6 +807,28 @@ class ViewDescriptor:
             "directory or file not managed by Spack. Please remove it manually to update the view."
         )
 
+    def _move_old_view_aside(self) -> Optional[str]:
+        """Move an existing view at ``self.root`` aside so we can roll back to it.
+
+        Returns where the old view was moved, or ``None`` if there was none, or it had to be
+        removed in place (overlayfs EXDEV) and can no longer be restored.
+        """
+        if not os.path.lexists(self.root):
+            return None
+        old_view = f"{self.root}.old.{uuid.uuid4().hex[:8]}"
+        try:
+            os.rename(self.root, old_view)
+        except OSError as e:
+            # overlayfs (e.g. `docker build`) can't rename a dir off a lower layer; remove it
+            # in place instead and give up rollback. A mount point also can't be renamed off its
+            # device (same EXDEV), but rmtree would wipe the mounted volume and then crash on the
+            # final rmdir, so refuse it.
+            if e.errno != errno.EXDEV or os.path.ismount(self.root):
+                raise
+            shutil.rmtree(self.root)
+            return None
+        return old_view
+
     def content_hash(self, specs):
         d = syaml.syaml_dict(
             [
@@ -909,17 +932,12 @@ class ViewDescriptor:
 
         root_parent = os.path.dirname(self.root)
         root_basename = os.path.basename(self.root)
-        suffix = uuid.uuid4().hex[:8]
-        # Temporary location for the old view in case we need to roll back
-        old_root = os.path.join(root_parent, f"{root_basename}.old.{suffix}")
 
         # The view is built *in place* at self.root: packages bake the projection path
         # (e.g. shebangs, pyvenv.cfg) into file contents, and that path has to be the
         # final view location, not a temporary build directory that's renamed afterwards.
         # To stay able to roll back, move an existing view aside first.
-        moved_old = os.path.lexists(self.root)
-        if moved_old:
-            os.rename(self.root, old_root)
+        old_root = self._move_old_view_aside()
 
         try:
             fs.mkdirp(self.root)
@@ -932,7 +950,7 @@ class ViewDescriptor:
         except Exception as e:
             # Roll back to the previous view (if any).
             shutil.rmtree(self.root, ignore_errors=True)
-            if moved_old:
+            if old_root is not None:
                 try:
                     os.rename(old_root, self.root)
                 except OSError:
@@ -954,7 +972,7 @@ class ViewDescriptor:
                 ) from e
             raise
 
-        if not moved_old:
+        if old_root is None:
             return
 
         # Clean up old view
