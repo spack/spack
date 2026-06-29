@@ -1827,8 +1827,15 @@ def schedule_builds(
                 continue
 
             # Write lock acquired: proceed with scheduling.
-            # Don't schedule builds for specs from upstream databases.
-            if upstream and record and not record.installed:
+            # Don't schedule builds for specs from upstream databases, unless this is a
+            # build-only dependency that can be rebuilt locally when missing upstream.
+            rebuild_locally = (
+                upstream
+                and record
+                and not record.installed
+                and not spec.dependents(deptype=dt.LINK | dt.RUN)
+            )
+            if upstream and record and not record.installed and not rebuild_locally:
                 lock.release_write()
                 raise spack.error.InstallError(
                     f"Cannot install {spec}: it is uninstalled in an upstream database."

@@ -6,12 +6,17 @@
 import pathlib
 import sys
 import time
+from functools import partial
+from types import SimpleNamespace
 
 import pytest
+
+import spack.deptypes as dt
 
 if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
+import spack.error
 import spack.spec
 from spack.new_installer import (
     OVERWRITE_GARBAGE_SUFFIX,
@@ -637,6 +642,93 @@ class TestScheduleBuilds:
             for _, _, lock in result.newly_installed:
                 lock.release_read()
             jobserver.close()
+
+    def test_upstream_uninstalled_build_dep_only_is_scheduled(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        """Build-only upstream deps are rebuilt locally; link/run upstream deps raise.
+
+        Uses the installed-deps-c package topology:
+          c --> d  (build only)
+          c --> e  (build + link)
+        """
+        dag = create_dag(
+            nodes=["installed-deps-c", "installed-deps-d", "installed-deps-e"],
+            edges=[
+                ("installed-deps-c", "installed-deps-d", "build"),
+                ("installed-deps-c", "installed-deps-e", ("build", "link")),
+            ],
+        )
+        for s in dag.values():
+            s._mark_concrete()
+        spec_c = dag["installed-deps-c"]
+        dep_d = dag["installed-deps-d"]  # build-only dep
+        dep_e = dag["installed-deps-e"]  # build+link dep
+
+        # Confirm the deptype structure the production code relies on.
+        assert not dep_d.dependents(deptype=dt.LINK | dt.RUN)
+        assert dep_e.dependents(deptype=dt.LINK | dt.RUN)
+
+        upstream_record = SimpleNamespace(
+            installed=False, path="/opt/upstream/missing", installation_time=0.0, explicit=False
+        )
+        original_query = temporary_store.db.query_by_spec_hash
+        bg = _FakeBuildGraph(list(dag.values()))
+
+        def fake_query(dag_hash, *, target_hash):
+            if dag_hash == target_hash:
+                return True, upstream_record
+            return original_query(dag_hash)
+
+        # Case 1: dep_d is upstream-uninstalled with no LINK|RUN dependents → scheduled.
+        monkeypatch.setattr(
+            temporary_store.db, "query_by_spec_hash", partial(fake_query, target_hash=dep_d.dag_hash())
+        )
+        jobserver = PosixJobServer(num_jobs=2)
+        pending = [dep_d.dag_hash()]
+        try:
+            result = schedule_builds(
+                pending,
+                bg,
+                temporary_store.db,
+                temporary_store.prefix_locker,
+                overwrite=set(),
+                overwrite_time=0.0,
+                capacity=1,
+                needs_jobserver_token=False,
+                jobserver=jobserver,
+                explicit=set(),
+            )
+            assert len(result.to_start) == 1
+            assert result.to_start[0][0] == dep_d.dag_hash()
+            assert not pending
+        finally:
+            for _, lock in result.to_start:
+                lock.release_write()
+            jobserver.close()
+
+        # Case 2: dep_e is upstream-uninstalled with a LINK dependent → raises.
+        monkeypatch.setattr(
+            temporary_store.db, "query_by_spec_hash", partial(fake_query, target_hash=dep_e.dag_hash())
+        )
+        jobserver2 = PosixJobServer(num_jobs=2)
+        pending2 = [dep_e.dag_hash()]
+        try:
+            with pytest.raises(spack.error.InstallError, match="uninstalled in an upstream"):
+                schedule_builds(
+                    pending2,
+                    bg,
+                    temporary_store.db,
+                    temporary_store.prefix_locker,
+                    overwrite=set(),
+                    overwrite_time=0.0,
+                    capacity=1,
+                    needs_jobserver_token=False,
+                    jobserver=jobserver2,
+                    explicit=set(),
+                )
+        finally:
+            jobserver2.close()
 
 
 def test_nodes_to_roots():
