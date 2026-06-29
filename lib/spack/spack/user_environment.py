@@ -58,7 +58,7 @@ def unconditional_environment_modifications(view):
 
     for subdir, vars in prefix_inspections(sys.platform).items():
         full_subdir = os.path.join(view.root, subdir)
-        full_subdir = spack.util.path.canonicalize_path(full_subdir)
+        full_subdir = spack.config.canonicalize_path(full_subdir)
         for var in vars:
             env.prepend_path(var, full_subdir)
 

@@ -4,10 +4,12 @@
 
 function _spack_env_set -a name value
     set -gx $name "$value"
+    return 0
 end
 
 function _spack_env_unset -a name
     set -e "$name"
+    return 0
 end
 
 function _spack_env_append -a name value sep
@@ -16,6 +18,7 @@ function _spack_env_append -a name value sep
     else
         set -gx $name "$value"
     end
+    return 0
 end
 
 function _spack_env_prepend -a name value sep
@@ -24,6 +27,7 @@ function _spack_env_prepend -a name value sep
     else
         set -gx $name "$value"
     end
+    return 0
 end
 
 function _spack_env_remove_value -a name value sep
@@ -36,7 +40,7 @@ function _spack_env_remove_value -a name value sep
         end
     end
     set -gx $name (string join -- $sep $as_list)
-    # exit 0
+    return 0
 end
 
 function _spack_env_remove_first -a name value sep
@@ -45,6 +49,7 @@ function _spack_env_remove_first -a name value sep
         set -e as_list[$index]
     end
     set -gx $name (string join -- $sep $as_list)
+    return 0
 end
 
 function _spack_env_remove_last -a name value sep
@@ -68,6 +73,7 @@ function _spack_env_remove_last -a name value sep
     end
 
     set -gx $name (string join -- $sep $as_list)
+    return 0
 end
 
 function _spack_env_prune_duplicates -a name sep
@@ -81,4 +87,5 @@ function _spack_env_prune_duplicates -a name sep
     end
 
     set -gx $name (string join -- $sep $new_list)
+    return 0
 end
