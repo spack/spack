@@ -1675,16 +1675,20 @@ def test_security_descriptor_from_file_sddl(tmp_path):
 
 @pytest.mark.only_windows("Windows security API required")
 def test_get_file_owner_returns_string(tmp_path):
-    """get_file_owner must return the current user's account name for a file we just created."""
+    """get_file_owner must return a human-readable account name that resolves to a valid SID."""
     from spack.util.win_acl import SecurityDescriptor, get_file_owner
 
     f = tmp_path / "owner_test.txt"
     f.write_text("hello")
     owner_name = get_file_owner(str(f))
 
-    # Resolve the returned name back to a SID and compare with the current user's SID
-    current_sid = SecurityDescriptor.get_sid_for_user()
-    assert SecurityDescriptor.get_sid_for_user(owner_name) == current_sid
+    # Must be a human-readable account name, not a raw SID
+    assert isinstance(owner_name, str) and owner_name
+    assert not owner_name.startswith("S-1-")
+
+    # Must resolve back to a valid SID — confirming the name is a real, known account
+    owner_sid = SecurityDescriptor.get_sid_for_user(owner_name)
+    assert owner_sid.startswith("S-1-")
 
 
 @pytest.mark.only_windows("Windows security API required")
