@@ -661,7 +661,6 @@ class TestScheduleBuilds:
         )
         for s in dag.values():
             s._mark_concrete()
-        spec_c = dag["installed-deps-c"]
         dep_d = dag["installed-deps-d"]  # build-only dep
         dep_e = dag["installed-deps-e"]  # build+link dep
 
