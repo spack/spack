@@ -3335,12 +3335,8 @@ def test_filtering_reused_specs(
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.context.SpackContext(
-            config=mutable_config,
-            store=spack.store.create(mutable_config),
-            repo=spack.repo.PATH,
-            binary_index=spack.binary_distribution.BINARY_INDEX,
-            misc_cache=spack.caches.MISC_CACHE,
+        context=spack.context.SpackContext.default()._replace(
+            config=mutable_config, store=spack.store.create(mutable_config)
         ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
@@ -3382,12 +3378,8 @@ def test_selecting_reused_sources(reuse_yaml, expected_length, mutable_config):
     )
     completion_mode = mutable_config.get("concretizer:externals:completion")
     selector = spack.solver.asp.ReusableSpecsSelector(
-        context=spack.context.SpackContext(
-            config=mutable_config,
-            store=spack.store.create(mutable_config),
-            repo=spack.repo.PATH,
-            binary_index=spack.binary_distribution.BINARY_INDEX,
-            misc_cache=spack.caches.MISC_CACHE,
+        context=spack.context.SpackContext.default()._replace(
+            config=mutable_config, store=spack.store.create(mutable_config)
         ),
         external_parser=create_external_parser(packages_with_externals, completion_mode),
         packages_with_externals=packages_with_externals,
