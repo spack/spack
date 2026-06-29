@@ -701,9 +701,13 @@ def copy_mode(src, dest):
         src_sd = SecurityDescriptor.from_file(src)
         if any(_grants_execute(ace) for ace in src_sd.dacl):
             dst_sd = SecurityDescriptor.from_file(dest)
-            for ace in dst_sd.dacl:
+            # dacl is a deep copy — modify it, then replace the stored DACL
+            dacl = dst_sd.dacl
+            dst_sd.clear_dacl()
+            for ace in dacl:
                 if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED:
                     ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+                dst_sd.add_ace(ace)
             dst_sd.apply(dest)
         return
     src_mode = os.stat(src).st_mode

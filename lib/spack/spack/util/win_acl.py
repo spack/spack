@@ -586,6 +586,8 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
     OWNER_SECURITY_INFORMATION = 0x00000001
     GROUP_SECURITY_INFORMATION = 0x00000002
     DACL_SECURITY_INFORMATION = 0x00000004
+    # Required to actually set/clear SE_DACL_PROTECTED; DACL_SECURITY_INFORMATION alone does not.
+    PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000
 
     with _local_ptr() as pp_sd:
         if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
@@ -629,6 +631,10 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
             security_info |= GROUP_SECURITY_INFORMATION
         if dacl_ptr is not None:
             security_info |= DACL_SECURITY_INFORMATION
+            # D:P in the SDDL requests a protected DACL (no inheritance from parent).
+            # SetNamedSecurityInfoW only honours this when the dedicated bit is also set.
+            if re.search(r"D:[^(]*P", sddl):
+                security_info |= PROTECTED_DACL_SECURITY_INFORMATION
 
         if security_info == 0:
             return
