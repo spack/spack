@@ -2152,7 +2152,7 @@ impose(Hash, PackageNode) :- attr("hash", PackageNode, Hash), attr("node", Packa
 build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 
 % This statement, which is a hidden feature of clingo, let us avoid cycles in the DAG
-#edge (A, B) : depends_on(A, B).
+#edge (A, B) : attr("depends_on", A, B, Type), Type != "run".
 
 %-----------------------------------------------------------------------------------------
 % Optimization
@@ -2369,7 +2369,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
 
 % Minimize the number of deprecated versions being used
 #minimize {
-    1@Priority, PackageNode  
+    1@Priority, PackageNode
     : attr("deprecated", PackageNode, _),
       not external(PackageNode),
       build_priority(PackageNode, BuildPriority),
@@ -2386,7 +2386,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       version_weight(PackageNode, Weight),
       build_priority(PackageNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "version badness (roots)");
-    
+
     Penalty@Priority, PackageNode
     : attr("root", PackageNode),
       version_deprecation_penalty(PackageNode, Penalty),
@@ -2412,7 +2412,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
 
 % Choose the preferred compiler before penalizing variants, to avoid that a variant penalty
 % on e.g. gcc causes clingo to pick another compiler e.g. llvm
-#minimize{ 
+#minimize{
     Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       language(Virtual),
@@ -2427,7 +2427,7 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
 }.
 
 % Try to use default variants or variants that have been set
-#minimize { 
+#minimize {
     Penalty@Priority, PackageNode,Variant,Value
     : variant_penalty(PackageNode, Variant, Value, Penalty),
       not attr("root", PackageNode),

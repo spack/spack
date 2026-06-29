@@ -2049,13 +2049,27 @@ class Spec:
         """Follow dependent links and find the root of this spec's DAG.
 
         Spack specs have a single root (the package being installed).
+        With circular dependencies, we detect cycles and return the node with no dependents.
         """
         # FIXME: In the case of multiple parents this property does not
         # FIXME: make sense. Should we revisit the semantics?
         if not self._dependents:
             return self
-        edges_by_package = next(iter(self._dependents.values()))
-        return edges_by_package[0].parent.root
+
+        # Use cycle detection to avoid infinite recursion with circular dependencies
+        visited = set()
+        current = self
+
+        while current._dependents:
+            if id(current) in visited:
+                # We've hit a cycle - return the current node
+                # In a circular dependency, there's no true "root", so return self
+                return self
+            visited.add(id(current))
+            edges_by_package = next(iter(current._dependents.values()))
+            current = edges_by_package[0].parent
+
+        return current
 
     @property
     def package(self):
@@ -2240,6 +2254,390 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
+    def _find_sccs_tarjan(
+        self, all_specs: Dict[int, "Spec"], depflag: dt.DepFlag
+    ) -> List[List["Spec"]]:
+        """Find strongly connected components using Tarjan's algorithm.
+
+        Args:
+            all_specs: Dictionary mapping spec id to spec
+            depflag: Dependency types to consider
+
+        Returns:
+            List of SCCs, where each SCC is a list of specs
+        """
+        index_counter = [0]
+        stack = []
+        lowlinks = {}
+        index = {}
+        on_stack = set()
+        sccs = []
+
+        def strongconnect(spec):
+            spec_id = id(spec)
+            index[spec_id] = index_counter[0]
+            lowlinks[spec_id] = index_counter[0]
+            index_counter[0] += 1
+            stack.append(spec)
+            on_stack.add(spec_id)
+
+            # Consider successors (dependencies)
+            for edge in spec.edges_to_dependencies(depflag=depflag):
+                dep_id = id(edge.spec)
+                if dep_id not in index:
+                    # Successor not yet visited; recurse
+                    strongconnect(edge.spec)
+                    lowlinks[spec_id] = min(lowlinks[spec_id], lowlinks[dep_id])
+                elif dep_id in on_stack:
+                    # Successor is on stack and hence in current SCC
+                    lowlinks[spec_id] = min(lowlinks[spec_id], index[dep_id])
+
+            # If spec is a root node, pop the stack and create an SCC
+            if lowlinks[spec_id] == index[spec_id]:
+                scc = []
+                while True:
+                    w = stack.pop()
+                    on_stack.remove(id(w))
+                    scc.append(w)
+                    if w is spec:
+                        break
+                sccs.append(scc)
+
+        # Process all specs
+        for spec in all_specs.values():
+            if id(spec) not in index:
+                strongconnect(spec)
+
+        return sccs
+
+    def _topological_sort_sccs(
+        self, sccs: List[List["Spec"]], depflag: dt.DepFlag
+    ) -> List[List["Spec"]]:
+        """Sort SCCs in topological order.
+
+        Returns SCCs such that if SCC_A depends on SCC_B, then SCC_B appears before SCC_A.
+
+        Args:
+            sccs: List of strongly connected components
+            depflag: Dependency types to consider
+
+        Returns:
+            SCCs in topological order
+        """
+        # Build SCC membership map
+        spec_to_scc = {}
+        for scc_idx, scc in enumerate(sccs):
+            for spec in scc:
+                spec_to_scc[id(spec)] = scc_idx
+
+        # Build SCC dependency graph
+        scc_deps = [set() for _ in sccs]
+        for scc_idx, scc in enumerate(sccs):
+            for spec in scc:
+                for edge in spec.edges_to_dependencies(depflag=depflag):
+                    dep_scc_idx = spec_to_scc[id(edge.spec)]
+                    if dep_scc_idx != scc_idx:  # External dependency
+                        scc_deps[scc_idx].add(dep_scc_idx)
+
+        # Kahn's algorithm for topological sort
+        in_degree = [len(deps) for deps in scc_deps]
+        queue = [i for i, degree in enumerate(in_degree) if degree == 0]
+        result = []
+
+        while queue:
+            scc_idx = queue.pop(0)
+            result.append(sccs[scc_idx])
+
+            # Reduce in-degree for dependent SCCs
+            for other_idx, deps in enumerate(scc_deps):
+                if scc_idx in deps:
+                    in_degree[other_idx] -= 1
+                    if in_degree[other_idx] == 0:
+                        queue.append(other_idx)
+
+        return result
+
+    def _extract_node_attributes(
+        self, spec: "Spec", hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[str, Any]:
+        """Extract non-dependency attributes for a spec.
+
+        Args:
+            spec: Spec to extract attributes from
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary of spec attributes (excluding dependencies)
+        """
+        attrs = {"name": spec.name}
+
+        if spec.versions:
+            attrs.update(spec.versions.to_dict())
+        if spec.architecture:
+            attrs.update(spec.architecture.to_dict())
+        if spec.namespace:
+            attrs["namespace"] = spec.namespace
+
+        # Variants and compiler flags
+        params = dict(sorted(v.yaml_entry() for v in spec.variants.values()))
+        params.update(
+            sorted(spec.compiler_flags.yaml_entry(flag_type) for flag_type in spec.compiler_flags)
+        )
+        if params:
+            attrs["parameters"] = params
+
+        # Propagation and abstract variants
+        if params and not spec.concrete:
+            flag_names = [
+                name
+                for name, flags in spec.compiler_flags.items()
+                if any(x.propagate for x in flags)
+            ]
+            attrs["propagate"] = sorted(
+                itertools.chain([v.name for v in spec.variants.values() if v.propagate], flag_names)
+            )
+            attrs["abstract"] = sorted(v.name for v in spec.variants.values() if not v.concrete)
+
+        # External packages
+        if spec.external:
+            attrs["external"] = {
+                "path": spec.external_path,
+                "module": spec.external_modules or None,
+                "extra_attributes": syaml.sorted_dict(spec.extra_attributes),
+            }
+
+        if not spec._concrete:
+            attrs["concrete"] = False
+
+        # Patches
+        if "patches" in spec.variants:
+            variant = spec.variants["patches"]
+            if hasattr(variant, "_patches_in_order_of_appearance"):
+                attrs["patches"] = variant._patches_in_order_of_appearance
+
+        # Package hash
+        if (
+            spec._concrete
+            and hash_descriptor.package_hash
+            and hasattr(spec, "_package_hash")
+            and spec._package_hash
+        ):
+            package_hash = spec._package_hash
+            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
+                package_hash = package_hash.decode("utf-8")
+            attrs["package_hash"] = package_hash
+
+        return attrs
+
+    def _to_node_dict_with_precomputed_hashes(
+        self, spec: "Spec", computed_hashes: Dict[int, str], hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[str, Any]:
+        """Build node dict using precomputed hashes for dependencies.
+
+        This is the reusable dictionary builder that both dag_hash() and to_dict() can use.
+
+        Args:
+            spec: Spec to build dict for
+            computed_hashes: Dictionary of already-computed hashes for dependencies
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary representation of the spec with precomputed dependency hashes
+        """
+        d = self._extract_node_attributes(spec, hash_descriptor)
+
+        # Dependencies - use precomputed hashes (ensures all dep hashes are included)
+        deps = spec._dependencies_dict(depflag=hash_descriptor.depflag)
+        if deps:
+            dependencies = []
+            for name, edges_for_name in sorted(deps.items()):
+                for dspec in edges_for_name:
+                    dep_attrs = {
+                        "name": name,
+                        hash_descriptor.name: computed_hashes[id(dspec.spec)],  # Include dep hash
+                        "parameters": {
+                            "deptypes": dt.flag_to_tuple(dspec.depflag),
+                            "virtuals": dspec.virtuals,
+                        },
+                    }
+                    if dspec.direct:
+                        dep_attrs["parameters"]["direct"] = True
+                    dependencies.append(dep_attrs)
+            d["dependencies"] = dependencies
+
+        # Build spec
+        if spec._build_spec:
+            d["build_spec"] = {
+                "name": spec.build_spec.name,
+                hash_descriptor.name: computed_hashes.get(
+                    id(spec.build_spec), spec.build_spec._cached_hash(hash_descriptor)
+                ),
+            }
+
+        # Annotations
+        d["annotations"] = {"original_specfile_version": spec.annotations.original_spec_format}
+        if spec.annotations.original_spec_format < 5:
+            d["annotations"]["compiler"] = str(spec.annotations.compiler_node_attribute)
+
+        return d
+
+    def _to_cycle_representation(
+        self,
+        scc_specs: List["Spec"],
+        computed_hashes: Dict[int, str],
+        hash_descriptor: ht.SpecHashDescriptor,
+    ) -> Dict[str, Any]:
+        """Build canonical dictionary representation of an entire cycle.
+
+        Args:
+            scc_specs: List of specs in the strongly connected component
+            computed_hashes: Dictionary of already-computed hashes for external dependencies
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary representing the full cycle structure, including all external dep hashes
+        """
+        scc_set = set(id(s) for s in scc_specs)
+        cycle_nodes = []
+
+        for spec in sorted(scc_specs, key=lambda s: (s.name, str(s.versions))):
+            internal_deps = []
+            external_deps = []
+
+            for edge in spec.edges_to_dependencies(depflag=hash_descriptor.depflag):
+                dep_info = {
+                    "name": edge.spec.name,
+                    "deptypes": dt.flag_to_tuple(edge.depflag),
+                    "virtuals": edge.virtuals,
+                }
+                if edge.direct:
+                    dep_info["direct"] = True
+
+                if id(edge.spec) in scc_set:
+                    # Internal dependency (within cycle) - no hash to avoid circularity
+                    internal_deps.append(dep_info)
+                else:
+                    # External dependency - include its precomputed hash
+                    dep_info["hash"] = computed_hashes[id(edge.spec)]
+                    external_deps.append(dep_info)
+
+            node_attrs = self._extract_node_attributes(spec, hash_descriptor)
+            cycle_nodes.append(
+                {
+                    "name": spec.name,
+                    "attributes": node_attrs,
+                    "internal_deps": sorted(internal_deps, key=lambda d: d["name"]),
+                    "external_deps": sorted(external_deps, key=lambda d: d["name"]),
+                }
+            )
+
+        return {"cycle_nodes": cycle_nodes}
+
+    def _to_cycle_node_dict(
+        self,
+        spec: "Spec",
+        cycle_hash: str,
+        hash_descriptor: ht.SpecHashDescriptor,
+    ) -> Dict[str, Any]:
+        """Build dictionary for a single node within a cycle.
+
+        Args:
+            spec: Spec to build dict for
+            cycle_hash: Hash of the entire cycle (precomputed)
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary for this node including cycle_hash and its role
+        """
+        node_dict = self._extract_node_attributes(spec, hash_descriptor)
+        node_dict["cycle_hash"] = cycle_hash
+        node_dict["cycle_role"] = {
+            "name": spec.name,
+            "dependencies": sorted(
+                [
+                    {
+                        "name": edge.spec.name,
+                        "deptypes": dt.flag_to_tuple(edge.depflag),
+                        "virtuals": edge.virtuals,
+                    }
+                    for edge in spec.edges_to_dependencies(depflag=hash_descriptor.depflag)
+                ],
+                key=lambda d: d["name"],
+            ),
+        }
+        return node_dict
+
+    def _hash_from_node_dict(self, node_dict: Dict[str, Any]) -> str:
+        """Compute hash from a node dictionary.
+
+        Separate method so we can reuse dict-building logic.
+
+        Args:
+            node_dict: Dictionary to hash
+
+        Returns:
+            Hash string
+        """
+        json_text = json.dumps(
+            node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
+        )
+        return spack.util.hash.b32_hash(json_text)
+
+    def _compute_dag_hash_with_cycles(
+        self, hash_descriptor: ht.SpecHashDescriptor
+    ) -> Dict[int, str]:
+        """Compute hashes for all specs with cycle support.
+
+        Uses SCC detection and topological sorting to handle circular dependencies.
+
+        Args:
+            hash_descriptor: Hash descriptor for configuration
+
+        Returns:
+            Dictionary mapping spec id to hash
+        """
+        # 1. Collect all reachable specs
+        all_specs = {
+            id(spec): spec
+            for spec in self.traverse(root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id)
+        }
+
+        # 2. Find SCCs
+        sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
+
+        # 3. Sort SCCs topologically
+        scc_order = self._topological_sort_sccs(sccs, hash_descriptor.depflag)
+
+        # 4. Compute hashes in topological order
+        spec_hashes = {}
+
+        for scc in scc_order:
+            if len(scc) == 1:
+                # Simple case: no cycle
+                spec = scc[0]
+                node_dict = self._to_node_dict_with_precomputed_hashes(
+                    spec, spec_hashes, hash_descriptor
+                )
+                hash_str = self._hash_from_node_dict(node_dict)
+
+                # Handle frankenhash splicing
+                if spec.build_spec is not spec:
+                    hash_str = hash_str[:-7] + spec.build_spec._cached_hash(hash_descriptor)[-7:]
+
+                spec_hashes[id(spec)] = hash_str
+            else:
+                # Cycle case: compute cycle hash first, then individual node hashes
+                # First: compute cycle hash from full cycle representation
+                cycle_repr = self._to_cycle_representation(scc, spec_hashes, hash_descriptor)
+                cycle_hash = self._hash_from_node_dict(cycle_repr)
+
+                # Second: compute individual hashes using cycle_hash
+                for spec in scc:
+                    node_dict = self._to_cycle_node_dict(spec, cycle_hash, hash_descriptor)
+                    spec_hashes[id(spec)] = self._hash_from_node_dict(node_dict)
+
+        return spec_hashes
+
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
 
@@ -2279,9 +2677,21 @@ class Spec:
         if hash_string:
             return hash_string[:length]
 
-        hash_string = self.spec_hash(hash)
+        # Use cycle-aware hash computation
+        all_hashes = self._compute_dag_hash_with_cycles(hash)
+        hash_string = all_hashes[id(self)]
+
         if force or self.concrete:
             setattr(self, hash.attr, hash_string)
+            # Also cache hashes for all other specs that were computed
+            # Only set if not already cached (respect existing cached values)
+            for spec_id, spec_hash in all_hashes.items():
+                # Find the spec object by ID and cache its hash
+                for spec in self.traverse(root=True, deptype=hash.depflag, cover="nodes", key=id):
+                    if id(spec) == spec_id and (force or spec.concrete):
+                        # Only cache if not already set
+                        if not getattr(spec, hash.attr, None):
+                            setattr(spec, hash.attr, spec_hash)
 
         return hash_string[:length]
 
