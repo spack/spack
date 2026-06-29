@@ -5439,6 +5439,7 @@ def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mo
     monkeypatch.setattr(spack.store, "STORE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
+    monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
 
     context = spack.context.SpackContext.from_config(mutable_config)
     result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a")])
