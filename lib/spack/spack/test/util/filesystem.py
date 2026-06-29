@@ -1500,7 +1500,6 @@ def test_security_descriptor_sacl_property(tmp_path):
     assert sd.sacl == []
 
 
-
 @pytest.mark.only_windows("Windows security API required")
 def test_get_sid_for_current_user():
     from spack.util.win_acl import SecurityDescriptor
@@ -1567,7 +1566,8 @@ def test_security_descriptor_add_remove_ace():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_dacl_is_copy():
-    """dacl must return a deep copy: mutating the list or its ACE objects must not affect the descriptor."""
+    """dacl must return a deep copy: mutating the list or its
+    ACE objects must not affect the descriptor."""
     from spack.util.win_acl import (
         AccessControlEntry,
         AceType,
