@@ -13,9 +13,10 @@ import copy
 import ctypes
 import os
 import re
+from contextlib import contextmanager
 from ctypes import wintypes  # type: ignore[attr-defined]
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
 
 class AceStringEnum(Enum):
@@ -406,6 +407,21 @@ _GetSecurityDescriptorDacl = _bind(
 )
 
 
+@contextmanager
+def _local_ptr(ptr_factory: Any = None) -> Generator[Any, None, None]:
+    """Yield a ``LocalFree``-able pointer and free it unconditionally on exit.
+
+    Args:
+        ptr_factory: Callable returning the ctypes pointer type (default: ``wintypes.LPVOID``).
+            Pass ``wintypes.LPWSTR`` for Windows string out-parameters.
+    """
+    ptr = (ptr_factory or wintypes.LPVOID)()
+    try:
+        yield ptr
+    finally:
+        _LocalFree(ptr)
+
+
 class _SddlHelper:
     """Private static helpers for parsing and serialising SDDL strings."""
 
@@ -540,24 +556,18 @@ def _get_file_sddl_raw(path: str) -> str:
     )
     SDDL_REVISION_1 = 1
 
-    pp_sd = wintypes.LPVOID()
-    try:
+    with _local_ptr() as pp_sd:
         res = _GetNamedSecurityInfoW(
             path, SE_FILE_OBJECT, security_info, None, None, None, None, ctypes.byref(pp_sd)
         )
         if res != 0:
             raise _WinError(res)
-        string_ptr = wintypes.LPWSTR()
-        if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
-            pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
-        ):
-            raise _WinError()
-        try:
+        with _local_ptr(wintypes.LPWSTR) as string_ptr:
+            if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
+                pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
+            ):
+                raise _WinError()
             return string_ptr.value or ""
-        finally:
-            _LocalFree(string_ptr)
-    finally:
-        _LocalFree(pp_sd)
 
 
 def _set_file_sddl_raw(path: str, sddl: str) -> None:
@@ -577,8 +587,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
     GROUP_SECURITY_INFORMATION = 0x00000002
     DACL_SECURITY_INFORMATION = 0x00000004
 
-    pp_sd = wintypes.LPVOID()
-    try:
+    with _local_ptr() as pp_sd:
         if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
             sddl, SDDL_REVISION_1, ctypes.byref(pp_sd), None
         ):
@@ -629,8 +638,6 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         )
         if res != 0:
             raise _WinError(res)
-    finally:
-        _LocalFree(pp_sd)
 
 
 def _compare_val(val_a: Any, val_b: Any) -> bool:
@@ -813,7 +820,13 @@ class SecurityDescriptor:
         Raises:
             OSError: wraps ``ctypes.WinError`` on Windows API failure.
         """
-        sddl = self.to_sddl()
+        # AI (auto-inherited) and AR (auto-inherit-required) are kernel-computed flags that
+        # describe how the *existing* DACL was built.  Passing them back to SetNamedSecurityInfoW
+        # causes the kernel to re-process parent inheritance, producing a different (and larger)
+        # ACE set than the one we wrote.  Strip them so the kernel treats our ACEs as explicit.
+        parsed = dict(self._parsed)
+        parsed["DACL_CONTROL"] = re.sub(r"AI|AR", "", parsed.get("DACL_CONTROL", ""))
+        sddl = _SddlHelper.create_sddl(parsed)
         if not sddl:
             return
         _set_file_sddl_raw(path, sddl)
@@ -839,22 +852,20 @@ class SecurityDescriptor:
         OWNER_SECURITY_INFORMATION = 0x00000001
 
         p_sid_owner = wintypes.LPVOID()
-        pp_sd = wintypes.LPVOID()
+        with _local_ptr() as pp_sd:
+            res = _GetNamedSecurityInfoW(
+                path,
+                SE_FILE_OBJECT,
+                OWNER_SECURITY_INFORMATION,
+                ctypes.byref(p_sid_owner),
+                None,
+                None,
+                None,
+                ctypes.byref(pp_sd),
+            )
+            if res != 0:
+                raise _WinError(res, f"Failed to get security info for {path}")
 
-        res = _GetNamedSecurityInfoW(
-            path,
-            SE_FILE_OBJECT,
-            OWNER_SECURITY_INFORMATION,
-            ctypes.byref(p_sid_owner),
-            None,
-            None,
-            None,
-            ctypes.byref(pp_sd),
-        )
-        if res != 0:
-            raise _WinError(res, f"Failed to get security info for {path}")
-
-        try:
             dw_name = wintypes.DWORD(0)
             dw_domain = wintypes.DWORD(0)
             e_use = ctypes.c_int(0)
@@ -886,10 +897,8 @@ class SecurityDescriptor:
                 ctypes.byref(e_use),
             ):
                 raise _WinError(_get_last_error(), f"Could not determine owner for: {path}")
-        finally:
-            _LocalFree(pp_sd)
 
-        return acct_name_buf.value
+            return acct_name_buf.value
 
     @staticmethod
     def copy_permissions(src: str, dst: str) -> None:
@@ -906,29 +915,24 @@ class SecurityDescriptor:
         DACL_SECURITY_INFORMATION = 0x00000004
 
         p_dacl = wintypes.LPVOID()
-        pp_sd = wintypes.LPVOID()
-
-        res = _GetNamedSecurityInfoW(
-            src,
-            SE_FILE_OBJECT,
-            DACL_SECURITY_INFORMATION,
-            None,
-            None,
-            ctypes.byref(p_dacl),
-            None,
-            ctypes.byref(pp_sd),
-        )
-        if res != 0:
-            raise _WinError(res)
-
-        try:
+        with _local_ptr() as pp_sd:
+            res = _GetNamedSecurityInfoW(
+                src,
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                None,
+                None,
+                ctypes.byref(p_dacl),
+                None,
+                ctypes.byref(pp_sd),
+            )
+            if res != 0:
+                raise _WinError(res)
             res = _SetNamedSecurityInfoW(
                 dst, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, None, None, p_dacl, None
             )
             if res != 0:
                 raise _WinError(res)
-        finally:
-            _LocalFree(pp_sd)
 
     @staticmethod
     def get_sid_for_user(username: Optional[str] = None) -> str:
@@ -994,14 +998,10 @@ class SecurityDescriptor:
 
             sid_ptr = sid_buffer
 
-        string_sid_ptr = wintypes.LPWSTR()
-        if not _ConvertSidToStringSidW(sid_ptr, ctypes.byref(string_sid_ptr)):
-            raise _WinError()
-
-        try:
+        with _local_ptr(wintypes.LPWSTR) as string_sid_ptr:
+            if not _ConvertSidToStringSidW(sid_ptr, ctypes.byref(string_sid_ptr)):
+                raise _WinError()
             return string_sid_ptr.value or ""
-        finally:
-            _LocalFree(string_sid_ptr)
 
 
 def get_file_owner(path: str) -> str:
