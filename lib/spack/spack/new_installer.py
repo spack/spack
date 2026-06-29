@@ -390,7 +390,8 @@ def worker_function(
     run_tests: bool,
     state: IpcChannel,
     parent: IpcChannel,
-    echo_control: IpcChannel,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
     jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
@@ -415,7 +416,8 @@ def worker_function(
         run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
-        echo_control: Connection to receive echo control messages from
+        tee_control_r: Read end of the control pipe; the parent sends echo on/off here
+        tee_control_w: Write end of the control pipe; used to stop the tee thread on POSIX
         jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
             opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
             inherited in the build process)
@@ -473,7 +475,7 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(echo_control, parent, log_path)
+    tee = Tee(tee_control_r, tee_control_w, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
@@ -853,6 +855,7 @@ def start_build(
             state_w_conn,
             output_w_conn,
             control_r_conn,
+            control_w_conn if sys.platform != "win32" else None,
             jobserver_details,
             log_path,
             GlobalStateMarshaler(serialize_env=False),

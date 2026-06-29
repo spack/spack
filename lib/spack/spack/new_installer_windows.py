@@ -199,7 +199,7 @@ class WindowsTee(Tee):
 
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         _echo = False
-        control_r = cast(socket.socket, self.control)
+        control_r = cast(socket.socket, self.control_r)
         parent_w = cast(socket.socket, self.parent)
 
         def _control_reader() -> None:

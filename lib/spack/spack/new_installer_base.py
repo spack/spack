@@ -31,6 +31,9 @@ else:
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 32768
 
+#: Control byte that stops the tee thread
+TEE_STOP = b"2"
+
 
 class StdinReader:
     """Non-blocking stdin reading with UTF-8 decoding, on top of a platform-specific function
@@ -219,11 +222,20 @@ class NoopJobServer(JobServerBase):
 
 class Tee(abc.ABC):
     """Emulates ./build 2>&1 | tee build.log. Output is sent to a log file and the parent
-    process (if echoing is enabled). The control socket is used to enable/disable echoing."""
+    process (if echoing is enabled). The control channel is used to enable/disable echoing."""
 
-    def __init__(self, control: IpcChannel, parent: IpcChannel, log_path: str) -> None:
-        self.control = control
+    def __init__(
+        self,
+        control_r: IpcChannel,
+        control_w: Optional[IpcChannel],
+        parent: IpcChannel,
+        log_path: str,
+    ) -> None:
+        # Read end: the parent sends echo on/off here.
+        self.control_r = control_r
         self.parent = parent
+        # Write end, used by tee itself to stop the thread (and by parent to toggle echoing).
+        self.control_w = control_w
         # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
         # redirect their file descriptors in addition to the original fds 1 and 2.
         fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
@@ -251,17 +263,24 @@ class Tee(abc.ABC):
         pass
 
     def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
+        # We restore stdout and stderr, because between sys.exit and the actual process exit
+        # buffers may be flushed, and can cause exit code 120 (witnessed under pytest+coverage on
+        # macOS).
         sys.stdout.flush()
         sys.stderr.flush()
         for fd, saved_fd in self.saved_fds.items():
             os.dup2(saved_fd, fd)
             os.close(saved_fd)
+        if self.control_w is not None:
+            # Send a control byte to stop the tee thread.
+            try:
+                os.write(self.control_w.fileno(), TEE_STOP)
+            except OSError:
+                pass
         self.tee_thread.join()
         # Only then close the other fds.
-        self.control.close()
+        if self.control_w is not None:
+            self.control_w.close()
+        self.control_r.close()
         self.parent.close()
         self._restore_handles()
