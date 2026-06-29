@@ -1039,7 +1039,7 @@ complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help 
 complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help -d 'show this help message and exit'
 
 # spack ci rebuild
-set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests no-fail-fast fail-fast timeout= j/jobs=
+set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests no-fail-fast fail-fast timeout= push no-push j/jobs=
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -f -a tests
@@ -1050,6 +1050,10 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a 
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop build/stand-alone tests after the first failure'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l push -f -a push_to_cache
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l push -d 'Skip the push to cache step.'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-push -f -a push_to_cache
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-push -d 'Skip the push to cache step.'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 

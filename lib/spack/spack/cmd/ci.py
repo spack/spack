@@ -190,19 +190,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         help="maximum time (in seconds) that tests are allowed to run",
     )
-    rebuild.add_argument(
+    rebuild_push_group = rebuild.add_mutually_exclusive_group()
+    rebuild_push_group.add_argument(
         "--push",
         action="store_true",
         dest="push_to_cache",
         default=True,
-        help="Skip the push to cache step.",
+        help="Push the binary to the buildcache-destination. (default)",
     )
-    rebuild.add_argument(
+    rebuild_push_group.add_argument(
         "--no-push",
         action="store_false",
         dest="push_to_cache",
-        default=True,
-        help="Skip the push to cache step.",
+        help="Do not push the binary to the buildcache-destination.",
     )
     rebuild.set_defaults(func=ci_rebuild, subparser=rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
