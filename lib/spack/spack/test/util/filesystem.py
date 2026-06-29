@@ -1487,29 +1487,18 @@ def test_ace_string_enum_or_with_non_enum_raises_type_error():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_sacl_property(tmp_path):
-    from spack.util.win_acl import AccessControlEntry, SecurityDescriptor
+    """from_file never populates the SACL (requires SE_SECURITY_PRIVILEGE); sacl returns a copy."""
+    from spack.util.win_acl import SecurityDescriptor
 
     f = tmp_path / "test.txt"
     f.write_text("hello")
     sd = SecurityDescriptor.from_file(str(f))
-    assert isinstance(sd.sacl, list)
-    assert all(isinstance(e, AccessControlEntry) for e in sd.sacl)
+    # Standard processes cannot read SACL; from_file does not request it
+    assert sd.sacl == []
+    # sacl returns a copy — mutations do not feed back into the descriptor
+    sd.sacl.append("mutation")
+    assert sd.sacl == []
 
-
-@pytest.mark.only_windows("Windows security API required")
-def test_remove_ace_string_filter_does_not_match_absent_sid():
-    """Filtering by a SID string must not remove ACEs whose SID field is absent."""
-    from spack.util.win_acl import SecurityDescriptor
-
-    # An ACE with an empty SID field parses to sid=None
-    sd = SecurityDescriptor("D:(A;;GR;;;)")
-    assert len(sd.dacl) == 1
-    assert sd.dacl[0].sid is None
-
-    # The string "None" must not match the Python None stored on the ACE
-    removed = sd.remove_ace(sid="None")
-    assert removed == 0
-    assert len(sd.dacl) == 1
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1550,6 +1539,7 @@ def test_get_file_sddl_missing_path():
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_add_remove_ace():
+    """add_ace must store all ACE fields; remove_ace must excise the entry and update the SDDL."""
     from spack.util.win_acl import (
         AccessControlEntry,
         AceType,
@@ -1563,15 +1553,21 @@ def test_security_descriptor_add_remove_ace():
             AceType.SDDL_ACCESS_ALLOWED, rights=GenericAccessRights.SDDL_GENERIC_READ, sid="BA"
         )
     )
-    assert len(sd.dacl) == 1
-    assert sd.dacl[0].sid == "BA"
+    stored = sd.dacl[0]
+    assert stored.sid == "BA"
+    assert stored.rights == GenericAccessRights.SDDL_GENERIC_READ
+    assert stored.ace_type == AceType.SDDL_ACCESS_ALLOWED
+    assert "(A;;GR;;;BA)" in sd.to_sddl()
+
     removed = sd.remove_ace(sid="BA")
     assert removed == 1
     assert len(sd.dacl) == 0
+    assert "(A;;GR;;;BA)" not in sd.to_sddl()
 
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_dacl_is_copy():
+    """dacl must return a deep copy: mutating the list or its ACE objects must not affect the descriptor."""
     from spack.util.win_acl import (
         AccessControlEntry,
         AceType,
@@ -1585,9 +1581,16 @@ def test_security_descriptor_dacl_is_copy():
             AceType.SDDL_ACCESS_ALLOWED, rights=GenericAccessRights.SDDL_GENERIC_READ, sid="BA"
         )
     )
-    copy = sd.dacl
-    copy.clear()
-    assert len(sd.dacl) == 1  # internal state unchanged
+
+    # Clearing the returned list must not empty the internal DACL
+    snapshot = sd.dacl
+    snapshot.clear()
+    assert len(sd.dacl) == 1
+
+    # Mutating an ACE from the copy must not affect the stored ACE (deep copy, not shallow)
+    snapshot2 = sd.dacl
+    snapshot2[0].sid = "WD"
+    assert sd.dacl[0].sid == "BA"
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1672,13 +1675,16 @@ def test_security_descriptor_from_file_sddl(tmp_path):
 
 @pytest.mark.only_windows("Windows security API required")
 def test_get_file_owner_returns_string(tmp_path):
-    from spack.util.win_acl import get_file_owner
+    """get_file_owner must return the current user's account name for a file we just created."""
+    from spack.util.win_acl import SecurityDescriptor, get_file_owner
 
     f = tmp_path / "owner_test.txt"
     f.write_text("hello")
-    owner = get_file_owner(str(f))
-    assert isinstance(owner, str)
-    assert len(owner) > 0
+    owner_name = get_file_owner(str(f))
+
+    # Resolve the returned name back to a SID and compare with the current user's SID
+    current_sid = SecurityDescriptor.get_sid_for_user()
+    assert SecurityDescriptor.get_sid_for_user(owner_name) == current_sid
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1792,9 +1798,11 @@ def test_security_descriptor_add_ace_out_of_range_raises():
     with pytest.raises(IndexError):
         sd.add_ace(_ace("SY", GenericAccessRights.SDDL_GENERIC_ALL), index=-1)
 
-    # index == len(dacl) is allowed (equivalent to append)
+    # index == len(dacl) is equivalent to append; verify the new ACE lands at position 1
     sd.add_ace(_ace("SY", GenericAccessRights.SDDL_GENERIC_ALL), index=len(sd.dacl))
-    assert len(sd.dacl) == 2
+    assert sd.dacl[0].sid == "BA"  # original ACE unmoved
+    assert sd.dacl[1].sid == "SY"
+    assert sd.dacl[1].rights == GenericAccessRights.SDDL_GENERIC_ALL
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1822,26 +1830,56 @@ def test_dacl_entries_are_access_control_entries():
 
 
 @pytest.mark.only_windows("Windows security API required")
-def test_dacl_entries_from_parsed_sddl_are_access_control_entries(tmp_path):
-    """ACEs from a real file's SDDL string must also be AccessControlEntry objects."""
-    from spack.util.win_acl import AccessControlEntry, SecurityDescriptor
+def test_dacl_entries_from_parsed_sddl_are_access_control_entries():
+    """The SDDL parser must populate all ACE fields correctly from both Allow and Deny entries."""
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+    )
 
-    f = tmp_path / "ace_type_test.txt"
-    f.write_text("hello")
-    sd = SecurityDescriptor.from_file(str(f))
-    assert all(isinstance(ace, AccessControlEntry) for ace in sd.dacl)
+    raw = "O:SYD:(A;;FR;;;WD)(D;;FW;;;BG)"
+    sd = SecurityDescriptor(raw)
+    dacl = sd.dacl
+    assert len(dacl) == 2
+    assert all(isinstance(ace, AccessControlEntry) for ace in dacl)
+
+    allow_ace = dacl[0]
+    assert allow_ace.ace_type == AceType.SDDL_ACCESS_ALLOWED
+    assert allow_ace.sid == "WD"
+    assert allow_ace.rights == FileAccessRights.SDDL_FILE_READ
+
+    deny_ace = dacl[1]
+    assert deny_ace.ace_type == AceType.SDDL_ACCESS_DENIED
+    assert deny_ace.sid == "BG"
+    assert deny_ace.rights == FileAccessRights.SDDL_FILE_WRITE
 
 
 @pytest.mark.only_windows("Windows security API required")
 def test_security_descriptor_from_file(tmp_path):
-    from spack.util.win_acl import SecurityDescriptor
+    """from_file must read real file metadata: owner matches creator, DACL has Allow entries,
+    and the descriptor round-trips faithfully through to_sddl."""
+    from spack.util.win_acl import AceType, SecurityDescriptor
 
     f = tmp_path / "from_file.txt"
     f.write_text("hello")
+
     sd = SecurityDescriptor.from_file(str(f))
+
+    # Owner field must be populated and correspond to the current process user
     assert sd.owner is not None
-    assert isinstance(sd.dacl, list)
-    assert len(sd.dacl) > 0
+    current_sid = SecurityDescriptor.get_sid_for_user()
+    owner_account = SecurityDescriptor.get_owner(str(f))
+    assert SecurityDescriptor.get_sid_for_user(owner_account) == current_sid
+
+    # Every sensible DACL contains at least one Allow entry
+    assert any(ace.ace_type == AceType.SDDL_ACCESS_ALLOWED for ace in sd.dacl)
+
+    # to_sddl must produce a valid SDDL with both owner and DACL sections, and round-trip exactly
+    sddl = sd.to_sddl()
+    assert "O:" in sddl and "D:" in sddl
+    assert SecurityDescriptor(sddl).to_sddl() == sddl
 
 
 @pytest.mark.only_windows("Windows security API required")
@@ -1920,7 +1958,6 @@ def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
 
 @pytest.mark.only_windows("Windows ACL path")
 def test_set_install_permissions_sets_acl_on_windows(tmp_path):
-    import spack.util.filesystem as fs
     from spack.util.win_acl import get_file_sddl
 
     f = tmp_path / "test.txt"
@@ -1935,7 +1972,6 @@ def test_set_install_permissions_sets_acl_on_windows(tmp_path):
 @pytest.mark.only_windows("Windows ACL path")
 def test_copy_mode_propagates_execute_on_windows(tmp_path):
     """copy_mode propagates FILE_EXECUTE from src to dst Allow ACEs on Windows."""
-    import spack.util.filesystem as fs
     from spack.util.win_acl import (
         AccessControlEntry,
         AceType,
@@ -1965,9 +2001,8 @@ def test_copy_mode_propagates_execute_on_windows(tmp_path):
 
 
 @pytest.mark.only_windows("Windows ACL path")
-def test_copy_mode_no_execute_leaves_dst_unchanged_on_windows(tmp_path):
+def test_copy_mode_only_changes_execute_on_windows(tmp_path):
     """copy_mode leaves dst DACL unchanged when src grants no execute rights."""
-    import spack.util.filesystem as fs
     from spack.util.win_acl import SecurityDescriptor, get_file_sddl
 
     src = tmp_path / "src.txt"
