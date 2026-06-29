@@ -157,13 +157,13 @@ function capture_all
     begin;
         begin;
             eval $argv[1]
-            set $argv[2] $status  # read sets the `status` flag => capture here
+            set -g $argv[2] $status  # read sets the `status` flag => capture here
         end 2>| read -z __err
     end 1>| read -z __out
 
     # output arrays
-    set $argv[3] (echo $__out | string split \n)
-    set $argv[4] (echo $__err | string split \n)
+    set -g $argv[3] (echo $__out | string split \n)
+    set -g $argv[4] (echo $__err | string split \n)
 
     return 0
 end
@@ -490,7 +490,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                             # actual call to activate: source the output
                             set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            eval $__sp_stdout
+                            eval (printf "%s\n" $__sp_stdout | string collect)
                             if test -n "$__sp_stderr"
                                 echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                             end
@@ -523,7 +523,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                                 end
                                 return $__sp_stat
                             end
-                            eval $__sp_stdout
+                            eval (printf "%s\n" $__sp_stdout | string collect)
                         end
 
                     case "*"
@@ -564,7 +564,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
                     end
                     return $__sp_stat
                 end
-                eval $__sp_stdout
+                eval (printf "%s\n" $__sp_stdout | string collect)
             end
 
 

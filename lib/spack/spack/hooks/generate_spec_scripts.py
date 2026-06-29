@@ -9,10 +9,10 @@ from datetime import datetime
 from typing import Tuple
 
 import spack.bootstrap.config
-import spack.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.user_environment as uenv
+import spack.util.filesystem as fs
 
 
 def _get_shell_script_path(spec, shell: str, load: bool) -> str:
