@@ -25,6 +25,7 @@ import spack.spec
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
+    TEE_STOP,
     BaseTerminalState,
     JobServerBase,
     ProcessExitNotifier,
@@ -193,10 +194,12 @@ class PosixExitNotifier(ProcessExitNotifier):
 class PosixTee(Tee):
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         """Forward log_r to log_file and parent (if echoing is enabled).
-        Echoing is enabled and disabled by reading from control."""
-        control_r = self.control.fileno()
+        Echoing is enabled and disabled by reading 1 and 0 resp. from control.
+        Thread exit is triggered by EOF or by reading TEE_STOP from control."""
+        control_r = self.control_r.fileno()
         parent_w = self.parent.fileno()
         echo_on = False
+        exit = False
         selector = selectors.DefaultSelector()
         selector.register(log_r, selectors.EVENT_READ)
         selector.register(control_r, selectors.EVENT_READ)
@@ -204,7 +207,12 @@ class PosixTee(Tee):
         try:
             with log_file, open(parent_w, "wb", closefd=False) as parent:
                 while True:
-                    for key, _ in selector.select():
+                    # If not done, block until log/control has data. If done, do one more iteration
+                    # to drain the log.
+                    events = selector.select(0 if exit else None)
+                    if exit and not events:
+                        return
+                    for key, _ in events:
                         if key.fd == log_r:
                             data = os.read(log_r, OUTPUT_BUFFER_SIZE)
                             if not data:  # EOF: exit the thread
@@ -217,8 +225,10 @@ class PosixTee(Tee):
 
                         elif key.fd == control_r:
                             control_data = os.read(control_r, 1)
-                            if not control_data:
-                                return
+                            if not control_data or control_data == TEE_STOP:
+                                # EOF or TEE_STOP: exit the thread after draining the log.
+                                selector.unregister(control_r)
+                                exit = True
                             else:
                                 echo_on = control_data == b"1"
         except OSError:  # do not raise
