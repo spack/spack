@@ -36,6 +36,7 @@ function _spack_env_remove_value -a name value sep
         end
     end
     set -gx $name (string join -- $sep $as_list)
+    # exit 0
 end
 
 function _spack_env_remove_first -a name value sep

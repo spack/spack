@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Tuple
 
 import spack.bootstrap.config
-import spack.llnl.util.filesystem as fs
+import spack.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.user_environment as uenv
