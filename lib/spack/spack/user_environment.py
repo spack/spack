@@ -9,7 +9,6 @@ import spack.build_environment
 import spack.config
 import spack.spec
 import spack.util.environment as environment
-import spack.util.path
 from spack import traverse
 from spack.context import Context
 
