@@ -434,6 +434,6 @@ def test_oci_config_created_timestamp(mutable_database):
         # Verify it's a reasonable timestamp (between 2020 and now + 1 day)
         year_2020 = datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc)
         tomorrow = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
-        assert (
-            year_2020 < created_dt < tomorrow
-        ), f"Created timestamp {created_str} should be between 2020 and now"
+        assert year_2020 < created_dt < tomorrow, (
+            f"Created timestamp {created_str} should be between 2020 and now"
+        )
