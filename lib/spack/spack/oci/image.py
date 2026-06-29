@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import datetime
 import re
 import urllib.parse
 from typing import Optional, Union
@@ -230,7 +231,7 @@ def ensure_valid_tag(tag: str) -> str:
     return sanitized
 
 
-def default_config(architecture: str, os: str, created: Optional[str] = None):
+def default_config(architecture: str, os: str):
     """Create a default OCI image config.
 
     Args:
@@ -241,10 +242,7 @@ def default_config(architecture: str, os: str, created: Optional[str] = None):
     Returns:
         A dictionary representing the OCI image config
     """
-    import datetime
-
-    if created is None:
-        created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     return {
         "created": created,
