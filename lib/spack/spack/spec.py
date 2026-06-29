@@ -2677,21 +2677,27 @@ class Spec:
         if hash_string:
             return hash_string[:length]
 
-        # Use cycle-aware hash computation
-        all_hashes = self._compute_dag_hash_with_cycles(hash)
-        hash_string = all_hashes[id(self)]
+        # If hash descriptor has an override function, use it (e.g., for package_hash)
+        if hash.override is not None:
+            hash_string = self.spec_hash(hash)
+            if force or self.concrete:
+                setattr(self, hash.attr, hash_string)
+        else:
+            # Use cycle-aware hash computation
+            all_hashes = self._compute_dag_hash_with_cycles(hash)
+            hash_string = all_hashes[id(self)]
 
-        if force or self.concrete:
-            setattr(self, hash.attr, hash_string)
-            # Also cache hashes for all other specs that were computed
-            # Only set if not already cached (respect existing cached values)
-            for spec_id, spec_hash in all_hashes.items():
-                # Find the spec object by ID and cache its hash
-                for spec in self.traverse(root=True, deptype=hash.depflag, cover="nodes", key=id):
-                    if id(spec) == spec_id and (force or spec.concrete):
-                        # Only cache if not already set
-                        if not getattr(spec, hash.attr, None):
-                            setattr(spec, hash.attr, spec_hash)
+            if force or self.concrete:
+                setattr(self, hash.attr, hash_string)
+                # Also cache hashes for all other specs that were computed
+                # Only set if not already cached (respect existing cached values)
+                for spec_id, spec_hash in all_hashes.items():
+                    # Find the spec object by ID and cache its hash
+                    for spec in self.traverse(root=True, deptype=hash.depflag, cover="nodes", key=id):
+                        if id(spec) == spec_id and (force or spec.concrete):
+                            # Only cache if not already set
+                            if not getattr(spec, hash.attr, None):
+                                setattr(spec, hash.attr, spec_hash)
 
         return hash_string[:length]
 
