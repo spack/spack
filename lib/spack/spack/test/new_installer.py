@@ -682,7 +682,9 @@ class TestScheduleBuilds:
 
         # Case 1: dep_d is upstream-uninstalled with no LINK|RUN dependents → scheduled.
         monkeypatch.setattr(
-            temporary_store.db, "query_by_spec_hash", partial(fake_query, target_hash=dep_d.dag_hash())
+            temporary_store.db,
+            "query_by_spec_hash",
+            partial(fake_query, target_hash=dep_d.dag_hash()),
         )
         jobserver = PosixJobServer(num_jobs=2)
         pending = [dep_d.dag_hash()]
@@ -709,7 +711,9 @@ class TestScheduleBuilds:
 
         # Case 2: dep_e is upstream-uninstalled with a LINK dependent → raises.
         monkeypatch.setattr(
-            temporary_store.db, "query_by_spec_hash", partial(fake_query, target_hash=dep_e.dag_hash())
+            temporary_store.db,
+            "query_by_spec_hash",
+            partial(fake_query, target_hash=dep_e.dag_hash()),
         )
         jobserver2 = PosixJobServer(num_jobs=2)
         pending2 = [dep_e.dag_hash()]
