@@ -332,9 +332,7 @@ class BinaryIndexCache:
             for new_entry in found_list:
                 current_list.add(new_entry.strip_view())
 
-    def update(
-        self, with_cooldown: bool = False, *, config: Optional[spack.config.Configuration] = None
-    ) -> None:
+    def update(self, with_cooldown: bool = False, *, config: spack.config.Configuration) -> None:
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -346,10 +344,7 @@ class BinaryIndexCache:
 
         Args:
             with_cooldown: skip mirrors whose index was fetched recently (within the TTL).
-            config: configuration to read the mirror list and TTL from. If None, the global
-                ``spack.config.CONFIG`` is used."""
-        if config is None:
-            config = spack.config.CONFIG
+            config: configuration to read the mirror list and TTL from."""
         self._init_local_index_cache()
         self.mirrors_without_index = set()
 
@@ -2278,7 +2273,7 @@ def update_cache_and_get_specs(index=None):
     """
     if index is None:
         index = BINARY_INDEX
-    index.update()
+    index.update(config=spack.config.CONFIG)
     return index.get_all_built_specs()
 
 
