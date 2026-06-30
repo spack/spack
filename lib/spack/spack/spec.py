@@ -2563,7 +2563,7 @@ class Spec:
         }
 
         # 2. Find SCCs in topological order (Tarjan's returns reverse topological order)
-        sccs = list(reversed(self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)))
+        sccs = list(self._find_sccs_tarjan(all_specs, hash_descriptor.depflag))
 
         # 3. Compute hashes in topological order
         spec_hashes = {}
