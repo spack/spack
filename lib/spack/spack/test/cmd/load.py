@@ -57,6 +57,7 @@ def test_manpath_trailing_colon(
             f"MANPATH prepend should include trailing '{os.pathsep}' to preserve system paths"
         )
 
+
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
     def test_load_shell(shell):
         """Test that `spack load` applies prefix inspections of its required runtime deps in
