@@ -11,6 +11,7 @@ or manipulate Windows ACLs
 
 import copy
 import ctypes
+import itertools
 import os
 import re
 from contextlib import contextmanager
@@ -146,6 +147,39 @@ class ResourceAttributeAceDataType(Enum):
     SDDL_SID = "TD"
     SDDL_BLOB = "TX"
     SDDL_BOOLEAN = "TB"
+
+
+# Canonical 32-bit access masks for each named SDDL access-right code (file objects).
+# Used to convert raw hex masks (produced by ConvertSecurityDescriptorToStringSecurityDescriptorW
+# for combinations it cannot express as a single token) back to named code strings.
+_NAMED_RIGHT_MASKS: Dict[str, int] = {
+    "FA": 0x001F01FF,  # FILE_ALL_ACCESS
+    "FR": 0x00120089,  # FILE_GENERIC_READ
+    "FW": 0x00120116,  # FILE_GENERIC_WRITE
+    "FX": 0x001200A0,  # FILE_GENERIC_EXECUTE
+    "GA": 0x10000000,  # GENERIC_ALL
+    "GR": 0x80000000,  # GENERIC_READ
+    "GW": 0x40000000,  # GENERIC_WRITE
+    "GX": 0x20000000,  # GENERIC_EXECUTE
+}
+
+# Reverse lookup: integer mask → named SDDL code string, covering all non-empty subsets.
+# Built once at module load; dict preserves insertion order so single-code entries win
+# over multi-code ones that happen to produce the same mask (e.g. FA | FR == FA).
+def _build_mask_to_named_rights(codes: Dict[str, int]) -> Dict[int, str]:
+    result: Dict[int, str] = {}
+    items = list(codes.items())
+    for r in range(1, len(items) + 1):
+        for combo in itertools.combinations(items, r):
+            mask = 0
+            for _, m in combo:
+                mask |= m
+            if mask not in result:
+                result[mask] = "".join(c for c, _ in combo)
+    return result
+
+
+_MASK_TO_NAMED_RIGHTS: Dict[int, str] = _build_mask_to_named_rights(_NAMED_RIGHT_MASKS)
 
 
 class AccessControlEntry:
@@ -499,8 +533,19 @@ class _SddlHelper:
 
     @staticmethod
     def _map_rights(rights_str: str) -> Any:
-        if rights_str.startswith("0x"):
-            return rights_str
+        try:
+            mask = int(rights_str, 0)
+        except (ValueError, TypeError):
+            mask = None
+
+        if mask is not None:
+            # Hex mask from the OS: normalise to the equivalent named code string, then
+            # re-enter to get a typed enum member where possible.
+            named = _MASK_TO_NAMED_RIGHTS.get(mask)
+            if named is not None:
+                return _SddlHelper._map_rights(named)
+            return rights_str  # unknown combination; keep as-is
+
         for enum_cls in [
             GenericAccessRights,
             StandardAccessRights,
@@ -566,7 +611,7 @@ def _get_file_sddl_raw(path: str) -> str:
             if not _ConvertSecurityDescriptorToStringSecurityDescriptorW(
                 pp_sd, SDDL_REVISION_1, security_info, ctypes.byref(string_ptr), None
             ):
-                raise _WinError()
+                raise _WinError(_get_last_error())
             return string_ptr.value or ""
 
 
@@ -593,21 +638,21 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         if not _ConvertStringSecurityDescriptorToSecurityDescriptorW(
             sddl, SDDL_REVISION_1, ctypes.byref(pp_sd), None
         ):
-            raise _WinError()
+            raise _WinError(_get_last_error())
 
         owner = wintypes.LPVOID()
         owner_defaulted = wintypes.BOOL()
         if not _GetSecurityDescriptorOwner(
             pp_sd, ctypes.byref(owner), ctypes.byref(owner_defaulted)
         ):
-            raise _WinError()
+            raise _WinError(_get_last_error())
 
         group = wintypes.LPVOID()
         group_defaulted = wintypes.BOOL()
         if not _GetSecurityDescriptorGroup(
             pp_sd, ctypes.byref(group), ctypes.byref(group_defaulted)
         ):
-            raise _WinError()
+            raise _WinError(_get_last_error())
 
         dacl_present = wintypes.BOOL()
         dacl = wintypes.LPVOID()
@@ -615,7 +660,7 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
         if not _GetSecurityDescriptorDacl(
             pp_sd, ctypes.byref(dacl_present), ctypes.byref(dacl), ctypes.byref(dacl_defaulted)
         ):
-            raise _WinError()
+            raise _WinError(_get_last_error())
 
         # c_void_p.value is None for NULL; use that to distinguish a real pointer from an unset
         # one.  A NULL DACL (dacl_present=True but pointer=NULL) grants everyone full access
@@ -951,7 +996,7 @@ class SecurityDescriptor:
             token_handle = wintypes.HANDLE()
 
             if not _OpenProcessToken(process_handle, TOKEN_QUERY, ctypes.byref(token_handle)):
-                raise _WinError()
+                raise _WinError(_get_last_error())
 
             try:
                 return_length = wintypes.DWORD()
@@ -963,7 +1008,7 @@ class SecurityDescriptor:
                 if not _GetTokenInformation(
                     token_handle, 1, buffer, return_length, ctypes.byref(return_length)
                 ):
-                    raise _WinError()
+                    raise _WinError(_get_last_error())
 
                 token_user = ctypes.cast(buffer, ctypes.POINTER(TOKEN_USER)).contents
                 sid_ptr = token_user.User.Sid
@@ -986,7 +1031,7 @@ class SecurityDescriptor:
             )
 
             if sid_size.value == 0:
-                raise _WinError()
+                raise _WinError(_get_last_error())
 
             sid_buffer = ctypes.create_string_buffer(sid_size.value)
             domain_buffer = ctypes.create_unicode_buffer(domain_size.value)
@@ -1000,13 +1045,13 @@ class SecurityDescriptor:
                 ctypes.byref(domain_size),
                 ctypes.byref(pe_use),
             ):
-                raise _WinError()
+                raise _WinError(_get_last_error())
 
             sid_ptr = sid_buffer
 
         with _local_ptr(wintypes.LPWSTR) as string_sid_ptr:
             if not _ConvertSidToStringSidW(sid_ptr, ctypes.byref(string_sid_ptr)):
-                raise _WinError()
+                raise _WinError(_get_last_error())
             return string_sid_ptr.value or ""
 
 

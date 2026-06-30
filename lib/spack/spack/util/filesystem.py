@@ -679,37 +679,50 @@ def chmod_x(entry, perms):
     os.chmod(entry, perms)
 
 
+def win_copy_exe_mode(src, dest):
+    from spack.util.win_acl import AceType, FileAccessRights, SecurityDescriptor
+    _execute_codes = frozenset(("FX", "FA", "GX", "GA"))
+    # FILE_GENERIC_EXECUTE bitmask; defensive fallback for any unnormalised hex residual.
+    _FILE_EXECUTE_MASK = 0x001200A0
+
+    def _rights_str(ace) -> str:
+        return ace.rights.value if hasattr(ace.rights, "value") else str(ace.rights)
+
+    def _grants_execute(ace) -> bool:
+        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or ace.rights is None:
+            return False
+        r = _rights_str(ace)
+        try:
+            return bool(int(r, 0) & _FILE_EXECUTE_MASK)
+        except ValueError:
+            return any(r[i : i + 2] in _execute_codes for i in range(0, len(r), 2))
+
+    def _add_execute(ace) -> None:
+        r = _rights_str(ace)
+        try:
+            ace.rights = hex(int(r, 0) | _FILE_EXECUTE_MASK)
+        except ValueError:
+            ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+
+    src_sd = SecurityDescriptor.from_file(src)
+    if any(_grants_execute(ace) for ace in src_sd.dacl):
+        dst_sd = SecurityDescriptor.from_file(dest)
+        # Modify the stored ACEs in-place; dst_sd.dacl returns a deep copy so we go
+        # through _parsed directly.
+        for ace in dst_sd._parsed.get("DACL", []):
+            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):
+                _add_execute(ace)
+        dst_sd.apply(dest)
+    return
+
+
 @system_path_filter
 def copy_mode(src, dest):
     """Set the mode of dest to that of src unless it is a link."""
     if islink(dest):
         return
     if sys.platform == "win32":
-        from spack.util.win_acl import AceType, FileAccessRights, SecurityDescriptor
-
-        _execute_codes = frozenset(("FX", "FA", "GX", "GA"))
-
-        def _grants_execute(ace) -> bool:
-            if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or ace.rights is None:
-                return False
-            r = ace.rights.value if hasattr(ace.rights, "value") else str(ace.rights)
-            # Skip hex masks; check 2-char SDDL codes that include execute
-            return not r.startswith("0x") and any(
-                r[i : i + 2] in _execute_codes for i in range(0, len(r), 2)
-            )
-
-        src_sd = SecurityDescriptor.from_file(src)
-        if any(_grants_execute(ace) for ace in src_sd.dacl):
-            dst_sd = SecurityDescriptor.from_file(dest)
-            # dacl is a deep copy — modify it, then replace the stored DACL
-            dacl = dst_sd.dacl
-            dst_sd.clear_dacl()
-            for ace in dacl:
-                if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED:
-                    ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
-                dst_sd.add_ace(ace)
-            dst_sd.apply(dest)
-        return
+        return win_copy_exe_mode(src, dest)
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
     if src_mode & stat.S_IXUSR:
