@@ -740,9 +740,10 @@ def validate_standard_versions(
 
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
-        assert url is not None, (
-            f"Package {pkg.name} does not have a valid URL for version {version}"
-        )
+        if url is None:
+            tty.error(f"No valid URLs found for {pkg.name}@{version}")
+            valid_checksums = False
+            continue
         url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
