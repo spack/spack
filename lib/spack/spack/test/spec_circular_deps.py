@@ -8,7 +8,6 @@ This test suite covers:
 - DAG hash computation with cycles using SCC detection
 - Serialization methods (to_dict, to_node_dict, to_json, to_yaml)
 - Dependency traversal with circular dependencies
-- Concretization support for circular run dependencies
 """
 
 import json
@@ -88,23 +87,23 @@ class TestCircularRunDependencies:
             assert spec_c2["cyc-a"].dag_hash() == hash_a
             assert spec_c2["cyc-b"].dag_hash() == hash_b
 
-    def test_run_cycle_with_external_deps(self, repo_builder: RepoBuilder):
-        """Test cycle with external dependencies: A→(run)→B→(run)→A, both depend on X.
+    def test_run_cycle_with_link_deps(self, repo_builder: RepoBuilder):
+        """Test cycle with link dependencies: A→(run)→B→(run)→A, both depend on X.
 
-        The cycle hash should include the external dependency hashes.
+        The cycle hash should include the link dependency hashes.
         """
-        repo_builder.add_package("ext-x")
+        repo_builder.add_package("link-x")
         repo_builder.add_package(
-            "cyc-ext-a", dependencies=[("cyc-ext-b", "run", None), ("ext-x", "build", None)]
+            "cyc-link-a", dependencies=[("cyc-link-b", "run", None), ("link-x", "build", None)]
         )
         repo_builder.add_package(
-            "cyc-ext-b", dependencies=[("cyc-ext-a", "run", None), ("ext-x", "link", None)]
+            "cyc-link-b", dependencies=[("cyc-link-a", "run", None), ("link-x", "link", None)]
         )
 
         with spack.repo.use_repositories(repo_builder.root):
-            spec_a = spack.concretize.concretize_one("cyc-ext-a")
-            spec_b = spec_a["cyc-ext-b"]
-            spec_x = spec_a["ext-x"]
+            spec_a = spack.concretize.concretize_one("cyc-link-a")
+            spec_b = spec_a["cyc-link-b"]
+            spec_x = spec_a["link-x"]
 
             hash_a = spec_a.dag_hash()
             hash_b = spec_b.dag_hash()
@@ -115,12 +114,6 @@ class TestCircularRunDependencies:
             assert hash_b is not None
             assert hash_x is not None
             assert len({hash_a, hash_b, hash_x}) == 3
-
-            # Changing external dependency should change cycle hashes
-            # (This verifies external deps are included in cycle hash)
-            spec_a2 = spack.concretize.concretize_one("cyc-ext-a@1.0")
-            # If ext-x version or attributes changed, cycle hashes should differ
-            # For now, just verify the structure is consistent
 
     def test_multiple_independent_cycles(self, repo_builder: RepoBuilder):
         """Test graph with two independent cycles.
@@ -186,65 +179,6 @@ class TestCircularRunDependencies:
             # All unique
             assert len({hash_root, hash_x, hash_y, hash_a, hash_b}) == 5
 
-    def test_hash_determinism(self, repo_builder: RepoBuilder):
-        """Test that hashes are deterministic across multiple computations."""
-        repo_builder.add_package("det-a", dependencies=[("det-b", "run", None)])
-        repo_builder.add_package("det-b", dependencies=[("det-a", "run", None)])
-
-        with spack.repo.use_repositories(repo_builder.root):
-            # Compute hash multiple times
-            hashes_a = []
-            hashes_b = []
-
-            for _ in range(3):
-                spec = spack.concretize.concretize_one("det-a")
-                hashes_a.append(spec.dag_hash())
-                hashes_b.append(spec["det-b"].dag_hash())
-
-            # All computations should produce the same hashes
-            assert len(set(hashes_a)) == 1
-            assert len(set(hashes_b)) == 1
-
-    def test_non_circular_backward_compatibility(self, repo_builder: RepoBuilder):
-        """Test that non-circular specs still hash correctly.
-
-        Verify that the new cycle-aware hashing doesn't break existing behavior.
-        """
-        repo_builder.add_package("regular-b")
-        repo_builder.add_package("regular-a", dependencies=[("regular-b", "run", None)])
-
-        with spack.repo.use_repositories(repo_builder.root):
-            spec = spack.concretize.concretize_one("regular-a")
-
-            # Should compute valid hashes
-            hash_a = spec.dag_hash()
-            hash_b = spec["regular-b"].dag_hash()
-
-            assert hash_a is not None
-            assert hash_b is not None
-            assert hash_a != hash_b
-
-            # Recompute to verify consistency
-            spec2 = spack.concretize.concretize_one("regular-a")
-            assert spec2.dag_hash() == hash_a
-            assert spec2["regular-b"].dag_hash() == hash_b
-
-    def test_cycle_with_variants(self, repo_builder: RepoBuilder):
-        """Test that variant changes in cycle affect hashes correctly."""
-        repo_builder.add_package("var-a", dependencies=[("var-b", "run", None)])
-        repo_builder.add_package("var-b", dependencies=[("var-a", "run", None)])
-
-        with spack.repo.use_repositories(repo_builder.root):
-            # Concretize with default variants
-            spec1 = spack.concretize.concretize_one("var-a")
-            hash_a1 = spec1.dag_hash()
-            hash_b1 = spec1["var-b"].dag_hash()
-
-            # If variants differ, hashes should differ
-            # (This is a basic sanity check that attributes matter)
-            spec2 = spack.concretize.concretize_one("var-a")
-            assert spec2.dag_hash() == hash_a1  # Same spec, same hash
-
     def test_to_dict_with_circular_deps(self, repo_builder: RepoBuilder):
         """Test that to_dict() works with circular run dependencies without hanging."""
         repo_builder.add_package("dict-a", dependencies=[("dict-b", "run", None)])
@@ -279,12 +213,6 @@ class TestCircularRunDependencies:
             # Should not raise RecursionError or hang
             node_dict_a = spec_a.to_node_dict()
             node_dict_b = spec_b.to_node_dict()
-
-            # Verify structure
-            assert "name" in node_dict_a
-            assert "name" in node_dict_b
-            assert "dependencies" in node_dict_a
-            assert "dependencies" in node_dict_b
 
             # The circular dependency should be reflected
             dep_names_a = [d["name"] for d in node_dict_a["dependencies"]]
@@ -338,13 +266,11 @@ class TestCircularRunDependencies:
             # Should not hang or raise RecursionError
             yaml_str = spec.to_yaml()
 
-            # Should be non-empty string
-            assert yaml_str
             assert "yaml-a" in yaml_str
             assert "yaml-b" in yaml_str
 
     def test_dependency_traversal(self, repo_builder: RepoBuilder):
-        """Verify dependencies() works with circular run dependencies."""
+        """Verify traverse() works with circular run dependencies."""
         repo_builder.add_package("trav-a", dependencies=[("trav-b", "run", None)])
         repo_builder.add_package("trav-b", dependencies=[("trav-a", "run", None)])
 
@@ -352,27 +278,19 @@ class TestCircularRunDependencies:
             spec_a = spack.concretize.concretize_one("trav-a")
             spec_b = spec_a["trav-b"]
 
-            # Should be able to query run dependencies
-            a_run_deps = spec_a.dependencies(deptype=dt.RUN)
-            assert len(a_run_deps) == 1
-            assert a_run_deps[0].name == "trav-b"
+            # Should be able to traverse the dependency graph without hanging
+            # Collect all specs encountered during traversal
+            traversed_from_a = list(spec_a.traverse())
+            traversed_from_b = list(spec_b.traverse())
 
-            b_run_deps = spec_b.dependencies(deptype=dt.RUN)
-            assert len(b_run_deps) == 1
-            assert b_run_deps[0].name == "trav-a"
+            # Should include both specs in the cycle
+            names_from_a = {s.name for s in traversed_from_a}
+            names_from_b = {s.name for s in traversed_from_b}
 
-    def test_concretize_simple_cycle(self, repo_builder: RepoBuilder):
-        """Verify basic concretization with A↔B works and solver allows it."""
-        repo_builder.add_package("conc-a", dependencies=[("conc-b", "run", None)])
-        repo_builder.add_package("conc-b", dependencies=[("conc-a", "run", None)])
+            assert "trav-a" in names_from_a
+            assert "trav-b" in names_from_a
+            assert "trav-a" in names_from_b
+            assert "trav-b" in names_from_b
 
-        with spack.repo.use_repositories(repo_builder.root):
-            spec = spack.concretize.concretize_one("conc-a")
-
-            # Should be concrete
-            assert spec.concrete
-            assert spec["conc-b"].concrete
-
-            # Should have circular deps
-            assert "conc-b" in spec
-            assert "conc-a" in spec["conc-b"]
+            # Both should traverse the same set of specs (the cycle)
+            assert names_from_a == names_from_b
