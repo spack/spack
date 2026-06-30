@@ -2332,7 +2332,7 @@ class Spec:
             attrs["namespace"] = spec.namespace
 
         # Variants and compiler flags
-        params = dict(sorted(v.yaml_entry() for v in spec.variants.values()))
+        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in spec.variants.values()))
         params.update(
             sorted(spec.compiler_flags.yaml_entry(flag_type) for flag_type in spec.compiler_flags)
         )
@@ -2375,11 +2375,17 @@ class Spec:
             and hasattr(spec, "_package_hash")
             and spec._package_hash
         ):
+            # The package hash is assigned at concretization time. We don't want to compute one for
+            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
+            # include the package hash when the spec was concretized.
             package_hash = spec._package_hash
+
+            # Full hashes are in bytes
             if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
                 package_hash = package_hash.decode("utf-8")
             attrs["package_hash"] = package_hash
 
+        # Note: relies on sorting dict by keys in caller
         return attrs
 
     def _to_node_dict_with_precomputed_hashes(
@@ -2599,6 +2605,7 @@ class Spec:
         # this when we move to using package hashing on all specs.
         if hash.override is not None:
             return hash.override(self)
+
         node_dict = self.to_node_dict(hash=hash)
         json_text = json.dumps(
             node_dict, ensure_ascii=True, indent=None, separators=(",", ":"), sort_keys=False
@@ -2718,75 +2725,10 @@ class Spec:
         Arguments:
             hash: type of hash to generate.
         """
-        d: Dict[str, Any] = {"name": self.name}
+        # Delegate to shared implementation with attribute extraction
+        d = self._extract_node_attributes(self, hash)
 
-        if self.versions:
-            d.update(self.versions.to_dict())
-
-        if self.architecture:
-            d.update(self.architecture.to_dict())
-
-        if self.namespace:
-            d["namespace"] = self.namespace
-
-        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in self.variants.values()))
-
-        # Only need the string compiler flag for yaml file
-        params.update(
-            sorted(
-                self.compiler_flags.yaml_entry(flag_type)
-                for flag_type in self.compiler_flags.keys()
-            )
-        )
-
-        if params:
-            d["parameters"] = params
-
-        if params and not self.concrete:
-            flag_names = [
-                name
-                for name, flags in self.compiler_flags.items()
-                if any(x.propagate for x in flags)
-            ]
-            d["propagate"] = sorted(
-                itertools.chain(
-                    [v.name for v in self.variants.values() if v.propagate], flag_names
-                )
-            )
-            d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
-
-        if self.external:
-            d["external"] = {
-                "path": self.external_path,
-                "module": self.external_modules or None,
-                "extra_attributes": syaml.sorted_dict(self.extra_attributes),
-            }
-
-        if not self._concrete:
-            d["concrete"] = False
-
-        if "patches" in self.variants:
-            variant = self.variants["patches"]
-            if hasattr(variant, "_patches_in_order_of_appearance"):
-                d["patches"] = variant._patches_in_order_of_appearance
-
-        if (
-            self._concrete
-            and hash.package_hash
-            and hasattr(self, "_package_hash")
-            and self._package_hash
-        ):
-            # The package hash is assigned at concretization time. We don't want to compute one for
-            # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
-            # include the package hash when the spec was concretized.
-            package_hash = self._package_hash
-
-            # Full hashes are in bytes
-            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
-                package_hash = package_hash.decode("utf-8")
-            d["package_hash"] = package_hash
-
-        # Note: Relies on sorting dict by keys later in algorithm.
+        # Dependencies - compute hashes recursively
         deps = self._dependencies_dict(depflag=hash.depflag)
         if deps:
             dependencies = []
@@ -2803,7 +2745,6 @@ class Spec:
                     if dspec.direct:
                         dep_attrs["parameters"]["direct"] = True
                     dependencies.append(dep_attrs)
-
             d["dependencies"] = dependencies
 
         # Name is included in case this is replacing a virtual.
