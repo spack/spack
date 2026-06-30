@@ -20,7 +20,7 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
-import spack.llnl.string as string
+import spack.llnl.string
 import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
@@ -597,8 +597,8 @@ def _env_untrack_or_remove(
     # ask the user if they really want to remove the known environments
     # force should do the same as yes to all here following the symantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
-        environments = string.plural(len(env_names_to_remove), "environment", show_n=False)
-        envs = string.comma_and(list(env_names_to_remove))
+        environments = spack.llnl.string.plural(len(env_names_to_remove), "environment", show_n=False)
+        envs = spack.llnl.string.comma_and(list(env_names_to_remove))
         answer = tty.get_yes_or_no(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
