@@ -681,6 +681,7 @@ def chmod_x(entry, perms):
 
 def win_copy_exe_mode(src, dest):
     from spack.util.win_acl import AceType, FileAccessRights, SecurityDescriptor
+
     _execute_codes = frozenset(("FX", "FA", "GX", "GA"))
     # FILE_GENERIC_EXECUTE bitmask; defensive fallback for any unnormalised hex residual.
     _FILE_EXECUTE_MASK = 0x001200A0

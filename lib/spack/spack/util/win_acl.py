@@ -163,6 +163,7 @@ _NAMED_RIGHT_MASKS: Dict[str, int] = {
     "GX": 0x20000000,  # GENERIC_EXECUTE
 }
 
+
 # Reverse lookup: integer mask → named SDDL code string, covering all non-empty subsets.
 # Built once at module load; dict preserves insertion order so single-code entries win
 # over multi-code ones that happen to produce the same mask (e.g. FA | FR == FA).
