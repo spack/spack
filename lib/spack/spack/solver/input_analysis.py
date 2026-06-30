@@ -292,7 +292,7 @@ class StaticAnalysis(NoStaticAnalysis):
 
     @lang.memoized
     def buildcache_specs(self) -> List[spack.spec.Spec]:
-        self.binary_index.update()
+        self.binary_index.update(config=self.configuration)
         return self.binary_index.get_all_built_specs()
 
     @lang.memoized

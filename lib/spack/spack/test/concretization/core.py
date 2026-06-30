@@ -5420,21 +5420,58 @@ def test_concretization_cache_skips_automatic_splice(
     assert spec1 == spec2
 
 
-def test_solve_uses_injected_context_not_globals(mutable_config, monkeypatch, mock_packages_repo):
+@pytest.fixture()
+def nullify_context_globals(monkeypatch):
+    """Nullifies the globals that may be read instead of the context."""
+
+    def _nullify():
+        monkeypatch.setattr(spack.config, "CONFIG", None)
+        monkeypatch.setattr(spack.store, "STORE", None)
+        monkeypatch.setattr(spack.repo, "PATH", None)
+        monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
+        monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
+
+    return _nullify
+
+
+def test_solve_uses_injected_context_not_globals(
+    nullify_context_globals, mutable_config, mock_packages_repo
+):
     """Tests that a solve driven by an explicit SpackContext must not read the process globals."""
     mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
 
     # Warm the out-of-scope clingo bootstrap path before nulling the globals it legitimately reads.
     spack.solver.compat.clingo()
 
-    monkeypatch.setattr(spack.config, "CONFIG", None)
-    monkeypatch.setattr(spack.store, "STORE", None)
-    monkeypatch.setattr(spack.repo, "PATH", None)
-    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", None)
-    monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
+    nullify_context_globals()
 
     context = spack.context.SpackContext.from_config(mutable_config)
     result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a")])
+
+    assert result.specs, "the solve produced no concrete spec"
+    concrete = result.specs[0]
+    assert concrete.concrete and concrete.name == "pkg-a"
+
+
+def test_static_analysis_uses_injected_context(
+    nullify_context_globals, mutable_config, mock_packages_repo
+):
+    """Tests that a solve with static analysis uses the injected context, not the globals."""
+    mutable_config.set("repos", {"builtin_mock": str(mock_packages_repo.root)})
+    # Force the missed path: static analysis evaluates ``can_be_installed`` for ``pkg-b``, which,
+    # being non-buildable, falls through to a buildcache query. Concretizing with ``foobar=baz``
+    # keeps pkg-b out of the result, so pruning it does not make the solve unsatisfiable.
+    mutable_config.set("concretizer:static_analysis", True)
+    mutable_config.set("concretizer:reuse", True)
+    mutable_config.set("packages:pkg-b:buildable", False)
+
+    # Warm the out-of-scope clingo bootstrap path before nulling the globals it legitimately reads.
+    spack.solver.compat.clingo()
+
+    nullify_context_globals()
+
+    context = spack.context.SpackContext.from_config(mutable_config)
+    result = spack.solver.asp.Solver(context=context).solve([Spec("pkg-a foobar=baz")])
 
     assert result.specs, "the solve produced no concrete spec"
     concrete = result.specs[0]
