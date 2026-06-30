@@ -2556,18 +2556,16 @@ class Spec:
         Returns:
             Dictionary mapping spec id to hash
         """
-        # 1. Collect all reachable specs
+        # Collect all reachable specs
         all_specs = {
             id(spec): spec
             for spec in self.traverse(root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id)
         }
 
-        # 2. Find SCCs in topological order (Tarjan's returns reverse topological order)
-        sccs = list(self._find_sccs_tarjan(all_specs, hash_descriptor.depflag))
+        # Find SCCs (Tarjan's returns reverse topological order which is what we need here anyway)
+        sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
 
-        # 3. Compute hashes in topological order
         spec_hashes = {}
-
         for scc in sccs:
             if len(scc) == 1:
                 # Simple case: no cycle
