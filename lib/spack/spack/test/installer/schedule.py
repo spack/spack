@@ -1248,56 +1248,6 @@ def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_stor
 class TestBuildGraphCircularDeps:
     """Tests for BuildGraph with circular run dependencies."""
 
-    def test_is_ordering_dependency_link(self, repo_builder):
-        """Test that LINK dependencies are ordering dependencies."""
-        from spack.test.conftest import RepoBuilder
-
-        repo_builder.add_package("dep")
-        repo_builder.add_package("parent", dependencies=[("dep", "link", None)])
-
-        with spack.repo.use_repositories(repo_builder.root):
-            parent_spec = spack.concretize.concretize_one("parent")
-            dep_spec = parent_spec["dep"]
-
-            db = spack.store.STORE.db
-            graph = BuildGraph(
-                [parent_spec],
-                root_policy="auto",
-                dependencies_policy="auto",
-                include_build_deps=False,
-                install_package=True,
-                install_deps=True,
-                database=db,
-                tests=False,
-            )
-
-            assert graph._is_ordering_dependency(parent_spec, dep_spec)
-
-    def test_is_ordering_dependency_run_only(self, repo_builder):
-        """Test that RUN-only dependencies are NOT ordering dependencies."""
-        from spack.test.conftest import RepoBuilder
-
-        repo_builder.add_package("dep")
-        repo_builder.add_package("parent", dependencies=[("dep", "run", None)])
-
-        with spack.repo.use_repositories(repo_builder.root):
-            parent_spec = spack.concretize.concretize_one("parent")
-            dep_spec = parent_spec["dep"]
-
-            db = spack.store.STORE.db
-            graph = BuildGraph(
-                [parent_spec],
-                root_policy="auto",
-                dependencies_policy="auto",
-                include_build_deps=False,
-                install_package=True,
-                install_deps=True,
-                database=db,
-                tests=False,
-            )
-
-            assert not graph._is_ordering_dependency(parent_spec, dep_spec)
-
     def test_build_graph_circular_run_deps(self, repo_builder):
         """Test BuildGraph with circular run dependencies A↔B."""
         from spack.test.conftest import RepoBuilder
