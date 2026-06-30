@@ -742,6 +742,9 @@ def validate_standard_versions(
         url = pkg.find_valid_url_for_version(version)
         if url is None:
             tty.error(f"No valid URLs found for {pkg.name}@{version}")
+            all_urls = pkg.all_urls_for_version(version)
+            for url in all_urls:
+                tty.error(f"    [Failed] {url}")
             valid_checksums = False
             continue
         url_dict[version] = url
