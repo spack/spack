@@ -3,7 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """
 Tests for circular run dependencies and DAG hash computation with cycles.
+
+This test suite covers:
+- DAG hash computation with cycles using SCC detection
+- Serialization methods (to_dict, to_node_dict, to_json, to_yaml)
+- Dependency traversal with circular dependencies
+- Concretization support for circular run dependencies
 """
+
+import json
 
 import pytest
 
@@ -236,3 +244,135 @@ class TestCircularRunDependencies:
             # (This is a basic sanity check that attributes matter)
             spec2 = spack.concretize.concretize_one("var-a")
             assert spec2.dag_hash() == hash_a1  # Same spec, same hash
+
+    def test_to_dict_with_circular_deps(self, repo_builder: RepoBuilder):
+        """Test that to_dict() works with circular run dependencies without hanging."""
+        repo_builder.add_package("dict-a", dependencies=[("dict-b", "run", None)])
+        repo_builder.add_package("dict-b", dependencies=[("dict-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("dict-a")
+            spec_b = spec_a["dict-b"]
+
+            # Should not raise RecursionError or hang
+            dict_a = spec_a.to_dict()
+            dict_b = spec_b.to_dict()
+
+            # Verify structure
+            assert "spec" in dict_a
+            assert "spec" in dict_b
+            assert "nodes" in dict_a["spec"]
+            assert "nodes" in dict_b["spec"]
+
+            # Root hashes should be different
+            assert dict_a["spec"]["nodes"][0]["hash"] != dict_b["spec"]["nodes"][0]["hash"]
+
+    def test_to_node_dict_with_circular_deps(self, repo_builder: RepoBuilder):
+        """Test that to_node_dict() works with circular run dependencies without hanging."""
+        repo_builder.add_package("node-a", dependencies=[("node-b", "run", None)])
+        repo_builder.add_package("node-b", dependencies=[("node-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("node-a")
+            spec_b = spec_a["node-b"]
+
+            # Should not raise RecursionError or hang
+            node_dict_a = spec_a.to_node_dict()
+            node_dict_b = spec_b.to_node_dict()
+
+            # Verify structure
+            assert "name" in node_dict_a
+            assert "name" in node_dict_b
+            assert "dependencies" in node_dict_a
+            assert "dependencies" in node_dict_b
+
+            # The circular dependency should be reflected
+            dep_names_a = [d["name"] for d in node_dict_a["dependencies"]]
+            dep_names_b = [d["name"] for d in node_dict_b["dependencies"]]
+
+            assert "node-b" in dep_names_a
+            assert "node-a" in dep_names_b
+
+    def test_dict_methods_determinism(self, repo_builder: RepoBuilder):
+        """Test that to_dict() and to_node_dict() produce deterministic output."""
+        repo_builder.add_package("ddet-a", dependencies=[("ddet-b", "run", None)])
+        repo_builder.add_package("ddet-b", dependencies=[("ddet-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            # Concretize multiple times
+            dicts = []
+            node_dicts = []
+
+            for _ in range(3):
+                spec = spack.concretize.concretize_one("ddet-a")
+                dicts.append(json.dumps(spec.to_dict(), sort_keys=True))
+                node_dicts.append(json.dumps(spec.to_node_dict(), sort_keys=True))
+
+            # All should be identical
+            assert len(set(dicts)) == 1, "to_dict() not deterministic"
+            assert len(set(node_dicts)) == 1, "to_node_dict() not deterministic"
+
+    def test_to_json_with_circular_deps(self, repo_builder: RepoBuilder):
+        """Verify to_json() works with circular dependencies."""
+        repo_builder.add_package("json-a", dependencies=[("json-b", "run", None)])
+        repo_builder.add_package("json-b", dependencies=[("json-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec = spack.concretize.concretize_one("json-a")
+
+            # Should not hang or raise RecursionError
+            json_str = spec.to_json()
+
+            # Should be valid JSON
+            parsed = json.loads(json_str)
+            assert "spec" in parsed
+
+    def test_to_yaml_with_circular_deps(self, repo_builder: RepoBuilder):
+        """Verify to_yaml() works with circular dependencies."""
+        repo_builder.add_package("yaml-a", dependencies=[("yaml-b", "run", None)])
+        repo_builder.add_package("yaml-b", dependencies=[("yaml-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec = spack.concretize.concretize_one("yaml-a")
+
+            # Should not hang or raise RecursionError
+            yaml_str = spec.to_yaml()
+
+            # Should be non-empty string
+            assert yaml_str
+            assert "yaml-a" in yaml_str
+            assert "yaml-b" in yaml_str
+
+    def test_dependency_traversal(self, repo_builder: RepoBuilder):
+        """Verify dependencies() works with circular run dependencies."""
+        repo_builder.add_package("trav-a", dependencies=[("trav-b", "run", None)])
+        repo_builder.add_package("trav-b", dependencies=[("trav-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec_a = spack.concretize.concretize_one("trav-a")
+            spec_b = spec_a["trav-b"]
+
+            # Should be able to query run dependencies
+            a_run_deps = spec_a.dependencies(deptype=dt.RUN)
+            assert len(a_run_deps) == 1
+            assert a_run_deps[0].name == "trav-b"
+
+            b_run_deps = spec_b.dependencies(deptype=dt.RUN)
+            assert len(b_run_deps) == 1
+            assert b_run_deps[0].name == "trav-a"
+
+    def test_concretize_simple_cycle(self, repo_builder: RepoBuilder):
+        """Verify basic concretization with A↔B works and solver allows it."""
+        repo_builder.add_package("conc-a", dependencies=[("conc-b", "run", None)])
+        repo_builder.add_package("conc-b", dependencies=[("conc-a", "run", None)])
+
+        with spack.repo.use_repositories(repo_builder.root):
+            spec = spack.concretize.concretize_one("conc-a")
+
+            # Should be concrete
+            assert spec.concrete
+            assert spec["conc-b"].concrete
+
+            # Should have circular deps
+            assert "conc-b" in spec
+            assert "conc-a" in spec["conc-b"]
