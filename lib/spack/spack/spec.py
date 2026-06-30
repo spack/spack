@@ -2310,53 +2310,6 @@ class Spec:
 
         return sccs
 
-    def _topological_sort_sccs(
-        self, sccs: List[List["Spec"]], depflag: dt.DepFlag
-    ) -> List[List["Spec"]]:
-        """Sort SCCs in topological order.
-
-        Returns SCCs such that if SCC_A depends on SCC_B, then SCC_B appears before SCC_A.
-
-        Args:
-            sccs: List of strongly connected components
-            depflag: Dependency types to consider
-
-        Returns:
-            SCCs in topological order
-        """
-        # Build SCC membership map
-        spec_to_scc = {}
-        for scc_idx, scc in enumerate(sccs):
-            for spec in scc:
-                spec_to_scc[id(spec)] = scc_idx
-
-        # Build SCC dependency graph
-        scc_deps = [set() for _ in sccs]
-        for scc_idx, scc in enumerate(sccs):
-            for spec in scc:
-                for edge in spec.edges_to_dependencies(depflag=depflag):
-                    dep_scc_idx = spec_to_scc[id(edge.spec)]
-                    if dep_scc_idx != scc_idx:  # External dependency
-                        scc_deps[scc_idx].add(dep_scc_idx)
-
-        # Kahn's algorithm for topological sort
-        in_degree = [len(deps) for deps in scc_deps]
-        queue = [i for i, degree in enumerate(in_degree) if degree == 0]
-        result = []
-
-        while queue:
-            scc_idx = queue.pop(0)
-            result.append(sccs[scc_idx])
-
-            # Reduce in-degree for dependent SCCs
-            for other_idx, deps in enumerate(scc_deps):
-                if scc_idx in deps:
-                    in_degree[other_idx] -= 1
-                    if in_degree[other_idx] == 0:
-                        queue.append(other_idx)
-
-        return result
-
     def _extract_node_attributes(
         self, spec: "Spec", hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
@@ -2588,7 +2541,8 @@ class Spec:
     ) -> Dict[int, str]:
         """Compute hashes for all specs with cycle support.
 
-        Uses SCC detection and topological sorting to handle circular dependencies.
+        Uses Tarjan's SCC detection algorithm, which produces SCCs in reverse topological
+        order as a side effect (per Knuth's observation in the literature).
 
         Args:
             hash_descriptor: Hash descriptor for configuration
@@ -2602,16 +2556,13 @@ class Spec:
             for spec in self.traverse(root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id)
         }
 
-        # 2. Find SCCs
-        sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
+        # 2. Find SCCs in topological order (Tarjan's returns reverse topological order)
+        sccs = list(reversed(self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)))
 
-        # 3. Sort SCCs topologically
-        scc_order = self._topological_sort_sccs(sccs, hash_descriptor.depflag)
-
-        # 4. Compute hashes in topological order
+        # 3. Compute hashes in topological order
         spec_hashes = {}
 
-        for scc in scc_order:
+        for scc in sccs:
             if len(scc) == 1:
                 # Simple case: no cycle
                 spec = scc[0]
