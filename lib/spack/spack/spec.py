@@ -2322,7 +2322,7 @@ class Spec:
         Returns:
             Dictionary of spec attributes (excluding dependencies)
         """
-        attrs = {"name": spec.name}
+        attrs: Dict[str, Any] = {"name": spec.name}
 
         if spec.versions:
             attrs.update(spec.versions.to_dict())
@@ -2347,7 +2347,9 @@ class Spec:
                 if any(x.propagate for x in flags)
             ]
             attrs["propagate"] = sorted(
-                itertools.chain([v.name for v in spec.variants.values() if v.propagate], flag_names)
+                itertools.chain(
+                    [v.name for v in spec.variants.values() if v.propagate], flag_names
+                )
             )
             attrs["abstract"] = sorted(v.name for v in spec.variants.values() if not v.concrete)
 
@@ -2457,14 +2459,14 @@ class Spec:
             Dictionary representing the full cycle structure, including all external dep hashes
         """
         scc_set = set(id(s) for s in scc_specs)
-        cycle_nodes = []
+        cycle_nodes: List[Dict[str, Any]] = []
 
         for spec in sorted(scc_specs, key=lambda s: (s.name, str(s.versions))):
             internal_deps = []
             external_deps = []
 
             for edge in spec.edges_to_dependencies(depflag=hash_descriptor.depflag):
-                dep_info = {
+                dep_info: Dict[str, Any] = {
                     "name": edge.spec.name,
                     "deptypes": dt.flag_to_tuple(edge.depflag),
                     "virtuals": edge.virtuals,
@@ -2493,10 +2495,7 @@ class Spec:
         return {"cycle_nodes": cycle_nodes}
 
     def _to_cycle_node_dict(
-        self,
-        spec: "Spec",
-        cycle_hash: str,
-        hash_descriptor: ht.SpecHashDescriptor,
+        self, spec: "Spec", cycle_hash: str, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
         """Build dictionary for a single node within a cycle.
 
@@ -2559,13 +2558,15 @@ class Spec:
         # Collect all reachable specs
         all_specs = {
             id(spec): spec
-            for spec in self.traverse(root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id)
+            for spec in self.traverse(
+                root=True, deptype=hash_descriptor.depflag, cover="nodes", key=id
+            )
         }
 
         # Find SCCs (Tarjan's returns reverse topological order which is what we need here anyway)
         sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
 
-        spec_hashes = {}
+        spec_hashes: Dict[int, str] = {}
         for scc in sccs:
             if len(scc) == 1:
                 # Simple case: no cycle
@@ -2649,7 +2650,9 @@ class Spec:
                 # Only set if not already cached (respect existing cached values)
                 for spec_id, spec_hash in all_hashes.items():
                     # Find the spec object by ID and cache its hash
-                    for spec in self.traverse(root=True, deptype=hash.depflag, cover="nodes", key=id):
+                    for spec in self.traverse(
+                        root=True, deptype=hash.depflag, cover="nodes", key=id
+                    ):
                         if id(spec) == spec_id and (force or spec.concrete):
                             # Only cache if not already set
                             if not getattr(spec, hash.attr, None):

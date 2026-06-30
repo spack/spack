@@ -15,9 +15,7 @@ import json
 import pytest
 
 import spack.concretize
-import spack.deptypes as dt
 import spack.repo
-from spack.spec import Spec
 from spack.test.conftest import RepoBuilder
 
 
