@@ -49,8 +49,8 @@ from spack.util.filesystem import getuid, touch, working_dir
 
 if sys.platform != "win32":
     import fcntl
-
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+else:
+    import win32file
 
 
 #
@@ -279,7 +279,7 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 # Process snippets below can be composed into tests.
 #
 class AcquireWrite:
-    def __init__(self, lock_path, start=0, length=0):
+    def __init__(self, lock_path, start=0, length=1):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -296,7 +296,7 @@ class AcquireWrite:
 
 
 class AcquireRead:
-    def __init__(self, lock_path, start=0, length=0):
+    def __init__(self, lock_path, start=0, length=1):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -313,7 +313,7 @@ class AcquireRead:
 
 
 class TimeoutWrite:
-    def __init__(self, lock_path, start=0, length=0):
+    def __init__(self, lock_path, start=0, length=1):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -331,7 +331,7 @@ class TimeoutWrite:
 
 
 class TimeoutRead:
-    def __init__(self, lock_path, start=0, length=0):
+    def __init__(self, lock_path, start=0, length=1):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -570,6 +570,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
 
 
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
+@pytest.mark.skipif(sys.platform == "win32", reason="Cannot make readonly dir on Windows")
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
     touch(lock_path)
@@ -597,7 +598,8 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
+# skipping on Windows as spack cannot currently make directories read only
+@pytest.mark.skipif(sys.platform == "win32" or getuid() == 0, reason="user is root")
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
@@ -646,7 +648,10 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
+    # On Windows, _unlock() closes the file handle so the file can be deleted
+    # (Windows raises WinError 32 on unlink if any process has the file open).
+    if not lk.IS_WINDOWS:
+        assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
 
 
 def test_release_write_downgrades_to_shared(private_lock_path):
@@ -1299,7 +1304,7 @@ def test_attempts_str():
 def test_lock_str():
     lock = lk.Lock("lockfile")
     lockstr = str(lock)
-    assert "lockfile[0:0]" in lockstr
+    assert f"lockfile[0:{lk.WHOLE_FILE_RANGE}]" in lockstr
     assert "timeout=None" in lockstr
     assert "#reads=0, #writes=0" in lockstr
 
@@ -1326,6 +1331,7 @@ def test_downgrade_write_fails(tmp_path: pathlib.Path):
         lock.release_read()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="fcntl unavailable on Windows")
 @pytest.mark.parametrize(
     "err_num,err_msg",
     [
@@ -1348,10 +1354,37 @@ def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_m
         monkeypatch.setattr(fcntl, "lockf", _lockf)
 
         if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock.backend.poll(fcntl.LOCK_EX)
+            assert not lock._poll_lock(lk.LockType.LOCK_EX)
         else:
             with pytest.raises(OSError, match=err_msg):
-                lock.backend.poll(fcntl.LOCK_EX)
+                lock._poll_lock(lk.LockType.LOCK_EX)
+
+        monkeypatch.undo()
+        lock.release_read()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="win32file only available on Windows")
+@pytest.mark.parametrize(
+    "err_num,err_msg", [(32, "Fake EACCES error analog"), (33, "Fake EAGAIN error analog")]
+)
+def test_poll_lock_exception_win(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
+    """Test poll lock exception handling."""
+
+    def LockFileEx(hfile, int_, int1_, int2_, ol):
+        raise OSError(err_num, err_msg)
+
+    with working_dir(str(tmp_path)):
+        lockfile = "lockfile"
+        lock = lk.Lock(lockfile)
+        lock.acquire_read()
+
+        monkeypatch.setattr(win32file, "LockFileEx", LockFileEx)
+
+        if err_num in [errno.EAGAIN, errno.EACCES]:
+            assert not lock._poll_lock(lk.LockType.LOCK_EX)
+        else:
+            with pytest.raises(OSError, match=err_msg):
+                lock._poll_lock(lk.LockType.LOCK_EX)
 
         monkeypatch.undo()
         lock.release_read()
@@ -1489,6 +1522,30 @@ def test_try_acquire_write(tmp_path: pathlib.Path):
         assert q.get() is False
     finally:
         lock.release_read()
+
+
+def test_try_acquire_write_from_read(tmp_path: pathlib.Path):
+    """try_acquire_write must properly upgrade an existing read to a write."""
+    lock = lk.Lock(str(tmp_path / "lockfile"))
+
+    # Acquire a read, then non-blockingly upgrade to write
+    lock.acquire_read()
+    assert lock._reads == 1
+    assert lock._writes == 0
+
+    assert lock.try_acquire_write() is True
+    assert lock._reads == 0
+    assert lock._writes == 1
+
+    # Nested try_acquire_write while holding write
+    assert lock.try_acquire_write() is True
+    assert lock._writes == 2
+
+    lock.release_write()
+    assert lock._writes == 1
+    lock.release_write()
+    assert lock._reads == 0
+    assert lock._writes == 0
 
 
 def _child_fails_to_acquire_read(_lock: lk.Lock):
