@@ -2255,9 +2255,7 @@ class Spec:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     @staticmethod
-    def _find_sccs_tarjan(
-        all_specs: Dict[int, "Spec"], depflag: dt.DepFlag
-    ) -> List[List["Spec"]]:
+    def _find_sccs_tarjan(all_specs: Dict[int, "Spec"], depflag: dt.DepFlag) -> List[List["Spec"]]:
         """Find strongly connected components using Tarjan's algorithm.
 
         Args:
@@ -2311,9 +2309,7 @@ class Spec:
 
         return sccs
 
-    def _to_node_attributes_dict(
-        self, hash_descriptor: ht.SpecHashDescriptor
-    ) -> Dict[str, Any]:
+    def _to_node_attributes_dict(self, hash_descriptor: ht.SpecHashDescriptor) -> Dict[str, Any]:
         """Extract non-dependency attributes for this spec.
 
         Args:
