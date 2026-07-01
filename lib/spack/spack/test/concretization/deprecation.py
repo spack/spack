@@ -24,8 +24,7 @@ def test_config_deprecated_with_old_style_version_deprecation(mock_packages, mut
     config:deprecated:false blocks them.
     """
     with mutable_config.override("config:deprecated", True):
-        with pytest.warns(UserWarning, match="maintenance"):
-            concretize_one("deprecated-old-style@1.0")
+        assert concretize_one("deprecated-old-style@1.0").satisfies("@1.0")
 
     with pytest.raises(UnsatisfiableSpecError, match="maintenance"):
         concretize_one("deprecated-old-style@1.0")
@@ -49,20 +48,21 @@ def test_version_deprecated_true_registers_in_deprecations(mock_packages):
     )
 
 
-def test_deprecated_directive_warns_on_concretize(
-    mock_packages, concretize_scope, packages_yaml_write
+def test_allowed_deprecation_concretizes_without_warning(
+    mock_packages, concretize_scope, packages_yaml_write, recwarn
 ):
-    """Tests that concretizing a spec that matches a deprecated() constraint emits a warning."""
+    """An allowed deprecation (severity <= threshold) concretizes silently, with no warning."""
     packages_yaml_write("""
 packages:
   all:
     allowed_deprecation_severity: critical
 """)
-    with pytest.warns(UserWarning) as warning_list:
-        concretize_one("deprecated-with-reason@2.0")
-    messages = [str(w.message) for w in warning_list]
-    assert any("cve" in m for m in messages)
-    assert any("critical" in m for m in messages)
+    spec = concretize_one("deprecated-with-reason@2.0")
+    assert spec.satisfies("@2.0")
+    assert not any(
+        "deprecat" in str(w.message).lower() or "cve" in str(w.message).lower()
+        for w in recwarn.list
+    )
 
 
 def test_allowed_deprecation_severity_per_package_blocks(
@@ -93,31 +93,12 @@ packages:
         concretize_one("deprecated-with-reason@2.0")
 
 
-def test_solver_severity_criterion_overrides_version_preference(
-    mock_packages, concretize_scope, packages_yaml_write
-):
-    """Tests that severity is taken into account when a deprecation is allowed.
-
-    deprecated-with-reason has @2.0 deprecated at critical severity and @1.0 at low
-    severity. Both are allowed here, but the solver picks @1.0 due to the lower severity,
-    even though @2.0 is the higher version.
-    """
-    packages_yaml_write("""
-packages:
-  all:
-    allowed_deprecation_severity: critical
-""")
-    spec = concretize_one("deprecated-with-reason")
-    assert spec.satisfies("@1.0")
-
-
 def test_coexistence_old_and_new_deprecation(mock_packages, mutable_config):
     """Tests that version(..., deprecated=True) and deprecated() on the same version coexist."""
-    # The solver should prefer @2.0 (non-deprecated) over @1.0.
+    # The solver avoids the deprecated @1.0 and picks @2.0 by default.
     spec = concretize_one("deprecated-dual")
     assert spec.satisfies("@2.0")
 
-    # Check that the deprecation reason from the directive is shown
+    # With deprecations allowed, @1.0 concretizes without error.
     with mutable_config.override("config:deprecated", True):
-        with pytest.warns(UserWarning, match="cve"):
-            concretize_one("deprecated-dual@1.0")
+        assert concretize_one("deprecated-dual@1.0").satisfies("@1.0")

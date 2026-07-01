@@ -411,15 +411,13 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-% When a deprecated() directive matches the selected node, surface it as an attr so Python can
-% emit a warning for it. Severity is an integer: 0=none, 1=low, 2=medium, 3=high, 4=critical.
-attr("deprecated_with_reason", node(ID, Package), Reason, Severity)
+% A deprecated() directive matching a selected non-external node is a concretization error when
+% its severity exceeds the configured threshold. Severity is an integer:
+% 0=none, 1=low, 2=medium, 3=high, 4=critical.
+error(1, "deprecated_error", Package, Reason, Severity, Allowed)
   :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
      condition_holds(CondID, node(ID, Package)),
-     not external(node(ID, Package)).
-
-error(1, "deprecated_error", Package, Reason, Severity, Allowed)
-  :- attr("deprecated_with_reason", node(ID, Package), Reason, Severity),
+     not external(node(ID, Package)),
      pkg_fact(Package, allowed_deprecation_severity(Allowed)),
      Severity > Allowed.
 
@@ -2251,7 +2249,6 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 % opt_criterion(Priority, Location, Type, Level (for fixed only), Description)
 
 opt_criterion(0, "high", "", 0, "requirement weight").
-opt_criterion(1, "high", "", 0, "deprecation severity penalty").
 
 opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
@@ -2341,21 +2338,6 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
     Weight@Priority, PackageNode,Language,Group
     : requirement_penalty(PackageNode, Language, Group, Weight),
       opt_priority(Priority, _, _, _, "requirement weight")
-}.
-
-% Severity-weighted penalty for deprecated() directives (priority between requirement_weight and
-% the when_possible unsolved-literal criterion). Weights grow 10x per severity so that a
-% single higher-severity match outweighs many lower-severity ones.
-severity_weight(1, 1).
-severity_weight(2, 10).
-severity_weight(3, 100).
-severity_weight(4, 1000).
-
-#minimize{
-    Weight@Priority, Package,ID
-    : attr("deprecated_with_reason", node(ID, Package), _, Severity),
-      severity_weight(Severity, Weight),
-      opt_priority(Priority, _, _, _, "deprecation severity penalty")
 }.
 
 % Try hard to reuse installed packages (i.e., minimize the number built)

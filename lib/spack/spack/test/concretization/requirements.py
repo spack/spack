@@ -478,7 +478,7 @@ packages:
 
 @pytest.mark.parametrize(
     "deprecated_config,expected,not_expected",
-    [(True, ["%gcc"], ["@=2.3"]), (False, ["%gcc"], ["@=2.3"])],
+    [(True, ["@=2.3"], []), (False, ["%gcc"], ["@=2.3"])],
 )
 def test_requirements_and_deprecated_versions(
     deprecated_config,
@@ -488,11 +488,12 @@ def test_requirements_and_deprecated_versions(
     test_repo,
     mutable_config: Configuration,
 ):
-    """Tests the expected behavior of requirements and deprecated versions.
+    """Tests the interaction between requirements and deprecation gating.
 
-    The any_of constraint is satisfied by %gcc alone in both cases. Without config:deprecated, the
-    solver blocks @=2.3 outright. With config:deprecated=True, the solver allows @=2.3 but still
-    avoids it via the severity penalty, so %gcc is still chosen over the deprecated version.
+    The any_of constraint can be satisfied either by the deprecated version @=2.3 or by %gcc.
+    Without config:deprecated, @=2.3 is a hard error, so the solver satisfies the requirement via
+    %gcc. With config:deprecated=True the deprecation is allowed with no penalty, so the solver is
+    free to satisfy the requirement with @=2.3.
     """
     # 2.3 is a deprecated version. The any_of is satisfiable by %gcc alone.
     conf_str = """\

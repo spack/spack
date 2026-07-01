@@ -7,11 +7,7 @@ from spack.package import *
 
 
 class DeprecatedWithReason(Package):
-    """Package using the deprecated() directive with reason and severity metadata.
-
-    Both versions are deprecated and the higher version has the higher severity, so
-    version preference and severity disagree on which version to pick.
-    """
+    """Package using the deprecated() directive with reason and severity metadata."""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/deprecated-with-reason-1.0.tar.gz"

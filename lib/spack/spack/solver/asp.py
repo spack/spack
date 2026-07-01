@@ -3276,14 +3276,6 @@ class SpecBuilder:
         assert len(dependencies) == 1, f"{virtual}: {provider_node.pkg}"
         dependencies[0].update_virtuals(virtual)
 
-    def deprecated_with_reason(self, node: NodeId, reason: str, severity: str) -> None:
-        warnings.warn(
-            f'"{node.pkg}" matches a deprecated spec '
-            f"(reason: {reason}, severity: {_severity_to_str(severity)})",
-            UserWarning,
-            stacklevel=2,
-        )
-
     def splice_at_hash(
         self, parent_node: NodeId, splice_node: NodeId, child_name: str, child_hash: str
     ):
