@@ -334,8 +334,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
@@ -364,8 +363,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
@@ -394,8 +392,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -424,8 +421,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -451,8 +447,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite={spec.dag_hash()},
                 overwrite_time=time.time() + 100,
                 capacity=1,
@@ -484,8 +479,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -523,8 +517,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -562,8 +555,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -589,8 +581,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite={spec.dag_hash()},
                 overwrite_time=0.0,  # earlier than now()
                 capacity=1,
@@ -621,8 +612,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
