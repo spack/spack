@@ -236,6 +236,10 @@ def activate(env, use_env_repo=False):
         if not isinstance(env, Environment):
             raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
+        # Record the env path so config "$env" substitutions work while the manifest's
+        # config scope is being prepared below (and for the lifetime of the activation).
+        spack.config.CONFIG.env_path = env.path
+
         # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
         # config changes.
         install_tree_before = spack.config.get("config:install_tree")
@@ -260,6 +264,7 @@ def activate(env, use_env_repo=False):
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
         _active_environment = None
+        spack.config.CONFIG.env_path = None
         raise
 
 
@@ -287,6 +292,7 @@ def deactivate():
     tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
     _active_environment = None
+    spack.config.CONFIG.env_path = None
 
 
 def active_environment() -> Optional["Environment"]:

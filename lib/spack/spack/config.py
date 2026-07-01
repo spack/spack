@@ -44,6 +44,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, U
 
 from spack.vendor import jsonschema
 
+import spack
 import spack.error
 import spack.paths
 import spack.schema
@@ -526,6 +527,11 @@ class Configuration:
     def __init__(self) -> None:
         self.scopes = lang.PriorityOrderedMapping()
         self.updated_scopes_by_section: Dict[str, List[ConfigScope]] = defaultdict(list)
+        # Path of the active environment, used for the "$env" substitution. It is set
+        # when an environment is activated and unset when it is deactivated, so that
+        # substitutions do not need to import spack.environment (avoiding a circular
+        # import).
+        self.env_path: Optional[str] = None
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
@@ -2292,10 +2298,6 @@ NOMATCH = object()
 
 # Substitutions to perform
 def replacements():
-    # break circular imports
-    import spack
-    import spack.environment as ev
-
     arch = architecture()
 
     return {
@@ -2312,7 +2314,7 @@ def replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: ev.active_environment().path if ev.active_environment() else NOMATCH,
+        "env": lambda: CONFIG.env_path if CONFIG.env_path else NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
