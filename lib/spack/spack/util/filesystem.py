@@ -53,6 +53,15 @@ from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_
 
 if sys.platform == "win32":
     from ctypes import wintypes
+
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        GenericAccessRights,
+        SecurityDescriptor,
+        get_file_owner,
+    )
 else:
     import grp
     import pwd
@@ -545,8 +554,6 @@ def exploding_archive_handler(tarball_container, stage):
 @system_path_filter
 def get_windows_file_security(path: str) -> str:
     if sys.platform == "win32":
-        from spack.util.win_acl import get_file_owner
-
         return get_file_owner(path)
     raise RuntimeError("cannot determine Windows file security on non-Windows")
 
@@ -590,13 +597,6 @@ def set_install_permissions(path):
     if islink(path):
         return
     if sys.platform == "win32":
-        from spack.util.win_acl import (
-            AccessControlEntry,
-            AceType,
-            FileAccessRights,
-            SecurityDescriptor,
-        )
-
         sd = SecurityDescriptor.from_file(path)
         owner_sid = sd.owner
         sd.clear_dacl()
@@ -604,14 +604,16 @@ def set_install_permissions(path):
         everyone_ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="WD")
         if os.path.isdir(path):
             # 755: owner full access, everyone read + traverse
-            owner_ace.add_right(FileAccessRights.SDDL_FILE_ALL)
-            everyone_ace.add_right(FileAccessRights.SDDL_FILE_READ)
-            everyone_ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+            owner_ace.add_right(FileAccessRights.FILE_ALL_ACCESS)
+            everyone_ace.add_right(
+                FileAccessRights.FILE_GENERIC_READ | FileAccessRights.FILE_GENERIC_EXECUTE
+            )
         else:
             # 644: owner read + write, everyone read
-            owner_ace.add_right(FileAccessRights.SDDL_FILE_READ)
-            owner_ace.add_right(FileAccessRights.SDDL_FILE_WRITE)
-            everyone_ace.add_right(FileAccessRights.SDDL_FILE_READ)
+            owner_ace.add_right(
+                FileAccessRights.FILE_GENERIC_READ | FileAccessRights.FILE_GENERIC_WRITE
+            )
+            everyone_ace.add_right(FileAccessRights.FILE_GENERIC_READ)
         sd.add_ace(owner_ace)
         sd.add_ace(everyone_ace)
         sd.apply(path)
@@ -680,41 +682,32 @@ def chmod_x(entry, perms):
 
 
 def win_copy_exe_mode(src, dest):
-    from spack.util.win_acl import AceType, FileAccessRights, SecurityDescriptor
+    """Propagate execute permission from *src* to *dest* on Windows.
 
-    _execute_codes = frozenset(("FX", "FA", "GX", "GA"))
-    # FILE_GENERIC_EXECUTE bitmask; defensive fallback for any unnormalised hex residual.
-    _FILE_EXECUTE_MASK = 0x001200A0
-
-    def _rights_str(ace) -> str:
-        return ace.rights.value if hasattr(ace.rights, "value") else str(ace.rights)
+    Reads the DACL of *src*; if any Allow ACE grants execute, ORs FILE_GENERIC_EXECUTE
+    into every Allow ACE in *dest*'s DACL that does not already include it.
+    """
+    # Masks that imply execute for file objects.  GENERIC_ALL / GENERIC_EXECUTE are
+    # checked separately because the generic bits don't overlap with the file-specific ones.
+    _FX = int(FileAccessRights.FILE_GENERIC_EXECUTE)
+    _GENERIC_X_MASKS = (
+        int(GenericAccessRights.GENERIC_EXECUTE),
+        int(GenericAccessRights.GENERIC_ALL),
+    )
 
     def _grants_execute(ace) -> bool:
-        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or ace.rights is None:
+        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:
             return False
-        r = _rights_str(ace)
-        try:
-            return bool(int(r, 0) & _FILE_EXECUTE_MASK)
-        except ValueError:
-            return any(r[i : i + 2] in _execute_codes for i in range(0, len(r), 2))
-
-    def _add_execute(ace) -> None:
-        r = _rights_str(ace)
-        try:
-            ace.rights = hex(int(r, 0) | _FILE_EXECUTE_MASK)
-        except ValueError:
-            ace.add_right(FileAccessRights.SDDL_FILE_EXECUTE)
+        # Subset check: every bit of FX must be present (FR & FX != 0 due to shared bits).
+        return (ace.rights & _FX) == _FX or any(bool(ace.rights & m) for m in _GENERIC_X_MASKS)
 
     src_sd = SecurityDescriptor.from_file(src)
     if any(_grants_execute(ace) for ace in src_sd.dacl):
         dst_sd = SecurityDescriptor.from_file(dest)
-        # Modify the stored ACEs in-place; dst_sd.dacl returns a deep copy so we go
-        # through _parsed directly.
-        for ace in dst_sd._parsed.get("DACL", []):
+        for ace in dst_sd.dacl:
             if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):
-                _add_execute(ace)
+                ace.add_right(_FX)
         dst_sd.apply(dest)
-    return
 
 
 @system_path_filter

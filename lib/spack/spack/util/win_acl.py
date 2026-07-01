@@ -16,29 +16,17 @@ import os
 import re
 from contextlib import contextmanager
 from ctypes import wintypes  # type: ignore[attr-defined]
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Any, Dict, Generator, List, Optional, Union
 
 
-class AceStringEnum(Enum):
-    """Base enum whose members can be combined with ``|`` to build SDDL strings."""
+class AccessRightsEnum(IntEnum):
+    """Base class for all access-rights enums.
 
-    def __or__(self, other: "AceStringEnum") -> str:
-        if not hasattr(other, "value"):
-            raise TypeError(
-                f"unsupported operand type(s) for |: {type(self).__name__!r} and"
-                f" {type(other).__name__!r}"
-            )
-        return self.value + other.value
-
-    def __ror__(self, other: str) -> str:
-        if not isinstance(other, str):
-            raise TypeError(f"Cannot combine {type(self)} with {type(other)}")
-        return other + self.value
-
-
-class AccessRightsEnum(AceStringEnum):
-    """Base class for all access-rights enums."""
+    Members are 32-bit Windows access-mask integers so they compose naturally with
+    bitwise operators and compare directly with ``ace.rights`` (which is also an
+    ``int``).  No ``.value`` dereferencing is needed.
+    """
 
 
 class AceType(Enum):
@@ -65,6 +53,18 @@ class AceType(Enum):
     def __str__(self) -> str:
         return self.value
 
+    @classmethod
+    def from_sddl(cls, token: str) -> "AceType":
+        """Return the ``AceType`` whose SDDL token matches *token*.
+
+        Raises:
+            ValueError: if *token* is not a recognised ACE type.
+        """
+        for member in cls:
+            if member.value == token:
+                return member
+        raise ValueError(f"Unknown ACE type SDDL token: {token!r}")
+
 
 class AceFlags(Enum):
     """ACE flags strings for the ``AceFlags`` field of the ACE_HEADER structure."""
@@ -81,61 +81,61 @@ class AceFlags(Enum):
 
 
 class GenericAccessRights(AccessRightsEnum):
-    """Generic access rights strings."""
+    """Generic access rights (mapped by the OS to object specific rights at access check time)."""
 
-    SDDL_GENERIC_ALL = "GA"
-    SDDL_GENERIC_READ = "GR"
-    SDDL_GENERIC_WRITE = "GW"
-    SDDL_GENERIC_EXECUTE = "GX"
+    GENERIC_ALL = 0x10000000
+    GENERIC_READ = 0x80000000
+    GENERIC_WRITE = 0x40000000
+    GENERIC_EXECUTE = 0x20000000
 
 
 class StandardAccessRights(AccessRightsEnum):
-    """Standard access rights strings."""
+    """Standard rights present on every securable object."""
 
-    SDDL_READ_CONTROL = "RC"
-    SDDL_STANDARD_DELETE = "SD"
-    SDDL_WRITE_DAC = "WD"
-    SDDL_WRITE_OWNER = "WO"
-
-
-class DirectoryServiceObjectAccessRights(AccessRightsEnum):
-    """Directory service object access rights strings."""
-
-    SDDL_READ_PROPERTY = "RP"
-    SDDL_WRITE_PROPERTY = "WP"
-    SDDL_CREATE_CHILD = "CC"
-    SDDL_DELETE_CHILD = "DC"
-    SDDL_LIST_CHILDREN = "LC"
-    SDDL_SELF_WRITE = "SW"
-    SDDL_LIST_OBJECT = "LO"
-    SDDL_DELETE_TREE = "DT"
-    SDDL_CONTROL_ACCESS = "CR"
+    DELETE = 0x00010000
+    READ_CONTROL = 0x00020000
+    WRITE_DAC = 0x00040000
+    WRITE_OWNER = 0x00080000
 
 
 class FileAccessRights(AccessRightsEnum):
-    """File access rights strings."""
+    """File and directory access rights (SDDL tokens FA/FR/FW/FX)."""
 
-    SDDL_FILE_ALL = "FA"
-    SDDL_FILE_READ = "FR"
-    SDDL_FILE_WRITE = "FW"
-    SDDL_FILE_EXECUTE = "FX"
+    FILE_ALL_ACCESS = 0x001F01FF
+    FILE_GENERIC_READ = 0x00120089
+    FILE_GENERIC_WRITE = 0x00120116
+    FILE_GENERIC_EXECUTE = 0x001200A0
 
 
 class RegistryKeyAccessRights(AccessRightsEnum):
-    """Registry key access rights strings."""
+    """Registry key access rights (SDDL tokens KA/KR/KW/KX)."""
 
-    SDDL_KEY_ALL = "KA"
-    SDDL_KEY_READ = "KR"
-    SDDL_KEY_WRITE = "KW"
-    SDDL_KEY_EXECUTE = "KX"
+    KEY_ALL_ACCESS = 0x000F003F
+    KEY_READ = 0x00020019
+    KEY_WRITE = 0x00020006
+    KEY_EXECUTE = 0x00020019  # alias for KEY_READ
 
 
 class MandatoryLabelRights(AccessRightsEnum):
-    """Mandatory label rights strings."""
+    """Mandatory integrity label rights (SDDL tokens NW/NR/NX)."""
 
-    SDDL_NO_READ_UP = "NR"
-    SDDL_NO_WRITE_UP = "NW"
-    SDDL_NO_EXECUTE_UP = "NX"
+    NO_WRITE_UP = 0x00000001
+    NO_READ_UP = 0x00000002
+    NO_EXECUTE_UP = 0x00000004
+
+
+class DirectoryServiceObjectAccessRights(AccessRightsEnum):
+    """Active Directory object access rights (SDDL tokens CC/DC/LC/SW/RP/WP/DT/LO/CR)."""
+
+    DS_CREATE_CHILD = 0x00000001
+    DS_DELETE_CHILD = 0x00000002
+    DS_LIST = 0x00000004
+    DS_SELF = 0x00000008
+    DS_READ_PROP = 0x00000010
+    DS_WRITE_PROP = 0x00000020
+    DS_DELETE_TREE = 0x00000040
+    DS_LIST_OBJECT = 0x00000080
+    DS_CONTROL_ACCESS = 0x00000100
 
 
 class ResourceAttributeAceDataType(Enum):
@@ -149,24 +149,55 @@ class ResourceAttributeAceDataType(Enum):
     SDDL_BOOLEAN = "TB"
 
 
-# Canonical 32-bit access masks for each named SDDL access-right code (file objects).
-# Used to convert raw hex masks (produced by ConvertSecurityDescriptorToStringSecurityDescriptorW
-# for combinations it cannot express as a single token) back to named code strings.
+# SDDL code: 32-bit access mask for every named right token.  Used by _map_rights to
+# parse SDDL strings ("FRFW", "GR", …) into integer masks during ACE construction.
 _NAMED_RIGHT_MASKS: Dict[str, int] = {
-    "FA": 0x001F01FF,  # FILE_ALL_ACCESS
-    "FR": 0x00120089,  # FILE_GENERIC_READ
-    "FW": 0x00120116,  # FILE_GENERIC_WRITE
-    "FX": 0x001200A0,  # FILE_GENERIC_EXECUTE
-    "GA": 0x10000000,  # GENERIC_ALL
-    "GR": 0x80000000,  # GENERIC_READ
-    "GW": 0x40000000,  # GENERIC_WRITE
-    "GX": 0x20000000,  # GENERIC_EXECUTE
+    # File access rights
+    "FA": int(FileAccessRights.FILE_ALL_ACCESS),
+    "FR": int(FileAccessRights.FILE_GENERIC_READ),
+    "FW": int(FileAccessRights.FILE_GENERIC_WRITE),
+    "FX": int(FileAccessRights.FILE_GENERIC_EXECUTE),
+    # Generic access rights
+    "GA": int(GenericAccessRights.GENERIC_ALL),
+    "GR": int(GenericAccessRights.GENERIC_READ),
+    "GW": int(GenericAccessRights.GENERIC_WRITE),
+    "GX": int(GenericAccessRights.GENERIC_EXECUTE),
+    # Standard access rights
+    "SD": int(StandardAccessRights.DELETE),
+    "RC": int(StandardAccessRights.READ_CONTROL),
+    "WD": int(StandardAccessRights.WRITE_DAC),
+    "WO": int(StandardAccessRights.WRITE_OWNER),
+    # Registry key access rights
+    "KA": int(RegistryKeyAccessRights.KEY_ALL_ACCESS),
+    "KR": int(RegistryKeyAccessRights.KEY_READ),
+    "KW": int(RegistryKeyAccessRights.KEY_WRITE),
+    "KX": int(RegistryKeyAccessRights.KEY_EXECUTE),
+    # Mandatory label rights
+    "NW": int(MandatoryLabelRights.NO_WRITE_UP),
+    "NR": int(MandatoryLabelRights.NO_READ_UP),
+    "NX": int(MandatoryLabelRights.NO_EXECUTE_UP),
+    # Directory service object access rights
+    "CC": int(DirectoryServiceObjectAccessRights.DS_CREATE_CHILD),
+    "DC": int(DirectoryServiceObjectAccessRights.DS_DELETE_CHILD),
+    "LC": int(DirectoryServiceObjectAccessRights.DS_LIST),
+    "SW": int(DirectoryServiceObjectAccessRights.DS_SELF),
+    "RP": int(DirectoryServiceObjectAccessRights.DS_READ_PROP),
+    "WP": int(DirectoryServiceObjectAccessRights.DS_WRITE_PROP),
+    "DT": int(DirectoryServiceObjectAccessRights.DS_DELETE_TREE),
+    "LO": int(DirectoryServiceObjectAccessRights.DS_LIST_OBJECT),
+    "CR": int(DirectoryServiceObjectAccessRights.DS_CONTROL_ACCESS),
 }
 
 
-# Reverse lookup: integer mask → named SDDL code string, covering all non-empty subsets.
-# Built once at module load; dict preserves insertion order so single-code entries win
-# over multi-code ones that happen to produce the same mask (e.g. FA | FR == FA).
+# Reverse lookup:  SDDL code string to int mask for file/generic rights.
+# Used during SDDL serialisation to convert stored integer masks back to readable tokens.
+# Limited to the 8 file+generic codes since those are what ConvertSecurityDescriptor…
+# emits for file objects; other masks fall back to hex in _to_ace_string.
+_FILE_GENERIC_SDDL_CODES: Dict[str, int] = {
+    k: _NAMED_RIGHT_MASKS[k] for k in ("FA", "FR", "FW", "FX", "GA", "GR", "GW", "GX")
+}
+
+
 def _build_mask_to_named_rights(codes: Dict[str, int]) -> Dict[int, str]:
     result: Dict[int, str] = {}
     items = list(codes.items())
@@ -180,7 +211,7 @@ def _build_mask_to_named_rights(codes: Dict[str, int]) -> Dict[int, str]:
     return result
 
 
-_MASK_TO_NAMED_RIGHTS: Dict[int, str] = _build_mask_to_named_rights(_NAMED_RIGHT_MASKS)
+_MASK_TO_NAMED_RIGHTS: Dict[int, str] = _build_mask_to_named_rights(_FILE_GENERIC_SDDL_CODES)
 
 
 class AccessControlEntry:
@@ -206,7 +237,7 @@ class AccessControlEntry:
         self,
         ace_type: AceType,
         flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
-        rights: Optional[Union[AccessRightsEnum, str]] = None,
+        rights: Optional[int] = None,
         obj_guid: Optional[str] = None,
         inh_obj_guid: Optional[str] = None,
         sid: Optional[str] = None,
@@ -219,7 +250,7 @@ class AccessControlEntry:
             self._flags = list(flags)
         else:
             self._flags = [flags]
-        self._rights: Optional[Union[AccessRightsEnum, str]] = rights
+        self._rights: Optional[int] = rights
         self._obj_guid = obj_guid
         self._inh_obj_guid = inh_obj_guid
         self._sid = sid
@@ -247,11 +278,11 @@ class AccessControlEntry:
             self._flags = [val]
 
     @property
-    def rights(self) -> Optional[Union[AccessRightsEnum, str]]:
+    def rights(self) -> Optional[int]:
         return self._rights
 
     @rights.setter
-    def rights(self, val: Union[AccessRightsEnum, str]) -> None:
+    def rights(self, val: Optional[int]) -> None:
         self._rights = val
 
     @property
@@ -270,40 +301,33 @@ class AccessControlEntry:
     def inh_obj_guid(self) -> Optional[str]:
         return self._inh_obj_guid
 
-    def add_right(self, right: AccessRightsEnum) -> None:
-        """Append *right* to the accumulated rights string.
+    def grants(self, mask: int) -> bool:
+        """Return ``True`` if this ACE's rights include all bits in *mask*.
 
-        Note:
-            After multiple ``add_right`` calls the stored rights value becomes a
-            concatenated string (e.g. ``"GRFW"``).  If this ACE is round-tripped
-            through :meth:`SecurityDescriptor` parsing, ``remove_ace`` filtering by
-            individual rights values will not match that concatenated string.  Rights-based
-            filtering is reliable only on ACEs parsed directly from a Windows SDDL string
-            (where the rights field is always a single 2-letter code or a hex value).
+        Uses subset semantics: ``ace.grants(FX)`` is True only when every bit of
+        FILE_GENERIC_EXECUTE is present, not merely when the masks share any bit.
         """
-        if self._rights:
-            self._rights = self._rights | right  # type: ignore[assignment]
-        else:
-            self._rights = right
+        return bool(self._rights) and (self._rights & mask) == mask
+
+    def add_right(self, mask: int) -> None:
+        """OR *mask* into the accumulated rights."""
+        self._rights = (self._rights or 0) | mask
 
     def _to_ace_string(self) -> str:
-        def _fmt(v: Any) -> str:
-            if v is None:
-                return ""
-            if isinstance(v, list):
-                return "".join(i.value if hasattr(i, "value") else str(i) for i in v)
-            return v.value if hasattr(v, "value") else str(v)
-
+        if self._rights is not None:
+            rights_str = _MASK_TO_NAMED_RIGHTS.get(self._rights, hex(self._rights))
+        else:
+            rights_str = ""
         parts = [
-            _fmt(self._type),
-            _fmt(self._flags),
-            _fmt(self._rights),
+            self._type.value,
+            "".join(f.value for f in self._flags),
+            rights_str,
             self._obj_guid or "",
             self._inh_obj_guid or "",
             self._sid or "",
         ]
         if self._resource_attr is not None:
-            parts.append(_fmt(self._resource_attr))
+            parts.append(self._resource_attr.value)
         return "(" + ";".join(parts) + ")"
 
     def __repr__(self) -> str:
@@ -476,6 +500,7 @@ class _SddlHelper:
             "SACL": [],
             "DACL_CONTROL": "",
             "SACL_CONTROL": "",
+            "DACL_PRESENT": False,
         }
 
         for tag in re.split(r"(?=[OGDS]:)", sddl_string):
@@ -486,6 +511,8 @@ class _SddlHelper:
             elif tag.startswith("D:") or tag.startswith("S:"):
                 acl_key = "DACL" if tag.startswith("D:") else "SACL"
                 ctrl_key = "DACL_CONTROL" if acl_key == "DACL" else "SACL_CONTROL"
+                if acl_key == "DACL":
+                    parsed["DACL_PRESENT"] = True
                 rest = tag[2:]
                 paren = rest.find("(")
                 parsed[ctrl_key] = rest[:paren] if paren >= 0 else rest
@@ -503,20 +530,13 @@ class _SddlHelper:
         # Resource-attribute ACEs have a 7th field; we intentionally ignore it since
         # Spack never generates such ACEs and write-back preserves the OS SACL intact.
         return AccessControlEntry(
-            ace_type=_SddlHelper._map_enum(parts[0], AceType),
+            ace_type=AceType.from_sddl(parts[0]),
             flags=_SddlHelper._map_flags(parts[1], AceFlags),
             rights=_SddlHelper._map_rights(parts[2]) if parts[2] else None,
             obj_guid=parts[3] if parts[3] else None,
             inh_obj_guid=parts[4] if parts[4] else None,
             sid=parts[5] if parts[5] else None,
         )
-
-    @staticmethod
-    def _map_enum(value: str, enum_cls: type) -> Any:
-        for member in enum_cls:  # type: ignore[attr-defined]
-            if member.value == value:
-                return member
-        return value
 
     @staticmethod
     def _map_flags(flag_str: str, enum_cls: type) -> List[Any]:
@@ -533,32 +553,24 @@ class _SddlHelper:
         return flags
 
     @staticmethod
-    def _map_rights(rights_str: str) -> Any:
+    def _map_rights(rights_str: str) -> int:
+        """Parse an SDDL rights token to its 32-bit integer access mask.
+
+        Handles hex strings (``"0x12019f"``), decimal strings, and named SDDL code
+        sequences (``"FR"``, ``"FRFW"``).  Raises ``ValueError`` for unrecognised codes.
+        """
         try:
-            mask = int(rights_str, 0)
-        except (ValueError, TypeError):
-            mask = None
-
-        if mask is not None:
-            # Hex mask from the OS: normalise to the equivalent named code string, then
-            # re-enter to get a typed enum member where possible.
-            named = _MASK_TO_NAMED_RIGHTS.get(mask)
-            if named is not None:
-                return _SddlHelper._map_rights(named)
-            return rights_str  # unknown combination; keep as-is
-
-        for enum_cls in [
-            GenericAccessRights,
-            StandardAccessRights,
-            FileAccessRights,
-            RegistryKeyAccessRights,
-            MandatoryLabelRights,
-            DirectoryServiceObjectAccessRights,
-        ]:
-            for member in enum_cls:
-                if member.value == rights_str:
-                    return member
-        return rights_str
+            return int(rights_str, 0)
+        except ValueError:
+            pass
+        mask = 0
+        for i in range(0, len(rights_str), 2):
+            code = rights_str[i : i + 2]
+            val = _NAMED_RIGHT_MASKS.get(code)
+            if val is None:
+                raise ValueError(f"Unknown SDDL rights code: {code!r}")
+            mask |= val
+        return mask
 
     @staticmethod
     def create_sddl(security_descriptor: Dict[str, Any]) -> str:
@@ -730,6 +742,7 @@ class SecurityDescriptor:
                 "SACL": [],
                 "DACL_CONTROL": "",
                 "SACL_CONTROL": "",
+                "DACL_PRESENT": False,
             }
 
     @classmethod
@@ -738,30 +751,30 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            OSError: wraps ``ctypes.WinError`` on Windows API failure.
+            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         return cls(_get_file_sddl_raw(path))
 
     @property
-    def owner(self) -> Any:
+    def owner(self) -> Optional[str]:
         return self._parsed["Owner"]
 
     @owner.setter
-    def owner(self, sid: Any) -> None:
+    def owner(self, sid: Optional[str]) -> None:
         self._parsed["Owner"] = sid
 
     @property
-    def group(self) -> Any:
+    def group(self) -> Optional[str]:
         return self._parsed["Group"]
 
     @group.setter
-    def group(self, sid: Any) -> None:
+    def group(self, sid: Optional[str]) -> None:
         self._parsed["Group"] = sid
 
     @property
     def dacl(self) -> List[AccessControlEntry]:
-        """Return a deep copy of the DACL as a list of ``AccessControlEntry`` objects."""
-        return copy.deepcopy(self._parsed["DACL"])
+        """Return the DACL as a list of ``AccessControlEntry`` objects."""
+        return self._parsed["DACL"]
 
     @property
     def sacl(self) -> List[AccessControlEntry]:
@@ -803,9 +816,9 @@ class SecurityDescriptor:
 
     def remove_ace(
         self,
-        sid: Any = None,
-        rights: Any = None,
-        ace_type: Any = None,
+        sid: Optional[str] = None,
+        rights: Optional[int] = None,
+        ace_type: Optional[AceType] = None,
         remove_all_matches: bool = False,
     ) -> int:
         """Remove ACEs from the DACL that match all supplied criteria.
@@ -838,10 +851,10 @@ class SecurityDescriptor:
     def modify_ace(
         self,
         index: int,
-        sid: Any = None,
-        rights: Any = None,
-        flags: Any = None,
-        ace_type: Any = None,
+        sid: Optional[str] = None,
+        rights: Optional[int] = None,
+        flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
+        ace_type: Optional[AceType] = None,
     ) -> None:
         """Modify an existing ACE in-place by index."""
         dacl = self._parsed["DACL"]
@@ -870,8 +883,13 @@ class SecurityDescriptor:
         """Write this security descriptor to *path*.
 
         Raises:
-            OSError: wraps ``ctypes.WinError`` on Windows API failure.
+            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
         """
+        if self._parsed.get("DACL_PRESENT") and not self._parsed["DACL"]:
+            raise ValueError(
+                "Refusing to apply a null DACL: D: section is present but contains no ACEs. "
+                "A null DACL on Windows grants all users full access."
+            )
         # AI (auto-inherited) and AR (auto-inherit-required) are kernel-computed flags that
         # describe how the *existing* DACL was built.  Passing them back to SetNamedSecurityInfoW
         # causes the kernel to re-process parent inheritance, producing a different (and larger)
@@ -895,7 +913,7 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            OSError: wraps ``ctypes.WinError`` on Windows API failure.
+            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         if not os.path.exists(path):
             raise FileNotFoundError(f"No such file or directory: '{path}'")
@@ -961,7 +979,7 @@ class SecurityDescriptor:
         parsing, making it more efficient than :meth:`apply` for pure-copy operations.
 
         Raises:
-            OSError: wraps ``ctypes.WinError`` on Windows API failure.
+            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
         """
         SE_FILE_OBJECT = 1
         DACL_SECURITY_INFORMATION = 0x00000004
@@ -1077,7 +1095,7 @@ def get_file_sddl(path: str) -> str:
 
     Raises:
         FileNotFoundError: if *path* does not exist.
-        OSError: on any Windows API failure.
+        WindowsError: on any Windows API failure.
     """
     return SecurityDescriptor.from_file(path).to_sddl()
 
@@ -1088,6 +1106,6 @@ def set_file_sddl(path: str, sddl: str) -> None:
     Only the components present in *sddl* (owner, group, DACL) are written.
 
     Raises:
-        OSError: on any Windows API failure.
+        WindowsError: on any Windows API failure.
     """
     SecurityDescriptor(sddl).apply(path)
