@@ -2210,8 +2210,10 @@ The first positional argument is an optional spec constraint, in this case the v
 The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
 The optional ``severity`` keyword ranks the urgency: ``"low"``, ``"medium"``, ``"high"``, or ``"critical"`` in increasing order, defaulting to ``"low"``.
 
-Depending on the user's configuration, selecting a deprecated configuration may result in a warning only, or in a hard concretization error.
-In either case, non-deprecated versions are preferred over deprecated ones, and lower-severity deprecated versions over higher-severity ones.
+Whether a deprecated configuration can be selected depends on the user's configuration.
+If its severity exceeds the configured threshold it is a hard concretization error.
+At or below the threshold it is allowed silently, with no warning and no penalty in the solve.
+The default threshold rejects every deprecation, so by default the concretizer will avoid deprecated configurations whenever a valid alternative exists.
 See :ref:`package-deprecations-config` for how to configure the threshold.
 
 The older ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
