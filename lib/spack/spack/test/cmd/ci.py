@@ -1132,17 +1132,6 @@ spack:
             assert concrete_spec.dag_hash() + " callpath" in output
 
 
-def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
-    """Test that we can detect the change to .gitlab-ci.yml in a
-    mock spack git repo."""
-    os.environ["CI_CONFIG_PATH"] = os.path.join(mock_git_repo, ".gitlab-ci.yml")
-    monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
-    fake_env_path = os.path.join(
-        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
-    )
-    assert ci.stack_changed(fake_env_path) is True
-
-
 def test_ci_generate_prune_untouched(
     ci_generate_test, monkeypatch, tmp_path: pathlib.Path, repo_builder: RepoBuilder
 ):

@@ -567,6 +567,17 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
         assert all(count == 1 for count in have)
 
 
+def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
+    """Test that we can detect the change to .gitlab-ci.yml in a
+    mock spack git repo."""
+    os.environ["CI_CONFIG_PATH"] = os.path.join(mock_git_repo, ".gitlab-ci.yml")
+    monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
+    fake_env_path = os.path.join(
+        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
+    )
+    assert ci.stack_changed(fake_env_path) is True
+
+
 def test_ci_stack_changed(git, mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
