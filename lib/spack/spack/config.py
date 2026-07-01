@@ -2314,7 +2314,7 @@ def replacements():
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: CONFIG.env_path if CONFIG.env_path else NOMATCH,
+        "env": lambda: CONFIG.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
