@@ -1403,8 +1403,8 @@ def test_add_circular_run_deps_two_node(mutable_database, repo_builder: RepoBuil
             assert _tracked_dep_names(rec_b) == ["circ-a"]
 
             # Each node has exactly one dependent (the other cycle member).
-            assert rec_a.ref_count == 1
-            assert rec_b.ref_count == 1
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
 
             # Ref counts are internally consistent.
             db._check_ref_counts()
@@ -1430,8 +1430,8 @@ def test_add_circular_run_deps_survives_reread(mutable_database, repo_builder: R
             _, rec_b = db.query_by_spec_hash(hash_b)
             assert _tracked_dep_names(rec_a) == ["circ-b"]
             assert _tracked_dep_names(rec_b) == ["circ-a"]
-            assert rec_a.ref_count == 1
-            assert rec_b.ref_count == 1
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
             db._check_ref_counts()
 
 
@@ -1458,9 +1458,9 @@ def test_add_three_node_run_cycle(mutable_database, repo_builder: RepoBuilder):
             assert _tracked_dep_names(rec_c) == ["tri-a"]
 
             # Each node has exactly one dependent within the cycle.
-            assert rec_a.ref_count == 1
-            assert rec_b.ref_count == 1
-            assert rec_c.ref_count == 1
+            assert rec_a and rec_a.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
+            assert rec_c and rec_c.ref_count == 1
 
             db._check_ref_counts()
 
@@ -1491,8 +1491,8 @@ def test_circular_run_dep_ref_count_includes_dependent_outside_cycle(
             _, rec_b = db.query_by_spec_hash(hash_b)
 
             # circ-a is depended on by both root (link) and circ-b (run, in-cycle).
-            assert rec_a.ref_count == 2
+            assert rec_a and rec_a.ref_count == 2
             # circ-b is depended on only by circ-a.
-            assert rec_b.ref_count == 1
+            assert rec_b and rec_b.ref_count == 1
 
             db._check_ref_counts()
