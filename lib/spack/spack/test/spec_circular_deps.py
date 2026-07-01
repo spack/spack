@@ -88,11 +88,13 @@ class TestCircularRunDependencies:
     def test_run_cycle_with_link_deps(self, repo_builder: RepoBuilder):
         """Test cycle with link dependencies: A→(run)→B→(run)→A, both depend on X.
 
-        The cycle hash should include the link dependency hashes.
+        The cycle hash must actually incorporate the link dependency's hash, so we assert that
+        each cycle member's serialized node dict embeds X's hash rather than merely checking that
+        the three hashes happen to differ.
         """
         repo_builder.add_package("link-x")
         repo_builder.add_package(
-            "cyc-link-a", dependencies=[("cyc-link-b", "run", None), ("link-x", "build", None)]
+            "cyc-link-a", dependencies=[("cyc-link-b", "run", None), ("link-x", "link", None)]
         )
         repo_builder.add_package(
             "cyc-link-b", dependencies=[("cyc-link-a", "run", None), ("link-x", "link", None)]
@@ -108,21 +110,30 @@ class TestCircularRunDependencies:
             hash_x = spec_x.dag_hash()
 
             # All should have valid, unique hashes
-            assert hash_a is not None
-            assert hash_b is not None
-            assert hash_x is not None
             assert len({hash_a, hash_b, hash_x}) == 3
+
+            # Each cycle member must embed X's hash as a dependency: this is what proves the link
+            # dependency actually feeds into the cycle members' hashes.
+            for member in (spec_a, spec_b):
+                embedded = {d["name"]: d.get("hash") for d in member.to_node_dict()["dependencies"]}
+                assert embedded.get("link-x") == hash_x
+
+            # Hashes are deterministic across re-concretization.
+            spec_a2 = spack.concretize.concretize_one("cyc-link-a")
+            assert spec_a2.dag_hash() == hash_a
+            assert spec_a2["cyc-link-b"].dag_hash() == hash_b
+            assert spec_a2["link-x"].dag_hash() == hash_x
 
     def test_multiple_independent_cycles(self, repo_builder: RepoBuilder):
         """Test graph with two independent cycles.
 
         Root depends on two separate circular dependency components.
         """
-        # First cycle: A ↔ B
+        # First cycle: A <-> B
         repo_builder.add_package("ind-a", dependencies=[("ind-b", "run", None)])
         repo_builder.add_package("ind-b", dependencies=[("ind-a", "run", None)])
 
-        # Second cycle: C ↔ D
+        # Second cycle: C <-> D
         repo_builder.add_package("ind-c", dependencies=[("ind-d", "run", None)])
         repo_builder.add_package("ind-d", dependencies=[("ind-c", "run", None)])
 
@@ -141,8 +152,21 @@ class TestCircularRunDependencies:
             hash_root = spec_root.dag_hash()
 
             # All should have unique hashes
-            all_hashes = {hash_a, hash_b, hash_c, hash_d, hash_root}
-            assert len(all_hashes) == 5
+            assert len({hash_a, hash_b, hash_c, hash_d, hash_root}) == 5
+
+            # The root must embed the hashes of both cycle entry points it links against, proving
+            # the two independent cycles both feed into the root's hash.
+            root_deps = {d["name"]: d.get("hash") for d in spec_root.to_node_dict()["dependencies"]}
+            assert root_deps.get("ind-a") == hash_a
+            assert root_deps.get("ind-c") == hash_c
+
+            # Hashes are deterministic across re-concretization.
+            spec_root2 = spack.concretize.concretize_one("ind-root")
+            assert spec_root2.dag_hash() == hash_root
+            assert spec_root2["ind-a"].dag_hash() == hash_a
+            assert spec_root2["ind-b"].dag_hash() == hash_b
+            assert spec_root2["ind-c"].dag_hash() == hash_c
+            assert spec_root2["ind-d"].dag_hash() == hash_d
 
     def test_deep_run_cycle(self, repo_builder: RepoBuilder):
         """Test cycle buried deep in dependency tree.
@@ -153,7 +177,7 @@ class TestCircularRunDependencies:
         repo_builder.add_package("deep-a", dependencies=[("deep-b", "run", None)])
         repo_builder.add_package("deep-b", dependencies=[("deep-a", "run", None)])
 
-        # Non-circular chain - use link deps so they're in dag_hash
+        # Non-circular chain from root
         repo_builder.add_package("deep-y", dependencies=[("deep-a", "run", None)])
         repo_builder.add_package("deep-x", dependencies=[("deep-y", "link", None)])
         repo_builder.add_package("deep-root", dependencies=[("deep-x", "link", None)])
@@ -161,21 +185,26 @@ class TestCircularRunDependencies:
         with spack.repo.use_repositories(repo_builder.root):
             spec_root = spack.concretize.concretize_one("deep-root")
 
-            # All nodes should have valid hashes
             hash_root = spec_root.dag_hash()
             hash_x = spec_root["deep-x"].dag_hash()
             hash_y = spec_root["deep-y"].dag_hash()
             hash_a = spec_root["deep-a"].dag_hash()
             hash_b = spec_root["deep-b"].dag_hash()
 
-            assert hash_root is not None
-            assert hash_x is not None
-            assert hash_y is not None
-            assert hash_a is not None
-            assert hash_b is not None
-
             # All unique
             assert len({hash_root, hash_x, hash_y, hash_a, hash_b}) == 5
+
+            # Cycle deps have consistent hashes when neither is the root
+            assert spec_root["deep-a"]["deep-b"].dag_hash() == hash_b
+            assert spec_root["deep-b"]["deep-a"].dag_hash() == hash_a
+
+            # Hashes are deterministic across re-concretization.
+            spec_root2 = spack.concretize.concretize_one("deep-root")
+            assert spec_root2.dag_hash() == hash_root
+            assert spec_root2["deep-x"].dag_hash() == hash_x
+            assert spec_root2["deep-y"].dag_hash() == hash_y
+            assert spec_root2["deep-a"].dag_hash() == hash_a
+            assert spec_root2["deep-b"].dag_hash() == hash_b
 
     def test_to_dict_with_circular_deps(self, repo_builder: RepoBuilder):
         """Test that to_dict() works with circular run dependencies without hanging."""
