@@ -115,7 +115,8 @@ class TestCircularRunDependencies:
             # Each cycle member must embed X's hash as a dependency: this is what proves the link
             # dependency actually feeds into the cycle members' hashes.
             for member in (spec_a, spec_b):
-                embedded = {d["name"]: d.get("hash") for d in member.to_node_dict()["dependencies"]}
+                deps = member.to_node_dict()["dependencies"]
+                embedded = {d["name"]: d.get("hash") for d in deps}
                 assert embedded.get("link-x") == hash_x
 
             # Hashes are deterministic across re-concretization.
@@ -156,7 +157,8 @@ class TestCircularRunDependencies:
 
             # The root must embed the hashes of both cycle entry points it links against, proving
             # the two independent cycles both feed into the root's hash.
-            root_deps = {d["name"]: d.get("hash") for d in spec_root.to_node_dict()["dependencies"]}
+            deps = spec_root.to_node_dict()["dependencies"]
+            root_deps = {d["name"]: d.get("hash") for d in deps}
             assert root_deps.get("ind-a") == hash_a
             assert root_deps.get("ind-c") == hash_c
 
