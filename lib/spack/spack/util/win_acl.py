@@ -54,16 +54,17 @@ class AceType(Enum):
         return self.value
 
     @classmethod
-    def from_sddl(cls, token: str) -> "AceType":
+    def from_sddl(cls, token: str) -> "Union[AceType, str]":
         """Return the ``AceType`` whose SDDL token matches *token*.
 
-        Raises:
-            ValueError: if *token* is not a recognised ACE type.
+        Returns *token* unchanged for unrecognised codes so that security
+        descriptors containing future or exotic ACE types survive a
+        parse/apply roundtrip without crashing.
         """
         for member in cls:
             if member.value == token:
                 return member
-        raise ValueError(f"Unknown ACE type SDDL token: {token!r}")
+        return token
 
 
 class AceFlags(Enum):
@@ -227,7 +228,7 @@ class AccessControlEntry:
         ace = AccessControlEntry(
             AceType.SDDL_ACCESS_ALLOWED,
             flags=AceFlags.SDDL_CONTAINER_INHERIT,
-            rights=FileAccessRights.SDDL_FILE_READ,
+            rights=FileAccessRights.FILE_GENERIC_READ,
             sid="BA",
         )
         sd.add_ace(ace)
@@ -235,7 +236,7 @@ class AccessControlEntry:
 
     def __init__(
         self,
-        ace_type: AceType,
+        ace_type: Union[AceType, str],
         flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
         rights: Optional[int] = None,
         obj_guid: Optional[str] = None,
@@ -243,9 +244,12 @@ class AccessControlEntry:
         sid: Optional[str] = None,
         resource_attr: Optional[ResourceAttributeAceDataType] = None,
     ):
-        self._type = ace_type
+        # str arm: AceType.from_sddl preserves unrecognised tokens as raw strings
+        # so that security descriptors with future/exotic ACE types round-trip safely.
+        self._type: Union[AceType, str] = ace_type
+        # str arm: _map_flags preserves unrecognised 2-char flag codes as raw strings.
         if flags is None:
-            self._flags: List[Any] = []
+            self._flags: List[Union[AceFlags, str]] = []
         elif isinstance(flags, list):
             self._flags = list(flags)
         else:
@@ -257,15 +261,15 @@ class AccessControlEntry:
         self._resource_attr = resource_attr
 
     @property
-    def ace_type(self) -> AceType:
+    def ace_type(self) -> Union[AceType, str]:
         return self._type
 
     @ace_type.setter
-    def ace_type(self, val: AceType) -> None:
+    def ace_type(self, val: Union[AceType, str]) -> None:
         self._type = val
 
     @property
-    def flags(self) -> List[Any]:
+    def flags(self) -> List[Union[AceFlags, str]]:
         return self._flags
 
     @flags.setter
@@ -319,8 +323,8 @@ class AccessControlEntry:
         else:
             rights_str = ""
         parts = [
-            self._type.value,
-            "".join(f.value for f in self._flags),
+            str(self._type),  # AceType.__str__ returns .value; str passthrough for unknowns
+            "".join(f if isinstance(f, str) else f.value for f in self._flags),
             rights_str,
             self._obj_guid or "",
             self._inh_obj_guid or "",
@@ -354,7 +358,7 @@ _WinError = ctypes.WinError  # type: ignore[attr-defined]
 _get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
 
 
-def _bind(dll: Any, name: str, argtypes: list, restype: Any) -> Any:
+def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:
     """Set argtypes/restype on a DLL function and return it."""
     fn = getattr(dll, name)
     fn.argtypes = argtypes
@@ -467,7 +471,7 @@ _GetSecurityDescriptorDacl = _bind(
 
 
 @contextmanager
-def _local_ptr(ptr_factory: Any = None) -> Generator[Any, None, None]:
+def _local_ptr(ptr_factory: Optional[type] = None) -> Generator[Any, None, None]:
     """Yield a ``LocalFree``-able pointer and free it unconditionally on exit.
 
     Args:
@@ -539,8 +543,8 @@ class _SddlHelper:
         )
 
     @staticmethod
-    def _map_flags(flag_str: str, enum_cls: type) -> List[Any]:
-        flags: List[Any] = []
+    def _map_flags(flag_str: str, enum_cls: type) -> List[Union[AceFlags, str]]:
+        flags: List[Union[AceFlags, str]] = []
         if not flag_str:
             return flags
         for chunk in (flag_str[i : i + 2] for i in range(0, len(flag_str), 2)):
@@ -549,6 +553,7 @@ class _SddlHelper:
                     flags.append(member)
                     break
             else:
+                # Unknown flag code: preserve as raw string for roundtrip fidelity.
                 flags.append(chunk)
         return flags
 
@@ -575,17 +580,13 @@ class _SddlHelper:
     @staticmethod
     def create_sddl(security_descriptor: Dict[str, Any]) -> str:
         """Serialise a parsed security descriptor dict back to an SDDL string."""
-
-        def _sid_str(item: Any) -> str:
-            return item.value if hasattr(item, "value") else str(item)
-
         parts = []
 
         if security_descriptor.get("Owner"):
-            parts.append(f"O:{_sid_str(security_descriptor['Owner'])}")
+            parts.append(f"O:{security_descriptor['Owner']}")
 
         if security_descriptor.get("Group"):
-            parts.append(f"G:{_sid_str(security_descriptor['Group'])}")
+            parts.append(f"G:{security_descriptor['Group']}")
 
         for acl_key, prefix, ctrl_key in [
             ("DACL", "D:", "DACL_CONTROL"),
@@ -704,15 +705,6 @@ def _set_file_sddl_raw(path: str, sddl: str) -> None:
             raise _WinError(res)
 
 
-def _compare_val(val_a: Any, val_b: Any) -> bool:
-    """Compare two ACE field values for equality, handling ``None`` correctly."""
-    if val_a is None or val_b is None:
-        return val_a is val_b
-    a = val_a.value if hasattr(val_a, "value") else str(val_a)
-    b = val_b.value if hasattr(val_b, "value") else str(val_b)
-    return a == b
-
-
 class SecurityDescriptor:
     """A mutable Windows security descriptor backed by an SDDL representation.
 
@@ -722,7 +714,7 @@ class SecurityDescriptor:
         sd = SecurityDescriptor.from_file(path)
         sd.add_ace(AccessControlEntry(
             AceType.SDDL_ACCESS_ALLOWED,
-            rights=FileAccessRights.SDDL_FILE_READ,
+            rights=FileAccessRights.FILE_GENERIC_READ,
             sid=SecurityDescriptor.get_sid_for_user(),
         ))
         sd.apply(path)
@@ -798,7 +790,7 @@ class SecurityDescriptor:
 
                     ace = AccessControlEntry(
                         AceType.SDDL_ACCESS_ALLOWED,
-                        rights=FileAccessRights.SDDL_FILE_READ,
+                        rights=FileAccessRights.FILE_GENERIC_READ,
                         sid="BA",
                     )
 
@@ -818,7 +810,7 @@ class SecurityDescriptor:
         self,
         sid: Optional[str] = None,
         rights: Optional[int] = None,
-        ace_type: Optional[AceType] = None,
+        ace_type: Optional[Union[AceType, str]] = None,
         remove_all_matches: bool = False,
     ) -> int:
         """Remove ACEs from the DACL that match all supplied criteria.
@@ -835,9 +827,9 @@ class SecurityDescriptor:
         to_remove = []
         for i, ace in enumerate(self._parsed["DACL"]):
             if (
-                (sid is None or _compare_val(ace.sid, sid))
-                and (rights is None or _compare_val(ace.rights, rights))
-                and (ace_type is None or _compare_val(ace.ace_type, ace_type))
+                (sid is None or ace.sid == sid)
+                and (rights is None or ace.rights == rights)
+                and (ace_type is None or ace.ace_type == ace_type)
             ):
                 to_remove.append(i)
                 if not remove_all_matches:
@@ -854,7 +846,7 @@ class SecurityDescriptor:
         sid: Optional[str] = None,
         rights: Optional[int] = None,
         flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
-        ace_type: Optional[AceType] = None,
+        ace_type: Optional[Union[AceType, str]] = None,
     ) -> None:
         """Modify an existing ACE in-place by index."""
         dacl = self._parsed["DACL"]
