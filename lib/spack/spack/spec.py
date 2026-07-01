@@ -2394,14 +2394,19 @@ class Spec:
     ) -> Dict[str, Any]:
         """Build node dict using precomputed hashes for dependencies.
 
-        This is the reusable dictionary builder that both dag_hash() and to_dict() can use.
+        This method is only used for hashing. It is required to be able to hash specs with
+        cyclic dependencies, because the hashes for cycles must be co-computed all at once. This
+        method is used for specs not in any cycle during that process. The dictionary from
+        ``Spec.to_node_dict`` is capable of expressing cyclic dependencies (just not hashing them)
+        and is still used for serialization. The original serialization method is preserved because
+        it allows partial serialization per-node.
 
         Args:
             computed_hashes: Dictionary of already-computed hashes for dependencies
             hash_descriptor: Hash descriptor for configuration
 
         Returns:
-            Dictionary representation of the spec with precomputed dependency hashes
+            Dictionary representation of the spec with cycles
         """
         d = self._extract_node_attributes(hash_descriptor)
 
@@ -2447,6 +2452,8 @@ class Spec:
         hash_descriptor: ht.SpecHashDescriptor,
     ) -> Dict[str, Any]:
         """Build canonical dictionary representation of an entire cycle.
+
+        This dictionary is used in hash computation, but not in spec serialization.
 
         Args:
             scc_specs: List of specs in the strongly connected component
@@ -2496,6 +2503,8 @@ class Spec:
         self, cycle_hash: str, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
         """Build dictionary for this node within a cycle.
+
+        This representation is used in hashing, but not in spec serialization.
 
         Args:
             cycle_hash: Hash of the entire cycle (precomputed)
