@@ -752,6 +752,7 @@ See the section on :ref:`version ordering <version-comparison>` for more details
    single: deprecation; of package versions
 
 .. _deprecate:
+.. _packaging_deprecations:
 
 Deprecating old versions
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -771,25 +772,34 @@ At the same time, there are many reasons to keep old versions of software:
 #. Requirements for older packages (e.g., some packages still rely on Qt 3)
 
 In general, you should not remove old versions from a ``package.py`` directly.
-Instead, you should first deprecate them using the following syntax:
+Instead, you should first deprecate them using the ``deprecated()`` directive.
+For example, to flag a version that has a known CVE:
 
 .. code-block:: python
 
-   version("1.2.3", sha256="...", deprecated=True)
+   class Openssl(Package):
+       version("3.0.7", sha256="...")
+       version("1.1.1t", sha256="...")
 
+       deprecated("@1.1.1t", reason="cve", severity="high")
 
-This has two effects.
-First, ``spack info`` will no longer advertise that version.
-Second, commands like ``spack install`` that fetch the package will require user approval:
+The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
+If omitted, the whole package is deprecated.
+The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
+The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
 
-.. code-block:: spec
+Whether a deprecated version can be selected depends on the user's configuration.
+If its severity exceeds the configured threshold, Spack refuses to use it.
+This is a hard error both at concretization time and before the spec is installed.
+At or below the threshold the version is used like any other, with no warning and no penalty.
+The default threshold rejects every deprecation, so Spack will not select a deprecated version unless the user explicitly relaxes the policy.
+See :ref:`package-deprecations-config` for how to configure the threshold.
 
-   $ spack install openssl@1.0.1e
-   ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
-   ==>   Fetch anyway? [y/N]
+The older ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
 
+.. code-block:: python
 
-If you use ``spack install --deprecated``, this check can be skipped.
+   deprecated("@X.Y", reason="maintenance", severity="critical")
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.
@@ -798,7 +808,7 @@ If you need to rename it, you can deprecate the old package and create a new pac
 Version deprecations should always last at least one release cycle of the builtin package repository before the version is completely removed.
 No version should be removed without such a deprecation process.
 This gives users a chance to complain about the deprecation in case the old version is needed for some application.
-If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
+If you require a deprecated version of a package, simply submit a PR to remove the ``deprecated()`` directive from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
 
@@ -2186,41 +2196,6 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
    Conflict and ``when`` specs can constrain the compiler, :ref:`version <version_constraints>`, :ref:`variants <basic-variants>`, :ref:`architecture <architecture_specifiers>`, :ref:`dependencies <dependency_specs>`, and more.
    See :ref:`sec-specs` for more information.
 
-
-.. index::
-   single: deprecation; in package.py
-   single: directive; deprecated
-   :name: packaging_deprecations
-
-Deprecations
-------------
-
-The ``deprecated()`` directive marks certain configurations, or an entire package, as deprecated.
-For example, to flag a version that has a known CVE:
-
-.. code-block:: python
-
-   class Openssl(Package):
-       version("3.0.7", sha256="...")
-       version("1.1.1t", sha256="...")
-
-       deprecated("@1.1.1t", reason="cve", severity="high")
-
-The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
-The ``reason`` keyword is required and must be one of ``"cve"``, ``"rename"``, ``"unavailable"``, or ``"maintenance"``.
-The optional ``severity`` keyword ranks the urgency: ``"low"``, ``"medium"``, ``"high"``, or ``"critical"`` in increasing order, defaulting to ``"low"``.
-
-Whether a deprecated configuration can be selected depends on the user's configuration.
-If its severity exceeds the configured threshold it is a hard concretization error.
-At or below the threshold it is allowed silently, with no warning and no penalty in the solve.
-The default threshold rejects every deprecation, so by default the concretizer will avoid deprecated configurations whenever a valid alternative exists.
-See :ref:`package-deprecations-config` for how to configure the threshold.
-
-The older ``version("X.Y", deprecated=True)`` syntax is still supported and is equivalent to:
-
-.. code-block:: python
-
-   deprecated("@X.Y", reason="maintenance", severity="critical")
 
 .. index::
    single: requirement; in package.py
