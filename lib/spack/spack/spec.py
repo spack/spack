@@ -2390,24 +2390,23 @@ class Spec:
         return attrs
 
     def _to_node_dict_with_precomputed_hashes(
-        self, spec: "Spec", computed_hashes: Dict[int, str], hash_descriptor: ht.SpecHashDescriptor
+        self, computed_hashes: Dict[int, str], hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
         """Build node dict using precomputed hashes for dependencies.
 
         This is the reusable dictionary builder that both dag_hash() and to_dict() can use.
 
         Args:
-            spec: Spec to build dict for
             computed_hashes: Dictionary of already-computed hashes for dependencies
             hash_descriptor: Hash descriptor for configuration
 
         Returns:
             Dictionary representation of the spec with precomputed dependency hashes
         """
-        d = spec._extract_node_attributes(hash_descriptor)
+        d = self._extract_node_attributes(hash_descriptor)
 
         # Dependencies - use precomputed hashes (ensures all dep hashes are included)
-        deps = spec._dependencies_dict(depflag=hash_descriptor.depflag)
+        deps = self._dependencies_dict(depflag=hash_descriptor.depflag)
         if deps:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
@@ -2426,18 +2425,18 @@ class Spec:
             d["dependencies"] = dependencies
 
         # Build spec
-        if spec._build_spec:
+        if self._build_spec:
             d["build_spec"] = {
-                "name": spec.build_spec.name,
+                "name": self.build_spec.name,
                 hash_descriptor.name: computed_hashes.get(
-                    id(spec.build_spec), spec.build_spec._cached_hash(hash_descriptor)
+                    id(self.build_spec), self.build_spec._cached_hash(hash_descriptor)
                 ),
             }
 
         # Annotations
-        d["annotations"] = {"original_specfile_version": spec.annotations.original_spec_format}
-        if spec.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(spec.annotations.compiler_node_attribute)
+        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
+        if self.annotations.original_spec_format < 5:
+            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
 
         return d
 
@@ -2578,8 +2577,8 @@ class Spec:
                 spec = scc[0]
                 if id(spec) in spec_hashes:
                     continue  # already known from a cached hash
-                node_dict = self._to_node_dict_with_precomputed_hashes(
-                    spec, spec_hashes, hash_descriptor
+                node_dict = spec._to_node_dict_with_precomputed_hashes(
+                    spec_hashes, hash_descriptor
                 )
                 hash_str = self._hash_from_node_dict(node_dict)
                 spec_hashes[id(spec)] = hash_str
