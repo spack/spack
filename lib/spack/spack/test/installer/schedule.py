@@ -1249,7 +1249,7 @@ class TestBuildGraphCircularDeps:
     """Tests for BuildGraph with circular run dependencies."""
 
     def test_build_graph_circular_run_deps(self, repo_builder):
-        """Test BuildGraph with circular run dependencies A↔B."""
+        """Test BuildGraph with circular run dependencies A<->B."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
@@ -1281,7 +1281,7 @@ class TestBuildGraphCircularDeps:
             assert hash_b not in graph.parent_to_child or not graph.parent_to_child[hash_b]
 
     def test_build_graph_mixed_deps_cycle(self, repo_builder):
-        """Test A→B (link), B→A (run) creates correct ordering."""
+        """Test A->B (link), B->A (run) creates correct ordering."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("mixed-a", dependencies=[("mixed-b", "link", None)])
@@ -1314,7 +1314,7 @@ class TestBuildGraphCircularDeps:
             assert hash_a in graph.child_to_parent[hash_b]
 
     def test_build_graph_three_node_run_cycle(self, repo_builder):
-        """Test A→B→C→A (all run) creates no ordering constraints."""
+        """Test A->B->C->A (all run) creates no ordering constraints."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("cyc3-a", dependencies=[("cyc3-b", "run", None)])
@@ -1350,7 +1350,7 @@ class TestBuildGraphCircularDeps:
             assert not graph.parent_to_child.get(hash_c, set())
 
     def test_build_graph_cycle_with_link_dep(self, repo_builder):
-        """Test A↔B (run) with both depending on non-circular C (link)."""
+        """Test A<->B (run) with both depending on non-circular C (link)."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("link-c")
@@ -1397,7 +1397,7 @@ class TestInstallerCircular:
     """Integration tests for installing packages with circular run dependencies."""
 
     def test_install_simple_circular_run_deps(self, repo_builder):
-        """Test actual installation with A↔B circular run dependencies."""
+        """Test actual installation with A<->B circular run dependencies."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("install-circ-a", dependencies=[("install-circ-b", "run", None)])
@@ -1423,7 +1423,7 @@ class TestInstallerCircular:
             assert found_b is not None
 
     def test_install_mixed_circular_deps(self, repo_builder):
-        """Test A→B (link), B→A (run) - should install B first, then A."""
+        """Test A->B (link), B->A (run) - should install B first, then A."""
         from spack.test.conftest import RepoBuilder
 
         repo_builder.add_package("mixed-inst-a", dependencies=[("mixed-inst-b", "link", None)])

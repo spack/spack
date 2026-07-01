@@ -24,7 +24,7 @@ class TestCircularRunDependencies:
     """Tests for handling circular run dependencies in spec hashing."""
 
     def test_simple_circular_run_dependency(self, repo_builder: RepoBuilder):
-        """Test A→(run)→B→(run)→A produces unique, deterministic hashes.
+        """Test A->(run)->B->(run)->A produces unique, deterministic hashes.
 
         Both packages should get unique hashes that are the same regardless
         of which node we start from.
@@ -52,7 +52,7 @@ class TestCircularRunDependencies:
             assert spec_b2.dag_hash() == hash_b
 
     def test_three_node_run_cycle(self, repo_builder: RepoBuilder):
-        """Test A→(run)→B→(run)→C→(run)→A all get unique hashes.
+        """Test A->(run)->B->(run)->C->(run)->A all get unique hashes.
 
         All three packages in the cycle should have unique, deterministic hashes.
         """
@@ -86,7 +86,7 @@ class TestCircularRunDependencies:
             assert spec_c2["cyc-b"].dag_hash() == hash_b
 
     def test_run_cycle_with_link_deps(self, repo_builder: RepoBuilder):
-        """Test cycle with link dependencies: A→(run)→B→(run)→A, both depend on X.
+        """Test cycle with link dependencies: A->(run)->B->(run)->A, both depend on X.
 
         The cycle hash must actually incorporate the link dependency's hash, so we assert that
         each cycle member's serialized node dict embeds X's hash rather than merely checking that
@@ -171,7 +171,7 @@ class TestCircularRunDependencies:
     def test_deep_run_cycle(self, repo_builder: RepoBuilder):
         """Test cycle buried deep in dependency tree.
 
-        Root →(link)→ X →(link)→ Y →(run)→ A →(run)→ B →(run)→ A
+        Root ->(link)-> X ->(link)-> Y ->(run)-> A ->(run)-> B ->(run)-> A
         """
         # Circular component
         repo_builder.add_package("deep-a", dependencies=[("deep-b", "run", None)])
