@@ -277,7 +277,7 @@ class AccessControlEntry:
         if val is None:
             self._flags = []
         elif isinstance(val, list):
-            self._flags = val
+            self._flags = val  # type: ignore[assignment]  # List[AceFlags] widens safely
         else:
             self._flags = [val]
 
@@ -311,7 +311,7 @@ class AccessControlEntry:
         Uses subset semantics: ``ace.grants(FX)`` is True only when every bit of
         FILE_GENERIC_EXECUTE is present, not merely when the masks share any bit.
         """
-        return bool(self._rights) and (self._rights & mask) == mask
+        return self._rights is not None and (self._rights & mask) == mask
 
     def add_right(self, mask: int) -> None:
         """OR *mask* into the accumulated rights."""
@@ -358,7 +358,7 @@ _WinError = ctypes.WinError  # type: ignore[attr-defined]
 _get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
 
 
-def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:
+def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # type: ignore[attr-defined]
     """Set argtypes/restype on a DLL function and return it."""
     fn = getattr(dll, name)
     fn.argtypes = argtypes
@@ -535,7 +535,7 @@ class _SddlHelper:
         # Spack never generates such ACEs and write-back preserves the OS SACL intact.
         return AccessControlEntry(
             ace_type=AceType.from_sddl(parts[0]),
-            flags=_SddlHelper._map_flags(parts[1], AceFlags),
+            flags=_SddlHelper._map_flags(parts[1], AceFlags),  # type: ignore[arg-type]
             rights=_SddlHelper._map_rights(parts[2]) if parts[2] else None,
             obj_guid=parts[3] if parts[3] else None,
             inh_obj_guid=parts[4] if parts[4] else None,

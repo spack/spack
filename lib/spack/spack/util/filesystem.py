@@ -696,7 +696,7 @@ def win_copy_exe_mode(src, dest):
     )
 
     def _grants_execute(ace) -> bool:
-        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:
+        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:  # type: ignore[name-defined]
             return False
         # FILE_GENERIC_READ and FILE_GENERIC_EXECUTE share bits (READ_CONTROL,
         # FILE_READ_ATTRIBUTES, SYNCHRONIZE), so `rights & FX != 0` is True for
@@ -709,7 +709,7 @@ def win_copy_exe_mode(src, dest):
     if any(_grants_execute(ace) for ace in src_sd.dacl):
         dst_sd = SecurityDescriptor.from_file(dest)
         for ace in dst_sd.dacl:
-            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):
+            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):  # type: ignore[name-defined]
                 ace.add_right(_FX)
         dst_sd.apply(dest)
 
