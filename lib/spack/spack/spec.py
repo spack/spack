@@ -2254,93 +2254,6 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
-    @staticmethod
-    def _find_sccs_tarjan(all_specs: Dict[int, "Spec"], depflag: dt.DepFlag) -> List[List["Spec"]]:
-        """Find strongly connected components using Tarjan's algorithm.
-
-        Args:
-            all_specs: Dictionary mapping spec id to spec
-            depflag: Dependency types to consider
-
-        Returns:
-            List of SCCs, where each SCC is a list of specs
-        """
-        # Iterative Tarjan's algorithm. An explicit work stack replaces recursion so that deep
-        # dependency chains cannot overflow Python's call stack (a recursive implementation crashes
-        # the interpreter on chains of a few hundred nodes). ``index``/``lowlinks`` carry the usual
-        # Tarjan bookkeeping; ``stack``/``on_stack`` are the SCC stack.
-        index_counter = 0
-        stack: List["Spec"] = []
-        lowlinks: Dict[int, int] = {}
-        index: Dict[int, int] = {}
-        on_stack: Set[int] = set()
-        sccs: List[List["Spec"]] = []
-
-        for start in all_specs.values():
-            if id(start) in index:
-                continue
-
-            # Each work-stack frame is [spec, successors, next_successor_idx]. ``successors`` is
-            # None until the frame is entered for the first time (mirrors the top of the recursive
-            # call, where index/lowlink are assigned before iterating successors).
-            # We use lists because the work-stack frames are intentionally mutated in-place to pass
-            # information between iterations.
-            work: List[list] = [[start, None, 0]]
-            while work:
-                frame = work[-1]  # frame remains on stack until all children are considered
-                spec = frame[0]
-                spec_id = id(spec)
-
-                if frame[1] is None:
-                    # First visit to this node: assign index/lowlink and push onto the SCC stack.
-                    index[spec_id] = index_counter
-                    lowlinks[spec_id] = index_counter
-                    index_counter += 1
-                    stack.append(spec)
-                    on_stack.add(spec_id)
-                    frame[1] = [edge.spec for edge in spec.edges_to_dependencies(depflag=depflag)]
-
-                successors = frame[1]  # no more mutating successors, we can bind a var for clarity
-                pushed_child = False
-                while frame[2] < len(successors):
-                    dep = successors[frame[2]]
-                    frame[2] += 1
-                    dep_id = id(dep)
-                    if dep_id not in index:
-                        # Unvisited successor: descend into it (equivalent to recursing). The
-                        # parent's lowlink is updated from the child's when the child frame pops.
-                        work.append([dep, None, 0])
-                        pushed_child = True
-                        break
-                    elif dep_id in on_stack:
-                        # Successor is on the stack and hence in the current SCC.
-                        lowlinks[spec_id] = min(lowlinks[spec_id], index[dep_id])
-
-                if pushed_child:
-                    continue  # This emulates recursion from the recursive algorithm
-
-                # Everything below here runs "after" the recursion
-
-                # All successors processed. If spec is a root node, pop the stack into an SCC.
-                if lowlinks[spec_id] == index[spec_id]:
-                    scc = []
-                    while True:
-                        w = stack.pop()
-                        on_stack.remove(id(w))
-                        scc.append(w)
-                        if w is spec:
-                            break
-                    sccs.append(scc)
-
-                # Pop this frame and propagate its lowlink to the parent (the post-recursion
-                # ``min`` update in the recursive formulation).
-                work.pop()
-                if work:
-                    parent_id = id(work[-1][0])
-                    lowlinks[parent_id] = min(lowlinks[parent_id], lowlinks[spec_id])
-
-        return sccs
-
     def _to_node_attributes_dict(self, hash_descriptor: ht.SpecHashDescriptor) -> Dict[str, Any]:
         """Extract non-dependency attributes for this spec.
 
@@ -2600,7 +2513,7 @@ class Spec:
         }
 
         # Find SCCs (Tarjan's returns reverse topological order which is what we need here anyway)
-        sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
+        sccs = spack.traverse.find_sccs_tarjan(all_specs, hash_descriptor.depflag)
 
         # Seed from already-cached hashes so we don't recompute subgraphs whose hashes are known.
         spec_hashes: Dict[int, str] = {}
