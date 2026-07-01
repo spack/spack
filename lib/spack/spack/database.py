@@ -1203,6 +1203,7 @@ class Database:
         installation_time: Optional[float] = None,
         allow_missing: bool = False,
         _visited: Optional[Set[str]] = None,
+        _deferred_edges: Optional[List[Tuple[str, "spack.spec.DependencySpec"]]] = None,
     ):
         """Add an install record for this spec to the database.
 
@@ -1223,6 +1224,9 @@ class Database:
                 This is useful when installing specs without build/test deps.
             _visited: internal parameter to track visited specs and avoid infinite
                 recursion with circular run dependencies
+            _deferred_edges: internal accumulator of ``(parent_key, edge)`` pairs for circular
+                edges that could not be connected during recursion because the dependency record
+                did not yet exist. Connected in a second pass once all records are present.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1235,9 +1239,14 @@ class Database:
 
         installation_time = installation_time or _now()
 
-        # Track visited specs to avoid infinite recursion with circular run dependencies
+        # Track visited specs to avoid infinite recursion with circular run dependencies. The
+        # top-level call (the one that allocates these) is responsible for the second pass that
+        # connects any deferred circular edges once every record has been created.
+        is_top_level = _visited is None
         if _visited is None:
             _visited = set()
+        if _deferred_edges is None:
+            _deferred_edges = []
 
         # Mark this spec as being processed to avoid circular recursion
         _visited.add(key)
@@ -1256,6 +1265,7 @@ class Database:
                 # allow missing build / test only deps
                 allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
                 _visited=_visited,
+                _deferred_edges=_deferred_edges,
             )
 
         if spec.spliced:
@@ -1301,15 +1311,14 @@ class Database:
             for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
-                # For circular dependencies, the dependency might not be in DB yet if we're
-                # still in the middle of adding it (it's in _visited but not yet in _data).
-                # In that case, skip connecting it now - it will be connected when both specs
-                # are fully added.
+                # For circular dependencies, the dependency might not be in the DB yet if we're
+                # still in the middle of adding it (it's in _visited but not yet in _data). Defer
+                # connecting the edge until the second pass, once every record exists.
                 if not record:
                     if dkey not in _visited:
                         # Dependency should have been added but wasn't - this is an error
                         raise AssertionError(f"Missing dependency {dep.spec.short_spec} in DB")
-                    # else: circular dependency being processed, skip for now
+                    _deferred_edges.append((key, dep))
                     continue
                 new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
                 if not upstream:
@@ -1327,6 +1336,22 @@ class Database:
             self._data[key].installation_time = _now()
 
         self._data[key].explicit = explicit
+
+        # Second pass (top-level call only): now that every record exists, connect the circular
+        # edges that were deferred above. This keeps the in-memory graph and ref counts consistent
+        # with the on-disk representation for specs that participate in a run-dependency cycle.
+        if is_top_level:
+            for parent_key, dep in _deferred_edges:
+                parent_record = self._data[parent_key]
+                dkey = dep.spec.dag_hash()
+                dep_upstream, dep_record = self.query_by_spec_hash(dkey)
+                if not dep_record:
+                    raise AssertionError(f"Missing dependency {dep.spec.short_spec} in DB")
+                parent_record.spec._add_dependency(
+                    dep_record.spec, depflag=dep.depflag, virtuals=dep.virtuals
+                )
+                if not dep_upstream:
+                    dep_record.ref_count += 1
 
     @_autospec
     def add(self, spec: "spack.spec.Spec", *, explicit: bool = False, allow_missing=False) -> None:
