@@ -2723,41 +2723,15 @@ class Spec:
         Arguments:
             hash: type of hash to generate.
         """
-        # Delegate to shared implementation with attribute extraction
-        d = self._to_node_attributes_dict(hash)
-
-        # Dependencies - compute hashes recursively
-        deps = self._dependencies_dict(depflag=hash.depflag)
-        if deps:
-            dependencies = []
-            for name, edges_for_name in sorted(deps.items()):
-                for dspec in edges_for_name:
-                    dep_attrs = {
-                        "name": name,
-                        hash.name: dspec.spec._cached_hash(hash),
-                        "parameters": {
-                            "deptypes": dt.flag_to_tuple(dspec.depflag),
-                            "virtuals": dspec.virtuals,
-                        },
-                    }
-                    if dspec.direct:
-                        dep_attrs["parameters"]["direct"] = True
-                    dependencies.append(dep_attrs)
-            d["dependencies"] = dependencies
-
-        # Name is included in case this is replacing a virtual.
+        computed_hashes = {
+            id(dspec.spec): dspec.spec._cached_hash(hash)
+            for edges_for_name in self._dependencies_dict(depflag=hash.depflag).values()
+            for dspec in edges_for_name
+        }
         if self._build_spec:
-            d["build_spec"] = {
-                "name": self.build_spec.name,
-                hash.name: self.build_spec._cached_hash(hash),
-            }
+            computed_hashes[id(self.build_spec)] = self.build_spec._cached_hash(hash)
 
-        # Annotations
-        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
-        if self.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
-
-        return d
+        return self._to_node_dict_with_precomputed_hashes(computed_hashes, hash)
 
     def to_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary suitable for writing this spec to YAML or JSON.
