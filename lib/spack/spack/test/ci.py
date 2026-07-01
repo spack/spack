@@ -44,7 +44,7 @@ def test_filter_added_checksums_new_checksum(mock_git_package_changes):
 
     with fs.working_dir(repo.packages_path):
         assert ci.filter_added_checksums(
-            checksum_versions.keys(), filename, from_ref=commits[-1], to_ref=commits[-2]
+            checksum_versions.keys(), filename, from_ref=commits[-2], to_ref=commits[-3]
         ) == ["3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04"]
 
 
@@ -61,7 +61,7 @@ def test_filter_added_checksums_new_commit(mock_git_package_changes):
 
     with fs.working_dir(repo.packages_path):
         assert ci.filter_added_checksums(
-            checksum_versions, filename, from_ref=commits[-2], to_ref=commits[-3]
+            checksum_versions, filename, from_ref=commits[-3], to_ref=commits[-4]
         ) == ["74253725f884e2424a0dd8ae3f69896d5377f325"]
 
 
@@ -565,3 +565,48 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
+
+
+def test_ci_stack_changed(git, mock_git_package_changes):
+    repo, filename, commits = mock_git_package_changes
+
+    stack_env = os.path.join(repo.root, "env", "spack.yaml")
+
+    # The changes to CI and the env are both the first commit
+    # No change should be detected
+    assert not ci.stack_changed(stack_env)
+
+    # Setting the path to the CI config with non-default name should
+    os.environ["CI_CONFIG_PATH"] = os.path.join(repo.root, ".ci", "pipeline.yml")
+    assert not ci.stack_changed(stack_env)
+
+    def commit(message, commit_counter=len(commits)):
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
+        commit_counter += 1
+
+    # Edit the pipeline.yml
+    with fs.working_dir(repo.root):
+        with open(os.path.join(".ci", "pipeline.yml"), "a", encoding="utf-8") as fd:
+            fd.write("another_job: { script: [echo 'Hello'] }")
+        git("add", os.path.join(".ci", "pipeline.yml"))
+        commit("Update pipeline.yml")
+
+    assert ci.stack_changed(stack_env)
+
+    # Edit the stack env
+    with fs.working_dir(repo.root):
+        git("reset", "--hard", "HEAD~")
+        with open(os.path.join("env", "spack.yaml"), "w", encoding="utf-8") as fd:
+            fd.write("spack: { specs: [ 'zlib'] }")
+
+        git("add", os.path.join("env", "spack.yaml"))
+        commit("Update stack env")
+
+    assert ci.stack_changed(stack_env)

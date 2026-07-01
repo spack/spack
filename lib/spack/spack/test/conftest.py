@@ -295,17 +295,35 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
         )
         commit_counter += 1
 
-    with working_dir(repo.packages_path):
+    def latest_commit():
+        return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+
+    commits = []
+
+    # Create an environment and Gitlab CI config to mimic spack-packages, living
+    # alongside the packages subdirectory in the same git repo.
+    with working_dir(repo.root):
         git("init")
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
 
-        commits = []
+        env_dir = "env"
+        os.makedirs(env_dir)
+        with open(os.path.join(env_dir, "spack.yaml"), "w", encoding="utf-8") as fd:
+            fd.write("spack: {}")
 
-        def latest_commit():
-            return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+        ci_dir = ".ci"
+        os.makedirs(ci_dir)
+        with open(os.path.join(ci_dir, "pipeline.yml"), "w", encoding="utf-8") as fd:
+            fd.write("some_job: { script: [echo 'Hello'] }")
 
+        git("add", "env/spack.yaml")
+        git("add", ".ci/pipeline.yml")
+        commit("ci: add stack")
+        commits.append(latest_commit())
+
+    with working_dir(repo.packages_path):
         os.makedirs(os.path.dirname(filename))
 
         # add diff-test as a new package to the repository
@@ -353,8 +371,12 @@ def mock_git_package_changes(
        o diff-test: add v2.1.5 (from source tarball)
        |
        o diff-test: new package (testing multiple added versions)
+       |
+       o ci: add stack
 
-    The repo consists of a single package.py file for DiffTest.
+    The repo consists of a single package.py file for DiffTest, plus an
+    ``env/spack.yaml`` environment and a ``.ci/pipeline.yml`` to mimic the
+    structure of spack-packages for testing ``stack_changed``.
 
     Important attributes of the repo for test coverage are: multiple package
     versions are added with some coming from a tarball and some from git refs.

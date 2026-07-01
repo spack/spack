@@ -143,6 +143,13 @@ def stack_changed(env_path: str) -> bool:
         return False
 
     rel_env_path = os.path.relpath(env_path, git_dir)
+    stack_paths = [rel_env_path]
+
+    # Get the gitlab pipeline config from the CI variable
+    ci_config_path = os.environ.get("CI_CONFIG_PATH")
+    if ci_config_path:
+        ci_config_path = os.path.relpath(ci_config_path, git_dir)
+        stack_paths.append(ci_config_path)
 
     with fs.working_dir(git_dir):
         diff = git(
@@ -159,7 +166,7 @@ def stack_changed(env_path: str) -> bool:
             return False
 
         for path in diff.split():
-            if ".gitlab-ci.yml" in path or rel_env_path in path:
+            if any(p in path for p in stack_paths):
                 tty.debug(f"env represented by {rel_env_path} changed")
                 tty.debug(f"touched file: {path}")
                 return True
