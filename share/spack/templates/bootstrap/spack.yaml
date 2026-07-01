@@ -20,11 +20,25 @@ spack:
     install_status: false
 
   packages:
+
+    expat:
+      allowed_deprecation_severity: critical
+
     python:
       buildable: false
+      # Python deprecation cycles are very fast, each new patch version deprecates
+      # the previous ones
+      allowed_deprecation_severity: critical
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
+
+    python-venv:
+      buildable: false
+
+    py-pytest:
+      allowed_deprecation_severity: critical
+      buildable: false
 
     py-typed-ast:
       require: "+wheel"
