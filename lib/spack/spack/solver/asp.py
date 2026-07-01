@@ -44,6 +44,7 @@ import spack.compilers.config
 import spack.compilers.flags
 import spack.concretize
 import spack.config
+import spack.deprecation
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
@@ -1373,24 +1374,6 @@ class ConditionContext(SourceContext):
         return ctxt
 
 
-def _compute_default_deprecation_severity() -> str:
-    packages_yaml = spack.config.CONFIG.get_config("packages")
-    severity_str = packages_yaml.get("all", {}).get("allowed_deprecation_severity")
-    if severity_str is not None:
-        return severity_str
-
-    if spack.config.CONFIG.get("config:deprecated", False):
-        warnings.warn(
-            "config:deprecated is deprecated. "
-            "Use 'packages:all:allowed_deprecation_severity:critical' instead",
-            UserWarning,
-            stacklevel=2,
-        )
-        return "critical"
-
-    return "none"
-
-
 class SpackSolverSetup:
     """Class to set up and run a Spack concretization solve."""
 
@@ -1399,7 +1382,6 @@ class SpackSolverSetup:
     possible_versions: Dict[str, Dict[GitOrStandardVersion, List[Provenance]]]
 
     def __init__(self, tests: spack.concretize.TestsType = False):
-        self._deprecation_default = ""
         self.possible_graph = create_graph_analyzer()
 
         # these are all initialized in setup()
@@ -1513,13 +1495,8 @@ class SpackSolverSetup:
                 )
             self.gen.newline()
 
-        pkg_cfg = spack.config.CONFIG.get_config("packages").get(pkg.name, {})
-        allowed = pkg_cfg.get("allowed_deprecation_severity", self._deprecation_default)
-        self.gen.fact(
-            fn.pkg_fact(
-                pkg.name, fn.allowed_deprecation_severity(DeprecationSeverity(allowed).value)
-            )
-        )
+        allowed = spack.deprecation.allowed_severity(pkg.name)
+        self.gen.fact(fn.pkg_fact(pkg.name, fn.allowed_deprecation_severity(allowed.value)))
 
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
@@ -2804,7 +2781,8 @@ class SpackSolverSetup:
         )
         self.validate_and_define_versions_from_requirements(require_checksum=checksummed)
 
-        self._deprecation_default = _compute_default_deprecation_severity()
+        # Emit the one-time warning if the deprecated config:deprecated flag is relaxing policy
+        spack.deprecation.default_allowed_severity(warn_on_legacy=True)
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
