@@ -67,7 +67,7 @@ def test_security_descriptor_sacl_property(tmp_path):
     sd = SecurityDescriptor.from_file(str(f))
     # Standard processes cannot read SACL; from_file does not request it
     assert sd.sacl == []
-    # sacl returns a copy — mutations do not feed back into the descriptor
+    # sacl returns a copy; mutations do not feed back into the descriptor
     sd.sacl.append("mutation")
     assert sd.sacl == []
 
@@ -183,7 +183,7 @@ def test_get_file_owner_returns_string(tmp_path):
     assert isinstance(owner_name, str) and owner_name
     assert not owner_name.startswith("S-1-")
 
-    # Must resolve back to a valid SID — confirming the name is a real, known account
+    # Must resolve back to a valid SID, confirming the name is a real, known account
     owner_sid = SecurityDescriptor.get_sid_for_user(owner_name)
     assert owner_sid.startswith("S-1-")
 
