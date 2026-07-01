@@ -14,6 +14,7 @@ import spack.builder
 import spack.concretize
 import spack.config
 import spack.database
+import spack.deprecation
 import spack.error
 import spack.installer_dispatch
 import spack.mirrors.mirror
@@ -718,3 +719,48 @@ def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_var
     with pytest.raises(spack.error.InstallError):
         installer.install()
     assert os.path.exists(pkg.log_path)
+
+
+def test_ensure_allowed_blocks_disallowed_deprecation(
+    install_mockery, mutable_config: Configuration
+):
+    """The shared scan flags a deprecated spec disallowed by the default policy."""
+    # Concretize while deprecations are allowed, so the deprecated @2.0 is selected.
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    # Under the default (strict) policy the pre-concretized spec is refused.
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.ensure_allowed([spec])
+
+
+def test_ensure_allowed_permits_configured_deprecation(
+    install_mockery, mutable_config: Configuration
+):
+    """The shared scan does not block deprecations allowed by configuration."""
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+        spack.deprecation.ensure_allowed([spec])  # must not raise
+
+
+def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Configuration):
+    """External specs are exempt from the deprecation gate, mirroring the concretizer."""
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    # The spec is blocked by the strict default policy...
+    assert spack.deprecation.disallowed(spec) is not None
+    # ...unless it is external, in which case the scan does not raise.
+    spec.external_path = "/opt/example"
+    spack.deprecation.ensure_allowed([spec])
+
+
+def test_installer_blocks_disallowed_deprecation(
+    install_mockery, installer_variant, mutable_config: Configuration
+):
+    """Both the old and new installer refuse a pre-concretized deprecated spec before building."""
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
