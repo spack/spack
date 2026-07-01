@@ -2311,7 +2311,7 @@ class Spec:
 
         return sccs
 
-    def _extract_node_attributes(
+    def _to_node_attributes_dict(
         self, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
         """Extract non-dependency attributes for this spec.
@@ -2409,7 +2409,7 @@ class Spec:
         Returns:
             Dictionary representation of the spec with cycles
         """
-        d = self._extract_node_attributes(hash_descriptor)
+        d = self._to_node_attributes_dict(hash_descriptor)
 
         # Dependencies - use precomputed hashes (ensures all dep hashes are included)
         deps = self._dependencies_dict(depflag=hash_descriptor.depflag)
@@ -2488,7 +2488,7 @@ class Spec:
                     dep_info["hash"] = computed_hashes[id(edge.spec)]
                     external_deps.append(dep_info)
 
-            node_attrs = spec._extract_node_attributes(hash_descriptor)
+            node_attrs = spec._to_node_attributes_dict(hash_descriptor)
             cycle_nodes.append(
                 {
                     "name": spec.name,
@@ -2514,7 +2514,7 @@ class Spec:
         Returns:
             Dictionary for this node including cycle_hash and its role
         """
-        node_dict = self._extract_node_attributes(hash_descriptor)
+        node_dict = self._to_node_attributes_dict(hash_descriptor)
         node_dict["cycle_hash"] = cycle_hash
         node_dict["cycle_role"] = {
             "name": self.name,
@@ -2549,7 +2549,7 @@ class Spec:
         )
         return spack.util.hash.b32_hash(json_text)
 
-    def _compute_dag_hash_with_cycles(
+    def _compute_graph_hash_with_cycles(
         self, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[int, str]:
         """Compute hashes for all specs with cycle support.
@@ -2631,7 +2631,7 @@ class Spec:
             return hash.override(self)
 
         # Use cycle-aware hash computation
-        all_hashes = self._compute_dag_hash_with_cycles(hash)
+        all_hashes = self._compute_graph_hash_with_cycles(hash)
         out = all_hashes[id(self)]
         if self.build_spec is not self:
             return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
@@ -2728,7 +2728,7 @@ class Spec:
             hash: type of hash to generate.
         """
         # Delegate to shared implementation with attribute extraction
-        d = self._extract_node_attributes(hash)
+        d = self._to_node_attributes_dict(hash)
 
         # Dependencies - compute hashes recursively
         deps = self._dependencies_dict(depflag=hash.depflag)
