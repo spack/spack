@@ -164,7 +164,7 @@ def parse_dynamic_linker(output: str):
 
         for idx in reversed(range(1, len(args))):
             arg = args[idx]
-            if arg == "-dynamic-linker" or args == "--dynamic-linker":
+            if arg == "-dynamic-linker" or arg == "--dynamic-linker":
                 return args[idx + 1]
             elif arg.startswith("--dynamic-linker=") or arg.startswith("-dynamic-linker="):
                 return arg.split("=", 1)[1]
