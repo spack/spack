@@ -711,7 +711,7 @@ Allowing Deprecated Versions
 
 When a package uses the ``deprecated()`` directive (see :ref:`packaging_deprecations`), the concretizer checks the selected deprecation severity against a per-package threshold.
 Deprecations whose severity *exceeds* the threshold cause a concretization error.
-Those at or below it emit a warning and allow concretization to proceed.
+Those at or below it are allowed silently: the deprecated version is treated like any other, with no warning and no penalty in the solve.
 
 The threshold is set with ``allowed_deprecation_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
 The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
@@ -726,7 +726,7 @@ The setting can be applied globally under ``all:`` or overridden for a specific 
      openssl:
        allowed_deprecation_severity: none
 
-In this example, ``low``-severity deprecations on any package are allowed through with a warning, while ``medium`` and above remain errors.
+In this example, ``low``-severity deprecations on any package are allowed silently, while ``medium`` and above remain errors.
 The per-package override for ``openssl`` reinstates the strictest threshold, so every deprecation on that package is an error regardless of the global setting.
 
 .. _package_permissions:
