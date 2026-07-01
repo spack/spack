@@ -2311,76 +2311,75 @@ class Spec:
         return sccs
 
     def _extract_node_attributes(
-        self, spec: "Spec", hash_descriptor: ht.SpecHashDescriptor
+        self, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
-        """Extract non-dependency attributes for a spec.
+        """Extract non-dependency attributes for this spec.
 
         Args:
-            spec: Spec to extract attributes from
             hash_descriptor: Hash descriptor for configuration
 
         Returns:
             Dictionary of spec attributes (excluding dependencies)
         """
-        attrs: Dict[str, Any] = {"name": spec.name}
+        attrs: Dict[str, Any] = {"name": self.name}
 
-        if spec.versions:
-            attrs.update(spec.versions.to_dict())
-        if spec.architecture:
-            attrs.update(spec.architecture.to_dict())
-        if spec.namespace:
-            attrs["namespace"] = spec.namespace
+        if self.versions:
+            attrs.update(self.versions.to_dict())
+        if self.architecture:
+            attrs.update(self.architecture.to_dict())
+        if self.namespace:
+            attrs["namespace"] = self.namespace
 
         # Variants and compiler flags
-        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in spec.variants.values()))
+        params: Dict[str, Any] = dict(sorted(v.yaml_entry() for v in self.variants.values()))
         params.update(
-            sorted(spec.compiler_flags.yaml_entry(flag_type) for flag_type in spec.compiler_flags)
+            sorted(self.compiler_flags.yaml_entry(flag_type) for flag_type in self.compiler_flags)
         )
         if params:
             attrs["parameters"] = params
 
         # Propagation and abstract variants
-        if params and not spec.concrete:
+        if params and not self.concrete:
             flag_names = [
                 name
-                for name, flags in spec.compiler_flags.items()
+                for name, flags in self.compiler_flags.items()
                 if any(x.propagate for x in flags)
             ]
             attrs["propagate"] = sorted(
                 itertools.chain(
-                    [v.name for v in spec.variants.values() if v.propagate], flag_names
+                    [v.name for v in self.variants.values() if v.propagate], flag_names
                 )
             )
-            attrs["abstract"] = sorted(v.name for v in spec.variants.values() if not v.concrete)
+            attrs["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
 
         # External packages
-        if spec.external:
+        if self.external:
             attrs["external"] = {
-                "path": spec.external_path,
-                "module": spec.external_modules or None,
-                "extra_attributes": syaml.sorted_dict(spec.extra_attributes),
+                "path": self.external_path,
+                "module": self.external_modules or None,
+                "extra_attributes": syaml.sorted_dict(self.extra_attributes),
             }
 
-        if not spec._concrete:
+        if not self._concrete:
             attrs["concrete"] = False
 
         # Patches
-        if "patches" in spec.variants:
-            variant = spec.variants["patches"]
+        if "patches" in self.variants:
+            variant = self.variants["patches"]
             if hasattr(variant, "_patches_in_order_of_appearance"):
                 attrs["patches"] = variant._patches_in_order_of_appearance
 
         # Package hash
         if (
-            spec._concrete
+            self._concrete
             and hash_descriptor.package_hash
-            and hasattr(spec, "_package_hash")
-            and spec._package_hash
+            and hasattr(self, "_package_hash")
+            and self._package_hash
         ):
             # The package hash is assigned at concretization time. We don't want to compute one for
             # a concrete spec, where a) the package might not exist, or b) the `dag_hash` didn't
             # include the package hash when the spec was concretized.
-            package_hash = spec._package_hash
+            package_hash = self._package_hash
 
             # Full hashes are in bytes
             if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
@@ -2405,7 +2404,7 @@ class Spec:
         Returns:
             Dictionary representation of the spec with precomputed dependency hashes
         """
-        d = self._extract_node_attributes(spec, hash_descriptor)
+        d = spec._extract_node_attributes(hash_descriptor)
 
         # Dependencies - use precomputed hashes (ensures all dep hashes are included)
         deps = spec._dependencies_dict(depflag=hash_descriptor.depflag)
@@ -2482,7 +2481,7 @@ class Spec:
                     dep_info["hash"] = computed_hashes[id(edge.spec)]
                     external_deps.append(dep_info)
 
-            node_attrs = self._extract_node_attributes(spec, hash_descriptor)
+            node_attrs = spec._extract_node_attributes(hash_descriptor)
             cycle_nodes.append(
                 {
                     "name": spec.name,
@@ -2507,7 +2506,7 @@ class Spec:
         Returns:
             Dictionary for this node including cycle_hash and its role
         """
-        node_dict = self._extract_node_attributes(spec, hash_descriptor)
+        node_dict = spec._extract_node_attributes(hash_descriptor)
         node_dict["cycle_hash"] = cycle_hash
         node_dict["cycle_role"] = {
             "name": spec.name,
@@ -2720,7 +2719,7 @@ class Spec:
             hash: type of hash to generate.
         """
         # Delegate to shared implementation with attribute extraction
-        d = self._extract_node_attributes(self, hash)
+        d = self._extract_node_attributes(hash)
 
         # Dependencies - compute hashes recursively
         deps = self._dependencies_dict(depflag=hash.depflag)
