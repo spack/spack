@@ -2567,15 +2567,11 @@ class Spec:
         sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
 
         # Seed from already-cached hashes so we don't recompute subgraphs whose hashes are known.
-        # Only non-spliced specs are seeded: for a spliced spec the cached attribute holds the
-        # frankenhash-spliced value, whereas spec_hashes must hold the raw (pre-splice) hash that
-        # parents embed. See spec_hash() for where the splice is applied.
         spec_hashes: Dict[int, str] = {}
         for spec_id, spec in all_specs.items():
-            if spec.build_spec is spec:
-                cached = getattr(spec, hash_descriptor.attr, None)
-                if cached:
-                    spec_hashes[spec_id] = cached
+            cached = getattr(spec, hash_descriptor.attr, None)
+            if cached:
+                spec_hashes[spec_id] = cached
 
         for scc in sccs:
             if len(scc) == 1:
@@ -2606,7 +2602,8 @@ class Spec:
         # Cache computed hashes back onto concrete, non-spliced specs so subsequent hash calls
         # (e.g. the per-node loop in _finalize_concretization) short-circuit instead of recomputing
         # the whole subgraph. Spliced specs are skipped here; their cached attribute is set by
-        # _cached_hash after the splice is applied.
+        # _cached_hash after the splice is applied, and we cannot do the frankenhash computation
+        # here because the build_spec is not in the spec_hashes dict.
         for spec_id, spec_hash in spec_hashes.items():
             spec = all_specs[spec_id]
             if spec.build_spec is not spec or not spec.concrete:
