@@ -698,7 +698,11 @@ def win_copy_exe_mode(src, dest):
     def _grants_execute(ace) -> bool:
         if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:
             return False
-        # Subset check: every bit of FX must be present (FR & FX != 0 due to shared bits).
+        # FILE_GENERIC_READ and FILE_GENERIC_EXECUTE share bits (READ_CONTROL,
+        # FILE_READ_ATTRIBUTES, SYNCHRONIZE), so `rights & FX != 0` is True for
+        # a read-only ACE (false positive).  Requiring all FX bits to be
+        # present (`== FX`) avoids that.  GENERIC_ALL/EXECUTE don't overlap with
+        # the file-specific mask at all, so they are checked separately.
         return (ace.rights & _FX) == _FX or any(bool(ace.rights & m) for m in _GENERIC_X_MASKS)
 
     src_sd = SecurityDescriptor.from_file(src)
