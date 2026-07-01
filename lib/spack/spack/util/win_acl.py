@@ -358,7 +358,7 @@ _WinError = ctypes.WinError  # type: ignore[attr-defined]
 _get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
 
 
-def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # type: ignore[attr-defined]
+def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # type: ignore[name-defined]
     """Set argtypes/restype on a DLL function and return it."""
     fn = getattr(dll, name)
     fn.argtypes = argtypes
