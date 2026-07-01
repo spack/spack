@@ -2493,22 +2493,21 @@ class Spec:
         return {"cycle_nodes": cycle_nodes}
 
     def _to_cycle_node_dict(
-        self, spec: "Spec", cycle_hash: str, hash_descriptor: ht.SpecHashDescriptor
+        self, cycle_hash: str, hash_descriptor: ht.SpecHashDescriptor
     ) -> Dict[str, Any]:
-        """Build dictionary for a single node within a cycle.
+        """Build dictionary for this node within a cycle.
 
         Args:
-            spec: Spec to build dict for
             cycle_hash: Hash of the entire cycle (precomputed)
             hash_descriptor: Hash descriptor for configuration
 
         Returns:
             Dictionary for this node including cycle_hash and its role
         """
-        node_dict = spec._extract_node_attributes(hash_descriptor)
+        node_dict = self._extract_node_attributes(hash_descriptor)
         node_dict["cycle_hash"] = cycle_hash
         node_dict["cycle_role"] = {
-            "name": spec.name,
+            "name": self.name,
             "dependencies": sorted(
                 [
                     {
@@ -2516,7 +2515,7 @@ class Spec:
                         "deptypes": dt.flag_to_tuple(edge.depflag),
                         "virtuals": edge.virtuals,
                     }
-                    for edge in spec.edges_to_dependencies(depflag=hash_descriptor.depflag)
+                    for edge in self.edges_to_dependencies(depflag=hash_descriptor.depflag)
                 ],
                 key=lambda d: d["name"],
             ),
@@ -2594,7 +2593,7 @@ class Spec:
 
                 # Second: compute individual hashes using cycle_hash
                 for spec in scc:
-                    node_dict = self._to_cycle_node_dict(spec, cycle_hash, hash_descriptor)
+                    node_dict = spec._to_cycle_node_dict(cycle_hash, hash_descriptor)
                     spec_hashes[id(spec)] = self._hash_from_node_dict(node_dict)
 
         # Cache computed hashes back onto concrete, non-spliced specs so subsequent hash calls
