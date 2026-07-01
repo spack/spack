@@ -2566,18 +2566,34 @@ class Spec:
         # Find SCCs (Tarjan's returns reverse topological order which is what we need here anyway)
         sccs = self._find_sccs_tarjan(all_specs, hash_descriptor.depflag)
 
+        # Seed from already-cached hashes so we don't recompute subgraphs whose hashes are known.
+        # Only non-spliced specs are seeded: for a spliced spec the cached attribute holds the
+        # frankenhash-spliced value, whereas spec_hashes must hold the raw (pre-splice) hash that
+        # parents embed. See spec_hash() for where the splice is applied.
         spec_hashes: Dict[int, str] = {}
+        for spec_id, spec in all_specs.items():
+            if spec.build_spec is spec:
+                cached = getattr(spec, hash_descriptor.attr, None)
+                if cached:
+                    spec_hashes[spec_id] = cached
+
         for scc in sccs:
             if len(scc) == 1:
                 # Simple case: no cycle
                 spec = scc[0]
+                if id(spec) in spec_hashes:
+                    continue  # already known from a cached hash
                 node_dict = self._to_node_dict_with_precomputed_hashes(
                     spec, spec_hashes, hash_descriptor
                 )
                 hash_str = self._hash_from_node_dict(node_dict)
                 spec_hashes[id(spec)] = hash_str
             else:
-                # Cycle case: compute cycle hash first, then individual node hashes
+                # Cycle case: compute cycle hash first, then individual node hashes.
+                # Cached hashes for a cycle are all-or-nothing (computed together below), so skip
+                # only when every member is already known.
+                if all(id(spec) in spec_hashes for spec in scc):
+                    continue
                 # First: compute cycle hash from full cycle representation
                 cycle_repr = self._to_cycle_representation(scc, spec_hashes, hash_descriptor)
                 cycle_hash = self._hash_from_node_dict(cycle_repr)
@@ -2586,6 +2602,17 @@ class Spec:
                 for spec in scc:
                     node_dict = self._to_cycle_node_dict(spec, cycle_hash, hash_descriptor)
                     spec_hashes[id(spec)] = self._hash_from_node_dict(node_dict)
+
+        # Cache computed hashes back onto concrete, non-spliced specs so subsequent hash calls
+        # (e.g. the per-node loop in _finalize_concretization) short-circuit instead of recomputing
+        # the whole subgraph. Spliced specs are skipped here; their cached attribute is set by
+        # _cached_hash after the splice is applied.
+        for spec_id, spec_hash in spec_hashes.items():
+            spec = all_specs[spec_id]
+            if spec.build_spec is not spec or not spec.concrete:
+                continue
+            if not getattr(spec, hash_descriptor.attr, None):
+                setattr(spec, hash_descriptor.attr, spec_hash)
 
         return spec_hashes
 
