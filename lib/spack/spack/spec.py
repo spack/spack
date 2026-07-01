@@ -2254,8 +2254,9 @@ class Spec:
     def set_prefix(self, value: str) -> None:
         self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
+    @staticmethod
     def _find_sccs_tarjan(
-        self, all_specs: Dict[int, "Spec"], depflag: dt.DepFlag
+        all_specs: Dict[int, "Spec"], depflag: dt.DepFlag
     ) -> List[List["Spec"]]:
         """Find strongly connected components using Tarjan's algorithm.
 
@@ -2445,8 +2446,8 @@ class Spec:
 
         return d
 
+    @staticmethod
     def _to_cycle_representation(
-        self,
         scc_specs: List["Spec"],
         computed_hashes: Dict[int, str],
         hash_descriptor: ht.SpecHashDescriptor,
@@ -2531,7 +2532,8 @@ class Spec:
         }
         return node_dict
 
-    def _hash_from_node_dict(self, node_dict: Dict[str, Any]) -> str:
+    @staticmethod
+    def _hash_from_node_dict(node_dict: Dict[str, Any]) -> str:
         """Compute hash from a node dictionary.
 
         Separate method so we can reuse dict-building logic.
