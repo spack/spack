@@ -191,7 +191,7 @@ DISPLAY_FORMAT = (
 )
 
 #: specfile format version. Must increase monotonically
-SPECFILE_FORMAT_VERSION = 5
+SPECFILE_FORMAT_VERSION = 6
 
 
 class InstallStatus(enum.Enum):
@@ -2742,7 +2742,7 @@ class Spec:
                     },
                     ...
                 ],
-                "annotations": {"original_specfile_version": 5},
+                "annotations": {"original_specfile_version": 6},
             }
 
 
@@ -2773,7 +2773,7 @@ class Spec:
 
             {
                 "spec": {
-                    "_meta": {"version": 5},
+                    "_meta": {"version": 6},
                     "nodes": [
                         {
                             "name": "sqlite",
@@ -2812,7 +2812,7 @@ class Spec:
                                 },
                                 ...
                             ],
-                            "annotations": {"original_specfile_version": 5},
+                            "annotations": {"original_specfile_version": 6},
                             "hash": "a2ubvvqnula6zdppckwqrjf3zmsdzpoh",
                         },
                         ...
@@ -5950,8 +5950,15 @@ class SpecfileV5(SpecfileV4):
         return dep_hash, deptypes, hash_type, virtuals, direct
 
 
+@register_reader
+class SpecfileV6(SpecfileV5):
+    # v6 shares the v5 format; the version was bumped only so that older Spack refuses to read
+    # specfiles that may contain circular run dependencies. See SPECFILE_FORMAT_VERSION.
+    SPEC_VERSION = 6
+
+
 #: Alias to the latest version of specfiles
-SpecfileLatest = SpecfileV5
+SpecfileLatest = SpecfileV6
 
 
 def specfile_reader_for_version(version: int) -> Type[SpecfileReaderBase]:
