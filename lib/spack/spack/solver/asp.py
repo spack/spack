@@ -3879,10 +3879,6 @@ class SpliceSerializationError(spack.error.SpackError):
     """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
 
 
-class DeprecatedVersionError(spack.error.SpackError):
-    """Raised when user directly requests a deprecated version."""
-
-
 class InvalidVersionError(spack.error.SpackError):
     """Raised when a version can't be satisfied by any possible versions."""
 

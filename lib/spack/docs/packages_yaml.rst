@@ -709,7 +709,7 @@ Going back to the example, if ``gperftools@2.3:`` was requested, then Spack will
 Allowing Deprecated Versions
 ----------------------------
 
-When a package uses the ``deprecated()`` directive (see :ref:`packaging_deprecations`), Spack checks the selected deprecation severity against a per-package threshold.
+When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack checks the selected deprecation severity against a per-package threshold.
 Deprecations whose severity *exceeds* the threshold are refused: this is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
 Those at or below the threshold are allowed silently and the deprecated version is treated like any other, with no warning and no penalty in the solve.
 
