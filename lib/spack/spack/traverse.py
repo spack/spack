@@ -416,27 +416,103 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
     # maps parent identifier to a list of edges, where None is a special identifier
     # for the artificial root/source.
     node_to_edges = defaultdict(list)
+    # discovery order of node identifiers, used to break ties deterministically when a cycle
+    # forces us to pick a node to release (see below).
+    discovery_order: Dict[Any, int] = {}
+    # the first (breadth-first) in-edge that discovered each node. Used as the representative edge
+    # to yield for a node we release out of a cycle, since no ordinary in-edge will drop its count.
+    discovery_edge: Dict[Any, EdgeAndDepth] = {}
     for edge in traverse_breadth_first_edges_generator(edges, visitor, root=True, depth=False):
-        in_edge_count[key(edge.spec)] += 1
+        child_id = key(edge.spec)
+        in_edge_count[child_id] += 1
+        if child_id not in discovery_order:
+            discovery_order[child_id] = len(discovery_order)
+            discovery_edge[child_id] = edge
         parent_id = key(edge.parent) if edge.parent is not None else None
         node_to_edges[parent_id].append(edge)
 
     queue = deque((None,))
 
-    while queue:
-        for edge in node_to_edges[queue.popleft()]:
-            child_id = key(edge.spec)
-            in_edge_count[child_id] -= 1
+    # SCCs of the collected sub-DAG, computed lazily and only if a cycle stalls Kahn's algorithm.
+    # ``sccs`` holds SCCs of size > 1 in topological order (dependencies first); ``next_scc`` is
+    # the index of the next one to release.
+    sccs: Optional[List[List[Any]]] = None
+    next_scc = 0
 
-            should_yield = root or edge.parent is not None
+    while True:
+        assert queue, "topo sort: Returned from seeding loop without seeding queue"
 
-            if all_edges and should_yield:
-                yield edge
+        # This is Kahn's algorithm for topological ordering. We use this instead of relying on
+        # Tarjan's SCC algorithm to preserve the BFS flavor of topo ordering.
+        while queue:
+            for edge in node_to_edges[queue.popleft()]:
+                child_id = key(edge.spec)
+                in_edge_count[child_id] -= 1
 
-            if in_edge_count[child_id] == 0:
-                if not all_edges and should_yield:
+                should_yield = root or edge.parent is not None
+
+                if all_edges and should_yield:
                     yield edge
-                queue.append(key(edge.spec))
+
+                if in_edge_count[child_id] == 0:
+                    if not all_edges and should_yield:
+                        yield edge
+                    queue.append(child_id)
+
+        # Kahn's algorithm drained the queue. If every node has been emitted (all in-edge counts
+        # are zero) we are done. Otherwise the remaining nodes are all either in a cycle or
+        # depended on by a node in a cycle.
+        # We break the deadlock by releasing one strongly connected component at a time, in
+        # topological order, seeding its earliest-discovered member into the queue so the normal
+        # Kahn's loop can drain it and anything blocked by it.
+        if not any(count > 0 for count in in_edge_count.values()):
+            return
+
+        # Use Tarjan's algorithm to find SCCs and return them in TOPO order
+        # Runs once
+        if sccs is None:
+            # Adjacency restricted to the collected sub-DAG, keyed the same way as the traversal.
+            children: Dict[Any, List[Any]] = defaultdict(list)
+            all_ids = set(discovery_order)  # Converting from dict, not relied on for deduplication
+            for parent_id, out_edges in node_to_edges.items():
+                if parent_id is None:
+                    continue
+                for edge in out_edges:
+                    children[parent_id].append(key(edge.spec))
+            # Tarjan returns SCCs in reverse topological order; reverse to get dependencies first,
+            # and keep only nontrivial SCCs (the cycles) since singletons drain via Kahn's.
+            all_sccs = find_sccs_tarjan(
+                all_ids, lambda nid: children.get(nid, ()), key=lambda nid: nid
+            )
+            sccs = [scc for scc in reversed(all_sccs) if len(scc) > 1]
+
+        # Find the next SCC that still has unreleased members and release it. An SCC is ready to
+        # release once all of its cross-SCC in-edges have been consumed, which -- because we
+        # process SCCs in topological order -- is guaranteed by the time we reach it.
+        while next_scc < len(sccs):
+            scc = sccs[next_scc]
+            next_scc += 1
+            # Seed the earliest-discovered scc member so within-cycle release is deterministic
+            # and as breadth-first as possible; force its in-edge count to zero to enqueue it.
+            seed = min(scc, key=lambda nid: discovery_order[nid])
+            in_edge_count[seed] = 0
+            # In node-cover mode the seed is emitted here, via its discovery edge, since no
+            # ordinary in-edge decrement will reach it. In edge-cover mode its in-edges were
+            # already yielded as they were encountered.
+            if not all_edges:
+                edge = discovery_edge[seed]
+                if root or edge.parent is not None:
+                    yield edge
+            queue.append(seed)
+            break
+        else:
+            # No nontrivial SCC remains to release, yet some nodes still have unconsumed in-edges.
+            # This is not a cycle: it happens when a node's only in-edges come from a parent that is
+            # not itself reached and processed from the traversal source (e.g. with ``root=False``,
+            # or when the collected graph has parents outside the traversal's frontier). Such nodes
+            # cannot be ordered, so we stop -- matching the behavior of the plain Kahn's loop, which
+            # simply drains the queue and returns.
+            return
 
 
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.
