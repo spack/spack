@@ -4,6 +4,12 @@
 
 """POSIX-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
+import sys
+
+if sys.platform == "win32":
+    # Also lets mypy skip this module when run on Windows.
+    raise ImportError("spack.new_installer_posix cannot be imported on Windows")
+
 import fcntl
 import functools
 import io
@@ -11,7 +17,6 @@ import os
 import re
 import selectors
 import signal
-import sys
 import tempfile
 import termios
 import tty
