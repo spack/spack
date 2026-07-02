@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
 
 from spack_repo.builtin_mock.build_systems.compiler import CompilerPackage
 from spack_repo.builtin_mock.build_systems.generic import Package
@@ -49,6 +48,7 @@ class CompilerWithDependency(CompilerPackage, Package):
     depends_on("cxx", type="build")
 
     depends_on("fftw")
+
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
         """Callback function to inject runtime-related rules into the solver.
