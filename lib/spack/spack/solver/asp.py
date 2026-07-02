@@ -2870,20 +2870,23 @@ class SpackSolverSetup:
                 if s.concrete:
                     continue
 
-                deps = {
-                    edge.spec.name
-                    for edge in s.edges_to_dependencies()
-                    if edge.direct and edge.when == EMPTY_SPEC
-                }
-                if deps:
+                direct_edges = [
+                    e for e in s.edges_to_dependencies() if e.direct and e.when == EMPTY_SPEC
+                ]
+                deps = {edge.spec.name for edge in direct_edges}
+                # Virtuals on a direct edge, must be virtuals the node can actually depend on
+                required_virtuals = {virtual for edge in direct_edges for virtual in edge.virtuals}
+                if deps or required_virtuals:
                     graph = analyzer.possible_dependencies(
                         s, allowed_deps=dt.ALL, transitive=False
                     )
                     deps.difference_update(graph.real_pkgs, graph.virtuals)
-                    if deps:
+                    required_virtuals.difference_update(graph.virtuals)
+                    invalid = deps | required_virtuals
+                    if invalid:
                         start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
                         raise UnsatisfiableSpecError(
-                            f"{start_str} cannot depend on {', '.join(deps)}"
+                            f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
                 spack.spec.Spec.ensure_valid_variants(s)

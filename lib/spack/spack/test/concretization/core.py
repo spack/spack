@@ -2460,6 +2460,7 @@ packages:
             solver.driver.solve(setup, specs, reuse=[])
 
     @pytest.mark.regression("43141")
+    @pytest.mark.regression("52567")
     @pytest.mark.parametrize(
         "spec_str,expected_match",
         [
@@ -2467,6 +2468,10 @@ packages:
             ("pkg-a ^foo", "since 'foo' does not exist"),
             # Request a compiler for a package that doesn't need it
             ("pkg-c %gcc", "cannot depend on gcc"),
+            # Request a compiler for a language the package doesn't use, while another
+            # compiler is requested for a language it does use. Only the unusable language
+            # must be reported.
+            ("pkg-b %c=gcc %fortran=llvm", "cannot depend on fortran"),
         ],
     )
     def test_errors_on_statically_checked_preconditions(self, spec_str, expected_match):
