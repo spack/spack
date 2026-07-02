@@ -733,7 +733,7 @@ def _url_push_index(
 
 def _read_specs(
     file_list: List[str],
-    read_method: Callable[[str], spack.spec.Spec],
+    read_method: Callable[[str], Optional[spack.spec.Spec]],
     filter_fn: Callable[[str], bool],
     db: BuildCacheDatabase,
 ):
@@ -756,7 +756,7 @@ def _read_specs(
             warnings.warn(f"Malformed metadata file name detected {file}")
             # _lazy_read_spec will still try to download the manifest, it is possible something odd
             # happened and this is still a valid cache manifest.
-            pass
+            continue
 
         if not filter_fn(spec_hash):
             continue
@@ -769,7 +769,8 @@ def _read_specs(
 
         spec = read_method(file)
         if not spec:
-            # Couldn't read the spec from anywhere, continue
+            # Couldn't read the spec from anywhere
+            warnings.warn(f"Failed to read spec from cache {spec.name}/{spec.dag_hash(7)}")
             continue
 
         db.add(spec)
@@ -778,7 +779,7 @@ def _read_specs(
 
 def _lazy_read_spec(
     file: str, spec_by_hash: Callable[[str], Optional[spack.spec.Spec]], read_from_cache: Callable
-):
+) -> Optional[spack.spec.Spec]:
     """Lazy reader that attempts to find the spec using local methods first"""
     try:
         _, _, spec_hash = URLBuildcacheEntry.decompose_manifest_filename(file)
@@ -792,7 +793,7 @@ def _lazy_read_spec(
         s = BINARY_INDEX.known_specs.get(spec_hash)
         if s:
             return s
-    except IndexError:
+    except (IndexError, ValueError):
         # Failure to parse the manifest means we can't just do this the fast way
         pass
 
@@ -802,13 +803,15 @@ def _lazy_read_spec(
         cache_entry = read_from_cache(file)
         spec_dict = cache_entry.fetch_metadata()
         s = spack.spec.Spec.from_dict(spec_dict)
+        return s
     except OSError as e:
         warnings.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
     finally:
         if cache_entry:
             cache_entry.destroy()
 
-        return s
+    return None
+
 
 
 def _url_update_index(

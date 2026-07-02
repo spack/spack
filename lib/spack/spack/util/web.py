@@ -398,7 +398,7 @@ def push_to_url(
     remote_url = urllib.parse.urlparse(remote_path)
     if if_match and remote_url.scheme != "s3":
         warnings.warn(
-            "Pushing to URL with `if_match` is only supported for s3:// URLS.n\n"
+            "Pushing to URL with `if_match` is only supported for s3:// URLS\n"
             "Files may be overwritten unexpectedly."
         )
 
@@ -424,6 +424,7 @@ def push_to_url(
     elif remote_url.scheme == "s3":
         extra_args = {}
         if if_match is not None:
+            # API ref https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
             extra_args.update({"IfMatch": if_match})
         if content_type is not None:
             extra_args.update({"ContentType": content_type})

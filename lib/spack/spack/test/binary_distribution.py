@@ -52,6 +52,7 @@ from spack.url_buildcache import (
     get_valid_spec_file,
 )
 from spack.util.filesystem import join_path, readlink, working_dir
+from spack.version.version_types import Version
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -1669,3 +1670,39 @@ def test_url_update_index_raises_after_retries_exhausted(tmp_path, create_mock_i
     retry = web_util.Retry(total=5, backoff_factor=0, backoff_max=1)
     with pytest.raises(GenerateIndexError):
         spack.binary_distribution._url_update_index(metadata, str(tmp_path), retry=retry)
+
+
+@pytest.mark.parametrize("spec_manifest", [
+    ("mock/manifest/spec/package-1.1.1-shorthash"),
+    ("mock/manifest/spec/package-1.1.1"),
+    ("mock/manifest/spec/malformed"),
+])
+def test_lazy_reader_failure(config, spec_manifest):
+    def mock_bad_read(_f):
+        raise OSError()
+
+    assert spack.binary_distribution._lazy_read_spec(
+        spec_manifest,
+        spec_by_hash=lambda _s: None,
+        read_from_cache=mock_bad_read,
+    ) is None
+
+
+decomposed_result = ("package", Version("1.1.1"), "asdf1234asdf1234asdf1234asdf1234")
+@pytest.mark.parametrize(("spec_manifest", "result"), [
+    ("mock/prefix/long{:_<256}/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json".format(""), decomposed_result),
+    ("mock/invalid/prefix/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json", decomposed_result),
+    ("mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234.spec.manifest.json", decomposed_result),
+    ("mock/v3/manifest/spec/package-1.1.1-asdf1234asdf1234asdf1234asdf1234", decomposed_result),
+    ("mock/v3/manifest/spec/package-with-long-name-and-many-dashes-1.1.1-asdf1234asdf1234asdf1234asdf1234", ("package-with-long-name-and-many-dashes", Version("1.1.1"), "asdf1234asdf1234asdf1234asdf1234")),
+    ("mock/v3/manifest/spec/malformed-package", ValueError),
+    ("mock/v3/manifest/spec/malformed-package-bad?version-asdf1234asdf1234asdf1234asdf1234", ValueError),
+    ("mock/v3/manifest/spec/malformed-package-1.1.1-shorthash", ValueError),
+])
+def test_url_buildcache_decompose_manifest_filename(spec_manifest, result):
+    if result is ValueError:
+        with pytest.raises(ValueError):
+            result = URLBuildcacheEntry.decompose_manifest_filename(spec_manifest)
+            print(result)
+    else:
+        assert result == URLBuildcacheEntry.decompose_manifest_filename(spec_manifest)
