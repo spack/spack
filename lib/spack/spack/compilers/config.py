@@ -265,16 +265,19 @@ class CompilerFactory:
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
         external_parser = ExternalSpecsParser(init_external_dicts)
-        all_specs = external_parser.all_specs()
         valid_compiler_specs = []
-        for spec, edict in zip(all_specs, init_external_dicts):
-            if spec.name not in compiler_package_names:
-                continue
-            if _EXTRA_ATTRIBUTES_KEY not in edict:
-                header = f"The external spec '{edict['spec']}' cannot be used as a compiler"
-                tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
-                continue
-            valid_compiler_specs.append(spec)
+        for name, external_specs_and_config in external_parser.specs_by_name.items():
+            for spec_with_config in external_specs_and_config:
+                if name not in compiler_package_names:
+                    continue
+                if _EXTRA_ATTRIBUTES_KEY not in spec_with_config.config:
+                    header = (
+                        f"The external spec '{spec_with_config.config['spec']}'"
+                        " cannot be used as a compiler"
+                    )
+                    tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
+                    continue
+                valid_compiler_specs.append(spec_with_config.spec)
         return valid_compiler_specs
 
     @staticmethod
