@@ -970,7 +970,7 @@ class ViewDescriptor:
                     f"    {spec_a}, and\n"
                     f"    {spec_b}.\n"
                     "    To resolve this issue:\n"
-                    "        a. use `concretization:unify:true` to ensure there is only one "
+                    "        a. use `concretizer:unify:true` to ensure there is only one "
                     "package per spec in the environment, or\n"
                     "        b. disable views with `view:false`, or\n"
                     "        c. create custom view projections."
