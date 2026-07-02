@@ -2512,8 +2512,8 @@ class Spec:
             )
         }
 
-        # Find SCCs (Tarjan's returns reverse topological order which is what we need here anyway)
-        sccs = spack.traverse.find_sccs_tarjan(all_specs, hash_descriptor.depflag)
+        # Find SCCs (returns reverse topological order which is what we need here anyway)
+        sccs = spack.traverse.find_sccs(self, deptype=hash_descriptor.depflag, key=id)
 
         # Seed from already-cached hashes so we don't recompute subgraphs whose hashes are known.
         spec_hashes: Dict[int, str] = {}
