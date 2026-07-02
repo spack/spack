@@ -289,6 +289,145 @@ def test_env_scripts_path_after_relocation(shell):
     assert orig_env.path not in new_deactivate_content
 
 
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_script_content_consistency(shell):
+    """Test that environment activation scripts are consistently generated."""
+    env("create", "consistent_test")
+    test_env = ev.read("consistent_test")
+
+    # Generate script first time
+    env("activate", f"--{shell}", "consistent_test")
+    activate_script_path = env_script.path_to_env_activate_shell_script(test_env, shell)
+
+    with open(activate_script_path, "r", encoding="utf-8") as f:
+        first_content = f.read()
+
+    os.remove(activate_script_path)
+    env("activate", f"--{shell}", "consistent_test")
+
+    with open(activate_script_path, "r", encoding="utf-8") as f:
+        second_content = f.read()
+
+    first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
+    second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
+
+    assert first_lines == second_lines
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_regenerate_on_spec_install(shell, install_mockery, mock_fetch):
+    """Test that environment lockfile is updated when specs are installed."""
+    env("create", "install_test")
+    test_env = ev.read("install_test")
+
+    env("activate", f"--{shell}", "install_test")
+
+    lockfile_path = test_env.lock_path
+
+    first_mtime = os.path.getmtime(lockfile_path) if os.path.exists(lockfile_path) else 0
+
+    import time
+    time.sleep(0.1)
+
+    test_env.add("libelf")
+    test_env.concretize()
+    test_env.write()
+
+    second_mtime = os.path.getmtime(lockfile_path)
+    assert second_mtime > first_mtime
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
+    """Test activation/deactivation of directory-based environments."""
+    with fs.working_dir(str(tmp_path)):
+        env("create", "-d", ".")
+        test_env = ev.Environment(str(tmp_path))
+
+        env("activate", f"--{shell}", ".")
+
+        activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
+        deactivate_script = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+
+        assert os.path.exists(activate_script)
+        assert os.path.exists(deactivate_script)
+
+        # Verify scripts contain correct paths
+        with open(activate_script, "r", encoding="utf-8") as f:
+            activate_content = f.read()
+
+        assert str(tmp_path) in activate_content or test_env.path in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_with_view(shell, tmp_path: pathlib.Path, install_mockery, mock_fetch):
+    """Test that environment scripts handle custom views correctly."""
+    view_dir = tmp_path / "view"
+    env("create", "--with-view=%s" % view_dir, "view_test")
+
+    test_env = ev.read("view_test")
+
+    # Add and install a spec to populate the view
+    test_env.add("libelf")
+    test_env.concretize()
+    test_env.write()
+    test_env.install_specs(fake=True)
+
+    env("activate", f"--{shell}", "view_test")
+
+    activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
+
+    with open(activate_script, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert str(view_dir) in content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
+    """Test activating an environment with multiple named views."""
+    env("create", "multi_view_test")
+    test_env = ev.read("multi_view_test")
+
+    view1_path = str(tmp_path / "view1")
+    view2_path = str(tmp_path / "view2")
+    spack_yaml_path = os.path.join(test_env.path, "spack.yaml")
+
+    import spack.util.spack_yaml as syaml
+
+    with open(spack_yaml_path, "r") as f:
+        yaml_data = syaml.load_config(f)
+
+    yaml_data["spack"]["view"] = {
+        "view1": {"root": view1_path},
+        "view2": {"root": view2_path}
+    }
+
+    with open(spack_yaml_path, "w") as f:
+        syaml.dump_config(yaml_data, f)
+
+    test_env = ev.read("multi_view_test")
+
+    assert "view1" in test_env.views
+    assert "view2" in test_env.views
+    assert test_env.views["view1"].root == view1_path
+    assert test_env.views["view2"].root == view2_path
+
+    activate_output = env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
+
+    assert "_spack_env_set SPACK_ENV_VIEW view2" in activate_output
+
+
 def test_env_track_existing_env_fails():
     env("create", "track_test")
 
