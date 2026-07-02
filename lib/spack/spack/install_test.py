@@ -49,7 +49,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union[spack.llnl.util.tty.log.nixlog, spack.llnl.util.tty.log.winlog]
+LogType = spack.llnl.util.tty.log.threadlog
 
 PackageObjectOrClass = Union[
     "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
@@ -206,7 +206,7 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
     """Print the message to the log, optionally echoing.
 
     Args:
-        logger: instance of the output logger (e.g. nixlog or winlog)
+        logger: instance of the output logger (a ``threadlog``)
         msg: message being output
         verbose: ``True`` displays verbose output, ``False`` suppresses
             it (``False`` is default)
@@ -281,10 +281,12 @@ class PackageTest:
 
     @property
     def logger(self) -> Optional[LogType]:
-        """The current logger or, if none, sets to one."""
-        if not self._logger:
-            self._logger = spack.llnl.util.tty.log.log_output(self.test_log_file)
+        """The current logger, set up by ``test_logger``.
 
+        ``threadlog`` redirects fds 1/2 in ``__enter__``, so it must only be constructed via
+        ``test_logger``. Callers (``test_part``, ``print_message``) always run inside an active
+        ``test_logger`` region, so ``self._logger`` is set.
+        """
         return self._logger
 
     @contextlib.contextmanager
@@ -300,8 +302,8 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.log_output(
-            self.test_log_file, verbose, append=True
+        with spack.llnl.util.tty.log.threadlog(
+            self.test_log_file, echo=verbose, append=True
         ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))

@@ -18,6 +18,7 @@ from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.spec
+from spack.llnl.util.tty.log import redirect_stdio, restore_stdio
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
@@ -236,18 +237,13 @@ class Tee(abc.ABC):
         self.parent = parent
         # Write end, used by tee itself to stop the thread (and by parent to toggle echoing).
         self.control_w = control_w
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        self.saved_fds = {fd: os.dup(fd) for fd in fds}
         #: The path of the log file
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
         self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
         self.tee_thread.start()
-        for fd in fds:
-            os.dup2(w, fd)
+        self.saved_fds = redirect_stdio(w)
         self._setup_handles()
         os.close(w)
 
@@ -266,11 +262,7 @@ class Tee(abc.ABC):
         # We restore stdout and stderr, because between sys.exit and the actual process exit
         # buffers may be flushed, and can cause exit code 120 (witnessed under pytest+coverage on
         # macOS).
-        sys.stdout.flush()
-        sys.stderr.flush()
-        for fd, saved_fd in self.saved_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
+        restore_stdio(self.saved_fds)
         if self.control_w is not None:
             # Send a control byte to stop the tee thread.
             try:
