@@ -1136,7 +1136,7 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
-error(100, "Cannot select a single provider for virtual '{0}'", Virtual)
+error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      2 { provider(P, node(X, Virtual)) }.
 
@@ -1149,7 +1149,7 @@ attr("root", PackageNode) :- attr("virtual_root", VirtualNode), provider(Package
 
 % The provider is selected among the nodes for which the virtual condition holds
 1 { provider(PackageNode, node(X, Virtual)) :
-    attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) } 1
+    attr("node", PackageNode), virtual_condition_holds(PackageNode, Virtual) }
   :- attr("virtual_node", node(X, Virtual)).
 
 % The provider provides the virtual if some provider condition holds.
