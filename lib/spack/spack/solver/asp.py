@@ -89,7 +89,6 @@ from .core import (
     quote_once,
 )
 from .error import (
-    DeprecatedVersionError,
     InternalConcretizerError,
     InvalidDependencyError,
     InvalidSpliceError,
