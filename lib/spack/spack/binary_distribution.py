@@ -770,7 +770,7 @@ def _read_specs(
         spec = read_method(file)
         if not spec:
             # Couldn't read the spec from anywhere
-            warnings.warn(f"Failed to read spec from cache {spec.name}/{spec.dag_hash(7)}")
+            warnings.warn(f"Failed to read spec from cache /{spec_hash}")
             continue
 
         db.add(spec)
@@ -811,7 +811,6 @@ def _lazy_read_spec(
             cache_entry.destroy()
 
     return None
-
 
 
 def _url_update_index(

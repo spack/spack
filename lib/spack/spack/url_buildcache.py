@@ -49,6 +49,7 @@ INDEX_MANIFEST_FILE = "index.manifest.json"
 #: Simple regex for matching spec hashes
 SPEC_HASH_RE = re.compile(r"^[a-z0-9]{32}$")
 
+
 class BuildcacheComponent(enum.Enum):
     """Enumeration of the kinds of things that live in a URL buildcache
 
@@ -289,7 +290,9 @@ class URLBuildcacheEntry:
             raise ValueError("Expected file with format <package-*>-<version>-<spec_hash>")
         spec_hash = parts[-1]
         if not SPEC_HASH_RE.match(spec_hash):
-            raise ValueError(f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}")
+            raise ValueError(
+                f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}"
+            )
         spec_version = Version(parts[-2])
         return "-".join(parts[:-2]), spec_version, spec_hash
 
