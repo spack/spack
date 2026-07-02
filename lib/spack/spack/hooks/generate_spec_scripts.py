@@ -134,14 +134,12 @@ def post_install(spec, explicit=None):
         return
 
     shells_avail = ["sh"]  # csh & fish have the same script as sh
-    comments = "###"
 
     if sys.platform == "win32":
         shells_avail = ["bat", "pwsh"]
 
     for shell in shells_avail:
-        if shell == "bat":
-            comments = "::"
+        comments = "::" if shell == "bat" else "###"
 
         try:
             load_script_path = path_to_load_shell_script(spec, shell)
