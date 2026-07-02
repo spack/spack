@@ -709,11 +709,9 @@ def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
         assert "Skipping build of libdwarf" in out
         assert "was not installed" in out
 
-        # Check that failure prefix locks are still cached
-        failed_packages = [
-            pkg_name
-            for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
-        ]
+        # Check that persistent failure markers exist
+        failure_marker_dir = spack.store.STORE.failure_tracker.dir
+        failed_packages = [item.name.split("-")[0] for item in failure_marker_dir.iterdir()]
         assert "libelf" in failed_packages
         assert "libdwarf" in failed_packages
 
