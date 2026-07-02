@@ -1070,6 +1070,9 @@ def test_mark_failed(mutable_database, monkeypatch, tmp_path: pathlib.Path, capf
         out = str(capfd.readouterr()[1])
         assert "Unable to mark pkg-a as failed" in out
 
+        # the un-acquired lock must not linger in the locker cache
+        assert not spack.store.STORE.failure_tracker.locker.has_lock(s)
+
     spack.store.STORE.failure_tracker.clear_all()
 
 

@@ -1571,8 +1571,9 @@ class PackageInstaller:
         # Mapping of unique package ids to task
         self.build_tasks: Dict[str, Task] = {}
 
-        # Cache of package locks for failed packages, keyed on package's ids
-        self.failed: Dict[str, Optional[lk.Lock]] = {}
+        # Specs of failed packages, keyed on package's ids; the spec is set only if the
+        # failure was marked in the failure tracker
+        self.failed: Dict[str, Optional[spack.spec.Spec]] = {}
 
         # Cache the PID for distributed build messaging
         self.pid: int = os.getpid()
@@ -1777,12 +1778,12 @@ class PackageInstaller:
         Args:
             pkg_id (str): identifier for the failed package
         """
-        lock = self.failed.get(pkg_id, None)
-        if lock is not None:
+        spec = self.failed.get(pkg_id, None)
+        if spec is not None:
             err = "{0} exception when removing failure tracking for {1}: {2}"
             try:
                 tty.verbose(f"Removing failure mark on {pkg_id}")
-                lock.release_write()
+                spack.store.STORE.failure_tracker.release(spec)
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
@@ -2177,7 +2178,8 @@ class PackageInstaller:
         err = "" if exc is None else f": {str(exc)}"
         tty.debug(f"Flagging {pkg_id} as failed{err}")
         if mark:
-            self.failed[pkg_id] = spack.store.STORE.failure_tracker.mark(task.pkg.spec)
+            spack.store.STORE.failure_tracker.mark(task.pkg.spec)
+            self.failed[pkg_id] = task.pkg.spec
         else:
             self.failed[pkg_id] = None
         task.status = BuildStatus.FAILED
