@@ -3372,6 +3372,35 @@ if sys.platform == "win32":
     import ctypes.wintypes
 
 
+def short_filenames_enabled() -> bool:
+    """Check whether Windows 8.3 (short) filename creation is enabled on this system.
+
+    8.3 name creation can be controlled two ways:
+
+    - A system-wide registry setting (``NtfsDisable8dot3NameCreation``) that either
+      forces short names on/off for every volume, or defers to a per-volume setting.
+    - A per-volume flag that only takes effect when the registry setting defers to it.
+
+    ``fsutil 8dot3name query <drive>`` reports both the registry state and the volume
+    state, then resolves them into a single effective answer for that drive
+    (e.g. "8dot3 name creation is disabled on <drive>"). This function queries the
+    system drive (``%SystemDrive%``) and parses that resolved line, so it reflects the
+    actual effective setting rather than just one of the two independent settings.
+
+    Always returns False on non-Windows platforms.
+    """
+    if sys.platform != "win32":
+        return False
+    try:
+        fsutil = which("fsutil", required=True)
+        drive = os.environ.get("SystemDrive", "C:")
+        output = fsutil("8dot3name", "query", drive, output=str, error=str)
+    except Exception:
+        return False
+    match = re.search(r"8dot3 name creation is (enabled|disabled)", output, re.IGNORECASE)
+    return bool(match) and match.group(1).lower() == "enabled"
+
+
 def fix_darwin_install_name(path: str) -> None:
     """Fix install name of dynamic libraries on Darwin to have full path.
 
@@ -3454,29 +3483,39 @@ def dumpbin(pkg) -> Executable:
     return dumpbin
 
 
-def relocate_win_rpath(package):
-    ev = EnvironmentModifications()
-    dlls = find(package.spec.prefix, "*.dll")
-    exes = find(package.spec.prefix, "*.exe")
-    pes = dlls + exes
-    pe_stage_to_prefix = {}
-    # map all PE (dll,exe) prefix locations to the stage
-    for pe in pes:
-        # location of PE file at link time (in stage)
-        # is baked into PE file as a resource
-        # extract it
-        stage_pe_loc = extract_spack_id(pe)
-        if stage_pe_loc:
-            print(f"Discovered stage pe location {stage_pe_loc} for pe {pe}")
-            pe_stage_to_prefix[stage_pe_loc] = pe
-        else:
-            print(f"unable to determine stage pe location for {pe}")
+def apply_pe_relocations(
+    pe_targets: Iterable[str],
+    coff_for_target: Dict[str, str],
+    reloc_exe: Executable,
+    ev: EnvironmentModifications,
+    export: bool = False,
+    **reloc_kwargs,
+) -> None:
+    """Invoke the compiler wrapper's relocate executable on each PE target (dll or
+    exe). PE files may or may not export symbols (most exes and plugin dlls do not),
+    but references to other PE files inside them still need relocating either way.
+    If ``coff_for_target`` has an import library recorded for a given target, it's
+    passed along via ``--coff`` so the wrapper regenerates its exports to point at
+    the relocated import library.
+    """
+    for pe in pe_targets:
+        args = ["--pe", pe]
+        if export:
+            args.append("--export")
+        args.append("--full")
+        if pe in coff_for_target:
+            args.extend(["--coff", coff_for_target[pe]])
+        print(f"relocate args: {args}")
+        reloc_exe(*args, extra_env=ev, **reloc_kwargs)
 
-    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
-    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
-    ev.set("SPACK_DEBUG_WRAPPER", "ON")
-    reloc = relocate(package)
-    lib_map = {}
+
+def _win_rpath_import_lib_targets(package, pe_stage_to_prefix: dict) -> Dict[str, str]:
+    """Match each import library under the package prefix against the stage
+    locations recorded in ``pe_stage_to_prefix`` (extracted from each PE's embedded
+    SPACKRESOURCE) and return a mapping from PE path to its associated import
+    library path, for use as the ``--coff`` argument when relocating that PE.
+    """
+    coff_for_target: Dict[str, str] = {}
     for lib in find(package.spec.prefix, "*.lib"):
         print(f"processing lib {lib}")
         if verify_import_lib(lib, package=package):
@@ -3487,20 +3526,42 @@ def relocate_win_rpath(package):
                 prefix_pe = pe_stage_to_prefix.get(dll_name, None)
                 print(f"prefix dll {prefix_pe}")
                 if prefix_pe:
-                    lib_map[prefix_pe] = lib
+                    coff_for_target[prefix_pe] = lib
+    return coff_for_target
+
+
+def relocate_win_rpath(package):
+    dlls = find(package.spec.prefix, "*.dll")
+    exes = find(package.spec.prefix, "*.exe")
+    pes = dlls + exes
+    pe_stage_to_prefix = {}
+    # map all PE (dll,exe) prefix locations to the stage
     for pe in pes:
-        args = ["--pe", pe, "--full"]
-        # PE files may or may not export symbols
-        # if they do not (i.e. most exes and plugin dlls)
-        # we still need to relocate the references to other PE files
-        # inside those PE files
-        if pe in lib_map:
-            args.extend(["--coff", lib_map[pe]])
-        print(args)
-        reloc(*args, extra_env=ev, output=str, error=str, fail_on_error=True)
+        # we don't want to update the rpath to symlinked files
+        if llnl.util.filesystem.islink(pe):
+            continue
+        print(f"Processing {pe}")
+        # location of PE file at link time (in stage)
+        # is baked into PE file as a resource
+        # extract it
+        stage_pe_loc = extract_spack_id_from_win_pe(pe)
+        if stage_pe_loc:
+            print(f"Discovered stage pe location {stage_pe_loc} for pe {pe}")
+            pe_stage_to_prefix[stage_pe_loc] = pe
+        else:
+            print(f"unable to determine stage pe location for {pe}")
+
+    ev = EnvironmentModifications()
+    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in pe_stage_to_prefix.items()])
+    ev.set("SPACK_INSTALL_PREFIX", spack.store.STORE.layout.root)
+    ev.set("SPACK_DEBUG_WRAPPER", "ON")
+    coff_for_target = _win_rpath_import_lib_targets(package, pe_stage_to_prefix)
+    apply_pe_relocations(
+        pes, coff_for_target, relocate(package), ev, output=str, error=str, fail_on_error=True
+    )
 
 
-def extract_spack_id(lib: str) -> Optional[str]:
+def extract_spack_id_from_win_pe(lib: str) -> Optional[str]:
     """Extracts the string ID spack of type spackresource from the
     string table in a given dll
     Arguments:
@@ -3572,7 +3633,7 @@ handle for {lib}: {ctypes.get_last_error()}"
     return str_id_data if res_size else None
 
 
-def get_importlib_target(lib, package=None):
+def get_importlib_target(lib, package=None) -> Optional[str]:
     reloc = relocate(package)
     info = reloc("--coff", lib, "--report", output=str)
     regex = re.compile("DLL: (.*)")

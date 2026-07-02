@@ -5,8 +5,9 @@ import collections
 import itertools
 import os
 import re
+import struct
 import sys
-from typing import Dict, Iterable, List, Optional
+from typing import IO, Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
@@ -19,7 +20,7 @@ import spack.util.filesystem as sfs
 import spack.util.lang
 from spack.util import elf, executable, tty
 from spack.util.environment import EnvironmentModifications
-from spack.util.filesystem import _windows_is_junction, readlink, symlink
+from spack.util.filesystem import readlink, symlink
 from spack.util.lang import memoized
 
 from .relocate_text import BinaryFilePrefixReplacer, PrefixToPrefix, TextFilePrefixReplacer
@@ -55,17 +56,18 @@ def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
 
 
-def relocate_msvc_pe_files(targets, prefixes: dict):
-    dirs_to_relocate = list(prefixes.values())
-    for search_dir in dirs_to_relocate:
-        for entry in os.scandir(search_dir):
-            if not (entry.is_symlink() or _windows_is_junction(entry.path)) and entry.is_dir():
-                dirs_to_relocate.append(entry.path)
-
-    ev = EnvironmentModifications()
-    ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
-    dll_lib_map = {}
-    for target in targets:
+def _buildcache_import_lib_targets(
+    targets: List[str], all_prefixes: Dict[str, str]
+) -> Dict[str, str]:
+    """Match each import library's referenced DLL against ``all_prefixes`` (old
+    prefix -> new prefix, including any SFN forms) and return a mapping from the
+    DLL's new absolute path to the import library's new absolute path, for use as
+    the ``--coff`` argument when relocating that DLL/exe.
+    """
+    libs = [t for t in targets if t.endswith(".lib")]
+    regex = re.compile("|".join(re.escape(p) for p in all_prefixes.keys()))
+    coff_for_target: Dict[str, str] = {}
+    for lib in libs:
         # we relocate exes and dlls, import libraries are regenerated
         # with a new dll pointer from the existing import library
         # static .libs are ignored (.lib is any coff library on Windows,
@@ -74,37 +76,43 @@ def relocate_msvc_pe_files(targets, prefixes: dict):
         # but import libraries reference dlls, so although
         # the DLLs are our "relocation targets" we drive that
         # via import libs to determine the proper association
-        if target.endswith(".lib"):
-            if sfs.verify_import_lib(target):
-                regex = re.compile("|".join(re.escape(p) for p in prefixes.keys()))
-                dll_path = sfs.get_importlib_target(target)
-                match = regex.match(dll_path)
-                if match:
-                    old_root = match.group()
-                    new_root = prefixes[old_root]
-                    dll_name = os.path.relpath(dll_path, old_root)
-                    dll_lib_map[dll_name] = os.path.join(new_root, os.path.basename(target))
-                else:
-                    tty.debug(
-                        f"Import lib: {target} does not reference a DLL"
-                        "in this prefix, skipping relocation..."
-                    )
-    for target in targets:
-        # Now that we've mapped all our libs to the dlls they point to
-        # Replace any dll references in our target dll or exe with the
-        # appropriate replacement for the packages new location on the host
-        # and if there is an import library associated with the dll/exe,
-        # regenerate it
-        if target.endswith(".dll") or target.endswith(".exe"):
-            regex = re.compile("|".join(re.escape(p) for p in prefixes.values()))
-            match = regex.match(target)
-            args = ["--pe", target, "--export", "--full"]
+        if sfs.verify_import_lib(lib):
+            dll_path = sfs.get_importlib_target(lib)
+            if not dll_path:
+                tty.debug(
+                    f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
+                )
+                continue
+            match = regex.match(dll_path)
             if match:
-                new_root = match.group()
-                dll_name = os.path.relpath(target, new_root)
-                if dll_name in dll_lib_map:
-                    args.extend(["--coff", dll_lib_map[dll_name]])
-            _msvc_relocate()(*args, extra_env=ev)
+                old_root = match.group()
+                new_root = all_prefixes[old_root]
+                dll_name = os.path.relpath(dll_path, old_root)
+                new_dll_path = os.path.join(new_root, dll_name)
+                coff_for_target[new_dll_path] = os.path.join(new_root, os.path.basename(lib))
+            else:
+                tty.debug(
+                    f"Import lib: {lib} does not reference a DLL "
+                    "in this prefix, skipping relocation..."
+                )
+    return coff_for_target
+
+
+def relocate_windows_binaries(
+    targets, prefixes: Dict[str, str], sfn_prefixes: Optional[Dict[str, str]] = None
+):
+    # Import libraries may reference their DLL by an 8.3 short filename (SFN) if the
+    # build host truncated the path. We can't expand such a path back to its long
+    # form here, since the old prefix no longer exists on this host, so instead we
+    # also match directly against the SFN form of each old prefix.
+    all_prefixes = {**prefixes, **(sfn_prefixes or {})}
+    import pdb; pdb.set_trace()
+    ev = EnvironmentModifications()
+    ev.set_path("SPACK_RELOCATE_PATH", ["|".join((k, v)) for k, v in all_prefixes.items()])
+
+    coff_for_target = _buildcache_import_lib_targets(targets, all_prefixes)
+    pe_targets = [t for t in targets if t.endswith(".dll") or t.endswith(".exe")]
+    sfs.apply_pe_relocations(pe_targets, coff_for_target, _msvc_relocate(), ev, export=True)
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
@@ -367,10 +375,27 @@ def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
 
 
-def is_msvc_magic(magic: bytes) -> bool:
-    return magic.startswith(b"!<arch>\n") or (
-        magic.startswith(b"MZ") and magic[60:64].startswith(b"PE\0\0")
-    )
+def is_msvc_magic(f: IO[bytes]) -> bool:
+    f.seek(0)
+    magic = f.read(8)
+    if magic.startswith(b"!<arch>\n"):
+        return True
+    # sanity check for minimal required size
+    # need at least 64 bytes for e_lfanew header
+    # which gives us the PE signature
+    f.seek(0, 2)
+    if f.tell() < 0x40:
+        return False
+    # wasn't a coff file, check PE
+    f.seek(0x3C)
+    pe_offset_bytes = f.read(4)
+    pe_offset = struct.unpack('<I', pe_offset_bytes)[0]
+    if pe_offset > f.tell():
+        return False
+    f.seek(pe_offset)
+    is_pe = f.read(4) == b"PE\x00\x00"
+    f.seek(0)
+    return is_pe
 
 
 def is_binary(filename: str) -> bool:
