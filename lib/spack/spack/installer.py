@@ -1353,12 +1353,6 @@ class BuildTask(Task):
         if self.error_result is not None:
             self.fail(self.error_result)
 
-        # hook that allows tests to inspect the Package before installation
-        # see _unit_test_check() docs.
-        if not pkg._unit_test_check():
-            self.succeed()
-            return ExecuteResult.FAILED
-
         try:
             # Check if the task's child process has completed
             spack.package_base.PackageBase._verbose = self.process_handle.complete()
