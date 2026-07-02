@@ -21,7 +21,7 @@ import spack.spec
 from spack.llnl.util.tty.log import redirect_stdio, restore_stdio
 
 if TYPE_CHECKING:
-    from spack.new_installer import BuildStatus
+    import spack.new_installer
 
 # Inter-process communication type
 if sys.platform == "win32":
@@ -70,14 +70,21 @@ class BaseTerminalState(abc.ABC):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
+        ui: "spack.new_installer.InstallerUI",
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
         self.selector = selector
-        self.build_status = build_status
+        self.ui = ui
         self.on_suspend = on_suspend
         self.on_resume = on_resume
+        #: True while the process is backgrounded/suspended and the terminal is not ours
+        self.headless = False
+
+    def _set_headless(self, headless: bool) -> None:
+        """Record headless state and tell the UI to suppress (True) or resume (False) rendering."""
+        self.headless = headless
+        self.ui.set_headless(headless)
 
     @classmethod
     def stdout_is_interactive(cls) -> bool:
@@ -155,9 +162,15 @@ class ProcessExitNotifier(abc.ABC):
 
 
 class JobServerBase(abc.ABC):
-    """Abstract base for controlling build concurrency."""
+    """Abstract base for controlling build concurrency.
 
-    def __init__(self, num_jobs: int) -> None:
+    Args:
+        num_jobs: The number of jobs to run concurrently.
+        makeflags: The MAKEFLAGS value to parse for an existing jobserver to attach to. Pass an
+            empty string to always create a fresh jobserver, or None to read the environment.
+    """
+
+    def __init__(self, num_jobs: int, makeflags: Optional[str] = None) -> None:
         #: The number of jobs to run concurrently
         self.num_jobs = num_jobs
         #: The target number of jobs to run concurrently, which may differ from num_jobs if the

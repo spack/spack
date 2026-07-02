@@ -24,6 +24,7 @@ if sys.platform != "win32":
 from ctypes import wintypes
 
 import spack.new_installer_windows as _niw
+from spack.new_installer import InstallerUI
 from spack.new_installer_base import StdinReader
 from spack.new_installer_windows import (
     ENABLE_ECHO_INPUT,
@@ -156,12 +157,13 @@ def _make_state(headless=True):
     sockets.
     """
     sel = _FakeSelector()
-    bs = types.SimpleNamespace(headless=headless, dirty=False)
+    bs = InstallerUI()
     k32 = _FakeKernel32()
 
     state = object.__new__(WindowsTerminalState)
     state.selector = sel
-    state.build_status = bs
+    state.ui = bs
+    state.headless = headless
     state.on_suspend = None
     state.on_resume = None
     state.kernel32 = k32
@@ -289,7 +291,7 @@ class TestForegroundBackground:
 
         tags = [data for _, _, data in sel.register_calls]
         assert "stdin" in tags
-        assert bs.headless is False
+        assert state.headless is False
 
     def test_enter_foreground_skips_stdin_when_not_interactive(self, monkeypatch):
         """enter_foreground() does not register stdin_r when not interactive."""
@@ -310,7 +312,7 @@ class TestInputThread:
     def _run_thread(self, state, fake_msvcrt, monkeypatch):
         """Call _input_thread directly and return bytes received on stdin_r."""
         state._running = True
-        state.build_status.headless = False
+        state.headless = False
         monkeypatch.setattr(_niw, "msvcrt", fake_msvcrt)
         monkeypatch.setattr(_niw.time, "sleep", lambda _: None)
         state._input_thread()
@@ -386,7 +388,7 @@ class TestInputThread:
     def test_no_keypress_when_headless(self, monkeypatch):
         """_input_thread does not call kbhit when headless=True."""
         state, sel, bs, k32 = _make_state()
-        state.build_status.headless = True
+        state.headless = True
         kbhit_calls = []
 
         def fake_sleep(_):

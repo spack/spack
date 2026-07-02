@@ -33,7 +33,7 @@ from spack.new_installer_base import (
 )
 
 if TYPE_CHECKING:
-    from spack.new_installer import BuildStatus
+    from spack.new_installer import InstallerUI
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -74,11 +74,11 @@ class WindowsTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        build_status: "BuildStatus",
+        ui: "InstallerUI",
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
-        super().__init__(selector, build_status, on_suspend, on_resume)
+        super().__init__(selector, ui, on_suspend, on_resume)
         self.kernel32 = ctypes.windll.kernel32
         self.hStdin = self.kernel32.GetStdHandle(-10)
         self.hStdout = self.kernel32.GetStdHandle(-11)
@@ -101,7 +101,7 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
 
         self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-        self.build_status.headless = True
+        self._set_headless(True)
 
         self._running = True
         threading.Thread(target=self._input_thread, daemon=True).start()
@@ -124,7 +124,7 @@ class WindowsTerminalState(BaseTerminalState):
         self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
     def enter_foreground(self) -> None:
-        if not self.build_status.headless:
+        if not self.headless:
             return
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
@@ -136,15 +136,14 @@ class WindowsTerminalState(BaseTerminalState):
         if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
             self.selector.register(self.stdin_r, selectors.EVENT_READ, "stdin")
 
-        self.build_status.headless = False
-        self.build_status.dirty = True
+        self._set_headless(False)
 
     def drain_sigwinch(self) -> None:
         self.sigwinch_r.recv(64)
 
     def _input_thread(self) -> None:
         while self._running:
-            if self.build_status.headless:
+            if self.headless:
                 time.sleep(0.1)
                 continue
             if msvcrt.kbhit():
