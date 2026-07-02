@@ -264,23 +264,18 @@ class CompilerFactory:
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        init_external_dicts = list(
-            x
-            for x in init_external_dicts
-            if spack.spec.Spec(x["spec"]).name in compiler_package_names
-        )
-
-        externals_dicts = []
-        for current in init_external_dicts:
-            if _EXTRA_ATTRIBUTES_KEY not in current:
-                header = f"The external spec '{current['spec']}' cannot be used as a compiler"
+        external_parser = ExternalSpecsParser(init_external_dicts)
+        all_specs = external_parser.all_specs()
+        valid_compiler_specs = []
+        for spec, edict in zip(all_specs, init_external_dicts):
+            if spec.name not in compiler_package_names:
+                continue
+            if _EXTRA_ATTRIBUTES_KEY not in edict:
+                header = f"The external spec '{edict['spec']}' cannot be used as a compiler"
                 tty.debug(f"[{__file__}] {header}: missing the '{_EXTRA_ATTRIBUTES_KEY}' key")
                 continue
-
-            externals_dicts.append(current)
-
-        external_parser = ExternalSpecsParser(externals_dicts)
-        return external_parser.all_specs()
+            valid_compiler_specs.append(spec)
+        return valid_compiler_specs
 
     @staticmethod
     def from_legacy_yaml(compiler_dict: Dict[str, Any]) -> List[spack.spec.Spec]:
