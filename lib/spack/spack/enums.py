@@ -74,10 +74,12 @@ class DeprecationSeverity(enum.IntEnum):
 
     @classmethod
     def _missing_(cls, value):
-        severity = {"none": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
-        if not isinstance(value, str) or value not in severity:
-            raise ValueError(f"{value!r} is not a valid DeprecationSeverity")
-        return cls(severity[value])
+        if isinstance(value, str):
+            try:
+                return cls[value.upper()]
+            except KeyError:
+                pass
+        raise ValueError(f"{value!r} is not a valid DeprecationSeverity")
 
 
 class DeprecationReason(enum.Enum):

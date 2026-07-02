@@ -752,7 +752,6 @@ See the section on :ref:`version ordering <version-comparison>` for more details
    single: deprecation; of package versions
 
 .. _deprecate:
-.. _packaging_deprecations:
 
 Deprecating old versions
 ^^^^^^^^^^^^^^^^^^^^^^^^
