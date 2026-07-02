@@ -32,6 +32,57 @@ def repro_dir(tmp_path: pathlib.Path):
         yield result
 
 
+@pytest.fixture(scope="function")
+def mock_git_repo(git, tmp_path: pathlib.Path):
+    """Create a mock git repo with two commits, the last one creating
+    a .gitlab-ci.yml"""
+
+    repo_path = str(tmp_path / "mockspackrepo")
+    fs.mkdirp(repo_path)
+
+    with fs.working_dir(repo_path):
+        git("init")
+
+        git("config", "--local", "user.email", "testing@spack.io")
+        git("config", "--local", "user.name", "Spack Testing")
+
+        # This path is used to satisfy git root detection and detection of environment changed
+        path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
+        os.makedirs(os.path.dirname(path_to_env))
+        with open(path_to_env, "w", encoding="utf-8") as f:
+            f.write(
+                """
+spack:
+    specs:
+    - a
+"""
+            )
+
+        git("add", path_to_env)
+
+        with open("README.md", "w", encoding="utf-8") as f:
+            f.write("# Introduction")
+
+        # initial commit with README
+        git("add", "README.md")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
+
+        with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
+            f.write(
+                """
+testjob:
+    script:
+        - echo "success"
+            """
+            )
+
+        # second commit, adding a .gitlab-ci.yml
+        git("add", ".gitlab-ci.yml")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "add a .gitlab-ci.yml")
+
+        yield repo_path
+
+
 def test_filter_added_checksums_new_checksum(mock_git_package_changes):
     repo, filename, commits = mock_git_package_changes
 
