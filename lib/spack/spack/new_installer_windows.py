@@ -4,6 +4,12 @@
 
 """Windows-specific terminal state, stdin reader, IPC channels, and job scheduling."""
 
+import sys
+
+if sys.platform != "win32":
+    # Also lets mypy skip this module when run on other platforms.
+    raise ImportError("spack.new_installer_windows can only be imported on Windows")
+
 import ctypes
 import functools
 import io
@@ -16,7 +22,7 @@ import threading
 import time
 from ctypes import wintypes
 from multiprocessing import Process
-from typing import TYPE_CHECKING, Callable, Optional, cast
+from typing import TYPE_CHECKING, Callable, Optional
 
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
@@ -54,14 +60,14 @@ class WindowsTerminalState(BaseTerminalState):
     def stdout_is_interactive(cls) -> bool:
         """Use GetConsoleMode so this works correctly through Windows Terminal's ConPTY."""
         mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-11)
         return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
 
     @classmethod
     def stdin_is_interactive(cls) -> bool:
         mode = wintypes.DWORD()
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         handle = kernel32.GetStdHandle(-10)
         return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
 
@@ -73,7 +79,7 @@ class WindowsTerminalState(BaseTerminalState):
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(selector, build_status, on_suspend, on_resume)
-        self.kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        self.kernel32 = ctypes.windll.kernel32
         self.hStdin = self.kernel32.GetStdHandle(-10)
         self.hStdout = self.kernel32.GetStdHandle(-11)
         self.old_stdin_settings = wintypes.DWORD()
@@ -141,10 +147,10 @@ class WindowsTerminalState(BaseTerminalState):
             if self.build_status.headless:
                 time.sleep(0.1)
                 continue
-            if msvcrt.kbhit():  # type: ignore[attr-defined]
-                char = msvcrt.getwch()  # type: ignore[attr-defined]
+            if msvcrt.kbhit():
+                char = msvcrt.getwch()
                 if char in ("\x00", "\xe0"):
-                    msvcrt.getwch()  # type: ignore[attr-defined]
+                    msvcrt.getwch()
                     continue
                 try:
                     self.stdin_w.sendall(char.encode("utf-8"))
@@ -199,8 +205,8 @@ class WindowsTee(Tee):
 
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         _echo = False
-        control_r = cast(socket.socket, self.control_r)
-        parent_w = cast(socket.socket, self.parent)
+        control_r = self.control_r
+        parent_w = self.parent
 
         def _control_reader() -> None:
             nonlocal _echo
@@ -234,16 +240,16 @@ class WindowsTee(Tee):
             os.close(log_r)
 
     def _setup_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         self._saved_win32_stdout = kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
         self._saved_win32_stderr = kernel32.GetStdHandle(WIN_STD_ERROR_HANDLE)
-        h_write = msvcrt.get_osfhandle(1)  # type: ignore[attr-defined]
-        os.set_handle_inheritable(h_write, True)  # type: ignore[attr-defined]
-        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)  # type: ignore[attr-defined]
-        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)  # type: ignore[attr-defined]
+        h_write = msvcrt.get_osfhandle(1)
+        os.set_handle_inheritable(h_write, True)
+        kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, h_write)
+        kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, h_write)
 
     def _restore_handles(self) -> None:
-        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32 = ctypes.windll.kernel32
         kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
         kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
 
