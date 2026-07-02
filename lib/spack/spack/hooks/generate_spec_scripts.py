@@ -23,6 +23,9 @@ def _get_shell_script_path(spec, shell: str, load: bool) -> str:
         shell: The shell that the user is running
         load: Whether to return the path to the load or unload script
     """
+    if spec.external:
+        return ""
+
     extension = ""
     if shell == "bat":
         extension = ".bat"

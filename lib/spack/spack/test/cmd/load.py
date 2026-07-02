@@ -25,6 +25,13 @@ def _get_load_cmds(spec, shell):
         return f.read()
 
 
+def _get_unload_cmds(spec, shell):
+    unload_script_file = spec_script.path_to_unload_shell_script(spec, shell[2:])
+
+    with open(unload_script_file, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 @pytest.mark.parametrize("shell", (["--bat"] if sys.platform == "win32" else ["--sh"]))
 def test_manpath_trailing_colon(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
@@ -164,6 +171,36 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
 @pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
+def test_load_external_spec(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_config
+):
+    """Test that external specs don't generate load scripts."""
+    # Configure an external spec
+    external_conf = {
+        "trivial-install-test-package": {
+            "externals": [{"spec": "trivial-install-test-package@1.0", "prefix": "/usr"}]
+        }
+    }
+    mutable_config.update_config("packages", external_conf)
+
+    install("--fake", "trivial-install-test-package")
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+
+    # External specs should not generate scripts
+    assert spec.external
+
+    load(shell, "trivial-install-test-package")
+
+    # Script should not exist for external spec
+    load_script_file = spec_script.path_to_load_shell_script(spec, shell[2:])
+    # External specs shouldn't have .spack directories
+    spec_cache_dir = os.path.join(spec.prefix, ".spack")
+    assert not os.path.exists(spec_cache_dir) or not os.path.exists(load_script_file)
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
 def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
     """Tests that any variables set in the user environment are undone by the
     unload command"""
@@ -178,11 +215,7 @@ def test_unload(shell, install_mockery, mock_fetch, mock_archive, mock_packages,
     )
 
     unload(shell, "mpileaks")
-
-    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
-
-    with open(unload_script_file, "r", encoding="utf-8") as f:
-        unload_cmds = f.read()
+    unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
 
     print(unload_cmds)
     assert "_spack_env_unset FOOBAR" in unload_cmds
@@ -198,6 +231,31 @@ def test_unload_fails_no_shell(
 
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_script_directory_creation(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that load scripts create necessary directories if missing."""
+    install("--fake", "mpileaks")
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+
+    # Remove the entire .spack directory
+    spec_cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
+    if os.path.exists(spec_cache_dir):
+        import shutil
+        shutil.rmtree(spec_cache_dir)
+
+    assert not os.path.exists(spec_cache_dir)
+
+    # Load should recreate the directory and script
+    load(shell, "mpileaks")
+    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
+    assert os.path.exists(spec_cache_dir)
+    assert os.path.exists(load_script_file)
 
 
 @pytest.mark.parametrize(
@@ -258,3 +316,106 @@ def test_unload_regenerates_deleted_script(
 
     unload(shell, "mpileaks")
     assert os.path.exists(unload_script_file)
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_script_content_consistency(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that the content of load scripts is consistent across multiple generations.
+    This ensures deterministic script generation."""
+    install("--fake", "mpileaks")
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+
+    # Load once to generate the script
+    load(shell, "mpileaks")
+    first_content = _get_load_cmds(mpileaks_spec, shell)
+
+    # Delete and regenerate
+    os.remove(spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:]))
+    load(shell, "mpileaks")
+
+    second_content = _get_load_cmds(mpileaks_spec, shell)
+
+    # Content should be identical (except for timestamp in header)
+    first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
+    second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
+
+    assert first_lines == second_lines
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_unload_multiple_specs(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test loading and unloading multiple specs in sequence."""
+    install("--fake", "mpileaks")
+    install("--fake", "libelf")
+
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    libelf_spec = spack.concretize.concretize_one("libelf")
+
+    load(shell, mpileaks_spec.name)
+    load(shell, libelf_spec.name)
+
+    mpileaks_load = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
+    libelf_load = spec_script.path_to_load_shell_script(libelf_spec, shell[2:])
+    assert os.path.exists(mpileaks_load)
+    assert os.path.exists(libelf_load)
+
+    os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join([
+        mpileaks_spec.dag_hash(),
+        libelf_spec.dag_hash()
+    ])
+
+    unload_script_files = unload(shell, mpileaks_spec.name, libelf_spec.name)
+
+    mpileaks_unload = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
+    libelf_unload = spec_script.path_to_unload_shell_script(libelf_spec, shell[2:])
+
+    assert os.path.exists(mpileaks_unload)
+    assert os.path.exists(libelf_unload)
+
+    assert mpileaks_unload in unload_script_files
+    assert libelf_unload in unload_script_files
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_unload_script_reverses_load(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that unload scripts properly reverse load scripts."""
+    install("--fake", "mpileaks")
+    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+
+    load(shell, "mpileaks")
+    load_cmds = _get_load_cmds(mpileaks_spec, shell)
+
+    os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
+    unload(shell, "mpileaks")
+
+    unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
+
+    # Count operations in a single pass
+    load_prepends = load_sets = 0
+    for line in load_cmds.splitlines():
+        if "_spack_env_prepend" in line:
+            load_prepends += 1
+        elif "_spack_env_set" in line:
+            load_sets += 1
+
+    unload_removes = unload_unsets = 0
+    for line in unload_cmds.splitlines():
+        if "_spack_env_remove" in line:
+            unload_removes += 1
+        elif "_spack_env_unset" in line:
+            unload_unsets += 1
+
+    assert load_prepends == unload_removes
+    assert load_sets == unload_unsets
