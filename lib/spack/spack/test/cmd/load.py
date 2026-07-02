@@ -243,7 +243,6 @@ def test_load_script_directory_creation(
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    # Remove the entire .spack directory
     spec_cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
     if os.path.exists(spec_cache_dir):
         import shutil
@@ -252,7 +251,6 @@ def test_load_script_directory_creation(
 
     assert not os.path.exists(spec_cache_dir)
 
-    # Load should recreate the directory and script
     load(shell, "mpileaks")
     load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
     assert os.path.exists(spec_cache_dir)
@@ -279,7 +277,6 @@ def test_load_regenerates_deleted_script(
     os.remove(load_script_file)
     assert not os.path.exists(load_script_file)
 
-    # Verify cached repo exists
     cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
     repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
     assert len(repo_yaml_files) > 0
@@ -310,7 +307,6 @@ def test_unload_regenerates_deleted_script(
     os.remove(unload_script_file)
     assert not os.path.exists(unload_script_file)
 
-    # Verify cached repo exists
     cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
     repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
     assert len(repo_yaml_files) > 0
@@ -326,21 +322,19 @@ def test_load_script_content_consistency(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
     """Test that the content of load scripts is consistent across multiple generations.
-    This ensures deterministic script generation."""
+    This ensures deterministic script generation.
+    """
     install("--fake", "mpileaks")
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    # Load once to generate the script
     load(shell, "mpileaks")
     first_content = _get_load_cmds(mpileaks_spec, shell)
 
-    # Delete and regenerate
     os.remove(spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:]))
     load(shell, "mpileaks")
 
     second_content = _get_load_cmds(mpileaks_spec, shell)
 
-    # Content should be identical (except for timestamp in header)
     first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
     second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
 
@@ -402,7 +396,6 @@ def test_unload_script_reverses_load(
 
     unload_cmds = _get_unload_cmds(mpileaks_spec, shell)
 
-    # Count operations in a single pass
     load_prepends = load_sets = 0
     for line in load_cmds.splitlines():
         if "_spack_env_prepend" in line:

@@ -331,6 +331,7 @@ def test_env_scripts_regenerate_on_spec_install(shell, install_mockery, mock_fet
     first_mtime = os.path.getmtime(lockfile_path) if os.path.exists(lockfile_path) else 0
 
     import time
+
     time.sleep(0.1)
 
     test_env.add("libelf")
@@ -408,10 +409,7 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
     with open(spack_yaml_path, "r") as f:
         yaml_data = syaml.load_config(f)
 
-    yaml_data["spack"]["view"] = {
-        "view1": {"root": view1_path},
-        "view2": {"root": view2_path}
-    }
+    yaml_data["spack"]["view"] = {"view1": {"root": view1_path}, "view2": {"root": view2_path}}
 
     with open(spack_yaml_path, "w") as f:
         syaml.dump_config(yaml_data, f)
