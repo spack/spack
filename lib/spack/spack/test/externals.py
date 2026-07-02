@@ -380,7 +380,7 @@ def test_external_compiler_with_non_compiler_dependency():
     # actually exist.
     externals_dicts = [
         {
-            "spec": "compiler-with-dependency@1",
+            "spec": "compiler-with-deps@1",
             "prefix": "/usr",
             "extra_attributes": {
                 "compilers": {
@@ -389,11 +389,11 @@ def test_external_compiler_with_non_compiler_dependency():
                     "fortran": "/usr/bin/gfortran",
                 }
             },
-            "dependencies": [{"id": "fftw_id", "deptypes": ["build", "link"]}],
+            "dependencies": [{"id": "bin_id", "deptypes": ["run", "link"]}],
         },
-        {"spec": "fftw@1", "prefix": "/usr", "id": "fftw_id"},
+        {"spec": "binutils-for-test@1", "prefix": "/usr", "id": "bin_id"},
     ]
     parser = ExternalSpecsParser(externals_dicts, complete_node=complete_variants_and_architecture)
     specs = parser.all_specs()
     assert len(specs) == 2
-    assert len(specs[0].dependencies("fftw")) == 1
+    assert len(specs[0].dependencies("binutils-for-test")) == 1
