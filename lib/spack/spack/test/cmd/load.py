@@ -247,6 +247,7 @@ def test_load_script_directory_creation(
     spec_cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
     if os.path.exists(spec_cache_dir):
         import shutil
+
         shutil.rmtree(spec_cache_dir)
 
     assert not os.path.exists(spec_cache_dir)
@@ -367,10 +368,9 @@ def test_load_unload_multiple_specs(
     assert os.path.exists(mpileaks_load)
     assert os.path.exists(libelf_load)
 
-    os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join([
-        mpileaks_spec.dag_hash(),
-        libelf_spec.dag_hash()
-    ])
+    os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
+        [mpileaks_spec.dag_hash(), libelf_spec.dag_hash()]
+    )
 
     unload_script_files = unload(shell, mpileaks_spec.name, libelf_spec.name)
 
