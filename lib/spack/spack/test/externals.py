@@ -372,3 +372,36 @@ def test_external_spec_multi_valued_variant_is_not_changed():
     specs = parser.all_specs()
     assert len(specs) == 1
     assert specs[0].variants["v"].value == ("bar", "foo")
+    
+@pytest.mark.regression("52643")
+def test_external_compiler_with_non_compiler_dependency():
+    # These dependencies are meaningless, since we're not checking if they
+    # actually exist.
+    externals_dicts = [
+        {
+            "spec": "compiler-with-dependency@1",
+            "prefix": "/usr",
+            "extra_attributes": {
+                "compilers" : {
+                    "c" : "/usr/bin/gcc",
+                    "cxx": "/usr/bin/g++",
+                    "fortran": "/usr/bin/gfortran"
+                }
+            },
+            "dependencies" : [
+                {
+                    "id": "fftw_id",
+                    "deptypes":  ["build", "link"]
+                }
+            ]
+        },
+        {
+            "spec" : "fftw@1",
+            "prefix" : "/usr",
+            "id": "fftw_id"
+        }
+    ]
+    parser = ExternalSpecsParser(externals_dicts, complete_node=complete_variants_and_architecture)
+    specs = parser.all_specs()
+    assert len(specs) == 2
+    assert len(specs[0].dependencies('fftw')) == 1 
