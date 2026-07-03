@@ -116,7 +116,7 @@ def test_uninstall_implicit_dependents_removes_implicit_chain(mutable_database):
     should remove the whole chain."""
     with spack.store.STORE.db.write_transaction():
         for spec in spack.store.STORE.db.query("mpileaks"):
-            spack.store.STORE.db.query_local_by_spec_hash(spec.dag_hash()).explicit = False
+            spack.store.STORE.db.mark(spec, "explicit", False)
 
     uninstall("-y", "-r", "libelf")
 
