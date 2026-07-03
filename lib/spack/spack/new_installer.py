@@ -1725,8 +1725,7 @@ class ScheduleResult(NamedTuple):
 def schedule_builds(
     pending: List[str],
     build_graph: BuildGraph,
-    db: spack.database.Database,
-    prefix_locker: spack.database.SpecLocker,
+    store: spack.store.Store,
     overwrite: Set[str],
     overwrite_time: float,
     capacity: int,
@@ -1749,8 +1748,7 @@ def schedule_builds(
     Args:
         pending: List of dag hashes pending installation; modified in-place.
         build_graph: The build dependency graph; used for node lookup and parent enqueueing.
-        db: Package database; used for read lock and installed-status queries.
-        prefix_locker: Per-spec write locker.
+        store: The local store for installs.
         overwrite: Set of dag hashes to overwrite even if already installed.
         overwrite_time: Timestamp (from time.time()) at which the overwrite install was requested.
             A spec in ``overwrite`` whose DB installation_time >= overwrite_time was installed by
@@ -1768,6 +1766,7 @@ def schedule_builds(
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
     to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
+    db = store.db
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
@@ -1779,7 +1778,7 @@ def schedule_builds(
         while capacity and idx < len(pending):
             dag_hash = pending[idx]
             spec = build_graph.nodes[dag_hash]
-            lock = prefix_locker.lock(spec)
+            lock = store.prefix_locker.lock(spec)
 
             if lock.try_acquire_write():
                 blocked = False
@@ -1820,12 +1819,16 @@ def schedule_builds(
                 continue
 
             # Write lock acquired: proceed with scheduling.
-            # Don't schedule builds for specs from upstream databases.
-            if upstream and record and not record.installed:
-                lock.release_write()
-                raise spack.error.InstallError(
-                    f"Cannot install {spec}: it is uninstalled in an upstream database."
-                )
+
+            # Allow local installs of specs that are referenced but uninstalled in an upstream db.
+            # In edge cases where an upstream has forcibly uninstalled just a link dep, we cannot
+            # fix the situation by installing it locally, because dependents in the upstream
+            # reference the missing upstream path. However, we document that users should not
+            # remove installed specs from upstreams, so it's a relatively safe assumption that
+            # missing upstream specs were never installed or garbage collected build deps, and are
+            # not referenced by absolute path in installed dependents.
+            if upstream and record and not record.installed and not spec.external:
+                spec.set_prefix(store.layout.path_for_spec(spec))
 
             # Defensively assert prefix invariants
             if not spec.external:
@@ -2514,8 +2517,7 @@ class PackageInstaller:
         result = schedule_builds(
             pending=self.pending_builds,
             build_graph=self.build_graph,
-            db=self.db,
-            prefix_locker=spack.store.STORE.prefix_locker,
+            store=spack.store.STORE,  # todo: dependency injection
             overwrite=self.overwrite,
             overwrite_time=self.overwrite_time,
             capacity=self.capacity,
