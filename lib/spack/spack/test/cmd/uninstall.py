@@ -57,8 +57,11 @@ def test_correct_installed_dependents(mutable_database):
     # Uninstall it, so it's missing.
     callpath.package.do_uninstall(force=True)
 
-    # Retrieve all dependent hashes
-    dependents = spack.cmd.uninstall.installed_dependents(dependencies)
+    # Retrieve all dependent hashes (explicit and implicit, combined)
+    explicit_dependents, implicit_dependents = spack.cmd.uninstall.installed_dependents(
+        dependencies
+    )
+    dependents = explicit_dependents + implicit_dependents
     assert dependents
 
     dependent_hashes = [s.dag_hash() for s in dependents]
@@ -88,6 +91,44 @@ def test_recursive_uninstall(mutable_database):
     assert len(mpileaks_specs) == 0
     assert len(callpath_specs) == 0
     assert len(mpi_specs) == 3
+
+
+@pytest.mark.db
+def test_uninstall_implicit_dependents_blocks_on_explicit(mutable_database):
+    """`-r/--implicit-dependents` must refuse when an explicitly installed dependent exists.
+
+    In the mock DB, ``mpileaks`` (explicit) transitively depends on ``libelf``, so uninstalling
+    ``libelf`` with ``-r`` must error rather than remove anything.
+    """
+    with pytest.raises(SpackCommandError):
+        uninstall("-y", "-r", "libelf")
+
+    # Nothing was removed.
+    assert len(spack.store.STORE.db.query("libelf", installed=True)) == 1
+    assert len(spack.store.STORE.db.query("mpileaks", installed=True)) == 3
+
+
+@pytest.mark.db
+def test_uninstall_implicit_dependents_removes_implicit_chain(mutable_database):
+    """`-r/--implicit-dependents` recursively uninstalls implicitly installed dependents.
+
+    After marking ``mpileaks`` implicit, every dependent of ``libelf`` is implicit, so ``-r``
+    should remove the whole chain."""
+    with spack.store.STORE.db.write_transaction():
+        for spec in spack.store.STORE.db.query("mpileaks"):
+            spack.store.STORE.db.query_local_by_spec_hash(spec.dag_hash()).explicit = False
+
+    uninstall("-y", "-r", "libelf")
+
+    for name in ("libelf", "callpath", "dyninst", "mpileaks", "libdwarf"):
+        assert len(spack.store.STORE.db.query(name, installed=True)) == 0
+
+
+@pytest.mark.db
+def test_uninstall_dependents_and_implicit_dependents_mutually_exclusive(mutable_database):
+    """`-R` and `-r` cannot be used together."""
+    with pytest.raises(SpackCommandError):
+        uninstall("-y", "-R", "-r", "libelf")
 
 
 @pytest.mark.db
