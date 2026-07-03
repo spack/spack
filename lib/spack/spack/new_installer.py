@@ -2164,6 +2164,7 @@ class PackageInstaller:
                     selector, jobserver, retained_read_locks, database_actions
                 )
                 self.build_status.set_blocked(blocked and not self.running_builds)
+                self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
                 self.pending_builds
@@ -2258,20 +2259,6 @@ class PackageInstaller:
                             jobserver.decrease_parallelism()
                             self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
-                # Insert into the database if we have any finished builds, and either the delay
-                # interval has passed, or we're done with all builds. The database save is not
-                # guaranteed; it fails if another process holds the lock. We'll try again next
-                # iteration of the event loop in that case.
-                if (
-                    database_actions
-                    and (
-                        current_time >= self.next_database_write
-                        or not (self.pending_builds or self.running_builds)
-                    )
-                    and self._save_to_db(database_actions, retained_read_locks)
-                ):
-                    database_actions.clear()
-
                 # Try to expand build deps for cache-miss specs. This requires a read lock on the
                 # database, meaning that it can take several iterations of the event loop in case
                 # of contention with other processes.
@@ -2284,6 +2271,11 @@ class PackageInstaller:
                         selector, jobserver, retained_read_locks, database_actions
                     )
                     self.build_status.set_blocked(blocked and not self.running_builds)
+
+                # Flush finished builds to the database if a write is due. This runs after
+                # scheduling so that a final mark-explicit action does not wait for the next
+                # select() timeout.
+                self._flush_db_if_due(current_time, database_actions, retained_read_locks)
 
                 # Finally update the UI
                 self.build_status.update()
@@ -2454,6 +2446,25 @@ class PackageInstaller:
                 )
             self.build_status.total += len(newly_added)
             self.pending_expansions.clear()
+
+    def _flush_db_if_due(
+        self,
+        current_time: float,
+        database_actions: List[DatabaseAction],
+        retained_read_locks: List[spack.util.lock.Lock],
+    ) -> None:
+        """Write finished builds to the database if the write interval has passed, or if all
+        builds are done. The write is not guaranteed; it fails if another process holds the lock,
+        in which case it is retried in a later iteration of the event loop."""
+        if (
+            database_actions
+            and (
+                current_time >= self.next_database_write
+                or not (self.pending_builds or self.running_builds)
+            )
+            and self._save_to_db(database_actions, retained_read_locks)
+        ):
+            database_actions.clear()
 
     def _save_to_db(
         self,
