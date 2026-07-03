@@ -208,7 +208,10 @@ def _remove_from_env(spec, env):
         pass  # ignore non-root specs
 
 
-def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
+def do_uninstall(specs: List[spack.spec.Spec]):
+    """Uninstall specs that have already been determined for removal.
+
+    Calling code is responsible for checking reference counts."""
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = {s.dag_hash() for s in specs}
@@ -217,7 +220,7 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
         specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
     ):
         if s.dag_hash() in hashes_to_remove:
-            spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
+            spack.package_base.PackageBase.uninstall_by_spec(s, force=True)
 
 
 def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Environment]):
@@ -313,7 +316,7 @@ def uninstall_specs(args, specs):
         confirmation.confirm_action(uninstall_list, "uninstalled", "uninstall")
 
     # Uninstall everything on the list
-    do_uninstall(uninstall_list, args.force)
+    do_uninstall(uninstall_list)
 
     if env:
         with env.write_transaction():
