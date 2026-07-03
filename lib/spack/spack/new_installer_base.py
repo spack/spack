@@ -135,10 +135,10 @@ class BaseTerminalState(abc.ABC):
 class FdInfo:
     """Information about a file descriptor mapping."""
 
-    __slots__ = ("pid", "name")
+    __slots__ = ("build_id", "name")
 
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
+    def __init__(self, build_id: str, name: str) -> None:
+        self.build_id = build_id
         self.name = name
 
 
