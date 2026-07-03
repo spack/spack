@@ -74,7 +74,7 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap disable spack-install
           spack bootstrap now
-          spack -v solve zlib
+          spack -v spec --show opt,solutions zlib
     - name: Run unit tests
       env:
           SPACK_PYTHON: python
@@ -187,7 +187,7 @@ jobs:
         spack bootstrap disable github-actions-v0.6
         spack bootstrap disable github-actions-v2
         spack bootstrap status
-        spack solve zlib
+        spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -225,7 +225,7 @@ jobs:
         spack bootstrap disable github-actions-v0.6
         spack bootstrap disable github-actions-v2
         spack bootstrap status
-        spack solve zlib
+        spack spec --show opt,solutions zlib
         pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml -x -n3 lib/spack/spack/test/concretization/
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
@@ -262,7 +262,7 @@ jobs:
         . .github/workflows/bin/setup_git.sh
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
-        spack solve zlib
+        spack spec --show opt,solutions zlib
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml --dist loadfile -x -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
