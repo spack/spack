@@ -142,8 +142,8 @@ def test_uninstall_circular_run_deps_all_in_list(
     """Uninstalling every member of a run-dependency cycle at once succeeds.
 
     ``circ-a <-> circ-b`` reference-count each other, so neither can be uninstalled alone. But
-    when both are named, topologically-ordered removal drops one (releasing the other's ref
-    count) and then the other, so the whole cycle comes out.
+    when both are named, only their combined dependents excluding themselves are considered for
+    reference counting.
     """
     spack.config.set("config:installer", "new")
     repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
@@ -151,6 +151,10 @@ def test_uninstall_circular_run_deps_all_in_list(
 
     with spack.repo.use_repositories(repo_builder.root, override=False):
         install("--fake", "circ-a")
+
+        with pytest.raises(SpackCommandError):
+            uninstall("-y", "circ-a")
+
         uninstall("-y", "circ-a", "circ-b")
 
         assert not spack.store.STORE.db.query("circ-a", installed=True)

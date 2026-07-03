@@ -242,8 +242,7 @@ def test_gc_collects_unused_circular_run_deps(
     mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config, repo_builder
 ):
     """An unused circular run-dependency (a <-> b, reachable from no explicit root) should be
-    garbage collected. ``unused_specs`` correctly identifies the cycle as unused, but removal
-    currently fails because a and b reference-count each other.
+    garbage collected.
     """
     spack.config.set("config:installer", "new")
     repo_builder.add_package("gc-cyc-a", dependencies=[("gc-cyc-b", "run", None)])
