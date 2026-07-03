@@ -478,7 +478,7 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
             all_sccs = find_sccs_tarjan(
                 all_ids,
                 lambda nid: [key(edge.spec) for edge in node_to_edges[nid]],
-                key=lambda nid: nid
+                key=lambda nid: nid,
             )
             sccs = [scc for scc in reversed(all_sccs) if len(scc) > 1]
 

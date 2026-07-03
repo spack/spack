@@ -96,7 +96,8 @@ class AsciiGraph:
         self._prev_index = None  # Index of expansion point of prev line
         self._pos = None
         # dag hashes of nodes that have a circular dependency edge which could not be drawn (it
-        # points back to an already-drawn node). These are marked with '*' and a footnote describing the edge(s)
+        # points back to an already-drawn node). These are marked with '*' and a footnote
+        # describing the edge(s)
         self._nodes_with_cycle = {}
 
     def _indent(self):
@@ -431,7 +432,9 @@ class AsciiGraph:
                 edges = sorted(node.edges_to_dependencies(depflag=self.depflag), reverse=True)
                 deps = [e.spec.dag_hash() for e in edges if e.spec.dag_hash() not in drawn]
                 if len(deps) != len(edges):
-                    self._nodes_with_cycle[node.dag_hash()] = set(e for e in edges if e.spec.dag_hash() in drawn)
+                    self._nodes_with_cycle[node.dag_hash()] = set(
+                        e for e in edges if e.spec.dag_hash() in drawn
+                    )
 
                 # Find the named node in the frontier and draw it.
                 i = find(self._frontier, lambda f: node.dag_hash() in f)
