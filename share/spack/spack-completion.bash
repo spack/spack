@@ -2059,7 +2059,7 @@ _spack_undevelop() {
 _spack_uninstall() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --remove -R --dependents -y --yes-to-all -a --all --origin"
+        SPACK_COMPREPLY="-h --help -f --force --remove -R --dependents -r --implicit-dependents -y --yes-to-all -a --all --origin"
     else
         _installed_packages
     fi
