@@ -20,30 +20,24 @@ output to both a log file and the UI process (if the UI process has requested it
 runs an event loop to listen for control messages from the UI process (to enable/disable echoing
 of logs), and for output from the build process."""
 
-import codecs
-import fcntl
 import glob
 import io
 import json
 import os
-import re
 import selectors
 import shlex
 import shutil
 import signal
+import socket
 import sys
 import tempfile
-import termios
-import threading
 import time
 import traceback
-import tty
-import warnings
 from gzip import GzipFile
 from multiprocessing import Pipe, Process
-from multiprocessing.connection import Connection
 from typing import (
     TYPE_CHECKING,
+    Any,
     Callable,
     Dict,
     FrozenSet,
@@ -54,6 +48,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 
 from spack.vendor.typing_extensions import Literal
@@ -66,7 +61,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
@@ -78,14 +72,36 @@ import spack.store
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
-from spack.llnl.util.lang import pretty_duration
-from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
+from spack.new_installer_base import (
+    OUTPUT_BUFFER_SIZE,
+    BaseTerminalState,
+    FdInfo,
+    IpcChannel,
+    JobServerBase,
+    ProcessExitNotifier,
+    StdinReader,
+)
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
+from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
+
+if sys.platform == "win32":
+    from spack.new_installer_base import NoopJobServer as JobServer
+    from spack.new_installer_windows import WindowsSentinelBridge as ExitNotifier
+    from spack.new_installer_windows import WindowsTee as Tee
+    from spack.new_installer_windows import WindowsTerminalState as TerminalState
+    from spack.new_installer_windows import make_state_stream, read_connection, write_connection
+else:
+    from spack.new_installer_posix import PosixExitNotifier as ExitNotifier
+    from spack.new_installer_posix import PosixJobServer as JobServer
+    from spack.new_installer_posix import PosixTee as Tee
+    from spack.new_installer_posix import PosixTerminalState as TerminalState
+    from spack.new_installer_posix import make_state_stream, read_connection, write_connection
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -104,9 +120,6 @@ CLEANUP_TIMEOUT = 2.0
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
-
-#: Size of the output buffer for child processes
-OUTPUT_BUFFER_SIZE = 32768
 
 #: Suffix for temporary backup during overwrite install
 OVERWRITE_BACKUP_SUFFIX = ".old"
@@ -129,7 +142,7 @@ class DatabaseAction:
 
     __slots__ = ("spec", "prefix_lock")
 
-    spec: "spack.spec.Spec"
+    spec: spack.spec.Spec
     prefix_lock: Optional[spack.util.lock.Lock]
 
     def save_to_db(self, db: spack.database.Database) -> None: ...
@@ -160,15 +173,24 @@ class MarkExplicitAction(DatabaseAction):
 class ChildInfo(DatabaseAction):
     """Information about a child process."""
 
-    __slots__ = ("proc", "output_r_conn", "state_r_conn", "control_w_conn", "explicit", "log_path")
+    __slots__ = (
+        "proc",
+        "output_r_conn",
+        "state_r_conn",
+        "control_w_conn",
+        "notifier",
+        "explicit",
+        "log_path",
+    )
 
     def __init__(
         self,
         proc: Process,
         spec: spack.spec.Spec,
-        output_r_conn: Connection,
-        state_r_conn: Connection,
-        control_w_conn: Connection,
+        output_r_conn: IpcChannel,
+        state_r_conn: IpcChannel,
+        control_w_conn: IpcChannel,
+        notifier: ProcessExitNotifier,
         log_path: str,
         explicit: bool = False,
     ) -> None:
@@ -177,6 +199,7 @@ class ChildInfo(DatabaseAction):
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
+        self.notifier = notifier
         self.log_path = log_path
         self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
@@ -184,24 +207,31 @@ class ChildInfo(DatabaseAction):
     def save_to_db(self, db: spack.database.Database) -> None:
         return db._add(self.spec, explicit=self.explicit)
 
+    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+        """Register output, state, and sentinel channels with the selector."""
+        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
+        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
+        selector.register(self.notifier.fileobj, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
         Returns the exit code of the child process."""
         try:
-            selector.unregister(self.output_r_conn.fileno())
-        except KeyError:
+            selector.unregister(self.output_r_conn)
+        except (KeyError, OSError):
             pass
         try:
-            selector.unregister(self.state_r_conn.fileno())
-        except KeyError:
+            selector.unregister(self.state_r_conn)
+        except (KeyError, OSError):
             pass
         try:
-            selector.unregister(self.proc.sentinel)
-        except (KeyError, ValueError):
+            selector.unregister(self.notifier.fileobj)
+        except (KeyError, ValueError, OSError):
             pass
         self.output_r_conn.close()
         self.state_r_conn.close()
         self.control_w_conn.close()
+        self.notifier.close()
         self.proc.join()
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"
@@ -228,87 +258,19 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
-def tee(control_r: int, log_r: int, log_file: io.BufferedWriter, parent_w: int) -> None:
-    """Forward log_r to file_w and parent_w (if echoing is enabled).
-    Echoing is enabled and disabled by reading from control_r."""
-    echo_on = False
-    selector = selectors.DefaultSelector()
-    selector.register(log_r, selectors.EVENT_READ)
-    selector.register(control_r, selectors.EVENT_READ)
-
-    try:
-        with log_file, open(parent_w, "wb", closefd=False) as parent:
-            while True:
-                for key, _ in selector.select():
-                    if key.fd == log_r:
-                        data = os.read(log_r, OUTPUT_BUFFER_SIZE)
-                        if not data:  # EOF: exit the thread
-                            return
-                        log_file.write(data)
-                        log_file.flush()
-                        if echo_on:
-                            parent.write(data)
-                            parent.flush()
-
-                    elif key.fd == control_r:
-                        control_data = os.read(control_r, 1)
-                        if not control_data:
-                            return
-                        else:
-                            echo_on = control_data == b"1"
-    except OSError:  # do not raise
-        pass
-    finally:
-        os.close(log_r)
-
-
-class Tee:
-    """Emulates ./build 2>&1 | tee build.log. The output is sent both to a log file and the parent
-    process (if echoing is enabled). The control_fd is used to enable/disable echoing."""
-
-    def __init__(self, control: Connection, parent: Connection, log_path: str) -> None:
-        self.control = control
-        self.parent = parent
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        self.saved_fds = {fd: os.dup(fd) for fd in fds}
-        #: The path of the log file
-        self.log_path = log_path
-        log_file = open(self.log_path, "ab")
-        r, w = os.pipe()
-        self.tee_thread = threading.Thread(
-            target=tee,
-            args=(self.control.fileno(), r, log_file, self.parent.fileno()),
-            daemon=True,
-        )
-        self.tee_thread.start()
-        for fd in fds:
-            os.dup2(w, fd)
-        os.close(w)
-
-    def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
-        sys.stdout.flush()
-        sys.stderr.flush()
-        for fd, saved_fd in self.saved_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
-        self.tee_thread.join()
-        # Only then close the other fds.
-        self.control.close()
-        self.parent.close()
-
-
 def install_from_buildcache(
     mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
 ) -> bool:
+    # Skip if no configured mirror accepts this spec (select/exclude filters)
+    if not any(
+        m.matches_binary(spec, direction="fetch")
+        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    ):
+        return False
+
     send_state("fetching from build cache", state_stream)
     try:
         tarball_stage = spack.binary_distribution.download_tarball(
@@ -403,7 +365,7 @@ class PrefixPivoter:
         return os.path.lexists(path)
 
     def _rename(self, src: str, dst: str) -> None:
-        os.rename(src, dst)
+        fs.rename(src, dst)
 
     def _mkdtemp(self, dir: str, prefix: str, suffix: str) -> str:
         return tempfile.mkdtemp(dir=dir, prefix=prefix, suffix=suffix)
@@ -426,12 +388,11 @@ def worker_function(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    state: Connection,
-    parent: Connection,
-    echo_control: Connection,
-    makeflags: str,
-    js1: Optional[Connection],
-    js2: Optional[Connection],
+    state: IpcChannel,
+    parent: IpcChannel,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
+    jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
     stop_before: Optional[str] = None,
@@ -455,10 +416,11 @@ def worker_function(
         run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
-        echo_control: Connection to receive echo control messages from
-        makeflags: MAKEFLAGS to set, so that the build process uses the POSIX jobserver
-        js1: Connection for old style jobserver read fd (if any). Unused, just to inherit fd.
-        js2: Connection for old style jobserver write fd (if any). Unused, just to inherit fd.
+        tee_control_r: Read end of the control pipe; the parent sends echo on/off here
+        tee_control_w: Write end of the control pipe; used to stop the tee thread on POSIX
+        jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
+            opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
+            inherited in the build process)
         log_path: Path to the log file to write build output to
         global_state: Global state to restore
     """
@@ -469,12 +431,13 @@ def worker_function(
 
     global_state.restore()
 
-    # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
-    # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
-    os.setpgid(0, 0)
+    if sys.platform != "win32":
+        # Isolate the process group to shield against Ctrl+C and enable safe killpg() cleanup. In
+        # constrast to setsid(), this keeps a neat process group hierarchy for utils like pstree.
+        os.setpgid(0, 0)
 
-    # Reset SIGTSTP to default in case the parent had a custom handler.
-    signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        # Reset SIGTSTP to default in case the parent had a custom handler.
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -483,29 +446,26 @@ def worker_function(
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        os.killpg(0, signal.SIGTERM)
-
-        try:
-            while True:
-                os.waitpid(-1, 0)
-        except ChildProcessError:
-            pass
+        if sys.platform != "win32":
+            os.killpg(0, signal.SIGTERM)
+            try:
+                while True:
+                    os.waitpid(-1, 0)
+            except ChildProcessError:
+                pass
 
         raise KeyboardInterrupt("Installation interrupted")
 
     signal.signal(signal.SIGTERM, handle_sigterm)
 
-    os.environ["MAKEFLAGS"] = makeflags
+    makeflags, _ = jobserver_info
+    if makeflags is not None:
+        os.environ["MAKEFLAGS"] = makeflags
 
-    # Force line buffering for Python's textio wrappers of stdout/stderr. We're not going to print
-    # much ourselves, but what we print should appear before output from `make` and other build
-    # tools.
-    sys.stdout = os.fdopen(
-        sys.stdout.fileno(), "w", buffering=1, encoding=sys.stdout.encoding, closefd=False
-    )
-    sys.stderr = os.fdopen(
-        sys.stderr.fileno(), "w", buffering=1, encoding=sys.stderr.encoding, closefd=False
-    )
+    # Save encodings before the Tee redirects fds 1/2 to the pipe. We need them to create the
+    # line-buffered wrappers after the Tee starts.
+    _stdout_enc = sys.stdout.encoding or "utf-8"
+    _stderr_enc = sys.stderr.encoding or "utf-8"
 
     # Detach stdin from the terminal like `./build < /dev/null`. This would not be necessary if we
     # used os.setsid() instead of os.setpgid(), but that would "break" pstree output.
@@ -515,10 +475,20 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(echo_control, parent, log_path)
+    tee = Tee(tee_control_r, tee_control_w, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
-    state_stream = os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+    # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
+    # than ConsoleIO (WriteConsoleW). On Windows, if fds 1/2 are still console handles when
+    # os.fdopen() is called, Python picks ConsoleIO; WriteConsoleW on a pipe handle returns
+    # ERROR_INVALID_FUNCTION. Post-dup2 the fds are pipe handles, so FileIO is chosen.
+    sys.stdout = os.fdopen(
+        sys.stdout.fileno(), "w", buffering=1, encoding=_stdout_enc, closefd=False
+    )
+    sys.stderr = os.fdopen(
+        sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
+    )
+    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -825,149 +795,6 @@ def _install(
         spack.hooks.post_install(spec, explicit)
 
 
-class JobServer:
-    """Attach to an existing POSIX jobserver or create a FIFO-based one."""
-
-    def __init__(self, num_jobs: int) -> None:
-        #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
-        self.tokens_acquired = 0
-        #: The number of jobs to run concurrently. This translates to `num_jobs - 1` tokens in the
-        #: jobserver.
-        self.num_jobs = num_jobs
-        #: The target number of jobs to run concurrently, which may differ from num_jobs if the
-        #: user has requested a decrease in parallelism, but we haven't consumed enough tokens to
-        #: reflect that yet. This value is used in the UI. The invariant is that self.target_jobs
-        #: can only be modified if self.created is True.
-        self.target_jobs = num_jobs
-        self.fifo_path: Optional[str] = None
-        self.created = False
-        self._setup()
-        # Ensure that Executable()(...) in build processes ultimately inherit jobserver fds.
-        os.set_inheritable(self.r, True)
-        os.set_inheritable(self.w, True)
-        # r_conn and w_conn are used to make build processes inherit the jobserver fds if needed.
-        # Connection objects close the fd as they are garbage collected, so store them.
-        self.r_conn = Connection(self.r)
-        self.w_conn = Connection(self.w)
-
-    def _setup(self) -> None:
-
-        fifo_config = get_jobserver_config()
-
-        if type(fifo_config) is str:
-            # FIFO-based jobserver. Try to open the FIFO.
-            open_attempt = open_existing_jobserver_fifo(fifo_config)
-            if open_attempt:
-                self.r, self.w = open_attempt
-                self.fifo_path = fifo_config
-                return
-        elif type(fifo_config) is tuple:
-            # Old style pipe-based jobserver. Validate the fds before using them.
-            r, w = fifo_config
-            if fcntl.fcntl(r, fcntl.F_GETFD) != -1 and fcntl.fcntl(w, fcntl.F_GETFD) != -1:
-                self.r, self.w = r, w
-                return
-
-        # No existing jobserver we can connect to: create a FIFO-based one.
-        self.r, self.w, self.fifo_path = create_jobserver_fifo(self.num_jobs)
-        self.created = True
-
-    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> str:
-        """Return the MAKEFLAGS for a build process, depending on its gmake build dependency."""
-        if self.fifo_path and (not gmake or gmake.satisfies("@4.4:")):
-            return f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
-        elif not gmake or gmake.satisfies("@4.0:"):
-            return f" -j{self.num_jobs} --jobserver-auth={self.r},{self.w}"
-        else:
-            return f" -j{self.num_jobs} --jobserver-fds={self.r},{self.w}"
-
-    def has_target_parallelism(self) -> bool:
-        return self.num_jobs == self.target_jobs
-
-    def increase_parallelism(self) -> None:
-        """Add one token to the jobserver to increase parallelism; this should always work."""
-        if not self.created:
-            return
-        self.target_jobs += 1
-        # If a decrease was pending, don't add a token.
-        if self.target_jobs <= self.num_jobs:
-            return
-        os.write(self.w, b"+")
-        self.num_jobs += 1
-
-    def decrease_parallelism(self) -> None:
-        """Request an eventual concurrency decrease by 1."""
-        if not self.created or self.target_jobs <= 1:
-            return
-        self.target_jobs -= 1
-        self.maybe_discard_tokens()
-
-    def maybe_discard_tokens(self) -> None:
-        """Try to get reduce parallelism by discarding tokens."""
-        to_discard = self.num_jobs - self.target_jobs
-        if to_discard <= 0:
-            return
-        try:
-            # The read may return zero or just fewer bytes than requested; we'll try again later.
-            self.num_jobs -= len(os.read(self.r, to_discard))
-        except BlockingIOError:
-            pass
-
-    def acquire(self, jobs: int) -> int:
-        """Try and acquire at most 'jobs' tokens from the jobserver. Returns the number of
-        tokens actually acquired (may be less than requested, or zero)."""
-        try:
-            num_acquired = len(os.read(self.r, jobs))
-            self.tokens_acquired += num_acquired
-            return num_acquired
-        except BlockingIOError:
-            return 0
-
-    def release(self) -> None:
-        """Release a token back to the jobserver."""
-        # The last job to quit has an implicit token, so don't release if we have none.
-        if self.tokens_acquired == 0:
-            return
-        self.tokens_acquired -= 1
-        if self.target_jobs < self.num_jobs:
-            # If a decrease in parallelism is requested, discard a token instead of releasing it.
-            self.num_jobs -= 1
-        else:
-            os.write(self.w, b"+")
-
-    def close(self) -> None:
-        if self.created and self.num_jobs > 1:
-            if self.tokens_acquired != 0:
-                # It's a non-fatal internal error to close the jobserver with acquired tokens.
-                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
-            else:
-                # Verify that all build processes released the tokens they acquired.
-                total = self.num_jobs - 1
-                drained = self.acquire(total)
-                if drained != total:
-                    n = total - drained
-                    warnings.warn(
-                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
-                        "by the build processes. This can indicate that the build ran with "
-                        "limited parallelism.",
-                        stacklevel=2,
-                    )
-
-        self.r_conn.close()
-        self.w_conn.close()
-
-        # Remove the FIFO if we created it.
-        if self.created and self.fifo_path:
-            try:
-                os.unlink(self.fifo_path)
-            except OSError:
-                pass
-            try:
-                os.rmdir(os.path.dirname(self.fifo_path))
-            except OSError:
-                pass
-
-
 def start_build(
     spec: spack.spec.Spec,
     explicit: bool,
@@ -982,22 +809,30 @@ def start_build(
     fake: bool,
     install_source: bool,
     run_tests: bool,
-    jobserver: JobServer,
+    jobserver: JobServerBase,
     log_path: str,
     stop_before: Optional[str] = None,
     stop_at: Optional[str] = None,
 ) -> ChildInfo:
     """Start a new build."""
-    # Create pipes for the child's output, state reporting, and control.
-    state_r_conn, state_w_conn = Pipe(duplex=False)
-    output_r_conn, output_w_conn = Pipe(duplex=False)
-    control_r_conn, control_w_conn = Pipe(duplex=False)
+    # Set the read ends non-blocking so the selector-based loop never blocks.
+    if sys.platform == "win32":
+        state_r_conn, state_w_conn = socket.socketpair()
+        output_r_conn, output_w_conn = socket.socketpair()
+        control_r_conn, control_w_conn = socket.socketpair()
+        output_r_conn.setblocking(False)
+        state_r_conn.setblocking(False)
+    else:
+        state_r_conn, state_w_conn = Pipe(duplex=False)
+        output_r_conn, output_w_conn = Pipe(duplex=False)
+        control_r_conn, control_w_conn = Pipe(duplex=False)
+        os.set_blocking(output_r_conn.fileno(), False)
+        os.set_blocking(state_r_conn.fileno(), False)
 
     # Obtain the MAKEFLAGS to be set in the child process, and determine whether it's necessary
     # for the child process to inherit our jobserver fds.
     gmake = next(iter(spec.dependencies("gmake")), None)
-    makeflags = jobserver.makeflags(gmake)
-    fifo = "--jobserver-auth=fifo:" in makeflags
+    jobserver_details = jobserver.makeflags_and_data(gmake)
 
     # As a performance optimization, we do not serialize the environment which
     # is slow to serialize and not needed in the build job
@@ -1020,9 +855,8 @@ def start_build(
             state_w_conn,
             output_w_conn,
             control_r_conn,
-            makeflags,
-            None if fifo else jobserver.r_conn,
-            None if fifo else jobserver.w_conn,
+            control_w_conn if sys.platform != "win32" else None,
+            jobserver_details,
             log_path,
             GlobalStateMarshaler(serialize_env=False),
             stop_before,
@@ -1036,86 +870,16 @@ def start_build(
     output_w_conn.close()
     control_r_conn.close()
 
-    # Set the read ends to non-blocking: in principle redundant with epoll/kqueue, but safer.
-    os.set_blocking(output_r_conn.fileno(), False)
-    os.set_blocking(state_r_conn.fileno(), False)
-
-    return ChildInfo(proc, spec, output_r_conn, state_r_conn, control_w_conn, log_path, explicit)
-
-
-def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[Union[str, Tuple[int, int]]]:
-    """Parse MAKEFLAGS for jobserver. Either it's a FIFO or (r, w) pair of file descriptors.
-
-    Args:
-        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
-    """
-    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
-    if not makeflags:
-        return None
-    # We can have the following flags:
-    # --jobserver-fds=R,W (before GNU make 4.2)
-    # --jobserver-auth=fifo:PATH or --jobserver-auth=R,W (after GNU make 4.2)
-    # In case of multiple, the last one wins.
-    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
-    if not matches:
-        return None
-    last_match: str = matches[-1]
-    assert isinstance(last_match, str)
-    if last_match.startswith("fifo:"):
-        return last_match[5:]
-    parts = last_match.split(",", 1)
-    if len(parts) != 2:
-        return None
-    try:
-        return int(parts[0]), int(parts[1])
-    except ValueError:
-        return None
-
-
-def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
-    """Create a new jobserver FIFO with the specified number of job tokens."""
-    tmpdir = tempfile.mkdtemp()
-    fifo_path = os.path.join(tmpdir, "jobserver_fifo")
-
-    try:
-        os.mkfifo(fifo_path, 0o600)
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        # write num_jobs - 1 tokens, because the first job is implicit
-        os.write(write_fd, b"+" * (num_jobs - 1))
-        return read_fd, write_fd, fifo_path
-    except Exception:
-        try:
-            os.unlink(fifo_path)
-        except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
-            pass
-        try:
-            os.rmdir(tmpdir)
-        except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
-            pass
-        raise
-
-
-def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
-    """Open an existing jobserver FIFO for reading and writing."""
-    try:
-        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-        write_fd = os.open(fifo_path, os.O_WRONLY)
-        return read_fd, write_fd
-    except OSError:
-        return None
-
-
-class FdInfo:
-    """Information about a file descriptor mapping."""
-
-    __slots__ = ("pid", "name")
-
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
-        self.name = name
+    return ChildInfo(
+        proc,
+        spec,
+        output_r_conn,
+        state_r_conn,
+        control_w_conn,
+        ExitNotifier(proc),
+        log_path,
+        explicit,
+    )
 
 
 class BuildInfo:
@@ -1142,7 +906,7 @@ class BuildInfo:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection],
+        control_w_conn: Optional[IpcChannel],
         log_path: Optional[str] = None,
         start_time: float = 0.0,
     ) -> None:
@@ -1168,7 +932,7 @@ class BuildStatus:
     def __init__(
         self,
         total: int,
-        stdout: io.TextIOWrapper = sys.stdout,  # type: ignore[assignment]
+        stdout: Optional[io.TextIOWrapper] = None,
         get_terminal_size: Callable[[], os.terminal_size] = os.get_terminal_size,
         get_time: Callable[[], float] = time.monotonic,
         is_tty: Optional[bool] = None,
@@ -1176,6 +940,8 @@ class BuildStatus:
         verbose: bool = False,
         filter_padding: bool = False,
     ) -> None:
+        if stdout is None:
+            stdout = cast(io.TextIOWrapper, sys.stdout)
         #: Ordered dict of build ID -> info
         self.total = total
         self.completed = 0
@@ -1213,6 +979,7 @@ class BuildStatus:
         #: When True, suppress all terminal output (process is in background).
         #: Controlling code is responsible for modifying this variable based on process state
         self.headless = False
+        self.term_title = spack.config.get("config:install_status", True) and self.is_tty
 
     def on_resize(self) -> None:
         """Refresh cached terminal size and trigger a redraw."""
@@ -1223,7 +990,7 @@ class BuildStatus:
         self,
         spec: spack.spec.Spec,
         explicit: bool,
-        control_w_conn: Optional[Connection] = None,
+        control_w_conn: Optional[IpcChannel] = None,
         log_path: Optional[str] = None,
     ) -> None:
         """Add a new build to the display and mark the display as dirty."""
@@ -1235,7 +1002,7 @@ class BuildStatus:
         if self.verbose and not self.tracked_build_id and control_w_conn is not None:
             self.tracked_build_id = spec.dag_hash()
             try:
-                os.write(control_w_conn.fileno(), b"1")
+                write_connection(control_w_conn, b"1")
             except OSError:
                 pass
 
@@ -1264,7 +1031,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
             self.tracked_build_id = ""
@@ -1329,7 +1096,7 @@ class BuildStatus:
             try:
                 conn = self.builds[self.tracked_build_id].control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"0")
+                    write_connection(conn, b"0")
             except (KeyError, OSError):
                 pass
 
@@ -1361,7 +1128,7 @@ class BuildStatus:
             try:
                 conn = new_build.control_w_conn
                 if conn is not None:
-                    os.write(conn.fileno(), b"1")
+                    write_connection(conn, b"1")
             except (KeyError, OSError):
                 pass
 
@@ -1372,6 +1139,18 @@ class BuildStatus:
         self.blocked = blocked
         self.dirty = True
 
+    def _update_terminal_title(self, clear: bool = False) -> None:
+        if not self.term_title or self.headless:
+            return
+
+        term_title = ""
+
+        if not clear:
+            term_title = f"Spack: {self.completed}/{self.total} - {self.actual_jobs} jobs"
+
+        self.stdout.write(f"\x1b]0;{term_title}\x07")
+        self.stdout.flush()
+
     def set_jobs(self, actual: int, target: int) -> None:
         """Set the actual and target number of jobs to run concurrently."""
         if actual == self.actual_jobs and target == self.target_jobs:
@@ -1379,6 +1158,7 @@ class BuildStatus:
         self.actual_jobs = actual
         self.target_jobs = target
         self.dirty = True
+        self._update_terminal_title()
 
     def update_state(self, build_id: str, state: str) -> None:
         """Update the state of a package and mark the display as dirty."""
@@ -1400,6 +1180,7 @@ class BuildStatus:
                     self.tracked_build_id = ""
 
         self.dirty = True
+        self._update_terminal_title()
 
         # For non-TTY output, print state changes immediately
         if not self.is_tty and not self.headless:
@@ -1556,6 +1337,9 @@ class BuildStatus:
 
         # Schedule next UI update
         self.next_update = now + SPINNER_INTERVAL / 2
+
+        if finalize:
+            self._update_terminal_title(True)
 
     def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""
@@ -1941,13 +1725,12 @@ class ScheduleResult(NamedTuple):
 def schedule_builds(
     pending: List[str],
     build_graph: BuildGraph,
-    db: spack.database.Database,
-    prefix_locker: spack.database.SpecLocker,
+    store: spack.store.Store,
     overwrite: Set[str],
     overwrite_time: float,
     capacity: int,
     needs_jobserver_token: bool,
-    jobserver: JobServer,
+    jobserver: JobServerBase,
     explicit: Set[str],
 ) -> ScheduleResult:
     """Try to schedule as many pending builds as possible.
@@ -1965,8 +1748,7 @@ def schedule_builds(
     Args:
         pending: List of dag hashes pending installation; modified in-place.
         build_graph: The build dependency graph; used for node lookup and parent enqueueing.
-        db: Package database; used for read lock and installed-status queries.
-        prefix_locker: Per-spec write locker.
+        store: The local store for installs.
         overwrite: Set of dag hashes to overwrite even if already installed.
         overwrite_time: Timestamp (from time.time()) at which the overwrite install was requested.
             A spec in ``overwrite`` whose DB installation_time >= overwrite_time was installed by
@@ -1984,20 +1766,19 @@ def schedule_builds(
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
     to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
+    db = store.db
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
-    if not db.lock.try_acquire_read():
-        return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
-
-    try:
-        db._read()  # refresh in-memory snapshot under the read lock
+    with db.try_read_transaction() as acquired:
+        if not acquired:
+            return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
         idx = 0
         while capacity and idx < len(pending):
             dag_hash = pending[idx]
             spec = build_graph.nodes[dag_hash]
-            lock = prefix_locker.lock(spec)
+            lock = store.prefix_locker.lock(spec)
 
             if lock.try_acquire_write():
                 blocked = False
@@ -2038,12 +1819,16 @@ def schedule_builds(
                 continue
 
             # Write lock acquired: proceed with scheduling.
-            # Don't schedule builds for specs from upstream databases.
-            if upstream and record and not record.installed:
-                lock.release_write()
-                raise spack.error.InstallError(
-                    f"Cannot install {spec}: it is uninstalled in an upstream database."
-                )
+
+            # Allow local installs of specs that are referenced but uninstalled in an upstream db.
+            # In edge cases where an upstream has forcibly uninstalled just a link dep, we cannot
+            # fix the situation by installing it locally, because dependents in the upstream
+            # reference the missing upstream path. However, we document that users should not
+            # remove installed specs from upstreams, so it's a relatively safe assumption that
+            # missing upstream specs were never installed or garbage collected build deps, and are
+            # not referenced by absolute path in installed dependents.
+            if upstream and record and not record.installed and not spec.external:
+                spec.set_prefix(store.layout.path_for_spec(spec))
 
             # Defensively assert prefix invariants
             if not spec.external:
@@ -2075,9 +1860,6 @@ def schedule_builds(
             to_start.append((dag_hash, lock))
             capacity -= 1
             needs_jobserver_token = True  # all subsequent jobs need a token
-
-    finally:
-        db.lock.release_read()
 
     return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
 
@@ -2199,143 +1981,6 @@ class NullReportData(ReportData):
         pass
 
 
-class TerminalState:
-    """Manages terminal settings, stdin selector registration, and suspend/resume signals.
-
-    Installs a SIGTSTP handler that restores the terminal before suspending and re-applies it
-    on resume. After waking up it checks whether the process is in the foreground or background
-    and enables or suppresses interactive output accordingly.
-
-    Optional ``on_suspend`` / ``on_resume`` hooks are called just before the process suspends
-    and just after it wakes, allowing callers to pause and resume child processes."""
-
-    def __init__(
-        self,
-        selector: selectors.BaseSelector,
-        build_status: BuildStatus,
-        on_suspend: Optional[Callable[[], None]] = None,
-        on_resume: Optional[Callable[[], None]] = None,
-    ) -> None:
-        self.selector = selector
-        self.build_status = build_status
-        self.on_suspend = on_suspend
-        self.on_resume = on_resume
-        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
-        self.sigwinch_r = -1
-        self.sigwinch_w = -1
-
-    def setup(self) -> None:
-        """Set cbreak mode, register stdin and signal pipes in the selector."""
-
-        # SIGWINCH self-pipe (stdout must be a tty too)
-        if sys.stdout.isatty():
-            self.sigwinch_r, self.sigwinch_w = os.pipe()
-            os.set_blocking(self.sigwinch_r, False)
-            os.set_blocking(self.sigwinch_w, False)
-            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
-            self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
-        else:
-            self.old_sigwinch = None
-
-        self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
-
-        # Start correctly depending on whether we're foregrounded or backgrounded
-        self.build_status.headless = True
-        if not _is_background_tty(sys.stdin):
-            self.enter_foreground()
-
-    def teardown(self) -> None:
-        """Restore terminal settings and signal handlers, close pipes."""
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
-
-        for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
-            if old is not None:
-                try:
-                    signal.signal(sig, old)
-                except Exception as e:
-                    spack.llnl.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
-
-        if sys.stdin.fileno() in self.selector.get_map():
-            self.selector.unregister(sys.stdin.fileno())
-
-        for fd in (self.sigwinch_r, self.sigwinch_w):
-            if fd < 0:
-                continue
-            if fd in self.selector.get_map():
-                self.selector.unregister(fd)
-            try:
-                os.close(fd)
-            except Exception as e:
-                spack.llnl.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
-
-    def _handle_sigtstp(self, signum: int, frame: object) -> None:
-        """Restore terminal before suspending, then re-install handler after resume."""
-
-        # Reset so the first redraw after resume doesn't overwrite the shell's
-        # prompt / "$ fg" line.
-        self.build_status.active_area_rows = 0
-
-        # Restore terminal so the user's shell works normally while we're stopped.
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSANOW, self.old_stdin_settings)
-
-        # Force headless mode before suspending so that enter_foreground() doesn't
-        # exit early when we resume, ensuring terminal settings are re-applied.
-        self.build_status.headless = True
-
-        # Actually suspend: reset to default handler then re-send SIGTSTP.
-        if self.on_suspend is not None:
-            self.on_suspend()
-        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
-        os.kill(os.getpid(), signal.SIGTSTP)
-
-        # Execution resumes here after SIGCONT. Re-install our handler.
-        signal.signal(signal.SIGTSTP, self._handle_sigtstp)
-
-        if self.on_resume is not None:
-            self.on_resume()
-        self.handle_continue()
-
-    def _handle_sigwinch(self, signum: int, frame: object) -> None:
-        try:
-            os.write(self.sigwinch_w, b"\x00")
-        except OSError:
-            pass
-
-    def enter_foreground(self) -> None:
-        """Restore interactive terminal mode."""
-        if not self.build_status.headless:
-            return
-
-        # We save old settings right before applying cbreak.
-        # If we started in the background, bash may have had the terminal in its own
-        # readline (raw) mode when __init__ ran. Waiting until we are foregrounded
-        # ensures we capture the shell's exported 'sane' configuration for this job.
-        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
-
-        with ignore_signal(signal.SIGTTOU):
-            tty.setcbreak(sys.stdin.fileno())
-
-        if sys.stdin.fileno() not in self.selector.get_map():
-            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
-        self.build_status.headless = False
-        self.build_status.dirty = True
-
-    def enter_background(self) -> None:
-        """Suppress output and stop reading stdin to avoid SIGTTIN/SIGTTOU."""
-        if sys.stdin.fileno() in self.selector.get_map():
-            self.selector.unregister(sys.stdin.fileno())
-        self.build_status.headless = True
-
-    def handle_continue(self) -> None:
-        """Detect whether the process is in the foreground or background and adjust accordingly."""
-        if _is_background_tty(sys.stdin):
-            self.enter_background()
-        else:
-            self.enter_foreground()
-
-
 def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
@@ -2345,28 +1990,6 @@ def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) 
                 os.killpg(pid, sig)
         except OSError:
             pass
-
-
-class StdinReader:
-    """Helper class to do non-blocking, incremental decoding of stdin, stripping ANSI escape
-    sequences. The input is the backing file descriptor for stdin (instead of the TextIOWrapper) to
-    avoid double buffering issues: the event loop triggers when the fd is ready to read, and if we
-    do a partial read from the TextIOWrapper, it will likely drain the fd and buffer the remainder
-    internally, which the event loop is not aware of, and user input doesn't come through."""
-
-    def __init__(self, fd: int) -> None:
-        self.fd = fd
-        #: Handle multi-byte UTF-8 characters
-        self.decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
-        #: For stripping out arrow and navigation keys
-        self.ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z~]")
-
-    def read(self) -> str:
-        try:
-            chars = self.decoder.decode(os.read(self.fd, 1024))
-            return self.ansi_escape_re.sub("", chars)
-        except OSError:
-            return ""
 
 
 class PackageInstaller:
@@ -2421,8 +2044,11 @@ class PackageInstaller:
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
 
-        # Buffer for incoming, partially received state data from child processes
-        self.state_buffers: Dict[int, str] = {}
+        # Buffer for incoming, partially received state data from child processes. Kept as raw
+        # bytes and split on b"\n": the newline byte cannot occur inside a multi-byte UTF-8
+        # sequence, so framing is safe without decoding partial reads. Keyed by PID rather than fd
+        # because on Windows the state channel is a socket whose handle is not a stable POSIX fd.
+        self.state_buffers: Dict[int, bytes] = {}
 
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
@@ -2480,6 +2106,7 @@ class PackageInstaller:
             len(self.build_graph.nodes),
             verbose=verbose,
             filter_padding=spack.store.STORE.has_padding(),
+            is_tty=TerminalState.stdout_is_interactive(),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.build_status.actual_jobs = self.jobs
@@ -2513,10 +2140,9 @@ class PackageInstaller:
         selector = selectors.DefaultSelector()
 
         # Set up terminal handling (cbreak, signals, stdin registration)
-        terminal: Optional[TerminalState] = None
+        terminal: Optional[BaseTerminalState] = None
         stdin_reader: Optional[StdinReader] = None
-        if sys.stdin.isatty():
-            stdin_reader = StdinReader(sys.stdin.fileno())
+        if TerminalState.stdin_is_interactive():
             terminal = TerminalState(
                 selector,
                 self.build_status,
@@ -2524,6 +2150,7 @@ class PackageInstaller:
                 on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
             )
             terminal.setup()
+            stdin_reader = terminal.create_stdin_reader()
 
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
@@ -2540,6 +2167,7 @@ class PackageInstaller:
                     selector, jobserver, retained_read_locks, database_actions
                 )
                 self.build_status.set_blocked(blocked and not self.running_builds)
+                self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
                 self.pending_builds
@@ -2550,16 +2178,13 @@ class PackageInstaller:
                 # Monitor the jobserver when we have pending builds, capacity, and at least one
                 # spec is not locked by another process. Also listen if the target parallelism is
                 # reduced.
-                wake_on_jobserver = (
+                wake_on_jobserver = bool(
                     self.pending_builds
                     and self.capacity
                     and not blocked
                     or not jobserver.has_target_parallelism()
                 )
-                if wake_on_jobserver and jobserver.r not in selector.get_map():
-                    selector.register(jobserver.r, selectors.EVENT_READ, "jobserver")
-                elif not wake_on_jobserver and jobserver.r in selector.get_map():
-                    selector.unregister(jobserver.r)
+                jobserver.update_selector(selector, wake_on_jobserver)
 
                 stdin_ready = False
 
@@ -2579,7 +2204,7 @@ class PackageInstaller:
                 # handler, but there's no SIGCONT event in the transition of background to
                 # foreground, so we conditionally poll for that here (headless case). In the
                 # headless case the event loop only fires once per second, so this is cheap enough.
-                if terminal and self.build_status.headless and not _is_background_tty(sys.stdin):
+                if terminal and self.build_status.headless and terminal.should_enter_foreground():
                     terminal.enter_foreground()
 
                 for key, _ in events:
@@ -2588,19 +2213,19 @@ class PackageInstaller:
                         # Child output (logs and state updates)
                         child_info = self.running_builds[data.pid]
                         if data.name == "output":
-                            self._handle_child_logs(key.fd, child_info, selector)
+                            self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(key.fd, child_info, selector)
+                            self._handle_child_state(child_info, selector)
                         elif data.name == "sentinel":
                             finished_pids.append(data.pid)
                     elif data == "stdin":
                         stdin_ready = True
                     elif data == "sigwinch":
                         assert terminal is not None
-                        os.read(terminal.sigwinch_r, 64)  # drain the pipe
+                        terminal.drain_sigwinch()
                         self.build_status.on_resize()
                     elif data == "jobserver" and not jobserver.has_target_parallelism():
-                        jobserver.maybe_discard_tokens()
+                        jobserver._maybe_discard_tokens()
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
@@ -2615,6 +2240,7 @@ class PackageInstaller:
                     for child in self.running_builds.values():
                         child.proc.terminate()
                     self.pending_builds.clear()
+                    self.pending_expansions.clear()
 
                 if stdin_ready and stdin_reader is not None:
                     for char in stdin_reader.read():
@@ -2636,20 +2262,6 @@ class PackageInstaller:
                             jobserver.decrease_parallelism()
                             self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
-                # Insert into the database if we have any finished builds, and either the delay
-                # interval has passed, or we're done with all builds. The database save is not
-                # guaranteed; it fails if another process holds the lock. We'll try again next
-                # iteration of the event loop in that case.
-                if (
-                    database_actions
-                    and (
-                        current_time >= self.next_database_write
-                        or not (self.pending_builds or self.running_builds)
-                    )
-                    and self._save_to_db(database_actions, retained_read_locks)
-                ):
-                    database_actions.clear()
-
                 # Try to expand build deps for cache-miss specs. This requires a read lock on the
                 # database, meaning that it can take several iterations of the event loop in case
                 # of contention with other processes.
@@ -2663,12 +2275,19 @@ class PackageInstaller:
                     )
                     self.build_status.set_blocked(blocked and not self.running_builds)
 
+                # Flush finished builds to the database if a write is due. This runs after
+                # scheduling so that a final mark-explicit action does not wait for the next
+                # select() timeout.
+                self._flush_db_if_due(current_time, database_actions, retained_read_locks)
+
                 # Finally update the UI
                 self.build_status.update()
         finally:
-            # First ensure that the user's terminal state is restored.
+            # Restore input settings and signal handlers. On POSIX this runs TCSADRAIN,
+            # ensuring buffered cursor-movement codes from the event loop are transmitted
+            # before the final render.
             if terminal is not None:
-                terminal.teardown()
+                terminal.teardown_input()
 
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
@@ -2720,6 +2339,11 @@ class PackageInstaller:
             except Exception:
                 pass
 
+            # Restore output settings. On Linux this is a no-op. On Windows this disables
+            # VT100 processing and must happen after the final render.
+            if terminal is not None:
+                terminal.teardown_output()
+
             # Re-raise the DB exception if any.
             if db_exc is not None:
                 raise db_exc
@@ -2754,7 +2378,7 @@ class PackageInstaller:
         self,
         pid: int,
         current_time: float,
-        jobserver: JobServer,
+        jobserver: JobServerBase,
         selector: selectors.BaseSelector,
         failures: List[spack.spec.Spec],
         database_actions: List[DatabaseAction],
@@ -2808,10 +2432,9 @@ class PackageInstaller:
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately
         if the DB read lock is unavailable."""
-        if not self.db.lock.try_acquire_read():
-            return
-        try:
-            self.db._read()
+        with self.db.try_read_transaction() as acquired:
+            if not acquired:
+                return
             dep_policy = (
                 "source_only"
                 if (self.dependencies_policy == "auto" and not self.has_mirrors)
@@ -2826,22 +2449,36 @@ class PackageInstaller:
                 )
             self.build_status.total += len(newly_added)
             self.pending_expansions.clear()
-        finally:
-            self.db.lock.release_read()
+
+    def _flush_db_if_due(
+        self,
+        current_time: float,
+        database_actions: List[DatabaseAction],
+        retained_read_locks: List[spack.util.lock.Lock],
+    ) -> None:
+        """Write finished builds to the database if the write interval has passed, or if all
+        builds are done. The write is not guaranteed; it fails if another process holds the lock,
+        in which case it is retried in a later iteration of the event loop."""
+        if (
+            database_actions
+            and (
+                current_time >= self.next_database_write
+                or not (self.pending_builds or self.running_builds)
+            )
+            and self._save_to_db(database_actions, retained_read_locks)
+        ):
+            database_actions.clear()
 
     def _save_to_db(
         self,
         database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
     ) -> bool:
-        if not self.db.lock.try_acquire_write():
-            return False
-        try:
-            self.db._read()
+        with self.db.try_write_transaction() as acquired:
+            if not acquired:
+                return False
             for action in database_actions:
                 action.save_to_db(self.db)
-        finally:
-            self.db.lock.release_write(self.db._write)
 
         # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
         # other processes can see the specs are installed, while preventing concurrent uninstalls.
@@ -2861,7 +2498,7 @@ class PackageInstaller:
     def _schedule_builds(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: JobServerBase,
         retained_read_locks: List[spack.util.lock.Lock],
         database_actions: List[DatabaseAction],
     ) -> bool:
@@ -2880,8 +2517,7 @@ class PackageInstaller:
         result = schedule_builds(
             pending=self.pending_builds,
             build_graph=self.build_graph,
-            db=self.db,
-            prefix_locker=spack.store.STORE.prefix_locker,
+            store=spack.store.STORE,  # todo: dependency injection
             overwrite=self.overwrite,
             overwrite_time=self.overwrite_time,
             capacity=self.capacity,
@@ -2921,7 +2557,7 @@ class PackageInstaller:
     def _start(
         self,
         selector: selectors.BaseSelector,
-        jobserver: JobServer,
+        jobserver: JobServerBase,
         dag_hash: str,
         prefix_lock: spack.util.lock.Lock,
     ) -> None:
@@ -2969,13 +2605,7 @@ class PackageInstaller:
         pid = child_info.proc.pid
         assert type(pid) is int
         self.running_builds[pid] = child_info
-        selector.register(
-            child_info.output_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "output")
-        )
-        selector.register(
-            child_info.state_r_conn.fileno(), selectors.EVENT_READ, FdInfo(pid, "state")
-        )
-        selector.register(child_info.proc.sentinel, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        child_info.register_with_selector(selector, pid)
         self.build_status.add_build(
             child_info.spec,
             explicit=explicit,
@@ -2984,75 +2614,77 @@ class PackageInstaller:
         )
         self.report_data.start_record(spec)
 
-    def _handle_child_logs(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
-    ) -> None:
-        """Handle reading output logs from a child process pipe."""
+    def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
+        """Handle reading output logs from a child process pipe. Returns False once the channel
+        has reached EOF and was unregistered, True while it remains open."""
+        conn = child_info.output_r_conn
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(conn, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
-            return
+            return True
         except OSError:
             data = None
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(conn)
+            except (KeyError, OSError):
                 pass
-            return
+            return False
 
         self.build_status.print_logs(child_info.spec.dag_hash(), data)
+        return True
 
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
-        r_fd = child_info.output_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_logs(r_fd, child_info, selector)
+        while self._handle_child_logs(child_info, selector):
+            pass
 
     def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and process any remaining state messages from a finished child's pipe."""
-        r_fd = child_info.state_r_conn.fileno()
-        while r_fd in selector.get_map():
-            self._handle_child_state(r_fd, child_info, selector)
+        # Must drain before child.close() to consume any remaining data before bridges close.
+        while self._handle_child_state(child_info, selector):
+            pass
 
-    def _handle_child_state(
-        self, r_fd: int, child_info: ChildInfo, selector: selectors.BaseSelector
-    ) -> None:
-        """Handle reading state updates from a child process pipe."""
+    def _handle_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
+        """Handle reading state updates from a child process pipe. Returns False once the channel
+        has reached EOF and was unregistered, True while it remains open."""
+        conn = child_info.state_r_conn
+        pid = child_info.proc.pid
+        assert pid is not None
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
-            data = os.read(r_fd, OUTPUT_BUFFER_SIZE)
+            data = read_connection(conn, OUTPUT_BUFFER_SIZE)
         except BlockingIOError:
-            return
+            return True
         except OSError:
             data = None
 
         if not data:  # EOF or error
             try:
-                selector.unregister(r_fd)
-            except KeyError:
+                selector.unregister(conn)
+            except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(r_fd, None)
-            return
+            self.state_buffers.pop(pid, None)
+            return False
 
-        # Append new data to the buffer for this fd and process it
-        buffer = self.state_buffers.get(r_fd, "") + data.decode(errors="replace")
-        lines = buffer.split("\n")
-
+        # Accumulate raw bytes and split on the newline byte. We never decode a partial read; only
+        # complete lines are handed to json.loads(), which decodes the (UTF-8) bytes itself.
+        buffer = self.state_buffers.get(pid, b"") + data
+        lines = buffer.split(b"\n")
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[r_fd] = lines.pop()
+        self.state_buffers[pid] = lines.pop()
 
         for line in lines:
             if not line:
                 continue
             try:
                 message = json.loads(line)
-            except json.JSONDecodeError:
+            except ValueError:
                 continue
             if "state" in message:
                 self.build_status.update_state(child_info.spec.dag_hash(), message["state"])
@@ -3062,6 +2694,8 @@ class PackageInstaller:
                 )
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+
+        return True
 
 
 class BinaryCacheMiss(spack.error.SpackError):

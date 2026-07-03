@@ -22,19 +22,19 @@ import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
+import spack.util.filesystem as fs
 import spack.util.web as web_util
 from spack import traverse
-from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
+from spack.util.lang import memoized
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]

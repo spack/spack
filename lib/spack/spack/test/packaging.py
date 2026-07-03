@@ -29,10 +29,10 @@ import spack.util.gpg
 import spack.util.url as url_util
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
-from spack.llnl.util import filesystem as fs
-from spack.llnl.util.filesystem import readlink, symlink
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import _macho_find_paths, relocate_links, relocate_text
+from spack.util import filesystem as fs
+from spack.util.filesystem import readlink, symlink
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 

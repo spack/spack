@@ -18,8 +18,8 @@ import spack.package_base
 import spack.repo
 import spack.util.git
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty.colify import colify
+from spack.util.filesystem import working_dir
 from spack.util.url import path_to_file_url
 from spack.version import VersionList
 

@@ -26,9 +26,9 @@ from typing import (
 )
 
 import spack.error
-import spack.llnl.util.lang as lang
 import spack.llnl.util.tty.color
 import spack.spec_parser
+import spack.util.lang as lang
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -597,6 +597,9 @@ class DisjointSetsOfValues(collections.abc.Sequence):
             x for x in self.feature_values if x != "none"
         )
         return object_without_empty_set
+
+    def __iter__(self):
+        return itertools.chain.from_iterable(self.sets)
 
     def __getitem__(self, idx):
         return tuple(itertools.chain.from_iterable(self.sets))[idx]

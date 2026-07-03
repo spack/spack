@@ -42,8 +42,6 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.path
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
@@ -51,14 +49,15 @@ import spack.provider_index
 import spack.tag
 import spack.util.executable
 import spack.util.file_cache
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.hash
 import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.lang import Singleton, memoized
+from spack.util.filesystem import working_dir
+from spack.util.lang import Singleton, ensure_unwrapped, memoized
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -600,7 +599,7 @@ class RepoIndex:
         self._checker: Optional[FastPackageChecker] = None
         self.packages_path = packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -733,7 +732,7 @@ class RepoPath:
         """Create a RepoPath from a configuration object."""
         overrides = {
             pkg_name: {
-                k: spack.util.path.substitute_path_variables(v) if isinstance(v, str) else v
+                k: spack.config.substitute_path_variables(v) if isinstance(v, str) else v
                 for k, v in data["package_attributes"].items()
             }
             for pkg_name, data in config.get_config("packages").items()
@@ -760,10 +759,6 @@ class RepoPath:
         for p in self.python_paths():
             if p in sys.path:
                 sys.path.remove(p)
-
-    def ensure_unwrapped(self) -> "RepoPath":
-        """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
-        return self
 
     def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
@@ -1126,7 +1121,7 @@ class Repo:
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
-        self.root = spack.util.path.canonicalize_path(root)
+        self.root = spack.config.canonicalize_path(root)
 
         # check and raise BadRepoError on fail.
         def check(condition, msg):
@@ -1634,7 +1629,7 @@ def create_repo(
     If the namespace is not provided, use basename of root.
     Return the canonicalized path and namespace of the created repository.
     """
-    root = spack.util.path.canonicalize_path(root)
+    root = spack.config.canonicalize_path(root)
     repo_yaml_dir, namespace = get_repo_yaml_dir(os.path.abspath(root), namespace, package_api)
 
     existed = True
@@ -2046,7 +2041,7 @@ def parse_config_descriptor(
 
     """
     if isinstance(descriptor, str):
-        return LocalRepoDescriptor(name, spack.util.path.canonicalize_path(descriptor))
+        return LocalRepoDescriptor(name, spack.config.canonicalize_path(descriptor))
 
     # Should be the case due to config validation.
     assert isinstance(descriptor, dict), "Repository descriptor must be a string or a dictionary"
@@ -2069,7 +2064,7 @@ def parse_config_descriptor(
         dir_name = spack.util.hash.b32_hash(repository)[-7:]
         destination = os.path.join(spack.paths.package_repos_path, dir_name)
     else:
-        destination = spack.util.path.canonicalize_path(destination)
+        destination = spack.config.canonicalize_path(destination)
 
     return RemoteRepoDescriptor(
         name=name,
@@ -2213,7 +2208,7 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH.ensure_unwrapped()
+                    repo = ensure_unwrapped(PATH)
 
                 # We need to compare the base package name
                 pkg_name = name_from_fullname(name)

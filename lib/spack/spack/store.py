@@ -31,13 +31,13 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
-import spack.llnl.util.lang
 import spack.package_prefs
 import spack.paths
 import spack.spec
+import spack.util.lang
 import spack.util.path
-from spack.llnl.util import filesystem as fs
 from spack.llnl.util import tty
+from spack.util import filesystem as fs
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -77,7 +77,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
             "install_path_scheme", spack.directory_layout.default_projections["all"]
@@ -86,7 +86,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
         projections = {"all": all_projection}
     else:
         unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)
         if padded_length is True:
@@ -296,7 +296,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
+STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
 
 def reinitialize():
@@ -306,7 +306,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = cast(Store, spack.llnl.util.lang.Singleton(_create_global))
+    STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
     return token
 
@@ -324,7 +324,7 @@ def _construct_upstream_dbs_from_install_roots(
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            spack.util.path.canonicalize_path(install_root),
+            spack.config.canonicalize_path(install_root),
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )

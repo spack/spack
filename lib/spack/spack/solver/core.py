@@ -5,7 +5,7 @@
 
 from typing import Any, NamedTuple, Optional, Tuple
 
-from spack.llnl.util import lang
+from spack.util import lang
 
 from .compat import symbol_name, symbol_string
 
@@ -57,7 +57,7 @@ class AspFunction:
             attr("version", "foo", "bar")
 
         """
-        return AspFunction(self.name, self.args + args)
+        return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
         parts = []
@@ -77,7 +77,12 @@ class AspFunction:
 
 class _AspFunctionBuilder:
     def __getattr__(self, name: str) -> AspFunction:
-        return AspFunction(name)
+        # Writing to __dict__ directly caches the result so repeated access to the
+        # same name bypasses __getattr__ and hits the instance dict instead.
+        # Safe because AspFunction objects are never mutated.
+        f = AspFunction(name)
+        self.__dict__[name] = f
+        return f
 
 
 #: Global AspFunction builder

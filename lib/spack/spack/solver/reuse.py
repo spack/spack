@@ -9,11 +9,11 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
-import spack.llnl.path
 import spack.repo
 import spack.spec
 import spack.store
 import spack.traverse
+import spack.util.path
 from spack.externals import ExternalSpecsParser
 from spack.spec_filter import SpecFilter
 
@@ -106,7 +106,7 @@ def _is_reusable(spec: spack.spec.Spec, packages_with_externals, local: bool) ->
         for entry in packages_with_externals.get(name, {}).get("externals", []):
             expected_prefix = entry.get("prefix")
             if expected_prefix is not None:
-                expected_prefix = spack.llnl.path.path_to_os_path(expected_prefix)[0]
+                expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
             if (
                 spec.satisfies(entry["spec"])
                 and spec.external_path == expected_prefix

@@ -10,7 +10,7 @@ import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
 
-description = "remove specs from an environment"
+description = "remove specs from an environment's develop: section"
 section = "environments"
 level = "long"
 

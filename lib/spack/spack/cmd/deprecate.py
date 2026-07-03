@@ -22,7 +22,7 @@ import spack.installer
 import spack.llnl.util.tty as tty
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import symlink
+from spack.util.filesystem import symlink
 
 from ..enums import InstallRecordStatus
 

@@ -86,10 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.path
-import spack.llnl.string
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.patch
@@ -99,17 +95,21 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
+import spack.util.lang as lang
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
 import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
 
-from .enums import InstallRecordStatus, PropagationPolicy
+from .enums import PropagationPolicy
 
 __all__ = [
     "CompilerSpec",
@@ -199,6 +199,7 @@ class InstallStatus(enum.Enum):
     external = "@M{[e]}  "
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
+    buildcache = "@g{[b]}  "
 
 
 # regexes used in spec formatting
@@ -1643,7 +1644,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2227,7 +2228,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
@@ -2297,73 +2298,6 @@ class Spec:
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
-
-    def _lookup_hash(self):
-        """Lookup just one spec with an abstract hash, returning a spec from the the environment,
-        store, or finally, binary caches."""
-        from spack.binary_distribution import BinaryCacheQuery
-        from spack.environment import active_environment
-        from spack.store import STORE
-
-        active_env = active_environment()
-
-        # First env, then store, then binary cache
-        matches = (
-            (active_env.all_matching_specs(self) if active_env else [])
-            or STORE.db.query(self, installed=InstallRecordStatus.ANY)
-            or BinaryCacheQuery(True)(self)
-        )
-
-        if not matches:
-            raise InvalidHashError(self, self.abstract_hash)
-
-        if len(matches) != 1:
-            raise AmbiguousHashError(
-                f"Multiple packages specify hash beginning '{self.abstract_hash}'.", *matches
-            )
-
-        return matches[0]
-
-    def lookup_hash(self):
-        """Given a spec with an abstract hash, return a copy of the spec with all properties and
-        dependencies by looking up the hash in the environment, store, or finally, binary caches.
-        This is non-destructive."""
-        if self.concrete or not any(node.abstract_hash for node in self.traverse()):
-            return self
-
-        spec = self.copy(deps=False)
-        # root spec is replaced
-        if spec.abstract_hash:
-            spec._dup(self._lookup_hash())
-            return spec
-
-        # Map the dependencies that need to be replaced
-        node_lookup = {
-            id(node): node._lookup_hash()
-            for node in self.traverse(root=False)
-            if node.abstract_hash
-        }
-
-        # Reconstruct dependencies
-        for edge in self.traverse_edges(root=False):
-            key = edge.parent.name
-            current_node = spec if key == spec.name else spec[key]
-            child_node = node_lookup.get(id(edge.spec), edge.spec.copy())
-            current_node._add_dependency(
-                child_node, depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
-            )
-
-        return spec
-
-    def replace_hash(self):
-        """Given a spec with an abstract hash, attempt to populate all properties and dependencies
-        by looking up the hash in the environment, store, or finally, binary caches.
-        This is destructive."""
-
-        if not any(node for node in self.traverse(order="post") if node.abstract_hash):
-            return
-
-        self._dup(self.lookup_hash())
 
     def to_node_dict(self, hash: ht.SpecHashDescriptor = ht.dag_hash) -> Dict[str, Any]:
         """Create a dictionary representing the state of this Spec.
@@ -5313,9 +5247,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = spack.llnl.string.plural(len(unknown), "variant")
+        variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {spack.llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5946,7 +5880,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
         )
 
 
@@ -6078,6 +6012,7 @@ class _ImmutableSpec(Spec):
     """An immutable Spec that prevents a class of accidental mutations."""
 
     _mutable: bool
+    _str_cache: str
 
     def __init__(self, spec_like: Optional[str] = None) -> None:
         object.__setattr__(self, "_mutable", True)
@@ -6096,6 +6031,15 @@ class _ImmutableSpec(Spec):
     def add_dependency_edge(self, *args, **kwargs):
         assert self._mutable
         return super().add_dependency_edge(*args, **kwargs)
+
+    def __str__(self) -> str:
+        # Cache the str value of immutable specs as an optimization
+        try:
+            return self._str_cache
+        except AttributeError:
+            s = self._str(color=False)
+            object.__setattr__(self, "_str_cache", s)
+            return s
 
     def __setattr__(self, name, value) -> None:
         assert self._mutable

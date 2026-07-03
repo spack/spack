@@ -10,11 +10,11 @@ import pytest
 import spack.concretize
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.main import SpackCommand
 
 dev_build = SpackCommand("dev-build")

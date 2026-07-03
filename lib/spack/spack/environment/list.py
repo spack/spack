@@ -113,6 +113,9 @@ class SpecList:
 
 
 def _expand_matrix_constraints(matrix_config):
+    # Avoid circular import
+    import spack.hash_lookup
+
     # recurse so we can handle nested matrices
     expanded_rows = []
     for row in matrix_config["matrix"]:
@@ -154,7 +157,7 @@ def _expand_matrix_constraints(matrix_config):
             pass
 
         # Resolve abstract hashes for exclusion criteria
-        if any(test_spec.lookup_hash().satisfies(x) for x in excludes):
+        if any(spack.hash_lookup.lookup_hash(test_spec).satisfies(x) for x in excludes):
             continue
 
         if sigil:

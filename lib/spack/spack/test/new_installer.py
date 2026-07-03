@@ -12,17 +12,24 @@ import pytest
 if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
+from typing import Tuple
+
+import spack.deptypes as dt
 import spack.spec
+import spack.store
+from spack.database import Database
 from spack.new_installer import (
     OVERWRITE_GARBAGE_SUFFIX,
     BinaryCacheMiss,
     BuildGraph,
-    JobServer,
     PackageInstaller,
     PrefixPivoter,
     _node_to_roots,
     schedule_builds,
 )
+from spack.new_installer_base import NoopJobServer
+from spack.new_installer_posix import PosixJobServer
+from spack.test.conftest import writable
 from spack.test.traverse import create_dag
 
 
@@ -329,13 +336,12 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
@@ -359,13 +365,12 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
@@ -389,13 +394,12 @@ class TestScheduleBuilds:
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
         # num_jobs=1 writes 0 tokens to the FIFO. Only the implicit token exists.
-        jobserver = JobServer(num_jobs=1)
+        jobserver = PosixJobServer(num_jobs=1)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -415,7 +419,7 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         # Pre-register the lock in the prefix_locker cache, then patch try_acquire to fail.
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
@@ -424,8 +428,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -446,13 +449,12 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite={spec.dag_hash()},
                 overwrite_time=time.time() + 100,
                 capacity=1,
@@ -475,7 +477,7 @@ class TestScheduleBuilds:
         spec_b = self._make_spec("trivial-smoke-test")
         pending = [spec_a.dag_hash(), spec_b.dag_hash()]
         bg = _FakeBuildGraph([spec_a, spec_b])
-        jobserver = JobServer(num_jobs=4)
+        jobserver = PosixJobServer(num_jobs=4)
         # Patch spec_a's lock to always fail, simulating an external write lock.
         lock_a = temporary_store.prefix_locker.lock(spec_a)
         monkeypatch.setattr(lock_a, "try_acquire_write", lambda: False)
@@ -484,8 +486,7 @@ class TestScheduleBuilds:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -516,15 +517,14 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -555,15 +555,14 @@ class TestScheduleBuilds:
         spec = self._make_spec("trivial-install-test-package")
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         lock = temporary_store.prefix_locker.lock(spec)
         monkeypatch.setattr(lock, "try_acquire_write", lambda: False)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=2,
@@ -584,13 +583,12 @@ class TestScheduleBuilds:
         self._mark_installed(spec, temporary_store)  # installation_time = now()
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite={spec.dag_hash()},
                 overwrite_time=0.0,  # earlier than now()
                 capacity=1,
@@ -616,13 +614,12 @@ class TestScheduleBuilds:
         temporary_store.db.add(spec, explicit=False)
         pending = [spec.dag_hash()]
         bg = _FakeBuildGraph([spec])
-        jobserver = JobServer(num_jobs=2)
+        jobserver = PosixJobServer(num_jobs=2)
         try:
             result = schedule_builds(
                 pending,
                 bg,
-                temporary_store.db,
-                temporary_store.prefix_locker,
+                temporary_store,
                 overwrite=set(),
                 overwrite_time=0.0,
                 capacity=1,
@@ -637,6 +634,53 @@ class TestScheduleBuilds:
             for _, _, lock in result.newly_installed:
                 lock.release_read()
             jobserver.close()
+
+    def test_missing_in_upstream_is_installed_locally(
+        self, upstream_and_downstream_db: Tuple[Database, Database], mock_packages
+    ):
+        """A spec that is referenced but not installed in an upstream database is scheduled for
+        a local build, with its prefix repointed to the local store."""
+        upstream_db, downstream_db = upstream_and_downstream_db
+        dep = self._make_spec("dependency-install")
+        parent = spack.spec.Spec("dependent-install")
+        parent._add_dependency(dep, depflag=dt.BUILD, virtuals=())
+        parent._mark_concrete()
+
+        # Register both specs in the upstream, then uninstall the dep: its record is kept as
+        # uninstalled because the parent still references it.
+        with writable(upstream_db):
+            upstream_db.add(parent, explicit=True)
+            upstream_db.remove(dep)
+
+        # Create a Store for schedule_builds based on the downstream database.
+        local_store = spack.store.Store(downstream_db.root, upstreams=[upstream_db])
+        upstream, record = local_store.db.query_by_spec_hash(dep.dag_hash())
+        assert upstream and record is not None and not record.installed
+
+        # Like BuildGraph, start out with the prefix from the upstream record.
+        assert upstream_db.layout
+        dep.set_prefix(upstream_db.layout.path_for_spec(dep))
+
+        jobserver = NoopJobServer(num_jobs=2)
+        result = schedule_builds(
+            pending=[dep.dag_hash()],
+            build_graph=_FakeBuildGraph([dep]),  # type: ignore[arg-type]
+            store=local_store,
+            overwrite=set(),
+            overwrite_time=0.0,
+            capacity=1,
+            needs_jobserver_token=False,
+            jobserver=jobserver,
+            explicit=set(),
+        )
+        assert not result.blocked
+        assert [dag_hash for dag_hash, _ in result.to_start] == [dep.dag_hash()]
+        # The prefix was repointed from the upstream to the local store.
+        assert dep.prefix == local_store.layout.path_for_spec(dep)
+
+        # Cleanup
+        for _, lock in result.to_start:
+            lock.release_write()
 
 
 def test_nodes_to_roots():

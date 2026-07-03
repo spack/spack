@@ -25,8 +25,8 @@ import spack.tengine
 import spack.util.git
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.util.crypto import checksum
+from spack.util.filesystem import working_dir
 from spack.util.log_parse import parse_log_events
 
 from .base import Reporter

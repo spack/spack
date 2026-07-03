@@ -30,13 +30,13 @@ from spack.vendor.typing_extensions import ParamSpec
 import spack
 import spack.config
 import spack.error
-import spack.llnl.url
 import spack.util.executable
 import spack.util.parallel
-import spack.util.path
+import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import lang, tty
-from spack.llnl.util.filesystem import mkdirp, rename, working_dir
+from spack.llnl.util import tty
+from spack.util import lang
+from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
@@ -193,7 +193,7 @@ def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
     ssl_certs = spack.config.get("config:ssl_certs")
     if not ssl_certs:
         return None
-    path = spack.util.path.substitute_path_variables(ssl_certs)
+    path = spack.config.substitute_path_variables(ssl_certs)
     if not os.path.isabs(path):
         tty.debug(f"certs: relative path not allowed: {path}")
         return None
@@ -396,7 +396,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                rename(local_file_path, remote_file_path)
+                shutil.move(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
@@ -932,7 +932,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in spack.llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in spack.util.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

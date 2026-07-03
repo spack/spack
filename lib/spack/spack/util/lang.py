@@ -511,7 +511,7 @@ def dedupe(sequence, key=None):
 
             [x for x in dedupe([1, 2, 1, 3, 2])] == [1, 2, 3]
 
-            [x for x in spack.llnl.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
+            [x for x in spack.util.lang.dedupe([1,-2,1,3,2], key=abs)] == [1, -2, 3]
     """
     seen = set()
     for x in sequence:
@@ -785,6 +785,11 @@ class Singleton:
 
 class SingletonInstantiationError(Exception):
     """Error that indicates a singleton that cannot instantiate."""
+
+
+def ensure_unwrapped(obj):
+    """Returns the real object behind a Singleton"""
+    return obj.instance if isinstance(obj, Singleton) else obj
 
 
 def get_entry_points(*, group: str):

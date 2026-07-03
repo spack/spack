@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional,
 
 import spack.config
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.log
 import spack.paths
@@ -24,14 +23,14 @@ import spack.repo
 import spack.report
 import spack.spec
 import spack.util.executable
-import spack.util.path
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack.error import InstallError
-from spack.llnl.string import plural
-from spack.llnl.util.lang import nullcontext
 from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
+from spack.util.string import plural
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -50,7 +49,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = Union[spack.llnl.util.tty.log.nixlog, spack.llnl.util.tty.log.winlog]
+LogType = spack.llnl.util.tty.log.threadlog
 
 PackageObjectOrClass = Union[
     "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
@@ -98,7 +97,7 @@ def get_test_stage_dir() -> str:
     Returns:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
     )
 
@@ -207,7 +206,7 @@ def print_message(logger: LogType, msg: str, verbose: bool = False):
     """Print the message to the log, optionally echoing.
 
     Args:
-        logger: instance of the output logger (e.g. nixlog or winlog)
+        logger: instance of the output logger (a ``threadlog``)
         msg: message being output
         verbose: ``True`` displays verbose output, ``False`` suppresses
             it (``False`` is default)
@@ -282,10 +281,12 @@ class PackageTest:
 
     @property
     def logger(self) -> Optional[LogType]:
-        """The current logger or, if none, sets to one."""
-        if not self._logger:
-            self._logger = spack.llnl.util.tty.log.log_output(self.test_log_file)
+        """The current logger, set up by ``test_logger``.
 
+        ``threadlog`` redirects fds 1/2 in ``__enter__``, so it must only be constructed via
+        ``test_logger``. Callers (``test_part``, ``print_message``) always run inside an active
+        ``test_logger`` region, so ``self._logger`` is set.
+        """
         return self._logger
 
     @contextlib.contextmanager
@@ -301,8 +302,8 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.log_output(
-            self.test_log_file, verbose, append=True
+        with spack.llnl.util.tty.log.threadlog(
+            self.test_log_file, echo=verbose, append=True
         ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))

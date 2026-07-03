@@ -8,19 +8,20 @@ import shutil
 import sys
 from typing import List
 
+import spack.binary_distribution
 import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.error import InstallError, SpackError
 from spack.installer import InstallPolicy
-from spack.llnl.string import plural
 from spack.llnl.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
@@ -359,7 +360,9 @@ def _maybe_add_and_concretize(args, env, specs):
         concretized_specs = env.concretize(tests=tests)
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
-            ev.display_specs([concrete for _, concrete in concretized_specs])
+            spack.binary_distribution.load_buildcache_index()
+            status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.

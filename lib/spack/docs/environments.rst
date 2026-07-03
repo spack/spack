@@ -974,25 +974,26 @@ That can be done with the following manifest file:
 .. code-block:: yaml
 
    spack:
-   - group: apps-x86_64_v3
      specs:
-     - gromacs
-     - quantum-espresso
-     override:
-       packages:
-         all:
-           prefer:
-           - target=x86_64_v3
+     - group: apps-x86_64_v3
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v3
 
-   - group: apps-x86_64_v4
-     specs:
-     - gromacs
-     - quantum-espresso
-     override:
-       packages:
-         all:
-           prefer:
-           - target=x86_64_v4
+     - group: apps-x86_64_v4
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v4
 
 The ``override:`` attribute allows us to override the configuration for a single group of specs.
 The overridden part is always added as the *topmost* scope when the current group is concretized.

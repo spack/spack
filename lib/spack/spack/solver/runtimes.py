@@ -6,6 +6,7 @@ from typing import Set, Tuple
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.config
+import spack.hash_lookup
 import spack.repo
 import spack.spec
 import spack.util.libc
@@ -165,6 +166,7 @@ class RuntimePropertyRecorder:
 
         imposed_spec = spack.spec.Spec(f"{self.current_package}{impose}")
         when_spec = spack.spec.Spec(f"{self.current_package}{when}")
+        when_spec = spack.hash_lookup.lookup_hash(when_spec)
 
         assert imposed_spec.versions.concrete, f"{impose} must have a concrete version"
 

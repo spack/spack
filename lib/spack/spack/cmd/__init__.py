@@ -11,14 +11,14 @@ import subprocess
 import sys
 import textwrap
 from collections import Counter
-from typing import Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.llnl.string
+import spack.hash_lookup
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.repo
@@ -29,10 +29,11 @@ import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import join_path
-from spack.llnl.util.lang import attr_setdefault, index_by
+import spack.util.string
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
+from spack.util.filesystem import join_path
+from spack.util.lang import attr_setdefault, index_by
 
 from ..enums import InstallRecordStatus
 
@@ -213,7 +214,8 @@ def _concretize_spec_pairs(
     ):
         # Get all the concrete specs
         ret = [
-            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
+            concrete
+            or (abstract if abstract.concrete else spack.hash_lookup.lookup_hash(abstract))
             for abstract, concrete in to_concretize
         ]
 
@@ -351,6 +353,28 @@ def gray_hash(spec, length):
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
     return colorize("@K{%s}" % h)
+
+
+def buildcache_status_fn(
+    available_hashes: Container[str],
+) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
+
+    Args:
+        available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
+            known to be available in at least one buildcache.
+    """
+
+    def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        status = spec.install_status()
+        if (
+            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
+            and spec.dag_hash() in available_hashes
+        ):
+            return spack.spec.InstallStatus.buildcache
+        return status
+
+    return _status_fn
 
 
 def display_specs_as_json(specs, deps=False):
@@ -575,7 +599,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():

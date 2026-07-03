@@ -11,7 +11,7 @@ from spack.vendor.typing_extensions import ParamSpec
 import spack.error
 import spack.repo
 import spack.spec
-from spack.llnl.util.lang import dedupe
+from spack.util.lang import dedupe
 
 P = ParamSpec("P")
 R = TypeVar("R")

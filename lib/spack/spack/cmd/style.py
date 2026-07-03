@@ -19,8 +19,8 @@ from spack.cmd.common.spec_strings import (
     _spec_str_default_handler,
     _spec_str_fix_handler,
 )
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable, which
+from spack.util.filesystem import working_dir
 
 description = "runs source code style checks on spack"
 section = "developer"

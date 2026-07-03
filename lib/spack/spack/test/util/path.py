@@ -146,19 +146,3 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     monkeypatch.setattr(tty, "_debug", debug)
     with spack.config.override("config:install_tree", {"padded_length": 128}):
         assert expected == sup.debug_padded_filter(string)
-
-
-@pytest.mark.not_on_windows("Unix path")
-def test_canonicalize_file_unix():
-    assert sup.canonicalize_path("/home/spack/path/to/file.txt") == "/home/spack/path/to/file.txt"
-    assert sup.canonicalize_path("file:///home/another/config.yaml") == "/home/another/config.yaml"
-
-
-@pytest.mark.only_windows("Windows path")
-def test_canonicalize_file_windows():
-    assert sup.canonicalize_path(r"C:\Files (x86)\Windows\10") == r"C:\Files (x86)\Windows\10"
-    assert sup.canonicalize_path(r"E:/spack stage") == r"E:\spack stage"
-
-
-def test_canonicalize_file_relative():
-    assert sup.canonicalize_path("path/to.txt") == os.path.join(os.getcwd(), "path", "to.txt")

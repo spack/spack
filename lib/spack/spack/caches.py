@@ -8,10 +8,9 @@ from typing import cast
 
 import spack.config
 import spack.fetch_strategy
-import spack.llnl.util.lang
 import spack.paths
 import spack.util.file_cache
-import spack.util.path
+import spack.util.lang
 
 
 def misc_cache_location():
@@ -21,7 +20,7 @@ def misc_cache_location():
     providers and for which packages provide which tags.
     """
     path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
-    return spack.util.path.canonicalize_path(path)
+    return spack.config.canonicalize_path(path)
 
 
 def _misc_cache():
@@ -30,7 +29,7 @@ def _misc_cache():
 
 
 #: Spack's cache for small data
-MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.llnl.util.lang.Singleton(_misc_cache))
+MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.util.lang.Singleton(_misc_cache))
 
 
 def fetch_cache_location():
@@ -42,7 +41,7 @@ def fetch_cache_location():
     path = spack.config.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
-    path = spack.util.path.canonicalize_path(path)
+    path = spack.config.canonicalize_path(path)
     return path
 
 
@@ -65,4 +64,4 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
 
 
 #: Spack's local cache for downloaded source archives
-FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.llnl.util.lang.Singleton(_fetch_cache))
+FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.util.lang.Singleton(_fetch_cache))

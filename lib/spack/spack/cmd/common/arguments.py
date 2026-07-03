@@ -17,7 +17,7 @@ import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
-from spack.llnl.util.lang import stable_partition
+from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
 __all__ = ["add_common_arguments"]
@@ -458,6 +458,7 @@ def install_status():
             "show install status of packages\n"
             "[+] installed       [^] installed in an upstream\n"
             " -  not installed   [-] missing dep of installed package\n"
+            "[b] available in a buildcache\n"
         ),
     )
 

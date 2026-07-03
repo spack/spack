@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -43,9 +42,7 @@ def create_installer(
     create_reports: bool = False,
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
-    use_old_installer = (
-        sys.platform == "win32" or spack.config.get("config:installer", "new") == "old"
-    )
+    use_old_installer = spack.config.get("config:installer", "new") == "old"
 
     if spack.config.get("config:sandbox:enable", False):
         if use_old_installer:

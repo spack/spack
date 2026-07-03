@@ -75,7 +75,7 @@ import time
 from collections import deque
 from typing import Dict, Iterable, List, Optional, TextIO, Tuple, Union
 
-from spack.llnl.util.lang import PatternStr
+from spack.util.lang import PatternStr
 
 _error_matches = [
     "^FAIL: ",

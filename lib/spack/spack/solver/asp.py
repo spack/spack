@@ -47,8 +47,8 @@ import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
+import spack.hash_lookup
 import spack.hash_types as ht
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
@@ -60,16 +60,16 @@ import spack.store
 import spack.traverse
 import spack.util.crypto
 import spack.util.hash
+import spack.util.lang
 import spack.util.module_cmd as md
-import spack.util.path
 import spack.util.timer
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
-from spack.llnl.util.lang import elide_list
 from spack.spec import EMPTY_SPEC
+from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control
 from .core import AspFunction, AspVar, NodeId, SourceContext, extract_args, fn
@@ -551,7 +551,7 @@ class ConcretizationCache:
             root = os.path.join(spack.caches.misc_cache_location(), "concretization")
 
         # cache is versioned so that we can easily upgrade it over time
-        self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
+        self.root = pathlib.Path(spack.config.canonicalize_path(root))
         self.root /= f"v{ConcretizationCache.VERSION}"
 
     def cleanup(self):
@@ -952,7 +952,7 @@ class PyclingoDriver:
                 finished = handle.wait(1.0)
 
             if not finished:
-                specs_str = ", ".join(spack.llnl.util.lang.elide_list([str(s) for s in specs], 4))
+                specs_str = ", ".join(spack.util.lang.elide_list([str(s) for s in specs], 4))
                 header = f"Spack is taking more than {time_limit} seconds to solve for {specs_str}"
                 if error_on_timeout:
                     raise UnsatisfiableSpecError(f"{header}, stopping concretization")
@@ -1361,7 +1361,7 @@ class SpackSolverSetup:
         # Account for preferences in packages.yaml, if any
         if pkg.name in self.versions_from_yaml:
             ordered_versions = list(
-                spack.llnl.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
+                spack.util.lang.dedupe(self.versions_from_yaml[pkg.name] + ordered_versions)
             )
 
         # Set the deprecation penalty, according to the package. This should be enough to move the
@@ -1945,7 +1945,7 @@ class SpackSolverSetup:
 
             current_preferences = required + preferred + virtual_preferences.get(virtual_str, [])
             current_preferences = [x for x in current_preferences if x not in removed]
-            for i, provider in enumerate(spack.llnl.util.lang.dedupe(current_preferences)):
+            for i, provider in enumerate(spack.util.lang.dedupe(current_preferences)):
                 provider_name = spack.spec.Spec(provider).name
                 self.gen.fact(fn.provider_weight_from_config(virtual_str, provider_name, i))
             self.gen.newline()
@@ -1996,7 +1996,7 @@ class SpackSolverSetup:
 
             for input_spec in requirement_grp:
                 spec = spack.spec.Spec(input_spec)
-                spec.replace_hash()
+                spack.hash_lookup.replace_hash(spec)
                 if not spec.name:
                     spec.name = pkg_name
                 spec.attach_git_version_lookup()
@@ -2454,7 +2454,7 @@ class SpackSolverSetup:
                         )
                     from_packages_yaml.extend(matches)
 
-            from_packages_yaml = list(spack.llnl.util.lang.dedupe(from_packages_yaml))
+            from_packages_yaml = list(spack.util.lang.dedupe(from_packages_yaml))
             for v in from_packages_yaml:
                 provenance = Provenance.PACKAGES_YAML
                 if isinstance(v, vn.GitVersion):
@@ -2517,7 +2517,7 @@ class SpackSolverSetup:
         platform = spack.platforms.host()
 
         # create set of OS's to consider
-        buildable = set(platform.operating_sys.keys())
+        buildable = platform.buildable_oses()
 
         # Consider any OS's mentioned on the command line. We need this to
         # cross-concretize in CI, and for some tests.
@@ -2870,20 +2870,23 @@ class SpackSolverSetup:
                 if s.concrete:
                     continue
 
-                deps = {
-                    edge.spec.name
-                    for edge in s.edges_to_dependencies()
-                    if edge.direct and edge.when == EMPTY_SPEC
-                }
-                if deps:
+                direct_edges = [
+                    e for e in s.edges_to_dependencies() if e.direct and e.when == EMPTY_SPEC
+                ]
+                deps = {edge.spec.name for edge in direct_edges}
+                # Virtuals on a direct edge, must be virtuals the node can actually depend on
+                required_virtuals = {virtual for edge in direct_edges for virtual in edge.virtuals}
+                if deps or required_virtuals:
                     graph = analyzer.possible_dependencies(
                         s, allowed_deps=dt.ALL, transitive=False
                     )
                     deps.difference_update(graph.real_pkgs, graph.virtuals)
-                    if deps:
+                    required_virtuals.difference_update(graph.virtuals)
+                    invalid = deps | required_virtuals
+                    if invalid:
                         start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
                         raise UnsatisfiableSpecError(
-                            f"{start_str} cannot depend on {', '.join(deps)}"
+                            f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
                         )
 
                 spack.spec.Spec.ensure_valid_variants(s)
@@ -2982,7 +2985,7 @@ class SpackSolverSetup:
             dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
                     'dev_path="%s"'
-                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                    % spack.config.canonicalize_path(info["path"], default_wd=env.path)
                 )
                 for name, info in env.dev_specs.items()
             )
@@ -3853,7 +3856,7 @@ def execute_explicit_splices(specs: SpecDict) -> SpecDict:
 
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
-                    replacement.replace_hash()
+                    spack.hash_lookup.replace_hash(replacement)
                 current_spec = current_spec.splice(replacement, transitive)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
@@ -3906,7 +3909,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
+    path = spack.config.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (
@@ -3978,7 +3981,7 @@ class Solver:
           setup_only: if True, stop after setup and don't solve (default False).
           allow_deprecated: allow deprecated version in the solve
         """
-        specs = [s.lookup_hash() for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)
@@ -4029,7 +4032,7 @@ class Solver:
             tests (bool): add test dependencies to the solve
             allow_deprecated (bool): allow deprecated version in the solve
         """
-        specs = [s.lookup_hash() for s in specs]
+        specs = [spack.hash_lookup.lookup_hash(s) for s in specs]
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs))
         setup = SpackSolverSetup(tests=tests)

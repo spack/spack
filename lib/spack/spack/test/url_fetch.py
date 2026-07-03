@@ -20,9 +20,9 @@ import spack.url
 import spack.util.crypto as crypto
 import spack.util.web as web_util
 import spack.version
-from spack.llnl.util.filesystem import is_exe, working_dir
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.filesystem import is_exe, working_dir
 
 
 @pytest.fixture

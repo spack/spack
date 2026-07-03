@@ -16,12 +16,12 @@ from typing import Optional, Sequence, Union
 import spack.vendor.archspec.cpu
 from spack.vendor.typing_extensions import TypedDict
 
-import spack.llnl.util.filesystem as fs
 import spack.platforms
 import spack.spec
 import spack.store
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fs
 from spack.llnl.util import tty
 
 from .config import spec_for_current_python

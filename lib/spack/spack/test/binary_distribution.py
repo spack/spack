@@ -38,7 +38,6 @@ import spack.util.web as web_util
 from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import join_path, readlink, working_dir
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
@@ -51,6 +50,7 @@ from spack.url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
+from spack.util.filesystem import join_path, readlink, working_dir
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -92,7 +92,7 @@ def dummy_prefix(tmp_path: pathlib.Path):
 
 
 @pytest.mark.maybeslow
-def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery):
+def test_buildcache_cmd_smoke_test(tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
@@ -1576,3 +1576,38 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     ]
     assert not concretization_warnings, "update() must not warn about concretization"
     assert binary_index.mirrors_without_index == {mirror_url, mirror_url2}
+
+
+def test_load_buildcache_index(monkeypatch, tmp_path):
+    """Tests that load_buildcache_index uses the local cache (no network call)."""
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    regenerate_calls = []
+    update_calls = []
+
+    def fake_regenerate(clear_existing=False):
+        regenerate_calls.append(clear_existing)
+
+    def fake_update(with_cooldown=False):
+        update_calls.append(with_cooldown)
+
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", fake_regenerate)
+    monkeypatch.setattr(mock_index, "update", fake_update)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    spack.binary_distribution.load_buildcache_index()
+
+    assert regenerate_calls == [False] and update_calls == []
+
+
+def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
+    """Tests that load_buildcache_index swallows errors; status display never breaks a command."""
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+
+    def exploding_regenerate(clear_existing=False):
+        raise OSError("disk error")
+
+    monkeypatch.setattr(mock_index, "regenerate_spec_cache", exploding_regenerate)
+    monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
+
+    # Should not raise.
+    spack.binary_distribution.load_buildcache_index()

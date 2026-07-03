@@ -17,9 +17,9 @@ import spack.llnl.util.tty as tty
 import spack.main
 import spack.paths
 import spack.platforms
-from spack.llnl.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 from spack.llnl.util.tty.colify import colify
 from spack.main import SpackArgumentParser, section_descriptions
+from spack.util.argparsewriter import ArgparseRstWriter, ArgparseWriter, Command
 
 description = "list available spack commands"
 section = "config"

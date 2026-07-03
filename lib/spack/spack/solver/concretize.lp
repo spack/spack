@@ -135,19 +135,21 @@ needs_build_unification_set(ParentNode) :- attr("depends_on", ParentNode, _, "bu
 % If any of the build dependencies can be duplicated, they can go into any ("build", ID) set
 unification_set(("build", ID), node(X, Child))
   :- attr("depends_on", ParentNode, node(X, Child), "build"),
-     build_set_id(ParentNode, ID),
-     needs_build_unification_set(ParentNode).
+     build_set_id(ParentNode, ID).
 
-% A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider
+% A virtual that is on an edge of non-build type belongs to the same unification set as the parent of the provider.
+% The provider is projected out into virtual_nonbuild_edge so the unification_set rule does not ground once per provider.
+virtual_nonbuild_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, Type), Type != "build".
 unification_set(SetID, VirtualNode) :-
-  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, Type), Type != "build",
+  virtual_nonbuild_edge(ParentNode, VirtualNode),
   unification_set(SetID, ParentNode).
 
-% A virtual that is on a build edge, goes in the build set id of the parent of the provider
+% A virtual that is on a build edge, goes in the build set id of the parent of the provider.
+% The provider is projected out into virtual_build_edge so the unification_set rule does not ground once per provider.
+virtual_build_edge(ParentNode, VirtualNode) :- virtual_on_edge(ParentNode, _, VirtualNode, "build").
 unification_set(("build", ID), VirtualNode) :-
-  virtual_on_edge(ParentNode, ProviderNode, VirtualNode, "build"),
-  build_set_id(ParentNode, ID),
-  needs_build_unification_set(ParentNode).
+  virtual_build_edge(ParentNode, VirtualNode),
+  build_set_id(ParentNode, ID).
 
 % Needed for reused dependencies. A reused dependency has its build edges trimmed, so we
 % only care about the non-build edges.
@@ -210,6 +212,10 @@ related(NodeA, NodeB) :- attr("closure", NodeA, NodeB, "linkrun").
 
 % In the "root" unification set only ID = 0 are allowed
 :- unification_set("root", node(ID, _)), ID != 0.
+
+% Build-set IDs are interchangeable labels, so forbid gaps to avoid churn when searching.
+build_set_used(ID) :- build_set_id(_, ID).
+:- build_set_used(ID), ID > 0, not build_set_used(ID-1).
 
 % In the "root" unification set we allow only packages from the link-run possible subDAG
 :- unification_set("root", node(_, Package)), not possible_in_link_run(Package), not virtual(Package).
@@ -405,10 +411,7 @@ error(10000, "Cannot satisfy '{0}@{1}'", Package, Constraint)
      not version_constraint_satisfied(node(ID,Package), Constraint).
 
 attr("node_version_satisfies", node(ID, Package), Constraint)
-  :- attr("version", node(ID, Package), Version),
-     pkg_fact(Package, version_order(Version, VersionIdx)),
-     pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
-     VersionIdx >= MinIdx, VersionIdx <= MaxIdx.
+  :- version_constraint_satisfied(node(ID, Package), Constraint).
 
 
 % if a version needs a commit or has one it can use the commit variant
@@ -447,7 +450,14 @@ condition_set(PackageNode, PackageNode) :- attr("node", PackageNode).
 condition_set(PackageNode, VirtualNode) :- provider(PackageNode, VirtualNode).
 condition_set(PackageNode, DependencyNode) :- condition_set(PackageNode, PackageNode), depends_on(PackageNode, DependencyNode).
 condition_set(ID, VirtualNode) :- condition_set(ID, PackageNode), provider(PackageNode, VirtualNode).
-condition_set(VirtualNode, X) :- provider(PackageNode, VirtualNode), condition_set(PackageNode, X).
+% A virtual inherits its provider's condition set, but only when the virtual can originate a
+% condition. condition_set keyed by a node is only consumed when that node has a trigger id, so
+% the entry is useless for a virtual without one.
+virtual_has_trigger(Virtual) :- pkg_fact(Virtual, trigger_id(_)).
+condition_set(node(VID, Virtual), X) :-
+  provider(PackageNode, node(VID, Virtual)),
+  condition_set(PackageNode, X),
+  virtual_has_trigger(Virtual).
 
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1).
 condition_packages(ID, A1) :- condition_requirement(ID, _, A1, _).
@@ -521,9 +531,13 @@ satisfied(trigger(PackageNode), condition_requirement(Name, A1, A2, A3, A4)) :-
   generic_condition_requirement(Name, A1, A2, A3, A4),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement("depends_on", A1, A2, A3)) :-
+% depends_on edges that match a condition requirement, joined with condition_nodes below.
+attr_depends_on_for_requirement(node(X, A1), node(Y, A2), A3) :-
   attr("depends_on", node(X, A1), node(Y, A2), A3),
-  generic_condition_requirement("depends_on", A1, A2, A3),
+  generic_condition_requirement("depends_on", A1, A2, A3).
+
+satisfied(trigger(PackageNode), condition_requirement("depends_on", A1, A2, A3)) :-
+  attr_depends_on_for_requirement(node(X, A1), node(Y, A2), A3),
   condition_nodes(PackageNode, node(X, A1)),
   condition_nodes(PackageNode, node(Y, A2)).
 
@@ -536,9 +550,13 @@ satisfied(trigger(PackageNode), condition_requirement("closure", A1, A2, A3)) :-
   generic_condition_requirement("closure", A1, A2, A3),
   condition_nodes(PackageNode, node(X, A1)).
 
-satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+% virtual_on_edge edges that match a condition requirement, joined with condition_nodes below.
+attr_virtual_on_edge_for_requirement(node(X, A1), node(Y, A2), A3) :-
   attr("virtual_on_edge", node(X, A1), node(Y, A2), A3),
-  generic_condition_requirement("virtual_on_edge", A1, A2, A3),
+  generic_condition_requirement("virtual_on_edge", A1, A2, A3).
+
+satisfied(trigger(PackageNode), condition_requirement("virtual_on_edge", A1, A2, A3)) :-
+  attr_virtual_on_edge_for_requirement(node(X, A1), node(Y, A2), A3),
   condition_nodes(PackageNode, node(X, A1)),
   condition_nodes(PackageNode, node(Y, A2)).
 
@@ -618,15 +636,26 @@ impose(EffectID, node(X, Package))
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
-% Effects of subconditions hold if the trigger holds and the
-% primary condition holds
+% Effects of subconditions hold if the trigger holds and the primary condition holds.
+% subcondition_effect_at binds EffectID and the primary ConditionID from the trigger side
+% alone; it is empty when there are no subconditions.
+subcondition_effect_at(EffectID, ConditionID, node(X, Package))
+  :- trigger_condition_holds(TriggerID, node(X, Package)),
+     trigger_requestor_node(TriggerID, node(X, Package)),
+     trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
+     subcondition(SubconditionID, ConditionID).
+
+% subcondition_effect_at projected on its node and on its condition id; both empty when the
+% package has no subconditions. Used as guards on the impose rule below.
+subcondition_effect_at_node(node(X, Package)) :- subcondition_effect_at(_, _, node(X, Package)).
+subcondition_effect_at_cond(ConditionID)      :- subcondition_effect_at(_, ConditionID, _).
+
 impose(EffectID, node(X, Package))
-  :- subcondition(SubconditionID, ConditionID),
+  :- subcondition_effect_at(EffectID, ConditionID, node(X, Package)),
+     subcondition_effect_at_node(node(X, Package)),
+     subcondition_effect_at_cond(ConditionID),
      condition_holds(ConditionID, ConditionNode),
      condition_set(ConditionNode, node(X, Package)),
-     trigger_and_effect(Package, SubconditionID, TriggerID, EffectID),
-     trigger_requestor_node(TriggerID, node(X, Package)),
-     trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
@@ -651,11 +680,19 @@ imposed_nodes(PackageNode, node(X, A1))
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not has_condition_set_node(PackageNode, A1).
 :- imposed_packages(ID, A1), impose(ID, PackageNode), not has_imposed_node(PackageNode, A1).
 
+% A1-keyed existence projections of imposed_constraint by arity. Lets gringo prune the
+% attr-imposing rules below by package before the impose() fan-out (the full
+% imposed_constraint tuple is only retrievable after ID is bound by impose).
+imposed_constraint_pkg0(A1) :- imposed_constraint(_, _, A1).
+imposed_constraint_pkg1(A1) :- imposed_constraint(_, _, A1, _).
+imposed_constraint_pkg2(A1) :- imposed_constraint(_, _, A1, _, _).
+imposed_constraint_pkg3(A1) :- imposed_constraint(_, _, A1, _, _, _).
+
 % Conditions that hold impose may impose constraints on other specs
-attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
-attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(PackageNode, node(X, A1)).
+attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(PackageNode, node(X, A1)), imposed_constraint_pkg0(A1).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name), imposed_constraint_pkg1(A1).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name), imposed_constraint_pkg2(A1).
+attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(PackageNode, node(X, A1)), imposed_constraint_pkg3(A1).
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
 % might appear in the HEAD of a rule
@@ -677,14 +714,24 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
+% A1-keyed existence projection for the concrete_variant_set constraint specifically
+% (the generic 5-arg projection is non-empty, so it would not prune this rule).
+concrete_variant_set_imposed_pkg(A1) :- imposed_constraint(_, "concrete_variant_set", A1, _, _).
+
 % For := we must keep track of the origin of the fact, since we need to check
 % each condition separately, i.e. foo:=a,b in one place and foo:=c in another
 % should not make foo:=a,b,c possible
 attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
   :- impose(ID, PackageNode),
      imposed_nodes(PackageNode, node(X, A1)),
-     imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value).
+     imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value),
+     concrete_variant_set_imposed_pkg(A1).
 
+
+% depends_on imposed constraints projected on the condition id and on the parent package
+% A1. Used as guards on the cross-edge depends_on rule below.
+imposed_constraint_depends_on_id(ID)  :- imposed_constraint(ID, "depends_on", _, _, _).
+imposed_constraint_depends_on_pkg(A1) :- imposed_constraint(_, "depends_on", A1, _, _).
 
 % The rule below accounts for expressions like:
 %
@@ -693,8 +740,10 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 % where "compiler" is a dependency of "dep", but is enforced by a condition imposed by "root"
 1 { attr("depends_on", node(A1_DUPE_ID, A1), node(0..Y-1, A2), A3) : max_dupes(A2, Y) } 1
   :- impose(ID, RootNode),
+     imposed_constraint_depends_on_id(ID),
      unification_set("root", RootNode),
      condition_set(RootNode, node(A1_DUPE_ID, A1)),
+     imposed_constraint_depends_on_pkg(A1),
      not self_build_requirement(RootNode, node(A1_DUPE_ID, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3).
 
@@ -1335,11 +1384,16 @@ requirement_penalty(node(ID, Package), Group, W) :-
   requirement_weight(node(ID, Package), Group, W),
   not language(Package).
 
+% A language virtual on an edge of PackageNode. The provider is projected out so the
+% requirement_penalty rule below does not ground once per provider.
+language_on_edge(PackageNode, node(ID, Language)) :-
+  provider(ProviderNode, node(ID, Language)),
+  attr("virtual_on_edge", PackageNode, ProviderNode, Language),
+  language(Language).
+
 requirement_penalty(PackageNode, Language, Group, W) :-
   requirement_weight(node(ID, Language), Group, W),
-  language(Language),
-  provider(ProviderNode, node(ID, Language)),
-  attr("virtual_on_edge", PackageNode, ProviderNode, Language).
+  language_on_edge(PackageNode, node(ID, Language)).
 
 requirement_penalty(PackageNode, Language, Group, W) :-
   requirement_weight(node(CompilerHash, Language), Group, W),
@@ -1875,12 +1929,6 @@ node_os_weight(PackageNode, Weight)
  :- attr("node", PackageNode),
     attr("node_os", PackageNode, OS),
     os(OS, Weight).
-
-% every OS is compatible with itself. We can use `os_compatible` to declare
-os_compatible(OS, OS) :- os(OS).
-
-% Transitive compatibility among operating systems
-os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
 
 % If an OS is set explicitly respect the value
 attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("node", PackageNode).

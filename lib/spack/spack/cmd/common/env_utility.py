@@ -12,7 +12,7 @@ import spack.spec
 import spack.store
 from spack import build_environment, traverse
 from spack.cmd.common import arguments
-from spack.context import Context
+from spack.enums import Context
 from spack.util.environment import dump_environment, pickle_environment
 
 
