@@ -74,7 +74,7 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap disable spack-install
           spack bootstrap now
-          spack -v solve zlib
+          spack -v spec --show opt,solutions zlib
     - name: Run unit tests
       env:
           SPACK_PYTHON: python

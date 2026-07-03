@@ -180,7 +180,7 @@ jobs:
           ./share/spack/setup-env.ps1
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack -d solve zlib
+          spack -d spec --show opt,solutions zlib
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/
       - name: Bootstrap GnuPG

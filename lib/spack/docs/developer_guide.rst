@@ -431,7 +431,7 @@ For example, if you were to add this step to the Linux unit test CI, it would lo
        . share/spack/setup-env.sh
        spack bootstrap disable spack-install
        spack bootstrap now
-       spack -v solve zlib
+       spack -v spec --show opt,solutions zlib
    - name: Setup tmate session
      uses: mxschmitt/action-tmate@c0afd6f790e3a5564914980036ebf83216678101
    - name: Run unit tests
