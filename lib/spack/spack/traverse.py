@@ -503,11 +503,10 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
             break
         else:
             # No nontrivial SCC remains to release, yet some nodes still have unconsumed in-edges.
-            # This is not a cycle: it happens when a node's only in-edges come from a parent that is
-            # not itself reached and processed from the traversal source (e.g. with ``root=False``,
-            # or when the collected graph has parents outside the traversal's frontier). Such nodes
-            # cannot be ordered, so we stop -- matching the behavior of the plain Kahn's loop, which
-            # simply drains the queue and returns.
+            # This is not a cycle: it happens when a node's only in-edges come from a parent that
+            # is not itself reached and processed from the traversal source (e.g. with
+            # ``root=False``, or when starting traversal from a node in the middle of a spec.
+            # Such edges must not be yielded, so we stop
             return
 
 
