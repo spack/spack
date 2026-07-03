@@ -47,7 +47,7 @@ jobs:
           spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:
@@ -74,7 +74,7 @@ jobs:
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           tree ~/.spack/bootstrap/store/
 
   gnupg-sources:
@@ -100,7 +100,7 @@ jobs:
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack gpg list
@@ -150,7 +150,7 @@ jobs:
               echo "Python $ver not found"
               exit 1
             fi
-            spack solve zlib
+            spack spec --show opt,solutions zlib
           done
           tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
