@@ -1470,7 +1470,7 @@ class BuildGraph:
         include_build_deps: bool,
         install_package: bool,
         install_deps: bool,
-        database: spack.database.Database,
+        store: spack.store.Store,
         overwrite_set: Optional[Set[str]] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         explicit_set: Optional[Set[str]] = None,
@@ -1479,6 +1479,7 @@ class BuildGraph:
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
         included when necessary."""
+        database = store.db
         self.roots = {s.dag_hash() for s in specs}
         self.nodes = {s.dag_hash(): s for s in specs}
         self.parent_to_child: Dict[str, Set[str]] = {}
@@ -1501,7 +1502,7 @@ class BuildGraph:
                 if record and record.path:
                     s.set_prefix(record.path)
                 else:
-                    s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
+                    s.set_prefix(store.layout.path_for_spec(s))
 
             # Build the graph and determine which specs to prune
             while stack:
@@ -2021,6 +2022,7 @@ class PackageInstaller:
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
         create_reports: bool = False,
+        store: Optional[spack.store.Store] = None,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -2029,7 +2031,7 @@ class PackageInstaller:
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
 
-        self.db = spack.store.STORE.db
+        self.store = store or spack.store.STORE
 
         specs = [pkg.spec for pkg in packages]
 
@@ -2065,7 +2067,7 @@ class PackageInstaller:
             include_build_deps,
             install_package,
             install_deps,
-            self.db,
+            self.store,
             self.overwrite,
             tests,
             self.explicit,
@@ -2105,7 +2107,7 @@ class PackageInstaller:
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
             verbose=verbose,
-            filter_padding=spack.store.STORE.has_padding(),
+            filter_padding=self.store.has_padding(),
             is_tty=TerminalState.stdout_is_interactive(),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
@@ -2135,7 +2137,7 @@ class PackageInstaller:
         self._installer()
 
     def _installer(self) -> None:
-        spack.store.STORE.install_sbang()
+        self.store.install_sbang()
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
 
@@ -2294,9 +2296,10 @@ class PackageInstaller:
             db_exc = None
             if database_actions:
                 try:
-                    with self.db.write_transaction():
+                    db = self.store.db
+                    with db.write_transaction():
                         for action in database_actions:
-                            action.save_to_db(self.db)
+                            action.save_to_db(db)
                 except Exception as e:
                     db_exc = e
 
@@ -2432,7 +2435,8 @@ class PackageInstaller:
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately
         if the DB read lock is unavailable."""
-        with self.db.try_read_transaction() as acquired:
+        db = self.store.db
+        with db.try_read_transaction() as acquired:
             if not acquired:
                 return
             dep_policy = (
@@ -2441,7 +2445,7 @@ class PackageInstaller:
                 else self.dependencies_policy
             )
             newly_added = self.build_graph.expand_build_deps(
-                self.pending_expansions, self.pending_builds, self.db, dep_policy
+                self.pending_expansions, self.pending_builds, db, dep_policy
             )
             for h in newly_added:
                 self.binary_cache_for_spec[h] = (
@@ -2474,11 +2478,12 @@ class PackageInstaller:
         database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
     ) -> bool:
-        with self.db.try_write_transaction() as acquired:
+        db = self.store.db
+        with db.try_write_transaction() as acquired:
             if not acquired:
                 return False
             for action in database_actions:
-                action.save_to_db(self.db)
+                action.save_to_db(db)
 
         # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
         # other processes can see the specs are installed, while preventing concurrent uninstalls.
@@ -2517,7 +2522,7 @@ class PackageInstaller:
         result = schedule_builds(
             pending=self.pending_builds,
             build_graph=self.build_graph,
-            store=spack.store.STORE,  # todo: dependency injection
+            store=self.store,
             overwrite=self.overwrite,
             overwrite_time=self.overwrite_time,
             capacity=self.capacity,
