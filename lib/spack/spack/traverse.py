@@ -471,18 +471,14 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
         # Use Tarjan's algorithm to find SCCs and return them in TOPO order
         # Runs once
         if sccs is None:
-            # Adjacency restricted to the collected sub-DAG, keyed the same way as the traversal.
-            children: Dict[Any, List[Any]] = defaultdict(list)
             all_ids = set(discovery_order)  # Converting from dict, not relied on for deduplication
-            for parent_id, out_edges in node_to_edges.items():
-                if parent_id is None:
-                    continue
-                for edge in out_edges:
-                    children[parent_id].append(key(edge.spec))
-            # Tarjan returns SCCs in reverse topological order; reverse to get dependencies first,
-            # and keep only nontrivial SCCs (the cycles) since singletons drain via Kahn's.
+
+            # Tarjan returns SCCs in reverse topological order
+            # Keep only nontrivial SCCs (the cycles) since singletons drain via Kahn's.
             all_sccs = find_sccs_tarjan(
-                all_ids, lambda nid: children.get(nid, ()), key=lambda nid: nid
+                all_ids,
+                lambda nid: [key(edge.spec) for edge in node_to_edges[nid]],
+                key=lambda nid: nid
             )
             sccs = [scc for scc in reversed(all_sccs) if len(scc) > 1]
 
