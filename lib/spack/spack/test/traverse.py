@@ -511,9 +511,7 @@ def test_topo_cycle_in_middle_preserves_order(key):
 @pytest.mark.parametrize("key", _TOPO_KEYS)
 def test_topo_root_in_cycle(key):
     """A traversal whose root is itself part of a cycle must not hang or drop nodes."""
-    graph = create_dag(
-        nodes=["root", "b"], edges=(("root", "b", "run"), ("b", "root", "run"))
-    )
+    graph = create_dag(nodes=["root", "b"], edges=(("root", "b", "run"), ("b", "root", "run")))
     names = [
         s.name
         for s in traverse.traverse_nodes([graph["root"]], order="topo", cover="nodes", key=key)
