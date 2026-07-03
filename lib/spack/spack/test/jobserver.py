@@ -12,6 +12,7 @@ if sys.platform == "win32":
 import fcntl
 import os
 import pathlib
+import selectors
 import stat
 
 from spack.new_installer_posix import (
@@ -166,6 +167,60 @@ class TestJobServer:
 
         finally:
             js1.close()
+
+    def test_setup_attaches_to_fifo_from_makeflags(self):
+        """A FIFO jobserver advertised in MAKEFLAGS is attached to instead of creating one."""
+        js1 = PosixJobServer(4, makeflags="")
+        assert js1.fifo_path
+        js2 = PosixJobServer(4, makeflags=f" -j4 --jobserver-auth=fifo:{js1.fifo_path}")
+        try:
+            assert js2.created is False
+            assert js2.fifo_path == js1.fifo_path
+            # The creator's tokens are visible through the attached file descriptors.
+            assert js2.acquire(1) == 1
+            js2.release()
+        finally:
+            js2.close()
+            js1.close()
+
+    def test_setup_attaches_to_pipe_from_makeflags(self):
+        """An old-style pipe jobserver advertised in MAKEFLAGS is validated and adopted."""
+        r, w = os.pipe()
+        js = PosixJobServer(4, makeflags=f" -j4 --jobserver-auth={r},{w}")
+        try:
+            assert js.created is False
+            assert js.fifo_path is None
+            assert (js.r, js.w) == (r, w)
+        finally:
+            js.close()  # closes r and w through the Connection objects
+
+    def test_setup_invalid_pipe_fds_creates_fifo(self):
+        """Invalid jobserver file descriptors in MAKEFLAGS fall back to a new FIFO."""
+        r, w = os.pipe()
+        os.close(r)
+        os.close(w)
+        js = PosixJobServer(2, makeflags=f" -j2 --jobserver-auth={r},{w}")
+        try:
+            assert js.created is True
+            assert js.fifo_path is not None
+        finally:
+            js.close()
+
+    def test_update_selector_registers_and_unregisters(self):
+        """update_selector idempotently (un)registers the token fd based on the wake flag."""
+        js = PosixJobServer(2, makeflags="")
+        selector = selectors.DefaultSelector()
+        try:
+            js.update_selector(selector, wake=True)
+            assert js.r in selector.get_map()
+            js.update_selector(selector, wake=True)  # already registered: no-op
+            assert len(selector.get_map()) == 1
+            js.update_selector(selector, wake=False)
+            assert js.r not in selector.get_map()
+            js.update_selector(selector, wake=False)  # already unregistered: no-op
+        finally:
+            selector.close()
+            js.close()
 
     def test_acquire_tokens(self):
         """Should acquire tokens from jobserver."""
