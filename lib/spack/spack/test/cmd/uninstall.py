@@ -6,7 +6,9 @@
 import pytest
 
 import spack.cmd.uninstall
+import spack.config
 import spack.environment
+import spack.repo
 import spack.store
 from spack.database import Database
 from spack.enums import InstallRecordStatus
@@ -131,6 +133,49 @@ def test_uninstall_dependents_and_implicit_dependents_mutually_exclusive(mutable
     """`-R` and `-r` cannot be used together."""
     with pytest.raises(SpackCommandError):
         uninstall("-y", "-R", "-r", "libelf")
+
+
+@pytest.mark.db
+def test_uninstall_circular_run_deps_all_in_list(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config, repo_builder
+):
+    """Uninstalling every member of a run-dependency cycle at once succeeds.
+
+    ``circ-a <-> circ-b`` reference-count each other, so neither can be uninstalled alone. But
+    when both are named, topologically-ordered removal drops one (releasing the other's ref
+    count) and then the other, so the whole cycle comes out.
+    """
+    spack.config.set("config:installer", "new")
+    repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+    repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        install("--fake", "circ-a")
+        uninstall("-y", "circ-a", "circ-b")
+
+        assert not spack.store.STORE.db.query("circ-a", installed=True)
+        assert not spack.store.STORE.db.query("circ-b", installed=True)
+
+
+@pytest.mark.db
+def test_uninstall_circular_run_deps_implicit_dependents(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config, repo_builder
+):
+    """``spack uninstall -r`` uninstalls a cycle by naming only the explicitly installed member."""
+    spack.config.set("config:installer", "new")
+    repo_builder.add_package("circ-a", dependencies=[("circ-b", "run", None)])
+    repo_builder.add_package("circ-b", dependencies=[("circ-a", "run", None)])
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        install("circ-a")
+
+        with pytest.raises(SpackCommandError):
+            uninstall("-y", "circ-a")
+
+        uninstall("-y", "-r", "circ-a")
+
+        assert not spack.store.STORE.db.query("circ-a", installed=True)
+        assert not spack.store.STORE.db.query("circ-b", installed=True)
 
 
 @pytest.mark.db
