@@ -157,8 +157,7 @@ class DatabaseAction:
 
 
 class MarkExplicitAction(DatabaseAction):
-    """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
-    used when no build process was needed."""
+    """Action to mark an already installed spec as explicitly installed."""
 
     __slots__ = ()
 
@@ -170,17 +169,37 @@ class MarkExplicitAction(DatabaseAction):
         db._mark(self.spec, "explicit", True)
 
 
-class ChildInfo(DatabaseAction):
-    """Information about a child process."""
+class AddSpecAction(DatabaseAction):
+    """Action to add a successfully built spec to the database. Owns the prefix write lock from
+    the moment the build finishes until the DB write (downgrade to read) or cleanup (release)."""
+
+    __slots__ = ("explicit",)
+
+    def __init__(
+        self, spec: "spack.spec.Spec", explicit: bool, prefix_lock: Optional[spack.util.lock.Lock]
+    ) -> None:
+        self.spec = spec
+        self.explicit = explicit
+        self.prefix_lock = prefix_lock
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        db._add(self.spec, explicit=self.explicit)
+
+
+class ChildInfo:
+    """Loop-side handle to a running build: the child process and its IPC channels. Owns the
+    prefix write lock while the build runs; on success ownership transfers to the pending
+    ``AddSpecAction`` DB insert."""
 
     __slots__ = (
         "proc",
+        "spec",
         "output_r_conn",
         "state_r_conn",
         "control_w_conn",
         "notifier",
-        "explicit",
         "log_path",
+        "prefix_lock",
         "state_buffer",
     )
 
@@ -193,7 +212,6 @@ class ChildInfo(DatabaseAction):
         control_w_conn: IpcChannel,
         notifier: ProcessExitNotifier,
         log_path: str,
-        explicit: bool = False,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -202,15 +220,19 @@ class ChildInfo(DatabaseAction):
         self.control_w_conn = control_w_conn
         self.notifier = notifier
         self.log_path = log_path
-        self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
         # safe without decoding partial reads.
         self.state_buffer = b""
 
-    def save_to_db(self, db: spack.database.Database) -> None:
-        return db._add(self.spec, explicit=self.explicit)
+    def release_prefix_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+        self.prefix_lock = None
 
     def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
         """Register output, state, and sentinel channels with the selector."""
@@ -878,14 +900,7 @@ def start_build(
     control_r_conn.close()
 
     return ChildInfo(
-        proc,
-        spec,
-        output_r_conn,
-        state_r_conn,
-        control_w_conn,
-        ExitNotifier(proc),
-        log_path,
-        explicit,
+        proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
     )
 
 
@@ -2397,9 +2412,13 @@ class PackageInstaller:
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
-            # Schedule successful builds for batched database insertion. We don't release the
-            # prefix lock here; that strictly happens after a successful db write.
-            database_actions.append(build)
+            # Schedule successful builds for batched database insertion. Ownership of the prefix
+            # write lock moves from the finished child to the pending DB insert; it is downgraded
+            # or released only after a successful db write.
+            database_actions.append(
+                AddSpecAction(build.spec, dag_hash in self.explicit, build.prefix_lock)
+            )
+            build.prefix_lock = None
             self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
             self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
             self.build_status.update_state(dag_hash, "finished")
