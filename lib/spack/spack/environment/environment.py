@@ -672,7 +672,7 @@ def _is_dev_spec_and_has_changed(spec):
         return False
 
     # Now we can check whether the code changed since the last installation
-    if not spec.installed:
+    if not spack.store.STORE.db.installed(spec):
         # Not installed -> nothing to compare against
         return False
 
@@ -911,7 +911,7 @@ class ViewDescriptor:
 
         # Filter selected, installed specs
         with spack.store.STORE.db.read_transaction():
-            result = [s for s in specs if s in self and s.installed]
+            result = [s for s in specs if s in self and spack.store.STORE.db.installed(s)]
 
         return self._exclude_duplicate_runtimes(result)
 
@@ -1898,11 +1898,12 @@ class Environment:
         try:
             # This is effectively a no-op, but it touches all packages in the
             # default view if they are installed.
-            for view_name, view in self.views.items():
-                for spec in self.concrete_roots():
-                    if spec in view and spec.package and spec.installed:
-                        msg = '{0} in view "{1}"'
-                        tty.debug(msg.format(spec.name, view_name))
+            with spack.store.STORE.db.read_transaction():
+                for view_name, view in self.views.items():
+                    for spec in self.concrete_roots():
+                        if spec in view and spec.package and spack.store.STORE.db.installed(spec):
+                            msg = '{0} in view "{1}"'
+                            tty.debug(msg.format(spec.name, view_name))
 
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
@@ -1916,7 +1917,9 @@ class Environment:
     ) -> spack.util.environment.EnvironmentModifications:
         try:
             with spack.store.STORE.db.read_transaction():
-                installed_roots = [s for s in self.concrete_roots() if s.installed]
+                installed_roots = [
+                    s for s in self.concrete_roots() if spack.store.STORE.db.installed(s)
+                ]
             mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
@@ -1994,29 +1997,32 @@ class Environment:
 
     def _dev_specs_that_need_overwrite(self):
         """Return the hashes of all specs that need to be reinstalled due to source code change."""
-        changed_dev_specs = [
-            s
-            for s in traverse.traverse_nodes(
-                self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
-            )
-            if _is_dev_spec_and_has_changed(s)
-        ]
+        # Single read transaction to avoid repeated `Database.installed` overhead, both here and
+        # in the `_is_dev_spec_and_has_changed` calls below.
+        with spack.store.STORE.db.read_transaction():
+            changed_dev_specs = [
+                s
+                for s in traverse.traverse_nodes(
+                    self.concrete_roots(), order="breadth", key=traverse.by_dag_hash
+                )
+                if _is_dev_spec_and_has_changed(s)
+            ]
 
-        # Collect their hashes, and the hashes of their installed parents.
-        # Notice: with order=breadth all changed dev specs are at depth 0,
-        # even if they occur as parents of one another.
-        return [
-            spec.dag_hash()
-            for depth, spec in traverse.traverse_nodes(
-                changed_dev_specs,
-                root=True,
-                order="breadth",
-                depth=True,
-                direction="parents",
-                key=traverse.by_dag_hash,
-            )
-            if depth == 0 or spec.installed
-        ]
+            # Collect their hashes, and the hashes of their installed parents.
+            # Notice: with order=breadth all changed dev specs are at depth 0,
+            # even if they occur as parents of one another.
+            return [
+                spec.dag_hash()
+                for depth, spec in traverse.traverse_nodes(
+                    changed_dev_specs,
+                    root=True,
+                    order="breadth",
+                    depth=True,
+                    direction="parents",
+                    key=traverse.by_dag_hash,
+                )
+                if depth == 0 or spack.store.STORE.db.installed(spec)
+            ]
 
     def _partition_roots_by_install_status(self):
         """Partition root specs into those that do not have to be passed to the
@@ -2108,14 +2114,14 @@ class Environment:
         spec for already concretized but not yet installed specs.
         """
         # use a transaction to avoid overhead of repeated calls
-        # to `package.spec.installed`
+        # to `Database.installed`
         with spack.store.STORE.db.read_transaction():
             concretized = dict(self.concretized_specs())
             for spec in self.user_specs:
                 concrete = concretized.get(spec)
                 if not concrete:
                     yield spec
-                elif not concrete.installed:
+                elif not spack.store.STORE.db.installed(concrete):
                     yield concrete
 
     def concretized_specs(self):
@@ -2593,7 +2599,9 @@ class Environment:
 
 
 def _is_uninstalled(spec):
-    return not spec.installed or (spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*"))
+    return not spack.store.STORE.db.installed(spec) or (
+        spec.satisfies("dev_path=*") or spec.satisfies("^dev_path=*")
+    )
 
 
 class ReusableSpecsFactory:
