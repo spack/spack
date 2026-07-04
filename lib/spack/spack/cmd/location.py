@@ -2,207 +2,46 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-import os
+import spack.cmd.path as path
+from spack.llnl.util.tty.color import colorize
 
-import spack.builder
-import spack.cmd
-import spack.environment as ev
-import spack.llnl.util.tty as tty
-import spack.paths
-import spack.repo
-import spack.stage
-from spack.cmd.common import arguments
-
-description = "print out locations of packages and spack directories"
+description = "print package/dir locations (deprecated; use spack path)"
 section = "query"
 level = "long"
 
+# `spack location` is deprecated in favor of `spack path`, and `spack location -i SPEC`
+# is the same as `spack path SPEC`.
 
-def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    directories = subparser.add_mutually_exclusive_group()
+# This is a thin wrapper around `spack.cmd.path`, and can be removed if/when `spack location`
+# is no longer needed.
 
-    directories.add_argument(
-        "-m", "--module-dir", action="store_true", help="spack python module directory"
-    )
-    directories.add_argument(
-        "-r", "--spack-root", action="store_true", help="spack installation root"
-    )
+_help = colorize(
+    "@*Y{Warning:} @*{spack location} is deprecated; use @*{spack path} instead.\n\n"
+    "@*{spack path} takes all the same options as @*{spack location}, but it prints the\n"
+    "install prefix (-i) by default instead of the source directory (-c).\n"
+)
 
-    directories.add_argument(
-        "-i",
-        "--install-dir",
-        action="store_true",
-        help="install prefix for spec (spec need not be installed)",
-    )
-    directories.add_argument(
-        "-p",
-        "--package-dir",
-        action="store_true",
-        help="directory enclosing a spec's package.py file",
-    )
-    directories.add_argument(
-        "--repo",
-        # for backwards compatibility
-        "--packages",
-        "-P",
-        nargs="?",
-        default=False,
-        metavar="repo",
-        help="package repository root (defaults to first configured repository)",
-    )
-    directories.add_argument(
-        "-s", "--stage-dir", action="store_true", help="stage directory for a spec"
-    )
-    directories.add_argument(
-        "-S", "--stages", action="store_true", help="top level stage directory"
-    )
-    directories.add_argument(
-        "-c",
-        "--source-dir",
-        action="store_true",
-        help="source directory for a spec (requires it to be staged first)",
-    )
-    directories.add_argument(
-        "-b",
-        "--build-dir",
-        action="store_true",
-        help="build directory for a spec (requires it to be staged first)",
-    )
-    directories.add_argument(
-        "-e",
-        "--env",
-        action="store",
-        dest="location_env",
-        nargs="?",
-        metavar="name",
-        default=False,
-        help="location of the named or current environment",
-    )
-    directories.add_argument(
-        "-v",
-        "--view",
-        action="store",
-        nargs="?",
-        metavar="name",
-        dest="location_view",
-        default=False,
-        help="location of the named or active environment view",
-    )
 
-    subparser.add_argument(
-        "--first",
-        action="store_true",
-        default=False,
-        dest="find_first",
-        help="use the first match if multiple packages match the spec",
-    )
+def setup_parser(subparser):
+    # `location` shares `path`'s options, but overrides the help text so that
+    # `spack location -h` shows the deprecation warning above.
+    path.setup_parser(subparser)
+    subparser.description = _help
 
-    arguments.add_common_arguments(subparser, ["spec"])
+
+def requested_a_directory(args) -> bool:
+    """Whether the user selected any of `path`'s directory options."""
+    # find the group defined by `path.setup_parser`, which will have an `install_dir` attr
+    groups = args.subparser._mutually_exclusive_groups
+    group = next(g for g in groups if any(a.dest == "install_dir" for a in g._group_actions))
+
+    # see if anything was specified explicitly by the user
+    return any(getattr(args, a.dest) != a.default for a in group._group_actions)
 
 
 def location(parser, args):
-    if args.module_dir:
-        print(spack.paths.module_path)
-        return
-
-    if args.spack_root:
-        print(spack.paths.prefix)
-        return
-
-    # no -e corresponds to False, -e without arg to None, -e name to the string name.
-    if args.location_env is not False:
-        if args.location_env is None:
-            # Get current environment path
-            spack.cmd.require_active_env(args.subparser)
-            path = ev.active_environment().path
-        else:
-            # Get path of requested environment
-            if not ev.exists(args.location_env):
-                tty.die("no such environment: '%s'" % args.location_env)
-            path = ev.root(args.location_env)
-        print(path)
-        return
-
-    # no -v corresponds to False, -v without arg to None, -v name to the string name.
-    if args.location_view is not False:
-        env = spack.cmd.require_active_env(args.subparser)
-        view_name = args.location_view
-        if view_name is None:
-            # get active view name
-            view_name = os.getenv(ev.spack_env_view_var)
-            if view_name is None:
-                tty.die("no active view in the current environment")
-        # print the view location
-        if env.has_view(view_name):
-            print(f"{env.views[view_name].root}\n")
-        else:
-            tty.die("no such view in the current environment: '%s'" % view_name)
-        return
-
-    if args.repo is not False:
-        if args.repo is None:
-            print(spack.repo.PATH.first_repo().root)
-            return
-        try:
-            print(spack.repo.PATH.get_repo(args.repo).root)
-        except spack.repo.UnknownNamespaceError:
-            tty.die(f"no such repository: '{args.repo}'")
-        return
-
-    if args.stages:
-        print(spack.stage.get_stage_root())
-        return
-
-    specs = spack.cmd.parse_specs(args.spec)
-
-    if not specs:
-        args.subparser.error("requires a spec")
-
-    if len(specs) != 1:
-        args.subparser.error("too many specs, supply only one")
-
-    # install_dir command matches against installed specs.
-    if args.install_dir:
-        env = ev.active_environment()
-        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
-        print(spec.prefix)
-        return
-
-    spec = specs[0]
-
-    # Package dir just needs the spec name
-    if args.package_dir:
-        print(spack.repo.PATH.dirname_for_package_name(spec.name))
-        return
-
-    # Either concretize or filter from already concretized environment
-    spec = spack.cmd.matching_spec_from_env(spec)
-    pkg = spec.package
-    builder = spack.builder.create(pkg)
-
-    if args.stage_dir:
-        print(pkg.stage.path)
-        return
-
-    if args.build_dir:
-        # Out of source builds have build_directory defined
-        if hasattr(builder, "build_directory"):
-            # build_directory can be either absolute or relative to the stage path
-            # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
-            return
-
-        # Otherwise assume in-source builds
-        print(pkg.stage.source_path)
-        return
-
-    # source dir remains, which requires the spec to be staged
-    if not pkg.stage.expanded:
-        tty.die(
-            "Source directory does not exist yet. Run this to create it:",
-            "spack stage " + " ".join(args.spec),
-        )
-
-    # Default to source dir.
-    print(pkg.stage.source_path)
+    # Unlike `spack path`, `location` defaults to a spec's source dir rather
+    # than its install prefix. No runtime warning is emitted here on purpose.
+    if not requested_a_directory(args):
+        args.source_dir = True
+    path.print_path(parser, args)
