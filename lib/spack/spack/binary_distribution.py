@@ -2151,7 +2151,7 @@ def install_root_node(
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
         return
-    elif spec.installed and not force:
+    elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
         return
 
