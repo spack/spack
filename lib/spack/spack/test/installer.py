@@ -239,11 +239,11 @@ def test_installer_prune_built_build_deps(install_mockery, monkeypatch, repo_bui
     only include four packages. [(a), (b), (c), (d), (e)]
     """
 
-    def _mock_installed(self):
-        return self.name == "pkg-c"
+    def _mock_installed(self, spec):
+        return spec.name == "pkg-c"
 
-    # Mock the installed property to say that (c) is installed
-    monkeypatch.setattr(spack.spec.Spec, "installed", property(_mock_installed))
+    # Mock the database to say that (c) is installed
+    monkeypatch.setattr(spack.database.Database, "installed", _mock_installed)
 
     # Create mock repository with packages (a), (b), (c), (d), and (e)
     repo_builder.add_package(
@@ -307,14 +307,14 @@ def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
 
     # Force an upstream package error
     spec.external_path, spec.external_modules = path, modules
-    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
+    monkeypatch.setattr(spack.database.Database, "installed_upstream", lambda self, spec: True)
     msg = fmt.format("is upstream")
     with pytest.raises(inst.UpstreamPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an install lock error, which should occur naturally since
     # we are calling an internal method prior to any lock-related setup
-    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", False)
+    monkeypatch.setattr(spack.database.Database, "installed_upstream", lambda self, spec: False)
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format("not locked")):
         installer._ensure_install_ready(spec.package)
@@ -615,7 +615,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     request = installer.build_requests[0]
 
     # Mock the known dependencies as installed upstream
-    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
+    monkeypatch.setattr(spack.database.Database, "installed_upstream", lambda self, spec: True)
     installer._check_deps_status(request)
 
     for dep in request.spec.traverse(root=False):
@@ -675,8 +675,8 @@ def test_install_spliced(install_mockery, mock_fetch, monkeypatch, transitive, i
     )
     installer.install()
     for node in out.traverse():
-        assert node.installed
-        assert node.build_spec.installed
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
 
 
 @pytest.mark.parametrize("transitive", [True, False])
@@ -696,8 +696,8 @@ def test_install_spliced_build_spec_installed(
     )
     installer.install()
     for node in out.traverse():
-        assert node.installed
-        assert node.build_spec.installed
+        assert spack.store.STORE.db.installed(node)
+        assert spack.store.STORE.db.installed(node.build_spec)
 
 
 # Unit tests should not be affected by the user's managed environments
@@ -1363,7 +1363,7 @@ def test_overwrite_install_does_install_build_deps(install_mockery, mock_fetch):
     create_installer([s], {"overwrite": [s.dag_hash()]}).install()
 
     # Verify that the build dep was also installed.
-    assert build_dep.installed
+    assert spack.store.STORE.db.installed(build_dep)
 
 
 @pytest.mark.parametrize("run_tests", [True, False])
