@@ -764,3 +764,44 @@ def test_installer_blocks_disallowed_deprecation(
 
     with pytest.raises(spack.error.InstallError, match="deprecated"):
         spack.installer_dispatch.create_installer([spec.package]).install()
+
+
+def test_installer_blocks_already_installed_deprecated_dependency(
+    install_mockery, monkeypatch, mutable_config: Configuration
+):
+    """Tests that we refuse to install a new DAG containing a deprecated dependency that is already
+    installed (and thus pruned from the build set).
+    """
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-client ^deprecated-versions@1.1.0")
+
+    # Mark only the deprecated dependency as installed, which is not in the build graph
+    def _mock_installed(self):
+        return self.name == "deprecated-versions"
+
+    monkeypatch.setattr(Spec, "installed", property(_mock_installed))
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package])
+
+
+def test_deprecated_build_only_dependency_is_not_blocked(
+    install_mockery, mutable_config: Configuration
+):
+    """A deprecated spec reachable only through a build edge is a blocker only when it is actually
+    built. If it is only a build record for a node already installed or coming from a buildcache it
+    must not be rejected.
+    """
+    with mutable_config.override("config:deprecated", True):
+        spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+    # The deprecated spec is in the DAG, but only reachable through a build edge (so spec[...],
+    # which follows the runtime closure, cannot see it).
+    deprecated = [s for s in spec.traverse() if s.name == "deprecated-versions"]
+    assert deprecated and deprecated[0].satisfies("@1.1.0")
+    with pytest.raises(KeyError):
+        spec["deprecated-versions"]
+
+    # Under the strict default policy this must not raise: the deprecated spec is a pure build
+    # dependency, so it is outside the runtime closure checked at dispatch time.
+    spack.installer_dispatch.create_installer([spec.package])
