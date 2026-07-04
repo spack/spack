@@ -2073,42 +2073,6 @@ class Spec:
         """
         return any(s.build_spec is not s for s in self.traverse(root=True))
 
-    @property
-    def installed(self):
-        """Installation status of a package.
-
-        Returns:
-            True if the package has been installed, False otherwise.
-        """
-        if not self.concrete:
-            return False
-
-        try:
-            # If the spec is in the DB, check the installed
-            # attribute of the record
-            from spack.store import STORE
-
-            return STORE.db.get_record(self).installed
-        except KeyError:
-            # If the spec is not in the DB, the method
-            #  above raises a Key error
-            return False
-
-    @property
-    def installed_upstream(self):
-        """Whether the spec is installed in an upstream repository.
-
-        Returns:
-            True if the package is installed in an upstream, False otherwise.
-        """
-        if not self.concrete:
-            return False
-
-        from spack.store import STORE
-
-        upstream, record = STORE.db.query_by_spec_hash(self.dag_hash())
-        return upstream and record and record.installed
-
     @overload
     def traverse(
         self,
