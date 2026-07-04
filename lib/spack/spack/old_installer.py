@@ -2345,8 +2345,12 @@ class PackageInstaller:
         return None
 
     def _check_deprecations(self) -> None:
-        """Refuse to install specs that use a deprecation disallowed by configuration."""
-        spack.deprecation.ensure_allowed(task.pkg.spec for task in self.build_tasks.values())
+        """Refuse to deploy specs with a disallowed deprecation in their runtime graph."""
+        spack.deprecation.ensure_allowed_deployment(
+            task.pkg.spec
+            for task in self.build_tasks.values()
+            if not task.pkg.spec.installed or task.pkg.spec.dag_hash() in task.request.overwrite
+        )
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
@@ -2362,9 +2366,9 @@ class PackageInstaller:
 
         """
 
-        spack.store.STORE.install_sbang()
         self._init_queue()
         self._check_deprecations()
+        spack.store.STORE.install_sbang()
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []

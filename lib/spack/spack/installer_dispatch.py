@@ -7,10 +7,7 @@ from typing import TYPE_CHECKING, List, Optional, Set, Union
 from spack.vendor.typing_extensions import Literal
 
 import spack.config
-import spack.deprecation
-import spack.deptypes as dt
 import spack.sandbox
-import spack.traverse
 
 if TYPE_CHECKING:
     import spack.installer
@@ -46,15 +43,6 @@ def create_installer(
     create_reports: bool = False,
 ) -> Union["spack.old_installer.PackageInstaller", "spack.installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
-    # Don't install specs that have a deprecated node in the runtime graph.
-    spack.deprecation.ensure_allowed(
-        spack.traverse.traverse_nodes(
-            [pkg.spec for pkg in packages],
-            deptype=dt.LINK | dt.RUN,
-            key=spack.traverse.by_dag_hash,
-        )
-    )
-
     use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
 
     if spack.config.CONFIG.get("config:sandbox:enable", False):
