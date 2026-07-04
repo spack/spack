@@ -366,7 +366,7 @@ def _find_query(
         results = list()
         with spack.store.STORE.db.read_transaction():
             for spec in env_specs:
-                if not spec.installed:
+                if not spack.store.STORE.db.installed(spec):
                     concretized_but_not_installed.append(spec)
                 if spec in specs_meeting_q_args:
                     results.append(spec)

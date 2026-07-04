@@ -9,6 +9,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.package_base
+import spack.store
 import spack.traverse
 from spack.cmd.common import arguments
 from spack.util import tty
@@ -36,7 +37,7 @@ class StageFilter:
         if spec.external:
             return True
 
-        if self.skip_installed and spec.installed:
+        if self.skip_installed and spack.store.STORE.db.installed(spec):
             return True
 
         if any(spec.satisfies(exclude) for exclude in self.exclusions):

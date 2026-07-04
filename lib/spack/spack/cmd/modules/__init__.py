@@ -16,6 +16,7 @@ import spack.modules
 import spack.modules.common
 import spack.modules.error
 import spack.repo
+import spack.store
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
 from spack.util import filesystem, tty
@@ -292,7 +293,7 @@ def refresh(module_type, specs, args):
         return
 
     if not args.upstream_modules:
-        specs = [s for s in specs if not s.installed_upstream]
+        specs = [s for s in specs if not spack.store.STORE.db.installed_upstream(s)]
 
     if not args.yes_to_all:
         msg = "You are about to regenerate {types} module files for:\n"

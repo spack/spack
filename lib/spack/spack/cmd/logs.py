@@ -12,6 +12,7 @@ import sys
 
 import spack.cmd
 import spack.spec
+import spack.store
 from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.util import compression
@@ -32,7 +33,7 @@ def _dump_byte_stream_to_stdout(instream: io.BufferedIOBase) -> None:
 
 
 def _logs(cmdline_spec: spack.spec.Spec, concrete_spec: spack.spec.Spec):
-    if concrete_spec.installed:
+    if spack.store.STORE.db.installed(concrete_spec):
         log_path = concrete_spec.package.install_log_path
     elif os.path.exists(concrete_spec.package.stage.path):
         # TODO: `spack logs` can currently not show the logs while a package is being built, as the

@@ -60,7 +60,7 @@ class AreDepsInstalledVisitor:
             return False
 
         spec = item.edge.spec
-        if not spec.external and not spec.installed:
+        if not spec.external and not spack.store.STORE.db.installed(spec):
             self.has_uninstalled_deps = True
             return False
 
