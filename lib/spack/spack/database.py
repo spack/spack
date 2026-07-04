@@ -1333,6 +1333,22 @@ class Database:
         _, record = self.query_by_spec_hash(key)
         return record
 
+    def installed(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed, locally or in an upstream."""
+        if not spec.concrete:
+            return False
+        try:
+            return self.get_record(spec).installed
+        except KeyError:
+            return False
+
+    def installed_upstream(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed in an upstream database."""
+        if not spec.concrete:
+            return False
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        return bool(upstream and record and record.installed)
+
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
 

@@ -1362,3 +1362,31 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     assert len(specs) == 8
     assert len([x for x in specs if x.external]) == 2
     assert len([x for x in specs if x.original_spec_format() < 5]) == 8
+
+
+def test_database_installed(
+    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
+):
+    """Test the owner-side Database.installed / installed_upstream API."""
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    with spack.repo.use_repositories(mock_custom_repository):
+        spec = spack.concretize.concretize_one("pkg-c")
+
+        # a concrete but not-yet-installed spec is not installed anywhere
+        assert not downstream_db.installed(spec)
+        assert not downstream_db.installed_upstream(spec)
+
+        with writable(upstream_db):
+            upstream_db.add(spec)
+        upstream_db._read()
+
+        # once installed upstream, both queries report it, and copies match
+        assert downstream_db.installed(spec)
+        assert downstream_db.installed_upstream(spec)
+        assert downstream_db.installed(spec.copy())
+
+    # an abstract spec is never installed
+    abstract = spack.spec.Spec("not-a-real-package")
+    assert not downstream_db.installed(abstract)
+    assert not downstream_db.installed_upstream(abstract)
