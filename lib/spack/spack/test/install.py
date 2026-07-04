@@ -767,32 +767,33 @@ def test_installer_blocks_disallowed_deprecation(
 
 
 def test_installer_blocks_already_installed_deprecated_dependency(
-    install_mockery, monkeypatch, mutable_config: Configuration
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
 ):
-    """Tests that we refuse to install a new DAG containing a deprecated dependency that is already
-    installed (and thus pruned from the build set).
+    """Tests that we refuse to install a new DAG with a deprecated dependency in its runtime
+    graph, even when that dependency is already installed (and thus pruned from the build set).
     """
     with mutable_config.override("config:deprecated", True):
+        dep = spack.concretize.concretize_one("deprecated-versions@1.1.0")
+        spack.installer_dispatch.create_installer([dep.package]).install()
         spec = spack.concretize.concretize_one("deprecated-client ^deprecated-versions@1.1.0")
 
-    # Mark only the deprecated dependency as installed, which is not in the build graph
-    def _mock_installed(self):
-        return self.name == "deprecated-versions"
-
-    monkeypatch.setattr(Spec, "installed", property(_mock_installed))
+    # The deprecated dependency is already installed, so it is not part of the build set
+    assert spec["deprecated-versions"].installed
 
     with pytest.raises(spack.error.InstallError, match="deprecated"):
-        spack.installer_dispatch.create_installer([spec.package])
+        spack.installer_dispatch.create_installer([spec.package]).install()
 
 
 def test_deprecated_build_only_dependency_is_not_blocked(
-    install_mockery, mutable_config: Configuration
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
 ):
     """A deprecated spec reachable only through a build edge is a blocker only when it is actually
-    built. If it is only a build record for a node already installed or coming from a buildcache it
-    must not be rejected.
+    deployed. If the build dependency that carries it is already installed (or elided in favor of
+    a buildcache hit), nothing deprecated is deployed and the install must not be rejected.
     """
     with mutable_config.override("config:deprecated", True):
+        buildtool = spack.concretize.concretize_one("deprecated-buildtool")
+        spack.installer_dispatch.create_installer([buildtool.package]).install()
         spec = spack.concretize.concretize_one("deprecated-buildtool-client")
 
     # The deprecated spec is in the DAG, but only reachable through a build edge (so spec[...],
@@ -802,6 +803,29 @@ def test_deprecated_build_only_dependency_is_not_blocked(
     with pytest.raises(KeyError):
         spec["deprecated-versions"]
 
-    # Under the strict default policy this must not raise: the deprecated spec is a pure build
-    # dependency, so it is outside the runtime closure checked at dispatch time.
-    spack.installer_dispatch.create_installer([spec.package])
+    # This must not raise. The build tool carrying the deprecated runtime dependency is already
+    # installed, so this command deploys only the client, whose runtime graph is clean.
+    spack.installer_dispatch.create_installer([spec.package]).install()
+    assert spec.installed
+
+
+def test_built_build_dep_with_installed_deprecated_runtime_dep_is_blocked(
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
+):
+    """Tests that a pure build dependency that gets built now is refused when its runtime graph
+    contains a deprecated node, even though the root's runtime closure is clean.
+    """
+    with mutable_config.override("config:deprecated", True):
+        dep = spack.concretize.concretize_one("deprecated-versions@1.1.0")
+        spack.installer_dispatch.create_installer([dep.package]).install()
+        spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+    # The deprecated node is already installed and reachable only through the build edge to
+    # deprecated-buildtool, which needs to be built now.
+    deprecated = [s for s in spec.traverse() if s.name == "deprecated-versions"]
+    assert deprecated and deprecated[0].installed
+    with pytest.raises(KeyError):
+        spec["deprecated-versions"]
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
