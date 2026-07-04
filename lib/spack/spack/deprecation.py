@@ -14,8 +14,10 @@ import warnings
 from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 
 import spack.config
+import spack.deptypes as dt
 import spack.error
 import spack.repo
+import spack.traverse
 from spack.enums import DeprecationReason, DeprecationSeverity
 
 if TYPE_CHECKING:
@@ -115,3 +117,14 @@ def ensure_allowed(specs: Iterable["spack.spec.Spec"]) -> None:
             + "\n\n    Relax 'packages:<name>:allowed_deprecation_severity' in your "
             "configuration to install them anyway."
         )
+
+
+def ensure_allowed_deployment(specs: Iterable["spack.spec.Spec"]) -> None:
+    """Raise if any spec about to be installed has a disallowed deprecation in its runtime
+    closure.
+    """
+    ensure_allowed(
+        spack.traverse.traverse_nodes(
+            list(specs), deptype=dt.LINK | dt.RUN, key=spack.traverse.by_dag_hash
+        )
+    )

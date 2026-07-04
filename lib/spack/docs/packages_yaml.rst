@@ -713,6 +713,10 @@ When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack
 Deprecations whose severity *exceeds* the threshold are refused: this is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
 Those at or below the threshold are allowed silently and the deprecated version is treated like any other, with no warning and no penalty in the solve.
 
+At install time the check covers everything the command deploys: a spec is refused if its runtime (link and run) graph contains a disallowed deprecation, even when the deprecated dependency is already installed.
+This applies to build dependencies that are built by the command as well, since they are installed in the store like any other spec.
+Build dependencies that are *not* installed by the command, for example because they are already present or because their dependent comes from a build cache, are not checked.
+
 The threshold is set with ``allowed_deprecation_severity``, which accepts the values ``"none"``, ``"low"``, ``"medium"``, ``"high"``, and ``"critical"`` in increasing order of permissiveness.
 The default is ``"none"``, meaning every deprecation is a hard error unless the user explicitly relaxes it.
 
