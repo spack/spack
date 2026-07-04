@@ -2573,8 +2573,9 @@ class PackageInstaller:
             if spec.external:
                 self.log_paths[dag_hash] = os.devnull
             else:
+                safe_version = str(spec.version).replace("/", "_").replace("\\", "_")
                 log_fd, log_path = tempfile.mkstemp(
-                    prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
+                    prefix=f"spack-stage-{spec.name}-{safe_version}-{spec.dag_hash()}-",
                     suffix=".log",
                     dir=spack.stage.get_stage_root(),
                 )
