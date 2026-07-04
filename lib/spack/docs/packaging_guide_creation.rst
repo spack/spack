@@ -798,7 +798,7 @@ The older ``version("X.Y", deprecated=True)`` syntax is still supported and is e
 
 .. code-block:: python
 
-   deprecated("@X.Y", reason="maintenance", severity="critical")
+   deprecated("@=X.Y", reason="maintenance", severity="critical")
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.
