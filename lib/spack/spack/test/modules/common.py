@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import stat
+import types
 
 import pytest
 
@@ -16,6 +17,7 @@ import spack.modules.tcl
 import spack.package_base
 import spack.package_prefs
 import spack.repo
+import spack.store
 from spack.modules.common import UpstreamModuleIndex
 from spack.old_installer import PackageInstaller
 from spack.util.filesystem import readlink
@@ -95,6 +97,9 @@ class MockDb:
     def db_for_spec_hash(self, spec_hash):
         return self.spec_hash_to_db.get(spec_hash)
 
+    def installed_upstream(self, spec):
+        return self.spec_hash_to_db.get(spec.dag_hash()) is not None
+
 
 class MockSpec:
     def __init__(self, unique_id):
@@ -143,7 +148,7 @@ module_index:
         upstream_index.upstream_module(s4, "tcl")
 
 
-def test_get_module_upstream():
+def test_get_module_upstream(monkeypatch):
     s1 = MockSpec("spec-1")
 
     tcl_module_index = """\
@@ -160,7 +165,7 @@ module_index:
     mock_db = MockDb(dbs, {s1.dag_hash(): "d1"})
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    setattr(s1, "installed_upstream", True)
+    monkeypatch.setattr(spack.store, "STORE", types.SimpleNamespace(db=mock_db))
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index
