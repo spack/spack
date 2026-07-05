@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """
-This file implements an expression syntax, similar to ``printf``, for adding
+This file implements an expression syntax, similar to ``texinfo``, for adding
 ANSI colors to text.
 
 See :func:`colorize`, :func:`cwrite`, and :func:`cprint` for routines that can
@@ -27,29 +27,41 @@ Expression      Meaning
 ``@R``          Turn on bright red coloring
 ``@*{foo}``     Bold foo, but don't change text color
 ``@_{bar}``     Underline bar, but don't change text color
-``@*b``         Turn on bold, blue text
-``@_B``         Turn on bright blue text with an underline
+``@/{baz}``     Italicize baz, but don't change text color.
+``@~{qux}``     Strikethrough qux, but don't change text color.
+``@*b``         Turn on bold, blue text.
+``@_B``         Turn on bright blue text with an underline.
+``@/B``         Turn on bright blue text in italics.
+``@~B``         Turn on bright blue text with a strikethrough.
 ``@.``          Revert to plain formatting
 ``@*g{green}``  Print out 'green' in bold, green text, then reset to plain.
 ``@*ggreen@.``  Print out 'green' in bold, green text, then reset to plain.
 ==============  ============================================================
+The final example is intended to demonstrate the behavior of {...} as a grouping operator,
+reminiscent of its use in texinfo, and not to perform any form of quoting function.
 
 The syntax consists of:
 
 ==========  =====================================================
 color-expr  ``'@' [style] color-code '{' text '}' | '@.' | '@@'``
-style       ``'*' | '_'``
+style       ``'*' | '_' | '/' | '~'``
 color-code  ``[krgybmcwKRGYBMCW]``
 text        ``.*``
 ==========  =====================================================
 
-``@`` indicates the start of a color expression.  It can be followed
-by an optional ``*`` or ``_`` that indicates whether the font should be bold or
-underlined.  If ``*`` or ``_`` is not provided, the text will be plain.  Then
-an optional color code is supplied.  This can be ``[krgybmcw]`` or ``[KRGYBMCW]``,
+``@`` indicates the start of a formatting expression.  It may be followed by an optional ``*``,
+``_``, ``/``, or ``~``, which indicates styling that modifies the *shape* of the font, such as bold
+or underline effects. The subsequent character is the color code to be applied.
+This can be ``[krgybmcw]`` or ``[KRGYBMCW]``,
 where the letters map to  ``black(k)``, ``red(r)``, ``green(g)``, ``yellow(y)``, ``blue(b)``,
-``magenta(m)``, ``cyan(c)``, and ``white(w)``.  Lowercase letters denote normal ANSI
-colors and capital letters denote bright ANSI colors.
+``magenta(m)``, ``cyan(c)``, and ``white(w)``.
+
+The lowercase ASCII alphabet is translated to ANSI color sequences as above, while the
+corresponding uppercase ASCII character denotes a "bright" version of the indicated color.
+
+The user and their terminal are always able to translate these codes into their own preferred
+palette, but we also make sure to provide appropriate config flags to disable this styling, so that
+we can ensure Spack's text output remains robust and independent of this configurable formatting.
 
 Finally, the color expression can be followed by text enclosed in ``{}``.  If
 braces are present, only the text in braces is colored.  If the braces are
@@ -76,7 +88,18 @@ class ColorParseError(Exception):
 
 
 # Text styles for ansi codes
-styles = {"*": "1", "_": "4", None: "0"}  # bold  # underline  # plain
+styles = {
+    # bold
+    "*": "1",
+    # italics
+    "/": "3",
+    # underline
+    "_": "4",
+    # strikethrough
+    "~": "9",
+    # reset
+    None: "0",
+}
 
 # Dim and bright ansi colors
 colors = {
@@ -99,7 +122,7 @@ colors = {
 }  # white
 
 # Regex to be used for color formatting
-COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
+COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_/~])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 
 # Mapping from color arguments to values for tty.set_color
 color_when_values = {"always": True, "auto": None, "never": False}

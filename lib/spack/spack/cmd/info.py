@@ -9,10 +9,11 @@ import shutil
 import sys
 import textwrap
 from argparse import Namespace
-from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, TextIO, Tuple
 
 import spack.builder
 import spack.cmd
+import spack.config
 import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
@@ -94,6 +95,24 @@ def padder(str_list: Iterable, extra: int = 0) -> Callable:
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-a", "--all", action="store_true", default=False, help="output all package information"
+    )
+    subparser.add_argument(
+        "-n",
+        "--name-only",
+        action="store_true",
+        default=False,
+        help="Disable all machine-readable information.\n"
+        "Print out only the package's docstring, homepage, and\n"
+        "other semantic information intended for a human audience.",
+    )
+    subparser.add_argument(
+        "-e",
+        "--extended",
+        action="store_true",
+        default=False,
+        help="Include the full package docstring.\n"
+        "Typically only the first line of the package docstring is printed.\n"
+        "This includes the rest of the docstring, for expansive text on each package's purpose.",
     )
 
     by = subparser.add_mutually_exclusive_group()
@@ -186,7 +205,7 @@ def print_dependencies(pkg: PackageBase, args: Namespace) -> None:
     print_definitions(pkg, "Dependencies", pkg.dependencies, DependencyFormatter(), args.by_name)
 
 
-def print_dependency_suggestion(pkg: PackageBase) -> None:
+def print_dependency_suggestion(pkg: PackageBase, args: Namespace) -> None:
     variant_counts = count_bool_variant_conditions(pkg.dependencies)
     big_variants = [
         (name, val)
@@ -636,6 +655,45 @@ def print_virtuals(pkg: PackageBase, args: Namespace) -> None:
         color.cprint("    None")
 
 
+def print_sections(args: Namespace) -> Iterator[Callable[[PackageBase, Namespace], None]]:
+    """Output optional information in the expected order.
+
+    --name-only restricts the info we print, but otherwise respects the same arguments.
+    --all will unconditionally print every optional piece of data.
+    """
+    if args.name_only:
+        if args.all or args.maintainers:
+            yield print_maintainers
+        yield print_licenses
+        return
+
+    if args.all or args.maintainers:
+        yield print_maintainers
+    if args.all or args.namespace:
+        yield print_namespace
+    if args.all or args.detectable:
+        yield print_detectable
+    if args.all or args.tags:
+        yield print_tags
+    if args.all or not args.no_versions:
+        yield print_versions
+    if args.all or not args.no_variants:
+        yield print_variants
+    if args.all or args.phases:
+        yield print_phases
+    if args.all or not args.no_dependencies:
+        yield print_dependencies
+    if args.all or args.virtuals:
+        yield print_virtuals
+    if args.all or args.tests:
+        yield print_tests
+    yield print_licenses
+
+    yield print_dependency_suggestion
+
+    return
+
+
 def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
@@ -655,7 +713,15 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
     color.cprint("")
     color.cprint(section_title("Description:"))
     if pkg.__doc__:
-        color.cprint(color.cescape(pkg.format_doc(indent=4)))
+        color.cprint(
+            color.cescape(
+                pkg.format_doc(
+                    indent=spack.config.get("config:indent_offset"),
+                    extended=args.extended,
+                    max_width=tty.TerminalWidth.configured(),
+                )
+            )
+        )
     else:
         color.cprint("    None")
 
@@ -663,23 +729,7 @@ def info(parser: argparse.ArgumentParser, args: Namespace) -> None:
         color.cprint(section_title("Homepage: ") + str(pkg.homepage))
 
     # Now output optional information in expected order
-    sections = [
-        (args.all or args.maintainers, print_maintainers),
-        (args.all or args.namespace, print_namespace),
-        (args.all or args.detectable, print_detectable),
-        (args.all or args.tags, print_tags),
-        (args.all or not args.no_versions, print_versions),
-        (args.all or not args.no_variants, print_variants),
-        (args.all or args.phases, print_phases),
-        (args.all or not args.no_dependencies, print_dependencies),
-        (args.all or args.virtuals, print_virtuals),
-        (args.all or args.tests, print_tests),
-        (True, print_licenses),
-    ]
-    for print_it, func in sections:
-        if print_it:
-            func(pkg, args)
-
-    print_dependency_suggestion(pkg)
-
-    color.cprint("")
+    for func in print_sections(args):
+        func(pkg, args)
+    # print_licenses() is always printed, and always at the end.
+    # It will conclude with two trailing newlines, as a result of print_definitions().

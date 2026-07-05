@@ -253,6 +253,9 @@ def version_json(pkg_names, out):
     out.write("\n]\n")
 
 
+# TODO(cosmicexplorer):
+# - unify the styling from spack.llnl.util.tty.color across terminal and HTML output!
+# - caching, asynchrony, and parallelism could fix this!
 @formatter
 def html(pkg_names, out):
     """Print out information on all packages in Sphinx HTML.

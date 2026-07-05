@@ -250,3 +250,6 @@ config:
     concretise: concretize
     containerise: containerize
     rm: remove
+
+  indent_offset: 4
+  max_width: 0

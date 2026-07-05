@@ -11,7 +11,12 @@ import textwrap
 import traceback
 from datetime import datetime
 from types import TracebackType
-from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
+from typing import IO, TYPE_CHECKING, Callable, Iterator, NoReturn, Optional, Type, Union
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+from spack.util.lang import memoized
 
 from .color import cescape, clen, cprint, cwrite
 
@@ -282,19 +287,90 @@ def get_yes_or_no(prompt: str, default: Optional[bool] = None) -> Optional[bool]
     return result
 
 
-def hline(label: Optional[str] = None, *, char: str = "-", max_width: int = 64) -> None:
+class TerminalWidth(int):
+    MIN_WIDTH = 10
+
+    def __new__(cls, *args, **kwargs):
+        ret = super().__new__(cls, *args, **kwargs)
+        if ret <= cls.MIN_WIDTH:
+            raise ValueError(
+                f"selected terminal width must be at least {cls.MIN_WIDTH} columns wide "
+                f"(was: {ret})"
+            )
+        return ret
+
+    @classmethod
+    @memoized
+    def _default(cls) -> Self:
+        return cls(72)
+
+    @classmethod
+    @memoized
+    def _as_introspected(cls) -> Optional[Self]:
+        """Query the stdlib facilities for the width of the encompassing terminal, if available."""
+        cols = shutil.get_terminal_size().columns
+        if cols:
+            return cls(cols)
+        return None
+
+    @classmethod
+    def _as_configured(cls) -> Optional[Self]:
+        # May return 0 (the default), which we convert to a None.
+        import spack.config
+
+        width = spack.config.get("config:max_width")
+        if width:
+            return cls(width)
+        return None
+
+    @classmethod
+    def configured(cls, default: Optional[Self] = None) -> Self:
+        configured = cls._as_configured()
+        if configured is not None:
+            return configured
+        introspected = cls._as_introspected()
+        if introspected is not None:
+            return introspected
+        return default or cls._default
+
+    @memoized
+    def limit_to(self, within_range: Self) -> Self:
+        if self <= within_range:
+            return self
+        return within_range
+
+    def reduce_by(self, n: int) -> Self:
+        """Reduce the current width by some amount."""
+        if n < 0:
+            raise ValueError(f"cannot reduce a terminal width by a negative (got: {n})")
+        # This will raise ValueError if < the min width.
+        return self.__class__(self - n)
+
+    @classmethod
+    @memoized
+    def _hline_max_width(cls) -> Self:
+        return cls(64)
+
+    @classmethod
+    def convert_or_default(cls, default: Self, max_width: Optional[int] = None) -> Self:
+        if max_width is None:
+            return default
+        return cls(max_width)
+
+
+def hline(
+    label: Optional[str] = None, *, char: str = "-", max_width: Optional[int] = None
+) -> None:
     """Draw a labeled horizontal line.
 
     Args:
         char: char to draw the line with
         max_width: maximum width of the line
     """
-    cols = shutil.get_terminal_size().columns
-    if not cols:
-        cols = max_width
-    else:
-        cols -= 2
-    cols = min(max_width, cols)
+    max_width = TerminalWidth.convert_or_default(
+        default=TerminalWidth._hline_max_width(), max_width=max_width
+    )
+    cols = TerminalWidth.configured().reduce_by(2).limit_to(max_width)
 
     label = str(label)
     prefix = char * 2 + " "

@@ -10,7 +10,6 @@ import errno
 import functools
 import glob
 import hashlib
-import io
 import itertools
 import os
 import pathlib
@@ -53,6 +52,7 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
+from spack.llnl.util.tty.color import colorize
 from spack.resource import Resource
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
 from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
@@ -2272,20 +2272,75 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Removes the package's build stage and source tarball."""
         self.stage.destroy()
 
+    @classproperty
+    def docstring_uses_rich_text(cls):
+        # Default to false--this is a new and breaking way to interpret text, so let users opt in.
+        return False
+
+    @classproperty
+    def docstring_has_extended_text(cls):
+        # Default to false--this is a new and breaking way to interpret text, so let users opt in.
+        return False
+
+    _until_first_break = re.compile(r"^(.*?)(?=$|\n\n)", flags=re.DOTALL)
+    _spacing = re.compile(r"\s+")
+
     @classmethod
     def format_doc(cls, **kwargs):
-        """Wrap doc string at 72 characters and format nicely"""
+        """Wrap doc string and format nicely!"""
         indent = kwargs.get("indent", 0)
+        extended = kwargs.get("extended", False)
+        max_width = tty.TerminalWidth.convert_or_default(
+            default=tty.TerminalWidth._default(), max_width=kwargs.get("max_width", None)
+        )
 
-        if not cls.__doc__:
+        # We perform several transformations upon this string depending upon kwarg values.
+        doc = cls.__doc__
+        if not doc:
             return ""
 
-        doc = re.sub(r"\s+", " ", cls.__doc__)
-        lines = textwrap.wrap(doc, 72)
-        results = io.StringIO()
-        for line in lines:
-            results.write((" " * indent) + line + "\n")
-        return results.getvalue()
+        # If the docstring opts into this "extended" mechanism, then use it to limit the text
+        # we print.
+        if cls.docstring_has_extended_text:
+            if not extended:
+                doc = cls._until_first_break.match(cls.__doc__).group(0)
+                doc = cls._spacing.sub(" ", doc)
+            # If "extended" *is* selected, then we preserve newlines and other spacing in
+            # the output.
+        else:
+            # Otherwise, we perform the previous behavior, which coalesces all forms of spacing.
+            doc = cls._spacing.sub(" ", doc)
+
+        # If the docstring opts into using coloration, we perform that process on the
+        # coalesced version.
+        if cls.docstring_uses_rich_text:
+            doc = colorize(doc)
+
+        # The textwrap.wrap() method supports its own indentation. Use those arguments with our
+        # given prefix.
+        prefix = " " * indent
+        # Wrap to the specified width.
+        if cls.docstring_has_extended_text and extended:
+            sections = doc.split("\n\n")
+
+            lines_by_section = []
+            for section in sections:
+                # import pdb; pdb.set_trace()
+                lines = textwrap.wrap(
+                    section, width=max_width, initial_indent=prefix, subsequent_indent=prefix
+                )
+                lines_by_section.append("\n".join(lines))
+            joined_lines = "\n\n".join(lines_by_section)
+        else:
+            lines = textwrap.wrap(
+                doc, width=max_width, initial_indent=prefix, subsequent_indent=prefix
+            )
+            joined_lines = "\n".join(lines)
+
+        if joined_lines:
+            return joined_lines + "\n"
+        else:
+            return ""
 
     @property
     def all_urls(self) -> List[str]:

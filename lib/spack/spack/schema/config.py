@@ -228,6 +228,21 @@ properties: Dict[str, Any] = {
                 "description": "A mapping of aliases that can be used to define new "
                 "Spack commands",
             },
+            "indent_offset": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The number of ASCII space (0x20) characters used to prefix "
+                "every line of structured output, increasing linearly with the level of "
+                "hierarchical nesting.",
+            },
+            "max_width": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "How many monospace characters may be written to the "
+                "terminal in sequence before writing an ASCII newline (0xa) "
+                "as part of a context-specific word-wrapping processto limit "
+                "the terminal column width necessary to convey the output.",
+            },
             "installer": {
                 "type": "string",
                 "enum": ["old", "new"],
