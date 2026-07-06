@@ -464,8 +464,9 @@ def test_set_install_permissions_expands_restricted_dacl(tmp_path):
     f.write_text("hello")
     owner_sid = SecurityDescriptor.from_file(str(f)).owner
 
-    # Restrict to owner-only (600-equivalent): no Everyone in DACL
-    set_file_sddl(str(f), f"D:P(A;;FRFW;;;{owner_sid})")
+    # Restrict to owner-only: no Everyone in DACL.  Owner needs FA (which includes
+    # WRITE_DAC) so that set_install_permissions can modify the ACL.
+    set_file_sddl(str(f), f"D:P(A;;FA;;;{owner_sid})")
     assert not any(a.sid == "WD" for a in SecurityDescriptor.from_file(str(f)).dacl)
 
     fs.set_install_permissions(str(f))
