@@ -489,13 +489,24 @@ def test_copy_mode_propagates_execute_on_windows(tmp_path):
 
     _FX = int(FileAccessRights.FILE_GENERIC_EXECUTE)
 
-    # Give src execute-only; give dst read-only.  The P flag blocks inheritance so no
-    # inherited execute-granting ACEs from the parent directory can slip into dst.
-    set_file_sddl(str(src), "D:P(A;;FX;;;WD)")
-    set_file_sddl(str(dst), "D:P(A;;FR;;;WD)")
+    # Add an execute ACE to src's existing DACL (preserves owner/admin access on src).
+    src_sd = SecurityDescriptor.from_file(str(src))
+    src_sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_ALLOWED, rights=FileAccessRights.FILE_GENERIC_EXECUTE, sid="WD"
+        )
+    )
+    src_sd.apply(str(src))
 
-    # Sanity: dst must not grant execute before copy_mode
-    assert not any(a.grants(_FX) for a in SecurityDescriptor.from_file(str(dst)).dacl)
+    # Give dst a known DACL: owner FA (includes WRITE_DAC so apply() can update it) plus
+    # Everyone FR (no execute).  P blocks inheritance so no execute-granting ACE slips in.
+    owner_sid = SecurityDescriptor.from_file(str(dst)).owner
+    set_file_sddl(str(dst), f"D:P(A;;FA;;;{owner_sid})(A;;FR;;;WD)")
+
+    # Sanity: Everyone on dst must not have execute before copy_mode
+    assert not any(
+        a.sid == "WD" and a.grants(_FX) for a in SecurityDescriptor.from_file(str(dst)).dacl
+    )
 
     fs.copy_mode(str(src), str(dst))
 
