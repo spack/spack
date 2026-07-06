@@ -157,8 +157,7 @@ class DatabaseAction:
 
 
 class MarkExplicitAction(DatabaseAction):
-    """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
-    used when no build process was needed."""
+    """Action to mark an already installed spec as explicitly installed."""
 
     __slots__ = ()
 
@@ -170,17 +169,38 @@ class MarkExplicitAction(DatabaseAction):
         db._mark(self.spec, "explicit", True)
 
 
-class ChildInfo(DatabaseAction):
-    """Information about a child process."""
+class AddSpecAction(DatabaseAction):
+    """Action to add a successfully built spec to the database. Owns the prefix write lock from
+    the moment the build finishes until the DB write (downgrade to read) or cleanup (release)."""
+
+    __slots__ = ("explicit",)
+
+    def __init__(
+        self, spec: "spack.spec.Spec", explicit: bool, prefix_lock: Optional[spack.util.lock.Lock]
+    ) -> None:
+        self.spec = spec
+        self.explicit = explicit
+        self.prefix_lock = prefix_lock
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        db._add(self.spec, explicit=self.explicit)
+
+
+class ChildInfo:
+    """Loop-side handle to a running build: the child process and its IPC channels. Owns the
+    prefix write lock while the build runs; on success ownership transfers to the pending
+    ``AddSpecAction`` DB insert."""
 
     __slots__ = (
         "proc",
+        "spec",
         "output_r_conn",
         "state_r_conn",
         "control_w_conn",
         "notifier",
-        "explicit",
         "log_path",
+        "prefix_lock",
+        "state_buffer",
     )
 
     def __init__(
@@ -192,7 +212,6 @@ class ChildInfo(DatabaseAction):
         control_w_conn: IpcChannel,
         notifier: ProcessExitNotifier,
         log_path: str,
-        explicit: bool = False,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -201,17 +220,27 @@ class ChildInfo(DatabaseAction):
         self.control_w_conn = control_w_conn
         self.notifier = notifier
         self.log_path = log_path
-        self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        # Buffer for partially received state data from this child. Kept as raw bytes and split on
+        # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
+        # safe without decoding partial reads.
+        self.state_buffer = b""
 
-    def save_to_db(self, db: spack.database.Database) -> None:
-        return db._add(self.spec, explicit=self.explicit)
+    def release_prefix_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+        self.prefix_lock = None
 
-    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+    def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
         """Register output, state, and sentinel channels with the selector."""
-        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
-        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
-        selector.register(self.notifier.fileobj, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(build_id, "output"))
+        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(build_id, "state"))
+        selector.register(
+            self.notifier.fileobj, selectors.EVENT_READ, FdInfo(build_id, "sentinel")
+        )
 
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
@@ -871,14 +900,7 @@ def start_build(
     control_r_conn.close()
 
     return ChildInfo(
-        proc,
-        spec,
-        output_r_conn,
-        state_r_conn,
-        control_w_conn,
-        ExitNotifier(proc),
-        log_path,
-        explicit,
+        proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
     )
 
 
@@ -1981,7 +2003,7 @@ class NullReportData(ReportData):
         pass
 
 
-def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
+def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
         try:
@@ -2044,12 +2066,6 @@ class PackageInstaller:
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
 
-        # Buffer for incoming, partially received state data from child processes. Kept as raw
-        # bytes and split on b"\n": the newline byte cannot occur inside a multi-byte UTF-8
-        # sequence, so framing is safe without decoding partial reads. Keyed by PID rather than fd
-        # because on Windows the state channel is a socket whose handle is not a stable POSIX fd.
-        self.state_buffers: Dict[int, bytes] = {}
-
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
         elif explicit is False:
@@ -2100,7 +2116,7 @@ class PackageInstaller:
         self.pending_expansions: List[str] = []
 
         self.verbose = verbose
-        self.running_builds: Dict[int, ChildInfo] = {}
+        self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
@@ -2158,7 +2174,7 @@ class PackageInstaller:
         retained_read_locks: List[spack.util.lock.Lock] = []
 
         failures: List[spack.spec.Spec] = []
-        finished_pids: List[int] = []
+        finished_builds: List[str] = []
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
@@ -2198,7 +2214,7 @@ class PackageInstaller:
                     timeout = DATABASE_WRITE_INTERVAL
                 events = selector.select(timeout=timeout)
 
-                finished_pids.clear()
+                finished_builds.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -2211,13 +2227,13 @@ class PackageInstaller:
                     data = key.data
                     if isinstance(data, FdInfo):
                         # Child output (logs and state updates)
-                        child_info = self.running_builds[data.pid]
+                        child_info = self.running_builds[data.build_id]
                         if data.name == "output":
                             self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
                             self._handle_child_state(child_info, selector)
                         elif data.name == "sentinel":
-                            finished_pids.append(data.pid)
+                            finished_builds.append(data.build_id)
                     elif data == "stdin":
                         stdin_ready = True
                     elif data == "sigwinch":
@@ -2229,9 +2245,9 @@ class PackageInstaller:
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
-                for pid in finished_pids:
+                for build_id in finished_builds:
                     self._handle_finished_build(
-                        pid, current_time, jobserver, selector, failures, database_actions
+                        build_id, current_time, jobserver, selector, failures, database_actions
                     )
 
                 if failures and self.fail_fast:
@@ -2376,7 +2392,7 @@ class PackageInstaller:
 
     def _handle_finished_build(
         self,
-        pid: int,
+        dag_hash: str,
         current_time: float,
         jobserver: JobServerBase,
         selector: selectors.BaseSelector,
@@ -2386,8 +2402,7 @@ class PackageInstaller:
         """Handle a build that has finished. Remove from running_builds; release jobserver token;
         update UI state; defer database insertion if successful; possibly reschedule if failed with
         cache miss; register failures."""
-        build = self.running_builds.pop(pid)
-        dag_hash = build.spec.dag_hash()
+        build = self.running_builds.pop(dag_hash)
         self.capacity += 1
         jobserver.release()
         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
@@ -2397,9 +2412,13 @@ class PackageInstaller:
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
-            # Schedule successful builds for batched database insertion. We don't release the
-            # prefix lock here; that strictly happens after a successful db write.
-            database_actions.append(build)
+            # Schedule successful builds for batched database insertion. Ownership of the prefix
+            # write lock moves from the finished child to the pending DB insert; it is downgraded
+            # or released only after a successful db write.
+            database_actions.append(
+                AddSpecAction(build.spec, dag_hash in self.explicit, build.prefix_lock)
+            )
+            build.prefix_lock = None
             self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
             self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
             self.build_status.update_state(dag_hash, "finished")
@@ -2603,10 +2622,8 @@ class PackageInstaller:
             stop_at=self.stop_at if is_root else None,
         )
         child_info.prefix_lock = prefix_lock
-        pid = child_info.proc.pid
-        assert type(pid) is int
-        self.running_builds[pid] = child_info
-        child_info.register_with_selector(selector, pid)
+        self.running_builds[dag_hash] = child_info
+        child_info.register_with_selector(selector, dag_hash)
         self.build_status.add_build(
             child_info.spec,
             explicit=explicit,
@@ -2653,8 +2670,7 @@ class PackageInstaller:
         """Handle reading state updates from a child process pipe. Returns False once the channel
         has reached EOF and was unregistered, True while it remains open."""
         conn = child_info.state_r_conn
-        pid = child_info.proc.pid
-        assert pid is not None
+        dag_hash = child_info.spec.dag_hash()
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
@@ -2669,16 +2685,16 @@ class PackageInstaller:
                 selector.unregister(conn)
             except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(pid, None)
+            child_info.state_buffer = b""
             return False
 
         # Accumulate raw bytes and split on the newline byte. We never decode a partial read; only
         # complete lines are handed to json.loads(), which decodes the (UTF-8) bytes itself.
-        buffer = self.state_buffers.get(pid, b"") + data
+        buffer = child_info.state_buffer + data
         lines = buffer.split(b"\n")
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[pid] = lines.pop()
+        child_info.state_buffer = lines.pop()
 
         for line in lines:
             if not line:
@@ -2688,11 +2704,9 @@ class PackageInstaller:
             except ValueError:
                 continue
             if "state" in message:
-                self.build_status.update_state(child_info.spec.dag_hash(), message["state"])
+                self.build_status.update_state(dag_hash, message["state"])
             elif "progress" in message and "total" in message:
-                self.build_status.update_progress(
-                    child_info.spec.dag_hash(), message["progress"], message["total"]
-                )
+                self.build_status.update_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
 
