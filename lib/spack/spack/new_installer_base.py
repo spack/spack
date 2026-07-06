@@ -18,6 +18,7 @@ from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.spec
+from spack.llnl.util.tty.log import redirect_stdio, restore_stdio
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
@@ -30,6 +31,9 @@ else:
 
 #: Size of the output buffer for child processes
 OUTPUT_BUFFER_SIZE = 32768
+
+#: Control byte that stops the tee thread
+TEE_STOP = b"2"
 
 
 class StdinReader:
@@ -131,10 +135,10 @@ class BaseTerminalState(abc.ABC):
 class FdInfo:
     """Information about a file descriptor mapping."""
 
-    __slots__ = ("pid", "name")
+    __slots__ = ("build_id", "name")
 
-    def __init__(self, pid: int, name: str) -> None:
-        self.pid = pid
+    def __init__(self, build_id: str, name: str) -> None:
+        self.build_id = build_id
         self.name = name
 
 
@@ -210,7 +214,7 @@ class NoopJobServer(JobServerBase):
     def decrease_parallelism(self) -> None: ...
 
     def acquire(self, jobs: int) -> int:
-        return 0
+        return jobs
 
     def release(self) -> None: ...
 
@@ -219,23 +223,27 @@ class NoopJobServer(JobServerBase):
 
 class Tee(abc.ABC):
     """Emulates ./build 2>&1 | tee build.log. Output is sent to a log file and the parent
-    process (if echoing is enabled). The control socket is used to enable/disable echoing."""
+    process (if echoing is enabled). The control channel is used to enable/disable echoing."""
 
-    def __init__(self, control: IpcChannel, parent: IpcChannel, log_path: str) -> None:
-        self.control = control
+    def __init__(
+        self,
+        control_r: IpcChannel,
+        control_w: Optional[IpcChannel],
+        parent: IpcChannel,
+        log_path: str,
+    ) -> None:
+        # Read end: the parent sends echo on/off here.
+        self.control_r = control_r
         self.parent = parent
-        # sys.stdout and sys.stderr may have been replaced with file objects under pytest, so
-        # redirect their file descriptors in addition to the original fds 1 and 2.
-        fds = {sys.stdout.fileno(), sys.stderr.fileno(), 1, 2}
-        self.saved_fds = {fd: os.dup(fd) for fd in fds}
+        # Write end, used by tee itself to stop the thread (and by parent to toggle echoing).
+        self.control_w = control_w
         #: The path of the log file
         self.log_path = log_path
         log_file = open(self.log_path, "ab")
         r, w = os.pipe()
         self.tee_thread = threading.Thread(target=self.run, args=(r, log_file), daemon=True)
         self.tee_thread.start()
-        for fd in fds:
-            os.dup2(w, fd)
+        self.saved_fds = redirect_stdio(w)
         self._setup_handles()
         os.close(w)
 
@@ -251,17 +259,20 @@ class Tee(abc.ABC):
         pass
 
     def close(self) -> None:
-        # Closing stdout and stderr should close the last reference to the write end of the pipe,
-        # causing the tee thread to wake up, flush the last data, and exit. We restore stdout and
-        # stderr, because between sys.exit and the actual process exit buffers may be flushed, and
-        # can cause exit code 120 (witnessed under pytest+coverage on macOS).
-        sys.stdout.flush()
-        sys.stderr.flush()
-        for fd, saved_fd in self.saved_fds.items():
-            os.dup2(saved_fd, fd)
-            os.close(saved_fd)
+        # We restore stdout and stderr, because between sys.exit and the actual process exit
+        # buffers may be flushed, and can cause exit code 120 (witnessed under pytest+coverage on
+        # macOS).
+        restore_stdio(self.saved_fds)
+        if self.control_w is not None:
+            # Send a control byte to stop the tee thread.
+            try:
+                os.write(self.control_w.fileno(), TEE_STOP)
+            except OSError:
+                pass
         self.tee_thread.join()
         # Only then close the other fds.
-        self.control.close()
+        if self.control_w is not None:
+            self.control_w.close()
+        self.control_r.close()
         self.parent.close()
         self._restore_handles()

@@ -7,10 +7,10 @@ import sys
 from typing import Dict, Iterable, List
 
 import spack.environment
-import spack.llnl.string
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify as colify
 import spack.repo
+import spack.util.string
 
 description = "show package tags and associated packages"
 section = "query"
@@ -24,7 +24,7 @@ def report_tags(category, tags):
     if isatty:
         num = len(tags)
         fmt = "{0} package tag".format(category)
-        buffer.write("{0}:\n".format(spack.llnl.string.plural(num, fmt)))
+        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)

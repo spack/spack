@@ -30,7 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
@@ -45,6 +44,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +53,9 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -861,7 +856,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -1122,15 +1117,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls

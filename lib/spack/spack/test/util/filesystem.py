@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for ``llnl/util/filesystem.py``"""
+"""Tests for ``util/filesystem.py``"""
 
 import filecmp
 import os
@@ -14,8 +14,8 @@ from contextlib import contextmanager
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.paths
+import spack.util.filesystem as fs
 
 
 @pytest.fixture()
@@ -741,6 +741,49 @@ def test_keep_modification_time(tmp_path: pathlib.Path):
     assert int(mtime1) == int(file1.stat().st_mtime)
 
 
+def test_temp_cwd_changes_restores_and_removes_dir():
+    previous_dir = os.path.realpath(os.getcwd())
+    with fs.temp_cwd() as tmp_dir:
+        assert previous_dir != os.path.realpath(os.getcwd())
+        assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+        assert os.path.isdir(tmp_dir)
+    assert os.path.realpath(os.getcwd()) == previous_dir
+    assert not os.path.exists(tmp_dir)
+
+
+def test_temp_cwd_restores_working_dir_on_exception():
+    previous_dir = os.path.realpath(os.getcwd())
+    with pytest.raises(RuntimeError, match="mock failure"):
+        with fs.temp_cwd() as tmp_dir:
+            assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+            raise RuntimeError("mock failure")
+    assert os.path.realpath(os.getcwd()) == previous_dir
+
+
+@pytest.mark.parametrize("ignore_cleanup_errors", [True, False])
+def test_temp_cwd_cleanup_args(monkeypatch, ignore_cleanup_errors):
+
+    expected_ignore_errors = False if sys.platform == "win32" else ignore_cleanup_errors
+
+    def mock_rmtree(path, **kwargs):
+        assert kwargs["ignore_errors"] is expected_ignore_errors
+
+    def mock_readonly_file_handler(ignore_errors=False):
+        # always true when called in this context on Windows
+        # should not be called on other platforms
+        assert ignore_errors is True
+        assert sys.platform == "win32"
+
+    real_rmtree = shutil.rmtree
+    monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
+    monkeypatch.setattr(fs, "readonly_file_handler", mock_readonly_file_handler)
+
+    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors):
+        pass
+    # need to restore rmtree to avoid breaking teardown
+    monkeypatch.setattr(shutil, "rmtree", real_rmtree)
+
+
 def test_temporary_dir_context_manager():
     previous_dir = os.path.realpath(os.getcwd())
     with fs.temporary_dir() as tmp_dir:
@@ -1317,3 +1360,51 @@ def test_edit_in_place_through_temporary_file(tmp_path: pathlib.Path):
             f.write("World")
     assert (tmp_path / "example.txt").read_text() == "World"
     assert os.stat(tmp_path / "example.txt").st_ino == current_ino
+
+
+def test_write_tmp_and_move_replaces_and_cleans_up(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.txt"
+    dst.write_text("old")
+    with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+        f.write("new")
+    assert dst.read_text() == "new"
+    assert os.listdir(tmp_path) == ["file.txt"]
+
+
+def test_write_tmp_and_move_failure_keeps_destination(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.txt"
+    dst.write_text("old")
+    with pytest.raises(ValueError, match="expected"):
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+            f.write("partial")
+            raise ValueError("expected")
+    assert dst.read_text() == "old"
+    assert os.listdir(tmp_path) == ["file.txt"]
+
+
+def test_write_tmp_and_move_binary_mode(tmp_path: pathlib.Path):
+    dst = tmp_path / "file.bin"
+    with fs.write_tmp_and_move(str(dst), mode="wb") as f:
+        f.write(b"\x00\x01\x02")
+    assert dst.read_bytes() == b"\x00\x01\x02"
+    assert os.listdir(tmp_path) == ["file.bin"]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="umask is not supported on Windows")
+def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
+    old_umask = os.umask(0o022)
+    try:
+        # new files are created with mode 0o666 & ~umask
+        dst = tmp_path / "file.txt"
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+            f.write("content")
+        assert stat.S_IMODE(os.stat(dst).st_mode) == 0o644
+
+        # permissions of an existing destination are preserved
+        os.chmod(dst, 0o600)
+        with fs.write_tmp_and_move(str(dst), encoding="utf-8") as f:
+            f.write("updated")
+        assert stat.S_IMODE(os.stat(dst).st_mode) == 0o600
+        assert dst.read_text() == "updated"
+    finally:
+        os.umask(old_umask)

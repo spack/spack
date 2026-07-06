@@ -119,6 +119,8 @@ Spack can clone and use repositories directly from Git URLs:
    repos:
      my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
+.. _automatic-repo-cloning:
+
 Automatic Cloning
 """""""""""""""""
 
@@ -128,6 +130,8 @@ By default, these repositories are cloned into a subdirectory within ``~/.spack/
 To change directories to the package repository, you can use ``spack cd --repo [name]``.
 To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
 The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
+
+.. _customizing-clone-location:
 
 Customizing Clone Location
 """"""""""""""""""""""""""

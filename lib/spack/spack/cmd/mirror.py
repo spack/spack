@@ -11,18 +11,18 @@ import spack.cmd
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify as colify
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
+import spack.util.lang as lang
 import spack.util.parallel
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.string import comma_or
+from spack.util.string import comma_or
 
 description = "manage mirrors (source and binary)"
 section = "config"

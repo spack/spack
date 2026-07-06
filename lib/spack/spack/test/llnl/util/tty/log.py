@@ -6,11 +6,13 @@ import contextlib
 import pathlib
 import sys
 from types import ModuleType
-from typing import Optional
+from typing import List, Optional, Type
+
+import pytest
 
 import spack.llnl.util.tty.log as log
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 termios: Optional[ModuleType] = None
 try:
@@ -19,6 +21,16 @@ try:
     termios = term_mod
 except ImportError:
     pass
+
+_log_classes: List[Type] = (
+    [log.threadlog] if sys.platform == "win32" else [log.nixlog, log.threadlog]
+)
+
+
+@pytest.fixture(autouse=True, params=_log_classes, ids=[cls.__name__ for cls in _log_classes])
+def logger_class(request, monkeypatch):
+    """Run every test in this module against all logger implementations."""
+    monkeypatch.setattr(log, "log_output", request.param)
 
 
 @contextlib.contextmanager

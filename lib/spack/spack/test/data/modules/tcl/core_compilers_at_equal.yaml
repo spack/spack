@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  hierarchical: true
+  core_compilers:
+    - 'clang@=15.0.0'

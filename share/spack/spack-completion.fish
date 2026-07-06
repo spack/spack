@@ -374,7 +374,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependencies -d '
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'show packages that depend on another'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'build package from code in current working directory'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s dev-build information'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s develop: section'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
@@ -389,6 +389,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a graph -d 'generat
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a help -d 'get help on spack and its commands'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a info -d 'get detailed information on a particular package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a install -d 'build and install packages'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a isolate -d 'isolate the current spack instance from the home directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a license -d 'list and check license headers on files in spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a list -d 'list and search available packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a load -d 'add package to the user environment'
@@ -419,7 +420,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a tags -d 'show pac
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a test -d 'run spack'"'"'s tests for an install'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a test-env -d 'run a command in a spec'"'"'s test environment,'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a tutorial -d 'set up spack for our tutorial (WARNING: modifies config!)'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a undevelop -d 'remove specs from an environment'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a undevelop -d 'remove specs from an environment'"'"'s develop: section'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a uninstall -d 'remove installed packages'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a unit-test -d 'run spack'"'"'s unit tests (wrapper around pytest)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a unload -d 'remove package from the user environment'
@@ -2070,7 +2071,7 @@ complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -f -a cl
 complete -c spack -n '__fish_spack_using_command gpg sign' -l clearsign -d 'if specified, create a clearsign signature'
 
 # spack graph
-set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype=
+set -g __fish_spack_optspecs_spack_graph h/help a/ascii d/dot s/static c/color i/installed deptype= l/long L/very-long
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 graph' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command graph' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command graph' -s h -l help -d 'show this help message and exit'
@@ -2086,6 +2087,10 @@ complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -f -a 
 complete -c spack -n '__fish_spack_using_command graph' -s i -l installed -d 'graph specs from the DB'
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -f -a deptype
 complete -c spack -n '__fish_spack_using_command graph' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
+complete -c spack -n '__fish_spack_using_command graph' -s l -l long -f -a long
+complete -c spack -n '__fish_spack_using_command graph' -s l -l long -d 'show dependency hashes as well as versions'
+complete -c spack -n '__fish_spack_using_command graph' -s L -l very-long -f -a very_long
+complete -c spack -n '__fish_spack_using_command graph' -s L -l very-long -d 'show full dependency hashes as well as versions'
 
 # spack help
 set -g __fish_spack_optspecs_spack_help h/help a/all spec
@@ -2210,6 +2215,19 @@ complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reus
 complete -c spack -n '__fish_spack_using_command install' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command install' -l deprecated -d 'allow concretizer to select deprecated versions'
+
+# spack isolate
+set -g __fish_spack_optspecs_spack_isolate h/help path= self undo overwrite
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command isolate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command isolate' -l path -r -f -a path
+complete -c spack -n '__fish_spack_using_command isolate' -l path -r -d 'path to data isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l self -f -a path
+complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'use spack'"'"'s own prefix as isolation directory'
+complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
+complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'overwrite existing isolation if necessary'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
@@ -2565,8 +2583,8 @@ complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -d 'conf
 
 # spack module
 set -g __fish_spack_optspecs_spack_module h/help
-complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a lmod -d 'manipulate hierarchical module files'
-complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a tcl -d 'manipulate non-hierarchical module files'
+complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a lmod -d 'manipulate lua module files'
+complete -c spack -n '__fish_spack_using_command_pos 0 module' -f -a tcl -d 'manipulate tcl module files'
 complete -c spack -n '__fish_spack_using_command module' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command module' -s h -l help -d 'show this help message and exit'
 
@@ -2967,7 +2985,7 @@ complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r 
 complete -c spack -n '__fish_spack_using_command repo update' -l commit -s c -r -d 'name of a commit to change to'
 
 # spack repo show-version-updates
-set -g __fish_spack_optspecs_spack_repo_show_version_updates h/help no-manual-packages no-git-versions only-redistributable
+set -g __fish_spack_optspecs_spack_repo_show_version_updates h/help no-manual-packages no-git-versions only-redistributable no-deprecated
 
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -s h -l help -d 'show this help message and exit'
@@ -2977,6 +2995,8 @@ complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l n
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-git-versions -d 'exclude versions from git'
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l only-redistributable -f -a only_redistributable
 complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l only-redistributable -d 'exclude non-redistributable packages'
+complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-deprecated -f -a no_deprecated
+complete -c spack -n '__fish_spack_using_command repo show-version-updates' -l no-deprecated -d 'exclude deprecated versions'
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help
@@ -3005,16 +3025,10 @@ complete -c spack -n '__fish_spack_using_command restage' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command restage' -s h -l help -d 'show this help message and exit'
 
 # spack solve
-set -g __fish_spack_optspecs_spack_solve h/help show= timers stats l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_solve h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated show= timers stats
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 solve' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command solve' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command solve' -l show -r -f -a show
-complete -c spack -n '__fish_spack_using_command solve' -l show -r -d 'select outputs'
-complete -c spack -n '__fish_spack_using_command solve' -l timers -f -a timers
-complete -c spack -n '__fish_spack_using_command solve' -l timers -d 'print out timers for different solve phases'
-complete -c spack -n '__fish_spack_using_command solve' -l stats -f -a stats
-complete -c spack -n '__fish_spack_using_command solve' -l stats -d 'print out statistics from clingo'
 complete -c spack -n '__fish_spack_using_command solve' -s l -l long -f -a long
 complete -c spack -n '__fish_spack_using_command solve' -s l -l long -d 'show dependency hashes as well as versions'
 complete -c spack -n '__fish_spack_using_command solve' -s L -l very-long -f -a very_long
@@ -3047,9 +3061,15 @@ complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-
 complete -c spack -n '__fish_spack_using_command solve' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command solve' -l deprecated -d 'allow concretizer to select deprecated versions'
+complete -c spack -n '__fish_spack_using_command solve' -l show -r -f -a show
+complete -c spack -n '__fish_spack_using_command solve' -l show -r -d 'select outputs'
+complete -c spack -n '__fish_spack_using_command solve' -l timers -f -a timers
+complete -c spack -n '__fish_spack_using_command solve' -l timers -d 'print out timers for different solve phases'
+complete -c spack -n '__fish_spack_using_command solve' -l stats -f -a stats
+complete -c spack -n '__fish_spack_using_command solve' -l stats -d 'print out statistics from clingo'
 
 # spack spec
-set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated
+set -g __fish_spack_optspecs_spack_spec h/help l/long L/very-long N/namespaces I/install-status no-install-status y/yaml j/json format= non-defaults c/cover= t/types f/force U/fresh reuse fresh-roots deprecated show= timers stats
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 spec' -f -k -a '(__fish_spack_specs_or_id)'
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command spec' -s h -l help -d 'show this help message and exit'
@@ -3085,6 +3105,12 @@ complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-d
 complete -c spack -n '__fish_spack_using_command spec' -l fresh-roots -l reuse-deps -d 'concretize with fresh roots and reused dependencies'
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -f -a config_deprecated
 complete -c spack -n '__fish_spack_using_command spec' -l deprecated -d 'allow concretizer to select deprecated versions'
+complete -c spack -n '__fish_spack_using_command spec' -l show -r -f -a show
+complete -c spack -n '__fish_spack_using_command spec' -l show -r -d 'select outputs'
+complete -c spack -n '__fish_spack_using_command spec' -l timers -f -a timers
+complete -c spack -n '__fish_spack_using_command spec' -l timers -d 'print out timers for different solve phases'
+complete -c spack -n '__fish_spack_using_command spec' -l stats -f -a stats
+complete -c spack -n '__fish_spack_using_command spec' -l stats -d 'print out statistics from clingo'
 
 # spack stage
 set -g __fish_spack_optspecs_spack_stage h/help n/no-checksum p/path= e/exclude= s/skip-installed f/force U/fresh reuse fresh-roots deprecated

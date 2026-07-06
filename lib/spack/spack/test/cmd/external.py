@@ -13,9 +13,9 @@ import spack.cray_manifest
 import spack.detection
 import spack.detection.path
 import spack.repo
-from spack.llnl.util.filesystem import getuid, touch
 from spack.main import SpackCommand
 from spack.spec import Spec
+from spack.util.filesystem import getuid, touch
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 

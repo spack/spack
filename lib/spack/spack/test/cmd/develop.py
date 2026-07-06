@@ -10,12 +10,11 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
 import spack.package_base
 import spack.spec
 import spack.stage
+import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.path
 from spack.error import SpackError
 from spack.fetch_strategy import URLFetchStrategy
 from spack.main import SpackCommand
@@ -176,8 +175,8 @@ class TestDevelop:
             e.write()
 
             # canonicalize paths relative to env
-            testpath1 = spack.util.path.canonicalize_path("test/path1", e.path)
-            testpath2 = spack.util.path.canonicalize_path("test/path2", e.path)
+            testpath1 = spack.config.canonicalize_path("test/path1", e.path)
+            testpath2 = spack.config.canonicalize_path("test/path2", e.path)
 
             monkeypatch.setattr(spack.stage.Stage, "steal_source", lambda x, y: None)
             # Testing that second call to develop successfully changes both config and specs
@@ -211,7 +210,7 @@ class TestDevelop:
             e.write()
 
             path = "../$user"
-            abspath = spack.util.path.canonicalize_path(path, e.path)
+            abspath = spack.config.canonicalize_path(path, e.path)
 
             def check_path(stage, dest):
                 assert dest == abspath
@@ -233,7 +232,7 @@ class TestDevelop:
             e.write()
 
             path = "$user"
-            abspath = spack.util.path.canonicalize_path(path, e.path)
+            abspath = spack.config.canonicalize_path(path, e.path)
 
             def check_path(stage, dest):
                 assert dest == abspath

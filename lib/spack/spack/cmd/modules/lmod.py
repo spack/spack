@@ -12,7 +12,7 @@ import spack.modules.lmod
 
 
 def add_command(parser, command_dict):
-    lmod_parser = parser.add_parser("lmod", help="manipulate hierarchical module files")
+    lmod_parser = parser.add_parser("lmod", help="manipulate lua module files")
     sp = spack.cmd.modules.setup_parser(lmod_parser)
 
     # Set default module file for a package
@@ -42,5 +42,5 @@ def setdefault(module_type, specs, args):
     spack.modules.lmod.LmodConfiguration._registry = {}
     scope = spack.config.InternalConfigScope("lmod-setdefault", data)
     with spack.config.override(scope):
-        writer = spack.modules.module_types["lmod"](spec, args.module_set_name)
+        writer = spack.modules.module_types["lmod"].from_spec(spec, args.module_set_name)
         writer.update_module_defaults()

@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Tests for Spack's wrapper module around spack.llnl.util.lock."""
+"""Tests for Spack's lock module."""
 
 import os
 import pathlib
@@ -11,7 +11,7 @@ import pytest
 
 import spack.error
 import spack.util.lock as lk
-from spack.llnl.util.filesystem import getuid, group_ids
+from spack.util.filesystem import getuid, group_ids
 
 
 def test_disable_locking(tmp_path: pathlib.Path):

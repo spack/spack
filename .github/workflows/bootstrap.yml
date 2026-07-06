@@ -38,7 +38,7 @@ jobs:
               make patch unzip which xz python3 python3-devel tree \
               cmake bison
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
       - name: Bootstrap clingo
@@ -47,7 +47,7 @@ jobs:
           spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:
@@ -61,10 +61,10 @@ jobs:
         if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: brew install bison tree
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: "3.12"
       - name: Bootstrap clingo
@@ -74,7 +74,7 @@ jobs:
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           tree ~/.spack/bootstrap/store/
 
   gnupg-sources:
@@ -93,14 +93,14 @@ jobs:
             sudo rm $(command -v gpg gpg2 patchelf)
           done
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
           spack config add config:installer:new
-          spack solve zlib
+          spack spec --show opt,solutions zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack gpg list
@@ -122,10 +122,10 @@ jobs:
             sudo rm $(command -v gpg gpg2 patchelf)
           done
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: |
             3.8
@@ -150,7 +150,7 @@ jobs:
               echo "Python $ver not found"
               exit 1
             fi
-            spack solve zlib
+            spack spec --show opt,solutions zlib
           done
           tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
@@ -165,10 +165,10 @@ jobs:
     runs-on: "windows-latest"
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: "3.12"
       - name: Setup Windows
@@ -180,7 +180,7 @@ jobs:
           ./share/spack/setup-env.ps1
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack -d solve zlib
+          spack -d spec --show "opt,solutions" zlib
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/
       - name: Bootstrap GnuPG
@@ -199,7 +199,7 @@ jobs:
           dnf install -y \
               bzip2 curl gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch python3.11 tcl unzip which xz
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
     - name: Setup repo and non-root user
       run: |
           git --version

@@ -5,7 +5,7 @@
 
 from typing import Any, NamedTuple, Optional, Tuple
 
-from spack.llnl.util import lang
+from spack.util import lang
 
 from .compat import symbol_name, symbol_string
 

@@ -140,7 +140,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root should be in roots set
@@ -159,7 +159,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Only install dependencies
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root should NOT be in nodes when install_package=False
@@ -182,7 +182,7 @@ class TestBuildGraph:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=False,  # Don't install dependencies
-                database=temporary_store.db,
+                store=temporary_store,
             )
 
     def test_multiple_roots(self, mock_specs: Dict[str, Spec], temporary_store: Store):
@@ -194,7 +194,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Both should be in roots
@@ -211,7 +211,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Verify parent_to_child and child_to_parent are inverse mappings
@@ -231,7 +231,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Shared dependency should have two parents
@@ -254,7 +254,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # dep2 should be pruned since it's installed
@@ -278,7 +278,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Shared should be pruned
@@ -303,7 +303,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             overwrite_set={dep2.dag_hash()},
         )
 
@@ -329,7 +329,7 @@ class TestBuildGraph:
             include_build_deps=True,  # Should be ignored for installed root
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # build_dep should NOT be in the graph (installed root never needs build deps)
@@ -350,7 +350,7 @@ class TestBuildGraph:
             include_build_deps=False,  # exclude build deps when possible
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
@@ -373,7 +373,7 @@ class TestBuildGraph:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # All dependencies should be in the graph, including build_dep
@@ -397,7 +397,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=False,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Only the root should be in the graph
@@ -436,7 +436,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         parent1_hash = complex_pruning_dag["parent1"].dag_hash()
@@ -491,7 +491,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # All nodes should be pruned, resulting in an empty graph
@@ -514,7 +514,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Don't install the root
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root is pruned because install_package=False
@@ -541,7 +541,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         dep2_hash = dep2.dag_hash()
@@ -570,7 +570,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Prune the root
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         dep1_hash = mock_specs["dep1"].dag_hash()
@@ -619,7 +619,7 @@ class TestBuildGraphTestDeps:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             tests=False,
         )
 
@@ -638,7 +638,7 @@ class TestBuildGraphTestDeps:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             tests=["root"],
         )
 
@@ -658,7 +658,7 @@ class TestBuildGraphTestDeps:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             tests=True,
         )
 
@@ -681,7 +681,7 @@ class TestBuildGraphTestDeps:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             explicit_set={root.dag_hash()},
         )
         # root should be in graph (not pruned) because it needs to be marked explicit.
@@ -702,7 +702,7 @@ class TestExpandBuildDeps:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
     def _expand(self, graph, dag_hash, pending, db, tests=False):

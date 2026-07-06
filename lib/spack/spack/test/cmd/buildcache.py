@@ -26,8 +26,6 @@ import spack.spec
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import copy_tree, find, getuid
-from spack.llnl.util.lang import nullcontext
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
@@ -36,6 +34,8 @@ from spack.url_buildcache import (
     check_mirror_for_layout,
     get_url_buildcache_class,
 )
+from spack.util.filesystem import copy_tree, find, getuid
+from spack.util.lang import nullcontext
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -485,6 +485,35 @@ def test_skip_no_redistribute(mock_packages, config):
     filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
     assert not any(s.name == "no-redistribute" for s in filtered)
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
+
+
+def test_filter_specs_for_push_with_exclude(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push excludes specs matching the mirror's exclude patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "exclude_binary": ["brillig"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
+
+
+def test_filter_specs_for_push_with_include(mock_packages, mutable_config):
+    """Test that _filter_specs_for_push only includes specs matching the mirror's include
+    patterns."""
+    specs = [
+        spack.concretize.concretize_one("brillig"),
+        spack.concretize.concretize_one("canfail"),
+    ]
+    mirror = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "include_binary": ["canfail"]}
+    )
+    filtered = spack.cmd.buildcache._filter_specs_for_push(specs, mirror)
+    assert not any(s.name == "brillig" for s in filtered)
+    assert any(s.name == "canfail" for s in filtered)
 
 
 def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path, mutable_database):

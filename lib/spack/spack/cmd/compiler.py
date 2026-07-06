@@ -14,10 +14,10 @@ import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util.lang import index_by
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util.lang import index_by
 
 description = "manage compilers"
 section = "config"

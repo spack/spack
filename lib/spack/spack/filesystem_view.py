@@ -23,17 +23,17 @@ import spack.store
 import spack.util.spack_json as s_json
 import spack.util.spack_yaml as s_yaml
 from spack.error import SpackError
-from spack.llnl.string import comma_or
 from spack.llnl.util import tty
-from spack.llnl.util.filesystem import (
+from spack.llnl.util.tty.color import colorize
+from spack.util.filesystem import (
     mkdirp,
     remove_dead_links,
     remove_empty_directories,
     symlink,
     visit_directory_tree,
 )
-from spack.llnl.util.lang import index_by, match_predicate
-from spack.llnl.util.link_tree import (
+from spack.util.lang import index_by, match_predicate
+from spack.util.link_tree import (
     ConflictingSpecsError,
     DestinationMergeVisitor,
     LinkTree,
@@ -41,7 +41,7 @@ from spack.llnl.util.link_tree import (
     MultiPrefixMerger,
     SingleMergeConflictError,
 )
-from spack.llnl.util.tty.color import colorize
+from spack.util.string import comma_or
 
 __all__ = ["FilesystemView", "YamlFilesystemView"]
 
@@ -170,7 +170,7 @@ class FilesystemView:
         Initialize a filesystem view under the given ``root`` directory with
         corresponding directory ``layout``.
 
-        Files are linked by method ``link`` (spack.llnl.util.filesystem.symlink by default).
+        Files are linked by method ``link`` (spack.util.filesystem.symlink by default).
         """
         self._root = root
         self.layout = layout
@@ -843,7 +843,7 @@ def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
 def colorize_root(root):
     colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())
     pre, post = map(colorize, "@M[@. @M]@.".split())
-    return "".join([pre, root, post])
+    return f"{pre}{root}{post}"
 
 
 def colorize_spec(spec):

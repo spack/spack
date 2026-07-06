@@ -4,6 +4,7 @@
 
 import base64
 import collections
+import contextlib
 import datetime
 import email.message
 import errno
@@ -36,13 +37,12 @@ import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
 import spack.config
+import spack.database
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_types
-import spack.llnl.util.lang
-import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color
 import spack.modules.common
@@ -61,6 +61,8 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.lang
+import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
@@ -70,7 +72,8 @@ import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import (
+from spack.main import SpackCommand
+from spack.util.filesystem import (
     copy,
     copy_tree,
     join_path,
@@ -78,7 +81,6 @@ from spack.llnl.util.filesystem import (
     remove_linked_tree,
     working_dir,
 )
-from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 
@@ -1353,16 +1355,53 @@ def gen_mock_layout(tmp_path: Path):
     yield create_layout
 
 
-class MockConfig:
-    def __init__(self, configuration, writer_key):
-        self._configuration = configuration
-        self.writer_key = writer_key
+@contextlib.contextmanager
+def writable(database):
+    """Allow a database to be written inside this context manager."""
+    old_lock, old_is_upstream = database.lock, database.is_upstream
+    db_root = Path(database.root)
 
-    def configuration(self, module_set_name):
-        return self._configuration
+    try:
+        # this is safe on all platforms during tests (tests get their own tmpdirs)
+        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
+        database.is_upstream = False
+        db_root.chmod(mode=0o755)
+        with database.write_transaction():
+            yield
+    finally:
+        db_root.chmod(mode=0o555)
+        database.lock = old_lock
+        database.is_upstream = old_is_upstream
 
-    def writer_configuration(self, module_set_name):
-        return self.configuration(module_set_name)[self.writer_key]
+
+@pytest.fixture()
+def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
+    """Fixture for a pair of stores: upstream and downstream.
+
+    Upstream API prohibits writing to an upstream, so we also return a writable version
+    of the upstream DB for tests to use.
+
+    """
+    mock_db_root = tmp_path / "mock_db_root"
+    mock_db_root.mkdir()
+    mock_db_root.chmod(0o555)
+
+    upstream_db = spack.database.Database(
+        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
+    )
+    with writable(upstream_db):
+        upstream_db._write()
+
+    downstream_db_root = tmp_path / "mock_downstream_db_root"
+    downstream_db_root.mkdir()
+    downstream_db_root.chmod(0o755)
+
+    downstream_db = spack.database.Database(
+        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
+    )
+    downstream_db._write()
+
+    yield upstream_db, downstream_db
 
 
 class ConfigUpdate:
@@ -1377,12 +1416,8 @@ class ConfigUpdate:
         with open(file, encoding="utf-8") as f:
             config_settings = syaml.load_config(f)
         spack.config.set("modules:default", config_settings)
-        mock_config = MockConfig(config_settings, self.writer_key)
 
         conf_cls = getattr(self.writer_mod, self.writer_key.capitalize() + "Configuration")
-        self.monkeypatch.setattr(
-            conf_cls, "configuration", staticmethod(mock_config.writer_configuration)
-        )
         self.monkeypatch.setattr(conf_cls, "_registry", {})
 
 
@@ -2083,21 +2118,21 @@ def mock_test_stage(mutable_config, tmp_path: Path):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    spack.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in spack.llnl.util.lock.FILE_TRACKER._descriptors.values())
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.util.lock.FILE_TRACKER._descriptors.values())
+    spack.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
+    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
         spack.binary_distribution.BinaryIndexCache
     )
 

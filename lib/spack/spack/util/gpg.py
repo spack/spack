@@ -14,10 +14,10 @@ import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import spack.error
-import spack.llnl.util.filesystem
 import spack.llnl.util.tty as tty
 import spack.paths
 import spack.util.executable
+import spack.util.filesystem
 import spack.util.spack_json as sjson
 import spack.version
 from spack.util.executable import Executable
@@ -862,7 +862,7 @@ def _parse_gpg_output(output: str) -> List[GpgKey]:
     current_key: Optional[GpgKey] = None
     current_subkey: Optional[GpgKey] = None
     keys = []
-    for line in output.split("\n"):
+    for line in output.splitlines():
         # Only parse lines with colons
         if ":" not in line:
             continue
@@ -1139,7 +1139,7 @@ def _socket_dir(gpgconf: Optional[Executable]) -> Optional[pathlib.Path]:
                 os.mkdir(var_run_user)
                 os.chmod(var_run_user, 0o777)
 
-            user_dir = os.path.join(var_run_user, str(spack.llnl.util.filesystem.getuid()))
+            user_dir = os.path.join(var_run_user, str(spack.util.filesystem.getuid()))
 
             if not os.path.exists(user_dir):
                 os.mkdir(user_dir)

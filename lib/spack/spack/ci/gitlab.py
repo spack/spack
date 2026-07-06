@@ -18,7 +18,6 @@ import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
-import spack.util.path as path_util
 import spack.util.spack_yaml as syaml
 
 from .common import (
@@ -146,7 +145,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             )
 
         def _rewrite_include(path, orig_root, new_root):
-            expanded_path = path_util.substitute_path_variables(path)
+            expanded_path = spack.config.substitute_path_variables(path)
 
             # Skip non-local paths
             parsed = urllib.parse.urlparse(expanded_path)
@@ -156,7 +155,7 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
 
             if os.path.isabs(parsed.path):
                 return path
-            abs_path = path_util.canonicalize_path(path, orig_root)
+            abs_path = spack.config.canonicalize_path(path, orig_root)
             return pathlib.Path(os.path.relpath(abs_path, new_root)).as_posix()
 
         # If there are no includes, just copy

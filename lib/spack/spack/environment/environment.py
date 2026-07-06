@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import contextlib
+import errno
 import glob
 import os
 import pathlib
@@ -35,7 +36,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.hash_types as ht
 import spack.installer_dispatch
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.package_base
@@ -47,21 +47,21 @@ import spack.spec
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.hash
 import spack.util.lock as lk
-import spack.util.path
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 from spack import traverse
+from spack.config import substitute_path_variables
 from spack.enums import ConfigScopePriority
-from spack.llnl.util.filesystem import copy_tree, islink, readlink
-from spack.llnl.util.lang import stable_partition
-from spack.llnl.util.link_tree import ConflictingSpecsError
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_filter import SpecFilter
-from spack.util.path import substitute_path_variables
+from spack.util.filesystem import copy_tree, islink, readlink
+from spack.util.lang import stable_partition
+from spack.util.link_tree import ConflictingSpecsError
 
 from .list import SpecList, SpecListError, SpecListParser
 
@@ -104,7 +104,7 @@ MARKER_FILE = ".spack-view"
 
 def env_root_path() -> str:
     """Override default root path if the user specified it"""
-    return spack.util.path.canonicalize_path(
+    return spack.config.canonicalize_path(
         spack.config.get("config:environments_root", default=default_env_path)
     )
 
@@ -236,6 +236,10 @@ def activate(env, use_env_repo=False):
         if not isinstance(env, Environment):
             raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
+        # Record the env path so config "$env" substitutions work while the manifest's
+        # config scope is being prepared below (and for the lifetime of the activation).
+        spack.config.CONFIG.env_path = env.path
+
         # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
         # config changes.
         install_tree_before = spack.config.get("config:install_tree")
@@ -260,6 +264,7 @@ def activate(env, use_env_repo=False):
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
         _active_environment = None
+        spack.config.CONFIG.env_path = None
         raise
 
 
@@ -287,6 +292,7 @@ def deactivate():
     tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
     _active_environment = None
+    spack.config.CONFIG.env_path = None
 
 
 def active_environment() -> Optional["Environment"]:
@@ -464,7 +470,7 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
             return
         for name, entry in dev_specs.items():
             dev_path = substitute_path_variables(entry["path"])
-            expanded_path = spack.util.path.canonicalize_path(dev_path, default_wd=init_file_dir)
+            expanded_path = spack.config.canonicalize_path(dev_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry["path"] == expanded_path:
@@ -499,7 +505,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
             if not isinstance(entry, str):
                 continue
             repo_path = substitute_path_variables(entry)
-            expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
+            expanded_path = spack.config.canonicalize_path(repo_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:
@@ -694,7 +700,7 @@ class ViewDescriptor:
     ) -> None:
         self.base = base_path
         self.raw_root = root
-        self.root = spack.util.path.canonicalize_path(root, default_wd=base_path)
+        self.root = spack.config.canonicalize_path(root, default_wd=base_path)
         self.projections = projections or {}
         self.select = select or []
         self.exclude = exclude or []
@@ -713,7 +719,7 @@ class ViewDescriptor:
 
     def update_root(self, new_path: str) -> None:
         self.raw_root = new_path
-        self.root = spack.util.path.canonicalize_path(new_path, default_wd=self.base)
+        self.root = spack.config.canonicalize_path(new_path, default_wd=self.base)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -806,6 +812,28 @@ class ViewDescriptor:
             "directory or file not managed by Spack. Please remove it manually to update the view."
         )
 
+    def _move_old_view_aside(self) -> Optional[str]:
+        """Move an existing view at ``self.root`` aside so we can roll back to it.
+
+        Returns where the old view was moved, or ``None`` if there was none, or it had to be
+        removed in place (overlayfs EXDEV) and can no longer be restored.
+        """
+        if not os.path.lexists(self.root):
+            return None
+        old_view = f"{self.root}.old.{uuid.uuid4().hex[:8]}"
+        try:
+            os.rename(self.root, old_view)
+        except OSError as e:
+            # overlayfs (e.g. `docker build`) can't rename a dir off a lower layer; remove it
+            # in place instead and give up rollback. A mount point also can't be renamed off its
+            # device (same EXDEV), but rmtree would wipe the mounted volume and then crash on the
+            # final rmdir, so refuse it.
+            if e.errno != errno.EXDEV or os.path.ismount(self.root):
+                raise
+            shutil.rmtree(self.root)
+            return None
+        return old_view
+
     def content_hash(self, specs):
         d = syaml.syaml_dict(
             [
@@ -821,20 +849,14 @@ class ViewDescriptor:
         to exist on the filesystem."""
         return self._view(self.root).get_projection_for_spec(spec)
 
-    def view(self, new: Optional[str] = None) -> fsv.SimpleFilesystemView:
+    def view(self) -> fsv.SimpleFilesystemView:
         """
         Returns a view object for the *underlying* view directory. This means that the
-        self.root symlink is followed, and that the view has to exist on the filesystem
-        (unless ``new``). This function is useful when writing to the view.
+        self.root symlink is followed, and that the view has to exist on the filesystem.
+        This function is useful when writing to the view.
 
-        Raise if new is None and there is no current view
-
-        Arguments:
-            new: If a string, create a FilesystemView rooted at that path. Default None. This
-                should only be used to regenerate the view, and cannot be used to access specs.
+        Raise if there is no current view.
         """
-        if new:
-            return self._view(new)
         if os.path.islink(self.root):
             path: Optional[str] = self._current_root  # old format: follow symlink
         elif os.path.isdir(self.root):
@@ -915,28 +937,25 @@ class ViewDescriptor:
 
         root_parent = os.path.dirname(self.root)
         root_basename = os.path.basename(self.root)
-        suffix = uuid.uuid4().hex[:8]
-        # Working directory for the new view
-        new_root = os.path.join(root_parent, f"{root_basename}.new.{suffix}")
-        # Temporary location for the old view in case we need to roll back
-        old_root = os.path.join(root_parent, f"{root_basename}.old.{suffix}")
+
+        # The view is built *in place* at self.root: packages bake the projection path
+        # (e.g. shebangs, pyvenv.cfg) into file contents, and that path has to be the
+        # final view location, not a temporary build directory that's renamed afterwards.
+        # To stay able to roll back, move an existing view aside first.
+        old_root = self._move_old_view_aside()
 
         try:
-            fs.mkdirp(new_root)
-            self.view(new=new_root).add_specs(*specs)
+            fs.mkdirp(self.root)
+            self._view(self.root).add_specs(*specs)
 
             # Claim ownership of the view by dropping a marker file with the content hash.
-            with open(os.path.join(new_root, MARKER_FILE), "x", encoding="utf-8") as f:
+            with open(self.marker_path, "x", encoding="utf-8") as f:
                 f.write(content_hash)
 
-            # Rename self.root -> <root>.old (if it exists), then .new -> self.root
-            if os.path.lexists(self.root):
-                os.rename(self.root, old_root)
-            os.rename(new_root, self.root)
-
         except Exception as e:
-            # Restore self.root if the rename sequence left it missing
-            if not os.path.lexists(self.root) and os.path.lexists(old_root):
+            # Roll back to the previous view (if any).
+            shutil.rmtree(self.root, ignore_errors=True)
+            if old_root is not None:
                 try:
                     os.rename(old_root, self.root)
                 except OSError:
@@ -951,16 +970,15 @@ class ViewDescriptor:
                     f"    {spec_a}, and\n"
                     f"    {spec_b}.\n"
                     "    To resolve this issue:\n"
-                    "        a. use `concretization:unify:true` to ensure there is only one "
+                    "        a. use `concretizer:unify:true` to ensure there is only one "
                     "package per spec in the environment, or\n"
                     "        b. disable views with `view:false`, or\n"
                     "        c. create custom view projections."
                 ) from e
             raise
 
-        finally:
-            if os.path.lexists(new_root):
-                shutil.rmtree(new_root, ignore_errors=True)
+        if old_root is None:
+            return
 
         # Clean up old view
         if os.path.islink(old_root):
@@ -1240,8 +1258,7 @@ class Environment:
                 resolved = [os.path.join(destination, p) for p in include.paths]
             else:
                 resolved = [
-                    spack.util.path.canonicalize_path(p, default_wd=self.path)
-                    for p in include.paths
+                    spack.config.canonicalize_path(p, default_wd=self.path) for p in include.paths
                 ]
 
             for path in resolved:

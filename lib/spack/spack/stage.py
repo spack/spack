@@ -17,19 +17,23 @@ from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Opt
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.string
-import spack.llnl.util.lang
 import spack.llnl.util.tty as tty
 import spack.oci.image
 import spack.resource
 import spack.spec
 import spack.util.crypto
+import spack.util.lang
 import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
+import spack.util.string
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
-from spack.llnl.util.filesystem import (
+from spack.llnl.util.tty.colify import colify
+from spack.llnl.util.tty.color import colorize
+from spack.util.crypto import bit_length, prefix_bits
+from spack.util.editor import editor, executable
+from spack.util.filesystem import (
     AlreadyExistsError,
     can_access,
     get_owner_uid,
@@ -41,10 +45,6 @@ from spack.llnl.util.filesystem import (
     remove_linked_tree,
     symlink,
 )
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
-from spack.util.crypto import bit_length, prefix_bits
-from spack.util.editor import editor, executable
 from spack.version import StandardVersion, VersionList
 
 if TYPE_CHECKING:
@@ -63,13 +63,14 @@ stage_prefix = "spack-stage-"
 def compute_stage_name(spec):
     """Determine stage name given a spec"""
     spec_stage_structure = stage_prefix
+    # only use config for concrete specs since these are going to be actual stages
+    # non-concrete stages are persistent, but psuedo-temp because they are used to resolve
+    # commit values for git versions when using source mirrors
     if spec.concrete:
         spec_stage_structure += "{name}-{version}-{hash}"
+        stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
     else:
-        spec_stage_structure += "{name}-{version}"
-    # TODO (psakiev, scheibelp) Technically a user could still reintroduce a hash via
-    # config:stage_name. This is a fix for how to handle staging an abstract spec (see #51305)
-    stage_name_structure = spack.config.get("config:stage_name", default=spec_stage_structure)
+        stage_name_structure = spec_stage_structure + "{name}-{version}"
     return spec.format_path(format_string=stage_name_structure)
 
 
@@ -82,7 +83,7 @@ def create_stage_root(path: str) -> None:
     user_uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
-    group_paths, user_node, user_paths = partition_path(path, sup.get_user())
+    group_paths, user_node, user_paths = partition_path(path, spack.config.get_user())
 
     for p in group_paths:
         if not os.path.exists(p):
@@ -161,8 +162,8 @@ def _resolve_paths(candidates):
     Adjustments involve removing extra $user from $tempdir if $tempdir includes
     $user and appending $user if it is not present in the path.
     """
-    temp_path = sup.canonicalize_path("$tempdir")
-    user = sup.get_user()
+    temp_path = spack.config.canonicalize_path("$tempdir")
+    user = spack.config.get_user()
     tmp_has_usr = user in temp_path.split(os.path.sep)
 
     paths = []
@@ -173,7 +174,7 @@ def _resolve_paths(candidates):
             path = path.replace("/$user", "", 1)
 
         # Ensure the path is unique per user.
-        can_path = sup.canonicalize_path(path)
+        can_path = spack.config.canonicalize_path(path)
         # When multiple users share a stage root, we can avoid conflicts between
         # them by adding a per-user subdirectory.
         # Avoid doing this on Windows to keep stage absolute path as short as possible.
@@ -1098,16 +1099,16 @@ def interactive_version_filter(
             header = []
             if len(orig_url_dict) > 0 and len(sorted_and_filtered) == len(orig_url_dict):
                 header.append(
-                    f"Selected {spack.llnl.string.plural(len(sorted_and_filtered), 'version')}"
+                    f"Selected {spack.util.string.plural(len(sorted_and_filtered), 'version')}"
                 )
             else:
                 header.append(
                     f"Selected {len(sorted_and_filtered)} of "
-                    f"{spack.llnl.string.plural(len(orig_url_dict), 'version')}"
+                    f"{spack.util.string.plural(len(orig_url_dict), 'version')}"
                 )
             if sorted_and_filtered and known_versions:
                 num_new = sum(1 for v in sorted_and_filtered if v not in known_versions)
-                header.append(f"{spack.llnl.string.plural(num_new, 'new version')}")
+                header.append(f"{spack.util.string.plural(num_new, 'new version')}")
             if has_filter:
                 header.append(colorize(f"Filtered by {VERSION_COLOR}@@{version_filter}@."))
 
@@ -1118,7 +1119,7 @@ def interactive_version_filter(
                 )
                 for v in sorted_and_filtered
             ]
-            tty.msg(". ".join(header), *spack.llnl.util.lang.elide_list(version_with_url))
+            tty.msg(". ".join(header), *spack.util.lang.elide_list(version_with_url))
             print()
 
         print_header = True

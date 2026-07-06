@@ -21,12 +21,12 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Optional
 
 import spack.config
-import spack.llnl.util.lang
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
 import spack.util.gpg
+import spack.util.lang
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -102,10 +102,11 @@ class GlobalStateMarshaler:
         if self.is_forked:
             return
 
-        self.config = spack.llnl.util.lang.ensure_unwrapped(spack.config.CONFIG)
+        self.config = spack.util.lang.ensure_unwrapped(spack.config.CONFIG)
         self.platform = spack.platforms.host
         self.store = spack.store.STORE
         self.test_patches = TestPatches.create()
+        self.spack_working_dir = spack.paths.spack_working_dir
         self.gnupg_home = str(spack.util.gpg.GNUPGHOME) if spack.util.gpg.GNUPGHOME else None
         if serialize_env:
             from spack.environment import active_environment
@@ -130,6 +131,7 @@ class GlobalStateMarshaler:
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
+        spack.paths.spack_working_dir = self.spack_working_dir
         if self.gnupg_home:
             spack.util.gpg.GPG = spack.util.gpg.Gpg(self.gnupg_home)
             spack.util.gpg.GNUPGHOME = spack.util.gpg.GPG.home
@@ -171,7 +173,7 @@ class TestPatches:
                 module_patches.append((module_name, name, new_val))
             elif isinstance(target, type):
                 new_val = getattr(target, name)
-                class_fqn = ".".join([target.__module__, target.__name__])
+                class_fqn = f"{target.__module__}.{target.__name__}"
                 class_patches.append((class_fqn, name, new_val))
 
         return TestPatches(module_patches, class_patches)

@@ -16,8 +16,8 @@ import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
-from spack.llnl.util.filesystem import FileFilter, working_dir
 from spack.util.executable import which
+from spack.util.filesystem import FileFilter, working_dir
 
 #: directory with sample style files
 style_data = os.path.join(spack.paths.test_path, "data", "style")

@@ -51,7 +51,7 @@ in the lockfile.
         "-i", "--installed", action="store_true", help="graph specs from the DB"
     )
 
-    arguments.add_common_arguments(subparser, ["deptype", "specs"])
+    arguments.add_common_arguments(subparser, ["deptype", "long", "very_long", "specs"])
 
 
 def graph(parser, args):
@@ -86,9 +86,16 @@ def graph(parser, args):
         return
 
     if args.dot:
-        builder = SimpleDAG()
+        if args.very_long:
+            node_label_fmt = "{name}{@version}{/hash}"
+        elif args.long:
+            node_label_fmt = "{name}{@version}{/hash:7}"
+        else:
+            node_label_fmt = "{name}{@version}"
         if args.color:
-            builder = DAGWithDependencyTypes()
+            builder = DAGWithDependencyTypes(node_label_fmt)
+        else:
+            builder = SimpleDAG(node_label_fmt)
         graph_dot(specs, builder=builder, depflag=args.deptype)
         return
 

@@ -11,7 +11,7 @@ import spack.modules.tcl
 
 
 def add_command(parser, command_dict):
-    tcl_parser = parser.add_parser("tcl", help="manipulate non-hierarchical module files")
+    tcl_parser = parser.add_parser("tcl", help="manipulate tcl module files")
     sp = spack.cmd.modules.setup_parser(tcl_parser)
 
     # Set default module file for a package
@@ -37,5 +37,5 @@ def setdefault(module_type, specs, args):
     spack.modules.tcl.TclConfiguration._registry = {}
     scope = spack.config.InternalConfigScope("tcl-setdefault", data)
     with spack.config.override(scope):
-        writer = spack.modules.module_types["tcl"](spec, args.module_set_name)
+        writer = spack.modules.module_types["tcl"].from_spec(spec, args.module_set_name)
         writer.update_module_defaults()

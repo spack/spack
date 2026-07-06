@@ -61,7 +61,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty
 import spack.llnl.util.tty.color
 import spack.mirrors.mirror
@@ -73,9 +72,9 @@ import spack.store
 import spack.traverse
 import spack.url_buildcache
 import spack.util.environment
+import spack.util.filesystem as fs
 import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
-from spack.llnl.util.lang import pretty_duration
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     BaseTerminalState,
@@ -87,6 +86,7 @@ from spack.new_installer_base import (
 )
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
+from spack.util.lang import pretty_duration
 from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.path import padding_filter, padding_filter_bytes
 
@@ -157,8 +157,7 @@ class DatabaseAction:
 
 
 class MarkExplicitAction(DatabaseAction):
-    """Action to mark an already installed spec as explicitly installed. Similar to ChildInfo, but
-    used when no build process was needed."""
+    """Action to mark an already installed spec as explicitly installed."""
 
     __slots__ = ()
 
@@ -170,17 +169,38 @@ class MarkExplicitAction(DatabaseAction):
         db._mark(self.spec, "explicit", True)
 
 
-class ChildInfo(DatabaseAction):
-    """Information about a child process."""
+class AddSpecAction(DatabaseAction):
+    """Action to add a successfully built spec to the database. Owns the prefix write lock from
+    the moment the build finishes until the DB write (downgrade to read) or cleanup (release)."""
+
+    __slots__ = ("explicit",)
+
+    def __init__(
+        self, spec: "spack.spec.Spec", explicit: bool, prefix_lock: Optional[spack.util.lock.Lock]
+    ) -> None:
+        self.spec = spec
+        self.explicit = explicit
+        self.prefix_lock = prefix_lock
+
+    def save_to_db(self, db: spack.database.Database) -> None:
+        db._add(self.spec, explicit=self.explicit)
+
+
+class ChildInfo:
+    """Loop-side handle to a running build: the child process and its IPC channels. Owns the
+    prefix write lock while the build runs; on success ownership transfers to the pending
+    ``AddSpecAction`` DB insert."""
 
     __slots__ = (
         "proc",
+        "spec",
         "output_r_conn",
         "state_r_conn",
         "control_w_conn",
         "notifier",
-        "explicit",
         "log_path",
+        "prefix_lock",
+        "state_buffer",
     )
 
     def __init__(
@@ -192,7 +212,6 @@ class ChildInfo(DatabaseAction):
         control_w_conn: IpcChannel,
         notifier: ProcessExitNotifier,
         log_path: str,
-        explicit: bool = False,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -201,17 +220,27 @@ class ChildInfo(DatabaseAction):
         self.control_w_conn = control_w_conn
         self.notifier = notifier
         self.log_path = log_path
-        self.explicit = explicit
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        # Buffer for partially received state data from this child. Kept as raw bytes and split on
+        # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
+        # safe without decoding partial reads.
+        self.state_buffer = b""
 
-    def save_to_db(self, db: spack.database.Database) -> None:
-        return db._add(self.spec, explicit=self.explicit)
+    def release_prefix_lock(self) -> None:
+        if self.prefix_lock is not None:
+            try:
+                self.prefix_lock.release_write()
+            except Exception:
+                pass
+        self.prefix_lock = None
 
-    def register_with_selector(self, selector: selectors.BaseSelector, pid: int) -> None:
+    def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
         """Register output, state, and sentinel channels with the selector."""
-        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(pid, "output"))
-        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(pid, "state"))
-        selector.register(self.notifier.fileobj, selectors.EVENT_READ, FdInfo(pid, "sentinel"))
+        selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(build_id, "output"))
+        selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(build_id, "state"))
+        selector.register(
+            self.notifier.fileobj, selectors.EVENT_READ, FdInfo(build_id, "sentinel")
+        )
 
     def close(self, selector: selectors.BaseSelector) -> int:
         """Unregister and close file descriptors, and join the child process.
@@ -264,6 +293,13 @@ def install_from_buildcache(
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
 ) -> bool:
+    # Skip if no configured mirror accepts this spec (select/exclude filters)
+    if not any(
+        m.matches_binary(spec, direction="fetch")
+        for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    ):
+        return False
+
     send_state("fetching from build cache", state_stream)
     try:
         tarball_stage = spack.binary_distribution.download_tarball(
@@ -383,7 +419,8 @@ def worker_function(
     run_tests: bool,
     state: IpcChannel,
     parent: IpcChannel,
-    echo_control: IpcChannel,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
     jobserver_info: Tuple[Optional[str], Any],
     log_path: str,
     global_state: GlobalStateMarshaler,
@@ -408,7 +445,8 @@ def worker_function(
         run_tests: Whether to run install-time tests for this package
         state: Connection to send state updates to
         parent: Connection to send build output to
-        echo_control: Connection to receive echo control messages from
+        tee_control_r: Read end of the control pipe; the parent sends echo on/off here
+        tee_control_w: Write end of the control pipe; used to stop the tee thread on POSIX
         jobserver_info: MAKEFLAGS to set, so that the build process uses the POSIX jobserver, and
             opaque data only to be serialized (e.g. old style jobserver r/w pipes, only to be
             inherited in the build process)
@@ -466,7 +504,7 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
 
     # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(echo_control, parent, log_path)
+    tee = Tee(tee_control_r, tee_control_w, parent, log_path)
 
     # Use closedfd=false because of the connection objects. Use line buffering.
     # Replace sys.stdout/stderr AFTER Tee.dup2() so Python creates FileIO (WriteFile) rather
@@ -846,6 +884,7 @@ def start_build(
             state_w_conn,
             output_w_conn,
             control_r_conn,
+            control_w_conn if sys.platform != "win32" else None,
             jobserver_details,
             log_path,
             GlobalStateMarshaler(serialize_env=False),
@@ -861,14 +900,7 @@ def start_build(
     control_r_conn.close()
 
     return ChildInfo(
-        proc,
-        spec,
-        output_r_conn,
-        state_r_conn,
-        control_w_conn,
-        ExitNotifier(proc),
-        log_path,
-        explicit,
+        proc, spec, output_r_conn, state_r_conn, control_w_conn, ExitNotifier(proc), log_path
     )
 
 
@@ -1460,7 +1492,7 @@ class BuildGraph:
         include_build_deps: bool,
         install_package: bool,
         install_deps: bool,
-        database: spack.database.Database,
+        store: spack.store.Store,
         overwrite_set: Optional[Set[str]] = None,
         tests: Union[bool, List[str], Set[str]] = False,
         explicit_set: Optional[Set[str]] = None,
@@ -1469,6 +1501,7 @@ class BuildGraph:
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
         included when necessary."""
+        database = store.db
         self.roots = {s.dag_hash() for s in specs}
         self.nodes = {s.dag_hash(): s for s in specs}
         self.parent_to_child: Dict[str, Set[str]] = {}
@@ -1491,7 +1524,7 @@ class BuildGraph:
                 if record and record.path:
                     s.set_prefix(record.path)
                 else:
-                    s.set_prefix(spack.store.STORE.layout.path_for_spec(s))
+                    s.set_prefix(store.layout.path_for_spec(s))
 
             # Build the graph and determine which specs to prune
             while stack:
@@ -1715,8 +1748,7 @@ class ScheduleResult(NamedTuple):
 def schedule_builds(
     pending: List[str],
     build_graph: BuildGraph,
-    db: spack.database.Database,
-    prefix_locker: spack.database.SpecLocker,
+    store: spack.store.Store,
     overwrite: Set[str],
     overwrite_time: float,
     capacity: int,
@@ -1739,8 +1771,7 @@ def schedule_builds(
     Args:
         pending: List of dag hashes pending installation; modified in-place.
         build_graph: The build dependency graph; used for node lookup and parent enqueueing.
-        db: Package database; used for read lock and installed-status queries.
-        prefix_locker: Per-spec write locker.
+        store: The local store for installs.
         overwrite: Set of dag hashes to overwrite even if already installed.
         overwrite_time: Timestamp (from time.time()) at which the overwrite install was requested.
             A spec in ``overwrite`` whose DB installation_time >= overwrite_time was installed by
@@ -1758,6 +1789,7 @@ def schedule_builds(
     newly_installed: List[Tuple[str, spack.spec.Spec, spack.util.lock.Lock]] = []
     to_mark_explicit: List[MarkExplicitAction] = []
     blocked = True
+    db = store.db
 
     # Acquire the DB read lock non-blocking; hold it throughout the loop so the in-memory snapshot
     # stays consistent while we acquire per-spec prefix locks.
@@ -1769,7 +1801,7 @@ def schedule_builds(
         while capacity and idx < len(pending):
             dag_hash = pending[idx]
             spec = build_graph.nodes[dag_hash]
-            lock = prefix_locker.lock(spec)
+            lock = store.prefix_locker.lock(spec)
 
             if lock.try_acquire_write():
                 blocked = False
@@ -1810,12 +1842,16 @@ def schedule_builds(
                 continue
 
             # Write lock acquired: proceed with scheduling.
-            # Don't schedule builds for specs from upstream databases.
-            if upstream and record and not record.installed:
-                lock.release_write()
-                raise spack.error.InstallError(
-                    f"Cannot install {spec}: it is uninstalled in an upstream database."
-                )
+
+            # Allow local installs of specs that are referenced but uninstalled in an upstream db.
+            # In edge cases where an upstream has forcibly uninstalled just a link dep, we cannot
+            # fix the situation by installing it locally, because dependents in the upstream
+            # reference the missing upstream path. However, we document that users should not
+            # remove installed specs from upstreams, so it's a relatively safe assumption that
+            # missing upstream specs were never installed or garbage collected build deps, and are
+            # not referenced by absolute path in installed dependents.
+            if upstream and record and not record.installed and not spec.external:
+                spec.set_prefix(store.layout.path_for_spec(spec))
 
             # Defensively assert prefix invariants
             if not spec.external:
@@ -1968,7 +2004,7 @@ class NullReportData(ReportData):
         pass
 
 
-def _signal_children(running_builds: Dict[int, ChildInfo], sig: signal.Signals) -> None:
+def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
         try:
@@ -2008,6 +2044,7 @@ class PackageInstaller:
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
         create_reports: bool = False,
+        store: Optional[spack.store.Store] = None,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -2016,7 +2053,7 @@ class PackageInstaller:
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
 
-        self.db = spack.store.STORE.db
+        self.store = store or spack.store.STORE
 
         specs = [pkg.spec for pkg in packages]
 
@@ -2030,12 +2067,6 @@ class PackageInstaller:
         self.overwrite_time: float = time.time()
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
-
-        # Buffer for incoming, partially received state data from child processes. Kept as raw
-        # bytes and split on b"\n": the newline byte cannot occur inside a multi-byte UTF-8
-        # sequence, so framing is safe without decoding partial reads. Keyed by PID rather than fd
-        # because on Windows the state channel is a socket whose handle is not a stable POSIX fd.
-        self.state_buffers: Dict[int, bytes] = {}
 
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
@@ -2052,7 +2083,7 @@ class PackageInstaller:
             include_build_deps,
             install_package,
             install_deps,
-            self.db,
+            self.store,
             self.overwrite,
             tests,
             self.explicit,
@@ -2087,12 +2118,12 @@ class PackageInstaller:
         self.pending_expansions: List[str] = []
 
         self.verbose = verbose
-        self.running_builds: Dict[int, ChildInfo] = {}
+        self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.build_status = BuildStatus(
             len(self.build_graph.nodes),
             verbose=verbose,
-            filter_padding=spack.store.STORE.has_padding(),
+            filter_padding=self.store.has_padding(),
             is_tty=TerminalState.stdout_is_interactive(),
         )
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
@@ -2122,7 +2153,7 @@ class PackageInstaller:
         self._installer()
 
     def _installer(self) -> None:
-        spack.store.STORE.install_sbang()
+        self.store.install_sbang()
         jobserver = JobServer(self.jobs)
         selector = selectors.DefaultSelector()
 
@@ -2145,7 +2176,7 @@ class PackageInstaller:
         retained_read_locks: List[spack.util.lock.Lock] = []
 
         failures: List[spack.spec.Spec] = []
-        finished_pids: List[int] = []
+        finished_builds: List[str] = []
 
         try:
             # Try to schedule builds immediately. The first job does not require a token.
@@ -2154,6 +2185,7 @@ class PackageInstaller:
                     selector, jobserver, retained_read_locks, database_actions
                 )
                 self.build_status.set_blocked(blocked and not self.running_builds)
+                self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
                 self.pending_builds
@@ -2184,7 +2216,7 @@ class PackageInstaller:
                     timeout = DATABASE_WRITE_INTERVAL
                 events = selector.select(timeout=timeout)
 
-                finished_pids.clear()
+                finished_builds.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -2197,13 +2229,13 @@ class PackageInstaller:
                     data = key.data
                     if isinstance(data, FdInfo):
                         # Child output (logs and state updates)
-                        child_info = self.running_builds[data.pid]
+                        child_info = self.running_builds[data.build_id]
                         if data.name == "output":
                             self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
                             self._handle_child_state(child_info, selector)
                         elif data.name == "sentinel":
-                            finished_pids.append(data.pid)
+                            finished_builds.append(data.build_id)
                     elif data == "stdin":
                         stdin_ready = True
                     elif data == "sigwinch":
@@ -2215,9 +2247,9 @@ class PackageInstaller:
                         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
                 current_time = time.monotonic()
-                for pid in finished_pids:
+                for build_id in finished_builds:
                     self._handle_finished_build(
-                        pid, current_time, jobserver, selector, failures, database_actions
+                        build_id, current_time, jobserver, selector, failures, database_actions
                     )
 
                 if failures and self.fail_fast:
@@ -2248,20 +2280,6 @@ class PackageInstaller:
                             jobserver.decrease_parallelism()
                             self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
 
-                # Insert into the database if we have any finished builds, and either the delay
-                # interval has passed, or we're done with all builds. The database save is not
-                # guaranteed; it fails if another process holds the lock. We'll try again next
-                # iteration of the event loop in that case.
-                if (
-                    database_actions
-                    and (
-                        current_time >= self.next_database_write
-                        or not (self.pending_builds or self.running_builds)
-                    )
-                    and self._save_to_db(database_actions, retained_read_locks)
-                ):
-                    database_actions.clear()
-
                 # Try to expand build deps for cache-miss specs. This requires a read lock on the
                 # database, meaning that it can take several iterations of the event loop in case
                 # of contention with other processes.
@@ -2274,6 +2292,11 @@ class PackageInstaller:
                         selector, jobserver, retained_read_locks, database_actions
                     )
                     self.build_status.set_blocked(blocked and not self.running_builds)
+
+                # Flush finished builds to the database if a write is due. This runs after
+                # scheduling so that a final mark-explicit action does not wait for the next
+                # select() timeout.
+                self._flush_db_if_due(current_time, database_actions, retained_read_locks)
 
                 # Finally update the UI
                 self.build_status.update()
@@ -2289,9 +2312,10 @@ class PackageInstaller:
             db_exc = None
             if database_actions:
                 try:
-                    with self.db.write_transaction():
+                    db = self.store.db
+                    with db.write_transaction():
                         for action in database_actions:
-                            action.save_to_db(self.db)
+                            action.save_to_db(db)
                 except Exception as e:
                     db_exc = e
 
@@ -2371,7 +2395,7 @@ class PackageInstaller:
 
     def _handle_finished_build(
         self,
-        pid: int,
+        dag_hash: str,
         current_time: float,
         jobserver: JobServerBase,
         selector: selectors.BaseSelector,
@@ -2381,8 +2405,7 @@ class PackageInstaller:
         """Handle a build that has finished. Remove from running_builds; release jobserver token;
         update UI state; defer database insertion if successful; possibly reschedule if failed with
         cache miss; register failures."""
-        build = self.running_builds.pop(pid)
-        dag_hash = build.spec.dag_hash()
+        build = self.running_builds.pop(dag_hash)
         self.capacity += 1
         jobserver.release()
         self.build_status.set_jobs(jobserver.num_jobs, jobserver.target_jobs)
@@ -2392,9 +2415,13 @@ class PackageInstaller:
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
-            # Schedule successful builds for batched database insertion. We don't release the
-            # prefix lock here; that strictly happens after a successful db write.
-            database_actions.append(build)
+            # Schedule successful builds for batched database insertion. Ownership of the prefix
+            # write lock moves from the finished child to the pending DB insert; it is downgraded
+            # or released only after a successful db write.
+            database_actions.append(
+                AddSpecAction(build.spec, dag_hash in self.explicit, build.prefix_lock)
+            )
+            build.prefix_lock = None
             self.build_graph.enqueue_parents(dag_hash, self.pending_builds)
             self.next_database_write = current_time + DATABASE_WRITE_INTERVAL
             self.build_status.update_state(dag_hash, "finished")
@@ -2427,7 +2454,8 @@ class PackageInstaller:
     def _try_expand_build_deps(self) -> None:
         """Try to expand build deps for specs with cache misses. Non-blocking: returns immediately
         if the DB read lock is unavailable."""
-        with self.db.try_read_transaction() as acquired:
+        db = self.store.db
+        with db.try_read_transaction() as acquired:
             if not acquired:
                 return
             dep_policy = (
@@ -2436,7 +2464,7 @@ class PackageInstaller:
                 else self.dependencies_policy
             )
             newly_added = self.build_graph.expand_build_deps(
-                self.pending_expansions, self.pending_builds, self.db, dep_policy
+                self.pending_expansions, self.pending_builds, db, dep_policy
             )
             for h in newly_added:
                 self.binary_cache_for_spec[h] = (
@@ -2445,16 +2473,36 @@ class PackageInstaller:
             self.build_status.total += len(newly_added)
             self.pending_expansions.clear()
 
+    def _flush_db_if_due(
+        self,
+        current_time: float,
+        database_actions: List[DatabaseAction],
+        retained_read_locks: List[spack.util.lock.Lock],
+    ) -> None:
+        """Write finished builds to the database if the write interval has passed, or if all
+        builds are done. The write is not guaranteed; it fails if another process holds the lock,
+        in which case it is retried in a later iteration of the event loop."""
+        if (
+            database_actions
+            and (
+                current_time >= self.next_database_write
+                or not (self.pending_builds or self.running_builds)
+            )
+            and self._save_to_db(database_actions, retained_read_locks)
+        ):
+            database_actions.clear()
+
     def _save_to_db(
         self,
         database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
     ) -> bool:
-        with self.db.try_write_transaction() as acquired:
+        db = self.store.db
+        with db.try_write_transaction() as acquired:
             if not acquired:
                 return False
             for action in database_actions:
-                action.save_to_db(self.db)
+                action.save_to_db(db)
 
         # DB has been written and flushed; downgrade per-spec prefix write locks to read locks so
         # other processes can see the specs are installed, while preventing concurrent uninstalls.
@@ -2493,8 +2541,7 @@ class PackageInstaller:
         result = schedule_builds(
             pending=self.pending_builds,
             build_graph=self.build_graph,
-            db=self.db,
-            prefix_locker=spack.store.STORE.prefix_locker,
+            store=self.store,
             overwrite=self.overwrite,
             overwrite_time=self.overwrite_time,
             capacity=self.capacity,
@@ -2550,10 +2597,11 @@ class PackageInstaller:
             if spec.external:
                 self.log_paths[dag_hash] = os.devnull
             else:
+                prefix = fs.polite_filename(
+                    f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-"
+                )
                 log_fd, log_path = tempfile.mkstemp(
-                    prefix=f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-",
-                    suffix=".log",
-                    dir=spack.stage.get_stage_root(),
+                    prefix=prefix, suffix=".log", dir=spack.stage.get_stage_root()
                 )
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path
@@ -2579,10 +2627,8 @@ class PackageInstaller:
             stop_at=self.stop_at if is_root else None,
         )
         child_info.prefix_lock = prefix_lock
-        pid = child_info.proc.pid
-        assert type(pid) is int
-        self.running_builds[pid] = child_info
-        child_info.register_with_selector(selector, pid)
+        self.running_builds[dag_hash] = child_info
+        child_info.register_with_selector(selector, dag_hash)
         self.build_status.add_build(
             child_info.spec,
             explicit=explicit,
@@ -2629,8 +2675,7 @@ class PackageInstaller:
         """Handle reading state updates from a child process pipe. Returns False once the channel
         has reached EOF and was unregistered, True while it remains open."""
         conn = child_info.state_r_conn
-        pid = child_info.proc.pid
-        assert pid is not None
+        dag_hash = child_info.spec.dag_hash()
         try:
             # There might be more data than OUTPUT_BUFFER_SIZE, but we will read that in the next
             # iteration of the event loop to keep things responsive.
@@ -2645,16 +2690,16 @@ class PackageInstaller:
                 selector.unregister(conn)
             except (KeyError, OSError):
                 pass
-            self.state_buffers.pop(pid, None)
+            child_info.state_buffer = b""
             return False
 
         # Accumulate raw bytes and split on the newline byte. We never decode a partial read; only
         # complete lines are handed to json.loads(), which decodes the (UTF-8) bytes itself.
-        buffer = self.state_buffers.get(pid, b"") + data
+        buffer = child_info.state_buffer + data
         lines = buffer.split(b"\n")
         # The last element of split() will be a partial line or an empty string.
         # We store it back in the buffer for the next read.
-        self.state_buffers[pid] = lines.pop()
+        child_info.state_buffer = lines.pop()
 
         for line in lines:
             if not line:
@@ -2664,11 +2709,9 @@ class PackageInstaller:
             except ValueError:
                 continue
             if "state" in message:
-                self.build_status.update_state(child_info.spec.dag_hash(), message["state"])
+                self.build_status.update_state(dag_hash, message["state"])
             elif "progress" in message and "total" in message:
-                self.build_status.update_progress(
-                    child_info.spec.dag_hash(), message["progress"], message["total"]
-                )
+                self.build_status.update_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
 

@@ -86,10 +86,6 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.error
 import spack.hash_types as ht
-import spack.llnl.path
-import spack.llnl.string
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang as lang
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color as clr
 import spack.patch
@@ -99,11 +95,15 @@ import spack.provider_index
 import spack.repo
 import spack.spec_parser
 import spack.traverse
+import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
+import spack.util.lang as lang
+import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.util.string
 import spack.variant as vt
 import spack.version
 import spack.version as vn
@@ -1644,7 +1644,7 @@ class Spec:
 
     @property
     def external_path(self):
-        return spack.llnl.path.path_to_os_path(self._external_path)[0]
+        return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
     def external_path(self, ext_path):
@@ -2228,7 +2228,7 @@ class Spec:
         return self._prefix
 
     def set_prefix(self, value: str) -> None:
-        self._prefix = spack.util.prefix.Prefix(spack.llnl.path.convert_to_platform_path(value))
+        self._prefix = spack.util.prefix.Prefix(spack.util.path.convert_to_platform_path(value))
 
     def spec_hash(self, hash: ht.SpecHashDescriptor) -> str:
         """Utility method for computing different types of Spec hashes.
@@ -5247,9 +5247,9 @@ def substitute_abstract_variants(spec: Spec):
         spec.variants.substitute(new_variant)
 
     if unknown:
-        variants = spack.llnl.string.plural(len(unknown), "variant")
+        variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
-            f"Tried to set {variants} {spack.llnl.string.comma_and(unknown)}. "
+            f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
             f"{spec.name} has no such {variants}",
             unknown_variants=unknown,
         )
@@ -5880,7 +5880,7 @@ class InvalidDependencyError(spack.error.SpecError):
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super().__init__(
-            "Package {0} does not depend on {1}".format(pkg, spack.llnl.string.comma_or(deps))
+            "Package {0} does not depend on {1}".format(pkg, spack.util.string.comma_or(deps))
         )
 
 
