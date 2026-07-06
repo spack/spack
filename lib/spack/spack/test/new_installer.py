@@ -731,7 +731,7 @@ def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_stor
         include_build_deps=False,
         install_package=True,
         install_deps=True,
-        database=temporary_store.db,
+        store=temporary_store,
     )
 
     # The initial graph should contain only root (build deps deferred for "auto" policy).
