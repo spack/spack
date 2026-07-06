@@ -37,7 +37,6 @@ licensed_files_patterns = [
     r"^lib/spack/spack/(?!vendor/|util/unparse|util/ctest_log_parser|test/util/unparse).*\.py$",
     r"^lib/spack/spack/.*\.sh$",
     r"^lib/spack/spack/.*\.lp$",
-    r"^lib/spack/llnl/.*\.py$",
     # 1 file in vendored packages
     r"^lib/spack/spack/vendor/__init__.py$",
     # special case some test data files that have license headers

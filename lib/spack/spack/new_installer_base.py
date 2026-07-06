@@ -18,7 +18,7 @@ from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
 import spack.spec
-from spack.llnl.util.tty.log import redirect_stdio, restore_stdio
+from spack.util.tty.log import redirect_stdio, restore_stdio
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
