@@ -667,22 +667,27 @@ def _install(
 
         _enable_sandbox(spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path)
 
-        for phase in builder:
-            if stop_before is not None and phase.name == stop_before:
-                send_state(f"stopped before {stop_before}", state_stream)
-                raise spack.error.StopPhase(f"Stopping before '{stop_before}'")
-            send_state(phase.name, state_stream)
-            spack.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
-            # Run the install phase with debug output enabled.
-            old_debug = spack.util.tty.debug_level()
-            spack.util.tty.set_debug(1)
-            try:
-                phase.execute()
-            finally:
-                spack.util.tty.set_debug(old_debug)
-            if stop_at is not None and phase.name == stop_at:
-                send_state(f"stopped after {stop_at}", state_stream)
-                raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
+        try:
+            for phase in builder:
+                if stop_before is not None and phase.name == stop_before:
+                    send_state(f"stopped before {stop_before}", state_stream)
+                    raise spack.error.StopPhase(f"Stopping before '{stop_before}'")
+                send_state(phase.name, state_stream)
+                spack.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
+                # Run the install phase with debug output enabled.
+                old_debug = spack.util.tty.debug_level()
+                spack.util.tty.set_debug(1)
+                try:
+                    phase.execute()
+                finally:
+                    spack.util.tty.set_debug(old_debug)
+                if stop_at is not None and phase.name == stop_at:
+                    send_state(f"stopped after {stop_at}", state_stream)
+                    raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
+        finally:
+            # No-op on Linux (Landlock restricts the process itself and needs no teardown) and
+            # when sandboxing is disabled; only WindowsAppContainerSandbox registers as active.
+            spack.sandbox.cleanup_active_sandbox()
 
         _archive_build_metadata(pkg)
         spack.hooks.post_install(spec, explicit)

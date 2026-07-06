@@ -167,11 +167,10 @@ See :ref:`spack install <spack-install>` for the full set of flags related to de
 .. index::
    single: sandbox; configuring
 
-Build isolation and sandboxing (Linux)
+Build isolation and sandboxing
 --------------------------------------
 
 Spack can run builds in an unprivileged sandbox to restrict filesystem and network access.
-This opt-in feature requires Linux 5.13+ with Landlock support (network restrictions require Linux 6.7+).
 Sandboxing is meant for build reproducibility and bug containment rather than acting as a strict security boundary, as package recipes still execute outside the sandbox ahead of the build.
 
 When enabled, the stage directory, install prefix, system temp directory and ``/dev/null`` are implicitly writable.
@@ -183,7 +182,7 @@ All other paths must be explicitly allowed in configuration:
    config:
      sandbox:
        enable: true          # Enable for all builds
-       allow_network: false  # Disable TCP network access during the build phase
+       allow_network: false  # Disable network access during the build phase
        allow_read:           # Additional paths with read and execute permissions
        - /usr
        allow_write:          # Additional paths with write and execute permissions
@@ -194,4 +193,74 @@ Note that network restrictions only apply during the build phases, leaving Spack
 
 File system restrictions are complementary to existing file permissions and ACLs; they cannot grant access to files the user does not already have permission to read or write.
 
+The underlying isolation mechanism is platform-specific; see below for details.
+
+Linux (Landlock)
+^^^^^^^^^^^^^^^^
+
+On Linux, sandboxing uses the Landlock LSM and requires Linux 5.13+ (network restrictions require Linux 6.7+).
+
+Because Landlock lets a running process restrict itself in place, Spack applies the sandbox to
+the build process itself just before running the package's build phases: everything from that
+point on, including direct Python file I/O performed by the package recipe, is confined by the
+kernel.
+
 Spack's sandboxing complements external containerization tools like Podman or Bubblewrap: while a container must grant the main Spack process write access to the entire software store, Landlock dynamically confines each build subprocess strictly to its exact, package-specific install prefix.
+
+Windows (AppContainer)
+^^^^^^^^^^^^^^^^^^^^^^^
+
+On Windows, sandboxing uses `AppContainer isolation
+<https://learn.microsoft.com/en-us/windows/win32/secauthz/appcontainer-isolation>`_ and requires
+Windows 8 / Server 2012 or later.
+
+Unlike Landlock, a Windows AppContainer can only be established when a process is *created*;
+there is no supported way to confine an already-running process. Because of this, the Windows
+sandbox only confines the external build-tool subprocesses spawned during the build (compilers,
+``cmake``, ``make``, MSBuild, etc.); direct Python-level file I/O performed in-process by a
+package recipe (e.g. ``shutil.copy``, ``filter_file``, an in-process ``setup.py``) is **not**
+confined. This is an intentional, narrower guarantee than on Linux.
+
+Enforcement also works in the opposite direction from Landlock. Landlock removes access from a
+process that already has it, whereas an AppContainer starts with essentially nothing and is
+granted access one object at a time: a file is reachable only if its ACL names the container's
+own SID, one of its capabilities, or the built-in ``ALL APPLICATION PACKAGES`` group. Spack
+implements ``allow_read``/``allow_write`` by adding inheritable ACL entries for the container's
+SID to each allowed path, and removes them again when the build finishes.
+
+Two consequences follow from that model, and both usually need action:
+
+* **Build tools must be explicitly allowed.** ``C:\Windows`` and ``C:\Windows\System32`` grant
+  ``ALL APPLICATION PACKAGES`` read and execute by default, so they keep working, but most
+  installed software does not. In particular the MSVC toolchain and Windows SDK under
+  ``C:\Program Files (x86)\Microsoft Visual Studio`` and ``C:\Program Files (x86)\Windows Kits``
+  are **not** reachable from inside the sandbox unless you add them to ``allow_read``:
+
+  .. code-block:: yaml
+
+     config:
+       sandbox:
+         enable: true
+         allow_read:
+         - 'C:\Program Files\Microsoft Visual Studio'
+         - 'C:\Program Files (x86)\Windows Kits'
+
+* **Networking is opt-in, not opt-out.** An AppContainer has no network access at all by
+  default. ``allow_network: true`` therefore actively grants the ``internetClient``,
+  ``internetClientServer`` and ``privateNetworkClientServer`` capabilities (the last is what
+  makes a mirror on the local network reachable); ``allow_network: false`` simply grants none of
+  them. There is no kernel-version-style gating the way Landlock requires ABI v4+.
+
+Known limitations:
+
+* AppContainer processes cannot reach ``127.0.0.1``/localhost without a separate loopback
+  exemption, which Spack does not configure automatically. Builds or tests that rely on
+  contacting a local server will fail inside the sandbox, even with ``allow_network: true``.
+* Because access is granted by editing real ACLs, allowing a path with a large directory tree
+  costs an inheritance propagation pass over that tree, both when the sandbox is applied and
+  when it is torn down.
+* If a build is hard-killed mid-phase, the AppContainer profile and its granted ACL entries can
+  be left behind. This residue is inert (nothing can authenticate as the orphaned SID again) but
+  is not automatically reaped. After a clean build the granted entries are removed again; the
+  only lasting mark is the ``SE_DACL_AUTO_INHERITED`` control flag, which Windows sets on any
+  DACL it rewrites and which conveys no access.

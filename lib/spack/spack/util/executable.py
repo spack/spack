@@ -11,7 +11,7 @@ import sys
 from pathlib import Path, PurePath
 from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
 
-from spack.vendor.typing_extensions import Literal
+from spack.vendor.typing_extensions import Literal, Protocol
 
 import spack.error
 from spack.util import tty
@@ -20,6 +20,64 @@ from spack.util.environment import EnvironmentModifications
 __all__ = ["Executable", "which", "which_string", "ProcessError"]
 
 OutType = Union[Optional[BinaryIO], str, Type[str], Callable]
+
+StreamType = Union[None, int, BinaryIO]
+
+
+class SpawnedProcess(Protocol):
+    """The subset of ``subprocess.Popen`` that :meth:`Executable.__call__` relies on."""
+
+    returncode: Optional[int]
+
+    def communicate(self, *, timeout: Optional[float] = None) -> Tuple[bytes, bytes]: ...
+
+    def kill(self) -> None: ...
+
+
+class ProcessSpawner(Protocol):
+    """Starts a child process running ``cmd``, raising ``OSError`` if it cannot be started."""
+
+    def __call__(
+        self,
+        cmd: List[str],
+        *,
+        env: Dict[str, str],
+        stdin: StreamType,
+        stdout: StreamType,
+        stderr: StreamType,
+    ) -> SpawnedProcess: ...
+
+
+def _subprocess_spawner(
+    cmd: List[str],
+    *,
+    env: Dict[str, str],
+    stdin: StreamType,
+    stdout: StreamType,
+    stderr: StreamType,
+) -> SpawnedProcess:
+    # close_fds=False because Spack relies on children inheriting fds, e.g. the make jobserver.
+    return subprocess.Popen(
+        cmd, stdin=stdin, stderr=stderr, stdout=stdout, env=env, close_fds=False
+    )
+
+
+#: How Executable starts child processes. Swapped out by spack.sandbox to run build tools inside
+#: a Windows AppContainer, which can only be entered at process-creation time. Keeping this a
+#: seam rather than an import of spack.sandbox is what lets spack.util stay free of dependencies
+#: on top-level spack modules.
+_spawner: ProcessSpawner = _subprocess_spawner
+
+
+def set_process_spawner(spawner: Optional[ProcessSpawner]) -> ProcessSpawner:
+    """Install `spawner` process-wide, or restore the default when passed None.
+
+    Returns the spawner being replaced, so a caller can restore exactly what it found.
+    """
+    global _spawner
+    previous = _spawner
+    _spawner = _subprocess_spawner if spawner is None else spawner
+    return previous
 
 
 def _process_cmd_output(
@@ -46,7 +104,7 @@ def _process_cmd_output(
         return None
 
 
-def _streamify_output(arg: OutType, name: str) -> Tuple[Union[int, BinaryIO, None], bool]:
+def _streamify_output(arg: OutType, name: str) -> Tuple[StreamType, bool]:
     if isinstance(arg, str):
         return open(arg, "wb"), True
     elif arg is str or arg is str.split:
@@ -291,13 +349,8 @@ class Executable:
 
         result = None
         try:
-            proc = subprocess.Popen(
-                cmd,
-                stdin=istream,
-                stderr=estream,
-                stdout=ostream,
-                env=current_environment,
-                close_fds=False,
+            proc = _spawner(
+                cmd, env=current_environment, stdin=istream, stdout=ostream, stderr=estream
             )
         except OSError as e:
             message = "Command: " + cmd_line_string
@@ -309,6 +362,7 @@ class Executable:
         try:
             out, err = proc.communicate(timeout=timeout)
             result = _process_cmd_output(out, err, output, error)
+            assert proc.returncode is not None, "returncode is always set after communicate()"
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string

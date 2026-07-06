@@ -17,6 +17,8 @@ Public API:
   passed to :meth:`SecurityDescriptor.add_ace`.
 - :func:`get_file_owner` -- return the account name of the owner of a file.
 - :func:`copy_file_permissions` -- copy the DACL from one file to another.
+- :func:`sid_to_string` -- convert a binary ``PSID`` from a Win32 API into the SDDL SID
+  string that :class:`AccessControlEntry` expects.
 - :func:`get_file_sddl` / :func:`set_file_sddl` -- low-level SDDL string read/write;
   intended primarily (but not exclusively) for testing and debugging rather than general use.
 
@@ -1135,6 +1137,21 @@ class SecurityDescriptor:
             if not _ConvertSidToStringSidW(sid_ptr, ctypes.byref(string_sid_ptr)):
                 raise _WinError(_get_last_error())
             return string_sid_ptr.value or ""
+
+
+def sid_to_string(psid: int) -> str:
+    """Convert a binary ``PSID`` pointer to its SDDL string form (e.g. ``S-1-15-2-...``).
+
+    Win32 APIs that mint or look up SIDs (``CreateAppContainerProfile``,
+    ``DeriveCapabilitySidsFromName``, ...) hand back a raw pointer, whereas
+    :class:`AccessControlEntry` identifies principals by SDDL string. This bridges the two.
+
+    The caller retains ownership of *psid*; nothing here frees it.
+    """
+    with _local_ptr(wintypes.LPWSTR) as string_sid_ptr:
+        if not _ConvertSidToStringSidW(psid, ctypes.byref(string_sid_ptr)):
+            raise _WinError(_get_last_error())
+        return string_sid_ptr.value or ""
 
 
 def get_file_owner(path: str) -> str:
