@@ -1,3 +1,27 @@
+# v1.2.1 (2026-07-06)
+
+## Bug fixes
+
+* Installer bugfixes:
+  * Fix a hang of the new installer when running under forkserver (#52621)
+  * Sanitize the computed build log filename (#52660)
+  * Allow local installs for packages missing in upstream (#52630)
+  * Restore `working_dir` in build subprocess (#52576)
+* Solver bugfixes:
+  * Restore performance on macOS (#52604, #52603)
+  * Fix the solver heuristic for `build_set_id` (#52634)
+  * Drop noisy debug message (#52640)
+* Fix environment view regeneration when using multiple overlayfs layers (#52594)
+* Fix `spack cd -e` and other dash-prefixed args in fish (#52586)
+* Fix `spack location` with `-v` / `--view` and no environment active (#52587)
+* Allow multiple `py-setuptools-scm` specs in a dependency graph (#52595)
+* Fix overly strict file permission issue when updating config files (#52653)
+* Fix `libc` detection when `-Wl,--dynamic-linker` is passed with two dashes (#52626)
+* Fix config warning messages when there's no associated source file (#52638)
+* Handle empty list of URLs when generating BOM (#52585)
+* Fix temporary dir logic sometimes hitting a Windows code path on POSIX platforms (#52600)
+
+
 # v1.2.0 (2026-06-21)
 
 `v1.2.0` is a major feature release. The main changes you'll notice are the **new,
