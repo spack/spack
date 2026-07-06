@@ -155,9 +155,6 @@ cd = chdir
 #: Alias for :func:`os.getcwd`
 pwd = getcwd
 
-#: Alias for :func:`os.rename`
-rename = rename
-
 #: Alias for :func:`os.makedirs`
 makedirs = makedirs
 
@@ -178,6 +175,9 @@ rmtree = rmtree
 
 #: Alias for :func:`os.readlink` (with certain Windows-specific changes)
 readlink = readlink
+
+#: Alias for :func:`os.rename` (with certain Windows-specific changes)
+rename = rename
 
 #: Alias for :func:`os.symlink` (with certain Windows-specific changes)
 symlink = symlink
