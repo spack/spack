@@ -274,14 +274,8 @@ class DirectoryConfigScope(ConfigScope):
 
         try:
             filesystem.mkdirp(self.path)
-            fd, tmp = tempfile.mkstemp(dir=self.path, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, filename)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            with filesystem.write_tmp_and_move(filename, encoding="utf-8") as f:
+                syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
 
@@ -417,16 +411,9 @@ class SingleFileScope(ConfigScope):
 
         validate(data_to_write, self.schema)
         try:
-            parent = os.path.dirname(self.path)
-            filesystem.mkdirp(parent)
-            fd, tmp = tempfile.mkstemp(dir=parent, suffix=".tmp")
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-                filesystem.rename(tmp, self.path)
-            except Exception:
-                os.unlink(tmp)
-                raise
+            filesystem.mkdirp(os.path.dirname(self.path))
+            with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
+                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
