@@ -133,23 +133,14 @@ For example, to install the latest version of the ``mpileaks`` package, you migh
 
 If ``mpileaks`` depends on other packages, Spack will install the dependencies first.
 It then fetches the ``mpileaks`` tarball, expands it, verifies that it was downloaded without errors, builds it, and installs it in its own directory under ``$SPACK_ROOT/opt``.
-You'll see a number of messages from Spack, a lot of build output, and a message that the package is installed.
 
 .. code-block:: spec
 
    $ spack install mpileaks
    ... dependency build output ...
-   ==> Installing mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
-   ==> No binary for mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2 found: installing from source
-   ==> mpileaks: Executing phase: 'autoreconf'
-   ==> mpileaks: Executing phase: 'configure'
-   ==> mpileaks: Executing phase: 'build'
-   ==> mpileaks: Executing phase: 'install'
-   [+] ~/spack/opt/linux-rhel7-broadwell/gcc-8.1.0/mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
+   [+] ph7pbnh mpileaks@1.0 ~/spack/opt/linux-rhel7-broadwell/gcc-8.1.0/mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2 (5s)
 
 The last line, with the ``[+]``, indicates where the package is installed.
-
-Add the Spack debug option (one or more times) -- ``spack -d install mpileaks`` -- to get additional (and even more verbose) output.
 
 Building a specific version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

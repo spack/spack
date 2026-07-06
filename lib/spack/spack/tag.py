@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage package tags"""
+
 from typing import TYPE_CHECKING, Dict, List, Set
 
 import spack.error

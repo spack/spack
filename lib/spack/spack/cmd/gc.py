@@ -67,7 +67,7 @@ def roots_from_environments(args, active_env):
     # add root hashes from all considered environments to list of roots
     root_hashes = set()
     for env in all_environments:
-        root_hashes |= {x.hash for x in env.concretized_roots}
+        root_hashes |= {x.hash for x in env.explicit_roots()}
 
     return root_hashes
 
@@ -91,7 +91,8 @@ def gc(parser, args):
             tty.msg(f"Restricting garbage collection to environment '{active_env.name}'")
             root_hashes = set(spack.store.STORE.db.all_hashes())  # keep everything
             root_hashes -= set(active_env.all_hashes())  # except this env
-            root_hashes |= {x.hash for x in active_env.concretized_roots}  # but keep its roots
+            # but keep its explicit roots
+            root_hashes |= {x.hash for x in active_env.explicit_roots()}
         else:
             # consider all explicit specs roots (the default for db.unused_specs())
             root_hashes = None

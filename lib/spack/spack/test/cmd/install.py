@@ -22,11 +22,12 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.hash_types as ht
+import spack.hooks.sbom_generate
 import spack.installer
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.store
+import spack.util.filesystem as fs
 from spack.error import SpackError, SpecSyntaxError
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
@@ -234,13 +235,17 @@ def test_install_overwrite(
     spec = spack.concretize.concretize_one("pkg-c")
     install("pkg-c")
 
-    # Ignore manifest and install times
+    # Ignore manifest, install times, and sbom
     manifest = os.path.join(
         spec.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
-    ignores = [manifest, spec.package.times_log_path]
+    ignores = [
+        manifest,
+        spec.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(spec, "spdx-2.3"),
+    ]
 
     assert os.path.exists(spec.prefix)
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -305,13 +310,18 @@ def test_install_overwrite_multiple(
     install("--fake", "libdwarf")
     install("--fake", "cmake")
 
+    # Ignore manifest, install times, and sbom
     ld_manifest = os.path.join(
         libdwarf.prefix,
         spack.store.STORE.layout.metadata_dir,
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
+    ld_ignores = [
+        ld_manifest,
+        libdwarf.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(libdwarf, "spdx-2.3"),
+    ]
 
     assert os.path.exists(libdwarf.prefix)
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
@@ -322,7 +332,11 @@ def test_install_overwrite_multiple(
         spack.store.STORE.layout.manifest_file_name,
     )
 
-    cm_ignores = [cm_manifest, cmake.package.times_log_path]
+    cm_ignores = [
+        cm_manifest,
+        cmake.package.times_log_path,
+        spack.hooks.sbom_generate.sbom_path(cmake, "spdx-2.3"),
+    ]
     assert os.path.exists(cmake.prefix)
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
@@ -443,7 +457,7 @@ def test_junit_output_with_errors(
     tmp_path: pathlib.Path,
     monkeypatch,
 ):
-    throw = _keyboard_error if expected_exc == KeyboardInterrupt else _runtime_error
+    throw = _keyboard_error if expected_exc is KeyboardInterrupt else _runtime_error
     monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
 
     with fs.working_dir(str(tmp_path)):
@@ -681,21 +695,27 @@ def test_build_warning_output(mock_fetch, install_mockery):
     assert "foo.c:89: warning: some weird warning!" in e.value.long_message
 
 
-def test_cache_only_fails(mock_fetch, install_mockery):
+@pytest.mark.disable_clean_stage_check  # new installer keeps a log for build cache installs
+def test_cache_only_fails(mock_fetch, install_mockery, installer_variant):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     out = install("--cache-only", "libdwarf", fail_on_error=False)
+    assert isinstance(install.error, spack.error.InstallError)
+    assert not spack.store.STORE.db.query_local("libdwarf")
+    assert not spack.store.STORE.db.query_local("libelf")
 
-    assert "Failed to install gcc-runtime" in out
-    assert "Skipping build of libdwarf" in out
-    assert "was not installed" in out
+    if installer_variant == "old":
+        assert "Failed to install gcc-runtime" in out
+        assert "Skipping build of libdwarf" in out
+        assert "was not installed" in out
 
-    # Check that failure prefix locks are still cached
-    failed_packages = [
-        pkg_name for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
-    ]
-    assert "libelf" in failed_packages
-    assert "libdwarf" in failed_packages
+        # Check that failure prefix locks are still cached
+        failed_packages = [
+            pkg_name
+            for dag_hash, pkg_name in spack.store.STORE.failure_tracker.locker.locks.keys()
+        ]
+        assert "libelf" in failed_packages
+        assert "libdwarf" in failed_packages
 
 
 def test_install_only_dependencies(mock_fetch, install_mockery, installer_variant):

@@ -15,7 +15,7 @@ spec_list_properties = {
     "matrix": matrix_schema,
     "exclude": {
         "type": "array",
-        "description": "List of specific spec combinations to exclude from the " "matrix",
+        "description": "List of specific spec combinations to exclude from the matrix",
         "items": {"type": "string"},
     },
 }

@@ -32,7 +32,7 @@ You can include a single configuration file or an entire configuration *scope* l
    - path: /path/to/os-specific/config-dir
      when: os == "ventura"
 
-Included paths may be absolute, relative (to the configuration file), specified as URLs, or provided in an environment variable (e.g., ``$MY_SPECIAL_CONFIG_FILE``).
+Included paths may be absolute, relative (to the configuration file), specified as URLs, or provided in environment variables (e.g., ``$MY_SPECIAL_CONFIG_FILE``).
 
 * ``optional``: Spack will raise an error when an included configuration file does not exist, *unless* it is explicitly made ``optional: true``, like the second path above.
 * ``when``: Configuration scopes can also be included *conditionally* with ``when``.
@@ -44,23 +44,30 @@ The same conditions and variables in :ref:`Spec List References <spec-list-refer
 Remote file URLs
 ~~~~~~~~~~~~~~~~
 
-Only the ``file``, ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported for remote file URLs.
+Only the ``ftp``, ``http``, and ``https`` protocols (or schemes) are supported for remote file URLs.
 Spack-specific, environment, and user path variables can be used.
 (See :ref:`config-file-variables` for more information.)
 
-A ``sha256`` is required and must be specified as follows:
-
-.. code-block:: yaml
+A ``sha256`` is required.
+For example, suppose you have a ``/etc/spack/include.yaml`` file that specifies a remote ``config.yaml`` file as follows::
 
    include:
    - path: https://github.com/path/to/raw/config/config.yaml
      sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
 
-The ``config.yaml`` file would be cached locally to a special include location and its contents included in Spack's configuration.
+The ``config.yaml`` file is downloaded to a subdirectory of ``/etc/spack``.
+The contents of the downloaded file are read and included in Spack's configuration when Spack configuration files are processed.
+
+.. note::
+
+   You can check the destination of the downloaded file by running: ``spack config scopes -p``.
 
 .. warning::
 
    Remote file URLs must link to the **raw** form of the file's contents (e.g., `GitHub <https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_ or `GitLab <https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_).
+
+   If the directory containing the ``include.yaml`` file is not writable when the remote file is downloaded, then the destination will be a temporary directory.
+
 
 ``git`` repository files
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,12 +79,12 @@ Inclusion of the repository (and its paths) can be optional or conditional.
 If you want to control the :ref:`name of the configuration scope <named-config-scopes>`, you can provide a ``name``.
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
-And we want the configuration scope name to start ``USC``.
-We would then configure the ``include.yaml`` file as follows::
+And we want the configuration scope name to start ``common``.
+We could then configure the include in, for example, the user scope include file (i.e., ``$HOME/.spack/include.yaml`` by default), as follows::
 
    include:
-   - name: USC
-     git: https://github.com/spack/spack-configs
+   - name: common
+     git: https://github.com/spack/spack-configs.git
      branch: main
      when: os == "centos7"
      paths:
@@ -86,24 +93,24 @@ We would then configure the ``include.yaml`` file as follows::
 
 .. note::
 
-   The git URL can be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
+   The git URL could be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
 
-If the condition is satisfied, then the ``main`` branch of the repository will be cloned when the configuration scopes are initially created.
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$HOME/.spack/includes`` -- when configuration scopes are initially created.
 Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
-In this example, the new scopes can be seen by running::
+In this example, the new scopes and their paths can be seen by running::
 
    $ spack config scopes -p
    Scope               Path
    command_line
-   spack               /Users/username/spack/etc/spack/
-   user                /Users/username/.spack/
-   USC:config.yaml     /Users/username/.spack/includes/nncrh7v/USC/config/config.yaml
-   USC:packages.yaml   /Users/username/.spack/includes/nncrh7v/USC/config/packages.yaml
-   site                /Users/username/spack/etc/spack/site/
-   system              /etc/spack/
-   defaults            /Users/username/spack/etc/spack/defaults/
-   defaults:darwin     /Users/username/spack/etc/spack/defaults/darwin/
-   defaults:base       /Users/username/spack/etc/spack/defaults/base/
+   spack                           /Users/username/spack/etc/spack/
+   user                            /Users/username/.spack/
+   common:USC/config/config.yaml   /Users/username/.spack/includes/common/USC/config/config.yaml
+   common:USC/config/packages.yaml /Users/username/.spack/includes/common/USC/config/packages.yaml
+   site                            /Users/username/spack/etc/spack/site/
+   system                          /etc/spack/
+   defaults                        /Users/username/spack/etc/spack/defaults/
+   defaults:darwin                 /Users/username/spack/etc/spack/defaults/darwin/
+   defaults:base                   /Users/username/spack/etc/spack/defaults/base/
    _builtin
 
 Since there are two unique paths, each results in a separate configuration scope.

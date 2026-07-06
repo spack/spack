@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Check the database is functioning properly, both in memory and in its file."""
-import contextlib
+
 import datetime
 import functools
 import gzip
@@ -31,72 +31,22 @@ import spack.vendor.jsonschema
 import spack.concretize
 import spack.database
 import spack.deptypes as dt
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lock as lk
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.lock
+import spack.util.filesystem as fs
+import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
 from spack.llnl.util.tty.colify import colify
 from spack.schema.database_index import schema
-from spack.test.conftest import RepoBuilder
+from spack.test.conftest import RepoBuilder, writable
 from spack.util.executable import Executable
 
 pytestmark = pytest.mark.db
-
-
-@contextlib.contextmanager
-def writable(database):
-    """Allow a database to be written inside this context manager."""
-    old_lock, old_is_upstream = database.lock, database.is_upstream
-    db_root = pathlib.Path(database.root)
-
-    try:
-        # this is safe on all platforms during tests (tests get their own tmpdirs)
-        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
-        database.is_upstream = False
-        db_root.chmod(mode=0o755)
-        with database.write_transaction():
-            yield
-    finally:
-        db_root.chmod(mode=0o555)
-        database.lock = old_lock
-        database.is_upstream = old_is_upstream
-
-
-@pytest.fixture()
-def upstream_and_downstream_db(tmp_path: pathlib.Path, gen_mock_layout):
-    """Fixture for a pair of stores: upstream and downstream.
-
-    Upstream API prohibits writing to an upstream, so we also return a writable version
-    of the upstream DB for tests to use.
-
-    """
-    mock_db_root = tmp_path / "mock_db_root"
-    mock_db_root.mkdir()
-    mock_db_root.chmod(0o555)
-
-    upstream_db = spack.database.Database(
-        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
-    )
-    with writable(upstream_db):
-        upstream_db._write()
-
-    downstream_db_root = tmp_path / "mock_downstream_db_root"
-    downstream_db_root.mkdir()
-    downstream_db_root.chmod(0o755)
-
-    downstream_db = spack.database.Database(
-        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
-    )
-    downstream_db._write()
-
-    yield upstream_db, downstream_db
 
 
 @pytest.mark.parametrize(
@@ -352,11 +302,13 @@ def test_recursive_upstream_dbs(
         )
 
         assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (db_a_from_scratch)
-        assert db_a_from_scratch.db_for_spec_hash(spec["y"].dag_hash()) == (
-            upstream_dbs_from_scratch[0]
+        assert (
+            db_a_from_scratch.db_for_spec_hash(spec["y"].dag_hash())
+            == (upstream_dbs_from_scratch[0])
         )
-        assert db_a_from_scratch.db_for_spec_hash(spec["z"].dag_hash()) == (
-            upstream_dbs_from_scratch[1]
+        assert (
+            db_a_from_scratch.db_for_spec_hash(spec["z"].dag_hash())
+            == (upstream_dbs_from_scratch[1])
         )
 
         db_a_from_scratch._check_ref_counts()
@@ -621,6 +573,53 @@ def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
         assert new_rec.spec == rec.spec
         assert new_rec.path == rec.path
         assert new_rec.installed == rec.installed
+
+
+def test_try_write_transaction(mutable_database, monkeypatch):
+    """try_write_transaction persists changes on success and yields False without doing anything
+    when acquiring the lock would block."""
+    db = spack.store.STORE.db
+
+    spec = db.query_one("mpileaks ^zmpi")
+    with db.try_write_transaction() as acquired:
+        assert acquired
+        db._remove(spec)
+
+    db._state_is_inconsistent = True  # force re-read from disk
+    with db.read_transaction():
+        assert db.query_local_by_spec_hash(spec.dag_hash()) is None
+
+    monkeypatch.setattr(db.lock, "try_acquire_write", lambda: False)
+    with db.try_write_transaction() as acquired:
+        assert not acquired
+
+
+def test_try_write_transaction_does_not_flush_on_exception(mutable_database):
+    """Regression test: an exception inside try_write_transaction must not flush the possibly
+    inconsistent in-memory database to disk; the next transaction re-reads it instead."""
+    db = spack.store.STORE.db
+
+    with pytest.raises(ValueError):
+        with db.try_write_transaction() as acquired:
+            assert acquired
+            db._data.clear()
+            db._installed_prefixes.clear()
+            raise ValueError("interrupted transaction")
+
+    with db.read_transaction():
+        assert db.query("mpileaks")
+
+
+def test_try_read_transaction(mutable_database, monkeypatch):
+    db = spack.store.STORE.db
+
+    with db.try_read_transaction() as acquired:
+        assert acquired
+        assert db.query("mpileaks")
+
+    monkeypatch.setattr(db.lock, "try_acquire_read", lambda: False)
+    with db.try_read_transaction() as acquired:
+        assert not acquired
 
 
 def test_020_db_sanity(database):

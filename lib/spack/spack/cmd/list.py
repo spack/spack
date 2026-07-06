@@ -18,8 +18,8 @@ import spack.package_base
 import spack.repo
 import spack.util.git
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import working_dir
 from spack.llnl.util.tty.colify import colify
+from spack.util.filesystem import working_dir
 from spack.util.url import path_to_file_url
 from spack.version import VersionList
 
@@ -316,7 +316,7 @@ def html(pkg_names, out):
 
         if pkg_cls.homepage:
             out.write(
-                ("<li>" '<a class="reference external" href="%s">%s</a>' "</li>\n")
+                ('<li><a class="reference external" href="%s">%s</a></li>\n')
                 % (pkg_cls.homepage, escape(pkg_cls.homepage, True))
             )
         else:
@@ -326,7 +326,7 @@ def html(pkg_names, out):
         out.write("<dt>Spack package:</dt>\n")
         out.write('<dd><ul class="first last simple">\n')
         out.write(
-            ("<li>" '<a class="reference external" href="%s">%s/package.py</a>' "</li>\n")
+            ('<li><a class="reference external" href="%s">%s/package.py</a></li>\n')
             % (github_url(pkg_cls), pkg_cls.name)
         )
         out.write("</ul></dd>\n")

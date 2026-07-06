@@ -2,80 +2,34 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""This module implements the classes necessary to generate Tcl
-non-hierarchical modules.
-"""
-import os
-from typing import Dict, Optional, Tuple
+"""This module implements the classes necessary to generate Tcl modules."""
 
-import spack.config
-import spack.spec
-import spack.tengine as tengine
+from typing import Tuple
 
-from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
-
-
-#: Tcl specific part of the configuration
-def configuration(module_set_name: str) -> dict:
-    return spack.config.get(f"modules:{module_set_name}:tcl", {})
-
-
-# Caches the configuration {spec_hash: configuration}
-configuration_registry: Dict[Tuple[str, str, bool], BaseConfiguration] = {}
-
-
-def make_configuration(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseConfiguration:
-    """Returns the tcl configuration for spec"""
-    explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
-    key = (spec.dag_hash(), module_set_name, explicit)
-    try:
-        return configuration_registry[key]
-    except KeyError:
-        return configuration_registry.setdefault(
-            key, TclConfiguration(spec, module_set_name, explicit)
-        )
-
-
-def make_layout(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseFileLayout:
-    """Returns the layout information for spec"""
-    return TclFileLayout(make_configuration(spec, module_set_name, explicit))
-
-
-def make_context(
-    spec: spack.spec.Spec, module_set_name: str, explicit: Optional[bool] = None
-) -> BaseContext:
-    """Returns the context information for spec"""
-    return TclContext(make_configuration(spec, module_set_name, explicit))
+from .common import BaseConfiguration, BaseModuleFileWriter
 
 
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
+    module_system = "tcl"
 
-class TclFileLayout(BaseFileLayout):
-    """File layout for tcl module files."""
+    def manipulate_path(self, token: str) -> str:
+        if token in self.hierarchy_tokens:
+            return "${{{0}_name}} ${{{0}_version}}".format(token)
+        return '"' + token + '"'
 
-    @property
-    def modulerc(self):
-        """Returns the modulerc file associated with current module file"""
-        return os.path.join(os.path.dirname(self.filename), ".modulerc")
+    def format_condition(self, services_needed: Tuple[str, ...]) -> str:
+        return " && ".join(["[string length $" + x + "_name]" for x in services_needed])
 
-
-class TclContext(BaseContext):
-    """Context class for tcl module files."""
-
-    @tengine.context_property
-    def prerequisites(self):
-        """List of modules that needs to be loaded automatically."""
-        return self._create_module_list_of("specs_to_prereq")
+    def join_path(self, parts: Tuple[str, ...]) -> str:
+        return " ".join([self.manipulate_path(token) for token in parts])
 
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
+
+    configuration_class = TclConfiguration
 
     default_template = "modules/modulefile.tcl"
 

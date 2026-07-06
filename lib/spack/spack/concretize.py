@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+
 import importlib
 import sys
 import time
@@ -11,6 +12,7 @@ import spack.compilers
 import spack.compilers.config
 import spack.config
 import spack.error
+import spack.hash_lookup
 import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.parallel
@@ -190,7 +192,12 @@ def concretize_separately(
 
     for j, (i, concrete, duration) in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=num_procs, debug=tty.is_debug(), maxtaskperchild=1
+            _concretize_task,
+            args,
+            processes=num_procs,
+            debug=tty.is_debug(),
+            maxtaskperchild=1,
+            serialize_env=True,
         )
     ):
         ret.append((i, concrete))
@@ -235,7 +242,7 @@ def concretize_one(
 
     if isinstance(spec, str):
         spec = Spec(spec)
-    spec = spec.lookup_hash()
+    spec = spack.hash_lookup.lookup_hash(spec)
 
     if spec.concrete:
         return spec.copy()
@@ -260,9 +267,9 @@ def concretize_one(
         name = providers[0]
 
     node = SpecBuilder.make_node(pkg=name)
-    assert (
-        node in answer
-    ), f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    assert node in answer, (
+        f"cannot find {name} in the list of specs {','.join([n.pkg for n in answer.keys()])}"
+    )
 
     concretized = answer[node]
     return concretized

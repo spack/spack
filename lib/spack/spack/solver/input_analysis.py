@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes to analyze the input of a solve, and provide information to set up the ASP problem"""
+
 import collections
 from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
@@ -16,8 +17,9 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.error import SpackError
-from spack.llnl.util import lang, tty
+from spack.llnl.util import tty
 from spack.spec import EMPTY_SPEC
+from spack.util import lang
 
 
 class PossibleGraph(NamedTuple):
@@ -268,7 +270,7 @@ class StaticAnalysis(NoStaticAnalysis):
         configuration: spack.config.Configuration,
         repo: spack.repo.RepoPath,
         store: spack.store.Store,
-        binary_index: spack.binary_distribution.BinaryCacheIndex,
+        binary_index: spack.binary_distribution.BinaryIndexCache,
     ):
         self.store = store
         self.binary_index = binary_index
@@ -466,9 +468,9 @@ class MinimalDuplicatesCounter(NoDuplicatesCounter):
         )
         self._possible_virtuals.update(virtuals)
         self._link_run_virtuals.update(virtuals)
-        for x in self._link_run:
+        if self._link_run:
             reals, virtuals, _ = self.possible_graph.possible_dependencies(
-                x, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
+                *self._link_run, allowed_deps=dt.BUILD, transitive=False, strict_depflag=True
             )
             self._possible_virtuals.update(virtuals)
             self._direct_build.update(reals)

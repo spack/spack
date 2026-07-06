@@ -5,7 +5,7 @@
 import collections
 from typing import Optional
 
-import spack.llnl.util.lang as lang
+import spack.util.lang as lang
 
 #: An object of this kind is a shared global state used to collect callbacks during
 #: class definition time, and is flushed when the class object is created at the end

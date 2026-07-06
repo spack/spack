@@ -13,17 +13,22 @@ import spack
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.paths
 import spack.platforms
 import spack.util.executable as exe
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_yaml as syaml
 
 pytestmark = pytest.mark.not_on_windows(
     "Test functionality supported but tests are failing on Win"
 )
+
+
+@pytest.fixture(autouse=True)
+def _clear_commit_cache():
+    spack.get_spack_commit.cache_clear()
 
 
 def test_version_git_nonsense_output(tmp_path: pathlib.Path, working_env, monkeypatch):
@@ -62,9 +67,7 @@ def test_git_sha_output(tmp_path: pathlib.Path, working_env, monkeypatch):
         f.write(
             """#!/bin/sh
 echo {0}
-""".format(
-                sha
-            )
+""".format(sha)
         )
     fs.set_executable(str(git))
 
@@ -91,6 +94,10 @@ def test_main_calls_get_version(capfd, working_env, monkeypatch):
     spack.main.main(["-V"])
     out, err = capfd.readouterr()
     assert spack.spack_version == out.strip()
+
+
+def test_unrecognized_top_level_flag():
+    assert spack.main.main(["-o", "mirror", "list"]) != 0
 
 
 def test_get_version_bad_git(tmp_path: pathlib.Path, working_env, monkeypatch):

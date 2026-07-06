@@ -4,6 +4,7 @@
 """Schema for environment modifications. Meant for inclusion in other
 schemas.
 """
+
 import collections.abc
 from typing import Any, Dict
 
@@ -12,7 +13,7 @@ dictionary_of_strings_or_num = {
     "additionalProperties": {"anyOf": [{"type": "string"}, {"type": "number"}]},
 }
 
-definition: Dict[str, Any] = {
+env_modifications: Dict[str, Any] = {
     "type": "object",
     "description": "Environment variable modifications to apply at runtime",
     "default": {},
@@ -44,6 +45,9 @@ definition: Dict[str, Any] = {
         },
     },
 }
+
+#: $ref pointer for use in merged schema
+ref_env_modifications = {"$ref": "#/definitions/env_modifications"}
 
 
 def parse(config_obj):

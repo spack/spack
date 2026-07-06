@@ -79,13 +79,11 @@ import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
+import spack.util.module_cmd
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
-from spack.llnl.string import plural
-from spack.llnl.util.filesystem import join_path, symlink
-from spack.llnl.util.lang import dedupe, stable_partition
 from spack.llnl.util.tty.color import cescape, colorize
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
@@ -99,8 +97,10 @@ from spack.util.environment import (
     validate,
 )
 from spack.util.executable import Executable
+from spack.util.filesystem import join_path, symlink
+from spack.util.lang import dedupe, stable_partition
 from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module
+from spack.util.string import plural
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -787,9 +787,9 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     tty.debug("setup_package: adding compiler wrappers paths")
     env_by_name = env_mods.group_by_name()
     for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
-        assert isinstance(
-            x, PrependPath
-        ), "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        assert isinstance(x, PrependPath), (
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        )
         env_mods.prepend_path("PATH", x.value)
 
     # Check whether we want to force RPATH or RUNPATH
@@ -1117,7 +1117,7 @@ def load_external_modules(context: SetupContext) -> None:
     for spec, _ in context.external:
         external_modules = spec.external_modules or []
         for external_module in external_modules:
-            load_module(external_module)
+            spack.util.module_cmd.load_module(external_module)
 
 
 def _setup_pkg_and_run(
@@ -1654,7 +1654,7 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
 
 
 def write_log_summary(out, log_type, log, last=None):
-    errors, warnings = parse_log_events(log)
+    errors, warnings, _ = parse_log_events(log)
     nerr = len(errors)
     nwar = len(warnings)
 

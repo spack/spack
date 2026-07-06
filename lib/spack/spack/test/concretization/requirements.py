@@ -18,10 +18,11 @@ import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
+from spack.externals_config import create_external_parser, external_config_with_implicit_externals
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
-from spack.solver.reuse import create_external_parser, spec_filter_from_packages_yaml
-from spack.solver.runtimes import external_config_with_implicit_externals
+from spack.solver.requirements import RequirementParser
+from spack.solver.reuse import spec_filter_from_packages_yaml
 from spack.spec import Spec
 from spack.util.url import path_to_file_url
 
@@ -159,9 +160,7 @@ def test_requirement_adds_new_version(
 packages:
   v:
     require: "@{0}=2.2"
-""".format(
-        a_commit_hash
-    )
+""".format(a_commit_hash)
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("v")
@@ -192,9 +191,7 @@ def test_requirement_adds_version_satisfies(
 packages:
   t:
     require: "@{0}=2.2"
-""".format(
-        commits[0]
-    )
+""".format(commits[0])
     update_packages_config(conf_str)
 
     s1 = spack.concretize.concretize_one("t")
@@ -1647,3 +1644,44 @@ def test_penalties_for_language_preferences(concretize_scope, mock_packages):
     assert s.satisfies("%c=gcc@10")
     assert all(s[name].satisfies("%c=clang") for name in dependency_names)
     assert s["mpi"].satisfies("%c,cxx=clang %fortran=gcc@10")
+
+
+def test_prefer_when_condition_expands_toolchain(concretize_scope, mutable_config, mock_packages):
+    """Tests that toolchains in the 'when' condition of a 'prefer' rule must are expanded."""
+    # If the expansion to %gcc doesn't happen, the preference for @2.1 is silently ignored
+    mutable_config.set("toolchains", {"gcc_toolchain": "%c=gcc"}, scope="concretize")
+    update_packages_config("""
+packages:
+  multivalue-variant:
+    prefer:
+    - spec: "@2.1"
+      when: "%gcc_toolchain"
+""")
+
+    s_gcc = spack.concretize.concretize_one("multivalue-variant %c=gcc")
+    assert s_gcc.satisfies("@2.1 %c=gcc"), f"expected @2.1 with gcc, got {s_gcc.version}"
+
+    # With clang as compiler, condition does not fire -> default highest version @2.3
+    s_clang = spack.concretize.concretize_one("multivalue-variant %clang")
+    assert s_clang.satisfies("@2.3 %c=clang"), f"expected @2.3 with clang, got {s_clang.version}"
+
+
+@pytest.mark.regression("52636")
+def test_compiler_in_all_from_internal_scope_warns(mock_packages):
+    """Tests that building a warning on an InternalConfigScope doesn't raise because
+    there's no "line" attribute.
+    """
+    scope = spack.config.InternalConfigScope(
+        "env:groups:libs", {"packages": {"all": {"require": ["%gcc"]}}}
+    )
+    config = spack.config.Configuration()
+    config.push_scope(scope)
+    parser = RequirementParser(config)
+
+    require = config.get("packages:all:require")
+    # The mark on the requirement string has a name but no line number.
+    mark = syaml.get_mark_from_yaml_data(require[0])
+    assert mark is not None and mark.line is None
+
+    with pytest.warns(UserWarning, match="applies a dependency constraint to all packages"):
+        parser._maybe_warn_compiler_in_all(require, "require")

@@ -13,7 +13,7 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.main
-import spack.modules.common
+import spack.modules.error
 import spack.modules.lmod
 import spack.spec
 import spack.util.environment
@@ -66,6 +66,19 @@ class TestLmod:
         """
         module_configuration(modules_config)
         module, spec = factory("libelf%clang@15.0.0")
+        assert "Core" in module.layout.available_path_parts
+
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_compiler_built_with_core_compiler_is_in_core(
+        self, modules_config, module_configuration, factory
+    ):
+        """A compiler package built with a core compiler must itself land in Core/.
+
+        Without this the hierarchy is broken: the user loads Core/clang/15.0.0,
+        which should reveal Core/gcc/10.2.1 (not Compiler/clang/15.0.0/gcc/10.2.1).
+        """
+        module_configuration(modules_config)
+        module, spec = factory("gcc@10.2.1%clang@15.0.0")
         assert "Core" in module.layout.available_path_parts
 
     def test_file_layout(self, compiler, provider, factory, module_configuration):
@@ -322,14 +335,14 @@ class TestLmod:
         module_configuration("missing_core_compilers")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
         # Here we have an empty list
         module_configuration("core_compilers_empty")
 
         module, spec = factory(mpileaks_spec_string)
-        with pytest.raises(spack.modules.lmod.CoreCompilersNotFoundError):
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
             module.write()
 
     def test_conflicts(self, modulefile_content, module_configuration):
@@ -349,7 +362,7 @@ class TestLmod:
 
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(spack.modules.common.ModulesError):
+        with pytest.raises(spack.modules.error.ModulesError):
             modulefile_content("mpileaks")
 
     def test_override_template_in_package(self, modulefile_content, module_configuration):
@@ -413,12 +426,12 @@ class TestLmod:
         if spec.target.family != spec.target:
             assert str(spec.target) not in writer.layout.arch_dirname
 
-    def test_projections_specific(self, factory, module_configuration):
+    def test_projections_specific_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("mpileaks")
@@ -428,12 +441,12 @@ class TestLmod:
         projection = writer.spec.format(writer.conf.projections["mpileaks"])
         assert projection in writer.layout.use_name
 
-    def test_projections_all(self, factory, module_configuration):
+    def test_projections_all_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("libelf")
@@ -478,7 +491,7 @@ class TestLmod:
         spec = spack.concretize.concretize_one("mpileaks@2.3")
 
         # mpileaks is defined as implicit, thus hide command should appear in modulerc
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -500,7 +513,7 @@ class TestLmod:
 
         # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
         # extra module file is created; the old one still exists and remains hidden.
-        writer = writer_cls(spec, "default", True)
+        writer = writer_cls.from_spec(spec, "default", True)
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -510,13 +523,13 @@ class TestLmod:
 
         # after removing both the implicit and explicit module, the modulerc file would be empty
         # and should be removed.
-        writer_cls(spec, "default", False).remove()
-        writer_cls(spec, "default", True).remove()
+        writer_cls.from_spec(spec, "default", False).remove()
+        writer_cls.from_spec(spec, "default", True).remove()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
         # implicit module is removed
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write()
         assert os.path.exists(writer.layout.filename)
         assert os.path.exists(writer.layout.modulerc)
@@ -525,13 +538,13 @@ class TestLmod:
         assert not os.path.exists(writer.layout.filename)
 
         # three versions of mpileaks are implicit
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write(overwrite=True)
         spec_alt1 = spack.concretize.concretize_one("mpileaks@2.2")
         spec_alt2 = spack.concretize.concretize_one("mpileaks@2.1")
-        writer_alt1 = writer_cls(spec_alt1, "default", False)
+        writer_alt1 = writer_cls.from_spec(spec_alt1, "default", False)
         writer_alt1.write(overwrite=True)
-        writer_alt2 = writer_cls(spec_alt2, "default", False)
+        writer_alt2 = writer_cls.from_spec(spec_alt2, "default", False)
         writer_alt2.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -551,3 +564,45 @@ class TestLmod:
         assert len([x for x in content if hide_cmd == x]) == 1
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
+
+    def test_naming_scheme_compat(self, factory, module_configuration):
+        """Tests backwards compatibility for naming_scheme key"""
+        module_configuration("naming_scheme")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("mpileaks")
+        expected = {"all": "{name}/{version}-{compiler.name}"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["all"])
+        assert projection in writer.layout.use_name
+
+    def test_projections_specific_non_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_non_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("mpileaks")
+        expected = {"all": "{name}/{version}-{compiler.name}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["mpileaks"])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all_non_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_non_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("libelf")
+        expected = {"all": "{name}/{version}-{compiler.name}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["all"])
+        assert projection in writer.layout.use_name

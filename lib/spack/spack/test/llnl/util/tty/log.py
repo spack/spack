@@ -6,13 +6,13 @@ import contextlib
 import pathlib
 import sys
 from types import ModuleType
-from typing import Optional
+from typing import List, Optional, Type
 
 import pytest
 
 import spack.llnl.util.tty.log as log
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 termios: Optional[ModuleType] = None
 try:
@@ -22,8 +22,15 @@ try:
 except ImportError:
     pass
 
+_log_classes: List[Type] = (
+    [log.threadlog] if sys.platform == "win32" else [log.nixlog, log.threadlog]
+)
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
+
+@pytest.fixture(autouse=True, params=_log_classes, ids=[cls.__name__ for cls in _log_classes])
+def logger_class(request, monkeypatch):
+    """Run every test in this module against all logger implementations."""
+    monkeypatch.setattr(log, "log_output", request.param)
 
 
 @contextlib.contextmanager
@@ -165,4 +172,29 @@ def test_log_subproc_and_echo_output(capfd, tmp_path: pathlib.Path):
 
         # Check captured output (echoed content)
         # Note: 'logged' is not echoed because force_echo() scope ended
+        # Note: "print(echo)" above automatically uses an "\r\n" on Windows
+        # and will replace any \n with \r\n (so end=\n does not work)
+        # \r\n is expected and correct here
+        # Note: the above line ending constraint is an artifact of
+        # pytest's capfd. This is potentially (however unlikely)
+        # subject to change with future versions of pytest.
+        # if this test suddenly starts failing, verifying the line
+        # endings from capfd is a good starting place.
         assert capfd.readouterr()[0] == "echo\n"
+
+
+def test_nested_logging_contexts(capfd, tmp_path):
+    with working_dir(str(tmp_path)):
+        with log.log_output("foo.txt"):
+            with log.log_output("bar.txt"):
+                print("inner")
+            print("outer")
+
+        with open("foo.txt", "r", encoding="utf-8") as f:
+            log_captured_out = f.read()
+            assert "outer\n" in log_captured_out
+            assert "inner\n" not in log_captured_out
+        with open("bar.txt", "r", encoding="utf-8") as f:
+            log_captured_out = f.read()
+            assert "inner\n" in log_captured_out
+            assert "outer\n" not in log_captured_out

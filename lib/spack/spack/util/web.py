@@ -8,6 +8,7 @@ import functools
 import io
 import json
 import os
+import random
 import re
 import shutil
 import socket
@@ -29,17 +30,68 @@ from spack.vendor.typing_extensions import ParamSpec
 import spack
 import spack.config
 import spack.error
-import spack.llnl.url
 import spack.util.executable
 import spack.util.parallel
-import spack.util.path
+import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import lang, tty
-from spack.llnl.util.filesystem import mkdirp, rename, working_dir
+from spack.llnl.util import tty
+from spack.util import lang
+from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
 from .s3 import UrllibS3Handler, get_s3_session
+
+
+class Retry:
+    """Wrapper class around retry logic"""
+
+    def __init__(
+        self,
+        total: int = 5,
+        backoff_factor: float = 1.0,
+        backoff_jitter: float = 0.0,
+        backoff_max: float = 120.0,
+    ):
+        self.total = total
+        self.count = 0
+        self.backoff_factor = backoff_factor
+        self.backoff_jitter = backoff_jitter
+        self.backoff_max = backoff_max
+
+        if self.backoff_max <= 0:
+            raise ValueError("Maximum backoff must be a positive value")
+        if self.total < 1:
+            raise ValueError("Retry total must be at least 1")
+
+    def is_last_attempt(self):
+        """Return if this the retry counter is on last attempt"""
+        return self.count >= self.total - 1
+
+    def is_exhausted(self):
+        """Return if this the retry counter is exhausted"""
+        return self.count >= self.total
+
+    def backoff(self) -> float:
+        """Return the backoff duration in seconds for the current attempt"""
+        value: float = self.backoff_factor * (2 ** (self.count - 1))
+        if self.backoff_jitter != 0.0:
+            value += random.random() * self.backoff_jitter
+        return float(max(0, min(self.backoff_max, value)))
+
+    def sleep(self) -> None:
+        """Sleep for the backoff duration of the current attempt"""
+        time.sleep(self.backoff())
+
+    def __iter__(self):
+        """Convenient iterator function that handles doing backoff automatically"""
+        self.count = 0
+        while True:
+            yield self.count
+            self.count += 1
+            if self.is_exhausted():
+                break
+            self.sleep()
 
 
 def is_transient_error(e: Exception) -> bool:
@@ -68,19 +120,18 @@ _R = TypeVar("_R")
 
 
 def retry_on_transient_error(
-    f: Callable[_P, _R], retries: int = 5, sleep: Optional[Callable[[float], None]] = None
+    f: Callable[_P, _R], retry: Optional[Retry] = None
 ) -> Callable[_P, _R]:
     """Retry a function on transient HTTP/network errors with exponential backoff."""
-    sleep = sleep or time.sleep
 
     @functools.wraps(f)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        for i in range(retries):
+        _retry = retry or Retry()
+        for _ in _retry:
             try:
                 return f(*args, **kwargs)
             except Exception as e:
-                if i + 1 != retries and is_transient_error(e):
-                    sleep(2**i)  # type: ignore[misc]  # mypy still thinks it's possibly None.
+                if not _retry.is_last_attempt() and is_transient_error(e):
                     continue
                 raise
         raise AssertionError("unreachable")
@@ -142,7 +193,7 @@ def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
     ssl_certs = spack.config.get("config:ssl_certs")
     if not ssl_certs:
         return None
-    path = spack.util.path.substitute_path_variables(ssl_certs)
+    path = spack.config.substitute_path_variables(ssl_certs)
     if not os.path.isabs(path):
         tty.debug(f"certs: relative path not allowed: {path}")
         return None
@@ -240,7 +291,7 @@ class LinkParser(HTMLParser):
 
         # GitLab uses a javascript function to place dropdown links:
         #  <div class="js-source-code-dropdown" ...
-        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>
+        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>  # noqa: E501
         if tag == "div" and ("class", "js-source-code-dropdown") in attrs:
             try:
                 links_str = next(val for key, val in attrs if key == "data-download-links")
@@ -345,7 +396,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                rename(local_file_path, remote_file_path)
+                shutil.move(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
@@ -786,7 +837,7 @@ def spider(
         root = urllib.parse.urlparse(root_str)
         spider_args.append((root, go_deeper, _visited))
 
-    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as tp:
+    with spack.util.parallel.make_concurrent_executor(concurrency) as tp:
         while current_depth <= depth:
             tty.debug(
                 f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]"
@@ -881,7 +932,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in spack.llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in spack.util.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

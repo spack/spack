@@ -11,6 +11,7 @@ if sys.platform == "win32":
     pytest.skip("No Windows support", allow_module_level=True)
 
 
+import functools
 import io
 import os
 from multiprocessing import Pipe
@@ -18,6 +19,12 @@ from typing import List, Optional, Tuple
 
 import spack.new_installer as inst
 from spack.new_installer import BuildStatus
+from spack.new_installer_base import StdinReader
+
+
+def _fd_reader(fd: int) -> StdinReader:
+    """StdinReader reading from a raw fd, as PosixTerminalState.create_stdin_reader does."""
+    return StdinReader(functools.partial(os.read, fd, 1024))
 
 
 class MockConnection:
@@ -179,6 +186,30 @@ class TestBasicStateManagement:
         assert status.completed == 1
         assert status.builds[build_id].finished_time == fake_time[0] + inst.CLEANUP_TIMEOUT
 
+    def test_remove_build(self):
+        """Test that remove_build removes the build from the display."""
+        status, _, _ = create_build_status(total=2)
+        specs = add_mock_builds(status, 2)
+        build_id = specs[0].dag_hash()
+
+        status.dirty = False
+        status.remove_build(build_id)
+        assert build_id not in status.builds
+        assert len(status.builds) == 1
+        assert status.dirty is True
+
+    def test_remove_build_resets_tracked(self):
+        """Test that removing the tracked build resets tracking to overview mode."""
+        status, _, _ = create_build_status(total=1)
+        (spec,) = add_mock_builds(status, 1)
+        build_id = spec.dag_hash()
+
+        status.tracked_build_id = build_id
+        status.overview_mode = False
+        status.remove_build(build_id)
+        assert status.tracked_build_id == ""
+        assert status.overview_mode is True
+
     def test_parse_log_summary(self, tmp_path):
         """Test that parse_log_summary parses the build log and stores the summary."""
         status, _, _ = create_build_status()
@@ -335,9 +366,9 @@ class TestOutputRendering:
         status.update()
         output1 = fake_stdout.getvalue()
 
-        # Count newlines (\n) and cursor movements (\033[1E = move down 1 line)
+        # Count newlines (\n) and cursor movements (\033[1B\r = move down 1 line)
         newlines1 = output1.count("\n")
-        cursor_moves1 = output1.count("\033[1E")
+        cursor_moves1 = output1.count("\033[1B\r")
 
         # Initially all lines should be newlines (nothing in history yet)
         assert newlines1 > 0
@@ -359,7 +390,7 @@ class TestOutputRendering:
         output2 = fake_stdout.getvalue()
 
         newlines2 = output2.count("\n")
-        cursor_moves2 = output2.count("\033[1E")
+        cursor_moves2 = output2.count("\033[1B\r")
 
         # Should have newlines for the 2 finished builds persisted to history
         # and cursor movements for the active area (header + 3 active builds)
@@ -1413,3 +1444,93 @@ class TestTargetJobs:
         status.update()
         output = fake_stdout.getvalue()
         assert "4=>2" in output
+
+
+class TestHeadlessMode:
+    """Test that headless mode suppresses terminal output."""
+
+    def test_update_suppressed_when_headless(self):
+        """update() should not write anything when headless is True."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+
+    def test_print_logs_suppressed_when_headless(self):
+        """print_logs() should discard data when headless is True."""
+        status, _, stdout = create_build_status(is_tty=True, total=1)
+        specs = add_mock_builds(status, 1)
+        status.tracked_build_id = specs[0].dag_hash()
+        status.headless = True
+        status.print_logs(specs[0].dag_hash(), b"hello world\n")
+        assert stdout.getvalue() == ""
+
+    def test_update_state_non_tty_suppressed_when_headless(self):
+        """update_state() non-TTY output should be suppressed when headless."""
+        status, _, stdout = create_build_status(is_tty=False, total=1)
+        spec = MockSpec("pkg", "1.0")
+        status.add_build(spec, explicit=True)
+        status.headless = True
+        stdout.clear()
+        status.update_state(spec.dag_hash(), "finished")
+        assert stdout.getvalue() == ""
+
+    def test_update_works_after_headless_cleared(self):
+        """update() should work normally once headless is cleared."""
+        status, time_values, stdout = create_build_status(is_tty=True, total=1, color=False)
+        add_mock_builds(status, 1)
+        status.headless = True
+        time_values.append(10.0)
+        status.update()
+        assert stdout.getvalue() == ""
+        # Clear headless and verify output resumes
+        status.headless = False
+        status.dirty = True
+        status.update()
+        assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
+
+
+class TestStdinReader:
+    def test_basic_ascii(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            os.write(w, b"abc")
+            assert reader.read() == "abc"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_ansi_stripping(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            os.write(w, b"hello\x1b[Aworld\x1b[B!")
+            assert reader.read() == "helloworld!"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_multibyte_utf8(self):
+        r, w = os.pipe()
+        try:
+            reader = _fd_reader(r)
+            encoded = "é".encode("utf-8")  # 0xc3 0xa9
+            os.write(w, encoded[:1])
+            # First read: incomplete char, decoder buffers it
+            result1 = reader.read()
+            os.write(w, encoded[1:])
+            result2 = reader.read()
+            assert result1 + result2 == "é"
+        finally:
+            os.close(r)
+            os.close(w)
+
+    def test_oserror_returns_empty(self):
+        r, w = os.pipe()
+        os.close(w)
+        os.close(r)
+        reader = _fd_reader(r)
+        assert reader.read() == ""

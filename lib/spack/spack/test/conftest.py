@@ -4,6 +4,7 @@
 
 import base64
 import collections
+import contextlib
 import datetime
 import email.message
 import errno
@@ -21,7 +22,7 @@ import tempfile
 import textwrap
 import xml.etree.ElementTree
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import pytest
 
@@ -36,13 +37,12 @@ import spack.compilers.config
 import spack.compilers.libraries
 import spack.concretize
 import spack.config
+import spack.database
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
 import spack.hash_types
-import spack.llnl.util.lang
-import spack.llnl.util.lock
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.color
 import spack.modules.common
@@ -61,6 +61,8 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.lang
+import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
@@ -70,7 +72,8 @@ import spack.version
 from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import (
+from spack.main import SpackCommand
+from spack.util.filesystem import (
     copy,
     copy_tree,
     join_path,
@@ -78,7 +81,6 @@ from spack.llnl.util.filesystem import (
     remove_linked_tree,
     working_dir,
 )
-from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
 
@@ -445,7 +447,6 @@ def pytest_collection_modifyitems(config, items):
 def use_concretization_cache(mock_packages, mutable_config, tmp_path: Path):
     """Enables the use of the concretization cache"""
     conc_cache_dir = tmp_path / "concretization"
-    conc_cache_dir.mkdir()
 
     # ensure we have an isolated concretization cache while using fixture
     with spack.config.override(
@@ -632,7 +633,7 @@ def mock_binary_index(monkeypatch, tmp_path_factory: pytest.TempPathFactory):
     """
     tmpdir = tmp_path_factory.mktemp("mock_binary_index")
     index_path = tmpdir / "binary_index"
-    mock_index = spack.binary_distribution.BinaryCacheIndex(str(index_path))
+    mock_index = spack.binary_distribution.BinaryIndexCache(str(index_path))
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
@@ -1354,16 +1355,53 @@ def gen_mock_layout(tmp_path: Path):
     yield create_layout
 
 
-class MockConfig:
-    def __init__(self, configuration, writer_key):
-        self._configuration = configuration
-        self.writer_key = writer_key
+@contextlib.contextmanager
+def writable(database):
+    """Allow a database to be written inside this context manager."""
+    old_lock, old_is_upstream = database.lock, database.is_upstream
+    db_root = Path(database.root)
 
-    def configuration(self, module_set_name):
-        return self._configuration
+    try:
+        # this is safe on all platforms during tests (tests get their own tmpdirs)
+        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
+        database.is_upstream = False
+        db_root.chmod(mode=0o755)
+        with database.write_transaction():
+            yield
+    finally:
+        db_root.chmod(mode=0o555)
+        database.lock = old_lock
+        database.is_upstream = old_is_upstream
 
-    def writer_configuration(self, module_set_name):
-        return self.configuration(module_set_name)[self.writer_key]
+
+@pytest.fixture()
+def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
+    """Fixture for a pair of stores: upstream and downstream.
+
+    Upstream API prohibits writing to an upstream, so we also return a writable version
+    of the upstream DB for tests to use.
+
+    """
+    mock_db_root = tmp_path / "mock_db_root"
+    mock_db_root.mkdir()
+    mock_db_root.chmod(0o555)
+
+    upstream_db = spack.database.Database(
+        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
+    )
+    with writable(upstream_db):
+        upstream_db._write()
+
+    downstream_db_root = tmp_path / "mock_downstream_db_root"
+    downstream_db_root.mkdir()
+    downstream_db_root.chmod(0o755)
+
+    downstream_db = spack.database.Database(
+        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
+    )
+    downstream_db._write()
+
+    yield upstream_db, downstream_db
 
 
 class ConfigUpdate:
@@ -1378,13 +1416,9 @@ class ConfigUpdate:
         with open(file, encoding="utf-8") as f:
             config_settings = syaml.load_config(f)
         spack.config.set("modules:default", config_settings)
-        mock_config = MockConfig(config_settings, self.writer_key)
 
-        self.monkeypatch.setattr(spack.modules.common, "configuration", mock_config.configuration)
-        self.monkeypatch.setattr(
-            self.writer_mod, "configuration", mock_config.writer_configuration
-        )
-        self.monkeypatch.setattr(self.writer_mod, "configuration_registry", {})
+        conf_cls = getattr(self.writer_mod, self.writer_key.capitalize() + "Configuration")
+        self.monkeypatch.setattr(conf_cls, "_registry", {})
 
 
 @pytest.fixture()
@@ -1412,13 +1446,16 @@ def mock_gnupghome(monkeypatch):
     # have to make our own tmp_path with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    short_name_tmpdir = tempfile.mkdtemp()
     try:
-        spack.util.gpg.init()
+        # We must manually set gnupghome here, else tests run in parallel
+        # will all fall back to the system default location and cause
+        # failures when multiple try to init the same location concurrently
+        spack.util.gpg.init(gnupghome=short_name_tmpdir)
     except spack.util.gpg.SpackGPGError:
         if not spack.util.gpg.GPG:
             pytest.skip("This test requires gpg")
 
-    short_name_tmpdir = tempfile.mkdtemp()
     with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
@@ -1434,11 +1471,14 @@ def mock_gnupghome(monkeypatch):
 ##########
 
 
-@pytest.fixture(scope="session", params=[(".tar.gz", "z")])
+@pytest.fixture(scope="session")
 def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
+    # Tests may override it via an indirect parametrization
+    ext, tar_flag = getattr(request, "param", (".tar.gz", "z"))
+
     try:
         tar = spack.util.executable.which("tar", required=True)
     except spack.util.executable.CommandNotFoundError:
@@ -1467,8 +1507,8 @@ def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
 
     # Archive it
     with working_dir(str(tmpdir)):
-        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, request.param[0])
-        tar("-c{0}f".format(request.param[1]), archive_name, spack.stage._source_path_subdir)
+        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, ext)
+        tar("-c{0}f".format(tar_flag), archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple(
         "Archive", ["url", "path", "archive_file", "expanded_archive_basedir"]
@@ -2078,22 +2118,22 @@ def mock_test_stage(mutable_config, tmp_path: Path):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    spack.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in spack.llnl.util.lock.FILE_TRACKER._descriptors.values())
-    spack.llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.util.lock.FILE_TRACKER._descriptors.values())
+    spack.util.lock.FILE_TRACKER.purge()
 
 
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = spack.llnl.util.lang.Singleton(
-        spack.binary_distribution.BinaryCacheIndex
+    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
+        spack.binary_distribution.BinaryIndexCache
     )
 
 
@@ -2256,9 +2296,7 @@ def binary_with_rpaths(prefix_tmpdir: Path):
         int main(){{
             printf("{0}");
         }}
-        """.format(
-                message
-            )
+        """.format(message)
         )
         gcc = spack.util.executable.which("gcc", required=True)
         executable = source.parent / "main.x"
@@ -2486,12 +2524,6 @@ def _include_cache_root():
 
 
 @pytest.fixture()
-def mock_include_cache(monkeypatch):
-    """Override the include cache directory so tests don't pollute user cache."""
-    monkeypatch.setattr(spack.config, "_include_cache_location", _include_cache_root)
-
-
-@pytest.fixture()
 def wrapper_dir(install_mockery):
     """Installs the compiler wrapper and returns the prefix where the script is installed."""
     wrapper = spack.concretize.concretize_one("compiler-wrapper")
@@ -2588,3 +2620,53 @@ def installer_variant(request):
         pytest.skip("New installer not supported on Windows")
     with spack.config.override("config:installer", request.param):
         yield request.param
+
+
+class FsTree:
+    class symlink:
+        def __init__(self, target):
+            self.target = target
+
+    class file:
+        def __init__(self, content: Union[bytes, str] = b""):
+            self.content = content
+
+    class dir:
+        pass
+
+    def __init__(self, base_path: Path, layout: dict):
+        for rel_path, content in layout.items():
+            p = base_path / rel_path
+            p.parent.mkdir(parents=True, exist_ok=True)
+
+            assert isinstance(content, (self.symlink, self.file, self.dir))
+
+            if isinstance(content, self.dir):
+                p.mkdir(exist_ok=True)
+            elif isinstance(content, self.symlink):
+                p.symlink_to(content.target)
+            elif isinstance(content, self.file):
+                assert isinstance(content.content, (bytes, str))
+                if isinstance(content.content, bytes):
+                    p.write_bytes(content.content)
+                elif isinstance(content.content, str):
+                    p.write_text(content.content, encoding="utf-8")
+
+
+@pytest.fixture(scope="function")
+def mock_sleep(monkeypatch):
+
+    class CallCounter:
+        def __init__(self):
+            self.times = []
+
+        def __call__(self, duration):
+            self.times.append(duration)
+
+        @property
+        def count(self):
+            return len(self.times)
+
+    _sleep = CallCounter()
+    monkeypatch.setattr(spack.util.web.Retry, "sleep", lambda self: _sleep(self.backoff()))
+    yield _sleep

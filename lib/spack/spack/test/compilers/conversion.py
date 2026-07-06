@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests conversions from compilers.yaml"""
+
 import pathlib
 
 import pytest

@@ -179,6 +179,6 @@ def test_stage_spec_filters(
     specs_to_stage = [s for s in all_specs if not filter(s)]
     specs_were_filtered = [skip not in specs_to_stage for skip in should_be_filtered]
 
-    assert all(
-        specs_were_filtered
-    ), f"Packages associated with bools: {[s.name for s in should_be_filtered]}"
+    assert all(specs_were_filtered), (
+        f"Packages associated with bools: {[s.name for s in should_be_filtered]}"
+    )

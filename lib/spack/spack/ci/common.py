@@ -22,19 +22,19 @@ import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.compression as compression
+import spack.util.filesystem as fs
 import spack.util.web as web_util
 from spack import traverse
-from spack.llnl.util.lang import memoized
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.url_buildcache import get_url_buildcache_class
+from spack.util.lang import memoized
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -92,7 +92,6 @@ def copy_files_to_artifacts(
         compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-
         if compress_artifacts:
             copy_gzipped(src, artifacts_dir)
         else:
@@ -571,7 +570,12 @@ class SpackCIConfig:
 
     # Generate IR from the configs
     def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
+        """Generate the IR from the Spack CI configurations.
+
+        Generate makes use of special strings that need to be expanded by python format.
+
+            env_dir: The concrete environment directory used in downstream jobs
+        """
 
         jobs = self.ir["jobs"]
 
@@ -580,8 +584,8 @@ class SpackCIConfig:
             {
                 "build-job": {
                     "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
+                        "spack env activate --without-view {env_dir}",
+                        "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
                 }
@@ -589,18 +593,33 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+        update_index_extra_args = []
+        if buildcache_destination.push_view:
+            update_index_extra_args.extend(["--name", buildcache_destination.push_view])
+            option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
+            if option == "append":
+                # Running this in CI relies on a guarentee from the calling context that there is
+                # only a single writer or the build cache view doesn't require a complete view
+                # after each append.
+                tty.warn("Using --append to update buildcache-destination mirror index view")
+                update_index_extra_args.extend(["-y", "--append"])
+            elif option == "force":
+                update_index_extra_args.append("--force")
+            else:
+                raise SpackCIError(f"Unrecognized value: SPACK_CI_BUILDCACHE_VIEW={option}")
+
         # Job overrides
         overrides = [
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack -v buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
+                    "script:": [
+                        "spack env activate --without-view {env_dir}",
+                        "spack -v buildcache update-index --keys "
+                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                    ]
                 }
             },
             # Add signing job tags

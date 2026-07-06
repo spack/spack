@@ -15,22 +15,28 @@ but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
 """
+
 import contextlib
+import filecmp
 import os
 import pathlib
 import re
+import shutil
+import sys
 import uuid
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union, cast
 
 import spack.config
 import spack.database
 import spack.directory_layout
 import spack.error
-import spack.llnl.util.lang
+import spack.package_prefs
 import spack.paths
 import spack.spec
+import spack.util.lang
 import spack.util.path
 from spack.llnl.util import tty
+from spack.util import filesystem as fs
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
@@ -70,7 +76,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
     if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
             "install_path_scheme", spack.directory_layout.default_projections["all"]
@@ -79,7 +85,7 @@ def parse_install_tree(config_dict: dict) -> Tuple[str, str, Dict[str, str]]:
         projections = {"all": all_projection}
     else:
         unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
-        unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
+        unpadded_root = spack.config.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)
         if padded_length is True:
@@ -193,6 +199,48 @@ class Store:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex()
 
+    def install_sbang(self) -> None:
+        """Install the sbang script in this store's bin directory.
+
+        sbang is a short shell script that Spack prepends to scripts with shebangs that are too
+        long for the OS. It must live in the store so its path is short enough to fit on a
+        shebang line.
+        """
+
+        if sys.platform == "win32":
+            return
+
+        import grp  # unix only, hence the import here
+
+        sbang_path = os.path.join(self.unpadded_root, "bin", "sbang")
+        try:
+            if filecmp.cmp(sbang_path, spack.paths.sbang_script):
+                return  # installed and up to date
+        except FileNotFoundError:
+            pass
+
+        bin_dir = os.path.dirname(sbang_path)
+        os.makedirs(bin_dir, exist_ok=True)
+
+        all_spec = spack.spec.Spec("all")
+        group_name = spack.package_prefs.get_package_group(all_spec)
+        config_mode = spack.package_prefs.get_package_dir_permissions(all_spec)
+        gid = grp.getgrnam(group_name).gr_gid if group_name else -1
+
+        if group_name:
+            os.chmod(bin_dir, config_mode)
+            os.chown(bin_dir, -1, gid)
+        else:
+            fs.set_install_permissions(bin_dir)
+
+        with fs.write_tmp_and_move(sbang_path, mode="wb") as dst, open(
+            spack.paths.sbang_script, "rb"
+        ) as src:
+            shutil.copyfileobj(src, dst)
+            os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
+            if group_name:
+                os.fchown(dst.fileno(), -1, gid)
+
     def __reduce__(self):
         return Store, (
             self.root,
@@ -237,7 +285,7 @@ def _create_global() -> Store:
 
 
 #: Singleton store instance
-STORE: Store = spack.llnl.util.lang.Singleton(_create_global)  # type: ignore
+STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
 
 def reinitialize():
@@ -247,7 +295,7 @@ def reinitialize():
     global STORE
 
     token = STORE
-    STORE = spack.llnl.util.lang.Singleton(_create_global)
+    STORE = cast(Store, spack.util.lang.Singleton(_create_global))
 
     return token
 
@@ -265,7 +313,7 @@ def _construct_upstream_dbs_from_install_roots(
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            spack.util.path.canonicalize_path(install_root),
+            spack.config.canonicalize_path(install_root),
             is_upstream=True,
             upstream_dbs=upstream_dbs,
         )

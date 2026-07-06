@@ -39,6 +39,7 @@ package class as first argument::
     def _execute_example_directive(pkg, arg1, arg2):
         # modify pkg.example based on arg1 and arg2
 """
+
 import collections
 import collections.abc
 import os
@@ -247,7 +248,7 @@ def _execute_version(pkg: PackageType, ver: Union[str, int], kwargs: dict):
         and not pkg.has_code
     ):
         raise VersionChecksumError(
-            f"{pkg.name}: Checksums not allowed in no-code packages " f"(see '{ver}' version)."
+            f"{pkg.name}: Checksums not allowed in no-code packages (see '{ver}' version)."
         )
 
     if not isinstance(ver, (int, str)):
@@ -411,8 +412,7 @@ def _execute_redistribute(
         return
     elif (source is True) or (binary is True):
         raise DirectiveError(
-            "Source/binary distribution are true by default, they can only "
-            "be explicitly disabled."
+            "Source/binary distribution are true by default, they can only be explicitly disabled."
         )
 
     if source is None:

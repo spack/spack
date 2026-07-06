@@ -6,6 +6,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/concretizer.py
    :lines: 12-
 """
+
 from typing import Any, Dict
 
 LIST_OF_SPECS = {"type": "array", "items": {"type": "string"}}

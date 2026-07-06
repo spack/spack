@@ -6,12 +6,11 @@ import spack.concretize
 import spack.main
 import spack.repo
 from spack.installer import PackageInstaller
-from spack.tag import TagIndex
 
 tags = spack.main.SpackCommand("tags")
 
 
-def test_tags_bad_options():
+def test_tags_bad_options(mock_packages):
     out = tags("-a", "tag1", fail_on_error=False)
     assert "option OR provide" in out
 
@@ -38,9 +37,10 @@ def test_tags_all_mock_tag_packages(mock_packages):
         assert pkg in out
 
 
-def test_tags_no_tags(monkeypatch):
-    monkeypatch.setattr(spack.repo.PATH, "tag_index", TagIndex())
-    out = tags()
+def test_tags_no_tags(repo_builder):
+    repo_builder.add_package("pkg-a")
+    with spack.repo.use_repositories(repo_builder.root):
+        out = tags()
     assert "No tagged" in out
 
 

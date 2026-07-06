@@ -6,6 +6,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/compilers.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.environment
@@ -92,7 +93,7 @@ properties: Dict[str, Any] = {
                             ]
                         },
                         "implicit_rpaths": implicit_rpaths,
-                        "environment": spack.schema.environment.definition,
+                        "environment": spack.schema.environment.ref_env_modifications,
                         "extra_rpaths": extra_rpaths,
                     },
                 }
@@ -109,4 +110,5 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"env_modifications": spack.schema.environment.env_modifications},
 }

@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Manages the details on the images used in the various stages."""
+
 import json
 import os
 import shlex
 import sys
 
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
+import spack.util.filesystem as fs
 import spack.util.git
 
 #: Global variable used to cache in memory the content of images.json

@@ -9,9 +9,9 @@ from typing import List
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.util.executable as ex
+import spack.util.filesystem as fs
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 
@@ -32,9 +32,7 @@ def test_read_unicode(tmp_path: pathlib.Path, working_env):
             f.write(
                 """#!{0}
 print(u'\\xc3')
-""".format(
-                    sys.executable
-                )
+""".format(sys.executable)
             )
 
         # make it executable

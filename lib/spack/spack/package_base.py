@@ -30,7 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.filesystem as fsys
 import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
@@ -45,6 +44,7 @@ import spack.url
 import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
@@ -53,14 +53,9 @@ import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
-from spack.llnl.util.filesystem import (
-    AlreadyExistsError,
-    find_all_shared_libraries,
-    islink,
-    symlink,
-)
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.resource import Resource
+from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
 from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
@@ -320,9 +315,7 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [
-                        getattr(instance, key) == value for key, value in attr_dict.items()
-                    ]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -863,7 +856,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
+        return spack.config.canonicalize_path(spack.config.get("config:license_dir"))
 
     @property
     def global_license_file(self):
@@ -924,7 +917,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def version(self):
         if not self.spec.versions.concrete:
             raise ValueError(
-                "Version requested for a package that" " does not have a concrete version."
+                "Version requested for a package that does not have a concrete version."
             )
         return self.spec.versions[0]
 
@@ -1124,15 +1117,22 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
-            default_url = getattr(self, "url", getattr(self, "urls", [None])[0])
+            default_url = getattr(self, "url", None)
+
+            if not default_url:
+                default_urls = getattr(self, "urls", None)
+
+                if isinstance(default_urls, list) and len(default_urls) > 0:
+                    default_url = default_urls[0]
 
             # if no exact match AND no class-level default, use the nearest URL
             if not default_url:
                 default_url = self.nearest_url(version)
 
-                # if there are NO URLs to go by, then we can't do anything
-                if not default_url:
-                    raise NoURLError(self.__class__)
+            # if there are NO URLs to go by, then we can't do anything
+            if not default_url:
+                raise NoURLError(self.__class__)
+
             urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
@@ -1211,7 +1211,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             link_format = spack.config.get("config:develop_stage_link")
             if not link_format:
                 link_format = "build-{arch}-{hash:7}"
-            stage_link = self.spec.format_path(link_format)
+            if link_format == "None":
+                stage_link = None
+            else:
+                stage_link = self.spec.format_path(link_format)
             source_stage = stg.DevelopStage(
                 stg.compute_stage_name(self.spec), dev_path, stage_link
             )
@@ -1628,8 +1631,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         deprecated = spack.config.get("config:deprecated")
         if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
             tty.warn(
-                "{0} is deprecated and may be removed in a future Spack "
-                "release.".format(self.spec.format("{name}{@version}"))
+                "{0} is deprecated and may be removed in a future Spack release.".format(
+                    self.spec.format("{name}{@version}")
+                )
             )
 
             # Ask the user whether to install deprecated version if we're
@@ -2445,7 +2449,11 @@ class WindowsSimulatedRPath:
                 new_pth = pathlib.Path(pth).parent
             else:
                 new_pth = pathlib.Path(pth)
-            path_is_in_prefix = new_pth.is_relative_to(self.base_modification_prefix)
+
+            path_is_in_prefix = (
+                self.base_modification_prefix == new_pth
+                or self.base_modification_prefix in new_pth.parents
+            )
             if not path_is_in_prefix:
                 raise RuntimeError(
                     f"Attempting to generate rpath symlink out of rpath context:\

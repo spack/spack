@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import json
 import os
 import pathlib
@@ -16,12 +17,13 @@ import spack.environment as ev
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
+from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
 
 find = SpackCommand("find")
@@ -215,6 +217,15 @@ def test_display_json_deps(database, capfd):
     _check_json_output_deps(spec_list)
 
 
+@pytest.mark.regression("52219")
+def test_display_abstract_hash():
+    spec = spack.spec.Spec("/foobar")
+    out = io.StringIO()
+
+    spack.cmd.display_specs([spec], output=out)  # errors on failure
+    assert "/foobar" in out.getvalue()
+
+
 @pytest.mark.db
 def test_find_format(database, config):
     output = find("--format", "{name}-{^mpi.name}", "mpileaks")
@@ -275,15 +286,15 @@ def test_find_format_deps_paths(database, config):
         output
         == f"""\
 mpileaks-2.3                   {mpileaks.prefix}
-    callpath-1.0               {mpileaks['callpath'].prefix}
-        dyninst-8.2            {mpileaks['dyninst'].prefix}
-            libdwarf-20130729  {mpileaks['libdwarf'].prefix}
-            libelf-0.8.13      {mpileaks['libelf'].prefix}
-    compiler-wrapper-1.0       {mpileaks['compiler-wrapper'].prefix}
-    gcc-10.2.1                 {mpileaks['gcc'].prefix}
-    gcc-runtime-10.2.1         {mpileaks['gcc-runtime'].prefix}
-    zmpi-1.0                   {mpileaks['zmpi'].prefix}
-        fake-1.0               {mpileaks['fake'].prefix}
+    callpath-1.0               {mpileaks["callpath"].prefix}
+        dyninst-8.2            {mpileaks["dyninst"].prefix}
+            libdwarf-20130729  {mpileaks["libdwarf"].prefix}
+            libelf-0.8.13      {mpileaks["libelf"].prefix}
+    compiler-wrapper-1.0       {mpileaks["compiler-wrapper"].prefix}
+    gcc-10.2.1                 {mpileaks["gcc"].prefix}
+    gcc-runtime-10.2.1         {mpileaks["gcc-runtime"].prefix}
+    zmpi-1.0                   {mpileaks["zmpi"].prefix}
+        fake-1.0               {mpileaks["fake"].prefix}
 
 """
     )

@@ -14,6 +14,7 @@ import pytest
 import spack.cmd.logs
 import spack.concretize
 import spack.error
+import spack.main
 import spack.spec
 from spack.main import SpackCommand
 
@@ -53,8 +54,9 @@ def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_package
     with pytest.raises(spack.error.SpackError, match="is not installed or staged"):
         logs("pkg-c")
 
-    with pytest.raises(spack.error.SpackError, match="Too many specs"):
+    with pytest.raises(spack.main.SpackCommandError) as e:
         logs("pkg-c mpi")
+    assert e.value.code == 2
 
     install("pkg-c")
     os.remove(spec.package.install_log_path)

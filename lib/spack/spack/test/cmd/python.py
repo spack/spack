@@ -39,4 +39,5 @@ def test_python_with_module():
 
 def test_python_raises():
     out = python("--foobar", fail_on_error=False)
-    assert "Error: Unknown arguments" in out
+    assert python.returncode == 2
+    assert "--foobar" in out

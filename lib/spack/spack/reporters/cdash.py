@@ -25,8 +25,8 @@ import spack.tengine
 import spack.util.git
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.util.crypto import checksum
+from spack.util.filesystem import working_dir
 from spack.util.log_parse import parse_log_events
 
 from .base import Reporter
@@ -203,7 +203,7 @@ class CDash(Reporter):
         for phase in phases_encountered:
             report_data[phase]["endtime"] = self.endtime
             report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
+            errors, warnings, _ = parse_log_events(report_data[phase]["loglines"])
 
             # Convert errors to warnings if the package reported success.
             if package["result"] == "success":
@@ -229,9 +229,7 @@ class CDash(Reporter):
                     event["post_context"] = xml.sax.saxutils.escape(
                         "\n".join(event["post_context"])
                     )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
+                    if event["source_file"] is None:
                         event["source_file"] = ""
                         event["source_line_no"] = ""
                     else:

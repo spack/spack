@@ -18,10 +18,10 @@ import spack.platforms
 import spack.repo
 import spack.util.git
 from spack.fetch_strategy import GitFetchStrategy
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.package_base import PackageBase
 from spack.spec import Spec
 from spack.stage import Stage
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.variant import SingleValuedVariant
 from spack.version import Version
 

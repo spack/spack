@@ -30,6 +30,12 @@ include_concrete = {
 
 group_name_and_deps = {
     "group": {"type": "string", "description": "Name for this group of specs"},
+    "explicit": {
+        "type": "boolean",
+        "default": True,
+        "description": "When false, specs in this group are installed as implicit "
+        "dependencies and are eligible for garbage collection.",
+    },
     "needs": {
         "type": "array",
         "description": "Groups of specs that are needed by this group",
@@ -39,7 +45,7 @@ group_name_and_deps = {
         "type": "object",
         "description": "Top-most configuration scope for this group of specs",
         "additionalProperties": False,
-        "properties": {**spack.schema.merged.properties},
+        "properties": {**spack.schema.merged.ref_sections},
     },
 }
 
@@ -53,7 +59,7 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "properties": {
             # merged configuration scope schemas
-            **spack.schema.merged.properties,
+            **spack.schema.merged.ref_sections,
             # extra environment schema properties
             "specs": {
                 "type": "array",
@@ -98,6 +104,7 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": spack.schema.merged.defs,
 }
 
 

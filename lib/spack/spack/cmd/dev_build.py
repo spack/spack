@@ -11,10 +11,10 @@ import spack.cmd
 import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
+import spack.installer_dispatch
 import spack.llnl.util.tty as tty
 import spack.repo
 from spack.cmd.common import arguments
-from spack.installer import PackageInstaller
 
 description = "build package from code in current working directory"
 section = "build"
@@ -92,20 +92,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def dev_build(self, args):
     if not args.spec:
-        tty.die("spack dev-build requires a package spec argument.")
+        args.subparser.error("requires a package spec argument")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
-        tty.die("spack dev-build only takes one spec.")
+        args.subparser.error("only takes one spec")
 
     spec = specs[0]
     if not spack.repo.PATH.exists(spec.name):
         raise spack.repo.UnknownPackageError(spec.name)
 
     if not spec.versions.concrete_range_as_version:
-        tty.die(
-            "spack dev-build spec must have a single, concrete version. "
-            "Did you forget a package version number?"
+        args.subparser.error(
+            "spec must have a single, concrete version. Did you forget a package version number?"
         )
 
     source_path = args.source_path
@@ -132,7 +131,7 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    PackageInstaller(
+    spack.installer_dispatch.create_installer(
         [spec.package],
         tests=tests,
         keep_prefix=args.keep_prefix,
