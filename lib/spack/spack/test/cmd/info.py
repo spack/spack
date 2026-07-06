@@ -7,10 +7,17 @@ import re
 import pytest
 
 from spack.main import SpackCommand, SpackCommandError
+from spack.repo import UnknownPackageError
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
 info = SpackCommand("info")
+
+
+def test_package_suggestion():
+    with pytest.raises(UnknownPackageError) as exc_info:
+        info("vtk")
+    assert "Did you mean one of the following packages?" in str(exc_info.value)
 
 
 def test_deprecated_option_warns():
@@ -43,7 +50,8 @@ def test_is_externally_detectable(pkg_query, expected):
 
 
 @pytest.mark.parametrize(
-    "pkg_query", ["vtk-m", "gcc"]  # This should ensure --test's c_names processing loop covered
+    "pkg_query",
+    ["vtk-m", "gcc"],  # This should ensure --test's c_names processing loop covered
 )
 @pytest.mark.parametrize("extra_args", [[], ["--by-name"]])
 def test_info_fields(pkg_query, extra_args):

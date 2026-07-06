@@ -11,7 +11,6 @@ calls can be very expensive.
 
 """
 
-
 from typing import TYPE_CHECKING, Any
 
 from spack.vendor.typing_extensions import Protocol

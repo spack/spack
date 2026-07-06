@@ -7,9 +7,9 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/view.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
-import spack.schema
 import spack.schema.projections
 
 #: Properties for inclusion in other schemas
@@ -17,6 +17,7 @@ properties: Dict[str, Any] = {
     "view": {
         "description": "Environment filesystem view configuration for creating a directory with "
         "traditional structure where all files of installed packages are linked",
+        "default": True,
         "anyOf": [
             {
                 "type": "boolean",
@@ -36,7 +37,20 @@ properties: Dict[str, Any] = {
                     "properties": {
                         "root": {
                             "type": "string",
-                            "description": "Root directory path where the view will be " "created",
+                            "description": "Root directory path where the view will be created",
+                        },
+                        "group": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "Groups of specs to include in the view",
+                                },
+                                {
+                                    "type": "string",
+                                    "description": "Groups of specs to include in the view",
+                                },
+                            ]
                         },
                         "link": {
                             "enum": ["roots", "all", "run"],
@@ -50,6 +64,12 @@ properties: Dict[str, Any] = {
                             "description": "How files are linked in the view: 'symlink' "
                             "(default), 'hardlink', or 'copy'",
                         },
+                        "link_dirs": {
+                            "type": "boolean",
+                            "description": "Whether to link directories in the view, or only files"
+                            " (default: true, only applicable when link_type is 'symlink')",
+                            "default": True,
+                        },
                         "select": {
                             "type": "array",
                             "items": {"type": "string"},
@@ -62,7 +82,7 @@ properties: Dict[str, Any] = {
                             "description": "List of specs to exclude from the view "
                             "(default: exclude nothing)",
                         },
-                        **spack.schema.projections.properties,
+                        **spack.schema.projections.ref_properties,
                     },
                 },
             },
@@ -77,4 +97,5 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"projections": spack.schema.projections.projections},
 }

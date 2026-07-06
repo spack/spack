@@ -282,7 +282,7 @@ Spack uses GitLab CI for managing the orchestration of build jobs.
 GitLab Entry Point
 ~~~~~~~~~~~~~~~~~~
 
-Add a stack entrypoint to ``share/spack/gitlab/cloud_pipelines/.gitlab-ci.yml``.
+Add a stack entry point to ``share/spack/gitlab/cloud_pipelines/.gitlab-ci.yml``.
 There are two stages required for each new stack: the generation stage and the build stage.
 
 The generate stage is defined using the job template ``.generate`` configured with environment variables defining the name of the stack in ``SPACK_CI_STACK_NAME``, the platform (``SPACK_TARGET_PLATFORM``) and architecture (``SPACK_TARGET_ARCH``) configuration, and the tags associated with the class of runners to build on.

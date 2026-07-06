@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import os
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path, PurePath
-from typing import Callable, Dict, List, Optional, Sequence, TextIO, Type, Union, overload
+from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Type, Union, overload
 
 from spack.vendor.typing_extensions import Literal
 
@@ -16,6 +18,43 @@ import spack.llnl.util.tty as tty
 from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "which_string", "ProcessError"]
+
+OutType = Union[Optional[BinaryIO], str, Type[str], Callable]
+
+
+def _process_cmd_output(
+    out: bytes,
+    err: bytes,
+    output: OutType,
+    error: OutType,
+    encoding: str = "ISO-8859-1" if sys.platform == "win32" else "utf-8",
+) -> Optional[str]:
+    if output is str or output is str.split or error is str or error is str.split:
+        result = ""
+        if output is str or output is str.split:
+            outstr = out.decode(encoding)
+            result += outstr
+            if output is str.split:
+                sys.stdout.write(outstr)
+        if error is str or error is str.split:
+            errstr = err.decode(encoding)
+            result += errstr
+            if error is str.split:
+                sys.stderr.write(errstr)
+        return result
+    else:
+        return None
+
+
+def _streamify_output(arg: OutType, name: str) -> Tuple[Union[int, BinaryIO, None], bool]:
+    if isinstance(arg, str):
+        return open(arg, "wb"), True
+    elif arg is str or arg is str.split:
+        return subprocess.PIPE, False
+    elif callable(arg):
+        raise ValueError(f"`{name}` must be a stream, a filename, or `str`/`str.split`")
+    else:
+        return arg, False
 
 
 class Executable:
@@ -107,9 +146,9 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -123,9 +162,9 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Type[str], Callable],
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Type[str], Callable],  # str or str.split
+        error: OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -139,9 +178,9 @@ class Executable:
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
-        error: Union[Type[str], Callable],
+        input: Optional[BinaryIO] = ...,
+        output: OutType = ...,
+        error: Union[Type[str], Callable],  # str or str.split
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -154,9 +193,9 @@ class Executable:
         timeout: Optional[int] = None,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = None,
-        input: Optional[TextIO] = None,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = None,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = None,
+        input: Optional[BinaryIO] = None,
+        output: OutType = None,
+        error: OutType = None,
         _dump_env: Optional[Dict[str, str]] = None,
     ) -> Optional[str]:
         """Runs this executable in a subprocess.
@@ -195,29 +234,6 @@ class Executable:
 
         By default, the subprocess inherits the parent's file descriptors.
         """
-
-        def process_cmd_output(out, err):
-            result = None
-            if output in (str, str.split) or error in (str, str.split):
-                result = ""
-                if output in (str, str.split):
-                    if sys.platform == "win32":
-                        outstr = str(out.decode("ISO-8859-1"))
-                    else:
-                        outstr = str(out.decode("utf-8"))
-                    result += outstr
-                    if output is str.split:
-                        sys.stdout.write(outstr)
-                if error in (str, str.split):
-                    if sys.platform == "win32":
-                        errstr = str(err.decode("ISO-8859-1"))
-                    else:
-                        errstr = str(err.decode("utf-8"))
-                    result += errstr
-                    if error is str.split:
-                        sys.stderr.write(errstr)
-            return result
-
         # Setup default environment
         current_environment = os.environ.copy() if env is None else {}
         self._default_envmod.apply_modifications(current_environment)
@@ -246,37 +262,31 @@ class Executable:
         if isinstance(ignore_errors, int):
             ignore_errors = (ignore_errors,)
 
-        if input is str:
-            raise ValueError("Cannot use `str` as input stream.")
+        if input is str or input is str.split:
+            raise ValueError("Cannot use `str` or `str.split` as input stream.")
+        elif isinstance(input, str):
+            istream, close_istream = open(input, "rb"), True
+        else:
+            istream, close_istream = input, False
 
-        def streamify(arg, mode):
-            if isinstance(arg, str):
-                return open(arg, mode), True  # pylint: disable=unspecified-encoding
-            elif arg in (str, str.split):
-                return subprocess.PIPE, False
-            else:
-                return arg, False
-
-        ostream, close_ostream = streamify(output, "wb")
-        estream, close_estream = streamify(error, "wb")
-        istream, close_istream = streamify(input, "rb")
+        ostream, close_ostream = _streamify_output(output, "output")
+        estream, close_estream = _streamify_output(error, "error")
 
         if not ignore_quotes:
             quoted_args = [arg for arg in args if re.search(r'^".*"$|^\'.*\'$', arg)]
             if quoted_args:
                 tty.warn(
-                    "Quotes in command arguments can confuse scripts like" " configure.",
+                    "Quotes in command arguments can confuse scripts like configure.",
                     "The following arguments may cause problems when executed:",
                     str("\n".join(["    " + arg for arg in quoted_args])),
                     "Quotes aren't needed because spack doesn't use a shell. "
                     "Consider removing them.",
-                    "If multiple levels of quotation are required, use " "`ignore_quotes=True`.",
+                    "If multiple levels of quotation are required, use `ignore_quotes=True`.",
                 )
 
         cmd = self.exe + list(args)
 
-        escaped_cmd = ["'%s'" % arg.replace("'", "'\"'\"'") for arg in cmd]
-        cmd_line_string = " ".join(escaped_cmd)
+        cmd_line_string = " ".join(shlex.quote(arg) for arg in cmd)
         tty.debug(cmd_line_string)
 
         result = None
@@ -289,9 +299,16 @@ class Executable:
                 env=current_environment,
                 close_fds=False,
             )
-            out, err = proc.communicate(timeout=timeout)
+        except OSError as e:
+            message = "Command: " + cmd_line_string
+            if " " in self.exe[0]:
+                message += "\nDid you mean to add a space to the command?"
 
-            result = process_cmd_output(out, err)
+            raise ProcessError(f"{self.exe[0]}: {e.strerror}", message)
+
+        try:
+            out, err = proc.communicate(timeout=timeout)
+            result = _process_cmd_output(out, err, output, error)
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 long_msg = cmd_line_string
@@ -302,18 +319,12 @@ class Executable:
                     # stdout/stderr (e.g. if 'output' is not specified)
                     long_msg += "\n" + result
 
-                raise ProcessError("Command exited with status %d:" % proc.returncode, long_msg)
-        except OSError as e:
-            message = "Command: " + cmd_line_string
-            if " " in self.exe[0]:
-                message += "\nDid you mean to add a space to the command?"
-
-            raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
+                raise ProcessError(f"Command exited with status {proc.returncode}:", long_msg)
 
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()
-            result = process_cmd_output(out, err)
+            result = _process_cmd_output(out, err, output, error)
             long_msg = cmd_line_string + f"\n{result}"
             if fail_on_error:
                 raise ProcessTimeoutError(
@@ -324,11 +335,12 @@ class Executable:
                 ) from te
 
         finally:
-            if close_ostream:
+            # The isinstance checks are only needed for type checking.
+            if close_ostream and isinstance(ostream, io.IOBase):
                 ostream.close()
-            if close_estream:
+            if close_estream and isinstance(estream, io.IOBase):
                 estream.close()
-            if close_istream:
+            if close_istream and isinstance(istream, io.IOBase):
                 istream.close()
 
         return result
@@ -336,14 +348,11 @@ class Executable:
     def __eq__(self, other):
         return hasattr(other, "exe") and self.exe == other.exe
 
-    def __neq__(self, other):
-        return not (self == other)
-
     def __hash__(self):
         return hash((type(self),) + tuple(self.exe))
 
     def __repr__(self):
-        return "<exe: %s>" % self.exe
+        return f"<exe: {self.exe}>"
 
     def __str__(self):
         return " ".join(self.exe)

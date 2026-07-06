@@ -10,7 +10,7 @@ import spack.llnl.util.tty as tty
 import spack.spec
 from spack.cmd.common import arguments
 
-description = "remove specs from an environment"
+description = "remove specs from an environment's develop: section"
 section = "environments"
 level = "long"
 
@@ -49,7 +49,7 @@ def _update_config(specs_to_remove):
 def undevelop(parser, args):
     # TODO: when https://github.com/spack/spack/pull/35307 is merged,
     # an active env is not required if a scope is specified
-    env = spack.cmd.require_active_env(cmd_name="undevelop")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.all:
         remove_specs = [spack.spec.Spec(s) for s in env.dev_specs]
@@ -59,8 +59,7 @@ def undevelop(parser, args):
     with env.write_transaction():
         _update_config(remove_specs)
         if args.apply_changes:
-            for spec in remove_specs:
-                env.apply_develop(spec, path=None)
+            env.apply_develop(remove_specs, paths=None)
 
     updated_all_dev_specs = set(spack.config.get("develop"))
 

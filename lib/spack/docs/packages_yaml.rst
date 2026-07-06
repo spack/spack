@@ -62,7 +62,7 @@ If Spack is asked to build a package that uses one of these MPIs as a dependency
 Note that the specified path is the top-level install prefix, not the ``bin`` subdirectory.
 
 ``packages.yaml`` can also be used to specify modules to load instead of the installation prefixes.
-The following example says that module ``CMake/3.7.2`` provides cmake version 3.7.2.
+The following example says that module ``CMake/3.7.2`` provides CMake version 3.7.2.
 
 .. code-block:: yaml
 
@@ -155,7 +155,7 @@ Spack can be configured with every MPI provider not buildable individually, but 
 
 Spack can then use any of the listed external implementations of MPI to satisfy a dependency, and will choose among them depending on the compiler and architecture.
 
-In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or buildcaches) are not desirable, Spack can be configured to require specs matching only the available externals:
+In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers (available via stores or build caches) are not desirable, Spack can be configured to require specs matching only the available externals:
 
 .. code-block:: yaml
 
@@ -173,7 +173,7 @@ In cases where the concretizer is configured to reuse specs, and other ``mpi`` p
        - spec: "openmpi@1.4.3+debug"
          prefix: /opt/openmpi-1.4.3-debug
 
-This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused, unless it matches the requirements under ``packages:mpi:require``.
+This configuration prevents any spec using MPI and originating from stores or build caches to be reused, unless it matches the requirements under ``packages:mpi:require``.
 For more information on requirements see :ref:`package-requirements`.
 
 Specifying dependencies among external packages
@@ -505,7 +505,7 @@ In the example above, that means you could build ``mpich+cuda`` or ``mpich+rocm`
 .. note::
 
    When using a conditional requirement, Spack is allowed to actively avoid the triggering condition (the ``when=...`` spec) if that leads to a concrete spec with better scores in the optimization criteria.
-   To check the current optimization criteria and their priorities you can run ``spack solve zlib``.
+   To check the current optimization criteria and their priorities you can run ``spack spec --show opt,solutions zlib``.
 
 Setting default requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -744,4 +744,39 @@ You can assign class-level attributes in the configuration:
 Attributes set this way will be accessible to any method executed in the package.py file (e.g. the ``install()`` method).
 Values for these attributes may be any value parseable by yaml.
 
-These can only be applied to specific packages, not "all" or virtual packages.
+Variable substitution in package attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package attribute values support variable substitution, allowing you to use Spack-specific variables, environment variables, and user path expansion in your configuration.
+This is particularly useful for specifying paths relative to your Spack installation, environment, or home directory.
+
+For example, you can reference local source archives or build artifacts:
+
+.. code-block:: yaml
+
+   packages:
+     mypackage:
+       package_attributes:
+         # Use Spack installation directory
+         url: file://$spack/local-sources/mypackage-1.0.tar.gz
+         # Use environment name
+         git: $env/mypackage.git
+         # Use environment variables
+         custom_path: ${HOME}/build/artifacts
+         # Use user expansion
+         license_file: ~/licenses/mypackage.lic
+
+All the variables documented in :ref:`config-file-variables` are supported, including:
+
+* ``$spack``: path to the Spack installation
+* ``$env``: path to the currently active environment
+* ``$user``: current user name
+* ``${VARNAME}``: environment variables
+* ``~`` or ``~user``: user home directory expansion
+
+Variable substitution is applied to string values in ``package_attributes``.
+This allows you to create portable configurations that adapt to different environments and user contexts.
+
+.. note::
+
+   These can only be applied to specific packages, not "all" or virtual packages.

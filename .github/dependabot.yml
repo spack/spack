@@ -1,14 +1,15 @@
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
-  # Requirements to run style checks and build documentation
+
   - package-ecosystem: "pip"
     directories:
-     - "/.github/workflows/requirements/style/*"
+     - "/.github/workflows/requirements/coverage"
+     - "/.github/workflows/requirements/style"
+     - "/.github/workflows/requirements/unit_tests"
      - "/lib/spack/docs"
     schedule:
       interval: "daily"

@@ -10,7 +10,7 @@ import pytest
 import spack.config
 import spack.llnl.util.tty as tty
 import spack.util.remote_file_cache as rfc_util
-from spack.llnl.util.filesystem import join_path
+from spack.util.filesystem import join_path
 
 github_url = "https://github.com/fake/fake/{0}/develop"
 gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"
@@ -41,12 +41,6 @@ def test_rfc_local_file_unix():
 def test_rfc_local_file_windows():
     assert rfc_util.local_path(r"C:\Files (x86)\Windows\10", "") == r"C:\Files (x86)\Windows\10"
     assert rfc_util.local_path(r"D:/spack stage", "") == r"D:\spack stage"
-
-
-def test_rfc_local_file_relative():
-    path = "relative/packages.txt"
-    expected = os.path.join(os.getcwd(), "relative", "packages.txt")
-    assert rfc_util.local_path(path, "") == expected
 
 
 def test_rfc_remote_local_path_no_dest():
@@ -94,16 +88,15 @@ def test_rfc_remote_local_path(
         tty.debug(f"Expected {element} in '{filename}'")
         return False
 
-    def _dest_dir():
-        return join_path(str(tmp_path), "cache")
+    dest_dir = join_path(str(tmp_path), "cache")
 
     if err is not None:
         with spack.config.override("config:url_fetch_method", "curl"):
             with pytest.raises(err, match=msg):
-                rfc_util.local_path(url, sha256, _dest_dir)
+                rfc_util.local_path(url, sha256, dest_dir)
     else:
         with spack.config.override("config:url_fetch_method", "curl"):
-            path = rfc_util.local_path(url, sha256, _dest_dir)
+            path = rfc_util.local_path(url, sha256, dest_dir)
             assert os.path.exists(path)
             # Ensure correct file is "fetched"
             assert os.path.basename(path) == os.path.basename(url)

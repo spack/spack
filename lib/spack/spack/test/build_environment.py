@@ -20,14 +20,15 @@ import spack.deptypes as dt
 import spack.package_base
 import spack.spec
 import spack.util.environment
+import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.build_environment import UseMode, _static_to_shared_library, dso_suffix
-from spack.context import Context
+from spack.enums import Context
 from spack.installer import PackageInstaller
-from spack.llnl.path import Path, convert_to_platform_path
-from spack.llnl.util.filesystem import HeaderList, LibraryList
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
+from spack.util.filesystem import HeaderList, LibraryList
+from spack.util.path import Path, convert_to_platform_path
 
 
 def os_pathsep_join(path, *pths):
@@ -159,7 +160,7 @@ def test_cc_not_changed_by_modules(monkeypatch, mutable_config, working_env, com
         os.environ["CC"] = "NOT_THIS_PLEASE"
         os.environ["ANOTHER_VAR"] = "THIS_IS_SET"
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake %gcc@14")
     spack.build_environment.setup_package(s.package, dirty=False)
@@ -287,6 +288,39 @@ def test_compiler_config_modifications(
         assert name not in os.environ
 
 
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_load_external_modules_error(working_env, monkeypatch):
+    """Test that load_external_modules raises an exception when a module cannot be loaded"""
+
+    # Create a mock spec object with the minimum attributes needed for the test
+    class MockSpec:
+        def __init__(self):
+            self.external_modules = ["non_existent_module"]
+
+        def __str__(self):
+            return "mock-external-spec"
+
+    mock_spec = MockSpec()
+
+    # Create a simplified SetupContext-like class that only contains what we need
+    class MockSetupContext:
+        def __init__(self, spec):
+            self.external = [(spec, None)]
+
+    context = MockSetupContext(mock_spec)
+
+    # Mock the load_module function to raise an exception
+    def mock_load_module(module_name):
+        # Simulate module load failure
+        raise spack.util.module_cmd.ModuleLoadError(module_name)
+
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", mock_load_module)
+
+    # Test that load_external_modules raises ModuleLoadError
+    with pytest.raises(spack.util.module_cmd.ModuleLoadError):
+        spack.build_environment.load_external_modules(context)
+
+
 def test_external_config_env(mock_packages, mutable_config, working_env):
     cmake_config = {
         "externals": [
@@ -320,7 +354,7 @@ def test_spack_paths_before_module_paths(
     def _set_wrong_cc(x):
         os.environ["PATH"] = module_path + os.pathsep + os.environ["PATH"]
 
-    monkeypatch.setattr(spack.build_environment, "load_module", _set_wrong_cc)
+    monkeypatch.setattr(spack.util.module_cmd, "load_module", _set_wrong_cc)
 
     s = spack.concretize.concretize_one("cmake")
 
@@ -607,7 +641,7 @@ def test_effective_deptype_build_environment(default_mock_concretization):
     #  [b   ]      ^dtbuild1@1.0            # <- direct build dep
     #  [b   ]          ^dtbuild2@1.0        # <- indirect build-only dep is dropped
     #  [bl  ]          ^dtlink2@1.0         # <- linkable, and runtime dep of build dep
-    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, exectuable runtime dep of build dep
+    #  [  r ]          ^dtrun2@1.0          # <- non-linkable, executable runtime dep of build dep
     #  [bl  ]      ^dtlink1@1.0             # <- direct build dep
     #  [bl  ]          ^dtlink3@1.0         # <- linkable, and runtime dep of build dep
     #  [b   ]              ^dtbuild2@1.0    # <- indirect build-only dep is dropped
@@ -806,6 +840,33 @@ def test_extra_rpaths_is_set(
         assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
     else:
         assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
+
+
+@pytest.mark.parametrize(
+    "keep_werror,expected_keep,expected_replace",
+    [
+        ("all", "-Werror*", ""),
+        ("specific", None, "-Werror-|-Wno-error= -Werror|-Wno-error"),
+        ("none", "", "-Werror-|-Wno-error= -Werror|-Wno-error"),
+    ],
+)
+def test_add_werror_handling(keep_werror, expected_keep, expected_replace):
+    """`_add_werror_handling` translates the `config:flags:keep_werror` setting into the
+    SPACK_COMPILER_FLAGS_KEEP / SPACK_COMPILER_FLAGS_REPLACE env vars consumed by the
+    external compiler wrapper. Behavior of the wrapper itself is tested in the
+    spack-packages compiler-wrapper repo.
+    """
+    env = EnvironmentModifications()
+    spack.build_environment._add_werror_handling(keep_werror, env)
+
+    values = {m.name: m.value for m in env if m.name.startswith("SPACK_COMPILER_FLAGS_")}
+
+    if expected_keep is None:
+        # "specific" uses a set, so order of the two keep patterns is not stable
+        assert set(values["SPACK_COMPILER_FLAGS_KEEP"].split("|")) == {"-Werror-*", "-Werror=*"}
+    else:
+        assert values["SPACK_COMPILER_FLAGS_KEEP"] == expected_keep
+    assert values["SPACK_COMPILER_FLAGS_REPLACE"] == expected_replace
 
 
 class _TestProcess:

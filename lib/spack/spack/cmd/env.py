@@ -20,15 +20,16 @@ import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
-import spack.llnl.string as string
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.tengine
+import spack.util.filesystem as fs
+import spack.util.string as string
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.traverse import traverse_nodes
 from spack.util.environment import EnvironmentModifications
+from spack.util.filesystem import islink, symlink
 
 description = "manage environments"
 section = "environments"
@@ -126,7 +127,8 @@ def env_create(args):
     )
 
     # Generate views, only really useful for environments created from spack.lock files.
-    env.regenerate_views()
+    if args.envfile:
+        env.regenerate_views()
 
 
 def _env_create(
@@ -141,15 +143,15 @@ def _env_create(
     """Create a new environment, with an optional yaml description.
 
     Arguments:
-        name_or_path (str): name of the environment to create, or path to it
-        init_file (str or file): optional initialization file -- can be
-            a JSON lockfile (*.lock, *.json), YAML manifest file, or env dir
-        dir (bool): if True, create an environment in a directory instead
-            of a named environment
-        keep_relative (bool): if True, develop paths are copied verbatim into
-            the new environment file, otherwise they may be made absolute if the
-            new environment is in a different location
-        include_concrete (list): list of the included concrete environments
+        name_or_path: name of the environment to create, or path to it
+        init_file: optional initialization file -- can be a JSON lockfile
+            (*.lock, *.json), YAML manifest file, or env dir
+        dir: if True, create an environment in a directory instead of a named
+            environment
+        keep_relative: if True, develop paths are copied verbatim into the new
+            environment file, otherwise they may be made absolute if the new
+            environment is in a different location
+        include_concrete: list of the included concrete environments
     """
     if not dir:
         env = ev.create(
@@ -546,7 +548,7 @@ def _env_untrack_or_remove(
     else:
         env_names_to_remove = known_env_names
 
-    # initalize all environments with valid spack.yaml configs
+    # initialize all environments with valid spack.yaml configs
     all_valid_envs = get_valid_envs(all_env_names)
 
     # build a task list of environments and bad env names to remove
@@ -558,8 +560,8 @@ def _env_untrack_or_remove(
             if env.name == remove_env.name:
                 continue
 
-            # check if an environment is included un another
-            if remove_env.path in env.included_concrete_envs:
+            # check if an environment is included in another
+            if remove_env.path in env.included_concrete_env_root_dirs:
                 msg = f"Environment '{remove_env.name}' is used by environment '{env.name}'"
                 if force:
                     tty.warn(msg)
@@ -568,7 +570,7 @@ def _env_untrack_or_remove(
                     envs_to_remove.remove(remove_env)
 
     # ask the user if they really want to remove the known environments
-    # force should do the same as yes to all here following the symantics of rm
+    # force should do the same as yes to all here following the semantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
         environments = string.plural(len(env_names_to_remove), "environment", show_n=False)
         envs = string.comma_and(list(env_names_to_remove))
@@ -594,7 +596,7 @@ def _env_untrack_or_remove(
             real_env_path = os.path.realpath(env.path)
             os.unlink(env.path)
             tty.msg(
-                f"Sucessfully untracked environment '{name}', "
+                f"Successfully untracked environment '{name}', "
                 "but it can still be found at:\n\n"
                 f"        {real_env_path}\n"
             )
@@ -614,7 +616,7 @@ def _env_untrack_or_remove(
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
     # However, we should still process all the environments we know about
-    # and delete them instead of failing on the first unknown enviornment.
+    # and delete them instead of failing on the first unknown environment.
     if len(removed_env_names) < len(known_env_names):
         sys.exit(1)
 
@@ -857,7 +859,7 @@ def env_loads_setup_parser(subparser):
 
 
 def env_loads(args):
-    env = spack.cmd.require_active_env(cmd_name="env loads")
+    env = spack.cmd.require_active_env(args.subparser)
 
     # Set the module types that have been selected
     module_type = args.module_type
@@ -870,8 +872,10 @@ def env_loads(args):
 
     loads_file = fs.join_path(env.path, "loads")
     with open(loads_file, "w", encoding="utf-8") as f:
-        specs = env._get_environment_specs(recurse_dependencies=recurse_dependencies)
-
+        if not recurse_dependencies:
+            specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots]
+        else:
+            specs = list(traverse_nodes(env.concrete_roots(), deptype=("link", "run")))
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")
@@ -1029,7 +1033,7 @@ def env_depfile_setup_parser(subparser):
 
 def env_depfile(args):
     # Currently only make is supported.
-    spack.cmd.require_active_env(cmd_name="env depfile")
+    spack.cmd.require_active_env(args.subparser)
 
     env = ev.active_environment()
 
@@ -1094,6 +1098,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
             description=spack.cmd.doc_dedented(setup_parser_cmd),
             help=spack.cmd.doc_first_line(setup_parser_cmd),
         )
+        subsubparser.set_defaults(subparser=subsubparser)
         setup_parser_cmd(subsubparser)
 
 

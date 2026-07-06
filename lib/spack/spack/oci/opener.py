@@ -7,8 +7,6 @@
 import base64
 import json
 import re
-import socket
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -18,9 +16,9 @@ from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
 import spack.config
-import spack.llnl.util.lang
 import spack.mirrors.mirror
 import spack.tokenize
+import spack.util.lang
 import spack.util.web
 
 from .image import ImageReference
@@ -40,7 +38,7 @@ OpenType = Callable[..., HTTPResponse]
 MaybeOpen = Optional[OpenType]
 
 #: Opener that automatically uses OCI authentication based on mirror config
-urlopen: OpenType = spack.llnl.util.lang.Singleton(_urlopen)
+urlopen: OpenType = spack.util.lang.Singleton(_urlopen)
 
 
 SP = r" "
@@ -433,31 +431,4 @@ def ensure_status(request: urllib.request.Request, response: HTTPResponse, statu
     )
 
 
-def default_retry(f, retries: int = 5, sleep=None):
-    sleep = sleep or time.sleep
-
-    def wrapper(*args, **kwargs):
-        for i in range(retries):
-            try:
-                return f(*args, **kwargs)
-            except OSError as e:
-                # Retry on internal server errors, and rate limit errors
-                # Potentially this could take into account the Retry-After header
-                # if registries support it
-                if i + 1 != retries and (
-                    (
-                        isinstance(e, urllib.error.HTTPError)
-                        and (500 <= e.code < 600 or e.code == 429)
-                    )
-                    or (
-                        isinstance(e, urllib.error.URLError)
-                        and isinstance(e.reason, socket.timeout)
-                    )
-                    or isinstance(e, socket.timeout)
-                ):
-                    # Exponential backoff
-                    sleep(2**i)
-                    continue
-                raise
-
-    return wrapper
+default_retry = spack.util.web.retry_on_transient_error

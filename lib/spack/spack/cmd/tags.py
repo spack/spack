@@ -7,10 +7,10 @@ import sys
 from typing import Dict, Iterable, List
 
 import spack.environment
-import spack.llnl.string
 import spack.llnl.util.tty as tty
 import spack.llnl.util.tty.colify as colify
 import spack.repo
+import spack.util.string
 
 description = "show package tags and associated packages"
 section = "query"
@@ -24,7 +24,7 @@ def report_tags(category, tags):
     if isatty:
         num = len(tags)
         fmt = "{0} package tag".format(category)
-        buffer.write("{0}:\n".format(spack.llnl.string.plural(num, fmt)))
+        buffer.write("{0}:\n".format(spack.util.string.plural(num, fmt)))
 
     if tags:
         colify.colify(tags, output=buffer, tty=isatty, indent=4)
@@ -60,7 +60,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def tags(parser, args):
     # Disallow combining all option with (positional) tags to avoid confusion
     if args.all and args.tag:
-        tty.die("Use the '--all' option OR provide tag(s) on the command line")
+        args.subparser.error("use the '--all' option OR provide tag(s) on the command line")
 
     # Provide a nice, simple message if database is empty
     if args.installed and not spack.environment.installed_specs():
@@ -93,7 +93,7 @@ def tags(parser, args):
     tag_pkgs = packages_with_tags(tags, args.installed, False)
     missing = "No installed packages" if args.installed else "None"
     for tag in sorted(tag_pkgs):
-        # TODO: Remove the sorting once we're sure noone has an old
+        # TODO: Remove the sorting once we're sure no one has an old
         # TODO: tag cache since it can accumulate duplicates.
         packages = sorted(list(set(tag_pkgs[tag])))
         if isatty:

@@ -1533,6 +1533,8 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
+.. _variant-conditional-values:
+
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1660,7 +1662,7 @@ Let's take a look at the ``libdwarf`` package to see how it's done:
 ^^^^^^^^^^^^^^^^
 
 The highlighted ``depends_on("libelf")`` call tells Spack that it needs to build and install the ``libelf`` package before it builds ``libdwarf``.
-This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your libdwarf build.
+This means that in your ``install()`` method, you are guaranteed that ``libelf`` has been built and installed successfully, so you can rely on it for your ``libdwarf`` build.
 
 .. _dependency_specs:
 
@@ -1701,7 +1703,7 @@ Spack allows you to specify this in the ``depends_on`` directive using version r
 
    depends_on("python@3.10:")
 
-In this case, the package requires Python 3.10 or newer.
+In this case, the package requires Python 3.10 or newer, as specified in the project's :file:`pyproject.toml`.
 
 Commonly, packages drop support for older versions of a dependency as they release new versions.
 In Spack you can conveniently add every backward compatibility rule as a separate line:
@@ -1768,6 +1770,22 @@ For example, if you need Boost 1.59.0 or newer, but there are known issues with 
 
    depends_on("boost@1.59.0:1.63,1.65.1,1.67.0:")
 
+or, if those particular versions are excluded due to bugs rather than removed and reintroduced features:
+
+.. code-block:: python
+
+   depends_on("boost@1.59.0:")
+   conflicts("^boost@1.64.0,1.65.0,1.66.0")
+
+Always specify version ranges with an open-world assumption:
+
+- all "ground truths" about exclusions and inclusions (e.g., versions with features added or removed) must satisfy the range, and
+- no potential but unknown versions are excluded from the range.
+
+This practice avoids overconstraining version ranges, which can lead to concretization errors, and ensures that every version in a package is *meaningful* and not just *incidental* (i.e., based on the version you happened to test).
+In the above example, the project has presumably documented (with pyproject.toml, CMakeLists.txt, or release notes) that ``@:1.58`` are incompatible, and it is known from testing that ``@1.67`` is compatible.
+It is *not* known whether future versions ``@1.68:`` are incompatible, so they must be included by the range.
+If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
 .. _dependency-types:
 
@@ -2294,7 +2312,7 @@ Only needed for patches fetched from URLs.
 
 If supplied, this is a spec that tells Spack when to apply the patch.
 If the installed package spec matches this spec, the patch will be applied.
-In our example above, the patch is applied when mvapich is at version ``1.9`` or higher.
+In our example above, the patch is applied when ``mvapich`` is at version ``1.9`` or higher.
 
 ``level``
 """""""""
@@ -2325,7 +2343,7 @@ Lines 1-2 show paths with synthetic ``a/`` and ``b/`` prefixes.
 These are placeholders for the two ``mvapich2`` source directories that ``diff`` compared when it created the patch file.
 This is git's default behavior when creating patch files, but other programs may behave differently.
 
-``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded mvapich2 archive.
+``-p1`` strips off the first level of the prefix in both paths, allowing the patch to be applied from the root of an expanded ``mvapich2`` archive.
 If you set level to ``2``, it would strip off ``src``, and so on.
 
 It's generally easier to just structure your patch file so that it applies cleanly with ``-p1``, but if you're using a patch you didn't create yourself, ``level`` can be handy.
@@ -2482,7 +2500,7 @@ This ensures that Python in a view can always locate its Python packages, even w
 
 A package can only extend one other package at a time.
 To support packages that may extend one of a list of other packages, Spack supports multiple ``extends`` directives as long as at most one of them is selected as a dependency during concretization.
-For example, a lua package could extend either lua or luajit, but not both:
+For example, a lua package could extend either ``lua`` or ``lua-luajit``, but not both:
 
 .. code-block:: python
 
@@ -2493,7 +2511,7 @@ For example, a lua package could extend either lua or luajit, but not both:
        extends("lua-luajit", when="~use_lua")
        ...
 
-Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or luajit.
+Now, a user can install, and activate, the ``lua-lpeg`` package for either lua or ``lua-luajit``.
 
 Adding additional constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

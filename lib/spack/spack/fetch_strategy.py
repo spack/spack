@@ -25,12 +25,14 @@ in order to build it.  They need to define the following methods:
 ``archive()``
     Archive a source directory, e.g. for creating a mirror.
 """
+
 import copy
 import functools
 import hashlib
 import http.client
 import os
 import re
+import secrets
 import shutil
 import sys
 import time
@@ -41,21 +43,21 @@ from typing import Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
-import spack.llnl.url
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.oci.opener
 import spack.util.archive
 import spack.util.crypto as crypto
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.git
+import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.llnl.string import comma_and, quote
-from spack.llnl.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
+from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -427,43 +429,53 @@ class URLFetchStrategy(FetchStrategy):
             tty.warn(msg)
 
     @_needs_stage
-    def _fetch_urllib(self, url, chunk_size=65536):
+    def _fetch_urllib(self, url, chunk_size=65536, retries=5):
+        """Fetch a URL using urllib, with retries on transient errors and progress reporting."""
         save_file = self.stage.save_filename
+        part_file = save_file + ".part"
 
         request = urllib.request.Request(
             url, headers={"User-Agent": web_util.SPACK_USER_AGENT, "Accept": "*/*"}
         )
 
-        if os.path.lexists(save_file):
-            os.remove(save_file)
-
-        try:
-            response = web_util.urlopen(request)
-            tty.verbose(f"Fetching {url}")
-            progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
-            with open(save_file, "wb") as f:
-                while True:
-                    chunk = response.read(chunk_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    progress.advance(len(chunk))
-            progress.print(final=True)
-        except OSError as e:
-            # clean up archive on failure.
-            if self.archive_file:
-                os.remove(self.archive_file)
-            if os.path.lexists(save_file):
-                os.remove(save_file)
-            raise FailedDownloadError(e) from e
+        response_headers_str = None
+        for attempt in range(retries):
+            try:
+                with web_util.urlopen(request) as response:
+                    tty.verbose(f"Fetching {url}")
+                    progress = FetchProgress.from_headers(
+                        response.headers, enabled=sys.stdout.isatty()
+                    )
+                    with open(part_file, "wb") as f:
+                        while True:
+                            chunk = response.read(chunk_size)
+                            if not chunk:
+                                break
+                            f.write(chunk)
+                            progress.advance(len(chunk))
+                    progress.print(final=True)
+                    # Capture metadata before context manager closes the connection
+                    if isinstance(response, http.client.HTTPResponse):
+                        self._effective_url = response.geturl()
+                    response_headers_str = str(response.headers)
+                os.replace(part_file, save_file)
+                break  # success: exit retry loop
+            except Exception as e:
+                # clean up archive on failure.
+                if self.archive_file:
+                    os.remove(self.archive_file)
+                if os.path.lexists(part_file):
+                    os.remove(part_file)
+                # Raise if this was the last attempt, or if the error was not transient.
+                if (attempt + 1 == retries) or not web_util.is_transient_error(e):
+                    raise FailedDownloadError(e) from e
+                tty.debug(f"Retrying fetch (attempt {attempt + 1}): {e}")
+                time.sleep(2**attempt)
 
         # Save the redirected URL for error messages. Sometimes we're redirected to an arbitrary
         # mirror that is broken, leading to spurious download failures. In that case it's helpful
         # for users to know which URL was actually fetched.
-        if isinstance(response, http.client.HTTPResponse):
-            self._effective_url = response.geturl()
-
-        self._check_headers(str(response.headers))
+        self._check_headers(response_headers_str)
 
     @_needs_stage
     def _fetch_curl(self, url, config_args=[]):
@@ -553,7 +565,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = spack.llnl.url.determine_url_file_extension(self.url)
+            self.extension = spack.util.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug("Source already staged to %s" % self.stage.source_path)
@@ -705,7 +717,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, *, exclude: Optional[str] = None):
-        assert spack.llnl.url.extension_from_path(destination) == "tar.gz"
+        assert spack.util.url.extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
         # We need to prepend this dir name to every entry of the tarfile
         top_level_dir = PurePath(self.stage.srcdir or os.path.basename(self.stage.source_path))
@@ -961,12 +973,19 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         kwargs = {"debug": spack.config.get("config:debug"), "git_exe": self.git, "dest": name}
 
+        # TODO(psakievich) The use of the minimal clone need clearer justification via package API
+        # or something. There is a trade space of storage minimization vs available git information
+        # that grows to non-trivial proportions for larger projects
+        minimal_clone = self.commit and name and not self.get_full_repo
+
         with temp_cwd(ignore_cleanup_errors=True):
-            if self.commit and name:
+            if minimal_clone:
                 try:
                     spack.util.git.git_init_fetch(self.url, self.commit, depth, **kwargs)
                 except spack.util.executable.ProcessError:
-                    spack.util.git.git_clone(self.url, fetch_ref, True, depth, **kwargs)
+                    spack.util.git.git_clone(
+                        self.url, fetch_ref, self.get_full_repo, depth, **kwargs
+                    )
             else:
                 spack.util.git.git_clone(self.url, fetch_ref, self.get_full_repo, depth, **kwargs)
             repo_name = get_single_file(".")
@@ -1598,7 +1617,8 @@ def _for_package_version(pkg, version=None):
     commit = commit_var.value if commit_var else None
     tag = None
     if isinstance(version, spack.version.GitVersion) or commit:
-        if not hasattr(pkg, "git"):
+        git_url = pkg.version_or_package_attr("git", version)
+        if not git_url:
             raise spack.error.FetchError(
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
@@ -1630,9 +1650,10 @@ def _for_package_version(pkg, version=None):
             tag = version_meta_data.get("tag") or version_meta_data.get("branch")
 
         kwargs = {"commit": commit, "tag": tag, "no_cache": bool(not commit)}
-        kwargs["git"] = pkg.version_or_package_attr("git", version)
+        kwargs["git"] = git_url
         kwargs["submodules"] = pkg.version_or_package_attr("submodules", version, False)
         kwargs["git_sparse_paths"] = pkg.version_or_package_attr("git_sparse_paths", version, None)
+        kwargs["get_full_repo"] = pkg.version_or_package_attr("get_full_repo", version, False)
 
         # if the ref_version is a known version from the package, use that version's
         # attributes
@@ -1740,10 +1761,29 @@ def from_list_url(pkg):
             tty.msg("Could not determine url from list_url.")
 
 
-class FsCache:
+class FsCacheBase:
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
+    def store(self, fetcher, relative_dest):
+        dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        tmp = os.path.join(
+            os.path.dirname(dst), ".tmp." + secrets.token_hex(6) + "." + os.path.basename(dst)
+        )
+        open(tmp, "xb").close()
+        try:
+            fetcher.archive(tmp)
+            os.replace(tmp, dst)
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+
+
+class FsCache(FsCacheBase):
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
@@ -1753,9 +1793,7 @@ class FsCache:
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
-        fetcher.archive(dst)
+        super().store(fetcher, relative_dest)
 
     def fetcher(self, target_path: str, digest: Optional[str], **kwargs) -> CacheURLFetchStrategy:
         path = os.path.join(self.root, target_path)

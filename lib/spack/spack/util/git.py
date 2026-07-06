@@ -11,9 +11,10 @@ from typing import List, Optional, overload
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lang
 import spack.util.executable as exe
+import spack.util.filesystem as fs
+import spack.util.lang
+from spack.util.environment import EnvironmentModifications
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -26,7 +27,7 @@ def is_git_commit_sha(string: str) -> bool:
     return len(string) == 40 and bool(COMMIT_VERSION.match(string))
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _find_git() -> Optional[str]:
     """Find the git executable in the system path."""
     return exe.which_string("git", required=False)
@@ -78,6 +79,7 @@ class VersionConditionalOption:
 # git@1.8.5 is when branch could also accept tag so we don't have to track ref types as closely
 # This also corresponds to system git on RHEL7
 MIN_OPT_VERSION = (1, 8, 5, 2)
+MIN_DIRECT_COMMIT_FETCH = (2, 5, 0)
 
 # Technically the flags existed earlier but we are pruning our logic to 1.8.5 or greater
 BRANCH = VersionConditionalOption("--branch", min_version=MIN_OPT_VERSION)
@@ -102,7 +104,16 @@ def git(required: bool = ...) -> Optional[GitExecutable]: ...
 
 
 def git(required: bool = False) -> Optional[GitExecutable]:
-    """Get a git executable. Raises CommandNotFoundError if ``required`` and git is not found."""
+    """Get a git executable.
+
+    The returned executable automatically unsets ``GIT_EXTERNAL_DIFF`` and ``GIT_DIFF_OPTS``
+    environment variables that can interfere with spack git diff operations.
+
+    Args:
+       required (bool): if True, raises CommandNotFoundError when git is not found
+
+    Returns: GitExecutable, or None if git is not found and required is False
+    """
     git_path = _find_git()
 
     if not git_path:
@@ -114,8 +125,15 @@ def git(required: bool = False) -> Optional[GitExecutable]:
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.
-    if git and "pytest" in sys.modules:
+    if "pytest" in sys.modules:
         git.add_default_arg("-c", "protocol.file.allow=always")
+
+    # Block environment variables that can interfere with git diff operations
+    # this can cause problems for spack ci verify-versions and spack repo show-version-updates
+    env_blocklist = EnvironmentModifications()
+    env_blocklist.unset("GIT_EXTERNAL_DIFF")
+    env_blocklist.unset("GIT_DIFF_OPTS")
+    git.add_default_envmod(env_blocklist)
 
     return git
 
@@ -202,7 +220,7 @@ def pull_checkout_branch(
             raise ValueError("depth must be a positive integer")
         fetch_args.append(f"--depth={depth}")
 
-    git_exe("fetch", *fetch_args, remote, f"{branch}:refs/remotes/{remote}/{branch}")
+    git_exe("fetch", *fetch_args, remote, f"refs/heads/{branch}:refs/remotes/{remote}/{branch}")
     git_exe("checkout", "--quiet", branch)
 
     try:
@@ -308,10 +326,11 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     # minimum criteria for fetching a single commit, but also requires server to be configured
     # fall-back to a process error so an old git version or a fetch failure from an nonsupporting
     # server can be caught the same way.
-    if ref and is_git_commit_sha(ref) and version < (2, 5, 0):
+    if ref and is_git_commit_sha(ref) and version < MIN_DIRECT_COMMIT_FETCH:
         raise exe.ProcessError("Git older than 2.5 detected, can't fetch commit directly")
     init = ["init"]
     remote = ["remote", "add", "origin", url]
+    config = ["config", "remote.origin.fetch", "+refs/heads/*:origin/refs/*"]
     fetch = ["fetch"]
 
     if not debug:
@@ -319,8 +338,16 @@ def git_init_fetch(url, ref, depth=None, debug=False, dest=None, git_exe=None):
     if depth and protocol_supports_shallow_clone(url):
         fetch.extend(DEPTH(version, str(depth)))
 
-    fetch.extend([*FILTER_BLOB_NONE(version), url, ref])
-    cmds = [init, remote, fetch]
+    filter_args = FILTER_BLOB_NONE(version)
+    if filter_args:
+        fetch.extend(filter_args)
+    fetch.extend([url, ref])
+
+    partial_clone = ["config", "extensions.partialClone", "true"] if filter_args else None
+    if partial_clone is not None:
+        cmds = [init, partial_clone, remote, config, fetch]
+    else:
+        cmds = [init, remote, config, fetch]
     _exec_git_commands_unique_dir(git_exe, cmds, debug, dest)
 
 

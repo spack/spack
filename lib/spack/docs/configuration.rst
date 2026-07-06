@@ -66,7 +66,7 @@ From lowest to highest precedence:
 
 #. **system**: Stored in ``/etc/spack/``.
    These are settings for this machine or for all machines on which this file system is mounted.
-   The systm scope overrides the defaults scope.
+   The system scope overrides the defaults scope.
    It can be used for settings idiosyncratic to a particular machine, such as the locations of compilers or external packages.
    Be careful when modifying this scope, as changes here affect all Spack users on a machine.
    Before putting configuration here, instead consider using the ``site`` scope, which only affects the spack instance it's part of.
@@ -85,7 +85,7 @@ From lowest to highest precedence:
 #. **spack**: Stored in ``$(prefix)/etc/spack/``.
    Settings here affect only *this instance* of Spack, and they override ``user`` and lower configuration scopes.
    This is intended for project-specific or single-user spack installations.
-   This is the the topmost built-in spack scope, and modifying it gives you full control over configuration scopes.
+   This is the topmost built-in spack scope, and modifying it gives you full control over configuration scopes.
    For example, it defines the ``user``, ``site``, and ``system`` scopes, so you can use it to remove them completely if you want.
 
 #. **environment**: When using Spack :ref:`environments`, Spack reads additional configuration from the environment file.
@@ -102,7 +102,7 @@ When configurations conflict, settings from higher-precedence scopes override lo
 
 All of these except ``spack`` and ``defaults`` are initially empty, so you don't have to think about the others unless you need them.
 The most commonly used scopes are ``environment``, ``user``, and ``spack``.
-If you forget, you can always see the available configuration scopes in order of precedece wiht the ``spack config scopes`` command::
+If you forget, you can always see the available configuration scopes in order of precedence with the ``spack config scopes`` command::
 
     > spack config scopes -p
     Scope            Path
@@ -386,8 +386,8 @@ Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. _config-overrides:
 
-Overriding entire sections
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding configuration values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Above, the user ``config.yaml`` only overrides specific settings in the default ``config.yaml``.
 Sometimes, it is useful to *completely* override lower-precedence settings.
@@ -411,6 +411,19 @@ Spack will ignore all lower-precedence configuration under the ``config::`` sect
    config:
      install_tree:
        root: /some/other/directory
+
+Similarly,
+
+.. code-block:: yaml
+   :emphasize-lines: 2
+   :caption: ``~/.spack/config.yaml``
+   :name: code-example-override-install-tree
+
+   config:
+     install_tree::
+       root: /some/other/directory
+
+Will override all config settings within the ``install_tree`` sub-section.
 
 
 List-valued settings
@@ -676,3 +689,23 @@ With these settings, if you want to isolate Spack in a CI environment, you can d
 
   $ export SPACK_DISABLE_LOCAL_CONFIG=true
   $ export SPACK_USER_CACHE_PATH=/tmp/spack
+
+
+``spack isolate``
+^^^^^^^^^^^^^^^^^^
+
+``spack isolate --path ISO_PATH`` provides a mechanism for isolating a single spack instance from ``~/.spack``.
+It modifies the current Spack instance by setting the ``user`` scope to use ``ISO_PATH`` and creating an ``isolate`` scope below the ``site`` scope that moves caches and stages that usually default to ``~/.spack`` to ``ISO_PATH`` instead.
+This facilitates working with many independent Spack instances without worrying about overlapping configuration.
+``spack isolate --undo`` reverts the changes to Spack made by ``spack isolate``.
+
+``spack isolate --self`` is a shortcut that isolates Spack to its own prefix.
+
+Currently, ``spack isolate`` is a best-effort approach to isolation of a Spack instance.
+The default location Spack uses for cloning Git based package repositories can only be configured by the ``SPACK_USER_CACHE_PATH`` environment variable (see :ref:`automatic-repo-cloning`).
+``spack isolate --path ISO_PATH`` will explicitly set the destination of repositories that it knows about when invoked to a subdirectory of ``ISO_PATH``; however, newly added repositories without an explicit destination will be cloned to ``~/.spack``.
+To avoid this, either explicitly set ``SPACK_USER_CACHE_PATH`` or explicitly set the destination of newly added repositories to a different location (see :ref:`customizing-clone-location`).
+
+  .. warning::
+
+    This is an experimental feature that will be overhauled in v1.3, which will have big changes to how Spack is configured to store data and permit a more robust implementation.

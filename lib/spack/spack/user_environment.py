@@ -10,7 +10,7 @@ import spack.config
 import spack.spec
 import spack.util.environment as environment
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
@@ -116,21 +116,4 @@ def environment_modifications_for_specs(
     if view:
         project_env_mods(*topo_ordered, view=view, env=env)
 
-        # we don't want to set PYTHONPATH to the default search path in virtual environments
-        view_python_pattern = re.compile(
-            r"^" + re.escape(os.path.join(view.root, "lib")) + r"/python[^/]+/site-packages$"
-        )
-
-        mods = [
-            mod.value
-            for mod in env.env_modifications
-            if (
-                isinstance(mod, environment.PrependPath)
-                and mod.name == "PYTHONPATH"
-                and view_python_pattern.match(mod.value)
-            )
-        ]
-
-        for modif in mods:
-            env.remove_path("PYTHONPATH", modif)
     return env

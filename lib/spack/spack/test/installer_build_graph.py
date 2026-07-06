@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for BuildGraph class in new_installer"""
+
 import sys
 from typing import Dict, List, Tuple, Union
 
@@ -139,7 +140,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root should be in roots set
@@ -158,7 +159,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Only install dependencies
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root should NOT be in nodes when install_package=False
@@ -181,7 +182,7 @@ class TestBuildGraph:
                 include_build_deps=False,
                 install_package=True,
                 install_deps=False,  # Don't install dependencies
-                database=temporary_store.db,
+                store=temporary_store,
             )
 
     def test_multiple_roots(self, mock_specs: Dict[str, Spec], temporary_store: Store):
@@ -193,7 +194,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Both should be in roots
@@ -210,7 +211,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Verify parent_to_child and child_to_parent are inverse mappings
@@ -230,7 +231,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Shared dependency should have two parents
@@ -253,7 +254,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # dep2 should be pruned since it's installed
@@ -277,7 +278,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Shared should be pruned
@@ -302,7 +303,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
             overwrite_set={dep2.dag_hash()},
         )
 
@@ -328,7 +329,7 @@ class TestBuildGraph:
             include_build_deps=True,  # Should be ignored for installed root
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # build_dep should NOT be in the graph (installed root never needs build deps)
@@ -349,7 +350,7 @@ class TestBuildGraph:
             include_build_deps=False,  # exclude build deps when possible
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
@@ -372,7 +373,7 @@ class TestBuildGraph:
             include_build_deps=True,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # All dependencies should be in the graph, including build_dep
@@ -396,7 +397,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=False,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Only the root should be in the graph
@@ -435,7 +436,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         parent1_hash = complex_pruning_dag["parent1"].dag_hash()
@@ -490,7 +491,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # All nodes should be pruned, resulting in an empty graph
@@ -513,7 +514,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Don't install the root
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         # Root is pruned because install_package=False
@@ -540,7 +541,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=True,
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         dep2_hash = dep2.dag_hash()
@@ -569,7 +570,7 @@ class TestBuildGraph:
             include_build_deps=False,
             install_package=False,  # Prune the root
             install_deps=True,
-            database=temporary_store.db,
+            store=temporary_store,
         )
 
         dep1_hash = mock_specs["dep1"].dag_hash()
@@ -584,3 +585,276 @@ class TestBuildGraph:
         # dep1 should not appear in any mappings
         assert dep1_hash not in graph.parent_to_child
         assert dep1_hash not in graph.child_to_parent
+
+
+@pytest.fixture
+def specs_with_test_deps():
+    """Create specs with test-typed dependencies.
+
+    DAG structure:
+        root -> dep (link) + test_dep (test)
+        dep -> dep_test_dep (test)
+    """
+    return create_dag(
+        nodes=["root", "dep", "test_dep", "dep_test_dep"],
+        edges=[
+            ("root", "dep", ("build", "link")),
+            ("root", "test_dep", "test"),
+            ("dep", "dep_test_dep", "test"),
+        ],
+    )
+
+
+class TestBuildGraphTestDeps:
+    """Tests for BuildGraph handling of TEST-typed dependencies."""
+
+    def test_tests_false_excludes_test_deps(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=False excludes TEST-typed dependencies."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+            tests=False,
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() not in graph.nodes
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() not in graph.nodes
+
+    def test_tests_root_includes_test_deps_for_root(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=[root_name] includes test deps only for the root package."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+            tests=["root"],
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() in graph.nodes
+        # dep's test dep is NOT included because tests=["root"] only applies to "root"
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() not in graph.nodes
+
+    def test_tests_all_includes_test_deps_for_all(
+        self, specs_with_test_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """Test that tests=True includes TEST-typed deps for all packages."""
+        graph = BuildGraph(
+            specs=[specs_with_test_deps["root"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+            tests=True,
+        )
+
+        assert specs_with_test_deps["dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["test_dep"].dag_hash() in graph.nodes
+        assert specs_with_test_deps["dep_test_dep"].dag_hash() in graph.nodes
+
+    def test_mark_explicit_spec_excludes_build_only_deps(
+        self, specs_with_build_deps: Dict[str, Spec], temporary_store: Store
+    ):
+        """An installed-implicit spec in explicit_set should only traverse link/run deps,
+        not build-only deps."""
+        root = specs_with_build_deps["root"]
+        install_spec_in_db(root, temporary_store)
+        assert temporary_store.db._data[root.dag_hash()].explicit is False
+        graph = BuildGraph(
+            specs=[root],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=True,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+            explicit_set={root.dag_hash()},
+        )
+        # root should be in graph (not pruned) because it needs to be marked explicit.
+        assert root.dag_hash() in graph.nodes
+        # build-only dep should NOT be pulled in since root is already installed.
+        assert specs_with_build_deps["build_dep"].dag_hash() not in graph.nodes
+
+
+class TestExpandBuildDeps:
+    """Tests for BuildGraph.expand_build_deps after a binary cache miss."""
+
+    def _make_graph(self, specs, root, temporary_store):
+        """Helper to create a BuildGraph with include_build_deps=False (auto policy)."""
+        return BuildGraph(
+            specs=[specs[root]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=False,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+        )
+
+    def _expand(self, graph, dag_hash, pending, db, tests=False):
+        """Call expand_build_deps under the DB read lock (as the real caller would)."""
+        with db.read_transaction():
+            return graph.expand_build_deps([dag_hash], pending, db, tests)
+
+    def test_expand_build_deps_adds_missing_deps(self, temporary_store: Store):
+        """A --build--> C --link--> D, A --link--> B.
+        Initial graph (auto, no build deps): A, B.
+        After expand: C, D added. D is leaf -> in pending_builds."""
+        specs = create_dag(
+            nodes=["a", "b", "c", "d"],
+            edges=[("a", "b", "link"), ("a", "c", "build"), ("c", "d", "link")],
+        )
+        graph = self._make_graph(specs, "a", temporary_store)
+        assert specs["c"].dag_hash() not in graph.nodes
+        assert specs["d"].dag_hash() not in graph.nodes
+
+        pending: List[str] = []
+        newly_added = self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        assert specs["c"].dag_hash() in newly_added
+        assert specs["d"].dag_hash() in newly_added
+        assert specs["c"].dag_hash() in graph.nodes
+        assert specs["d"].dag_hash() in graph.nodes
+        # D is a leaf (no children), so it should be enqueued
+        assert specs["d"].dag_hash() in pending
+        # C waits on D, so it should NOT be enqueued
+        assert specs["c"].dag_hash() not in pending
+
+    def test_expand_build_deps_shared_dep_already_in_graph(self, temporary_store: Store):
+        """A --link--> B, A --build--> C --link--> B.
+        Initial graph: A, B. After expand: C added with edge C->B."""
+        specs = create_dag(
+            nodes=["a", "b", "c"],
+            edges=[("a", "b", "link"), ("a", "c", "build"), ("c", "b", "link")],
+        )
+        graph = self._make_graph(specs, "a", temporary_store)
+        assert specs["b"].dag_hash() in graph.nodes
+        assert specs["c"].dag_hash() not in graph.nodes
+
+        pending: List[str] = []
+        newly_added = self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        assert specs["c"].dag_hash() in newly_added
+        # C depends on B, so C->B edge should exist
+        assert specs["b"].dag_hash() in graph.parent_to_child[specs["c"].dag_hash()]
+        # B should list C as a parent
+        assert specs["c"].dag_hash() in graph.child_to_parent[specs["b"].dag_hash()]
+        # C waits on B, so not in pending
+        assert specs["c"].dag_hash() not in pending
+
+    def test_expand_build_deps_skips_installed_in_db(self, temporary_store: Store):
+        """A --build--> C --link--> D. D installed in DB.
+        After expand: C added, D NOT added. No edge C->D. C in pending."""
+        specs = create_dag(nodes=["a", "c", "d"], edges=[("a", "c", "build"), ("c", "d", "link")])
+        install_spec_in_db(specs["d"], temporary_store)
+        graph = self._make_graph(specs, "a", temporary_store)
+
+        pending: List[str] = []
+        newly_added = self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        assert specs["c"].dag_hash() in newly_added
+        assert specs["d"].dag_hash() not in newly_added
+        assert specs["d"].dag_hash() not in graph.nodes
+        # No edge from C to D (installed dep)
+        assert specs["d"].dag_hash() not in graph.parent_to_child.get(specs["c"].dag_hash(), set())
+        # C has no uninstalled children, so it should be enqueued
+        assert specs["c"].dag_hash() in pending
+
+    def test_expand_build_deps_skips_installed_in_session(self, temporary_store: Store):
+        """Same as above, but D in graph.done instead of DB."""
+        specs = create_dag(nodes=["a", "c", "d"], edges=[("a", "c", "build"), ("c", "d", "link")])
+        graph = self._make_graph(specs, "a", temporary_store)
+        graph.done.add(specs["d"].dag_hash())
+
+        pending: List[str] = []
+        newly_added = self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        assert specs["c"].dag_hash() in newly_added
+        assert specs["d"].dag_hash() not in newly_added
+        assert specs["d"].dag_hash() not in graph.nodes
+        assert specs["c"].dag_hash() in pending
+
+    def test_expand_build_deps_reenqueues_original_when_all_deps_installed(
+        self, temporary_store: Store
+    ):
+        """A --build--> C. C installed in DB.
+        After expand: C NOT added. A re-enqueued (no uninstalled children)."""
+        specs = create_dag(nodes=["a", "c"], edges=[("a", "c", "build")])
+        install_spec_in_db(specs["c"], temporary_store)
+        graph = self._make_graph(specs, "a", temporary_store)
+
+        pending: List[str] = []
+        newly_added = self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        assert len(newly_added) == 0
+        assert specs["a"].dag_hash() in pending
+
+    def test_expand_build_deps_no_deadlock_on_installed_dep(self, temporary_store: Store):
+        """A --build--> C --link--> D. D installed in DB.
+        No edge C->D in parent_to_child. C in pending."""
+        specs = create_dag(nodes=["a", "c", "d"], edges=[("a", "c", "build"), ("c", "d", "link")])
+        install_spec_in_db(specs["d"], temporary_store)
+        graph = self._make_graph(specs, "a", temporary_store)
+
+        pending: List[str] = []
+        self._expand(graph, specs["a"].dag_hash(), pending, temporary_store.db)
+
+        # No edge from C to D: installed deps get no edge, otherwise C is never scheduled
+        assert specs["d"].dag_hash() not in graph.parent_to_child.get(specs["c"].dag_hash(), set())
+        assert specs["c"].dag_hash() in pending
+
+    def test_has_unexpanded_build_deps_true(self, temporary_store: Store):
+        """A --build--> C, A --link--> B. With include_build_deps=False, C is not in the graph,
+        so has_unexpanded_build_deps returns True."""
+        specs = create_dag(nodes=["a", "b", "c"], edges=[("a", "b", "link"), ("a", "c", "build")])
+        graph = self._make_graph(specs, "a", temporary_store)
+        assert graph.has_unexpanded_build_deps(specs["a"].dag_hash())
+
+    def test_has_unexpanded_build_deps_false_shared(self, temporary_store: Store):
+        """A --(build,link)--> B. B is already in graph as link dep,
+        so has_unexpanded_build_deps returns False."""
+        specs = create_dag(nodes=["a", "b"], edges=[("a", "b", ("build", "link"))])
+        graph = self._make_graph(specs, "a", temporary_store)
+        assert not graph.has_unexpanded_build_deps(specs["a"].dag_hash())
+
+    def test_expand_build_deps_does_not_mark_in_graph_spec_as_done(self, temporary_store: Store):
+        """A --link--> B, A --link--> C, B --build--> C.
+        C is in the graph (link dep of A) and installed in DB (simulating an overwrite build
+        in progress). Expanding B's build deps should add edge B->C and NOT mark C as done."""
+        specs = create_dag(
+            nodes=["a", "b", "c"],
+            edges=[("a", "b", "link"), ("a", "c", "link"), ("b", "c", "build")],
+        )
+        graph = self._make_graph(specs, "a", temporary_store)
+        # C should be in graph as a link dep of A
+        assert specs["c"].dag_hash() in graph.nodes
+
+        # Simulate overwrite: install C in DB after graph creation
+        install_spec_in_db(specs["c"], temporary_store)
+
+        pending: List[str] = []
+        self._expand(graph, specs["b"].dag_hash(), pending, temporary_store.db)
+
+        c_hash = specs["c"].dag_hash()
+        b_hash = specs["b"].dag_hash()
+        # C must NOT be marked as done (it's still being overwrite-built)
+        assert c_hash not in graph.done
+        # Edge B->C must exist
+        assert c_hash in graph.parent_to_child[b_hash]
+        assert b_hash in graph.child_to_parent[c_hash]
+        # B should NOT be in pending (it still waits on C)
+        assert b_hash not in pending

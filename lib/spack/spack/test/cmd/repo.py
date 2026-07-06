@@ -16,8 +16,8 @@ import spack.main
 import spack.repo
 import spack.repo_migrate
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
 from spack.util.executable import Executable
+from spack.util.filesystem import working_dir
 
 repo = spack.main.SpackCommand("repo")
 env = spack.main.SpackCommand("env")
@@ -84,7 +84,7 @@ def test_repo_remove_by_scope(mutable_config, tmp_path: pathlib.Path):
 def test_env_repo_path_vars_substitution(
     tmp_path: pathlib.Path, install_mockery, mutable_mock_env_path, monkeypatch
 ):
-    """Test Spack correctly substitues repo paths with environment variables when creating an
+    """Test Spack correctly substitutes repo paths with environment variables when creating an
     environment from a manifest file."""
 
     monkeypatch.setenv("CUSTOM_REPO_PATH", ".")
@@ -813,6 +813,82 @@ def test_repo_list_format_flags(
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
 
 
+def test_repo_list_json_output(mutable_config: spack.config.Configuration, tmp_path: pathlib.Path):
+    """Test the --json flag for repo list command.
+
+    This test verifies that:
+    1. The --json flag produces valid JSON output
+    2. The output contains the expected repository information
+    3. Different repository types (installed, uninitialized, error)
+       are correctly represented
+    """
+    import json
+
+    # Fake a git monorepo with two package repositories
+    monorepo_path = tmp_path / "monorepo"
+    (monorepo_path / ".git").mkdir(parents=True)
+    repo("create", str(monorepo_path), "repo_one")
+    repo("create", str(monorepo_path), "repo_two")
+
+    # Configure repositories in Spack
+    test_repos = {
+        # git repo that provides two package repositories
+        "monorepo": {
+            "git": "https://example.com/monorepo.git",
+            "destination": str(monorepo_path),
+            "paths": ["spack_repo/repo_one", "spack_repo/repo_two"],
+        },
+        # git repo that is not yet cloned
+        "uninitialized": {
+            "git": "https://example.com/uninitialized.git",
+            "destination": str(tmp_path / "uninitialized"),
+        },
+        # invalid local repository
+        "misconfigured": str(tmp_path / "misconfigured"),
+    }
+    mutable_config.set("repos", test_repos, scope="site")
+
+    # Get and parse JSON output
+    json_output = repo("list", "--json")
+    repo_data = json.loads(json_output)
+
+    # Verify we got a list of repositories
+    assert isinstance(repo_data, list), "Expected JSON output to be a list"
+
+    # Index repositories by namespace for easier validation
+    repos_by_namespace = {}
+    for item in repo_data:
+        # Check all required fields are present
+        required_fields = ["name", "namespace", "path", "api_version", "status", "error"]
+        for field in required_fields:
+            assert field in item, f"Repository missing required field: {field}"
+
+        # Store by namespace for later validation
+        repos_by_namespace[item["namespace"]] = item
+
+    # Verify installed repositories (repo_one and repo_two)
+    for namespace in ["repo_one", "repo_two"]:
+        assert namespace in repos_by_namespace, f"Missing repository: {namespace}"
+        repo_info = repos_by_namespace[namespace]
+        assert repo_info["name"] == "monorepo", f"Incorrect name for {namespace}"
+        assert repo_info["status"] == "installed", f"Incorrect status for {namespace}"
+        assert repo_info["error"] is None, f"Unexpected error for {namespace}"
+        assert repo_info["api_version"], f"Missing API version for {namespace}"
+
+    # Verify uninitialized repository
+    assert "uninitialized" in repos_by_namespace, "Missing uninitialized repository"
+    uninit_repo = repos_by_namespace["uninitialized"]
+    assert uninit_repo["name"] == "uninitialized", "Incorrect name for uninitialized repo"
+    assert uninit_repo["status"] == "uninitialized", "Incorrect status for uninitialized repo"
+
+    # Verify misconfigured repository
+    assert "misconfigured" in repos_by_namespace, "Missing misconfigured repository"
+    misc_repo = repos_by_namespace["misconfigured"]
+    assert misc_repo["name"] == "misconfigured", "Incorrect name for misconfigured repo"
+    assert misc_repo["status"] == "error", "Incorrect status for misconfigured repo"
+    assert misc_repo["error"] is not None, "Missing error message for misconfigured repo"
+
+
 @pytest.mark.parametrize(
     "repo_name,flags",
     [
@@ -864,3 +940,138 @@ def test_repo_update_invalid_flags(monkeypatch, mutable_config, flags):
 
     with pytest.raises(SpackError):
         repo("update", *flags)
+
+
+def test_repo_show_version_updates_no_changes(mock_git_package_changes):
+    """Test that show-version-updates handles empty results gracefully"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Use the same commit for both refs - no changes
+        output = repo("show-version-updates", test_repo.root, commits[-1], commits[-1])
+
+        # Should have warning message
+        assert "No packages were added or changed" in output
+
+        # Should not have any specs
+        assert "diff-test@" not in output
+
+
+def test_repo_show_version_updates_success(mock_git_package_changes):
+    """Test that show-version-updates successfully outputs the correct specs"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # commits are ordered from newest to oldest after reversal
+        # commits[-2] = add v2.1.5, commits[-4] = add v2.1.7 and v2.1.8
+        # Find versions added between these commits
+        # Includes v2.1.6 (git version), v2.1.7, and v2.1.8 (sha256 versions)
+        output = repo("show-version-updates", test_repo.root, commits[-2], commits[-4])
+
+        # Verify all three versions are included
+        assert "diff-test@" in output
+        assert "2.1.6" in output
+        assert "2.1.7" in output
+        assert "2.1.8" in output
+
+        # Should have three specs
+        lines = [
+            line.strip()
+            for line in output.strip().split("\n")
+            if line.strip() and "Warning" not in line
+        ]
+        assert len(lines) == 3
+
+
+def test_repo_show_version_updates_excludes_manual_packages(monkeypatch, mock_git_package_changes):
+    """Test --no-manual-packages flag excludes packages with manual_download=True"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Set manual_download=True on the package
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        monkeypatch.setattr(pkg_class, "manual_download", True)
+
+        # Run show-version-updates with --no-manual-packages flag
+        output = repo(
+            "show-version-updates",
+            "--no-manual-packages",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
+        )
+
+        # Package should be excluded
+        assert "diff-test@" not in output
+        assert "No packages were added or changed" in output
+
+
+def test_repo_show_version_updates_excludes_non_redistributable(
+    monkeypatch, mock_git_package_changes
+):
+    """Test --only-redistributable flag excludes packages if redistribute_source returns False"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Set redistribute_source to return False
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        monkeypatch.setattr(pkg_class, "redistribute_source", classmethod(lambda cls, spec: False))
+
+        # Run show-version-updates with --only-redistributable flag
+        output = repo(
+            "show-version-updates",
+            "--only-redistributable",
+            test_repo.root,
+            commits[-2],
+            commits[-4],
+        )
+
+        # Package should be excluded
+        assert "diff-test@" not in output
+        assert "No new package versions found" in output
+
+
+def test_repo_show_version_updates_excludes_git_versions(mock_git_package_changes):
+    """Test --no-git-versions flag excludes versions from git (tag/commit)"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # commits[-3] = add v2.1.6 (git version), commits[-4] = add v2.1.7 and v2.1.8 (sha256)
+        # Without --no-git-versions, v2.1.6 would be included
+        output = repo(
+            "show-version-updates", "--no-git-versions", test_repo.root, commits[-3], commits[-4]
+        )
+
+        # v2.1.6 (git version) should be excluded
+        assert "2.1.6" not in output
+
+        # v2.1.7 and v2.1.8 (sha256 versions) should be included
+        assert "diff-test@" in output
+        assert "2.1.7" in output
+        assert "2.1.8" in output
+
+
+def test_repo_show_version_updates_excludes_deprecated(monkeypatch, mock_git_package_changes):
+    """Test --no-deprecated flag excludes versions marked with deprecated=True"""
+    test_repo, _, commits = mock_git_package_changes
+
+    with spack.repo.use_repositories(test_repo):
+        # Mark version 2.1.7 as deprecated
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
+        for v in pkg_class.versions:
+            if str(v) == "2.1.7":
+                pkg_class.versions[v]["deprecated"] = True
+                break
+
+        # Run show-version-updates with --no-deprecated flag
+        output = repo(
+            "show-version-updates", "--no-deprecated", test_repo.root, commits[-2], commits[-4]
+        )
+
+        # v2.1.7 (deprecated) should be excluded
+        assert "2.1.7" not in output
+
+        # v2.1.6 and v2.1.8 (not deprecated) should be included
+        assert "diff-test@" in output
+        assert "2.1.6" in output
+        assert "2.1.8" in output

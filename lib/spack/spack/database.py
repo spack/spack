@@ -16,6 +16,7 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
+
 import contextlib
 import datetime
 import os
@@ -24,6 +25,7 @@ import sys
 import time
 from json import JSONDecoder
 from typing import (
+    IO,
     Any,
     Callable,
     Container,
@@ -52,10 +54,10 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
 import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
+import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -655,6 +657,23 @@ class Database:
         """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
 
+    def try_write_transaction(self) -> lk.TryWriteTransaction:
+        """Non-blocking variant of :meth:`write_transaction`: the context manager yields True if
+        the write lock was acquired (the database is re-read from disk on entry and written back on
+        exit, unless an exception occurred), or False if acquiring the lock would block, in which
+        case the body must skip its work."""
+        if not isinstance(self.lock, lk.Lock):
+            raise ForbiddenLockError("Cannot acquire a write lock on an upstream database")
+        return lk.TryWriteTransaction(self.lock, acquire=self._read, release=self._write)
+
+    def try_read_transaction(self) -> lk.TryReadTransaction:
+        """Non-blocking variant of :meth:`read_transaction`: the context manager yields True if the
+        read lock was acquired (the database is re-read from disk on entry), or False if acquiring
+        the lock would block, in which case the body must skip its work."""
+        if not isinstance(self.lock, lk.Lock):
+            raise ForbiddenLockError("Cannot acquire a read lock on an upstream database")
+        return lk.TryReadTransaction(self.lock, acquire=self._read)
+
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
         as argument.
@@ -687,7 +706,7 @@ class Database:
         try:
             sjson.dump(database, stream)
         except (TypeError, ValueError) as e:
-            raise sjson.SpackJSONError("error writing JSON database:", str(e))
+            raise sjson.SpackJSONError("error writing JSON database:", e)
 
     def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
         """Recursively construct a spec from a hash in a YAML database.
@@ -751,6 +770,27 @@ class Database:
         with self.read_transaction():
             return self._data.get(hash_key, None)
 
+    def _assign_build_spec(
+        self,
+        spec_reader: Type["spack.spec.SpecfileReaderBase"],
+        hash_key: str,
+        installs: dict,
+        data: Dict[str, InstallRecord],
+    ):
+        # Add dependencies from other records in the install DB to
+        # form a full spec.
+        spec = data[hash_key].spec
+        spec_node_dict = installs[hash_key]["spec"]
+        if "name" not in spec_node_dict:
+            # old format
+            spec_node_dict = spec_node_dict[spec.name]
+        if "build_spec" in spec_node_dict:
+            assert spec_reader.SPEC_VERSION >= 2, "SpecfileV1 spec cannot have build_spec"
+            _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
+            _, build_spec = self.query_by_spec_hash(bhash, data=data)
+            assert build_spec is not None, f"build_spec with hash {bhash} not found in database"
+            spec._build_spec = build_spec.spec
+
     def _assign_dependencies(
         self,
         spec_reader: Type["spack.spec.SpecfileReaderBase"],
@@ -792,24 +832,31 @@ class Database:
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
+
+        Does not do any locking.
+        """
+        with filename.open("r", encoding="utf-8") as f:
+            self._read_from_stream(f, reindex=reindex)
+
+    def _read_from_stream(self, stream: IO[str], *, reindex: bool = False) -> None:
+        """Fill database from a text stream, do not maintain old data.
         Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
+        source = getattr(stream, "name", None) or self._index_path
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
-            fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
+            fdata, _ = JSONDecoder().raw_decode(stream.read())
         except Exception as e:
-            raise CorruptDatabaseError(f"error parsing database at {filename}:", str(e)) from e
+            raise CorruptDatabaseError(f"error parsing database at {source}:", str(e)) from e
 
         if fdata is None:
             return
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError(
-                    f"Spack database is corrupt: {msg}", str(self._index_path)
-                )
+                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", str(source))
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -831,7 +878,7 @@ class Database:
             return CorruptDatabaseError(
                 f"Invalid record in Spack database: hash: {hash_key}, cause: "
                 f"{type(error).__name__}: {error}",
-                str(self._index_path),
+                str(source),
             )
 
         # Build up the database in three passes:
@@ -865,6 +912,7 @@ class Database:
         # Pass 2: Assign dependencies once all specs are created.
         for hash_key in data:
             try:
+                self._assign_build_spec(spec_reader, hash_key, installs, data)
                 self._assign_dependencies(spec_reader, hash_key, installs, data)
             except MissingDependenciesError:
                 raise
@@ -940,8 +988,10 @@ class Database:
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if self._index_path.is_file():
-                    self._read_from_file(self._index_path, reindex=True)
+                with self._index_path.open("r", encoding="utf-8") as f:
+                    self._read_from_stream(f, reindex=True)
+            except FileNotFoundError:
+                pass
             except (CorruptDatabaseError, DatabaseNotReadableError):
                 self._data = {}
                 self._installed_prefixes = set()
@@ -1125,24 +1175,28 @@ class Database:
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if self._index_path.is_file():
+        try:
+            index_file = self._index_path.open("r", encoding="utf-8")
+        except FileNotFoundError:
+            if self.is_upstream:
+                tty.warn(f"upstream not found: {self._index_path}")
+            return
+
+        with index_file as f:
             current_verifier = ""
             if _use_uuid:
                 try:
-                    with self._verifier_path.open("r", encoding="utf-8") as f:
-                        current_verifier = f.read()
+                    with self._verifier_path.open("r", encoding="utf-8") as vf:
+                        current_verifier = vf.read()
                 except BaseException:
                     pass
             if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
             elif self._state_is_inconsistent:
-                self._read_from_file(self._index_path)
+                self._read_from_stream(f)
                 self._state_is_inconsistent = False
-            return
-        elif self.is_upstream:
-            tty.warn(f"upstream not found: {self._index_path}")
 
     def _add(
         self,
@@ -1190,6 +1244,9 @@ class Database:
                 # allow missing build / test only deps
                 allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
+
+        if spec.spliced:
+            self._add(spec.build_spec, explicit=False, allow_missing=True)
 
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and self.layout:

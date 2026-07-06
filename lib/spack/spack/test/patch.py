@@ -21,10 +21,10 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import Executable
+from spack.util.filesystem import mkdirp, touch, working_dir
 
 # various sha256 sums (using variables for legibility)
 # many file based shas will differ between Windows and other platforms
@@ -172,6 +172,33 @@ def test_patch_in_spec(mock_packages, config):
     assert (foo_sha256, bar_sha256, baz_sha256) == tuple(
         spec.variants["patches"]._patches_in_order_of_appearance
     )
+
+
+def test_stale_patch_cache_falls_back_to_fresh(mock_packages, config):
+    """spec.patches returns correct patches even when the stale in-memory cache is wrong."""
+    spec = spack.concretize.concretize_one("patch@=1.0")
+    pkg_cls = spack.repo.PATH.get_pkg_class("patch")
+
+    # Inject a stale PatchCache: foo_sha256 points to a non-existent patch file
+    stale_cache = spack.patch.PatchCache(repository=spack.repo.PATH)
+    stale_cache.index = {
+        foo_sha256: {
+            pkg_cls.fullname: {
+                "owner": pkg_cls.fullname,
+                "relative_path": "stale_wrong.patch",
+                "level": 1,
+                "working_dir": ".",
+                "reverse": False,
+            }
+        }
+    }
+    spack.repo.PATH._patch_index = stale_cache
+    spack.repo.PATH._index_is_fresh = False
+
+    patches = spec.patches
+
+    assert len(patches) == 2
+    assert {p.relative_path for p in patches} == {"foo.patch", "baz.patch"}
 
 
 def test_patch_mixed_versions_subset_constraint(mock_packages, config):
@@ -365,7 +392,11 @@ def test_conditional_patched_dependencies(mock_packages, config):
 
 
 def check_multi_dependency_patch_specs(
-    libelf, libdwarf, fake, owner, package_dir  # specs
+    libelf,
+    libdwarf,
+    fake,
+    owner,
+    package_dir,  # specs
 ):  # parent spec properties
     """Validate patches on dependencies of patch-several-dependencies."""
     # basic patch on libelf

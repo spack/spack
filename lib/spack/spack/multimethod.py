@@ -23,9 +23,10 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
+
 import functools
 from contextlib import contextmanager
-from typing import Union
+from typing import Optional, Union
 
 import spack.directives_meta
 import spack.error
@@ -237,6 +238,8 @@ class when:
     override all of the decorated versions. This is a limitation of the Python language.
     """
 
+    spec: Optional[spack.spec.Spec]
+
     def __init__(self, condition: Union[str, bool]):
         """Can be used both as a decorator, for multimethods, or as a context
         manager to group ``when=`` arguments together.
@@ -245,31 +248,33 @@ class when:
         Args:
             condition (str): condition to be met
         """
-        if isinstance(condition, bool):
-            self.spec = spack.spec.Spec() if condition else None
-        else:
-            self.spec = spack.spec.Spec(condition)
+        self.when = condition
 
     def __call__(self, method):
-        assert (
-            MultiMethodMeta._locals is not None
-        ), "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        assert MultiMethodMeta._locals is not None, (
+            "cannot use multimethod, missing MultiMethodMeta metaclass?"
+        )
 
         # Create a multimethod with this name if there is not one already
         original_method = MultiMethodMeta._locals.get(method.__name__)
         if not isinstance(original_method, SpecMultiMethod):
             original_method = SpecMultiMethod(original_method)
 
-        if self.spec is not None:
-            original_method.register(self.spec, method)
+        if self.when is True:
+            original_method.register(spack.spec.EMPTY_SPEC, method)
+        elif self.when is not False:
+            original_method.register(spack.directives_meta.get_spec(self.when), method)
 
         return original_method
 
     def __enter__(self):
-        spack.directives_meta.DirectiveMeta.push_to_context(str(self.spec))
+        # TODO: support when=False.
+        if isinstance(self.when, str):
+            spack.directives_meta.DirectiveMeta.push_when_constraint(self.when)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        spack.directives_meta.DirectiveMeta.pop_from_context()
+        if isinstance(self.when, str):
+            spack.directives_meta.DirectiveMeta.pop_when_constraint()
 
 
 @contextmanager

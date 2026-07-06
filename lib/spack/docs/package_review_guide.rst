@@ -129,7 +129,7 @@ This commonly happens with Python packages.
 For example, the case of one or more letters in the package name may change at some point (e.g., `py-sphinx <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_sphinx/package.py>`_).
 Also, dashes may be replaced with underscores (e.g., `py-scikit-build <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py_scikit_build/package.py>`_).
 In some cases, both changes can occur for the same package.
-As these examples illlustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
+As these examples illustrate, it is sometimes possible to add a ``url_for_version`` method to override the default derived URL to ensure the correct one is returned.
 
 If older versions are no longer available and there is a chance someone has the package in a build cache, the usual approach is to first suggest :ref:`deprecating <deprecate>` them in the package.
 
@@ -300,7 +300,7 @@ They only need to be checked in a review when versions are being added or remove
 Dependencies affected by such changes should be confirmed, when possible, and *at least* when the Contributor is not a Maintainer of the package.
 
 **Solutions.**
-In some cases, the needed change may be as simple as ensuring the version range and or variant options in the dependency are accurate.
+In some cases, the needed change may be as simple as ensuring the version ranges (see :ref:`version_compatibility`) and/or variant options in the dependency are accurate.
 In others, one or more of the dependencies needed by new versions are missing and need to be added.
 Or there may be dependencies that are no longer relevant when versions requiring them are removed, meaning the dependencies should be removed as well.
 

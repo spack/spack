@@ -14,7 +14,7 @@ import spack.paths
 import spack.repo
 import spack.util.executable
 import spack.util.file_cache
-from spack.llnl.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import mkdirp, working_dir
 
 pkg = spack.main.SpackCommand("pkg")
 

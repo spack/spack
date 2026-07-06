@@ -6,12 +6,19 @@ import re
 
 import pytest
 
+import spack.cmd
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
+
+buildcache = SpackCommand("buildcache")
+install = SpackCommand("install")
+mirror = SpackCommand("mirror")
+uninstall = SpackCommand("uninstall")
 
 # Unit tests should not be affected by the user's managed environments
 pytestmark = pytest.mark.usefixtures(
@@ -32,7 +39,7 @@ def test_spec():
     assert "mpich@3.0.4" in output
 
 
-def test_spec_concretizer_args(mutable_database, do_not_check_runtimes_on_reuse):
+def test_spec_concretizer_args(mutable_database):
     """End-to-end test of CLI concretizer prefs.
 
     It's here to make sure that everything works from CLI
@@ -100,6 +107,7 @@ def test_spec_json():
 
 def test_spec_format(mutable_database):
     output = spec("--format", "{name}-{^mpi.name}", "mpileaks^mpich")
+    print(output)
     assert output.rstrip("\n") == "mpileaks-mpich"
 
 
@@ -140,7 +148,7 @@ def test_spec_deptypes_edges():
 def test_spec_returncode():
     with pytest.raises(SpackCommandError):
         spec()
-    assert spec.returncode == 1
+    assert spec.returncode == 2
 
 
 def test_spec_parse_error():
@@ -171,7 +179,7 @@ def test_env_aware_spec(mutable_mock_env_path):
     [
         ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=develop", None),
         ("develop-branch-version", "git." + "a" * 40 + "=develop", None),
-        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", spack.error.FetchError),
+        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", spack.error.PackageError),
         ("develop-branch-version", "git.foo=0.2.15", None),
     ],
 )
@@ -199,7 +207,7 @@ def test_spec_version_assigned_git_ref_as_version(name, version, error):
         (False, ["mpileaks_mpich", "dyninst"], "mpich", None),
         (False, ["mpileaks_zmpi", "dyninst"], "zmpi", None),
         # cases with unfiy:false
-        (True, ["mpileaks_mpich", "mpileaks_zmpi"], "callpath, mpileaks", spack.error.SpecError),
+        (True, ["mpileaks_mpich", "mpileaks_zmpi"], "mpileaks.*, mpileaks", spack.error.SpecError),
         (False, ["mpileaks_mpich", "mpileaks_zmpi"], "zmpi", None),
     ],
 )
@@ -223,3 +231,24 @@ def test_spec_unification_from_cli(
     else:
         output = spec(*hashes)
         assert match in output
+
+
+def test_buildcache_status_fn_marks_absent_spec(install_mockery, mock_packages):
+    """Tests the basic semantics of build_cache_status_fn."""
+    s = spack.concretize.concretize_one("mpileaks")
+    assert s.install_status() == spack.spec.InstallStatus.absent
+
+    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
+    assert status_fn(s) == spack.spec.InstallStatus.buildcache
+
+    status_fn = spack.cmd.buildcache_status_fn(set())
+    assert status_fn(s) == spack.spec.InstallStatus.absent
+
+
+def test_buildcache_status_fn_installed_not_overridden(mutable_database):
+    """Tests that an installed spec stays installed even if its hash is in the cache."""
+    s = spack.store.STORE.db.query_one("mpileaks^mpich")
+    assert s.install_status() == spack.spec.InstallStatus.installed
+
+    status_fn = spack.cmd.buildcache_status_fn({s.dag_hash()})
+    assert status_fn(s) == spack.spec.InstallStatus.installed

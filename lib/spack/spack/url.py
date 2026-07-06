@@ -28,6 +28,7 @@ This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
 it's never been told about that version before.
 """
+
 import io
 import os
 import pathlib
@@ -35,11 +36,11 @@ import re
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import spack.error
-import spack.llnl.url
+import spack.util.url
 import spack.util.web
 import spack.version
-from spack.llnl.path import convert_to_posix_path
 from spack.llnl.util.tty.color import cescape, colorize
+from spack.util.path import convert_to_posix_path
 
 #
 # Note: We call the input to most of these functions a "path" but the functions
@@ -143,13 +144,13 @@ def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = spack.llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
 
     # Try to strip off anything after the version number
-    stem = spack.llnl.url.strip_version_suffixes(original_stem)
+    stem = spack.util.url.strip_version_suffixes(original_stem)
 
     # Assumptions:
     #
@@ -169,7 +170,7 @@ def parse_version_offset(path: str) -> Tuple[str, int, int, int, str]:
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the version of the package. Thefore, hyperspecific regexes should
+    # the version of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
@@ -341,7 +342,7 @@ def parse_name_offset(
     # path:   The prefix of the URL, everything before the ext and suffix
     # ext:    The file extension
     # suffix: Any kind of query string that begins with a '?'
-    path, ext, suffix = spack.llnl.url.split_url_extension(path)
+    path, ext, suffix = spack.util.url.split_url_extension(path)
 
     # stem:   Everything from path after the final '/'
     original_stem = os.path.basename(path)
@@ -357,7 +358,7 @@ def parse_name_offset(
     # ]
     #
     # The first regex that matches string will be used to determine
-    # the name of the package. Thefore, hyperspecific regexes should
+    # the name of the package. Therefore, hyperspecific regexes should
     # come first while generic, catch-all regexes should come last.
     # With that said, regular expressions are slow, so if possible, put
     # ones that only catch one or two URLs at the bottom.
@@ -531,7 +532,7 @@ def substitute_version(path: str, new_version) -> str:
 
        >>> substitute_version("https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz", "2.3")
        "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
-    """
+    """  # noqa: E501
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
 
     new_path = ""
@@ -645,7 +646,7 @@ def find_versions_of_archive(
     if list_url is not None:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls |= spack.llnl.url.find_list_urls(aurl)
+        list_urls |= spack.util.url.find_list_urls(aurl)
 
     # Add '/' to the end of the URL. Some web servers require this.
     additional_list_urls = set()

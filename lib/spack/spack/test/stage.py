@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test that the Stage class works correctly."""
+
 import collections
 import errno
 import getpass
@@ -19,12 +20,11 @@ import spack.error
 import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
-import spack.util.path
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.config import canonicalize_path
 from spack.resource import Resource
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
-from spack.util.path import canonicalize_path
+from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -713,7 +713,7 @@ class TestStage:
         assert spack.stage._resolve_paths([]) == []
 
         user = "testuser"
-        monkeypatch.setattr(spack.util.path, "get_user", lambda: user)
+        monkeypatch.setattr(spack.config, "get_user", lambda: user)
 
         # Test that user is appended to path if not present (except on Windows)
         if sys.platform == "win32":
@@ -865,6 +865,21 @@ class TestDevelopStage:
 
         stage.destroy()
         assert not os.path.exists(stage.reference_link)
+        # Make sure destroying the stage doesn't change anything
+        # about the path
+        assert not os.path.exists(stage.path)
+        srctree2 = _create_tree_from_dir_recursive(srcdir)
+        assert srctree2 == devtree
+
+    def test_develop_stage_without_reference_link(self, develop_path, tmp_build_stage_dir):
+        """Check that develop stages can be created without creating a reference link"""
+        devtree, srcdir = develop_path
+        stage = DevelopStage("test-stage", srcdir, reference_link=None)
+        stage.create()
+        srctree1 = _create_tree_from_dir_recursive(stage.source_path)
+        assert srctree1 == devtree
+
+        stage.destroy()
         # Make sure destroying the stage doesn't change anything
         # about the path
         assert not os.path.exists(stage.path)

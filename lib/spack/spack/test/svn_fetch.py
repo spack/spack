@@ -10,9 +10,9 @@ import pytest
 import spack.concretize
 import spack.config
 from spack.fetch_strategy import SvnFetchStrategy
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
 
 pytestmark = [

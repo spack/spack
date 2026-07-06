@@ -13,9 +13,9 @@ import spack.ci as ci
 import spack.concretize
 import spack.environment as ev
 import spack.error
-import spack.llnl.util.filesystem as fs
 import spack.paths
 import spack.repo as repo
+import spack.util.filesystem as fs
 import spack.util.git
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder

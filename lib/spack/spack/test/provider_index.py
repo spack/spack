@@ -17,6 +17,7 @@ Tests assume that mock packages provide this::
                     mpi@:10.0: set([zmpi])},
     'stuff': {stuff: set([externalvirtual])}}
 """
+
 import io
 
 import spack.repo
@@ -72,3 +73,15 @@ def test_copy(mock_packages):
     p = ProviderIndex(specs=spack.repo.all_package_names(), repository=spack.repo.PATH)
     q = p.copy()
     assert p == q
+
+
+def test_remove_providers(mock_packages):
+    """Test removing providers from the index."""
+    p = ProviderIndex(specs=["mpich"], repository=spack.repo.PATH)
+    # Check that mpich is a provider for mpi
+    providers = p.providers_for("mpi")
+    assert any(spec.name == "mpich" for spec in providers)
+    p.remove_providers({"mpich"})
+    # After removal, mpich should no longer be a provider for mpi
+    providers = p.providers_for("mpi")
+    assert not any(spec.name == "mpich" for spec in providers)
