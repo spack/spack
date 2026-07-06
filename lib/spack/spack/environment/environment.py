@@ -2951,14 +2951,14 @@ def display_specs(
         highlight_non_defaults: if True, highlights non-default versions and variants in the specs
             being displayed
         status_fn: callable mapping a spec to its InstallStatus; defaults to
-            ``spack.spec.Spec.install_status``
+            ``spack.store.STORE.db.install_status``
     """
     tree_string = spack.spec.tree(
         specs,
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=status_fn if status_fn is not None else spack.spec.Spec.install_status,
+        status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
         highlight_version_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),

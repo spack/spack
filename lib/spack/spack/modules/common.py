@@ -354,7 +354,13 @@ class BaseConfiguration:
         """
         if cache is None:
             cache = {}
-        explicit = bool(spec._installed_explicitly()) if explicit is None else explicit
+
+        if explicit is None:
+            try:
+                explicit = bool(spack.store.STORE.db.get_record(spec).explicit)
+            except KeyError:
+                explicit = False
+
         key = (spec.dag_hash(), module_set_name, explicit)
         configuration = cache.get(key)
         if configuration is None:

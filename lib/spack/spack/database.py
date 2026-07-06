@@ -1349,6 +1349,24 @@ class Database:
         upstream, record = self.query_by_spec_hash(spec.dag_hash())
         return bool(upstream and record and record.installed)
 
+    def install_status(self, spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        """Return the installation status of a spec (helper for tree display)."""
+        if not spec.concrete:
+            return spack.spec.InstallStatus.absent
+
+        if spec.external:
+            return spack.spec.InstallStatus.external
+
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        if not record:
+            return spack.spec.InstallStatus.absent
+        elif upstream and record.installed:
+            return spack.spec.InstallStatus.upstream
+        elif record.installed:
+            return spack.spec.InstallStatus.installed
+        else:
+            return spack.spec.InstallStatus.missing
+
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
 

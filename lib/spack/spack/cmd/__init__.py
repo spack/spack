@@ -366,7 +366,7 @@ def buildcache_status_fn(
     """
 
     def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
-        status = spec.install_status()
+        status = spack.store.STORE.db.install_status(spec)
         if (
             status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
             and spec.dag_hash() in available_hashes
