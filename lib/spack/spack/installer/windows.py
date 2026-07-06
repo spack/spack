@@ -15,14 +15,16 @@ import functools
 import io
 import msvcrt
 import os
+import re
 import selectors
 import shutil
 import socket
 import threading
 import time
+import warnings
 from ctypes import wintypes
 from multiprocessing import Process
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple
 
 from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
@@ -30,10 +32,15 @@ from spack.installer.base import (
     STDIN_EVENT,
     BaseTerminalState,
     BuildChannels,
+    JobServerBase,
     ProcessExitNotifier,
     StdinReader,
     Tee,
 )
+
+if TYPE_CHECKING:
+    import spack.spec
+    from spack.installer.base import BuildStatus
 
 # Windows console mode flags
 ENABLE_LINE_INPUT = 0x0002
@@ -44,6 +51,42 @@ ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
 WIN_STD_INPUT_HANDLE = -10
 WIN_STD_OUTPUT_HANDLE = -11
 WIN_STD_ERROR_HANDLE = -12
+
+# Semaphore / synchronization constants
+SYNCHRONIZE = 0x00100000
+SEMAPHORE_MODIFY_STATE = 0x00000002
+WAIT_OBJECT_0 = 0
+SEMAPHORE_MAX_COUNT = 65536
+
+# Module-level kernel32 handle with fully typed Win32 API signatures.
+_k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+
+_k32.GetStdHandle.restype = wintypes.HANDLE
+_k32.GetStdHandle.argtypes = [wintypes.DWORD]
+
+_k32.GetConsoleMode.restype = wintypes.BOOL
+_k32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+
+_k32.SetConsoleMode.restype = wintypes.BOOL
+_k32.SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+
+_k32.SetStdHandle.restype = wintypes.BOOL
+_k32.SetStdHandle.argtypes = [wintypes.DWORD, wintypes.HANDLE]
+
+_k32.OpenSemaphoreW.restype = wintypes.HANDLE
+_k32.OpenSemaphoreW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
+
+_k32.CreateSemaphoreW.restype = wintypes.HANDLE
+_k32.CreateSemaphoreW.argtypes = [ctypes.c_void_p, wintypes.LONG, wintypes.LONG, wintypes.LPCWSTR]
+
+_k32.WaitForSingleObject.restype = wintypes.DWORD
+_k32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+
+_k32.ReleaseSemaphore.restype = wintypes.BOOL
+_k32.ReleaseSemaphore.argtypes = [wintypes.HANDLE, wintypes.LONG, ctypes.c_void_p]
+
+_k32.CloseHandle.restype = wintypes.BOOL
+_k32.CloseHandle.argtypes = [wintypes.HANDLE]
 
 
 def _handle_is_console(handle_id: int) -> bool:
@@ -86,8 +129,8 @@ class WindowsTerminalState(BaseTerminalState):
         self.hStdout = self.kernel32.GetStdHandle(WIN_STD_OUTPUT_HANDLE)
         self.old_stdin_settings = wintypes.DWORD()
         self.old_stdout_settings = wintypes.DWORD()
-        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
-        self.kernel32.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
+        _k32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        _k32.GetConsoleMode(self.hStdout, ctypes.byref(self.old_stdout_settings))
 
         self.stdin_r, self.stdin_w = socket.socketpair()
         self.stdin_r.setblocking(False)
@@ -98,7 +141,7 @@ class WindowsTerminalState(BaseTerminalState):
     def setup(self) -> None:
         # Enable VT100 ANSI escapes on stdout
         new_out_mode = self.old_stdout_settings.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
-        self.kernel32.SetConsoleMode(self.hStdout, new_out_mode)
+        _k32.SetConsoleMode(self.hStdout, new_out_mode)
 
         self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
         self._set_headless(True)
@@ -111,7 +154,7 @@ class WindowsTerminalState(BaseTerminalState):
 
     def teardown_input(self) -> None:
         self._running = False
-        self.kernel32.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
+        _k32.SetConsoleMode(self.hStdin, self.old_stdin_settings.value)
 
         for sock in (self.stdin_r, self.sigwinch_r, self.stdin_w, self.sigwinch_w):
             try:
@@ -121,17 +164,17 @@ class WindowsTerminalState(BaseTerminalState):
             sock.close()
 
     def teardown_output(self) -> None:
-        self.kernel32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
+        _k32.SetConsoleMode(self.hStdout, self.old_stdout_settings.value)
 
     def enter_foreground(self) -> None:
         if not self.headless:
             return
 
-        self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
+        _k32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
 
         disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
         new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS
-        self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
+        _k32.SetConsoleMode(self.hStdin, new_in_mode)
 
         if self.stdin_is_interactive() and self.stdin_r.fileno() not in self.selector.get_map():
             self.selector.register(self.stdin_r, selectors.EVENT_READ, STDIN_EVENT)
@@ -260,6 +303,170 @@ class WindowsTee(Tee):
         kernel32 = ctypes.windll.kernel32
         kernel32.SetStdHandle(WIN_STD_OUTPUT_HANDLE, self._saved_win32_stdout)
         kernel32.SetStdHandle(WIN_STD_ERROR_HANDLE, self._saved_win32_stderr)
+
+
+SYNCHRONIZE = 0x00100000
+SEMAPHORE_MODIFY_STATE = 0x00000002
+WAIT_OBJECT_0 = 0
+SEMAPHORE_MAX_COUNT = 65536
+
+
+def get_jobserver_semaphore_name(makeflags: Optional[str] = None) -> Optional[str]:
+    """Parse MAKEFLAGS for a Windows named-semaphore jobserver name.
+    Returns None for FIFO (fifo:path) or pipe (r,w) formats."""
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
+    if not makeflags:
+        return None
+    for match in reversed(re.findall(r"(?:^| )--jobserver-auth=([^ ]+)", makeflags)):
+        if not match.startswith("fifo:") and "," not in match:
+            return match
+    return None
+
+
+class WindowsJobServer(JobServerBase):
+    """Win32 named-semaphore jobserver: attaches to a parent semaphore named in MAKEFLAGS,
+    or creates one for child processes to inherit via their environment."""
+
+    def __init__(self, num_jobs: int) -> None:
+        super().__init__(num_jobs)
+        self.tokens_acquired = 0
+        self._created = False
+        self.semaphore_name: str = ""
+        self.semaphore: int = 0
+        self.wake_r, self.wake_w = socket.socketpair()
+        self.wake_r.setblocking(False)
+        self._stop_event = threading.Event()
+        self._watcher_lock = threading.Lock()
+        self._watcher_active = False
+        self._watcher_generation = 0
+        self._watcher_thread: Optional[threading.Thread] = None
+        self._setup()
+
+    def _setup(self) -> None:
+        existing = get_jobserver_semaphore_name()
+        if existing:
+            h = _k32.OpenSemaphoreW(SYNCHRONIZE | SEMAPHORE_MODIFY_STATE, False, existing)
+            if h:
+                self.semaphore, self.semaphore_name = h, existing
+                return
+            warnings.warn(
+                f"Could not open parent jobserver semaphore {existing!r}: {ctypes.WinError()!s}; "
+                "creating a new semaphore instead",
+                stacklevel=3,
+            )
+        name = f"spack-jobserver-{os.getpid()}"
+        h = _k32.CreateSemaphoreW(None, max(0, self.num_jobs - 1), SEMAPHORE_MAX_COUNT, name)
+        if not h:
+            raise OSError(ctypes.WinError())
+        self.semaphore, self.semaphore_name, self._created = h, name, True
+
+    def makeflags_and_data(self, gmake: "Optional[spack.spec.Spec]") -> Tuple[Optional[str], Any]:
+        return (f" -j{self.num_jobs} --jobserver-auth={self.semaphore_name}", None)
+
+    def acquire(self, jobs: int) -> int:
+        # WaitForSingleObject takes exactly one token at a time; `jobs` is advisory only.
+        if _k32.WaitForSingleObject(self.semaphore, 0) == WAIT_OBJECT_0:
+            self.tokens_acquired += 1
+            return 1
+        return 0
+
+    def release(self) -> None:
+        if self.tokens_acquired == 0:
+            return
+        self.tokens_acquired -= 1
+        if self.target_jobs < self.num_jobs:
+            self.num_jobs -= 1
+        else:
+            _k32.ReleaseSemaphore(self.semaphore, 1, None)
+
+    def _maybe_discard_tokens(self) -> None:
+        to_discard = self.num_jobs - self.target_jobs
+        while to_discard > 0:
+            if _k32.WaitForSingleObject(self.semaphore, 0) != WAIT_OBJECT_0:
+                break
+            self.num_jobs -= 1
+            to_discard -= 1
+
+    def increase_parallelism(self) -> None:
+        if not self._created:
+            return
+        self.target_jobs += 1
+        if self.target_jobs > self.num_jobs:
+            _k32.ReleaseSemaphore(self.semaphore, 1, None)
+            self.num_jobs += 1
+
+    def decrease_parallelism(self) -> None:
+        if not self._created or self.target_jobs <= 1:
+            return
+        self.target_jobs -= 1
+        self._maybe_discard_tokens()
+
+    def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
+        if wake:
+            try:
+                self.wake_r.recv(64)
+            except OSError:
+                pass
+            with self._watcher_lock:
+                # Also spawn when the stop event is set: the old thread is winding down and
+                # will exit without clearing _watcher_active for the new generation.
+                if not self._watcher_active or self._stop_event.is_set():
+                    self._watcher_generation += 1
+                    gen = self._watcher_generation
+                    self._watcher_active = True
+                    self._stop_event.clear()
+                    t = threading.Thread(target=self._wake_watcher, args=(gen,), daemon=True)
+                    self._watcher_thread = t
+                    t.start()
+            if self.wake_r not in selector.get_map():
+                selector.register(self.wake_r, selectors.EVENT_READ, "jobserver")
+        else:
+            self._stop_event.set()
+            try:
+                selector.unregister(self.wake_r)
+            except KeyError:
+                pass
+
+    def _wake_watcher(self, gen: int) -> None:
+        while not self._stop_event.is_set():
+            if _k32.WaitForSingleObject(self.semaphore, 200) == WAIT_OBJECT_0:
+                _k32.ReleaseSemaphore(self.semaphore, 1, None)
+                try:
+                    self.wake_w.sendall(b"j")
+                except OSError:
+                    pass
+                break
+        with self._watcher_lock:
+            if self._watcher_generation == gen:
+                self._watcher_active = False
+
+    def close(self) -> None:
+        self._stop_event.set()
+        self.wake_r.close()
+        self.wake_w.close()
+        with self._watcher_lock:
+            thread = self._watcher_thread
+        if thread is not None:
+            thread.join(timeout=0.5)
+        if self._created:
+            total = self.num_jobs - 1
+            if self.tokens_acquired != 0:
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
+            elif total > 0:
+                drained = sum(
+                    1
+                    for _ in range(total)
+                    if _k32.WaitForSingleObject(self.semaphore, 0) == WAIT_OBJECT_0
+                )
+                if drained != total:
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver tokens were not released by the build processes. "
+                        "This can indicate that the build ran with limited parallelism.",
+                        stacklevel=2,
+                    )
+        if self.semaphore:
+            _k32.CloseHandle(self.semaphore)
 
 
 def make_state_stream(state: socket.socket) -> io.TextIOWrapper:

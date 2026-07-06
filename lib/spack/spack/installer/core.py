@@ -51,7 +51,7 @@ from spack.installer.schedule import (
 from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
 
 if sys.platform == "win32":
-    from spack.installer.base import NoopJobServer as JobServer
+    from spack.installer.windows import WindowsJobServer as JobServer
     from spack.installer.windows import WindowsTerminalState as TerminalState
     from spack.installer.windows import read_connection, write_connection
 else:
