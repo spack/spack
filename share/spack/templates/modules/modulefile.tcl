@@ -25,6 +25,55 @@ proc ModulesHelp { } {
 }
 {% endblock %}
 
+{% block variants %}
+{% if variants|length > 0 %}
+proc variant_set_spec {name is_bool} {
+    set value [getvariant --return-value $name __undef__]
+    if {$value eq {__undef__} || [module-info mode scan]} {
+       return
+    }
+    if {!$is_bool} {
+        lappend ::variant_spec_list $name=$value
+    } elseif {$value} {
+        lappend ::variant_spec_list +$name
+    } else {
+        lappend ::variant_spec_list ~$name
+    }
+}
+
+{# Define variants and their values instanciated in actual installations #}
+{# Build along the definition the variant set specified when loading module #}
+set variant_spec_list [list]
+{% for name, v in variants.items() %}
+{% if v['type'] == 'bool' %}
+variant --boolean --default {{ v['value'] }} {{ name }}
+variant_set_spec {{ name }} 1
+{% else %}
+variant --default {{ v['value'] }} {{ name }} {{ v['value'] }}
+variant_set_spec {{ name }} 0
+{% endif %}
+{% endfor %}
+
+array set avail_installation [list\
+    {{ '{' }}{{ variants_spec }}{{ '}' }} {{ hash }}\
+]
+
+proc select_installation {spec} {
+    if {[info exists ::avail_installation($spec)]} {
+        return $::avail_installation($spec)
+    }
+    # raise error if selected set does not correspond to an installed package
+    set err_msg "Specified package is not installed, available packages for this version are:\n"
+    foreach avail_spec [array names ::avail_installation] {
+        append err_msg "* \"$avail_spec\"\n"
+    }
+    reportError $err_msg
+    break
+}
+
+set selected_installation [select_installation [join $variant_spec_list]]
+{% endif %}
+{% endblock %}
 {% block provides %}
 {# Prepend the path I unlock as a provider of #}
 {# services and set the families of services I provide #}
