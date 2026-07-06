@@ -203,7 +203,7 @@ Other Modules
 :mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:

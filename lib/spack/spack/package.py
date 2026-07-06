@@ -158,9 +158,6 @@ pwd = getcwd
 #: Alias for :func:`os.rename`
 rename = rename
 
-#: Alias for :func:`os.rename` (with certain Windows-specific changes)
-rename = rename
-
 #: Alias for :func:`os.makedirs`
 makedirs = makedirs
 
