@@ -4,9 +4,36 @@
 
 """Windows Access Control List (ACL) utilities.
 
+On Windows, file permissions are represented as a list of Access Control Entries (ACEs).
+Each entry expresses something like "User 1 can read this file".  This module provides
+the building blocks to inspect and modify those permissions.
 
-Provides utilities to define, add, remove, or otherwise inspect
-or manipulate Windows ACLs
+Public API:
+
+- :class:`SecurityDescriptor` -- mutable security descriptor; supports reading from/writing
+  to files (:meth:`~SecurityDescriptor.from_file`, :meth:`~SecurityDescriptor.apply`),
+  adding/removing/modifying ACEs, and querying ownership.
+- :class:`AccessControlEntry` -- a single ACE; built with the semantic enum types below and
+  passed to :meth:`SecurityDescriptor.add_ace`.
+- :func:`get_file_owner` -- return the account name of the owner of a file.
+- :func:`copy_file_permissions` -- copy the DACL from one file to another.
+- :func:`get_file_sddl` / :func:`set_file_sddl` -- low-level SDDL string read/write;
+  intended primarily (but not exclusively) for testing and debugging rather than general use.
+
+Terminology:
+
+- **ACE** (Access Control Entry): a single permission entry describing a principal and
+  what they may do, e.g. "User 1 can read and write".
+- **DACL** (Discretionary Access Control List): the ordered list of ACEs that governs
+  file access.  Owner, group, and DACL together form a *Security Descriptor*.
+- **Owner**: the principal who owns the file; the owner always has the right to change
+  the DACL regardless of what the DACL itself says.
+- **SDDL** (Security Descriptor Definition Language): the text format used by Windows to
+  represent security descriptors, e.g. ``O:BAG:SYD:(A;;GR;;;WD)``.
+- **SACL** (System Access Control List): like the DACL but controls auditing (e.g. "log
+  when User 1 reads this file") rather than access.  Reading or writing the SACL requires
+  ``SE_SECURITY_PRIVILEGE``, which standard user processes do not hold; Spack never
+  modifies the SACL.
 """
 
 import copy
@@ -221,6 +248,17 @@ class AccessControlEntry:
     Produces the standard SDDL ACE string format::
 
         (ace_type;ace_flags;rights;object_guid;inherit_object_guid;account_sid)
+
+    The three most important fields are:
+
+    - **sid**: the account this ACE applies to, as an SDDL SID string (e.g. ``"WD"`` for
+      Everyone, ``"BA"`` for Builtin Administrators, or ``"S-1-5-21-..."`` for a domain
+      account).  Use :meth:`SecurityDescriptor.get_sid_for_user` to resolve a username.
+    - **rights**: a bitmask of access rights, built from :class:`FileAccessRights`,
+      :class:`GenericAccessRights`, or other ``AccessRightsEnum`` subclasses.  Multiple
+      rights are OR-ed together (or accumulated with :meth:`add_right`).
+    - **flags**: zero or more :class:`AceFlags` controlling inheritance behaviour (e.g.
+      whether child objects inherit this ACE).  Most file ACEs leave this empty.
 
     Build an ACE using the semantic enum types, then pass it to
     :meth:`SecurityDescriptor.add_ace`::
@@ -602,7 +640,12 @@ class _SddlHelper:
 
 
 def _get_file_sddl_raw(path: str) -> str:
-    """Read the security descriptor of *path* and return it as an SDDL string."""
+    """Read the security descriptor of *path* and return it as an SDDL string.
+
+    Only Owner, Group, and DACL are requested.  The SACL is deliberately omitted:
+    reading it requires ``SE_SECURITY_PRIVILEGE``, which standard user processes do not
+    hold, and Spack never needs to inspect or modify audit entries.
+    """
     if not os.path.exists(path):
         raise FileNotFoundError(f"No such file or directory: '{path}'")
 
@@ -743,7 +786,7 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
+            OSError: raised by ``ctypes.WinError`` on Windows API failure (carries ``winerror``).
         """
         return cls(_get_file_sddl_raw(path))
 
@@ -875,7 +918,8 @@ class SecurityDescriptor:
         """Write this security descriptor to *path*.
 
         Raises:
-            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
+            ValueError: if the descriptor has an explicit but empty DACL (null DACL).
+            OSError: raised by ``ctypes.WinError`` on Windows API failure (carries ``winerror``).
         """
         if self._parsed.get("DACL_PRESENT") and not self._parsed["DACL"]:
             raise ValueError(
@@ -905,7 +949,7 @@ class SecurityDescriptor:
 
         Raises:
             FileNotFoundError: if *path* does not exist.
-            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
+            OSError: raised by ``ctypes.WinError`` on Windows API failure (carries ``winerror``).
         """
         if not os.path.exists(path):
             raise FileNotFoundError(f"No such file or directory: '{path}'")
@@ -971,7 +1015,7 @@ class SecurityDescriptor:
         parsing, making it more efficient than :meth:`apply` for pure-copy operations.
 
         Raises:
-            WindowsError: wraps ``ctypes.WinError`` on Windows API failure.
+            OSError: raised by ``ctypes.WinError`` on Windows API failure (carries ``winerror``).
         """
         SE_FILE_OBJECT = 1
         DACL_SECURITY_INFORMATION = 0x00000004

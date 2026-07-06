@@ -43,21 +43,21 @@ def test_access_control_entry_to_sddl_string():
     assert str(ace_with_flags) == "(A;CI;GR;;;BA)"
 
 
-def test_access_control_entry_add_right_chained():
-    """Successive add_right calls OR masks together; the serialised SDDL reflects the union."""
-    ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
-    ace.add_right(GenericAccessRights.GENERIC_READ)
-    ace.add_right(GenericAccessRights.GENERIC_WRITE)
-    ace.add_right(GenericAccessRights.GENERIC_EXECUTE)
-    assert str(ace) == "(A;;GRGWGX;;;BA)"
+def test_access_control_entry_add_right_accumulates():
+    """Successive add_right calls OR masks together; the serialised SDDL reflects the union.
 
+    Covers both generic rights (GR/GW/GX) and file-specific rights (FR/FW).
+    """
+    ace_generic = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
+    ace_generic.add_right(GenericAccessRights.GENERIC_READ)
+    ace_generic.add_right(GenericAccessRights.GENERIC_WRITE)
+    ace_generic.add_right(GenericAccessRights.GENERIC_EXECUTE)
+    assert str(ace_generic) == "(A;;GRGWGX;;;BA)"
 
-def test_access_control_entry_add_right_file_access_rights():
-    """add_right accumulates file-specific rights into a valid SDDL rights string."""
-    ace = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
-    ace.add_right(FileAccessRights.FILE_GENERIC_READ)
-    ace.add_right(FileAccessRights.FILE_GENERIC_WRITE)
-    assert str(ace) == "(A;;FRFW;;;BA)"
+    ace_file = AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, sid="BA")
+    ace_file.add_right(FileAccessRights.FILE_GENERIC_READ)
+    ace_file.add_right(FileAccessRights.FILE_GENERIC_WRITE)
+    assert str(ace_file) == "(A;;FRFW;;;BA)"
 
 
 def test_security_descriptor_sacl_property(tmp_path):
@@ -91,9 +91,9 @@ def test_get_file_sddl_returns_string(tmp_path):
     assert "D:" in sddl  # must contain a DACL
 
 
-def test_get_file_sddl_missing_path():
+def test_get_file_sddl_missing_path(tmp_path):
     with pytest.raises(FileNotFoundError):
-        get_file_sddl("C:/nonexistent_spack_acl_test_path_12345")
+        get_file_sddl(str(tmp_path / "nonexistent.txt"))
 
 
 def test_security_descriptor_add_remove_ace():
@@ -139,6 +139,17 @@ def test_parse_sddl_roundtrip():
     assert sd.owner == "BA"
     assert sd.group == "SY"
     assert len(sd.dacl) == 2
+
+    ace0 = sd.dacl[0]
+    assert ace0.ace_type == AceType.SDDL_ACCESS_ALLOWED
+    assert ace0.sid == "BU"
+    assert ace0.rights == GenericAccessRights.GENERIC_READ
+
+    ace1 = sd.dacl[1]
+    assert ace1.ace_type == AceType.SDDL_ACCESS_ALLOWED
+    assert ace1.sid == "BA"
+    assert ace1.rights == GenericAccessRights.GENERIC_WRITE
+
     assert sd.to_sddl() == raw
 
 
@@ -265,9 +276,18 @@ def test_security_descriptor_add_ace_out_of_range_raises():
     with pytest.raises(IndexError):
         sd.add_ace(_ace("SY", GenericAccessRights.GENERIC_ALL), index=-1)
 
-    # index == len(dacl) is equivalent to append; verify the new ACE lands at position 1
+
+def test_security_descriptor_add_ace_at_index_boundary():
+    """index == len(dacl) is a valid append-at-end; the existing ACE must not move."""
+
+    def _ace(sid, rights):
+        return AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED, rights=rights, sid=sid)
+
+    sd = SecurityDescriptor()
+    sd.add_ace(_ace("BA", GenericAccessRights.GENERIC_READ))
+
     sd.add_ace(_ace("SY", GenericAccessRights.GENERIC_ALL), index=len(sd.dacl))
-    assert sd.dacl[0].sid == "BA"  # original ACE unmoved
+    assert sd.dacl[0].sid == "BA"
     assert sd.dacl[1].sid == "SY"
     assert sd.dacl[1].rights == GenericAccessRights.GENERIC_ALL
 
@@ -390,38 +410,99 @@ def test_security_descriptor_apply_null_dacl_is_rejected(tmp_path):
         sd.apply(str(f))
 
 
-def test_set_install_permissions_sets_acl_on_windows(tmp_path):
-    """set_install_permissions writes an explicit DACL granting read to Everyone."""
+def test_set_install_permissions_file_acl(tmp_path):
+    """set_install_permissions sets 644-equivalent permissions on a file.
+
+    The owner receives Allow(read+write); Everyone receives Allow(read).
+    """
     f = tmp_path / "test.txt"
     f.write_text("hello")
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
     fs.set_install_permissions(str(f))
-    sddl = get_file_sddl(str(f))
-    dacl = sddl.split("D:")[1] if "D:" in sddl else sddl
-    assert dacl, "DACL must be non-empty after set_install_permissions"
-    assert "A;;" in dacl and "WD)" in dacl
+
+    sd = SecurityDescriptor.from_file(str(f))
+    _FRFW = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_WRITE)
+    _FR = int(FileAccessRights.FILE_GENERIC_READ)
+
+    assert any(
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FRFW)
+        for a in sd.dacl
+    ), "owner must have Allow ACE granting read+write"
+    assert any(
+        a.sid == "WD" and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FR)
+        for a in sd.dacl
+    ), "Everyone must have Allow ACE granting read"
+
+
+def test_set_install_permissions_directory_acl(tmp_path):
+    """set_install_permissions sets 755-equivalent permissions on a directory.
+
+    The owner receives Allow(full access); Everyone receives Allow(read+execute).
+    """
+    d = tmp_path / "subdir"
+    d.mkdir()
+    owner_sid = SecurityDescriptor.from_file(str(d)).owner
+    fs.set_install_permissions(str(d))
+
+    sd = SecurityDescriptor.from_file(str(d))
+    _FA = int(FileAccessRights.FILE_ALL_ACCESS)
+    _FRFX = int(FileAccessRights.FILE_GENERIC_READ) | int(FileAccessRights.FILE_GENERIC_EXECUTE)
+
+    assert any(
+        a.sid == owner_sid and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FA)
+        for a in sd.dacl
+    ), "owner must have Allow ACE granting full access"
+    assert any(
+        a.sid == "WD" and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FRFX)
+        for a in sd.dacl
+    ), "Everyone must have Allow ACE granting read+execute"
+
+
+def test_set_install_permissions_expands_restricted_dacl(tmp_path):
+    """set_install_permissions adds Everyone-read even when the initial DACL excludes them."""
+    f = tmp_path / "test.txt"
+    f.write_text("hello")
+    owner_sid = SecurityDescriptor.from_file(str(f)).owner
+
+    # Restrict to owner-only (600-equivalent): no Everyone in DACL
+    set_file_sddl(str(f), f"D:P(A;;FRFW;;;{owner_sid})")
+    assert not any(a.sid == "WD" for a in SecurityDescriptor.from_file(str(f)).dacl)
+
+    fs.set_install_permissions(str(f))
+
+    sd = SecurityDescriptor.from_file(str(f))
+    assert any(
+        a.sid == "WD"
+        and a.ace_type == AceType.SDDL_ACCESS_ALLOWED
+        and a.grants(int(FileAccessRights.FILE_GENERIC_READ))
+        for a in sd.dacl
+    ), "Everyone must have read access after set_install_permissions"
 
 
 def test_copy_mode_propagates_execute_on_windows(tmp_path):
-    """copy_mode propagates FILE_EXECUTE from src to dst Allow ACEs on Windows."""
+    """copy_mode ORs FILE_GENERIC_EXECUTE into dst Allow ACEs when src grants execute."""
     src = tmp_path / "src.txt"
     dst = tmp_path / "dst.txt"
     src.write_text("source")
     dst.write_text("dest")
 
-    # Give src an explicit execute ACE for Everyone
-    src_sd = SecurityDescriptor.from_file(str(src))
-    src_sd.add_ace(
-        AccessControlEntry(
-            AceType.SDDL_ACCESS_ALLOWED, rights=FileAccessRights.FILE_GENERIC_EXECUTE, sid="WD"
-        )
-    )
-    src_sd.apply(str(src))
+    _FX = int(FileAccessRights.FILE_GENERIC_EXECUTE)
+
+    # Give src execute-only; give dst read-only.  The P flag blocks inheritance so no
+    # inherited execute-granting ACEs from the parent directory can slip into dst.
+    set_file_sddl(str(src), "D:P(A;;FX;;;WD)")
+    set_file_sddl(str(dst), "D:P(A;;FR;;;WD)")
+
+    # Sanity: dst must not grant execute before copy_mode
+    assert not any(a.grants(_FX) for a in SecurityDescriptor.from_file(str(dst)).dacl)
 
     fs.copy_mode(str(src), str(dst))
 
-    # dst DACL should now contain an Allow ACE granting execute to some principal
-    dst_sddl = SecurityDescriptor.from_file(str(dst)).to_sddl()
-    assert "FX" in dst_sddl or "FA" in dst_sddl
+    dst_dacl = SecurityDescriptor.from_file(str(dst)).dacl
+    assert any(
+        a.sid == "WD" and a.ace_type == AceType.SDDL_ACCESS_ALLOWED and a.grants(_FX)
+        for a in dst_dacl
+    ), "Everyone Allow ACE must include FILE_GENERIC_EXECUTE after copy_mode"
 
 
 def test_copy_mode_only_changes_execute_on_windows(tmp_path):
