@@ -15,6 +15,7 @@ import os
 import pathlib
 import posixpath
 import re
+import secrets
 import shutil
 import stat
 import subprocess
@@ -24,7 +25,10 @@ from contextlib import contextmanager
 from itertools import accumulate
 from typing import (
     IO,
+    Any,
+    BinaryIO,
     Callable,
+    ContextManager,
     Deque,
     Dict,
     Generator,
@@ -34,9 +38,13 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    TextIO,
     Tuple,
     Union,
+    overload,
 )
+
+from spack.vendor.typing_extensions import Literal
 
 from spack.llnl.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 from spack.llnl.util import lang, tty
@@ -1232,16 +1240,45 @@ def hash_directory(directory, ignore=[]):
     return md5_hash.hexdigest()
 
 
+@overload
+def write_tmp_and_move(
+    filename: str, *, mode: Literal["w"] = ..., encoding: Optional[str] = ...
+) -> ContextManager[TextIO]: ...
+
+
+@overload
+def write_tmp_and_move(
+    filename: str, *, mode: Literal["wb"], encoding: None = ...
+) -> ContextManager[BinaryIO]: ...
+
+
 @contextmanager
 @system_path_filter
-def write_tmp_and_move(filename: str, *, encoding: Optional[str] = None):
-    """Write to a temporary file, then move into place."""
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
-    tmp = os.path.join(dirname, ".%s.tmp" % basename)
-    with open(tmp, "w", encoding=encoding) as f:
-        yield f
-    shutil.move(tmp, filename)
+def write_tmp_and_move(
+    filename: str, *, mode: Literal["w", "wb"] = "w", encoding: Optional[str] = None
+) -> Generator[IO[Any], None, None]:
+    """Write to a new temporary file, then atomically move into place. The temporary file is
+    removed on failure. If ``filename`` does not exist, the new file respects umask; if it does
+    exist, permissions of the existing file are preserved."""
+    dirname, basename = os.path.split(filename)
+    tmp = os.path.join(dirname, f".{basename}.{secrets.token_hex(8)}.tmp")
+    # "x" errors on collision instead of clobbering; opened outside the try block so we never
+    # unlink a file created by another process
+    f = open(tmp, mode.replace("w", "x"), encoding=encoding)
+    try:
+        with f:
+            try:
+                os.chmod(tmp, stat.S_IMODE(os.stat(filename).st_mode))
+            except FileNotFoundError:
+                pass
+            yield f
+        rename(tmp, filename)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 @system_path_filter
