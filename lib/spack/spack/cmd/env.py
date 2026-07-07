@@ -24,7 +24,7 @@ import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.environment import depfile
 from spack.traverse import traverse_nodes
-from spack.util import tty
+from spack.util import string, tty
 from spack.util.filesystem import islink, symlink
 from spack.util.tty.colify import colify
 from spack.util.tty.color import cescape, colorize
@@ -596,10 +596,10 @@ def _env_untrack_or_remove(
     # ask the user if they really want to remove the known environments
     # force should do the same as yes to all here following the semantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
-        environments = spack.util.string.plural(
+        environments = string.plural(
             len(env_names_to_remove), "environment", show_n=False
         )
-        envs = spack.util.string.comma_and(list(env_names_to_remove))
+        envs = string.comma_and(list(env_names_to_remove))
         answer = tty.get_yes_or_no(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
