@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import gzip
 import io
 import os
 import pathlib
@@ -13,6 +14,7 @@ import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.paths
+import spack.store
 import spack.util.filesystem as fs
 import spack.util.git
 from spack import ci, repo
@@ -235,14 +237,105 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
 def test_ci_copy_stage_logs_to_artifacts_fail(
     tmp_path: pathlib.Path, default_mock_concretization, capfd
 ):
-    """The copy will fail because the spec is not concrete so does not have
-    a package."""
+    """The copy will warn because the package has no log files to copy."""
     log_dir = tmp_path / "log_dir"
     concrete_spec = default_mock_concretization("printing-package")
     ci.copy_stage_logs_to_artifacts(concrete_spec, str(log_dir))
     _, err = capfd.readouterr()
-    assert "Unable to copy files" in err
-    assert "No such file or directory" in err
+    assert "Package not installed, falling back to use stage dir" in err
+    assert "No build logs or archived files found" in err
+
+
+@pytest.mark.parametrize(
+    "build_logs, copied_logs",
+    [
+        (["spack-build-out.txt.gz"], ["spack-build-out.txt.gz"]),
+        (["spack-build-out.txt"], ["spack-build-out.txt.gz"]),
+        (["spack-build-out.txt.gz", "spack-build-out.txt"], ["spack-build-out.txt.gz"]),
+    ],
+)
+def test_ci_copy_stage_logs_to_artifacts_copies_existing_build_logs(
+    tmp_path: pathlib.Path,
+    default_mock_concretization,
+    monkeypatch,
+    capfd,
+    build_logs,
+    copied_logs,
+):
+    metadata_dir = tmp_path / "metadata"
+    metadata_dir.mkdir()
+    for build_log in build_logs:
+        if build_log.endswith(".gz"):
+            with gzip.open(metadata_dir / build_log, "wt") as f:
+                f.write("build log")
+        else:
+            (metadata_dir / build_log).write_text("build log")
+    (metadata_dir / "spack-build-env.txt").write_text("build env")
+
+    concrete_spec = default_mock_concretization("printing-package")
+    monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
+
+    log_dir = tmp_path / "log_dir"
+    log_dir.mkdir()
+    ci.copy_stage_logs_to_artifacts(concrete_spec, str(log_dir))
+    _, err = capfd.readouterr()
+
+    assert "Unable to copy files" not in err
+    for copied_log in copied_logs:
+        assert copied_log in os.listdir(log_dir)
+    assert "spack-build-env.txt.gz" in os.listdir(log_dir)
+
+
+def test_ci_copy_stage_logs_to_artifacts_attempts_all_existing_candidates(
+    tmp_path: pathlib.Path, default_mock_concretization, monkeypatch, capfd
+):
+    metadata_dir = tmp_path / "metadata"
+    metadata_dir.mkdir()
+    with gzip.open(metadata_dir / "spack-build-out.txt.gz", "wt") as f:
+        f.write("compressed build log")
+    (metadata_dir / "spack-build-out.txt").write_text("plain build log")
+    (metadata_dir / "spack-build-env.txt").write_text("build env")
+    archive_dir = metadata_dir / "archived-files"
+    archive_dir.mkdir()
+    (archive_dir / "archive.txt").write_text("archive")
+
+    concrete_spec = default_mock_concretization("printing-package")
+    monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
+
+    copied = []
+
+    def record_copy(src, artifacts_dir, *, compress_artifacts=False):
+        copied.append(os.path.basename(src))
+
+    monkeypatch.setattr(ci, "copy_files_to_artifacts", record_copy)
+
+    ci.copy_stage_logs_to_artifacts(concrete_spec, str(tmp_path / "log_dir"))
+    _, err = capfd.readouterr()
+
+    assert copied == [
+        "spack-build-out.txt.gz",
+        "spack-build-out.txt",
+        "spack-build-env.txt",
+        "archive.txt",
+    ]
+    assert "No build logs or archived files found" not in err
+
+
+def test_ci_copy_stage_logs_to_artifacts_warns_when_nothing_exists(
+    tmp_path: pathlib.Path, default_mock_concretization, monkeypatch, capfd
+):
+    metadata_dir = tmp_path / "metadata"
+    metadata_dir.mkdir()
+
+    concrete_spec = default_mock_concretization("printing-package")
+    monkeypatch.setattr(spack.store.STORE.layout, "metadata_path", lambda spec: str(metadata_dir))
+
+    log_dir = tmp_path / "log_dir"
+    log_dir.mkdir()
+    ci.copy_stage_logs_to_artifacts(concrete_spec, str(log_dir))
+    _, err = capfd.readouterr()
+
+    assert "No build logs or archived files found" in err
 
 
 def test_ci_copy_test_logs_to_artifacts_fail(tmp_path: pathlib.Path, capfd):

@@ -646,12 +646,13 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         return
 
     package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    archive_files: List[str]
     if not os.path.isdir(package_metadata_root):
         # Fallback to using the stage directory
         job_pkg = job_spec.package
 
         package_metadata_root = pathlib.Path(job_pkg.stage.path)
-        archive_files = spack.builder.create(job_pkg).archive_files
+        archive_files = [str(f) for f in spack.builder.create(job_pkg).archive_files]
         tty.warn("Package not installed, falling back to use stage dir")
         tty.debug(f"stage dir: {package_metadata_root}")
     else:
@@ -663,13 +664,21 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         else:
             tty.debug(f"No archived files detected at {archive_root}")
 
-    # Try zipped and unzipped versions of the build log
+    # Some artifact candidates are optional or alternate representations of the
+    # same log. Copy all that exist, but warn once if nothing can be copied.
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
     build_log = package_metadata_root / "spack-build-out.txt"
     build_env_mods = package_metadata_root / "spack-build-env.txt"
 
-    for f in [build_log_zipped, build_log, build_env_mods, *archive_files]:
-        copy_files_to_artifacts(str(f), job_log_dir, compress_artifacts=True)
+    copied = False
+    candidates = [str(build_log_zipped), str(build_log), str(build_env_mods), *archive_files]
+    for f in candidates:
+        if os.path.exists(f):
+            copy_files_to_artifacts(f, job_log_dir, compress_artifacts=True)
+            copied = True
+
+    if not copied:
+        tty.warn(f"No build logs or archived files found at {package_metadata_root}")
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
