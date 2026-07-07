@@ -16,8 +16,8 @@ import spack.deptypes as dt
 import spack.package_base
 import spack.repo
 import spack.util.git
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.tty.colify import colify
 from spack.util.url import path_to_file_url

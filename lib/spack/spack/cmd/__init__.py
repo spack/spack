@@ -24,12 +24,12 @@ import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
-import spack.util.tty as tty
+from spack import traverse
+from spack.util import tty
 from spack.util.filesystem import join_path
 from spack.util.lang import attr_setdefault, index_by
 from spack.util.tty.colify import colify

@@ -45,15 +45,14 @@ import spack.config
 import spack.error
 import spack.oci.opener
 import spack.util.archive
-import spack.util.crypto as crypto
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.tty as tty
 import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
+from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir

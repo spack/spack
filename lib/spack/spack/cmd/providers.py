@@ -8,7 +8,7 @@ import sys
 
 import spack.cmd
 import spack.repo
-import spack.util.tty.colify as colify
+from spack.util.tty import colify
 
 description = "list packages that provide a particular virtual package"
 section = "query"

@@ -9,10 +9,10 @@ import spack.cmd
 import spack.environment as ev
 import spack.spec
 import spack.store
-import spack.util.tty as tty
 import spack.verify
 import spack.verify_libraries
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.filesystem import visit_directory_tree
 from spack.util.string import plural
 

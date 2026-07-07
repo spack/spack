@@ -42,9 +42,9 @@ import spack.spec
 import spack.util.environment
 import spack.util.lang
 import spack.util.lock
-import spack.util.tty as tty
 import spack.util.tty.colify
-import spack.util.tty.color as color
+from spack.util import tty
+from spack.util.tty import color
 
 from .enums import ConfigScopePriority
 
@@ -1039,7 +1039,7 @@ def _main(argv=None):
     # like `ConstraintAction` and `ConfigSetAction` happen at parse time.
     bootstrap_context = spack.util.lang.nullcontext()
     if args.bootstrap:
-        import spack.bootstrap as bootstrap  # avoid circular imports
+        from spack import bootstrap  # avoid circular imports
 
         bootstrap_context = bootstrap.ensure_bootstrap_configuration()
 

@@ -52,16 +52,16 @@ import spack.schema
 import spack.schema.environment
 import spack.spec
 import spack.store
-import spack.tengine as tengine
 import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
-import spack.util.tty as tty
+from spack import tengine
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
+from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
 from .error import (

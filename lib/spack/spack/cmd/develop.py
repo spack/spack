@@ -13,10 +13,10 @@ import spack.fetch_strategy
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.tty as tty
 import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import tty
 
 description = "add a spec to an environment's develop: section"
 section = "environments"

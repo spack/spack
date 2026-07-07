@@ -79,11 +79,11 @@ import spack.store
 import spack.subprocess_context
 import spack.util.executable
 import spack.util.module_cmd
-import spack.util.tty as tty
 from spack import traverse
 from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
+from spack.util import tty
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,

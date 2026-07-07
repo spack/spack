@@ -20,12 +20,12 @@ import spack.install_test
 import spack.package_base
 import spack.repo
 import spack.spec
-import spack.util.tty as tty
-import spack.util.tty.color as color
 import spack.variant
 import spack.version
 from spack.cmd.common import arguments
 from spack.package_base import PackageBase
+from spack.util import tty
+from spack.util.tty import color
 from spack.util.tty.colify import colify
 from spack.util.typing import SupportsRichComparison
 

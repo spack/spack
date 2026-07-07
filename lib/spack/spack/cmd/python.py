@@ -11,7 +11,7 @@ import sys
 
 import spack
 import spack.repo
-import spack.util.tty as tty
+from spack.util import tty
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"

@@ -5,7 +5,7 @@
 import os
 
 import spack.util.editor as ed
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.filesystem import mkdirp, symlink
 
 

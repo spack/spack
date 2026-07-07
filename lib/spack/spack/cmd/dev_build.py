@@ -13,8 +13,8 @@ import spack.concretize
 import spack.config
 import spack.installer_dispatch
 import spack.repo
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "build package from code in current working directory"
 section = "build"

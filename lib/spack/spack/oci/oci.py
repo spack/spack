@@ -15,8 +15,8 @@ import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener
 import spack.stage
-import spack.util.tty as tty
 import spack.util.url
+from spack.util import tty
 
 from .image import Digest, ImageReference
 

@@ -62,13 +62,13 @@ import spack.util.hash
 import spack.util.lang
 import spack.util.module_cmd as md
 import spack.util.timer
-import spack.util.tty as tty
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
 from spack.spec import EMPTY_SPEC
+from spack.util import tty
 from spack.util.lang import elide_list
 
 from .compat import default_clingo_control, make_error_control

@@ -13,7 +13,6 @@ from urllib.parse import urlparse, urlunparse
 import spack.binary_distribution
 import spack.ci as spack_ci
 import spack.cmd
-import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
@@ -28,11 +27,11 @@ import spack.stage
 import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
-import spack.util.timer as timer
 import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.util import tty
+from spack.cmd import buildcache
+from spack.util import timer, tty
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line

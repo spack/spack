@@ -26,9 +26,9 @@ import spack.util.lock
 import spack.util.parallel
 import spack.util.path as sup
 import spack.util.string
-import spack.util.tty as tty
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
+from spack.util import tty
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.util.filesystem import (

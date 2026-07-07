@@ -8,9 +8,9 @@ import pytest
 import spack.cmd.uninstall
 import spack.environment
 import spack.store
-import spack.util.tty as tty
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
+from spack.util import tty
 
 uninstall = SpackCommand("uninstall")
 install = SpackCommand("install")

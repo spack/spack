@@ -12,7 +12,6 @@ import pytest
 import spack.vendor.jsonschema
 
 import spack.binary_distribution
-import spack.ci as ci
 import spack.cmd
 import spack.cmd.ci
 import spack.concretize
@@ -26,6 +25,7 @@ import spack.stage
 import spack.util.spack_yaml as syaml
 import spack.util.web
 import spack.version
+from spack import ci
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator

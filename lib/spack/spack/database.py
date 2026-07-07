@@ -59,7 +59,6 @@ import spack.traverse as tr
 import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-import spack.util.tty as tty
 import spack.version as vn
 from spack.directory_layout import (
     DirectoryLayout,
@@ -67,6 +66,7 @@ from spack.directory_layout import (
     InconsistentInstallDirectoryError,
 )
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 

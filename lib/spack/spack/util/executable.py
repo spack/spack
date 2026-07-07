@@ -14,7 +14,7 @@ from typing import BinaryIO, Callable, Dict, List, Optional, Sequence, Tuple, Ty
 from spack.vendor.typing_extensions import Literal
 
 import spack.error
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.environment import EnvironmentModifications
 
 __all__ = ["Executable", "which", "which_string", "ProcessError"]

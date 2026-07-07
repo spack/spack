@@ -50,7 +50,6 @@ import spack.util.hash
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-import spack.util.tty as tty
 import spack.util.tty.color as clr
 import spack.variant as vt
 from spack import traverse
@@ -59,6 +58,7 @@ from spack.enums import ConfigScopePriority
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
 from spack.spec_filter import SpecFilter
+from spack.util import tty
 from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import stable_partition
 from spack.util.link_tree import ConflictingSpecsError

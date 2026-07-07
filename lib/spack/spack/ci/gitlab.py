@@ -18,7 +18,7 @@ import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.spack_yaml as syaml
-import spack.util.tty as tty
+from spack.util import tty
 
 from .common import (
     SPACK_RESERVED_TAGS,

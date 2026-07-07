@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.paths
-import spack.util.tty as tty
-import spack.util.tty.color as color
+from spack.util import tty
+from spack.util.tty import color
 
 
 def shell_init_instructions(cmd, equivalent):

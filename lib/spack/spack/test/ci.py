@@ -9,14 +9,13 @@ from urllib.error import HTTPError
 
 import pytest
 
-import spack.ci as ci
 import spack.concretize
 import spack.environment as ev
 import spack.error
 import spack.paths
-import spack.repo as repo
 import spack.util.filesystem as fs
 import spack.util.git
+from spack import ci, repo
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.version import Version

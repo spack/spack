@@ -17,15 +17,14 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.environment.environment
 import spack.environment.shell
 import spack.tengine
 import spack.util.filesystem as fs
-import spack.util.string as string
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.environment import depfile
 from spack.traverse import traverse_nodes
+from spack.util import string, tty
 from spack.util.environment import EnvironmentModifications
 from spack.util.filesystem import islink, symlink
 from spack.util.tty.colify import colify

@@ -7,8 +7,8 @@ import sys
 
 import spack.repo
 import spack.spec
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.tty.colify import colify
 from spack.version import infinity_versions, ver
 

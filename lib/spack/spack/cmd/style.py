@@ -12,15 +12,15 @@ from typing import Dict, List, Optional, Set, Union
 import spack.paths
 import spack.repo
 import spack.util.git
-import spack.util.tty as tty
-import spack.util.tty.color as color
 from spack.cmd.common.spec_strings import (
     _check_spec_strings,
     _spec_str_default_handler,
     _spec_str_fix_handler,
 )
+from spack.util import tty
 from spack.util.executable import Executable, which
 from spack.util.filesystem import working_dir
+from spack.util.tty import color
 
 description = "runs source code style checks on spack"
 section = "developer"

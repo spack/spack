@@ -27,11 +27,11 @@ import spack.installer
 import spack.package_base
 import spack.store
 import spack.util.filesystem as fs
-import spack.util.tty as tty
 from spack.error import SpackError, SpecSyntaxError
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.spec import Spec
+from spack.util import tty
 
 install = SpackCommand("install")
 env = SpackCommand("env")

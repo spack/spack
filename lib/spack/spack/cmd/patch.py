@@ -9,8 +9,8 @@ import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.traverse
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "patch expanded sources in preparation for install"
 section = "build"

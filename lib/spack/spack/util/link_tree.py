@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import spack.util.filesystem as fs
-import spack.util.tty as tty
+from spack.util import tty
 
 __all__ = ["LinkTree"]
 

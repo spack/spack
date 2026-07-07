@@ -12,7 +12,7 @@ import urllib.request
 from typing import Optional
 
 import spack.util.crypto
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.filesystem import copy, join_path, mkdirp
 from spack.util.url import validate_scheme
 

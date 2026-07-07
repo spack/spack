@@ -11,15 +11,15 @@ from typing import List, Optional, Set
 import spack
 import spack.cmd
 import spack.config
-import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
 import spack.package_base
 import spack.repo
 import spack.spec
-import spack.util.tty as tty
-import spack.util.tty.colify as colify
+from spack import cray_manifest
 from spack.cmd.common import arguments
+from spack.util import tty
+from spack.util.tty import colify
 
 description = "manage external packages in Spack configuration"
 section = "config"

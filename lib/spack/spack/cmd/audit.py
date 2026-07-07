@@ -6,9 +6,9 @@ import warnings
 
 import spack.audit
 import spack.repo
-import spack.util.tty as tty
 import spack.util.tty.colify
 import spack.util.tty.color as cl
+from spack.util import tty
 
 description = "audit configuration files, packages, etc."
 section = "packaging"

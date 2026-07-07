@@ -12,9 +12,9 @@ import spack.compilers.config
 import spack.config
 import spack.spec
 import spack.store
-import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.spec import Spec
+from spack.util import tty
 from spack.util.lang import index_by
 from spack.util.tty.colify import colify
 from spack.util.tty.color import colorize

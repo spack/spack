@@ -12,7 +12,7 @@ from typing import Dict, Optional, Type
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.tty as tty
+from spack.util import tty
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules

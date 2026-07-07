@@ -13,8 +13,8 @@ import spack.config
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
-import spack.util.tty as tty
 from spack.cmd import spack_is_git_repo
+from spack.util import tty
 from spack.util.executable import ProcessError
 from spack.util.filesystem import working_dir
 from spack.util.lang import pretty_date

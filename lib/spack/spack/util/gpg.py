@@ -18,8 +18,8 @@ import spack.paths
 import spack.util.executable
 import spack.util.filesystem
 import spack.util.spack_json as sjson
-import spack.util.tty as tty
 import spack.version
+from spack.util import tty
 from spack.util.executable import Executable
 
 GPG_NAMES = ("gpg", "gpg2")

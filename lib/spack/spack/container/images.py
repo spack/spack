@@ -10,7 +10,7 @@ import sys
 
 import spack.util.filesystem as fs
 import spack.util.git
-import spack.util.tty as tty
+from spack.util import tty
 
 #: Global variable used to cache in memory the content of images.json
 _data = None

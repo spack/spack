@@ -9,10 +9,10 @@ import spack.deptypes as dt
 import spack.error
 import spack.spec
 import spack.store
-import spack.util.tty as tty
 from spack import build_environment, traverse
 from spack.cmd.common import arguments
 from spack.enums import Context
+from spack.util import tty
 from spack.util.environment import dump_environment, pickle_environment
 
 
