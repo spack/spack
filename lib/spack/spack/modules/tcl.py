@@ -57,6 +57,7 @@ class TclConfiguration(BaseConfiguration):
         return {
             v.name: self._variant_to_str_dict(v)
             for v in sorted(self.spec.variants.values(), key=lambda x: x.name)
+            if v.name not in self.exclude_variants
         }
 
     @property

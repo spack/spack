@@ -574,6 +574,12 @@ class BaseConfiguration:
         filter_subsection = self.conf.get("filter", {})
         return filter_subsection.get("exclude_env_vars", [])
 
+    @property
+    def exclude_variants(self) -> List[str]:
+        """List of variants that should not be defined."""
+        filter_subsection = self.conf.get("filter", {})
+        return filter_subsection.get("exclude_variants", [])
+
     def _create_list_for(self, what: str) -> List[spack.spec.Spec]:
         return [
             item
