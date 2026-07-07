@@ -15,13 +15,10 @@ import socket
 import sys
 import threading
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import spack.spec
 from spack.llnl.util.tty.log import redirect_stdio, restore_stdio
-
-if TYPE_CHECKING:
-    import spack.new_installer
 
 # Inter-process communication type
 if sys.platform == "win32":
@@ -34,6 +31,14 @@ OUTPUT_BUFFER_SIZE = 32768
 
 #: Control byte that stops the tee thread
 TEE_STOP = b"2"
+
+#: How often the event loop should wake up to poll for a background-to-foreground transition
+#: while the terminal is headless (there is no signal for it).
+HEADLESS_WAKE_INTERVAL = 1.0
+
+#: Selector data keys registered by the terminal and dispatched by the event loop
+STDIN_EVENT = "stdin"
+SIGWINCH_EVENT = "sigwinch"
 
 
 class StdinReader:
@@ -67,24 +72,29 @@ class StdinReader:
 class BaseTerminalState(abc.ABC):
     """Abstract base for platform-specific terminal state management."""
 
+    #: Non-blocking stdin reader, created by platform-specific subclasses in ``__init__``
+    stdin_reader: StdinReader
+
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        ui: "spack.new_installer.InstallerUI",
+        on_headless: Optional[Callable[[bool], None]] = None,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
         self.selector = selector
-        self.ui = ui
+        self.on_headless = on_headless
         self.on_suspend = on_suspend
         self.on_resume = on_resume
         #: True while the process is backgrounded/suspended and the terminal is not ours
         self.headless = False
 
     def _set_headless(self, headless: bool) -> None:
-        """Record headless state and tell the UI to suppress (True) or resume (False) rendering."""
+        """Record headless state and notify the frontend to suppress (True) or resume (False)
+        rendering."""
         self.headless = headless
-        self.ui.set_headless(headless)
+        if self.on_headless is not None:
+            self.on_headless(headless)
 
     @classmethod
     def stdout_is_interactive(cls) -> bool:
@@ -94,9 +104,9 @@ class BaseTerminalState(abc.ABC):
     def stdin_is_interactive(cls) -> bool:
         return sys.stdin.isatty()
 
-    @abc.abstractmethod
-    def create_stdin_reader(self) -> StdinReader:
-        pass
+    def read_input(self) -> str:
+        """Read available keyboard input as decoded text."""
+        return self.stdin_reader.read()
 
     @abc.abstractmethod
     def setup(self) -> None:
@@ -123,6 +133,16 @@ class BaseTerminalState(abc.ABC):
         """Drain the platform-specific sigwinch notification channel."""
         pass
 
+    def wake_interval(self) -> Optional[float]:
+        """Extra wake-up cadence the terminal needs from the event loop, or None. While headless
+        we poll for the background-to-foreground transition, since there is no signal for it."""
+        return HEADLESS_WAKE_INTERVAL if self.headless else None
+
+    def poll_foreground(self) -> None:
+        """Switch to foreground mode if the process is no longer backgrounded."""
+        if self.headless and self._should_enter_foreground():
+            self.enter_foreground()
+
     # The methods below are job-control hooks: a platform with suspend/resume support (SIGTSTP/
     # SIGCONT on POSIX) overrides them to transition between foreground and headless mode. The
     # defaults are for platforms without job control, where the process never goes headless after
@@ -134,7 +154,7 @@ class BaseTerminalState(abc.ABC):
     def handle_continue(self) -> None:
         pass
 
-    def should_enter_foreground(self) -> bool:
+    def _should_enter_foreground(self) -> bool:
         """Return True if the process should switch from headless to foreground mode."""
         return False
 

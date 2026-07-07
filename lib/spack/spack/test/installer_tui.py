@@ -22,7 +22,7 @@ from spack.new_installer_base import StdinReader
 
 
 def _fd_reader(fd: int) -> StdinReader:
-    """StdinReader reading from a raw fd, as PosixTerminalState.create_stdin_reader does."""
+    """StdinReader reading from a raw fd, as PosixTerminalState's stdin_reader does."""
     return StdinReader(functools.partial(os.read, fd, 1024))
 
 

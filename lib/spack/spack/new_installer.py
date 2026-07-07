@@ -77,12 +77,13 @@ import spack.util.lock
 from spack.installer import _do_fake_install, dump_packages
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
     BaseTerminalState,
     FdInfo,
     IpcChannel,
     JobServerBase,
     ProcessExitNotifier,
-    StdinReader,
 )
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
@@ -111,9 +112,6 @@ InstallPolicy = Literal["auto", "cache_only", "source_only"]
 
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
-
-#: How often to wake up in headless mode to check for background->foreground transition (seconds)
-HEADLESS_WAKE_INTERVAL = 1.0
 
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
@@ -2297,17 +2295,15 @@ class PackageInstaller:
 
         # Terminal handling (cbreak, suspend/resume signals, stdin registration) is event loop
         # plumbing, enabled only for frontends that read the controlling terminal.
-        stdin_reader: Optional[StdinReader] = None
         terminal: Optional[BaseTerminalState] = None
         if self.ui.reads_terminal_input and TerminalState.stdin_is_interactive():
             terminal = TerminalState(
                 selector,
-                self.ui,
+                on_headless=self.ui.set_headless,
                 on_suspend=lambda: _signal_children(self.running_builds, signal.SIGSTOP),
                 on_resume=lambda: _signal_children(self.running_builds, signal.SIGCONT),
             )
             terminal.setup()
-            stdin_reader = terminal.create_stdin_reader()
 
         # Finished builds that have not yet been written to the database.
         database_actions: List[DatabaseAction] = []
@@ -2353,18 +2349,19 @@ class PackageInstaller:
                 refresh_interval = self.ui.refresh_interval()
                 if refresh_interval is not None:
                     timeout = min(timeout, refresh_interval)
-                if terminal is not None and terminal.headless:
-                    timeout = min(timeout, HEADLESS_WAKE_INTERVAL)
+                wake_interval = terminal.wake_interval() if terminal is not None else None
+                if wake_interval is not None:
+                    timeout = min(timeout, wake_interval)
                 events = selector.select(timeout=timeout)
 
                 finished_builds.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
-                # foreground, so we conditionally poll for that here (headless case). In the
-                # headless case the event loop only fires once per second, so this is cheap enough.
-                if terminal and terminal.headless and terminal.should_enter_foreground():
-                    terminal.enter_foreground()
+                # foreground, so the terminal polls for that here (headless case, where the wake
+                # interval above bounds the poll rate).
+                if terminal is not None:
+                    terminal.poll_foreground()
 
                 for key, _ in events:
                     data = key.data
@@ -2377,9 +2374,9 @@ class PackageInstaller:
                             self._handle_child_state(child_info, selector)
                         elif data.name == "sentinel":
                             finished_builds.append(data.build_id)
-                    elif data == "stdin":
+                    elif data == STDIN_EVENT:
                         stdin_ready = True
-                    elif data == "sigwinch":
+                    elif data == SIGWINCH_EVENT:
                         assert terminal is not None
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
@@ -2401,8 +2398,8 @@ class PackageInstaller:
                     self.pending_builds.clear()
                     self.pending_expansions.clear()
 
-                if stdin_ready and stdin_reader is not None:
-                    self.ui.handle_input(stdin_reader.read())
+                if stdin_ready and terminal is not None:
+                    self.ui.handle_input(terminal.read_input())
 
                 # Try to expand build deps for cache-miss specs. This requires a read lock on the
                 # database, meaning that it can take several iterations of the event loop in case

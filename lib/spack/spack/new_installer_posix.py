@@ -23,13 +23,15 @@ import tty
 import warnings
 from multiprocessing import Process
 from multiprocessing.connection import Connection
-from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 import spack.llnl.util.tty
 import spack.spec
 from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
     TEE_STOP,
     BaseTerminalState,
     JobServerBase,
@@ -37,9 +39,6 @@ from spack.new_installer_base import (
     StdinReader,
     Tee,
 )
-
-if TYPE_CHECKING:
-    import spack.new_installer
 
 
 class PosixTerminalState(BaseTerminalState):
@@ -55,17 +54,15 @@ class PosixTerminalState(BaseTerminalState):
     def __init__(
         self,
         selector: selectors.BaseSelector,
-        ui: "spack.new_installer.InstallerUI",
+        on_headless: Optional[Callable[[bool], None]] = None,
         on_suspend: Optional[Callable[[], None]] = None,
         on_resume: Optional[Callable[[], None]] = None,
     ) -> None:
-        super().__init__(selector, ui, on_suspend, on_resume)
+        super().__init__(selector, on_headless, on_suspend, on_resume)
         self.old_stdin_settings = termios.tcgetattr(sys.stdin)
         self.sigwinch_r = -1
         self.sigwinch_w = -1
-
-    def create_stdin_reader(self) -> StdinReader:
-        return StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
+        self.stdin_reader = StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
 
     def setup(self) -> None:
         """Set cbreak mode, register stdin and signal pipes in the selector."""
@@ -75,7 +72,7 @@ class PosixTerminalState(BaseTerminalState):
             self.sigwinch_r, self.sigwinch_w = os.pipe()
             os.set_blocking(self.sigwinch_r, False)
             os.set_blocking(self.sigwinch_w, False)
-            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, "sigwinch")
+            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
             self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
         else:
             self.old_sigwinch = None
@@ -159,7 +156,7 @@ class PosixTerminalState(BaseTerminalState):
             tty.setcbreak(sys.stdin.fileno())
 
         if sys.stdin.fileno() not in self.selector.get_map():
-            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, "stdin")
+            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, STDIN_EVENT)
         self._set_headless(False)
 
     def enter_background(self) -> None:
@@ -178,7 +175,7 @@ class PosixTerminalState(BaseTerminalState):
     def drain_sigwinch(self) -> None:
         os.read(self.sigwinch_r, 64)
 
-    def should_enter_foreground(self) -> bool:
+    def _should_enter_foreground(self) -> bool:
         return not _is_background_tty(sys.stdin)
 
 
