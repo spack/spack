@@ -216,6 +216,13 @@ def validate_env_name(name):
     return name
 
 
+def set_active_environment(env: Optional["Environment"]) -> None:
+    """Set or clear the active environment, keeping the "$env" config substitution in sync."""
+    global _active_environment
+    _active_environment = env
+    spack.config.CONFIG.env_path = env.path if env is not None else None
+
+
 def activate(env, use_env_repo=False):
     """Activate an environment.
 
@@ -227,29 +234,24 @@ def activate(env, use_env_repo=False):
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
     """
-    global _active_environment
-
     try:
-        _active_environment = env
-
         # Fail early to avoid ending in an invalid state
         if not isinstance(env, Environment):
-            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+            raise TypeError(f"`env` should be of type {Environment.__name__}")
 
-        # Record the env path so config "$env" substitutions work while the manifest's
-        # config scope is being prepared below (and for the lifetime of the activation).
-        spack.config.CONFIG.env_path = env.path
-
-        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
-        # config changes.
         install_tree_before = spack.config.get("config:install_tree")
         upstreams_before = spack.config.get("upstreams")
         repos_before = spack.config.get("repos")
+
+        # Record the active env (and its path, so config "$env" substitutions work)
+        set_active_environment(env)
         env.manifest.prepare_config_scope()
+
         install_tree_after = spack.config.get("config:install_tree")
         upstreams_after = spack.config.get("upstreams")
         repos_after = spack.config.get("repos")
 
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO
         if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
             setattr(env, "store_token", spack.store.reinitialize())
 
@@ -263,15 +265,12 @@ def activate(env, use_env_repo=False):
 
         tty.debug(f"Using environment '{env.name}'")
     except Exception:
-        _active_environment = None
-        spack.config.CONFIG.env_path = None
+        set_active_environment(None)
         raise
 
 
 def deactivate():
     """Undo any configuration or repo settings modified by ``activate()``."""
-    global _active_environment
-
     if not _active_environment:
         return
 
@@ -291,8 +290,7 @@ def deactivate():
 
     tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
-    _active_environment = None
-    spack.config.CONFIG.env_path = None
+    set_active_environment(None)
 
 
 def active_environment() -> Optional["Environment"]:

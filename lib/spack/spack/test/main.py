@@ -339,3 +339,16 @@ include:
         assert mutable_config.get("config:debug") is expected
     except AssertionError:
         pytest.xfail("recursive includes are not processed in the expected order")
+
+
+@pytest.mark.regression("52664")
+def test_env_substitution_via_main_entrypoint(mutable_mock_env_path):
+    """Tests that an environment activated through the CLI entrypoint can substitute ``$env``"""
+    env = ev.create("test")
+    assert spack.config.CONFIG.env_path is None
+
+    # Just call a fast command
+    spack.main._main(["-e", "test", "config", "scopes"])
+
+    assert spack.config.CONFIG.env_path == env.path
+    assert spack.config.substitute_path_variables("$env/foo") == f"{env.path}/foo"

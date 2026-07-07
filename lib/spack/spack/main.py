@@ -997,7 +997,7 @@ def _main(argv=None):
         # do not call activate here, as it has a lot of expensive function calls to deal
         # with mutation of spack.config.CONFIG -- but we are still building the config.
         env.manifest.prepare_config_scope()
-        spack.environment.environment._active_environment = env
+        spack.environment.environment.set_active_environment(env)
 
     # add the environment
     if env:
