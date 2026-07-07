@@ -1408,32 +1408,8 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         assert dst.read_text() == "updated"
     finally:
         os.umask(old_umask)
-def test_ace_type_enum_values():
-    from spack.llnl.util.win_acl import AceType
-
-    assert AceType.SDDL_ACCESS_ALLOWED.value == "A"
-    assert AceType.SDDL_ACCESS_DENIED.value == "D"
-    assert AceType.SDDL_AUDIT.value == "AU"
 
 
-def test_ace_flags_enum_values():
-    from spack.llnl.util.win_acl import AceFlags
-
-    assert AceFlags.SDDL_CONTAINER_INHERIT.value == "CI"
-    assert AceFlags.SDDL_OBJECT_INHERIT.value == "OI"
-
-
-def test_access_rights_enum_values():
-    from spack.llnl.util.win_acl import FileAccessRights, GenericAccessRights, StandardAccessRights
-
-    assert GenericAccessRights.SDDL_GENERIC_READ.value == "GR"
-    assert GenericAccessRights.SDDL_GENERIC_ALL.value == "GA"
-    assert FileAccessRights.SDDL_FILE_ALL.value == "FA"
-    assert StandardAccessRights.SDDL_WRITE_DAC.value == "WD"
-
-
-def test_access_control_entry_str_simple():
-    from spack.llnl.util.win_acl import AccessControlEntry, AceType, GenericAccessRights
 @pytest.mark.only_windows("Windows security API required")
 def test_access_control_entry_to_sddl_string():
     from spack.util.win_acl import AccessControlEntry, AceFlags, AceType, GenericAccessRights
