@@ -797,7 +797,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
 
     target = os.path.join(tmpdir, "index.json")
 
-    index = {"keys": dict((fingerprint, {}) for fingerprint in sorted(set(fingerprints)))}
+    index: dict = {"keys": {fingerprint: {} for fingerprint in sorted(set(fingerprints))}}
     with open(target, "w", encoding="utf-8") as f:
         sjson.dump(index, f)
 
@@ -1929,7 +1929,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
     # that s replaced when we spliced.
     relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = set(id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
     for s in relocation_specs:
         analog = s
         if id(s) not in build_spec_ids:

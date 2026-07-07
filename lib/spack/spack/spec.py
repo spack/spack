@@ -943,9 +943,9 @@ class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
             else:
                 extra_other = set(other[flag_type]) - set(self[flag_type])
                 if extra_other:
-                    self[flag_type] = list(self[flag_type]) + list(
+                    self[flag_type] = list(self[flag_type]) + [
                         x for x in other[flag_type] if x in extra_other
-                    )
+                    ]
                     changed = True
 
                 # Next, if any flags in other propagate, we force them to propagate in our case
@@ -4652,7 +4652,7 @@ class Spec:
         """Return set of virtuals provided by self in the context of root"""
         if root is self:
             # Could be using any virtual the package can provide
-            return set(v.name for v in self.package.virtuals_provided)
+            return {v.name for v in self.package.virtuals_provided}
 
         hashes = [s.dag_hash() for s in root.traverse()]
         in_edges = set(
@@ -4732,7 +4732,7 @@ class Spec:
                 for evaluating whether ``replacement`` is a match for each node of ``self``. See
                 ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
         """
-        ids = set(id(s) for s in replacement.traverse())
+        ids = {id(s) for s in replacement.traverse()}
 
         # Sort all possible replacements by name and virtual for easy access later
         replacements_by_name = collections.defaultdict(list)

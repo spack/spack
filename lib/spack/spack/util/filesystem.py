@@ -275,10 +275,10 @@ def possible_library_filenames(library_names):
     library filenames that may be found on the system (e.g. libfoo.so).
     """
     lib_extensions = library_extensions
-    return set(
+    return {
         ".".join((lib, extension))
         for lib, extension in itertools.product(library_names, lib_extensions)
-    )
+    }
 
 
 def paths_containing_libs(paths, library_names):

@@ -241,10 +241,10 @@ def test_exclude_specs(mock_packages, config):
     )
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
@@ -275,10 +275,10 @@ mpich@1.0
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=str(exclude_path))
 
     mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
-    expected_include = set(
+    expected_include = {
         spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
-    )
-    expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
+    }
+    expected_exclude = {spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"]}
     assert expected_include <= set(mirror_specs)
     assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 

@@ -225,10 +225,10 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
         def add_subcommand_group(title, commands):
             """Add informational help group for a specific subcommand set."""
-            cmd_set = set(c for c in commands)
+            cmd_set = set(commands)
 
             # make a dict of commands of interest
-            cmds = dict((a.dest, a) for a in self.actions if a.dest in cmd_set)
+            cmds = {a.dest: a for a in self.actions if a.dest in cmd_set}
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
@@ -818,9 +818,9 @@ def print_setup_info(*info):
     other_spack_instances = spack.config.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get("modules", {})
-        upstream_module_roots = dict(
-            (k, v) for k, v in upstream_module_roots.items() if k in module_to_roots
-        )
+        upstream_module_roots = {
+            k: v for k, v in upstream_module_roots.items() if k in module_to_roots
+        }
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
 

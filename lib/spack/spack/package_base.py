@@ -352,7 +352,7 @@ class PackageViewMixin:
         Alternative implementations may allow some of the files to exist in
         the view (in this case they would be omitted from the results).
         """
-        return set(dst for dst in merge_map.values() if os.path.lexists(dst))
+        return {dst for dst in merge_map.values() if os.path.lexists(dst)}
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Given a map of package files to destination paths in the view, add
@@ -1541,7 +1541,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
         return sorted(
-            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+            {vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals)}
         )
 
     @property

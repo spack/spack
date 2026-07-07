@@ -705,11 +705,11 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
         # values are either ConditionalValue objects or the values themselves
-        build_system_names = set(
+        build_system_names = {
             v.value if isinstance(v, spack.variant.ConditionalValue) else v
             for _, variant in pkg_cls.variant_definitions("build_system")
             for v in variant.values
-        )
+        }
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 
         has_builders_in_package_py = any(

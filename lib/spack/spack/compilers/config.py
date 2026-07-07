@@ -264,11 +264,11 @@ class CompilerFactory:
         packages_yaml = configuration.deepcopy_as_builtin("packages", scope=scope)
 
         init_external_dicts = extract_dicts_from_configuration(packages_yaml)
-        init_external_dicts = list(
+        init_external_dicts = [
             x
             for x in init_external_dicts
             if spack.spec.Spec(x["spec"]).name in compiler_package_names
-        )
+        ]
 
         externals_dicts = []
         for current in init_external_dicts:

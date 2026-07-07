@@ -192,7 +192,7 @@ def _remove_from_env(spec, env):
 def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
-    hashes_to_remove = set(s.dag_hash() for s in specs)
+    hashes_to_remove = {s.dag_hash() for s in specs}
 
     for s in traverse.traverse_nodes(
         specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"

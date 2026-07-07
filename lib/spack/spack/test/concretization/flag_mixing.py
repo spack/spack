@@ -253,7 +253,7 @@ spack:
         e.concretize()
     e.write()
 
-    (result,) = list(j for i, j in e.concretized_specs() if j.name == "y")
+    (result,) = [j for i, j in e.concretized_specs() if j.name == "y"]
 
     assert result["y"].satisfies("cflags='-fsanitize=address -f1'")
 

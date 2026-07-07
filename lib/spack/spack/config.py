@@ -1702,11 +1702,11 @@ def existing_scopes() -> List[ConfigScope]:
 
 
 def writable_scope_names() -> List[str]:
-    return list(x.name for x in writable_scopes())
+    return [x.name for x in writable_scopes()]
 
 
 def existing_scope_names() -> List[str]:
-    return list(x.name for x in existing_scopes())
+    return [x.name for x in existing_scopes()]
 
 
 def matched_config(cfg_path: str) -> List[Tuple[str, Any]]:

@@ -88,20 +88,20 @@ def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
 
     # get facts for specs, making sure to include build dependencies of concrete
     # specs and to descend into dependency hashes so we include all facts.
-    a_facts = set(
+    a_facts = {
         shift(func)
         for func in setup.spec_clauses(
             a, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
         )
         if func.name == "attr"
-    )
-    b_facts = set(
+    }
+    b_facts = {
         shift(func)
         for func in setup.spec_clauses(
             b, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
         )
         if func.name == "attr"
-    )
+    }
 
     # We want to present them to the user as simple key: values
     intersect = sorted(a_facts.intersection(b_facts))

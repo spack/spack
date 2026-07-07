@@ -212,7 +212,7 @@ def compiler_list(args):
     # Python 3
     convert_str = lambda tuple_container: tuple(str(x) if x else "" for x in tuple_container)
 
-    index_str_keys = list((convert_str(x), y) for x, y in index.items())
+    index_str_keys = [(convert_str(x), y) for x, y in index.items()]
     ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:

@@ -209,7 +209,7 @@ def test_find(temporary_store, config, mock_packages):
 
     # Make sure all the installed specs appear in
     # DirectoryLayout.all_specs()
-    found_specs = dict((s.name, s) for s in layout.all_specs())
+    found_specs = {s.name: s for s in layout.all_specs()}
     for name, spec in found_specs.items():
         assert name in found_specs
         assert found_specs[name].eq_dag(spec)
