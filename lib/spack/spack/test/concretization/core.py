@@ -4524,6 +4524,44 @@ def test_spec_dict_roundtrip(mock_packages, config, spec_str):
     assert roundtrip[nid] == spec
 
 
+def test_concretization_cache_store_skips_spliced_results(mock_packages, use_concretization_cache):
+    """store() must not cache results containing spliced specs, even nested ones.
+
+    Spliced nodes carry a build_spec DAG that is reachable only through the build_spec
+    link -- dependency traversal never visits it, so spec_dict_to_json() would serialize
+    a dangling build_spec hash. It raises SpliceSerializationError instead, and store()
+    skips the entry, so spliced results are just re-solved every time.
+    """
+    t = spack.concretize.concretize_one("splice-t")
+    h = spack.concretize.concretize_one("splice-h+foo")
+    spliced = t.splice(h, transitive=True)
+    assert spliced.build_spec is not spliced
+
+    # an abstract parent that reuses the spliced spec as a plain dependency. The parent has
+    # no build_spec of its own, and the spliced node has no NodeId, so the splice can only
+    # be found by traversing the whole DAG. The abstract dep is added first so that its
+    # hash is force-cached before the splice is found.
+    root = Spec("pkg-a")
+    abstract_dep = Spec("pkg-b")
+    root._add_dependency(abstract_dep, depflag=dt.LINK, virtuals=())
+    root._add_dependency(spliced, depflag=dt.LINK, virtuals=())
+    nid = spack.solver.asp.SpecBuilder.make_node(pkg=root.name)
+
+    # serialization refuses spliced specs, and must clean up any force-cached hashes
+    with pytest.raises(spack.solver.asp.SpliceSerializationError):
+        spack.solver.asp.spec_dict_to_json({nid: root})
+    assert abstract_dep._hash is None
+    assert root._hash is None
+
+    result = Result(specs=[Spec("pkg-a")])
+    result.answers = [(0, 0, {nid: root})]
+
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    cache.store("spliced problem", result, statistics=[])
+
+    assert not cache._cache_path_from_problem("spliced problem").exists()
+
+
 @pytest.mark.parametrize(
     "spec,reused_dep",
     [
@@ -5331,10 +5369,15 @@ def test_concretization_cache_store_cleans_temp_on_error(use_concretization_cach
     assert temps == []
 
 
-def test_concretization_cache_roundtrip_with_automatic_splice(
+def test_concretization_cache_skips_automatic_splice(
     use_concretization_cache, mutable_config, monkeypatch, install_mockery
 ):
-    """Test that cache entries written after an automatic splice are readable on the next solve."""
+    """Solves that produce an automatic splice are not cached and re-solve correctly.
+
+    spec_dict_to_json() cannot serialize the build_spec DAGs that spliced specs carry, so
+    store() skips results containing them. The second solve must be a cache miss that
+    re-runs clingo and produces the same result.
+    """
     mutable_config.set("concretizer:reuse", True)
 
     # Install the old version.  splice-t depends on splice-h, which has:
@@ -5351,8 +5394,11 @@ def test_concretization_cache_roundtrip_with_automatic_splice(
 
     goal = "splice-t@1 ^splice-h@1.0.1+compat ^splice-z@1.0.0+compat"
 
+    # The solve for ``old`` above was cached; snapshot so we can tell nothing new appears.
+    cache = spack.solver.asp.ConcretizationCache(str(use_concretization_cache))
+    entries_before = {entry.name for entry in cache.cache_entries()}
+
     # First solve: the auto-splice fires, producing a spec with ._build_spec set.
-    # The result is stored in the cache by spec_dict_to_json().
     spec1 = spack.concretize.concretize_one(goal)
 
     # Confirm the splice actually occurred -- if it didn't, the test doesn't cover the bug.
@@ -5361,16 +5407,20 @@ def test_concretization_cache_roundtrip_with_automatic_splice(
         "the test premise is wrong if no splice occurred"
     )
 
-    # Second solve must be a pure cache hit: clingo must not run again.
-    # If the cache entry is unreadable (the bug), fetch() deletes it and falls through
-    # to _run_clingo, which calls store() -- triggering this assertion.
-    def _assert_no_store(self, problem, result, statistics):
-        raise AssertionError(
-            "cache should have been hit on the second solve, "
-            "but the cache entry was unreadable and clingo ran again"
-        )
+    # The spliced result must not have been written to the cache.
+    assert {entry.name for entry in cache.cache_entries()} == entries_before
 
-    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", _assert_no_store)
+    # Second solve: a cache miss that re-runs clingo and gets the same answer.
+    fetches = []
+    original_fetch = spack.solver.asp.ConcretizationCache.fetch
+
+    def counting_fetch(self, *args, **kwargs):
+        outcome = original_fetch(self, *args, **kwargs)
+        fetches.append(outcome)
+        return outcome
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "fetch", counting_fetch)
 
     spec2 = spack.concretize.concretize_one(goal)
+    assert fetches and all(outcome == (None, None) for outcome in fetches)
     assert spec1 == spec2
