@@ -22,7 +22,6 @@ import spack.environment.environment
 import spack.environment.generate_env_scripts as generate_script
 import spack.tengine
 import spack.util.filesystem as fs
-import spack.util.string
 from spack.cmd.common import arguments
 from spack.llnl.util.filesystem import islink, symlink
 from spack.llnl.util.tty.colify import colify
