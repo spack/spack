@@ -705,6 +705,8 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
 
+        lock.release_read()
+
 
 class ComplexAcquireAndRelease:
     def __init__(self, lock_path):

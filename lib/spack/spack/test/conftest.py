@@ -539,8 +539,9 @@ def ignore_stage_files():
 
     Used to track which leftover files in the stage have been seen.
     """
-    # to start with, ignore the .lock file at the stage root.
-    return set([".lock", spack.stage._source_path_subdir, "build_cache"])
+    # to start with, ignore the .lock file at the stage root, and its Windows-only gate lock
+    # sidecar (see spack.llnl.util.lock._safe_exclusion): .gate_lock files are never deleted.
+    return set([".lock", ".lock.gate_lock", spack.stage._source_path_subdir, "build_cache"])
 
 
 def remove_whatever_it_is(path):
