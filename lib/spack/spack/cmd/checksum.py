@@ -14,6 +14,7 @@ import spack.util.lang
 import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
+from spack.cmd.versions import new_versions
 from spack.llnl.util import tty
 from spack.package_base import (
     ManualDownloadRequiredError,
@@ -50,6 +51,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         default=False,
         help="checksum the latest available version",
+    )
+    subparser.add_argument(
+        "--new",
+        "-n",
+        action="store_true",
+        default=False,
+        help="checksum remote versions newer than the known versions",
     )
     subparser.add_argument(
         "--preferred",
@@ -104,6 +112,11 @@ def checksum(parser, args):
         remote_versions = pkg.fetch_remote_versions(concurrency=args.jobs)
         if len(remote_versions) > 0:
             versions.append(max(remote_versions.keys()))
+
+    # Add new versions (including major, minor, patch)
+    if args.new:
+        remote_versions = pkg.fetch_remote_versions(concurrency=args.jobs)
+        versions.extend(new_versions(pkg.versions, remote_versions))
 
     # Add preferred version if requested (todo: exclude git versions)
     if args.preferred:

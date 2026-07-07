@@ -5,8 +5,9 @@
 import pytest
 
 import spack.url
+from spack.cmd.versions import new_versions
 from spack.main import SpackCommand
-from spack.version import Version
+from spack.version import StandardVersion, Version
 
 versions = SpackCommand("versions")
 
@@ -39,6 +40,25 @@ def test_remote_versions_only(monkeypatch):
     assert versions("--remote", "zlib") == "  1.3.1\n  1.3\n  1.2.13\n"
 
 
+def test_new_versions_utility():
+    """Unit test for the new_versions() prefix-bucket logic."""
+    v = StandardVersion.from_string
+    safe = {v("3.2"): {}, v("1.0.0"): {}}
+    fetched = {
+        v("99.99.99"): {},  # new in the () bucket
+        v("3.3.0"): {},  # new in (3,) bucket
+        v("3.2.1"): {},  # new in (3, 2) bucket
+        v("3.2"): {},  # already checksummed
+        v("1.2.0"): {},  # new in (1,) bucket
+        v("1.1.0"): {},  # (1,) bucket — loses to 1.2.0
+        v("1.0.1"): {},  # new in (1, 0) bucket
+        v("1.0.0"): {},  # already checksummed
+        v("0.1.0"): {},  # loses to 99.99.99 in the () bucket
+    }
+    expected = {v("99.99.99"), v("3.3.0"), v("1.2.0"), v("1.0.1")}
+    assert new_versions(safe, fetched) == expected
+
+
 def test_new_versions_only(monkeypatch):
     """Test a package for which new versions should be available."""
     from spack_repo.builtin_mock.packages.brillig.package import Brillig  # type: ignore[import]
@@ -46,25 +66,28 @@ def test_new_versions_only(monkeypatch):
     def mock_fetch_remote_versions(*args, **kwargs):
         mock_remote_versions = {
             # new version, we expect this to be in output:
-            Version("99.99.99"): {},
+            Version("99.99.99"): {},  # new major version in the () bucket
             # some packages use '3.2' equivalently to '3.2.0'
             # thus '3.2.1' is considered to be a new version
-            # and expected in the output also
-            Version("3.2.1"): {},  # new version, we expect this to be in output
-            Version("3.2"): {},
-            Version("1.0.0"): {},
+            Version("3.2.1"): {},  # new patch version in the (3,) bucket
+            Version("3.2"): {},  # already checksummed
+            Version("1.2.0"): {},  # new minor version in the (1,) bucket
+            Version("1.1.0"): {},  # loses to 1.2.0
+            Version("1.0.1"): {},  # new patch version in the (1, 0) bucket
+            Version("1.0.0"): {},  # already checksummed
+            Version("0.1.0"): {},  # loses to 99.99.99
         }
         return mock_remote_versions
 
     mock_versions = {
-        # already checksummed versions:
+        # already checksummed versions
         Version("3.2"): {},
         Version("1.0.0"): {},
     }
     monkeypatch.setattr(Brillig, "versions", mock_versions)
     monkeypatch.setattr(Brillig, "fetch_remote_versions", mock_fetch_remote_versions)
     v = versions("--new", "brillig")
-    assert v.strip(" \n\t") == "99.99.99\n  3.2.1"
+    assert v.strip(" \n\t") == "99.99.99\n  3.2.1\n  1.2.0\n  1.0.1"
 
 
 def test_no_unchecksummed_versions(monkeypatch):
