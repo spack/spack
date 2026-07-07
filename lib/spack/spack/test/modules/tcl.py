@@ -1077,6 +1077,78 @@ class TestTcl:
             == 1
         )
 
+    def test_exclude_variants(self, modulefile_content, module_configuration):
+        """Tests excluding variant definitions in module file."""
+
+        # default exclude list for "all" and specific list for some packages
+        module_configuration("exclude_variants")
+        content = modulefile_content("mpileaks +debug -shared")
+
+        # test variant definition
+        assert len([x for x in content if "variant " in x]) == 5
+        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True debug" in x]) == 0
+        assert len([x for x in content if "variant --boolean --default False opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 0
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+
+        # test variant set module check code
+        assert (
+            len([x for x in content if "    {build_system=generic ~opt ~shared +static} " in x])
+            == 1
+        )
+
+        # test dependent module designation (containing variants specifications)
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 1
+        )
+
+        # test cascading specific definition between "all" and some packages
+        module_configuration("exclude_variants_cascading")
+        content = modulefile_content("mpileaks +debug -shared")
+
+        # test variant definition
+        assert len([x for x in content if "variant " in x]) == 4
+        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "variant --boolean --default True debug" in x]) == 0
+        assert len([x for x in content if "variant --boolean --default False opt" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 0
+        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 0
+        assert (
+            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+        )
+
+        # test variant set module check code
+        assert len([x for x in content if "    {build_system=generic ~opt +static} " in x]) == 1
+
+        # test dependent module designation (containing variants specifications)
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 1
+        )
+
     def test_fold_variants(self, install_mockery, module_configuration, modulefile_filenames):
         """Test generating and removing installations folded in same module file."""
         module_configuration("fold_variants_all")
@@ -1389,3 +1461,26 @@ class TestTcl:
             )
             == 1
         )
+
+        # check hash variant is added for 2 similar folded installations due to excluded variants
+        module_configuration("fold_variants_exclude_variants")
+        spec_a = "mpileaks@2.2 ~debug"
+        spec_b = "mpileaks@2.2 +debug"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file, encoding="utf-8") as f:
+            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "\\{build_system=generic hash=\\w{7} ~opt \\+shared \\+static\\}", x
+                    )
+                ]
+            )
+            == 2
+        )
+        assert len([x for x in content if re.match("variant hash \\w{7} \\w{7}", x)]) == 1

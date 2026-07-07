@@ -54,7 +54,7 @@ class TclConfiguration(BaseConfiguration):
         variant_dict = {
             v.name: self._variant_to_str_dict(v)
             for v in sorted(spec.variants.values(), key=lambda x: x.name)
-            if v.name not in RESERVED_NAMES
+            if v.name not in RESERVED_NAMES and v.name not in self.exclude_variants
         }
 
         if add_hash_variant:

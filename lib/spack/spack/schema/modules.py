@@ -27,8 +27,7 @@ module_file_configuration = {
         "filter": {
             "type": "object",
             "default": {},
-            "description": "Filter out specific environment variable modifications from "
-            "module files",
+            "description": "Filter out specific definitions from module files",
             "additionalProperties": False,
             "properties": {
                 "exclude_env_vars": {
@@ -37,7 +36,13 @@ module_file_configuration = {
                     "items": {"type": "string"},
                     "description": "List of environment variable names to exclude from module "
                     "file modifications",
-                }
+                },
+                "exclude_variants": {
+                    "type": "array",
+                    "default": [],
+                    "items": {"type": "string"},
+                    "description": "List of package variants to exclude from module file",
+                },
             },
         },
         "template": {

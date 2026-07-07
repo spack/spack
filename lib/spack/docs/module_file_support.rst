@@ -376,6 +376,41 @@ If two installations folded in the same module file cannot be distinguished by t
 
    If installing a package causes a folded module file to require the ``hash`` variant, it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>` for packages depending on it so their dependency load designations are updated accordingly.
 
+Filtering defined variants
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some variants may not be meaningful to you thus you may want to avoid exposing them in generated module files.
+
+To exclude some variants from being defined in module files, use the ``exclude_variants`` configuration option.
+It takes a list of variant names and defaults to an empty list.
+
+When ``exclude_variants`` is set, the specified variants are omitted from the module file variant definitions and from the variant-qualified module designation.
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       tcl:
+         variants: all
+         hash_length: 0
+         all:
+           filter:
+             exclude_variants:
+               - build_system
+               - debug
+               - lto
+         git:
+           filter:
+             exclude_variants:
+               - nls
+
+In the above configuration file, ``build_system``, ``debug`` and ``lto`` are filtered from all module files and ``git`` module files also have ``nls`` variant filtered.
+
+.. code-block:: console
+
+   $ spack module tcl find git
+   git/2.53.0-gcc-15.2.1 +man +perl +subtree ~tcltk
+
 Default module versions
 """""""""""""""""""""""
 
