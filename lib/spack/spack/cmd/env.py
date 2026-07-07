@@ -596,9 +596,7 @@ def _env_untrack_or_remove(
     # ask the user if they really want to remove the known environments
     # force should do the same as yes to all here following the semantics of rm
     if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
-        environments = string.plural(
-            len(env_names_to_remove), "environment", show_n=False
-        )
+        environments = string.plural(len(env_names_to_remove), "environment", show_n=False)
         envs = string.comma_and(list(env_names_to_remove))
         answer = tty.get_yes_or_no(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
