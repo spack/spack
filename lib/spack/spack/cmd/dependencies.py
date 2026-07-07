@@ -8,9 +8,9 @@ import sys
 import spack.cmd
 import spack.environment as ev
 import spack.store
-import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.solver.input_analysis import create_graph_analyzer
+from spack.util import tty
 from spack.util.tty.colify import colify
 
 description = "show dependencies of a package"

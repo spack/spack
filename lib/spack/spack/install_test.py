@@ -23,10 +23,10 @@ import spack.spec
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
-import spack.util.tty as tty
 import spack.util.tty.log
 from spack.error import InstallError
 from spack.spec import Spec
+from spack.util import tty
 from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
 from spack.util.string import plural

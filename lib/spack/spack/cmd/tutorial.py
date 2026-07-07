@@ -12,8 +12,8 @@ import spack.config
 import spack.paths
 import spack.util.git
 import spack.util.gpg
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.filesystem import working_dir
 from spack.util.spack_yaml import syaml_dict
 

@@ -10,8 +10,7 @@ import spack.vendor.archspec.cpu
 
 import spack.platforms
 import spack.spec
-import spack.util.tty.colify as colify
-import spack.util.tty.color as color
+from spack.util.tty import colify, color
 
 description = "print architecture information about this machine"
 section = "config"

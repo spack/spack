@@ -28,9 +28,9 @@ import spack.spec
 import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
-import spack.util.tty as tty
 from spack.main import SpackCommand
 from spack.test.conftest import RepoBuilder
+from spack.util import tty
 
 
 def _mock_repo(root, namespace):

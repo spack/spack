@@ -10,7 +10,7 @@ import spack.environment as ev
 import spack.repo
 import spack.schema.environment
 import spack.store
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.environment import EnvironmentModifications
 from spack.util.tty.color import colorize
 

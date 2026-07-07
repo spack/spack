@@ -5,7 +5,7 @@
 import sys
 from typing import Optional
 
-import spack.util.tty as tty
+from spack.util import tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early

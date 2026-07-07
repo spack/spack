@@ -15,8 +15,8 @@ import spack.vendor.jsonschema
 import spack.environment as ev
 import spack.error
 import spack.schema.env
-import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
+from spack import tengine
 
 from .images import (
     bootstrap_template_for,

@@ -12,7 +12,7 @@ import spack.cmd
 import spack.paths
 import spack.repo
 import spack.util.editor
-import spack.util.tty as tty
+from spack.util import tty
 
 description = "open package files in ``$EDITOR``"
 section = "packaging"

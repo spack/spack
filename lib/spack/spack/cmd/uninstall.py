@@ -7,13 +7,12 @@ import sys
 from typing import Dict, List, Optional
 
 import spack.cmd
-import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
-import spack.traverse as traverse
-from spack.cmd.common import arguments
+from spack import traverse
+from spack.cmd.common import arguments, confirmation
 from spack.util import tty
 from spack.util.tty.colify import colify
 

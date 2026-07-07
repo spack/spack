@@ -10,8 +10,8 @@ import spack.cmd
 import spack.environment as ev
 import spack.repo
 import spack.store
-import spack.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.tty.colify import colify
 
 description = "show packages that depend on another"

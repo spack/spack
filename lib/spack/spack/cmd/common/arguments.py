@@ -16,7 +16,7 @@ import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 

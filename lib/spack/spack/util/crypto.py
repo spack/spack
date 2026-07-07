@@ -5,7 +5,7 @@
 import hashlib
 from typing import BinaryIO, Callable, Dict, Optional
 
-import spack.util.tty as tty
+from spack.util import tty
 
 HashFactory = Callable[[], "hashlib._Hash"]
 

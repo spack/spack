@@ -19,12 +19,12 @@ import spack.error
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
-import spack.util.environment as environment
 import spack.util.filesystem
 import spack.util.lang
 import spack.util.ld_so_conf
 import spack.util.parallel
 import spack.util.tty
+from spack.util import environment
 
 from .common import (
     WindowsCompilerExternalPaths,

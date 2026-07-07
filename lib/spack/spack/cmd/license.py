@@ -10,7 +10,7 @@ from collections import defaultdict
 from typing import Dict, Generator
 
 import spack.paths
-import spack.util.tty as tty
+from spack.util import tty
 
 description = "list and check license headers on files in spack"
 section = "query"

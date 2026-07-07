@@ -13,7 +13,7 @@ import spack.config
 import spack.paths
 import spack.schema.include
 import spack.util.spack_yaml as syaml
-import spack.util.tty as tty
+from spack.util import tty
 
 description = "isolate the current spack instance from the home directory"
 section = "config"

@@ -20,11 +20,11 @@ from multiprocessing.connection import Connection
 from threading import Thread
 from typing import IO, Callable, Dict, List, Optional, TextIO, Tuple
 
-import spack.util.tty as tty
+from spack.util import tty
 
 if sys.platform == "win32":
-    import ctypes.wintypes as wintypes
     import msvcrt
+    from ctypes import wintypes
 
     kernel32 = ctypes.windll.kernel32
     kernel32.GetStdHandle.argtypes = [wintypes.DWORD]

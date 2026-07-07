@@ -20,9 +20,9 @@ import spack.repo
 import spack.spec
 import spack.util.filesystem as fs
 import spack.util.lang
-import spack.util.tty as tty
 from spack.externals import ExternalSpecsParser, external_spec, extract_dicts_from_configuration
 from spack.operating_systems import windows_os
+from spack.util import tty
 from spack.util.environment import get_path
 
 #: Tag used to identify packages providing a compiler

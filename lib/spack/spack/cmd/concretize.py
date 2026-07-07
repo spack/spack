@@ -8,7 +8,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.string import plural
 
 description = "concretize an environment and write a lockfile"

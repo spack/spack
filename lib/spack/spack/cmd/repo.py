@@ -20,9 +20,9 @@ import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
-import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.tty import color
 from spack.version import StandardVersion
 

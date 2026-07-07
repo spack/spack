@@ -12,9 +12,9 @@ import sys
 
 import spack.cmd
 import spack.spec
-import spack.util.compression as compression
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import compression
 
 description = "print out logs for packages"
 section = "query"

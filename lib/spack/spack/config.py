@@ -2407,7 +2407,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
 
     # Prepend the default, if provided, or current working directory.
     base = default_wd or os.getcwd()
-    import spack.util.tty as tty
+    from spack.util import tty
 
     tty.debug(f"Using working directory {base} as base for abspath")
     return os.path.normpath(os.path.join(base, path))

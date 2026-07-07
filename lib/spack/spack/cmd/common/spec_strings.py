@@ -9,9 +9,9 @@ import warnings
 from typing import Callable, List, Optional
 
 import spack.util.spack_yaml
-import spack.util.tty as tty
 from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
 from spack.tokenize import Token, TokenBase, Tokenizer
+from spack.util import tty
 
 IS_PROBABLY_COMPILER = re.compile(r"%[a-zA-Z_][a-zA-Z0-9\-]")
 

@@ -47,13 +47,13 @@ import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
-import spack.util.tty as tty
 import spack.util.web
 import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
+from spack.util import tty
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
 from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash

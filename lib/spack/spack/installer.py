@@ -42,7 +42,6 @@ from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Un
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.binary_distribution as binary_distribution
 import spack.build_environment
 import spack.builder
 import spack.config
@@ -60,9 +59,9 @@ import spack.store
 import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.path
-import spack.util.timer as timer
-import spack.util.tty as tty
+from spack import binary_distribution
 from spack.url_buildcache import BuildcacheEntryError
+from spack.util import timer, tty
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.lang import pretty_seconds
 from spack.util.string import ordinal

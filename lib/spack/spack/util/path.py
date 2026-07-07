@@ -16,7 +16,7 @@ import sys
 from typing import List, Optional, Union
 from urllib.parse import urlparse
 
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.lang import memoized
 
 __all__ = []

@@ -10,7 +10,7 @@ import spack.cmd.uninstall
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.store
-import spack.util.tty as tty
+from spack.util import tty
 
 description = "remove specs that are now no longer needed"
 section = "build"

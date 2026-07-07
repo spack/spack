@@ -4,7 +4,7 @@
 
 import spack.binary_distribution
 import spack.mirrors.mirror
-import spack.util.tty as tty
+from spack.util import tty
 
 
 def post_install(spec, explicit):

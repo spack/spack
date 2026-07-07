@@ -64,7 +64,6 @@ import spack.util.lock
 import spack.util.naming
 import spack.util.parallel
 import spack.util.spack_yaml as syaml
-import spack.util.tty as tty
 import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
@@ -73,6 +72,7 @@ from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.util import tty
 from spack.util.filesystem import (
     copy,
     copy_tree,

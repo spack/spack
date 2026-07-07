@@ -7,7 +7,7 @@ import os
 import spack.bootstrap
 import spack.config
 import spack.relocate
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.elf import ElfParsingError, parse_elf
 from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
 from spack.util.lang import elide_list

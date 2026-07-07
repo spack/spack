@@ -17,9 +17,9 @@ import spack.stage
 import spack.util.crypto
 import spack.util.gpg
 import spack.util.parallel
-import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util import tty
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (

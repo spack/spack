@@ -96,18 +96,17 @@ import spack.traverse
 import spack.util.filesystem as fs
 import spack.util.gpg
 import spack.util.hash
-import spack.util.lang as lang
 import spack.util.path
 import spack.util.prefix
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
-import spack.util.tty as tty
 import spack.util.tty.color as clr
 import spack.variant as vt
 import spack.version
 import spack.version as vn
 import spack.version.git_ref_lookup
+from spack.util import lang, tty
 
 from .enums import PropagationPolicy
 

@@ -7,7 +7,7 @@ from typing import List
 
 import spack.cmd
 import spack.spec
-import spack.util.tty as tty
+from spack.util import tty
 
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 

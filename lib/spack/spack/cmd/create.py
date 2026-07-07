@@ -10,7 +10,6 @@ from typing import List, Optional, Tuple
 
 import spack.repo
 import spack.stage
-import spack.util.tty as tty
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -19,6 +18,7 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp

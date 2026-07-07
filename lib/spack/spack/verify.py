@@ -10,8 +10,8 @@ from typing import Any, Dict
 import spack.store
 import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
-import spack.util.tty as tty
 from spack.package_base import spack_times_log
+from spack.util import tty
 from spack.util.filesystem import readlink
 
 

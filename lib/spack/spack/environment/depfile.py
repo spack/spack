@@ -16,7 +16,7 @@ import spack.deptypes as dt
 import spack.environment.environment as ev
 import spack.paths
 import spack.spec
-import spack.traverse as traverse
+from spack import traverse
 
 
 class UseBuildCache(Enum):

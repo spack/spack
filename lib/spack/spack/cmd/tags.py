@@ -9,8 +9,8 @@ from typing import Dict, Iterable, List
 import spack.environment
 import spack.repo
 import spack.util.string
-import spack.util.tty as tty
-import spack.util.tty.colify as colify
+from spack.util import tty
+from spack.util.tty import colify
 
 description = "show package tags and associated packages"
 section = "query"

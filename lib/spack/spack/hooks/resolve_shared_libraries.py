@@ -6,8 +6,8 @@ import io
 
 import spack.config
 import spack.error
-import spack.util.tty as tty
 import spack.verify_libraries
+from spack.util import tty
 from spack.util.filesystem import visit_directory_tree
 
 

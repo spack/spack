@@ -7,7 +7,7 @@ import textwrap
 
 import pytest
 
-import spack.util.tty.color as color
+from spack.util.tty import color
 from spack.util.tty.color import cescape, colorize, csub
 
 test_text = [

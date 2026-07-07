@@ -27,8 +27,8 @@ from typing import (
 
 import spack.error
 import spack.spec_parser
-import spack.util.lang as lang
 import spack.util.tty.color
+from spack.util import lang
 
 if TYPE_CHECKING:
     import spack.package_base

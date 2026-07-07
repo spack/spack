@@ -9,7 +9,7 @@ import pytest
 
 import spack.config
 import spack.util.remote_file_cache as rfc_util
-import spack.util.tty as tty
+from spack.util import tty
 from spack.util.filesystem import join_path
 
 github_url = "https://github.com/fake/fake/{0}/develop"
