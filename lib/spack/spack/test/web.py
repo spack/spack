@@ -14,11 +14,11 @@ from typing import Dict
 import pytest
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
 import spack.util.s3
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web
 from spack.util.filesystem import working_dir

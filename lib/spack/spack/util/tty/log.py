@@ -20,7 +20,7 @@ from multiprocessing.connection import Connection
 from threading import Thread
 from typing import IO, Callable, Dict, List, Optional, TextIO, Tuple
 
-import spack.llnl.util.tty as tty
+import spack.util.tty as tty
 
 if sys.platform == "win32":
     import ctypes.wintypes as wintypes

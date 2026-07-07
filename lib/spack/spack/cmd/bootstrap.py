@@ -15,11 +15,11 @@ import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
-import spack.llnl.util.tty
-import spack.llnl.util.tty.color
 import spack.stage
 import spack.util.filesystem
 import spack.util.spack_yaml
+import spack.util.tty
+import spack.util.tty.color
 from spack.cmd.common import arguments
 
 description = "manage bootstrap configuration"
@@ -146,10 +146,10 @@ def _enable_or_disable(args):
         # Set to True if we called "enable", otherwise set to false
         old_value = spack.config.get("bootstrap:enable", scope=args.scope)
         if old_value == value:
-            spack.llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
+            spack.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
         else:
             spack.config.set("bootstrap:enable", value, scope=args.scope)
-            spack.llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
+            spack.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
         return
 
     if value is True:
@@ -165,7 +165,7 @@ def _reset(args):
             "Current configuration will be lost.\n",
             "Do you want to continue?",
         ]
-        ok_to_continue = spack.llnl.util.tty.get_yes_or_no("".join(msg), default=True)
+        ok_to_continue = spack.util.tty.get_yes_or_no("".join(msg), default=True)
         if not ok_to_continue:
             raise RuntimeError("Aborting")
 
@@ -194,7 +194,7 @@ def _root(args):
         spack.config.set("bootstrap:root", args.path, scope=args.scope)
     elif args.scope:
         if args.scope not in spack.config.existing_scope_names():
-            spack.llnl.util.tty.die(
+            spack.util.tty.die(
                 f"The argument --scope={args.scope} must refer to an existing scope."
             )
 
@@ -207,11 +207,11 @@ def _root(args):
 def _list(args):
     sources = spack.bootstrap.core.bootstrapping_sources(scope=args.scope)
     if not sources:
-        spack.llnl.util.tty.msg("No method available for bootstrapping Spack's dependencies")
+        spack.util.tty.msg("No method available for bootstrapping Spack's dependencies")
         return
 
     def _print_method(source, trusted):
-        color = spack.llnl.util.tty.color
+        color = spack.util.tty.color
 
         def fmt(header, content):
             header_fmt = "@*b{{{0}:}} {1}"
@@ -291,13 +291,13 @@ def _write_bootstrapping_source_status(name, enabled, scope=None):
 def _enable_source(args):
     _write_bootstrapping_source_status(args.name, enabled=True, scope=args.scope)
     msg = '"{0}" is now enabled for bootstrapping'
-    spack.llnl.util.tty.msg(msg.format(args.name))
+    spack.util.tty.msg(msg.format(args.name))
 
 
 def _disable_source(args):
     _write_bootstrapping_source_status(args.name, enabled=False, scope=args.scope)
     msg = '"{0}" is now disabled and will not be used for bootstrapping'
-    spack.llnl.util.tty.msg(msg.format(args.name))
+    spack.util.tty.msg(msg.format(args.name))
 
 
 def _status(args):
@@ -310,7 +310,7 @@ def _status(args):
     header = "@*b{{Spack v{0} - {1}}}".format(
         spack.spack_version, spack.bootstrap.config.spec_for_current_python()
     )
-    print(spack.llnl.util.tty.color.colorize(header))
+    print(spack.util.tty.color.colorize(header))
     print()
     # Use the context manager here to avoid swapping between user and
     # bootstrap config many times
@@ -320,7 +320,7 @@ def _status(args):
             status_msg, fail = spack.bootstrap.status_message(section=current_section)
             missing = missing or fail
             if status_msg:
-                print(spack.llnl.util.tty.color.colorize(status_msg))
+                print(spack.util.tty.color.colorize(status_msg))
         print()
     legend = (
         "Spack will take care of bootstrapping any missing dependency marked"
@@ -328,7 +328,7 @@ def _status(args):
         " to be found on the system."
     )
     if missing:
-        print(spack.llnl.util.tty.color.colorize(legend))
+        print(spack.util.tty.color.colorize(legend))
         print()
         sys.exit(1)
 
@@ -358,7 +358,7 @@ def _add(args):
     spack.config.set("bootstrap:sources", sources, scope=write_scope)
 
     msg = 'New bootstrapping source "{0}" added in the "{1}" configuration scope'
-    spack.llnl.util.tty.msg(msg.format(args.name, write_scope))
+    spack.util.tty.msg(msg.format(args.name, write_scope))
     if args.trust:
         _enable_source(args)
 
@@ -381,13 +381,13 @@ def _remove(args):
             msg = (
                 'Removed the bootstrapping source named "{0}" from the "{1}" configuration scope.'
             )
-            spack.llnl.util.tty.msg(msg.format(args.name, current_scope))
+            spack.util.tty.msg(msg.format(args.name, current_scope))
         trusted = spack.config.get("bootstrap:trusted", scope=current_scope) or []
         if args.name in trusted:
             trusted.pop(args.name)
             spack.config.set("bootstrap:trusted", trusted, scope=current_scope)
             msg = 'Deleting information on "{0}" from list of trusted sources'
-            spack.llnl.util.tty.msg(msg.format(args.name))
+            spack.util.tty.msg(msg.format(args.name))
 
 
 def _mirror(args):
@@ -402,20 +402,20 @@ def _mirror(args):
 
     for spec_str in root_specs:
         msg = 'Adding "{0}" and dependencies to the mirror at {1}'
-        spack.llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
+        spack.util.tty.msg(msg.format(spec_str, mirror_dir))
         # Suppress tty from the call below for terser messages
-        spack.llnl.util.tty.set_msg_enabled(False)
+        spack.util.tty.set_msg_enabled(False)
         spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
             if node.external:
                 continue
             spack.cmd.mirror.create(mirror_dir, [node])
-        spack.llnl.util.tty.set_msg_enabled(True)
+        spack.util.tty.set_msg_enabled(True)
 
     if args.binary_packages:
         msg = 'Adding binary packages from "{0}" to the mirror at {1}'
-        spack.llnl.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
-        spack.llnl.util.tty.set_msg_enabled(False)
+        spack.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        spack.util.tty.set_msg_enabled(False)
         stage = spack.stage.Stage(BINARY_TARBALL, path=tempfile.mkdtemp())
         stage.create()
         stage.fetch()
@@ -423,7 +423,7 @@ def _mirror(args):
         stage_dir = pathlib.Path(stage.source_path)
         for entry in stage_dir.iterdir():
             shutil.move(str(entry), mirror_dir)
-        spack.llnl.util.tty.set_msg_enabled(True)
+        spack.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):
         metadata_rel_dir = os.path.join("metadata", subdir)

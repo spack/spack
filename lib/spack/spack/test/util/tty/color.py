@@ -7,8 +7,8 @@ import textwrap
 
 import pytest
 
-import spack.llnl.util.tty.color as color
-from spack.llnl.util.tty.color import cescape, colorize, csub
+import spack.util.tty.color as color
+from spack.util.tty.color import cescape, colorize, csub
 
 test_text = [
     "@r{The quick brown fox jumps over the lazy yellow dog.",

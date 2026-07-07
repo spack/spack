@@ -9,8 +9,8 @@ from typing import List
 import spack.cmd
 import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.spec
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "remove specs from the lockfile of an environment"

@@ -30,7 +30,6 @@ import spack.directives_meta
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.multimethod
@@ -48,6 +47,7 @@ import spack.util.filesystem as fsys
 import spack.util.git
 import spack.util.naming
 import spack.util.path
+import spack.util.tty as tty
 import spack.util.web
 import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler

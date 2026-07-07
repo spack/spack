@@ -17,16 +17,16 @@ import spack.dependency
 import spack.deptypes as dt
 import spack.fetch_strategy as fs
 import spack.install_test
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.util.tty as tty
+import spack.util.tty.color as color
 import spack.variant
 import spack.version
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
 from spack.package_base import PackageBase
+from spack.util.tty.colify import colify
 from spack.util.typing import SupportsRichComparison
 
 description = "get detailed information on a particular package"

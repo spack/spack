@@ -41,10 +41,10 @@ import spack.util.lock as lk
 import spack.version as vn
 from spack.enums import InstallRecordStatus
 from spack.installer import PackageInstaller
-from spack.llnl.util.tty.colify import colify
 from spack.schema.database_index import schema
 from spack.test.conftest import RepoBuilder, writable
 from spack.util.executable import Executable
+from spack.util.tty.colify import colify
 
 pytestmark = pytest.mark.db
 

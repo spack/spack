@@ -46,7 +46,6 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.projections as proj
 import spack.schema
@@ -60,6 +59,7 @@ import spack.util.file_permissions as fp
 import spack.util.filesystem
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
 from spack.enums import Context
 from spack.util.lang import Singleton, dedupe

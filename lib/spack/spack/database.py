@@ -54,12 +54,12 @@ except ImportError:
 
 import spack.deptypes as dt
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
 import spack.util.filesystem as fs
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
 import spack.version as vn
 from spack.directory_layout import (
     DirectoryLayout,

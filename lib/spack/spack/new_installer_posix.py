@@ -25,9 +25,8 @@ from multiprocessing import Process
 from multiprocessing.connection import Connection
 from typing import TYPE_CHECKING, Any, Callable, Optional, Tuple, Union
 
-import spack.llnl.util.tty
 import spack.spec
-from spack.llnl.util.tty.log import _is_background_tty, ignore_signal
+import spack.util.tty
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
     TEE_STOP,
@@ -37,6 +36,7 @@ from spack.new_installer_base import (
     StdinReader,
     Tee,
 )
+from spack.util.tty.log import _is_background_tty, ignore_signal
 
 if TYPE_CHECKING:
     from spack.new_installer import BuildStatus
@@ -97,7 +97,7 @@ class PosixTerminalState(BaseTerminalState):
                 try:
                     signal.signal(sig, old)
                 except Exception as e:
-                    spack.llnl.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
+                    spack.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
 
         if sys.stdin.fileno() in self.selector.get_map():
             self.selector.unregister(sys.stdin.fileno())
@@ -110,7 +110,7 @@ class PosixTerminalState(BaseTerminalState):
             try:
                 os.close(fd)
             except Exception as e:
-                spack.llnl.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
+                spack.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
 
     def _handle_sigtstp(self, signum: int, frame: object) -> None:
         """Restore terminal before suspending, then re-install handler after resume."""
@@ -426,12 +426,12 @@ def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
         try:
             os.unlink(fifo_path)
         except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
             pass
         try:
             os.rmdir(tmpdir)
         except OSError as e:
-            spack.llnl.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
             pass
         raise
 

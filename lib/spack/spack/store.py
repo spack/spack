@@ -35,8 +35,8 @@ import spack.paths
 import spack.spec
 import spack.util.lang
 import spack.util.path
-from spack.llnl.util import tty
 from spack.util import filesystem as fs
+from spack.util import tty
 
 #: default installation root, relative to the Spack install path
 DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")

@@ -10,14 +10,14 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.store
+import spack.util.tty as tty
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
 from spack.util.lang import index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 description = "manage compilers"
 section = "config"

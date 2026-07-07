@@ -20,7 +20,7 @@ import spack.util.lang
 import spack.util.libc
 import spack.util.module_cmd
 import spack.util.path
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.util.environment import filter_system_paths
 from spack.util.file_cache import FileCache
 from spack.util.filesystem import path_contains_subdirectory, paths_containing_libs

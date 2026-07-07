@@ -9,11 +9,11 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Union
 
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.paths
 import spack.repo
 import spack.util.git
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.cmd.common.spec_strings import (
     _check_spec_strings,
     _spec_str_default_handler,
@@ -306,7 +306,7 @@ def run_mypy(file_list, args):
         os.path.join(spack.paths.prefix, "pyproject.toml"),
         "--show-error-codes",
     ]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack", "--package", "llnl"]]
+    mypy_arg_sets = [common_mypy_args + ["--package", "spack"]]
     if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
         mypy_arg_sets.append(
             common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]

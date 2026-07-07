@@ -12,8 +12,8 @@ import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.installer_dispatch
-import spack.llnl.util.tty as tty
 import spack.repo
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "build package from code in current working directory"

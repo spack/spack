@@ -10,10 +10,10 @@ from typing import cast
 from spack.vendor.ruamel.yaml.compat import ordereddict
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.schema.include
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 
 description = "isolate the current spack instance from the home directory"
 section = "config"

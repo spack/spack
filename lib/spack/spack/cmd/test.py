@@ -17,8 +17,8 @@ import spack.install_test
 import spack.repo
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty import colify
+from spack.util import tty
+from spack.util.tty import colify
 
 from . import doc_dedented, doc_first_line
 

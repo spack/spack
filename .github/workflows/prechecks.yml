@@ -36,7 +36,7 @@ jobs:
                -t=3.6- \
                -vvv \
                --exclude-regex lib/spack/spack/vendor \
-               lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
+               lib/spack/spack/ bin/ var/spack/test_repos
     # Check that __slots__ are used properly
     - name: slotscheck
       run: |

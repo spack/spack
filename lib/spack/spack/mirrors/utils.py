@@ -7,10 +7,10 @@ from collections import Counter
 
 import spack.caches
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 import spack.version
 from spack.error import MirrorError
 from spack.mirrors.mirror import Mirror, MirrorCollection

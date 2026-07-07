@@ -21,7 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -34,12 +33,13 @@ import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,

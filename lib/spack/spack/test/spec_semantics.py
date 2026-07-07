@@ -22,8 +22,8 @@ import spack.variant
 import spack.version as vn
 from spack.enums import PropagationPolicy
 from spack.error import SpecError, UnsatisfiableSpecError
-from spack.llnl.util.tty.color import colorize
 from spack.spec import ArchSpec, DependencySpec, Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.util.tty.color import colorize
 from spack.variant import (
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,

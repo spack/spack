@@ -10,8 +10,8 @@ import sys
 import tempfile
 
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.store
+import spack.util.tty as tty
 
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the

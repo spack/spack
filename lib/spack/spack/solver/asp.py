@@ -49,7 +49,6 @@ import spack.error
 import spack.externals_config
 import spack.hash_lookup
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.package_prefs
 import spack.platforms
@@ -63,6 +62,7 @@ import spack.util.hash
 import spack.util.lang
 import spack.util.module_cmd as md
 import spack.util.timer
+import spack.util.tty as tty
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup

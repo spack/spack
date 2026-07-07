@@ -15,7 +15,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
-from spack.llnl.util import tty
+from spack.util import tty
 
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0

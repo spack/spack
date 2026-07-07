@@ -7,8 +7,8 @@ import pytest
 
 import spack.cmd.uninstall
 import spack.environment
-import spack.llnl.util.tty as tty
 import spack.store
+import spack.util.tty as tty
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand, SpackCommandError
 

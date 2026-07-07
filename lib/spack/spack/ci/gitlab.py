@@ -14,11 +14,11 @@ import spack.vendor.ruamel.yaml
 import spack
 import spack.binary_distribution
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
 import spack.util.spack_yaml as syaml
+import spack.util.tty as tty
 
 from .common import (
     SPACK_RESERVED_TAGS,

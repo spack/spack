@@ -20,7 +20,6 @@ import spack.config
 import spack.environment as ev
 import spack.environment.depfile as depfile
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.modules
 import spack.modules.tcl
@@ -36,6 +35,7 @@ import spack.util.filesystem as fs
 import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+import spack.util.tty as tty
 from spack.cmd.env import _env_create
 from spack.config import substitute_path_variables
 from spack.installer import PackageInstaller

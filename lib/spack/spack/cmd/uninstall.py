@@ -14,8 +14,8 @@ import spack.spec
 import spack.store
 import spack.traverse as traverse
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 from ..enums import InstallRecordStatus
 

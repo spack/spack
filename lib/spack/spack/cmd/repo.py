@@ -13,7 +13,6 @@ import spack
 import spack.caches
 import spack.ci
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.util.executable
@@ -21,9 +20,10 @@ import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+import spack.util.tty as tty
 from spack.cmd.common import arguments
 from spack.error import SpackError
-from spack.llnl.util.tty import color
+from spack.util.tty import color
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line

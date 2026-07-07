@@ -26,9 +26,9 @@ from typing import (
 )
 
 import spack.error
-import spack.llnl.util.tty.color
 import spack.spec_parser
 import spack.util.lang as lang
+import spack.util.tty.color
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -616,7 +616,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
             format_args = {"variant": variant_name, "package": pkg_name, "values": values}
             msg = self.error_fmt + " @*r{{[{package}, variant '{variant}']}}"
-            msg = spack.llnl.util.tty.color.colorize(msg.format(**format_args))
+            msg = spack.util.tty.color.colorize(msg.format(**format_args))
             raise spack.error.SpecError(msg)
 
         return _disjoint_set_validator

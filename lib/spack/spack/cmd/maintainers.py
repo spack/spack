@@ -5,9 +5,9 @@
 import argparse
 from collections import defaultdict
 
-import spack.llnl.util.tty.color as color
 import spack.repo
-from spack.llnl.util.tty.colify import colify
+import spack.util.tty.color as color
+from spack.util.tty.colify import colify
 
 description = "get information about package maintainers"
 section = "query"

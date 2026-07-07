@@ -8,9 +8,9 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.stage
+import spack.util.tty as tty
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,

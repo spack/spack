@@ -7,11 +7,11 @@ import sys
 
 import spack.cmd
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.store
+import spack.util.tty as tty
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
 from spack.solver.input_analysis import create_graph_analyzer
+from spack.util.tty.colify import colify
 
 description = "show dependencies of a package"
 section = "query"

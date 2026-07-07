@@ -16,8 +16,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional,
 
 import spack.config
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.log
 import spack.paths
 import spack.repo
 import spack.report
@@ -25,12 +23,14 @@ import spack.spec
 import spack.util.executable
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
+import spack.util.tty as tty
+import spack.util.tty.log
 from spack.error import InstallError
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
 from spack.util.lang import nullcontext
 from spack.util.prefix import Prefix
 from spack.util.string import plural
+from spack.util.tty.color import colorize
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -49,7 +49,7 @@ spack_install_test_log = "install-time-test-log.txt"
 
 
 ListOrStringType = Union[str, List[str]]
-LogType = spack.llnl.util.tty.log.threadlog
+LogType = spack.util.tty.log.threadlog
 
 PackageObjectOrClass = Union[
     "spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]
@@ -302,7 +302,7 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.llnl.util.tty.log.threadlog(
+        with spack.util.tty.log.threadlog(
             self.test_log_file, echo=verbose, append=True
         ) as self._logger:
             with self.logger.force_echo():  # type: ignore[union-attr]

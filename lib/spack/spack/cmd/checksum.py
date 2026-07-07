@@ -14,13 +14,13 @@ import spack.util.lang
 import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
 from spack.package_base import (
     ManualDownloadRequiredError,
     PackageBase,
     deprecated_version,
     preferred_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
 from spack.version import StandardVersion, Version

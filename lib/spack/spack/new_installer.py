@@ -61,8 +61,6 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.tty
-import spack.llnl.util.tty.color
 import spack.mirrors.mirror
 import spack.report
 import spack.sandbox
@@ -74,6 +72,8 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.tty
+import spack.util.tty.color
 from spack.installer import _do_fake_install, dump_packages
 from spack.new_installer_base import (
     OUTPUT_BUFFER_SIZE,
@@ -583,18 +583,18 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         if os.path.lexists(pkg.env_mods_path):
             shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
     except OSError as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
     try:
         if os.path.lexists(pkg.configure_args_path):
             shutil.copy2(pkg.configure_args_path, pkg.install_configure_args_path)
     except OSError as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     # Archive install-phase test log if present
     try:
         pkg.archive_install_test_log()
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     # Archive package-specific files matched by archive_files glob patterns
     try:
@@ -616,29 +616,27 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
                         fs.mkdirp(os.path.dirname(target))
                         fs.install(f, target)
                     except Exception as e:
-                        spack.llnl.util.tty.debug(e)
+                        spack.util.tty.debug(e)
                         errors.write(f"[FAILED TO ARCHIVE]: {f}")
             if errors.getvalue():
                 error_file = os.path.join(target_dir, "errors.txt")
                 fs.mkdirp(target_dir)
                 with open(error_file, "w", encoding="utf-8") as err:
                     err.write(errors.getvalue())
-                spack.llnl.util.tty.warn(
-                    f"Errors occurred when archiving files.\n\tSee: {error_file}"
-                )
+                spack.util.tty.warn(f"Errors occurred when archiving files.\n\tSee: {error_file}")
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     try:
         packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
         dump_packages(pkg.spec, packages_dir)
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
     try:
         spack.store.STORE.layout.write_host_environment(pkg.spec)
     except Exception as e:
-        spack.llnl.util.tty.debug(e)
+        spack.util.tty.debug(e)
 
 
 def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
@@ -808,14 +806,14 @@ def _install(
                 send_state(f"stopped before {stop_before}", state_stream)
                 raise spack.error.StopPhase(f"Stopping before '{stop_before}'")
             send_state(phase.name, state_stream)
-            spack.llnl.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
+            spack.util.tty.msg(f"{pkg.name}: Executing phase: '{phase.name}'")
             # Run the install phase with debug output enabled.
-            old_debug = spack.llnl.util.tty.debug_level()
-            spack.llnl.util.tty.set_debug(1)
+            old_debug = spack.util.tty.debug_level()
+            spack.util.tty.set_debug(1)
             try:
                 phase.execute()
             finally:
-                spack.llnl.util.tty.set_debug(old_debug)
+                spack.util.tty.set_debug(old_debug)
             if stop_at is not None and phase.name == stop_at:
                 send_state(f"stopped after {stop_at}", state_stream)
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
@@ -994,7 +992,7 @@ class BuildStatus:
         if color is not None:
             self.color = color
         else:
-            self.color = spack.llnl.util.tty.color.get_color_when(stdout)
+            self.color = spack.util.tty.color.get_color_when(stdout)
         #: Verbose mode only applies to non-TTY where we want to track a single build log.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
@@ -2370,7 +2368,7 @@ class PackageInstaller:
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
         except Exception as e:
-            spack.llnl.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
+            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}]")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:

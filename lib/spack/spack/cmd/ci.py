@@ -20,7 +20,6 @@ import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
 import spack.hash_types as ht
-import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
@@ -30,9 +29,10 @@ import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
+import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.llnl.util import tty
+from spack.util import tty
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line

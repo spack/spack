@@ -14,11 +14,11 @@ import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify as colify
 import spack.package_base
 import spack.repo
 import spack.spec
+import spack.util.tty as tty
+import spack.util.tty.colify as colify
 from spack.cmd.common import arguments
 
 description = "manage external packages in Spack configuration"

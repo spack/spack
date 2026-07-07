@@ -197,13 +197,13 @@ Other Modules
 :mod:`spack.error`
   :class:`~spack.error.SpackError`, the base class for Spack's exception hierarchy.
 
-:mod:`spack.llnl.util.tty`
+:mod:`spack.util.tty`
   Basic output functions for all of the messages Spack writes to the terminal.
 
-:mod:`spack.llnl.util.tty.color`
+:mod:`spack.util.tty.color`
   Implements a color formatting syntax used by ``spack.tty``.
 
-:mod:`spack.llnl.util`
+:mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
 .. _package-repositories:

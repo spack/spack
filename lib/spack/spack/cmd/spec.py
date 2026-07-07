@@ -12,11 +12,11 @@ import spack.cmd
 import spack.config
 import spack.environment
 import spack.hash_types as ht
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.package_base
 import spack.solver.asp as asp
 import spack.spec
+import spack.util.tty as tty
+import spack.util.tty.color as color
 from spack.cmd.common import arguments
 
 description = "show what would be installed, given a spec"

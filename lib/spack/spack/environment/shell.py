@@ -7,12 +7,12 @@ from typing import Optional
 
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.schema.environment
 import spack.store
-from spack.llnl.util.tty.color import colorize
+import spack.util.tty as tty
 from spack.util.environment import EnvironmentModifications
+from spack.util.tty.color import colorize
 
 
 def activate_header(env, shell, prompt=None, view: Optional[str] = None):
