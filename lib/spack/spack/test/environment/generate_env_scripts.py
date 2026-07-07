@@ -30,11 +30,11 @@ def test_paths_to_env_scripts_exist(
 
     env("activate", f"--{shell}", env_name)
 
-    activate_path = env_script.path_to_env_activate_shell_script(test_env, shell)
-    deactivate_path = env_script.path_to_env_deactivate_shell_script(test_env, shell)
+    activate_script = env_script.path_to_env_activate_shell_script(test_env, shell)
+    deactivate_script = env_script.path_to_env_deactivate_shell_script(test_env, shell)
 
-    assert os.path.exists(activate_path)
-    assert os.path.exists(deactivate_path)
+    assert os.path.isfile(activate_script)
+    assert os.path.isfile(deactivate_script)
 
 
 def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
