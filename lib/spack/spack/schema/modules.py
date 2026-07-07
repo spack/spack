@@ -18,7 +18,7 @@ array_of_strings = {"type": "array", "default": [], "items": {"type": "string"}}
 
 dependency_selection = {"type": "string", "enum": ["none", "run", "direct", "all"]}
 
-module_file_configuration = {
+module_file_configuration: Dict[str, Any] = {
     "type": "object",
     "default": {},
     "description": "Configuration for individual module file behavior and content customization",
@@ -27,8 +27,7 @@ module_file_configuration = {
         "filter": {
             "type": "object",
             "default": {},
-            "description": "Filter out specific environment variable modifications from "
-            "module files",
+            "description": "Filter out specific definitions from module files",
             "additionalProperties": False,
             "properties": {
                 "exclude_env_vars": {
@@ -73,6 +72,31 @@ module_file_configuration = {
 }
 
 ref_module_file_configuration = {"$ref": "#/definitions/module_file_configuration"}
+
+# Tcl module files can define package variants, so their configuration accepts a filter on them
+tcl_module_file_configuration = {
+    **module_file_configuration,
+    "description": "Configuration for individual Tcl module file behavior and content "
+    "customization",
+    "properties": {
+        **module_file_configuration["properties"],
+        "filter": {
+            **module_file_configuration["properties"]["filter"],
+            "properties": {
+                **module_file_configuration["properties"]["filter"]["properties"],
+                "exclude_variants": {
+                    "type": "array",
+                    "default": [],
+                    "items": {"type": "string"},
+                    "description": "List of package variants to exclude from module file "
+                    "variant definitions",
+                },
+            },
+        },
+    },
+}
+
+ref_tcl_module_file_configuration = {"$ref": "#/definitions/tcl_module_file_configuration"}
 
 projections_scheme = {"$ref": "#/definitions/projections"}
 
@@ -161,13 +185,14 @@ tcl_configuration = {
     "additionalKeysAreSpecs": True,
     "properties": {
         **common_props,
+        "all": ref_tcl_module_file_configuration,
         "variants": {
             "type": "string",
             "enum": ["none", "all"],
             "description": "Define variants in module files",
         },
     },
-    "additionalProperties": ref_module_file_configuration,
+    "additionalProperties": ref_tcl_module_file_configuration,
 }
 
 lmod_configuration = {
@@ -265,6 +290,7 @@ schema = {
     "additionalProperties": False,
     "definitions": {
         "module_file_configuration": module_file_configuration,
+        "tcl_module_file_configuration": tcl_module_file_configuration,
         "projections": spack.schema.projections.projections,
         "env_modifications": spack.schema.environment.env_modifications,
     },

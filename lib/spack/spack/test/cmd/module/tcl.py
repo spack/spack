@@ -32,6 +32,17 @@ def test_find_and_loads_variants(mutable_database, module_configuration, subcomm
     assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
 
 
+@pytest.mark.db
+@pytest.mark.parametrize("subcommand", ["find", "loads"])
+def test_find_and_loads_exclude_variants(mutable_database, module_configuration, subcommand):
+    """Test the module is returned without the variants excluded from its module file."""
+    module_configuration("exclude_variants")
+
+    module("tcl", "refresh", "-y", "--delete-tree")
+    out = module("tcl", subcommand, "mpileaks ^zmpi")
+    assert "mpileaks/2.3-gcc-10.2.1~opt+shared+static build_system=generic hash=" in out
+
+
 def test_refresh_fold_variants(install_mockery, module_configuration, modulefile_filename):
     """Test same module version is folded into one module file after refresh."""
     spec_a = "mpileaks@2.3 ~debug ^zmpi"
