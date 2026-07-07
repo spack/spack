@@ -1410,8 +1410,6 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         os.umask(old_umask)
 
 
-@pytest.mark.only_windows("Windows security API required")
-def test_access_control_entry_to_sddl_string():
     from spack.util.win_acl import AccessControlEntry, AceFlags, AceType, GenericAccessRights
 
     # Without flags: only ace_type, rights, and sid fields are populated
