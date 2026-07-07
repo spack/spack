@@ -21,12 +21,12 @@ class Splice(NamedTuple):
 def _resolve_collected_splices(
     specs: List[Spec], splices: Dict[Spec, List[Splice]]
 ) -> Dict[Spec, Spec]:
-    """After all of the specs have been concretized, apply all immediate splices.
+    """After all the specs have been concretized, apply all immediate splices.
     Returns a dict mapping original specs to their resolved counterparts
     """
 
     def splice_cmp(s1: Spec, s2: Spec):
-        """This function can be used to sort a list of specs such that that any
+        """This function can be used to sort a list of specs such that any
         spec which will be spliced into a parent comes after the parent it will
         be spliced into. This order ensures that transitive splices will be
         executed in the correct order.
@@ -53,11 +53,19 @@ def _resolve_collected_splices(
             edge.spec in already_resolved for edge in spec.edges_to_dependencies()
         ):
             continue
+
         new_spec = spec.copy(deps=False)
         new_spec.clear_caches(ignore=("package_hash",))
-        new_spec.build_spec = spec
+
+        is_reused = spec.concrete
+        if is_reused:
+            # The build_spec is meaningful only for reused nodes (it records how specs were built)
+            new_spec.build_spec = spec
+
         for edge in spec.edges_to_dependencies():
-            depflag = edge.depflag & ~dt.BUILD
+            # A reused node is rewired from its build_spec prefix, so its build deps live on the
+            # build_spec and are dropped here; a fresh node is built from source and keeps them.
+            depflag = edge.depflag & ~dt.BUILD if is_reused else edge.depflag
             if any(edge.spec.dag_hash() == splice.child_hash for splice in immediate):
                 splice = [s for s in immediate if s.child_hash == edge.spec.dag_hash()][0]
                 # If the spec being splice in is also spliced
