@@ -24,7 +24,7 @@ import spack.util.filesystem as fs
 from spack.cmd.common import arguments
 from spack.environment import depfile
 from spack.traverse import traverse_nodes
-from spack.util import string, tty
+from spack.util import tty
 from spack.util.filesystem import islink, symlink
 from spack.util.tty.colify import colify
 from spack.util.tty.color import cescape, colorize
