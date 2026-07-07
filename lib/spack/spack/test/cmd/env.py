@@ -406,12 +406,12 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
 
     import spack.util.spack_yaml as syaml
 
-    with open(spack_yaml_path, "r") as f:
+    with open(spack_yaml_path, "r", encoding="utf-8") as f:
         yaml_data = syaml.load_config(f)
 
     yaml_data["spack"]["view"] = {"view1": {"root": view1_path}, "view2": {"root": view2_path}}
 
-    with open(spack_yaml_path, "w") as f:
+    with open(spack_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump_config(yaml_data, f)
 
     test_env = ev.read("multi_view_test")

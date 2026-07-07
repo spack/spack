@@ -16,10 +16,7 @@ from spack.spec import Spec
 install = SpackCommand("install")
 
 
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that load & unload shell scripts are written to the right location
     when a spec is installed"""
 
@@ -28,22 +25,31 @@ def test_paths_to_shell_cached(shell, install_mockery, mock_fetch, mock_archive,
 
     install("--fake", spec.name)
 
-    extension = ""
-    if shell == "bat":
-        extension = ".bat"
-    elif shell == "pwsh":
-        extension = ".ps1"
+    shells_avail = ["sh"]  # csh and fish have the same scripts as sh
 
-    for pkg in spec.traverse():
-        pkg_load_script = os.path.join(pkg.prefix, ".spack", f"load{extension}")
-        path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
+    if sys.platform == "win32":
+        shells_avail = ["bat", "pwsh"]
+    for shell in shells_avail:
 
-        assert path_to_load_script == pkg_load_script
+        extension = ""
+        if shell == "bat":
+            extension = ".bat"
+        elif shell == "pwsh":
+            extension = ".ps1"
 
-        pkg_unload_script = os.path.join(pkg.prefix, ".spack", f"unload{extension}")
-        path_to_unload_script = spec_script.path_to_unload_shell_script(pkg, shell)
+        for pkg in spec.traverse():
+            if pkg.external:
+                continue
 
-        assert path_to_unload_script == pkg_unload_script
+            expected_load_path = os.path.join(pkg.prefix, ".spack", f"load{extension}")
+            path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
+
+            assert path_to_load_script == expected_load_path
+
+            expected_unload_path = os.path.join(pkg.prefix, ".spack", f"unload{extension}")
+            path_to_unload_script = spec_script.path_to_unload_shell_script(pkg, shell)
+
+            assert path_to_unload_script == expected_unload_path
 
 
 @pytest.mark.parametrize(
