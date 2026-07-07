@@ -30,7 +30,6 @@ def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_p
     if sys.platform == "win32":
         shells_avail = ["bat", "pwsh"]
     for shell in shells_avail:
-
         extension = ""
         if shell == "bat":
             extension = ".bat"
